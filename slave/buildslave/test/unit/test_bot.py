@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from builtins import range
+
 import mock
 import os
 import shutil
@@ -110,7 +112,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("setBuilderList", [('mybld', 'myblddir')])
 
         def check(builders):
-            self.assertEqual(builders.keys(), ['mybld'])
+            self.assertEqual(list(builders), ['mybld'])
             self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
             # note that we test the SlaveBuilder instance below
         d.addCallback(check)
@@ -126,7 +128,7 @@ class TestBot(unittest.TestCase):
                 ('mybld', 'myblddir')])
 
             def check(builders):
-                self.assertEqual(builders.keys(), ['mybld'])
+                self.assertEqual(list(builders), ['mybld'])
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 slavebuilders['my'] = builders['mybld']
             d.addCallback(check)
@@ -405,7 +407,7 @@ class TestBotFactory(unittest.TestCase):
         self.bf.startTimers()
         clock.callLater(100, self.bf.stopTimers)
 
-        clock.pump((1 for _ in xrange(150)))
+        clock.pump((1 for _ in range(150)))
         self.assertEqual(calls, [35, 70])
 
     @compat.usesFlushLoggedErrors

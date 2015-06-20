@@ -49,4 +49,4 @@ def getFactory(command):
 
 
 def getAllCommandNames():
-    return commandRegistry.keys()
+    return list(commandRegistry)

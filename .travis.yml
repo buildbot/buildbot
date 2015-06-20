@@ -102,6 +102,8 @@ install:
   - "[ $IS_LATEST = false ] || pip install pep8==1.5.7"
   # Install lz4 for log compression utest
   - pip install lz4
+  # Install python-future for py2/3 compatability
+  - pip install future
 
 # Tests running commands
 script:
