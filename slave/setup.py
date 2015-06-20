@@ -124,6 +124,7 @@ else:
     if sys.version_info[:2] >= (2, 6):
         setup_args['install_requires'] = [
             'twisted >= 8.0.0',
+            'future',
         ]
     else:
         # Latest supported on Python 2.5 version of Twisted is 12.10, and
@@ -133,6 +134,7 @@ else:
         setup_args['install_requires'] = [
             'twisted >= 8.0.0, <= 12.1.0',
             'zope.interface < 4.0.0',
+            'future',
         ]
     setup_args['extras_require'] = {
         'test': [
