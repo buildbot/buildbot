@@ -19,12 +19,16 @@ div.menu
     div.builders
       div.no-builder(ng-if="builds.builders.length == 0")
         | No builders has been configured yet.
-      md-button.menu-item.no-select(
+      div.menu-item.no-select(
+        layout="row",
         ng-repeat="builder in builds.builders",
       )
-        h3 {{ builder.name }}
-        div.tags
-          span.tag(ng-repeat="tag in builder.tags")
+        div(flex)
+          a.builder-title(href="", md-theme="default") {{ builder.name }}
+          div.tags
+            span.tag(ng-repeat="tag in builder.tags") {{tag}}
+        div.builder-id \#{{ builder.builderid }}
+
 
 
 md-content(flex, ui-view="")

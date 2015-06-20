@@ -11,9 +11,10 @@
   padding: 0px !important;
 
   .menu {
-    width: 250px;
+    width: 240px;
     border-right: 1px solid #dfdfef;
     background: #fff;
+    overflow-y: auto;
 
     .md-button.menu-item {
       display: block;
@@ -45,8 +46,6 @@
 
     .builders-menu {
       margin-top: 80px;
-      overflow: hidden;
-      overflow-y: auto;
 
       .menu-title {
         font-size: 14px;
@@ -64,6 +63,45 @@
         font-size: 12px;
         color: #aaa;
         padding: 10px;
+      }
+
+      .menu-item {
+        height: 80px;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .builder-title {
+        display: block;
+        font-size: 20px;
+        line-height: 24px;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+
+      .builder-id {
+        width: 40px;
+        text-align: right;
+        color: #999;
+        font-size: 20px;
+      }
+
+      .tags {
+        margin-top: 5px;
+
+        .tag {
+          font-size: 14px;
+          display: inline-block;
+          padding: 2px 5px;
+          margin-right: 2px;
+          border: 1px solid #ddd;
+          border-radius: 3px;
+          color: #999;
+          background: #eee;
+        }
       }
     }
   }
