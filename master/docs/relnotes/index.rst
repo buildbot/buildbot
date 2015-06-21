@@ -113,7 +113,7 @@ Reporters
 Status plugins have been moved into the ``reporters`` namespace.
 Their API has slightly to changed in order to adapt to the new data API.
 
-* :class:`~buildbot.status.status_gerrit.GerritStatusPush` renamed to :class:`~buildbot.reporters.gerrit.Gerrit`
+* :class:`~buildbot.status.status_gerrit.GerritStatusPush` renamed to :class:`~buildbot.reporters.gerrit.GerritStatusPush`
 
 * :class:`~buildbot.status.mail.MailNotifier` renamed to :class:`~buildbot.reporters.mail.MailNotifier`
 
@@ -128,6 +128,8 @@ Their API has slightly to changed in order to adapt to the new data API.
 * Added StashStatusPush status hook for Atlassian Stash
 
 * :bb:reporter:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
+
+* :bb:reporter:`GerritStatusPush` callbacks slightly changed signature
 
 * :class:`~buildbot.status.github.GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
