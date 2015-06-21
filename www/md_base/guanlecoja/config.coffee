@@ -3,13 +3,13 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.3.15"
-ANGULAR_MATERIAL_TAG = "~0.9.6"
+ANGULAR_TAG = "~1.4.1"
+ANGULAR_MATERIAL_TAG = "~0.10.0"
 
-path = require 'path'
-gulp = require 'gulp'
-shell = require("gulp-shell")
-svgSymbols = require 'gulp-svg-symbols'
+path = require('path')
+gulp = require('gulp')
+shell = require('gulp-shell')
+svgSymbols = require('gulp-svg-symbols')
 
 config =
 
@@ -53,6 +53,9 @@ config =
             "angular-moment":
                 version: '0.10.1'
                 files: 'angular-moment.js'
+            'buildbot-data':
+                version: '~1.0.7'
+                files: 'dist/buildbot-data.js'
             lodash:
                 version: "~2.4.1"
                 files: 'dist/lodash.js'
@@ -82,7 +85,7 @@ config =
 
         testdeps:
             "angular-mocks":
-                version: "~1.3.15"
+                version: ANGULAR_TAG
                 files: "angular-mocks.js"
 
     buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures']
