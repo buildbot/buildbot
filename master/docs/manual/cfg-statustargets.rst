@@ -428,6 +428,9 @@ IRC Bot
 
 .. py:class:: buildbot.status.words.IRC
 
+.. warning::
+
+    IRC Bot is not fully converted to the new data API
 
 The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
@@ -635,6 +638,13 @@ Setting random defaults like this means multiple IRC bots are less likely to den
 StatusPush
 ~~~~~~~~~~
 
+.. warning::
+
+    StatusPush is not converted to the new data API.
+    It will not work yet.
+    Patches are gladly accepted!
+
+
 .. @cindex StatusPush
 .. py:class:: buildbot.status.status_push.StatusPush
 
@@ -656,6 +666,13 @@ If no items were popped from ``self.queue``, ``retryDelay`` seconds will be wait
 
 HttpStatusPush
 ~~~~~~~~~~~~~~
+
+.. warning::
+
+    StatusPush is not converted to the new data API.
+    It will not work yet.
+    Patches are gladly accepted!
+
 
 .. @cindex HttpStatusPush
 .. @stindex buildbot.status.status_push.HttpStatusPush
@@ -753,6 +770,13 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 GitHubStatus
 ~~~~~~~~~~~~
 
+.. warning::
+
+    GitHubStatus is not converted to the new data API.
+    It will not work yet.
+    Patches are gladly accepted!
+
+
 .. @cindex GitHubStatus
 .. py:class:: buildbot.status.github.GitHubStatus
 
@@ -810,6 +834,13 @@ This feature requires ``txgithub`` of version 0.2.0 or better.
 
 StashStatusPush
 ~~~~~~~~~~~~~~~
+
+.. warning::
+
+    StashStatusPush is not converted to the new data API.
+    It will not work yet.
+    Patches are gladly accepted!
+
 
 .. @cindex StashStatusPush
 .. py:class:: buildbot.status.status_stash.StashStatusPush
