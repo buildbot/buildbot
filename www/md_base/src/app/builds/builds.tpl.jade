@@ -1,16 +1,28 @@
 div.menu
   div.grid-menu
-    md-button.menu-item.no-select(ui-sref="builds.masters")
+    md-button.menu-item.no-select(
+      ui-sref="builds.masters",
+      ng-class="{highlighted: builds.isHighlighted('builds.masters')}"
+    )
       md-icon(md-svg-icon="wand")
       span.title Masters
       div.md-ripple-container
-    md-button.menu-item.no-select(ui-sref="builds.slaves")
+    md-button.menu-item.no-select(
+      ui-sref="builds.slaves",
+      ng-class="{highlighted: builds.isHighlighted('builds.slaves')}"
+    )
       md-icon(md-svg-icon="hammer")
       span.title Slaves
-    md-button.menu-item.no-select(ui-sref="builds.schedulers")
+    md-button.menu-item.no-select(
+      ui-sref="builds.schedulers",
+      ng-class="{highlighted: builds.isHighlighted('builds.schedulers')}"
+    )
       md-icon(md-svg-icon="clock")
       span.title Schedulers
-    md-button.menu-item.no-select(ui-sref="builds.changes")
+    md-button.menu-item.no-select(
+      ui-sref="builds.changes",
+      ng-class="{highlighted: builds.isHighlighted('builds.changes')}"
+    )
       md-icon(md-svg-icon="changes")
       span.title Latest changes
 
@@ -22,14 +34,14 @@ div.menu
       div.menu-item.no-select(
         layout="row",
         ng-repeat="builder in builds.builders",
+        ng-class="{highlighted: builds.isHighlighted('builds.builder', {builderid: builder.builderid})}"
       )
         div(flex)
-          a.builder-title(href="", md-theme="default") {{ builder.name }}
+          a.builder-title(ui-sref="builds.builder({builderid:{{builder.builderid}}})") {{ builder.name }}
           div.tags
             span.tag(ng-repeat="tag in builder.tags") {{tag}}
         div.builder-id \#{{ builder.builderid }}
 
-
-
-md-content(flex, ui-view="")
-  | content
+md-content.sub-content(flex, ui-view="")
+  div.placeholder
+    | Choose something to view at the panel left.

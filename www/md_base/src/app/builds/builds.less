@@ -16,25 +16,24 @@
     background: #fff;
     overflow-y: auto;
 
-    .md-button.menu-item {
-      display: block;
-      padding: 10px;
-      margin: 0;
-      color: #333;
-      cursor: pointer;
-      border-radius: 0;
+    .menu-item.highlighted {
+      background: #eee;
     }
 
     .grid-menu {
       overflow: hidden;
 
       .menu-item {
+        color: #333;
         float: left;
         width: 50%;
         height: 80px;
         text-align: center;
         border-left: 1px solid #eee;
         border-bottom: 1px solid #eee;
+        padding: 10px;
+        margin: 0;
+        border-radius: 0;
 
         span.title {
           line-height: 24px;
@@ -45,7 +44,7 @@
     }
 
     .builders-menu {
-      margin-top: 80px;
+      margin-top: 60px;
 
       .menu-title {
         font-size: 14px;
@@ -72,9 +71,10 @@
       }
 
       .builder-title {
+        color: rgb(103, 58, 183);
         display: block;
         font-size: 20px;
-        line-height: 24px;
+        line-height: 26px;
         text-decoration: none;
         white-space: nowrap;
         overflow: hidden;
@@ -97,12 +97,20 @@
           display: inline-block;
           padding: 2px 5px;
           margin-right: 2px;
-          border: 1px solid #ddd;
+          border: 1px solid #ccc;
           border-radius: 3px;
-          color: #999;
-          background: #eee;
+          color: #666;
+          background: #ddd;
         }
       }
+    }
+  }
+
+  .sub-content {
+    .placeholder {
+      text-align: center;
+      color: #999;
+      margin-top: 50px;
     }
   }
 }
