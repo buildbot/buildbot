@@ -37,7 +37,7 @@ paths =
 files =
     coffee: [
         "#{paths.src}/**/*.module.coffee"
-        "#{paths.src}/**/*!(.spec).coffee"
+        "#{paths.src}/**/!(*.spec).coffee"
     ]
 
 ################################################################################
