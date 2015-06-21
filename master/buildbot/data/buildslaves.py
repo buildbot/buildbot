@@ -86,6 +86,9 @@ class Buildslave(base.ResourceType):
     plural = "buildslaves"
     endpoints = [BuildslaveEndpoint, BuildslavesEndpoint]
     keyFields = ['buildslaveid']
+    eventPathPatterns = """
+        /buildslaves/:buildslaveid
+    """
 
     class EntityType(types.Entity):
         buildslaveid = types.Integer()
