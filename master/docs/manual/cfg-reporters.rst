@@ -5,6 +5,13 @@
 Reporters
 ---------
 
+.. warning::
+
+   Report targets are being migrated to Data API and not all status targets had been ported.
+   These have an explicit warning before their description and are marked as such in the section title (to make it easier to distinguish them in the table of contents).
+   As the old status targets are migrated to the new API, the warnings and markings will be removed.
+   (Remember this is a beta version.)
+
 .. contents::
     :depth: 2
     :local:
@@ -423,11 +430,14 @@ List of responsible users
 
 .. index:: IRC
 
-IRC Bot
-~~~~~~~
+IRC Bot (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
 
 .. py:class:: buildbot.status.words.IRC
-
 
 The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
@@ -632,8 +642,12 @@ Setting random defaults like this means multiple IRC bots are less likely to den
 
 .. bb:reporter:: StatusPush
 
-StatusPush
-~~~~~~~~~~
+StatusPush (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
 
 .. @cindex StatusPush
 .. py:class:: buildbot.status.status_push.StatusPush
@@ -654,8 +668,12 @@ If no items were popped from ``self.queue``, ``retryDelay`` seconds will be wait
 
 .. bb:reporter:: HttpStatusPush
 
-HttpStatusPush
-~~~~~~~~~~~~~~
+HttpStatusPush (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
 
 .. @cindex HttpStatusPush
 .. @stindex buildbot.status.status_push.HttpStatusPush
@@ -750,8 +768,12 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. bb:reporter:: GitHubStatus
 
-GitHubStatus
-~~~~~~~~~~~~
+GitHubStatus (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
 
 .. @cindex GitHubStatus
 .. py:class:: buildbot.status.github.GitHubStatus
@@ -808,8 +830,12 @@ Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional
 This is required if you work with GitHub Enterprise installation.
 This feature requires ``txgithub`` of version 0.2.0 or better.
 
-StashStatusPush
-~~~~~~~~~~~~~~~
+StashStatusPush (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
 
 .. @cindex StashStatusPush
 .. py:class:: buildbot.status.status_stash.StashStatusPush
