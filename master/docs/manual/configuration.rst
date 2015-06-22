@@ -22,7 +22,7 @@ The next section, :doc:`customization`, describes this approach, with frequent r
     cfg-properties
     cfg-buildsteps
     cfg-interlocks
-    cfg-statustargets
+    cfg-reporters
     cfg-www
     cfg-wwwhooks
     cfg-services
