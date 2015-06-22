@@ -2,20 +2,19 @@ beforeEach module 'app'
 
 describe 'overview', ->
 
-    $rootScope = $compile = $httpBackend = null
+    $rootScope = $compile = $httpBackend = API = null
 
     injected = ($injector) ->
+        $injector.get('$window').ReconnectingWebSocket = WebSocket
         $compile = $injector.get('$compile')
         $rootScope = $injector.get('$rootScope')
         $httpBackend = $injector.get('$httpBackend')
         $q = $injector.get('$q')
-        mqService = $injector.get('mqService')
-        spyOn(mqService,"setBaseUrl").and.returnValue(null)
-        spyOn(mqService,"startConsuming").and.returnValue($q.when( -> ))
-        spyOn(mqService,"stopConsuming").and.returnValue(null)
+        dataService = $injector.get('dataService')
+        spyOn(dataService, 'startConsuming').and.returnValue($q.resolve())
         decorateHttpBackend($httpBackend)
 
-    beforeEach inject injected
+    beforeEach inject(injected)
 
     it 'should display tiles normally', ->
         $httpBackend.expectDataGET('masters')

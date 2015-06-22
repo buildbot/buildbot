@@ -22,24 +22,29 @@ class _Overview extends Controller
 
     schedulers:
         count: 0
- 
-    constructor: (buildbotService) ->
-        # TODO: Avoid fetch all the data here after # there is a direct API interface
-        buildbotService.all('masters').getList().then (entries) =>
-            actives = 0
-            for master in entries
-                actives += 1 if master.active
-            @masters.count = entries.length
-            @masters.active = actives
-            
-        buildbotService.all('buildslaves').getList().then (entries) =>
-            connections = 0
-            connections += slave.connected_to.length for slave in entries
-            @slaves.count = entries.length
-            @slaves.connections = connections
 
-        buildbotService.all('builders').getList().then (entries) =>
-            @builders.count = entries.length
+    constructor: ($scope, dataService) ->
+        # TODO: Avoid fetch all the data here after
+        # there is a direct API interface
+        opened = dataService.open()
+        opened.closeOnDestroy($scope)
 
-        buildbotService.all('schedulers').getList().then (entries) =>
-            @schedulers.count = entries.length
+        opened.getMasters().then (masters) =>
+            @masters =
+                active: 0
+                count: masters.length
+            for master in masters
+                @masters.active++ if master.active
+
+        opened.getBuildslaves().then (slaves) =>
+            @slaves =
+                connections: 0
+                count: slaves.length
+            for slave in slaves
+                @slaves.connections += slave.connected_to.length
+
+        opened.getBuilders().then (builders) =>
+            @builders.count = builders.length
+
+        opened.getSchedulers().then (schedulers) =>
+            @schedulers.count = schedulers.length
