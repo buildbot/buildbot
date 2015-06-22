@@ -4,8 +4,7 @@ class Builds extends Controller
     isHighlighted: (name, param) ->
         return @$state.is(name, param)
 
-    constructor: (@$state, buildbotService) ->
-        buildbotService.all('builders').getList().then (builders) =>
-            @builders = builders
-
-    
+    constructor: ($scope, @$state, dataService) ->
+        opened = dataService.open()
+        opened.closeOnDestroy($scope)
+        @builders = opened.getBuilders().getArray()

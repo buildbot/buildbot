@@ -3,8 +3,8 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.4.1"
-ANGULAR_MATERIAL_TAG = "~0.10.0"
+ANGULAR_TAG = '~1.4.1'
+ANGULAR_MATERIAL_TAG = '~0.10.0'
 
 path = require('path')
 gulp = require('gulp')
@@ -20,8 +20,6 @@ config =
         # The build folder is where the app resides once it's completely built
         build: 'buildbot_www/static'
 
-
-
     ### ###########################################################################################
     #   This is a collection of file patterns
     ### ###########################################################################################
@@ -33,34 +31,34 @@ config =
         # JavaScript libraries (order matters)
         deps:
             moment:
-                version: "~2.10.3"
+                version: '~2.10.3'
                 files: 'moment.js'
             angular:
                 version: ANGULAR_TAG
                 files: 'angular.js'
-            "angular-animate":
+            'angular-animate':
                 version: ANGULAR_TAG
                 files: 'angular-animate.js'
-            "angular-aria":
+            'angular-aria':
                 version: ANGULAR_TAG
                 files: 'angular-aria.js'
-            "angular-material":
+            'angular-material':
                 version: ANGULAR_MATERIAL_TAG
                 files: 'angular-material.js'
-            "angular-ui-router":
+            'angular-ui-router':
                 version: '0.2.13'
                 files: 'release/angular-ui-router.js'
-            "angular-moment":
+            'angular-moment':
                 version: '0.10.1'
                 files: 'angular-moment.js'
             'buildbot-data':
                 version: '~1.0.7'
                 files: 'dist/buildbot-data.js'
             lodash:
-                version: "~2.4.1"
+                version: '~2.4.1'
                 files: 'dist/lodash.js'
             'underscore.string':
-                version: "~2.3.3"
+                version: '~2.3.3'
                 files: 'lib/underscore.string.js'
             # Here we uses 'sortable.js'. It provides some good features compared with other solutions:
             # 1. It doesn't depends on JQuery
@@ -69,30 +67,25 @@ config =
             # 4. It supports moving animation
             # 5. It officially provides a binding to AngularJS
             'sortable.js':
-                version: "~1.2.0"
+                version: '~1.2.0'
                 files: ['Sortable.js', 'ng-sortable.js']
             # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
             # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
             # reimplement reconnecting ourselves
-            "reconnectingWebsocket":
-                version: "master"
-                files: ["reconnecting-websocket.js"]
-            # TODO: Remove the dependency of restangular once the new
-            # buildbotService is ready and restangular is deprecated
-            restangular:
-                version: "~1.4.0"
-                files: 'dist/restangular.js'
+            'reconnectingWebsocket':
+                version: 'master'
+                files: ['reconnecting-websocket.js']
 
         testdeps:
-            "angular-mocks":
+            'angular-mocks':
                 version: ANGULAR_TAG
-                files: "angular-mocks.js"
+                files: 'angular-mocks.js'
 
     buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures']
 
     generatedfixtures: ->
-        gulp.src ""
-            .pipe shell("buildbot dataspec -g window.dataspec -o " + path.join(config.dir.build,"generatedfixtures.js"))
+        gulp.src ''
+            .pipe shell('buildbot dataspec -g window.dataspec -o ' + path.join(config.dir.build,'generatedfixtures.js'))
 
 
 gulp.task 'icons', ->
@@ -105,7 +98,7 @@ gulp.task 'icons', ->
 
 gulp.task 'processindex', ['index'], ->
     indexpath = path.join(config.dir.build, 'index.html')
-    gulp.src ""
+    gulp.src ''
         .pipe shell("buildbot processwwwindex -i '#{indexpath}'")
 
 gulp.task 'proxy', ['processindex'], ->
