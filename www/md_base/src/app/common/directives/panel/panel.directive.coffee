@@ -20,7 +20,7 @@ class _Panel extends Controller
     constructor: (@$element, @$scope, $compile) ->
         # The following watch statement is necessary as the collapse function
         # is done by toggleClass in this controller instead of binding in template.
-        @$scope.$watch 'panel.bind.collapsed', (=> @updateCollapse())
+        @$scope.$watch 'panel.bind.collapsed', => @updateCollapse()
 
         if @bind.name
             tag = @bind.name.replace /_/g, '-'
