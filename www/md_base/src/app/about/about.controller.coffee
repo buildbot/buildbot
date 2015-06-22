@@ -15,5 +15,5 @@ class About extends Controller
         @versions = config.versions
         @config = config
         @specs = []
-        restService.get('application.spec').then (specs) =>
-            @specs = @processSpecs(specs)
+        restService.get('application.spec').then (data) =>
+            @specs = @processSpecs(data.specs)
