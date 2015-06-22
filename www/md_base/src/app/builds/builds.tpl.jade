@@ -28,12 +28,14 @@ div.menu
 
   div.builders-menu
     div.menu-title BUILDERS
+    div.search-input
+      input(type="text", placeholder="Filter builders", ng-model="builds.builder_filter")
     div.builders
       div.no-builder(ng-if="builds.builders.length == 0")
         | No builders has been configured yet.
       div.menu-item.no-select(
         layout="row",
-        ng-repeat="builder in builds.builders",
+        ng-repeat="builder in builds.builders|filter:builds.builder_filter",
         ng-class="{highlighted: builds.isHighlighted('builds.builder', {builderid: builder.builderid})}"
       )
         div(flex)
