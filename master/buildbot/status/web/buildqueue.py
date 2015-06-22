@@ -83,8 +83,7 @@ class CancelBuildQueueActionResource(ActionResource):
 
         buildrequest = [int(b) for b in req.args.get("cancelselected", []) if b]
 
-        ## get only the buildrequest from the list!
-        brdicts = yield master.db.buildrequests.getBuildRequests(claimed=False, brids=buildrequest)
+        brdicts = yield master.db.buildrequests.getBuildRequestInQueue(brids=buildrequest)
 
         for brdict in brdicts:
             br = yield BuildRequest.fromBrdict(

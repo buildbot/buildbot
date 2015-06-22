@@ -23,7 +23,7 @@ from twisted.internet import defer
 
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
-from buildbot.status.builder import RETRY
+from buildbot.status.builder import RETRY, RESUME
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
@@ -491,7 +491,7 @@ class Builder(config.ReconfigurableServiceMixin,
             db = self.master.db
             d = db.buildrequests.completeBuildRequests(brids, results)
             d.addCallback(
-                lambda _ : self._maybeBuildsetsComplete(build.requests))
+                lambda _ : self._maybeBuildsetsComplete(build.requests, results=results))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
@@ -502,13 +502,17 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
-    def _maybeBuildsetsComplete(self, requests, requestRemoved=False):
+    def _maybeBuildsetsComplete(self, requests, requestRemoved=False, results=None):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
             yield self.master.maybeBuildsetComplete(br.bsid)
             # notify the master that the buildrequest was remove from queue
             if requestRemoved:
                 self.master.buildRequestRemoved(br.bsid, br.id, self.name)
+
+            if results and results == RESUME:
+                self.master.buildRequestAdded(br.bsid, br.id, self.name)
+
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

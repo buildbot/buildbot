@@ -140,13 +140,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     # TODO: pass the current masterobject id to the selection filter
     @with_master_objectid
-    def getBuildRequestInQueue(self, buildername=None, _master_objectid=None, sorted=False, limit=False):
+    def getBuildRequestInQueue(self, brids=None, buildername=None, _master_objectid=None, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
             buildset_tbl = self.db.model.buildsets
+            builds_tbl = self.db.model.builds
 
             def checkConditions(query):
+                if buildername:
+                    query = query.where(reqs_tbl.c.buildername == buildername)
+
+                if brids:
+                    query = query.where(reqs_tbl.c.id.in_(brids))
+
                 if limit:
                     query = query.limit(200)
 
@@ -162,12 +169,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 if rows:
                     for row in rows:
-                        rv.append(dict(brid=row.id, buildername=row.buildername, reason=row.reason))
+                        rv.append(self._brdictFromRow(row, _master_objectid))
 
                 res.close()
                 return rv
 
-            pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason, reqs_tbl.c.submitted_at],
+            pending = sa.select([reqs_tbl, buildset_tbl.c.reason],
                           from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
                           .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
                           whereclause=((claims_tbl.c.claimed_at == None) &
@@ -175,10 +182,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             pending = checkConditions(pending)
 
-            resume = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, buildset_tbl.c.reason, reqs_tbl.c.submitted_at],
+            resume = sa.select([reqs_tbl, buildset_tbl.c.reason],
                                from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
                                                       & (claims_tbl.c.objectid == _master_objectid))
-                               .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)))\
+                               .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id))
+                               .join(builds_tbl, ()))\
                 .where(reqs_tbl.c.results == RESUME)\
                 .where(reqs_tbl.c.complete == 1)\
                 .where(reqs_tbl.c.mergebrid == None)
@@ -189,7 +197,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             result = getResults(buildqueue)
 
-            # todo return sorted by submmited
             return result
 
         return self.db.pool.do(thd)

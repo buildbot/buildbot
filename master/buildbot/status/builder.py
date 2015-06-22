@@ -353,13 +353,9 @@ class BuilderStatus(styles.Versioned):
     def getPendingBuildRequestStatuses(self):
         db = self.status.master.db
 
-        brdicts = yield db.buildrequests.getBuildRequests(claimed=False,
-                                             buildername=self.name)
+        brdicts = yield db.buildrequests.getBuildRequestInQueue(buildername=self.name, sorted=True)
 
-        resumed_brdicts = yield db.buildrequests.getBuildRequests(buildername=self.name, claimed="mine",
-                                                                  results=RESUME)
-
-        result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts + resumed_brdicts]
+        result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
 
         defer.returnValue(result)
 
