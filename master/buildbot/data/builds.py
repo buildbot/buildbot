@@ -17,7 +17,6 @@ from buildbot.data import base
 from buildbot.data import types
 from twisted.internet import defer
 
-
 class Db2DataMixin(object):
 
     def db2data(self, dbdict):
@@ -83,6 +82,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         /builds
         /builders/n:builderid/builds
         /buildrequests/n:buildrequestid/builds
+        /buildslaves/n:buildslaveid/builds
     """
     rootLinkName = 'builds'
 
@@ -94,6 +94,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
             buildrequestid=kwargs.get('buildrequestid'),
+            buildslaveid=kwargs.get('buildslaveid'),
             complete=complete)
         defer.returnValue(
             [(yield self.db2data(dbdict)) for dbdict in builds])
@@ -101,6 +102,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
     def startConsuming(self, callback, options, kwargs):
         builderid = kwargs.get('builderid')
         buildrequestid = kwargs.get('buildrequestid')
+        buildslaveid = kwargs.get('buildslaveid')
         if builderid is not None:
             return self.master.mq.startConsuming(
                 callback,
@@ -109,6 +111,10 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
             # XXX these messages are never produced
             return self.master.mq.startConsuming(callback,
                                                  ('buildrequests', str(buildrequestid), 'builds', None))
+        elif buildslaveid is not None:
+            # XXX these messages are never produced
+            return self.master.mq.startConsuming(callback,
+                                                 ('buildslaves', str(buildslaveid), 'builds', None))
         else:
             return self.master.mq.startConsuming(callback,
                                                  ('builds', None, None, None))
@@ -119,10 +125,11 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
-    keyFields = ['builderid', 'buildid']
+    keyFields = ['builderid', 'buildid', 'buildslaveid']
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid
+        /buildslaves/:buildslaveid/builds/:buildid
     """
 
     class EntityType(types.Entity):

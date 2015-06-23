@@ -44,7 +44,9 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Master(id=88),
         fakedb.Master(id=89, name="bar"),
         fakedb.Buildslave(id=13, name='sl'),
+        fakedb.Buildslave(id=12, name='sl2'),
     ]
+
     threeBuilds = [
         fakedb.Build(id=50, buildrequestid=42, number=5, masterid=88,
                      builderid=77, buildslaveid=13, state_string="test",
@@ -53,7 +55,7 @@ class Tests(interfaces.InterfaceTests):
                      builderid=88, buildslaveid=13, state_string="test",
                      started_at=TIME2),
         fakedb.Build(id=52, buildrequestid=42, number=7, masterid=88,
-                     builderid=77, buildslaveid=13, state_string="test",
+                     builderid=77, buildslaveid=12, state_string="test",
                      started_at=TIME3, complete_at=TIME4, results=5),
     ]
 
@@ -69,7 +71,7 @@ class Tests(interfaces.InterfaceTests):
              'complete_at': None, 'state_string': 'test',
              'results': None},
         52: {'id': 52, 'buildrequestid': 42, 'builderid': 77,
-             'masterid': 88, 'number': 7, 'buildslaveid': 13,
+             'masterid': 88, 'number': 7, 'buildslaveid': 12,
              'started_at': epoch2datetime(TIME3),
              'complete_at': epoch2datetime(TIME4),
              'state_string': 'test',
@@ -90,7 +92,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuilds(self):
         @self.assertArgSpecMatches(self.db.builds.getBuilds)
-        def getBuilds(self, builderid=None, buildrequestid=None, complete=None):
+        def getBuilds(self, builderid=None, buildrequestid=None, buildslaveid=None, complete=None):
             pass
 
     def test_signature_addBuild(self):
@@ -170,6 +172,15 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'builddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[50], self.threeBdicts[52]])
+
+    @defer.inlineCallbacks
+    def test_getBuilds_buildslaveid(self):
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(buildslaveid=13)
+        for bdict in bdicts:
+            validation.verifyDbDict(self, 'builddict', bdict)
+        self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
+                         [self.threeBdicts[50], self.threeBdicts[51]])
 
     @defer.inlineCallbacks
     def test_getBuilds_complete(self):

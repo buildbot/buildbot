@@ -96,7 +96,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          buildrequestid=82, number=3),
             fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
                          buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=13,
+            fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=12,
                          buildrequestid=83, number=5, complete_at=1),
         ])
 
@@ -119,6 +119,12 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_buildrequest(self):
         builds = yield self.callGet(('buildrequests', 82, 'builds'))
+        [self.validateData(build) for build in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
+    def test_get_buildslave(self):
+        builds = yield self.callGet(('buildslaves', 13, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
@@ -199,7 +205,8 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_event(addBuild,
                                   builderid=10, buildrequestid=13, buildslaveid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
-                                              (('builds', '100', 'new'), self.new_build_event)])
+                                              (('builds', '100', 'new'), self.new_build_event),
+                                              (('buildslaves', '20', 'builds', '100', 'new'), self.new_build_event)])
 
     def test_signature_setBuildStateString(self):
         @self.assertArgSpecMatches(
