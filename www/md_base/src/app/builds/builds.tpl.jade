@@ -1,4 +1,4 @@
-div.menu
+div.menu(ng-if="builds.showMenu()")
   div.grid-menu
     md-button.menu-item.no-select(
       ui-sref="builds.masters",
@@ -35,7 +35,7 @@ div.menu
         | No builders has been configured yet.
       div.menu-item.no-select(
         layout="row",
-        ng-repeat="builder in builds.builders|filter:builds.builder_filter",
+        ng-repeat="builder in builds.builders|filter:builds.builderFilter",
         ng-class="{highlighted: builds.isHighlighted('builds.builder', {builderid: builder.builderid})}"
       )
         div(flex)
@@ -44,6 +44,9 @@ div.menu
             span.tag(ng-repeat="tag in builder.tags") {{tag}}
         div.builder-id \#{{ builder.builderid }}
 
+md-select.select-menu(ng-model="builds.selectedOption", placeholder="Choose something to view", ng-if="!builds.showMenu()")
+  md-option(ng-value="opt.value", ng-repeat="opt in builds.selectOptions") {{ opt.title }}
+
 md-content.sub-content(flex, ui-view="")
   div.placeholder
-    | Choose something to view at the panel left.
+    | Choose something to view

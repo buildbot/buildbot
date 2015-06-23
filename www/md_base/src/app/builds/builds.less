@@ -1,12 +1,12 @@
 .builds {
-  -webkit-flex-direction: row;
-  -ms-flex-direction: row;
-  flex-direction: row;
-
   display: -webkit-flex;
   display: -moz-flex;
   display: -ms-flexbox;
   display: flex;
+
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
 
   padding: 0px !important;
 
@@ -116,11 +116,30 @@
     }
   }
 
+  .select-menu {
+    display: block;
+    background: white;
+    padding: 0;
+    text-align: center;
+
+    md-select-label {
+      padding: 10px 0 !important;
+    }
+  }
+
   .sub-content {
     .placeholder {
       text-align: center;
       color: #999;
       margin-top: 50px;
     }
+  }
+
+  @media (max-width: 600px) {
+
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+
   }
 }
