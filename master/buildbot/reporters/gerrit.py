@@ -356,13 +356,15 @@ class GerritStatusPush(service.BuildbotService):
 
         # Gerrit + Git
         if getProperty(build, "event.change.id") is not None:  # used only to verify Gerrit source
-            project = getProperty(build, "project")
+            project = getProperty(build, "event.change.project")
+            codebase = getProperty(build, "codebase")
             revision = getProperty(build, "got_revision") or build.getProperty("revision")
 
-            # review doesn't really work with multiple revisions, so let's
-            # just assume it's None there
             if isinstance(revision, dict):
                 revision = None
+                # in case of the revision is a codebase revision, we just take the revisionfor current codebase
+                if codebase is not None:
+                    revision = revision[codebase]
 
             if project is not None and revision is not None:
                 self.sendCodeReview(project, revision, result)
