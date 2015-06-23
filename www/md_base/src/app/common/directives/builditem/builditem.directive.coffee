@@ -19,5 +19,5 @@ class _BuildItem extends Controller
         if @outBuilder
             @builder = outBuilder
         else if @showBuilder
-            dataService.getBuilders(@build.builderid).then (builders) =>
+            dataService.getBuilders(@build.builderid, subscribe: false).then (builders) =>
                 @builder = builders[0]
