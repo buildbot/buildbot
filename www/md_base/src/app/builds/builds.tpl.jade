@@ -1,35 +1,17 @@
-div.menu(ng-if="builds.showMenu()")
+div.menu(ng-if="builds.showSideMenu()")
   div.grid-menu
     md-button.menu-item.no-select(
-      ui-sref="builds.masters",
-      ng-class="{highlighted: builds.isHighlighted('builds.masters')}"
+      ng-click="builds.gotoMenuItem(item.value)",
+      ng-class="{highlighted: builds.isHighlighted(item.value)}",
+      ng-repeat="item in builds.menuItems"
     )
-      md-icon(md-svg-icon="wand")
-      span.title Masters
-      div.md-ripple-container
-    md-button.menu-item.no-select(
-      ui-sref="builds.slaves",
-      ng-class="{highlighted: builds.isHighlighted('builds.slaves')}"
-    )
-      md-icon(md-svg-icon="hammer")
-      span.title Slaves
-    md-button.menu-item.no-select(
-      ui-sref="builds.schedulers",
-      ng-class="{highlighted: builds.isHighlighted('builds.schedulers')}"
-    )
-      md-icon(md-svg-icon="clock")
-      span.title Schedulers
-    md-button.menu-item.no-select(
-      ui-sref="builds.changes",
-      ng-class="{highlighted: builds.isHighlighted('builds.changes')}"
-    )
-      md-icon(md-svg-icon="changes")
-      span.title Latest changes
+      md-icon(md-svg-icon="{{ item.icon }}")
+      span.title {{ item.title }}
 
   div.builders-menu
     div.menu-title BUILDERS
     div.search-input
-      input(type="text", placeholder="Filter builders", ng-model="builds.builder_filter")
+      input(type="text", placeholder="Filter builders", ng-model="builds.builderFilter")
     div.builders
       div.no-builder(ng-if="builds.builders.length == 0")
         | No builders has been configured yet.
@@ -39,13 +21,32 @@ div.menu(ng-if="builds.showMenu()")
         ng-class="{highlighted: builds.isHighlighted('builds.builder', {builderid: builder.builderid})}"
       )
         div(flex)
-          a.builder-title(ui-sref="builds.builder({builderid:{{builder.builderid}}})") {{ builder.name }}
+          a.builder-title(ng-click="builds.gotoBuilder(builder)") {{ builder.name }}
           div.tags
-            span.tag(ng-repeat="tag in builder.tags") {{tag}}
+            a.tag(ng-repeat="tag in builder.tags", ng-click="builds.builderFilter = tag") {{tag}}
         div.builder-id \#{{ builder.builderid }}
 
-md-select.select-menu(ng-model="builds.selectedOption", placeholder="Choose something to view", ng-if="!builds.showMenu()")
-  md-option(ng-value="opt.value", ng-repeat="opt in builds.selectOptions") {{ opt.title }}
+md-menu.drop-menu(ng-if="!builds.showSideMenu()")
+  md-button(ng-click="$mdOpenMenu()") navigate to
+  md-menu-content(width="6")
+    md-menu-item(
+      ng-repeat="item in builds.menuItems"
+    )
+      md-button(ng-click="builds.gotoMenuItem(item.value)")
+        md-icon(md-svg-icon="{{ item.icon }}")
+        | {{ item.title }}
+
+    md-menu-divider
+    div.drop-menu-builders
+      div.title BUILDERS
+      div.no-builder(ng-if="builds.builders.length == 0")
+        | No builders has been configured yet.
+
+      md-menu-item(
+        ng-repeat="builder in builds.builders"
+      )
+        md-button(ng-click="builds.gotoBuilder(builder)") {{ builder.name }}
+
 
 md-content.sub-content(flex, ui-view="")
   div.placeholder

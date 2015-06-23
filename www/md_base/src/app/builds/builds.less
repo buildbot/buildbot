@@ -10,6 +10,10 @@
 
   padding: 0px !important;
 
+  a {
+    cursor: pointer;
+  }
+
   .menu {
     width: 260px;
     border-right: 1px solid #dfdfef;
@@ -81,6 +85,7 @@
       }
 
       .builder-title {
+        outline: none;
         color: rgb(103, 58, 183);
         display: block;
         font-size: 20px;
@@ -111,19 +116,9 @@
           border-radius: 3px;
           color: #666;
           background: #ddd;
+          outline: none;
         }
       }
-    }
-  }
-
-  .select-menu {
-    display: block;
-    background: white;
-    padding: 0;
-    text-align: center;
-
-    md-select-label {
-      padding: 10px 0 !important;
     }
   }
 
@@ -135,11 +130,41 @@
     }
   }
 
+  .drop-menu {
+    background: white;
+    text-align: center;
+    padding: 5px;
+
+    button {
+      margin: 0;
+      width: 100%;
+    }
+  }
+
   @media (max-width: 600px) {
 
     -webkit-flex-direction: column;
     -ms-flex-direction: column;
     flex-direction: column;
 
+  }
+}
+
+.drop-menu-builders {
+  max-height: 400px;
+  overflow-y: auto;
+
+  .title {
+    font-size: 12px;
+    font-weight: bold;
+    padding: 5px;
+    color: #999;
+    text-align: center;
+  }
+  .no-builder {
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    padding: 10px;
   }
 }
