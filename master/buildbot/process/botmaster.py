@@ -223,11 +223,10 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.stop()
 
     @defer.inlineCallbacks
-    def removeQueuedBuilds(self, builder_name):
-        builds = yield self.master.db.buildrequests.getBuildRequests(claimed=False, buildername=builder_name)
-        if len(builds):
-            log.msg("removing %d builds from the build queue from the builder %s" % (len(builds), builder_name))
-            for brdict in builds:
+    def removeQueuedBuilds(self, removed_builders):
+        if len(removed_builders):
+            log.msg("removing %d builds from the build queue, the builder(s) was removed" % len(removed_builders))
+            for brdict in removed_builders:
                 br = yield BuildRequest.fromBrdict(self.master, brdict)
                 brc = BuildRequestControl(None, br)
                 yield brc.cancel()
@@ -282,9 +281,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
             queued_builds = yield self.master.db.buildrequests.getBuildRequestInQueue(sorted=True)
             # TODO: if we are running in multimaster mode with multiple instance of katana we need
             # to check for the project key as well
-            builders = set(b["buildername"] for b in queued_builds if b["buildername"] not in new_set)
-            for builder in builders:
-                self.removeQueuedBuilds(builder)
+            removed_builders = [b for b in queued_builds if b["buildername"] not in new_set]
+            self.removeQueuedBuilds(removed_builders)
 
         timer.stop()
 

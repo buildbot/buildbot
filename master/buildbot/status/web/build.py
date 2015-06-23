@@ -30,6 +30,7 @@ from buildbot.status.web.status_json import BuildJsonResource
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
+from buildbot.status.results import RESUME
 
 class ForceBuildActionResource(ActionResource):
 
@@ -152,7 +153,7 @@ class StopBuildChainActionResource(ActionResource):
         brcontrols = yield builderc.getPendingBuildRequestControls(brids=brids)
         for build_req in brcontrols:
             if build_req:
-                build_req.cancel()
+                yield build_req.cancel()
 
         defer.returnValue(len(brcontrols) > 0)
 
@@ -171,7 +172,7 @@ class StopBuildChainActionResource(ActionResource):
                 return
 
             for br in buildchain:
-                if br['number']:
+                if br['number'] and br['results'] != RESUME:
                     buildc = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
                     log.msg("Stopping build chain: buildername: %s, build # %d, brid: %d" %
                             (br['buildername'], br['number'], br['brid']))

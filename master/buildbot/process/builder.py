@@ -662,9 +662,7 @@ class BuilderControl:
     @defer.inlineCallbacks
     def getPendingBuildRequestControls(self, brids=None):
         master = self.original.master
-        brdicts = yield master.db.buildrequests.getBuildRequests(
-                buildername=self.original.name,
-                claimed=False, brids=brids)
+        brdicts = yield master.db.buildrequests.getBuildRequestInQueue(brids=brids, buildername=self.original.name)
 
         # convert those into BuildRequest objects
         buildrequests = [ ]
@@ -674,8 +672,8 @@ class BuilderControl:
             buildrequests.append(br)
 
         # and return the corresponding control objects
-        defer.returnValue([ buildrequest.BuildRequestControl(self.original, r)
-                            for r in buildrequests ])
+        defer.returnValue([buildrequest.BuildRequestControl(self.original, r)
+                            for r in buildrequests])
 
     def getBuild(self, number):
         return self.original.getBuild(number)

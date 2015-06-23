@@ -181,6 +181,9 @@ class BuildRequestStatus:
 
         builds = yield self.getBuilds()
         all_builds = [build.asDict() for build in builds]
-        result['builds'] = sorted(all_builds, key=lambda build: build['number'], reverse=True)
+        sorted_builds = sorted(all_builds, key=lambda build: build['number'], reverse=True)
+        result['builds'] = sorted_builds
+        result['lastBuildNumber'] = sorted_builds[0]['number'] if sorted_builds and len(sorted_builds) > 0 \
+                                                                  and 'number' in sorted_builds[0] else None
 
         defer.returnValue(result)

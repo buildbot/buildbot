@@ -386,7 +386,7 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def getBuildChain(self, brid):
         master = self.builder.botmaster.parent
-        buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(self.requests, brid)
+        buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(self.requests)
         defer.returnValue(buildchain)
 
     def getNextStep(self):

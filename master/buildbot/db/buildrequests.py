@@ -508,7 +508,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     # calculate startbrid
                     triggeredbybrid = self.getStartbrid(conn, reqs_tbl, br)
 
-                q = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.buildername],
+                q = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.results, reqs_tbl.c.buildername],
                       from_obj=reqs_tbl.outerjoin(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)),
                       whereclause=(reqs_tbl.c.triggeredbybrid == triggeredbybrid)  &
                                    (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None))
@@ -517,7 +517,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rows = res.fetchall()
                 if rows:
                     for row in rows:
-                        rv.append(dict(brid=row.id, number=row.number,
+                        rv.append(dict(brid=row.id, results=row.results, number=row.number,
                                    buildername=row.buildername))
                 res.close()
 

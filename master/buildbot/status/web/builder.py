@@ -407,7 +407,7 @@ class CancelChangeResource(ActionResource):
                     res = yield authz.actionAllowed('cancelPendingBuild', req,
                                                                 build_req)
                     if res:
-                        build_req.cancel()
+                        yield build_req.cancel()
                     else:
                         defer.returnValue(path_to_authzfail(req))
                         return
@@ -460,7 +460,7 @@ class StopChangeMixin(object):
                         log.msg("Cancelling %s" % control)
                         res = yield authz.actionAllowed('stopChange', req, control)
                         if (auth_ok or res):
-                            control.cancel()
+                            yield control.cancel()
                         else:
                             defer.returnValue(False)
                             return
