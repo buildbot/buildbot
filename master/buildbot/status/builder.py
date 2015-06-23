@@ -638,6 +638,13 @@ class BuilderStatus(styles.Versioned):
         if useCache and num_builds == 1:
             self.saveLatestBuild(build=None, key=key)
 
+    @defer.inlineCallbacks
+    def cancelBuildOnResume(self, number):
+        build = yield self.deferToThread(number)
+        if build:
+            yield threads.deferToThread(build.cancelYourself())
+
+        defer.returnValue(build)
 
     def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         """This function creates a generator which will provide all of this

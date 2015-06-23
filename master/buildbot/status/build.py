@@ -24,8 +24,7 @@ from twisted.internet import reactor, defer
 from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
-from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED
-from buildbot.status.results import RESUME
+from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED, RESUME, CANCELED
 import time
 
 # Avoid doing an import since it creates circular reference
@@ -489,6 +488,14 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         # have been deleted (e.g., by purge())
         for s in self.steps:
             s.checkLogfiles()
+
+    def cancelYourself(self):
+        self.results = CANCELED
+        self.started = util.now() if self.started is None else self.started
+        self.finished = util.now() if self.finished is None else self.finished
+        self.setText(["Build Canceled"])
+        self.buildFinished()
+        self.saveYourself()
 
     def saveYourself(self):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)

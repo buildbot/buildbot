@@ -24,8 +24,8 @@ from buildbot import interfaces
 from buildbot.process.buildrequest import BuildRequest, BuildRequestControl
 
 # /buildqueue
-from buildbot.status.web.status_json import QueueJsonResource, FilterOut
-
+from buildbot.status.web.status_json import QueueJsonResource
+from buildbot.status.results import RESUME
 
 class BuildQueueResource(HtmlResource):
     pageTitle = "Katana - Build Queue"

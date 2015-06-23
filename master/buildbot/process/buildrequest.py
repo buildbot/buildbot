@@ -19,7 +19,8 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
-from buildbot.status.results import CANCELED, RESUME, EXCEPTION
+from buildbot.status.results import CANCELED, RESUME
+from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.db import buildrequests
 
 class BuildRequest(object):
@@ -271,8 +272,14 @@ class BuildRequestControl:
     def unsubscribe(self, observer):
         raise NotImplementedError
 
+    @defer.inlineCallbacks
     def cancel(self):
         d = self.original_request.cancelBuildRequest()
-        # todo: update the build status to Cancel build so it looks good in the UI
-        # d.addCallback(self.original_builder.updateBuildStatus(self.original_request))
+
+        if self.original_request.results== RESUME:
+            brs = BuildRequestStatus(self.original_builder.name, self.brid, self.original_builder.master.status)
+            brsdict = yield brs.asDict_async()
+            if brsdict['builds'] and len(brsdict['builds']) > 0 and 'number' in brsdict['builds'][0]:
+                d.addCallback(self.original_builder.builder_status.cancelBuildOnResume(brsdict['builds'][0]['number']))
+
         d.addErrback(log.err, 'while cancelling build request')

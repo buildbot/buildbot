@@ -174,19 +174,16 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 res.close()
                 return rv
 
-            pending = sa.select([reqs_tbl, buildset_tbl.c.reason],
-                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
-                          .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id)),
+            pending = sa.select([reqs_tbl],
+                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)),
                           whereclause=((claims_tbl.c.claimed_at == None) &
                                        (reqs_tbl.c.complete == 0)))
 
             pending = checkConditions(pending)
 
-            resume = sa.select([reqs_tbl, buildset_tbl.c.reason],
+            resume = sa.select([reqs_tbl],
                                from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
-                                                      & (claims_tbl.c.objectid == _master_objectid))
-                               .join(buildset_tbl, (reqs_tbl.c.buildsetid == buildset_tbl.c.id))
-                               .join(builds_tbl, ()))\
+                                                      & (claims_tbl.c.objectid == _master_objectid)))\
                 .where(reqs_tbl.c.results == RESUME)\
                 .where(reqs_tbl.c.complete == 1)\
                 .where(reqs_tbl.c.mergebrid == None)

@@ -180,6 +180,7 @@ class BuildRequestStatus:
             result['builderURL'] += getCodebasesArg(request)
 
         builds = yield self.getBuilds()
-        result['builds'] = [ build.asDict() for build in builds ]
+        all_builds = [build.asDict() for build in builds]
+        result['builds'] = sorted(all_builds, key=lambda build: build['number'], reverse=True)
 
         defer.returnValue(result)
