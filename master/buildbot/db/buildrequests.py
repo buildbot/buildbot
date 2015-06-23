@@ -144,8 +144,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
-            buildset_tbl = self.db.model.buildsets
-            builds_tbl = self.db.model.builds
 
             def checkConditions(query):
                 if buildername:
@@ -480,40 +478,34 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getStartbrid(self, conn, reqs_tbl, br):
-            stmt = sa.select([reqs_tbl]).where(reqs_tbl.c.id == br.id)
-            res = conn.execute(stmt)
-            row = res.fetchone()
-
-            startbrid = br.id
-            if row and row.startbrid:
-                startbrid = row.startbrid
-
-            res.close()
-
-            return startbrid
-
-    def getBuildRequestBuildChain(self, requests, brid=None):
+    @with_master_objectid
+    def getBuildRequestBuildChain(self, startbrid, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             builds_tbl = self.db.model.builds
+            claims_tbl = self.db.model.buildrequest_claims
             rv = []
 
-            if len(requests) > 0:
-                br = requests[0]
-
-                triggeredbybrid = brid
-
-                if brid is None:
-                    # calculate startbrid
-                    triggeredbybrid = self.getStartbrid(conn, reqs_tbl, br)
-
-                q = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.results, reqs_tbl.c.buildername],
+            if startbrid:
+                pending = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.results, reqs_tbl.c.buildername],
                       from_obj=reqs_tbl.outerjoin(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)),
-                      whereclause=(reqs_tbl.c.triggeredbybrid == triggeredbybrid)  &
-                                   (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None))
+                      whereclause=(reqs_tbl.c.startbrid == startbrid) &
+                                   (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None))\
+                    .order_by(reqs_tbl.c.submitted_at)
 
-                res = conn.execute(q)
+                resume = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.results, reqs_tbl.c.buildername],
+                                   from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
+                                                      & (claims_tbl.c.objectid == _master_objectid))
+                                   .join(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)))\
+                    .where(reqs_tbl.c.startbrid == startbrid)\
+                    .where(reqs_tbl.c.results == RESUME)\
+                    .where(reqs_tbl.c.complete == 1)\
+                    .where(reqs_tbl.c.mergebrid == None)\
+                    .order_by(reqs_tbl.c.submitted_at)
+
+                buildrequests = pending.alias('pending').select().union_all(resume.alias('resume').select())
+
+                res = conn.execute(buildrequests)
                 rows = res.fetchall()
                 if rows:
                     for row in rows:

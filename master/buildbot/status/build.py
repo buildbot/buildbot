@@ -490,12 +490,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             s.checkLogfiles()
 
     def cancelYourself(self):
-        self.results = CANCELED
-        self.started = util.now() if self.started is None else self.started
-        self.finished = util.now() if self.finished is None else self.finished
-        self.setText(["Build Canceled"])
-        self.buildFinished()
-        self.saveYourself()
+        if not self.isFinished():
+            self.results = CANCELED
+            self.started = util.now() if self.started is None else self.started
+            self.finished = util.now() if self.finished is None else self.finished
+            self.setText(["Build Canceled"])
+            self.buildFinished()
+            self.saveYourself()
 
     def saveYourself(self):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)

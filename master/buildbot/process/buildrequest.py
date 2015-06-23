@@ -280,6 +280,7 @@ class BuildRequestControl:
             brs = BuildRequestStatus(self.original_builder.name, self.brid, self.original_builder.master.status)
             brsdict = yield brs.asDict_async()
             if 'lastBuildNumber' in brsdict and brsdict['lastBuildNumber']:
-                d.addCallback(self.original_builder.builder_status.cancelBuildOnResume(brsdict['lastBuildNumber']))
+                d.addCallback(lambda _:
+                              self.original_builder.builder_status.cancelBuildOnResume(brsdict['lastBuildNumber']))
 
         d.addErrback(log.err, 'while cancelling build request')

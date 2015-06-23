@@ -158,16 +158,15 @@ class StopBuildChainActionResource(ActionResource):
         defer.returnValue(len(brcontrols) > 0)
 
     @defer.inlineCallbacks
-    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None, retry=0):
+    def stopEntireBuildChain(self, master, build, buildername, reason, retry=0):
 
         if build:
-
             if retry > 3:
                 log.msg("Giving up after 3 times retry, stop build chain: buildername: %s, build # %d" %
                             (buildername, build.build_status.number))
                 return
 
-            buildchain = yield build.getBuildChain(brid)
+            buildchain = yield build.getBuildChain()
             if len(buildchain) < 1:
                 return
 
@@ -176,8 +175,6 @@ class StopBuildChainActionResource(ActionResource):
                     buildc = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
                     log.msg("Stopping build chain: buildername: %s, build # %d, brid: %d" %
                             (br['buildername'], br['number'], br['brid']))
-                    # stop dependencies subtree
-                    yield self.stopEntireBuildChain(master, buildc, br['buildername'], reason, br['brid'])
                 else:
                     # the build was still on the queue
                     canceledrequests = yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
@@ -191,12 +188,12 @@ class StopBuildChainActionResource(ActionResource):
                             (br['buildername'], br['brid']))
 
             # the build chain should be empty by now, will retry any builds that changed state
-            buildchain = yield build.getBuildChain(brid)
+            buildchain = yield build.getBuildChain()
             if len(buildchain) > 0:
                 retry += 1
                 log.msg("Retry #%d stop build chain: buildername: %s, build # %d" %
                             (retry, buildername, build.build_status.number))
-                yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
+                yield self.stopEntireBuildChain(master, build, buildername, reason, retry)
 
 
     @defer.inlineCallbacks
