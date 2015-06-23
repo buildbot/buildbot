@@ -17,7 +17,6 @@
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #
-from __future__ import with_statement
 from subprocess import Popen, PIPE, STDOUT
 import os
 import re
