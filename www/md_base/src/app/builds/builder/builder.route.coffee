@@ -12,4 +12,4 @@ class State extends Config
             name: name
             url: "/builder/:builderid"
             data:
-                title: 'Builds / Builder'
+                title: 'Builder'
