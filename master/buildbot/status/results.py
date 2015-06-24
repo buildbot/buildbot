@@ -17,6 +17,8 @@ SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT, DE
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled", "not_rebuilt",
            "dependency_failure", "resume"]
 
+BEGINNING = -1
+
 def worst_status(a, b):
     # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY
     # Retry needs to be considered the worst so that conusmers don't have to

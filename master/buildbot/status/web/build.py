@@ -30,7 +30,7 @@ from buildbot.status.web.status_json import BuildJsonResource
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
-from buildbot.status.results import RESUME
+from buildbot.status.results import RESUME, EXCEPTION
 
 class ForceBuildActionResource(ActionResource):
 
@@ -334,7 +334,7 @@ class StatusResourceBuild(HtmlResource):
             getUrls = s.getURLs().items()
             for k,v in s.getURLs().items():
                 if isinstance(v, dict):
-                    if 'results' in v.keys():
+                    if 'results' in v.keys() and v['results'] in css_classes:
                         url_dict = dict(logname=k, url=v['url'] + codebases_arg, results=css_classes[v['results']])
                     else:
                         url_dict = dict(logname=k, url=v['url'] + codebases_arg)

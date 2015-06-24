@@ -489,7 +489,10 @@ class Builder(config.ReconfigurableServiceMixin,
             self._resubmit_buildreqs(build).addErrback(log.err)
         else:
             db = self.master.db
-            d = db.buildrequests.completeBuildRequests(brids, results)
+            if results == RESUME:
+                d = db.buildrequests.updateBuildRequests(brids, results=results)
+            else:
+                d = db.buildrequests.completeBuildRequests(brids, results)
             d.addCallback(
                 lambda _ : self._maybeBuildsetsComplete(build.requests, results=results))
             # nothing in particular to do with this deferred, so just log it if

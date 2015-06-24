@@ -23,10 +23,10 @@ from twisted.application import service
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.db.buildrequests import AlreadyClaimedError
-from buildbot.status.results import RESUME
-
+from buildbot.status.results import RESUME, BEGINNING
 
 import random
+
 
 class BuildChooserBase(object):
     #
@@ -499,7 +499,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         # since the status is not in the db
         # TODO: cached this information
         brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed="mine", complete=1, results=RESUME, exclude_merged=True)
+                        buildername=self.bldr.name, claimed="mine", results=RESUME, exclude_merged=True)
 
         if not brdicts:
             defer.returnValue(None)
@@ -810,13 +810,13 @@ class BuildRequestDistributor(service.Service):
             return
 
         brids = [br.id for br in breqs]
-        yield self.master.db.buildrequests.updateBuildRequests(brids)
+        yield self.master.db.buildrequests.updateBuildRequests(brids, results=BEGINNING)
 
         buildStarted = yield bldr.maybeResumeBuild(slave, buildnumber, breqs)
 
         if not buildStarted:
             bc.slavepool = bldr.getAvailableSlaves()
-            yield self.master.db.buildrequests.updateBuildRequests(brids, complete=1, results=RESUME)
+            yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
 
         defer.returnValue(buildStarted)
 

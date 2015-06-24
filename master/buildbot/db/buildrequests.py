@@ -140,7 +140,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     # TODO: pass the current masterobject id to the selection filter
     @with_master_objectid
-    def getBuildRequestInQueue(self, brids=None, buildername=None, _master_objectid=None, sorted=False, limit=False):
+    def getBuildRequestInQueue(self, brids=None, buildername=None,
+                               _master_objectid=None, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -183,7 +184,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
                                                       & (claims_tbl.c.objectid == _master_objectid)))\
                 .where(reqs_tbl.c.results == RESUME)\
-                .where(reqs_tbl.c.complete == 1)\
                 .where(reqs_tbl.c.mergebrid == None)
 
             resume = checkConditions(resume)
@@ -625,7 +625,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    def updateBuildRequests(self, brids, results=-1, complete=0):
+    def updateBuildRequests(self, brids, results=None, complete=None):
         def thd(conn):
 
             transaction = conn.begin()
@@ -640,9 +640,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if not batch:
                     break # success!
 
-                q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(batch))\
-                    .values(complete=complete)\
-                    .values(results=results)
+                q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(batch))
+
+                if results:
+                    q = q.values(results=results)
+
+                if complete:
+                    q = q.values(complete=complete)
 
                 if complete == 0:
                     q = q.values(complete_at=None)
