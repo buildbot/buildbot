@@ -94,6 +94,7 @@ class BuilderStatus(styles.Versioned):
         self.pendingBuildsCache = None
         self.tags = []
         self.loadingBuilds = {}
+        self.cancelBuilds = {}
 
 
     # persistence
@@ -144,6 +145,7 @@ class BuilderStatus(styles.Versioned):
         self.watchers = []
         self.slavenames = []
         self.loadingBuilds = {}
+        self.cancelBuilds = {}
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
         # self.master must be filled in by our parent
@@ -638,11 +640,27 @@ class BuilderStatus(styles.Versioned):
         if useCache and num_builds == 1:
             self.saveLatestBuild(build=None, key=key)
 
+    def buildCanceled(self, _, buildnumber):
+        self.cancelBuilds[buildnumber]['access'] -= 1
+        if not self.cancelBuilds[buildnumber]['access']:
+            del self.cancelBuilds[buildnumber]
+
+    def cancelBuildFromThread(self, build):
+        if build.number not in self.cancelBuilds:
+            d = threads.deferToThread(build.cancelYourself)
+            d.addCallback(self.buildCanceled, build.number)
+            self.cancelBuilds[build.number] = {'defer': d, 'access': 1}
+            return
+
+        if self.cancelBuilds[build.number]['defer']:
+            self.cancelBuilds[build.number]['access'] += 1
+
     @defer.inlineCallbacks
     def cancelBuildOnResume(self, number):
         build = yield self.deferToThread(number)
         if build:
-            yield threads.deferToThread(build.cancelYourself())
+            self.cancelBuildFromThread(build)
+            yield self.cancelBuilds[build.number]['defer']
 
         defer.returnValue(build)
 
