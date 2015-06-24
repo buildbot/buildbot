@@ -17,9 +17,14 @@
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #
-from subprocess import Popen, PIPE, STDOUT
+from __future__ import with_statement
+
 import os
 import re
+
+from subprocess import PIPE
+from subprocess import Popen
+from subprocess import STDOUT
 
 
 def getVersion(init_file):
