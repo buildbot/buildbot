@@ -8,40 +8,45 @@
       | None
     table.table.table-hover.table-striped.table-condensed(ng-show='buildrequests.length>0')
       tr
-        td #
-        td Submitted At
-        td Owner
+        td(width='100px') #
+        td(width='150px') Submitted At
+        td(width='150px') Owner
         td Properties
       tr(ng-repeat='br in buildrequests | orderBy:"-submitted_at"', ng-if="br.claimed==false" )
-          td(width='20px')
-              | {{ br.buildrequestid }}
-          td(width='50px')
+          td
+            a(ui-sref="buildrequest({buildrequest:br.buildrequestid})")
+              span.badge-status(ng-class="results2class(br, 'pulse')")
+                  .badge-inactive {{br.buildrequestid}}
+                  .badge-active {{results2text(br)}}
+          td
             span(title="{{br.submitted_at | dateformat:'LLL'}}")
               | {{br.submitted_at | timeago }}
-          td(width='50px')
-          td(width='50px')
+          td
+          td
+  .row
     h4 Builds:
     span(ng-hide='builds.length>0')
       | None
     table.table.table-hover.table-striped.table-condensed(ng-show='builds.length>0')
       tr
-        td #
-        td Started At
-        td Duration
-        td Owner
+        td(width='100px') #
+        td(width='150px') Started At
+        td(width='150px') Duration
+        td(width='200px') Owner
         td Status
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
-          td(width='20px')
+          td
             a(ui-sref="build({builder:builder.builderid, build:build.number})")
               span.badge-status(ng-class="results2class(build, 'pulse')")
-                | {{ build.number }}
-          td(width='150px')
+                  .badge-inactive {{build.number}}
+                  .badge-active {{results2text(build)}}
+          td
             span(title="{{build.started_at | dateformat:'LLL'}}")
               | {{build.started_at | timeago }}
-          td(width='150px')
+          td
             span(ng-show="build.complete", title="{{(build.complete_at - build.started_at)| durationformat:'LLL' }}")
               | {{(build.complete_at - build.started_at)| duration }}
-          td(width='200px')
+          td
           td
             ul.list-inline
               li
