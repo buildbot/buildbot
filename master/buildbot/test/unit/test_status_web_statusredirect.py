@@ -61,7 +61,7 @@ class TestRedirectStatusResource(unittest.TestCase):
             redirectstatus.RedirectStatusResource(status))
 
         self.assertEqual(self.request.redirected_to,
-                         "/builders/TestBuilder/builds/2")
+                         "/waterfall")
 
     @inlineCallbacks
     def testReturnWaterfallRedirectOnNoDataGiven(self):

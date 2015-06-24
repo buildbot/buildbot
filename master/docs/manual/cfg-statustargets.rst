@@ -287,7 +287,7 @@ The table below lists all of the internal pages and the URLs that can be used to
     This provides a redirection to the latest build by a given revision. It's best used with the ``/png`` view to provide a link to the build.
 
 :samp:`/redirect?revision=${REVHASH}&builder=${BUILDERNAME}`
-    This will return a redirection to the build specified by the $REVHASH on the given builder $BUILDERNAME. $BUILDERNAME is optional, if it's not specified all builders are searched. Please note that this will return a redirection to the latest build with the revision (for example it can be a force built one).
+    This will return a redirection to the build specified by the $REVHASH on the given builder $BUILDERNAME. If $BUILDERNAME is not defined or the revision is not found it redirects to ``/waterfall``.
 
 ``/users``
     This page exists for authentication reasons when checking ``showUsersPage``.

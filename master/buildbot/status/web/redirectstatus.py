@@ -26,23 +26,17 @@ class RedirectStatusResource(resource.Resource):
         """
         revision = request.args.get("revision", [None])[0]
 
-        builders = request.args.get("builder", [None])
+        builder = request.args.get("builder", [None])[0]
 
-        if revision is not None:
-            all_builders = self.status.getBuilderNames()
-            # easiest way to check if list is in list
-            if not set(builders).issubset(set(all_builders)):
-                builders = all_builders
-
-            for builder in builders:
-                build = self.status.getBuilder(builder).getBuild(0, revision)
-                if build is not None:
-                    number = build.getNumber()
-                    url = "/builders/%(builder)s/builds/%(number)d" % {
-                        'builder': builder,
-                        'number': number,
-                    }
-                    return url
+        if revision and builder in self.status.getBuilderNames():
+            build = self.status.getBuilder(builder).getBuild(0, revision)
+            if build:
+                number = build.getNumber()
+                url = "/builders/%(builder)s/builds/%(number)d" % {
+                    'builder': builder,
+                    'number': number,
+                }
+                return url
         return "/waterfall"
 
     def render(self, request):
