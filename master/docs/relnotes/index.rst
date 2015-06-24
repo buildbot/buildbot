@@ -21,6 +21,9 @@ Features
 
 * :class:`~buildbot.status.github.GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
+* The web UI now supports a Redirect Status Resource. The view produces a
+  redirection to a build specified by revision and builder name.
+
 Fixes
 ~~~~~
 
