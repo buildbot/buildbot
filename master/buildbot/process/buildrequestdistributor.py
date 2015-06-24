@@ -384,7 +384,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             breq = yield self._getBuildRequestForBrdict(b)
             if self.buildRequestHasSelectedSlave(breq):
                 selected_slave = self.getSelectedSlaveFromBuildRequest(breq)
-                if selected_slave is not None and selected_slave.isAvailable():
+                if selected_slave and selected_slave.isAvailable():
                     defer.returnValue(b)
             else:
                 defer.returnValue(b)
@@ -397,7 +397,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         if self.buildRequestHasSelectedSlave(breq):
             slavebuilder = self.getSelectedSlaveFromBuildRequest(breq)
 
-            if slavebuilder.isAvailable() is False:
+            if not slavebuilder or slavebuilder.isAvailable() is False or slavebuilder not in self.slavepool:
                 defer.returnValue(nextBuild)
                 return
 
