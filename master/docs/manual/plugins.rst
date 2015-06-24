@@ -30,8 +30,8 @@ Available ``kind``\s are:
 ``steps``
     build steps, described in :doc:`cfg-buildsteps`
 
-``status``
-    status targets, described in :doc:`cfg-statustargets`
+``reporters``
+    reporters (or reporter targets), described in :doc:`cfg-reporters`
 
 ``util``
     utility classes.
