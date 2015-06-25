@@ -73,7 +73,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
                          bsid=None, _master_objectid=None, brids=None,
-                         branch=None, repository=None, results=None, exclude_merged=False):
+                         branch=None, repository=None, results=None, mergebrid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -123,8 +123,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if results is not None:
                 q = q.where(reqs_tbl.c.results == results)
 
-            if exclude_merged:
+            if mergebrid == "exclude":
                 q = q.where(reqs_tbl.c.mergebrid == None)
+
+            elif mergebrid is not None:
+                q = q.where(reqs_tbl.c.mergebrid == mergebrid)
 
             if branch is not None:
               q = q.where(sstamps_tbls.c.branch == branch)
@@ -138,7 +141,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
-    # TODO: pass the current masterobject id to the selection filter
     @with_master_objectid
     def getBuildRequestInQueue(self, brids=None, buildername=None,
                                _master_objectid=None, sorted=False, limit=False):
@@ -624,6 +626,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
         return self.db.pool.do(thd)
+
+    # consider merged buildrequest from resume builds
+    # TODO:
+    def cancelBuildRequests(self, brid):
+        def thd(conn):
+            print "cancel request here"
+        return self.db.pool.do(thd)
+
 
     def updateBuildRequests(self, brids, results=None, complete=None):
         def thd(conn):

@@ -95,7 +95,7 @@ class BuildChooserBase(object):
         
         if self.unclaimedBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed=False)         
+                        buildername=self.bldr.name, claimed=False)
             # sort by submitted_at, so the first is the oldest
             brdicts.sort(key=lambda brd : brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
@@ -439,6 +439,14 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
+    def getMergedBuildRequests(self, breq):
+        brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
+                                                                      mergebrid=breq.id)
+        merged_breqs = yield defer.gatherResults([self._getBuildRequestForBrdict(brdict)
+                                                  for brdict in brdicts])
+        defer.returnValue([breq] + merged_breqs)
+
+    @defer.inlineCallbacks
     def chooseNextBuildToResume(self):
         slave, breq = yield self.popNextBuildToResume()
 
@@ -448,9 +456,9 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
 
-        # TODO: maybe try merging with pending build requests
+        breqs = yield self.getMergedBuildRequests(breq)
 
-        defer.returnValue((slave, buildnumber, [breq]))
+        defer.returnValue((slave, buildnumber, breqs))
 
     @defer.inlineCallbacks
     def chooseNextBuild(self):
@@ -499,7 +507,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         # since the status is not in the db
         # TODO: cached this information
         brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed="mine", results=RESUME, exclude_merged=True)
+                        buildername=self.bldr.name, claimed="mine", results=RESUME, mergebrid="exclude")
 
         if not brdicts:
             defer.returnValue(None)
@@ -829,7 +837,7 @@ class BuildRequestDistributor(service.Service):
             return
 
         # claim brid's
-        brids = [ br.id for br in breqs ]
+        brids = [br.id for br in breqs]
         yield bc.claimBuildRequests(breqs)
 
         buildStarted = yield bldr.maybeStartBuild(slave, breqs)
