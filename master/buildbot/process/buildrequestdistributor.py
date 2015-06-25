@@ -52,6 +52,7 @@ class BuildChooserBase(object):
         self.master = master
         self.breqCache = {}
         self.unclaimedBrdicts = None
+        self.resumeBrdicts = None
 
 
     @defer.inlineCallbacks
@@ -215,8 +216,6 @@ class BasicBuildChooser(BuildChooserBase):
             self._unpopSlaves(recycledSlaves)
 
         defer.returnValue(slave)
-
-
         
     @defer.inlineCallbacks
     def popNextBuild(self):
@@ -502,18 +501,25 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(False)
 
     @defer.inlineCallbacks
-    def _getNextBuildToResume(self):
+    def _fetchResumeBrdicts(self):
         # we need to resume builds that are claimed by this master
         # since the status is not in the db
-        # TODO: cached this information
-        brdicts = yield self.master.db.buildrequests.getBuildRequests(
+        if self.resumeBrdicts is None:
+            brdicts = yield self.master.db.buildrequests.getBuildRequests(
                         buildername=self.bldr.name, claimed="mine", results=RESUME, mergebrid="exclude")
+            brdicts.sort(key=lambda brd : brd['submitted_at'])
+            self.resumeBrdicts = brdicts
+        defer.returnValue(self.resumeBrdicts)
 
-        if not brdicts:
+    @defer.inlineCallbacks
+    def _getNextBuildToResume(self):
+        yield self._fetchResumeBrdicts()
+
+        if not self.resumeBrdicts:
             defer.returnValue(None)
             return
 
-        brdict = brdicts[0]
+        brdict = yield self._chooseBuild(self.resumeBrdicts)
         nextBreq = yield self._getBuildRequestForBrdict(brdict)
         defer.returnValue(nextBreq)
 
@@ -825,6 +831,7 @@ class BuildRequestDistributor(service.Service):
         if not buildStarted:
             bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
+            self.botmaster.maybeStartBuildsForBuilder(self.name)
 
         defer.returnValue(buildStarted)
 
@@ -843,8 +850,8 @@ class BuildRequestDistributor(service.Service):
         buildStarted = yield bldr.maybeStartBuild(slave, breqs)
 
         if not buildStarted:
+            bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
-
             # and try starting builds again.  If we still have a working slave,
             # then this may re-claim the same buildrequests
             self.botmaster.maybeStartBuildsForBuilder(self.name)
@@ -858,16 +865,10 @@ class BuildRequestDistributor(service.Service):
 
         bc = self.createBuildChooser(bldr, self.master)
 
-        resume_builds = isinstance(bc, KatanaBuildChooser)
-        new_builds = True
-
         while 1:
             try:
-                if resume_builds: # check resumebuildrequest
-                    resume_builds = yield self._maybeResumeBuildOnBuilder(bc, bldr)
-
-                if new_builds: # check unclaimedbuildrequests
-                    new_builds = yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
+                resume_builds = yield self._maybeResumeBuildOnBuilder(bc, bldr)
+                new_builds = yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
 
             except AlreadyClaimedError:
                 bc = self.createBuildChooser(bldr, self.master)
