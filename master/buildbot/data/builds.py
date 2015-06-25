@@ -107,14 +107,6 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
             return self.master.mq.startConsuming(
                 callback,
                 ('builders', str(builderid), 'builds', None, None))
-        elif buildrequestid is not None:
-            # XXX these messages are never produced
-            return self.master.mq.startConsuming(callback,
-                                                 ('buildrequests', str(buildrequestid), 'builds', None))
-        elif buildslaveid is not None:
-            # XXX these messages are never produced
-            return self.master.mq.startConsuming(callback,
-                                                 ('buildslaves', str(buildslaveid), 'builds', None))
         else:
             return self.master.mq.startConsuming(callback,
                                                  ('builds', None, None, None))
