@@ -17,6 +17,7 @@ from buildbot.data import base
 from buildbot.data import types
 from twisted.internet import defer
 
+
 class Db2DataMixin(object):
 
     def db2data(self, dbdict):
