@@ -111,12 +111,12 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
     def test_constructor_083_tac(self):
         # invocation as made from default 083 tac files
         bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                       umask=0123, maxdelay=10)
+                       umask=0o123, maxdelay=10)
 
     def test_constructor_full(self):
         # invocation with all args
         bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                       umask=0123, maxdelay=10, keepaliveTimeout=10,
+                       umask=0o123, maxdelay=10, keepaliveTimeout=10,
                        unicode_encoding='utf8', allow_shutdown=True)
 
     def test_buildslave_print(self):
@@ -133,7 +133,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         port = self.start_master(persp, on_attachment=call_print)
         self.buildslave = bot.BuildSlave("127.0.0.1", port,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=022)
+                                         keepalive=0, usePTY=False, umask=0o22)
         self.buildslave.startService()
 
         # and wait for the result of the print
@@ -144,7 +144,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
         self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=022)
+                                         keepalive=0, usePTY=False, umask=0o22)
         self.buildslave.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
@@ -157,7 +157,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
         self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=022)
+                                         keepalive=0, usePTY=False, umask=0o22)
         self.buildslave.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
@@ -188,7 +188,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
         self.buildslave = bot.BuildSlave("127.0.0.1", port,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=022)
+                                         keepalive=0, usePTY=False, umask=0o22)
 
         self.buildslave.startService()
 
@@ -204,7 +204,7 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
         buildslave = bot.BuildSlave("127.0.0.1", 1234,
                                     "testy", "westy", self.basedir,
-                                    keepalive=0, usePTY=False, umask=022,
+                                    keepalive=0, usePTY=False, umask=0o22,
                                     allow_shutdown='file')
 
         # Mock out gracefulShutdown

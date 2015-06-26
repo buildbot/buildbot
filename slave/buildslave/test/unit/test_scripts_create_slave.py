@@ -241,7 +241,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
         self.open.assert_has_calls([mock.call(tac_file_path, "rt"),
                                     mock.call(tac_file_path + ".new", "wt")])
         self.fileobj.write.assert_called_once_with("new-tac-contents")
-        self.chmod.assert_called_once_with(tac_file_path + ".new", 0600)
+        self.chmod.assert_called_once_with(tac_file_path + ".new", 0o600)
 
         # check output to the log
         if quiet:
@@ -279,7 +279,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
         tac_file_path = os.path.join("bdir", "buildbot.tac")
         self.open.assert_called_once_with(tac_file_path, "wt")
         self.fileobj.write.assert_called_once_with("test-tac-contents")
-        self.chmod.assert_called_once_with(tac_file_path, 0600)
+        self.chmod.assert_called_once_with(tac_file_path, 0o600)
 
 
 class TestMakeInfoFiles(misc.LoggingMixin,

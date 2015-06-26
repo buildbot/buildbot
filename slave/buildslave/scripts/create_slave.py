@@ -132,7 +132,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         f = open(tacfile, "wt")
         f.write(tac_file_contents)
         f.close()
-        os.chmod(tacfile, 0600)
+        os.chmod(tacfile, 0o600)
     except IOError as exception:
         raise CreateSlaveError("could not write %s: %s" %
                                (tacfile, exception.strerror))
