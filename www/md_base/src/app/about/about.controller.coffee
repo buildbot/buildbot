@@ -8,12 +8,12 @@ class About extends Controller
     processSpecs: (specs) ->
         return ({path: spec.path, fields: @fieldsToData(spec.type_spec.fields)} for spec in specs)
 
-    constructor: (config, buildbotService) ->
+    constructor: (config, restService) ->
         @projectInfo =
             'Project Name': config.title
             'Project URL': config.titleURL
         @versions = config.versions
         @config = config
         @specs = []
-        buildbotService.all('application.spec').getList().then (specs) =>
-            @specs = @processSpecs(specs)
+        restService.get('application.spec').then (data) =>
+            @specs = @processSpecs(data.specs)
