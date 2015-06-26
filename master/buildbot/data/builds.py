@@ -100,18 +100,6 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue(
             [(yield self.db2data(dbdict)) for dbdict in builds])
 
-    def startConsuming(self, callback, options, kwargs):
-        builderid = kwargs.get('builderid')
-        buildrequestid = kwargs.get('buildrequestid')
-        buildslaveid = kwargs.get('buildslaveid')
-        if builderid is not None:
-            return self.master.mq.startConsuming(
-                callback,
-                ('builders', str(builderid), 'builds', None, None))
-        else:
-            return self.master.mq.startConsuming(callback,
-                                                 ('builds', None, None, None))
-
 
 class Build(base.ResourceType):
 
