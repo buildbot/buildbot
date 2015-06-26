@@ -391,6 +391,16 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(None)
 
     @defer.inlineCallbacks
+    def _chooseBuildRequest(self, buildrequests):
+        nextBreq = None
+
+        brdict = yield self._chooseBuild(buildrequests)
+
+        if brdict:
+            nextBreq = yield self._getBuildRequestForBrdict(brdict)
+        defer.returnValue(nextBreq)
+
+    @defer.inlineCallbacks
     def buildHasSelectedSlave(self, breq):
         nextBuild = (None, None)
         if self.buildRequestHasSelectedSlave(breq):
@@ -432,8 +442,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                 nextBreq = None
         else:
             # otherwise just return the first build
-            brdict = yield self._chooseBuild(self.unclaimedBrdicts)
-            nextBreq = yield self._getBuildRequestForBrdict(brdict)
+            nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts)
 
         defer.returnValue(nextBreq)
 
@@ -478,7 +487,7 @@ class KatanaBuildChooser(BasicBuildChooser):
     # notify the master that the buildrequests were removed from queue
     def notifyRequestsRemoved(self, buildrequests):
         for br in buildrequests:
-            self.master.buildRequestRemoved(br.bsid, br.id, self.name)
+            self.master.buildRequestRemoved(br.bsid, br.id, self.bldr.name)
 
     @defer.inlineCallbacks
     def mergeBuildingRequests(self, brids, breqs):
@@ -519,8 +528,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             defer.returnValue(None)
             return
 
-        brdict = yield self._chooseBuild(self.resumeBrdicts)
-        nextBreq = yield self._getBuildRequestForBrdict(brdict)
+        nextBreq = yield self._chooseBuildRequest(self.resumeBrdicts)
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks

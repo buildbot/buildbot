@@ -236,7 +236,9 @@ class BuildRequest(object):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
 
-        if self.results != RESUME:
+        if self.results == RESUME:
+            yield self.master.db.buildrequests.cancelResumeBuildRequests(self.id)
+        else:
             try:
                 yield self.master.db.buildrequests.claimBuildRequests([self.id])
             except buildrequests.AlreadyClaimedError:
@@ -248,8 +250,6 @@ class BuildRequest(object):
             # references.
             yield self.master.db.buildrequests.completeBuildRequests([self.id],
                                                                     CANCELED)
-        else:
-            yield self.master.db.buildrequests.updateBuildRequests([self.id], complete=1, results=CANCELED)
 
         # and let the master know that the enclosing buildset may be complete
         yield self.master.maybeBuildsetComplete(self.bsid)

@@ -416,6 +416,7 @@ class Builder(config.ReconfigurableServiceMixin,
                 # add build information to merged br
                 for req in build.requests[1:]:
                     bid = yield self.master.db.builds.addBuild(req.id, bs.number)
+                    self.master.status.build_started(req.id, self.name, bs)
                     bids.append(bid)
         except:
             log.err(failure.Failure(), 'while adding rows to build table:')

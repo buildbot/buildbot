@@ -15,11 +15,12 @@
 
 import itertools
 import sqlalchemy as sa
+from sqlalchemy import or_
 from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
-from buildbot.status.results import RESUME
+from buildbot.status.results import RESUME, CANCELED
 
 class AlreadyClaimedError(Exception):
     pass
@@ -627,11 +628,32 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
         return self.db.pool.do(thd)
 
-    # consider merged buildrequest from resume builds
-    # TODO:
-    def cancelBuildRequests(self, brid):
+    def cancelResumeBuildRequests(self, brid):
         def thd(conn):
-            print "cancel request here"
+            buildrequests_tbl = self.db.model.buildrequests
+
+            transaction = conn.begin()
+            try:
+                stmt = sa.select([buildrequests_tbl.c.id])\
+                    .where(or_(buildrequests_tbl.c.id == brid, buildrequests_tbl.c.mergebrid == brid))\
+                    .where(buildrequests_tbl.c.results == RESUME).order_by(buildrequests_tbl.c.id)
+
+                res = conn.execute(stmt)
+                rows = res.fetchall()
+                brids = [row.id for row in rows]
+                res.close()
+
+                if brids:
+                    q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(brids))\
+                        .values(complete=1).values(results=CANCELED)
+
+                    conn.execute(q)
+            except:
+                transaction.rollback()
+                log.msg("build request already started; cannot cancel")
+                return
+
+            transaction.commit()
         return self.db.pool.do(thd)
 
 
@@ -650,7 +672,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if not batch:
                     break # success!
 
-                q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(batch))
+                q = buildrequests_tbl.update()\
+                    .where(buildrequests_tbl.c.id.in_(batch))
 
                 if results:
                     q = q.values(results=results)
