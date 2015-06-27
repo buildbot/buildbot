@@ -12,11 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
-
-from __future__ import with_statement
 # Portions Copyright Canonical Ltd. 2009
-
-"""A LatentSlave that uses EC2 to instantiate the slaves on demand.
+"""
+A LatentSlave that uses EC2 to instantiate the slaves on demand.
 
 Tested with Python boto 1.5c
 """

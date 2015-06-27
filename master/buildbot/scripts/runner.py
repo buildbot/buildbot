@@ -12,15 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
-
+#
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 #
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
-
 import sqlalchemy as sa
 import sys
 
