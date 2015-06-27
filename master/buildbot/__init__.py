@@ -17,9 +17,14 @@
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #
-from subprocess import Popen, PIPE, STDOUT
+from __future__ import with_statement
+
 import os
 import re
+
+from subprocess import PIPE
+from subprocess import Popen
+from subprocess import STDOUT
 
 
 def getVersion(init_file):
@@ -43,7 +48,7 @@ def getVersion(init_file):
 
     # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
     # no matter the number of digits for X, Y and Z
-    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?)(\w|-)*')
+    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?(\w|-)*)')
 
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
