@@ -253,6 +253,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         'descriptionSuffix',
         'doStepIf',
         'hideStepIf',
+        'workdir',
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
