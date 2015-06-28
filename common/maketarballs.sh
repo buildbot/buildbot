@@ -7,7 +7,7 @@ do
   pip install -e ${pkg}
   (
     cd ${pkg}
-    rm -rf dist
+    rm -rf MANIFEST dist
     python setup.py sdist
   )
   cp ${pkg}/dist/* dist/
