@@ -229,7 +229,6 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
             #  2. pick a slave
-            #slave = yield self._pickUpSlave(breq)
             slave = yield self._popNextSlave()
             if not slave:
                 break
@@ -365,6 +364,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         """
         Does the build request have a specified slave?
         """
+
         return breq.properties.hasProperty("selected_slave")
 
 
@@ -837,7 +837,7 @@ class BuildRequestDistributor(service.Service):
         buildStarted = yield bldr.maybeResumeBuild(slave, buildnumber, breqs)
 
         if not buildStarted:
-            bc.slavepool = bldr.getAvailableSlaves()
+            bc.resumeslaves = bldr.getAvailableSlavesToResume()
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 

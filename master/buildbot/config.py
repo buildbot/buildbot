@@ -672,7 +672,7 @@ class ProjectConfig:
 
 class BuilderConfig:
 
-    def __init__(self, name=None, slavename=None, slavenames=None,
+    def __init__(self, name=None, slavename=None, startSlavenames=None, slavenames=None,
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
             properties=None, mergeRequests=None, project=None, friendly_name=None, tags=[], description=None,
@@ -718,6 +718,18 @@ class BuilderConfig:
             error("builder '%s': at least one slavename is required" % (name,))
 
         self.slavenames = slavenames
+
+        if startSlavenames:
+            if not isinstance(startSlavenames, list):
+                error("builder '%s': startSlavenames must be a list" %
+                        (name,))
+
+            for sn in startSlavenames:
+                if sn in self.slavenames:
+                    error("builder '%s': startSlavenames must not contain slaves from slavenames list" % (name,))
+
+            self.startSlavenames = startSlavenames
+            self.slavenames.extend(self.startSlavenames)
 
         if not project:
             error(
@@ -786,6 +798,9 @@ class BuilderConfig:
             rv['mergeRequests'] = self.mergeRequests
         if self.description:
             rv['description'] = self.description
+        if self.startSlavenames:
+            rv['startSlavenames'] = self.startSlavenames
+
         return rv
 
 

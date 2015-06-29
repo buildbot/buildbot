@@ -144,6 +144,7 @@ class BuilderStatus(styles.Versioned):
         self.currentBuilds = []
         self.watchers = []
         self.slavenames = []
+        self.startSlavenames = []
         self.loadingBuilds = {}
         self.cancelBuilds = {}
         # self.basedir must be filled in by our parent
@@ -736,6 +737,9 @@ class BuilderStatus(styles.Versioned):
     def setSlavenames(self, names):
         self.slavenames = names
 
+    def setStartSlavenames(self, names):
+        self.startSlavenames = names
+
     def addEvent(self, text=[]):
         # this adds a duration event. When it is done, the user should call
         # e.finish(). They can also mangle it by modifying .text
@@ -927,6 +931,7 @@ class BuilderStatus(styles.Versioned):
         result['description'] = self.getDescription()
         result['project'] = self.project
         result['slaves'] = self.slavenames
+        result['startSlavenames '] = self.startSlavenames
         result['tags'] = self.tags
 
         # TODO(maruel): Add cache settings? Do we care?

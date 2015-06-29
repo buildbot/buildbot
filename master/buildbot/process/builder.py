@@ -66,6 +66,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.slaves = []
+        self.startSlaves = []
 
         self.config = None
         self.builder_status = None
@@ -101,6 +102,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
+        self.builder_status.setStartSlavenames(self.config.startself.config.slavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
         self.builder_status.setProject(builder_config.project)
         self.builder_status.setFriendlyName(builder_config.friendly_name)
@@ -157,6 +159,21 @@ class Builder(config.ReconfigurableServiceMixin,
                 return b
         return None
 
+    def isStartSlave(self, sb):
+        return self.startSlavenames and sb.slave.slavename in self.config.startSlavenames
+
+    def removeSlaveBuilder(self, sb):
+        if self.isStartSlave(sb):
+            self.startSlaves.append(sb)
+        else:
+            self.slaves.remove(sb)
+
+    def addSlaveBuilder(self, sb):
+        if self.isStartSlave(sb):
+            self.startSlaves.append(sb)
+        else:
+            self.slaves.append(sb)
+
     def addLatentSlave(self, slave):
         assert interfaces.ILatentBuildSlave.providedBy(slave)
         for s in self.slaves:
@@ -166,7 +183,7 @@ class Builder(config.ReconfigurableServiceMixin,
             sb = slavebuilder.LatentSlaveBuilder(slave, self)
             self.builder_status.addPointEvent(
                 ['added', 'latent', slave.slavename])
-            self.slaves.append(sb)
+            self.addSlaveBuilder(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
     def attached(self, slave, remote, commands):
@@ -210,7 +227,7 @@ class Builder(config.ReconfigurableServiceMixin,
     def _attached(self, sb):
         self.builder_status.addPointEvent(['connect', sb.slave.slavename])
         self.attaching_slaves.remove(sb)
-        self.slaves.append(sb)
+        self.addSlaveBuilder(sb)
 
         self.updateBigStatus()
 
@@ -246,7 +263,7 @@ class Builder(config.ReconfigurableServiceMixin,
         if sb in self.attaching_slaves:
             self.attaching_slaves.remove(sb)
         if sb in self.slaves:
-            self.slaves.remove(sb)
+            self.removeSlaveBuilder(sb)
 
         self.builder_status.addPointEvent(['disconnect', slave.slavename])
         sb.detached() # inform the SlaveBuilder that their slave went away
@@ -266,7 +283,15 @@ class Builder(config.ReconfigurableServiceMixin,
         except Exception:
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
+    def getAvailableSlavesToResume(self):
+        return [sb for sb in self.slaves
+                if sb.isAvailable()]
+
     def getAvailableSlaves(self):
+        if self.config.startSlavenames:
+            return [sb for sb in self.startSlaves
+                    if sb.isAvailable()]
+
         return [sb for sb in self.slaves
                 if sb.isAvailable()]
 
@@ -295,7 +320,6 @@ class Builder(config.ReconfigurableServiceMixin,
 
         build_started = yield self._startBuildFor(slavebuilder, breqs, build_status)
         defer.returnValue(build_started)
-        #defer.returnValue(False)
 
     @defer.inlineCallbacks
     def _startBuildFor(self, slavebuilder, buildrequests, build_status=None):
