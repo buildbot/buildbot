@@ -188,7 +188,9 @@ class Builder(config.ReconfigurableServiceMixin,
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
     def getAllSlaves(self):
-        return self.slaves + self.startSlaves
+        if self.startSlaves:
+            return self.slaves + self.startSlaves
+        return self.slaves
 
     def attached(self, slave, remote, commands):
         """This is invoked by the BuildSlave when the self.slavename bot

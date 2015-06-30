@@ -980,7 +980,7 @@ class SlaveJsonResource(JsonResource):
             # Figure out all the builders to which it's attached
             self.builders = []
             for builderName in self.status.getBuilderNames():
-                if self.name in self.status.getBuilder(builderName).slavenames:
+                if self.name in self.status.getBuilder(builderName).getAllSlaveNames():
                     builder_status = self.status.getBuilder(builderName)
                     builderDict = {'name': builderName, 'friendly_name': builder_status.getFriendlyName(),
                            'url': self.status.getURLForThing(builder_status)}

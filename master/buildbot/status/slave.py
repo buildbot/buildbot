@@ -123,7 +123,7 @@ class SlaveStatus:
         my_builders = []
         for bname in status.getBuilderNames():
             b = status.getBuilder(bname)
-            for bs in b.getSlaves():
+            for bs in b.getAllSlaves():
                 if bs.getName() == self.name:
                     my_builders.append(b)
 

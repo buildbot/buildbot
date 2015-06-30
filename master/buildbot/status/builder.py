@@ -351,9 +351,15 @@ class BuilderStatus(styles.Versioned):
         return (self.currentBigState, self.currentBuilds)
 
     def getAllSlaveNames(self):
-        return self.slavenames + self.startSlavenames
+        if self.startSlavenames:
+            return self.slavenames + self.startSlavenames
+
+        return self.slavenames
 
     def getSlaves(self):
+        return [self.status.getSlave(name) for name in self.slavenames]
+
+    def getAllSlaves(self):
         return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
