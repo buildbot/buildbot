@@ -120,7 +120,7 @@ gulp.task 'proxy', ['processindex'], ->
         console.log "[Proxy] #{req.method} #{req.url}"
 
     server = http.createServer (req, res) ->
-        if req.url.match /^\/(api|sse)/
+        if req.url.match /^\/(api|sse|avatar)/
             proxy.web req, res, {target: 'http://' + argv.host}
         else
             filepath = config.dir.build + req.url.split('?')[0]
