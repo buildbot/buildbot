@@ -7,7 +7,7 @@ md-list.master-list
     div.master-title(flex)
       h3 {{ master.name}}
       p(ng-if="master.last_active > 0") Last active at 
-        span(am-time-ago="master.last_active", am-preprocess="unix")
+        span(am-time-ago="master.last_active")
       p(ng-if="master.last_active == 0") Never been active.
     div.master-state
       span.active(ng-if="master.active") Active

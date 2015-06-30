@@ -3,4 +3,4 @@ div.inner(layout="row")
   span.builder-name(ng-if="builditem.showBuilder") {{ builditem.builder.name }}
   span.number(flex) \#{{ builditem.build.number }}
   span.status-text {{ builditem.build.state_string }}
-  span.time(am-time-ago="builditem.build.started_at", am-preprocess="unix")
+  span.time(am-time-ago="builditem.build.started_at")
