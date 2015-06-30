@@ -300,6 +300,9 @@ def path_to_json_slave_builds(request, slaveName):
 def path_to_json_builder_slaves(builderName):
     return "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
 
+def path_to_json_builder_startslaves(builderName):
+    return "json/builders/{0}/startslaves".format(urllib.quote(builderName, safe=''))
+
 def path_to_json_build(status, request, builderName, buildID):
     return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)
 

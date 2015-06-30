@@ -420,6 +420,8 @@ class BuilderJsonResource(JsonResource):
         self.putChild('builds', BuildsJsonResource(status, builder_status))
         self.putChild('slaves', BuilderSlavesJsonResources(status,
                                                            builder_status))
+        self.putChild('startslaves', BuilderStartSlavesJsonResources(status,
+                                                           builder_status))
         self.putChild(
             'pendingBuilds',
             BuilderPendingBuildsJsonResource(status, builder_status))
@@ -455,6 +457,25 @@ class BuilderSlavesJsonResources(JsonResource):
                           SlaveJsonResource(status,
                                             self.status.getSlave(slave_name)))
 
+class BuilderStartSlavesJsonResources(JsonResource):
+    help = """Describe the start slaves attached to a single builder.
+"""
+    pageTitle = 'BuilderStartSlaves'
+
+    def __init__(self, status, builder_status):
+        JsonResource.__init__(self, status)
+        self.builder_status = builder_status
+        if self.builder_status.startSlavenames:
+            for slave_name in self.builder_status.startSlavenames:
+                self.putChild(slave_name,
+                          SlaveJsonResource(status,
+                                            self.status.getSlave(slave_name)))
+
+    def asDict(self, request):
+        """Don't throw an exception when there is no child."""
+        if not self.children:
+            return {}
+        return JsonResource.asDict(self, request)
 
 class BuildJsonResource(JsonResource):
     help = """Describe a single build.

@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 import json
-from buildbot.status.web.status_json import SingleProjectJsonResource, SingleProjectBuilderJsonResource, SinglePendingBuildsJsonResource, PastBuildsJsonResource, FilterOut, \
-    BuilderSlavesJsonResources
+from buildbot.status.web.status_json import SingleProjectJsonResource, SingleProjectBuilderJsonResource, \
+    SinglePendingBuildsJsonResource, PastBuildsJsonResource, FilterOut, \
+    BuilderSlavesJsonResources, BuilderStartSlavesJsonResources
 
 from twisted.web import html
 import urllib, time
@@ -22,11 +23,11 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_buildqueue, path_to_codebases, path_to_slave, path_to_builder, path_to_builders, path_to_change, \
-    path_to_root, ICurrentBox, build_get_class, getCodebasesArg, \
-    map_branches, path_to_authzfail, ActionResource, \
-    getRequestCharset, path_to_json_builders, path_to_json_pending, path_to_json_project_builder, path_to_json_past_builds, path_to_json_slaves, \
-    path_to_json_builder_slaves
+    path_to_build, path_to_buildqueue, path_to_codebases, path_to_builder, path_to_builders, \
+    path_to_root, getCodebasesArg, \
+    path_to_authzfail, ActionResource, \
+    getRequestCharset, path_to_json_builders, path_to_json_pending, path_to_json_project_builder, \
+    path_to_json_past_builds, path_to_json_builder_slaves, path_to_json_builder_startslaves
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import ValidationError
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
@@ -258,6 +259,24 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     def getPageTitle(self, request):
         return "Katana - %s" % self.builder_status.getFriendlyName()
 
+    def getSlavesJsonResource(self, filters, url, slaves_dict):
+        if not slaves_dict:
+            return {}
+
+        slaves_dict = FilterOut(slaves_dict)
+
+        if "sources" in filters:
+            del filters["sources"]
+
+        return {"url": url, "data": json.dumps(slaves_dict, separators=(',', ':')),
+                "waitForPush": self.status.master.config.autobahn_push,
+                "pushFilters": {"buildStarted": filters,
+                                "buildFinished": filters,
+                                "stepStarted": filters,
+                                "stepFinished": filters,
+                                "slaveConnected": filters,
+                                "slaveDisconnected": filters,}}
+
     @defer.inlineCallbacks
     def content(self, req, cxt):
         b = self.builder_status
@@ -339,21 +358,14 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         slaves = BuilderSlavesJsonResources(self.status, self.builder_status)
         slaves_dict = yield slaves.asDict(req)
-        slaves_dict = FilterOut(slaves_dict)
         url = self.status.getBuildbotURL() + path_to_json_builder_slaves(self.builder_status.getName()) + "?filter=1"
+        cxt['instant_json']["slaves"] = self.getSlavesJsonResource(filters, url, slaves_dict)
 
-        del filters["sources"]
-
-        cxt['instant_json']["slaves"] = {"url": url, "data": json.dumps(slaves_dict, separators=(',', ':')),
-                                         "waitForPush": self.status.master.config.autobahn_push,
-                                         "pushFilters": {
-                                             "buildStarted": filters,
-                                             "buildFinished": filters,
-                                             "stepStarted": filters,
-                                             "stepFinished": filters,
-                                             "slaveConnected": filters,
-                                             "slaveDisconnected": filters,
-                                         }}
+        startslaves = BuilderStartSlavesJsonResources(self.status, self.builder_status)
+        startslaves_dict = yield startslaves.asDict(req)
+        url = self.status.getBuildbotURL() + \
+              path_to_json_builder_startslaves(self.builder_status.getName()) + "?filter=1"
+        cxt['instant_json']["start_slaves"] = self.getSlavesJsonResource(filters, url, startslaves_dict)
 
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
