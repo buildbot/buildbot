@@ -123,17 +123,20 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
+    def slaveInBuilder(self, slavename, builder):
+        return (slavename in builder.config.slavenames) or \
+               (builder.config.startSlavenames and slavename in builder.config.startSlavenames)
+
     @metrics.countMethod('BotMaster.slaveLost()')
     def slaveLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
         for name, b in self.builders.items():
-            if bot.slavename in b.config.slavenames:
+            if self.slaveInBuilder(bot.slavename, b):
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
-        return [ b for b in self.builders.values()
-                 if slavename in b.config.slavenames ]
+        return [b for b in self.builders.values() if self.slaveInBuilder(slavename, b)]
 
     def getBuildernames(self):
         return self.builderNames

@@ -186,6 +186,7 @@ class BasicBuildChooser(BuildChooserBase):
             self.nextSlave = lambda _,slaves: random.choice(slaves) if slaves else None
             
         self.slavepool = self.bldr.getAvailableSlaves()
+        self.resumeSlavePool = self.bldr.getAvailableSlavesToResume()
 
         # Pick slaves one at a time from the pool, and if the Builder says 
         # they're usable (eg, locks can be satisfied), then prefer those slaves; 
@@ -837,7 +838,7 @@ class BuildRequestDistributor(service.Service):
         buildStarted = yield bldr.maybeResumeBuild(slave, buildnumber, breqs)
 
         if not buildStarted:
-            bc.resumeslaves = bldr.getAvailableSlavesToResume()
+            bc.resumeSlavePool = bldr.getAvailableSlavesToResume()
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 

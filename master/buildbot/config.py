@@ -729,7 +729,8 @@ class BuilderConfig:
                     error("builder '%s': startSlavenames must not contain slaves from slavenames list" % (name,))
 
             self.startSlavenames = startSlavenames
-            self.slavenames.extend(self.startSlavenames)
+        else:
+            self.startSlavenames = None
 
         if not project:
             error(

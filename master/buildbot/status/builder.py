@@ -78,6 +78,7 @@ class BuilderStatus(styles.Versioned):
         self.friendly_name = friendly_name
 
         self.slavenames = []
+        self.startSlavenames = []
         self.events = []
         # these three hold Events, and are used to retrieve the current
         # state of the boxes.
@@ -349,8 +350,11 @@ class BuilderStatus(styles.Versioned):
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 
+    def getAllSlaveNames(self):
+        return self.slavenames + self.startSlavenames
+
     def getSlaves(self):
-        return [self.status.getSlave(name) for name in self.slavenames]
+        return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self):

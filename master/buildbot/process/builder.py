@@ -102,7 +102,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
-        self.builder_status.setStartSlavenames(self.config.startself.config.slavenames)
+        self.builder_status.setStartSlavenames(self.config.startSlavenames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
         self.builder_status.setProject(builder_config.project)
         self.builder_status.setFriendlyName(builder_config.friendly_name)
@@ -160,12 +160,13 @@ class Builder(config.ReconfigurableServiceMixin,
         return None
 
     def isStartSlave(self, sb):
-        return self.startSlavenames and sb.slave.slavename in self.config.startSlavenames
+        return self.config.startSlavenames and sb.slave.slavename in self.config.startSlavenames
 
     def removeSlaveBuilder(self, sb):
-        if self.isStartSlave(sb):
-            self.startSlaves.append(sb)
-        else:
+        if sb in self.startSlaves:
+            self.startSlaves.remove(sb)
+
+        if sb in self.slaves:
             self.slaves.remove(sb)
 
     def addSlaveBuilder(self, sb):
@@ -186,6 +187,9 @@ class Builder(config.ReconfigurableServiceMixin,
             self.addSlaveBuilder(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
+    def getAllSlaves(self):
+        return self.slaves + self.startSlaves
+
     def attached(self, slave, remote, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
@@ -201,7 +205,7 @@ class Builder(config.ReconfigurableServiceMixin,
         @return: a Deferred that fires (with 'self') when the slave-side
                  builder is fully attached and ready to accept commands.
         """
-        for s in self.attaching_slaves + self.slaves:
+        for s in self.attaching_slaves + self.getAllSlaves():
             if s.slave == slave:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
@@ -244,7 +248,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
     def detached(self, slave):
         """This is called when the connection to the bot is lost."""
-        for sb in self.attaching_slaves + self.slaves:
+        for sb in self.attaching_slaves + self.getAllSlaves():
             if sb.slave == slave:
                 break
         else:
@@ -252,7 +256,7 @@ class Builder(config.ReconfigurableServiceMixin,
                     " not in attaching_slaves(%s)"
                     " or slaves(%s)" % (slave, slave.slavename,
                                         self.attaching_slaves,
-                                        self.slaves))
+                                        self.getAllSlaves()))
             return
         if sb.state == BUILDING:
             # the Build's .lostRemote method (invoked by a notifyOnDisconnect
@@ -262,8 +266,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
         if sb in self.attaching_slaves:
             self.attaching_slaves.remove(sb)
-        if sb in self.slaves:
-            self.removeSlaveBuilder(sb)
+
+        self.removeSlaveBuilder(sb)
 
         self.builder_status.addPointEvent(['disconnect', slave.slavename])
         sb.detached() # inform the SlaveBuilder that their slave went away
