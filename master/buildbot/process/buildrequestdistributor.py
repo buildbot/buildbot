@@ -119,29 +119,35 @@ class BuildChooserBase(object):
                 self.breqCache[brdict['brid']] = breq
         defer.returnValue(breq)
 
-    def _getBrdictForBuildRequest(self, breq):
+    def _getBrdictForBuildRequest(self, breq, pendingBrdicts=None):
         # Turn a BuildRequest back into a brdict. This operates from the 
         # cache, which must be set up once via _fetchUnclaimedBrdicts
 
         if breq is None:
             return None
+
+        if not pendingBrdicts:
+            pendingBrdicts = self.unclaimedBrdicts
         
         brid = breq.id
-        for brdict in self.unclaimedBrdicts:
+        for brdict in pendingBrdicts:
             if brid == brdict['brid']:
                 return brdict
         return None
 
-    def _removeBuildRequest(self, breq):
+    def _removeBuildRequest(self, breq, pendingBrdicts=None):
         # Remove a BuildrRequest object (and its brdict)
         # from the caches
 
         if breq is None:
             return
+
+        if not pendingBrdicts:
+            pendingBrdicts = self.unclaimedBrdicts
         
-        brdict = self._getBrdictForBuildRequest(breq)
-        if brdict is not None:
-            self.unclaimedBrdicts.remove(brdict)
+        brdict = self._getBrdictForBuildRequest(breq, pendingBrdicts)
+        if brdict is not None and brdict in pendingBrdicts:
+            pendingBrdicts.remove(brdict)
 
         if breq.id in self.breqCache:
             del self.breqCache[breq.id]
@@ -186,7 +192,6 @@ class BasicBuildChooser(BuildChooserBase):
             self.nextSlave = lambda _,slaves: random.choice(slaves) if slaves else None
             
         self.slavepool = self.bldr.getAvailableSlaves()
-        self.resumeSlavePool = self.bldr.getAvailableSlavesToResume()
 
         # Pick slaves one at a time from the pool, and if the Builder says 
         # they're usable (eg, locks can be satisfied), then prefer those slaves; 
@@ -200,7 +205,8 @@ class BasicBuildChooser(BuildChooserBase):
         self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
 
     @defer.inlineCallbacks
-    def _pickUpSlave(self, slave, breq):
+    def _pickUpSlave(self, slave, breq, slavepool=None):
+
         #  3. make sure slave+ is usable for the breq
         recycledSlaves = []
         while slave:
@@ -209,7 +215,7 @@ class BasicBuildChooser(BuildChooserBase):
                 break
             # try a different slave
             recycledSlaves.append(slave)
-            slave = yield self._popNextSlave()
+            slave = yield self._popNextSlave(slavepool)
 
         # recycle the slaves that we didnt use to the head of the queue
         # this helps ensure we run 'nextSlave' only once per slave choice
@@ -292,24 +298,27 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
-    def _popNextSlave(self):
+    def _popNextSlave(self, slavepool=None):
         # use 'preferred' slaves first, if we have some ready
+        if not slavepool:
+            slavepool = self.slavepool
+
         if self.preferredSlaves:
             slave = self.preferredSlaves.pop(0)
             defer.returnValue(slave)
             return
         
-        while self.slavepool:
+        while slavepool:
             try:
-                slave = yield self.nextSlave(self.bldr, self.slavepool)
+                slave = yield self.nextSlave(self.bldr, slavepool)
             except Exception:
                 slave = None
             
-            if not slave or slave not in self.slavepool:
+            if not slave or slave not in slavepool:
                 # bad slave or no slave returned
                 break
 
-            self.slavepool.remove(slave)
+            slavepool.remove(slave)
             
             canStart = yield self.bldr.canStartWithSlavebuilder(slave)
             if canStart:
@@ -339,6 +348,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
     def __init__(self, bldr, master):
         BasicBuildChooser.__init__(self, bldr, master)
+        self.resumeSlavePool = self.bldr.getAvailableSlavesToResume()
 
     @defer.inlineCallbacks
     def claimBuildRequests(self, breqs):
@@ -402,16 +412,16 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
-    def buildHasSelectedSlave(self, breq):
+    def buildHasSelectedSlave(self, breq, slavepool):
         nextBuild = (None, None)
         if self.buildRequestHasSelectedSlave(breq):
             slavebuilder = self.getSelectedSlaveFromBuildRequest(breq)
 
-            if not slavebuilder or slavebuilder.isAvailable() is False or slavebuilder not in self.slavepool:
+            if not slavebuilder or slavebuilder.isAvailable() is False or slavebuilder not in slavepool:
                 defer.returnValue(nextBuild)
                 return
 
-            self.slavepool.remove(slavebuilder)
+            slavepool.remove(slavebuilder)
 
             canStart = yield self.bldr.canStartWithSlavebuilder(slavebuilder)
             if canStart:
@@ -466,6 +476,8 @@ class KatanaBuildChooser(BasicBuildChooser):
         buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
 
         breqs = yield self.getMergedBuildRequests(breq)
+        for b in breqs:
+            self._removeBuildRequest(b, self.resumeBrdicts)
 
         defer.returnValue((slave, buildnumber, breqs))
 
@@ -544,24 +556,23 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         # run the build on a specific slave
         if  self.buildRequestHasSelectedSlave(breq):
-            nextBuild = yield self.buildHasSelectedSlave(breq)
+            nextBuild = yield self.buildHasSelectedSlave(breq, self.resumeSlavePool)
             defer.returnValue(nextBuild)
             return
 
         #  2. pick a slave
-        slave = yield self._popNextSlave()
+        slave = yield self._popNextSlave(self.resumeSlavePool)
 
         if not slave:
             defer.returnValue(nextBuild)
             return
 
         # 3. make sure slave is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq)
+        slave = yield self._pickUpSlave(slave, breq, self.resumeSlavePool)
         if slave:
             nextBuild = (slave, breq)
 
         defer.returnValue(nextBuild)
-
 
     @defer.inlineCallbacks
     def popNextBuild(self):
@@ -623,8 +634,8 @@ class KatanaBuildChooser(BasicBuildChooser):
                     return
 
         # run the build on a specific slave
-        if  self.buildRequestHasSelectedSlave(breq):
-            nextBuild = yield self.buildHasSelectedSlave(breq)
+        if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
+            nextBuild = yield self.buildHasSelectedSlave(breq, self.slavepool)
             defer.returnValue(nextBuild)
             return
 

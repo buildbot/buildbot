@@ -192,6 +192,9 @@ class Builder(config.ReconfigurableServiceMixin,
             return self.slaves + self.startSlaves
         return self.slaves
 
+    def shouldUseSelectedSlave(self):
+        return not self.config.startSlavenames
+
     def attached(self, slave, remote, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
