@@ -24,7 +24,7 @@ describe 'buildstatus', ->
         icon = elem.children().eq(0)
 
         # unknown status
-        expect(icon.attr('md-svg-icon')).toBe('build-pending')
+        expect(icon.attr('md-svg-icon')).toBe('pending')
         expect(icon.hasClass('unknown')).toBe(true)
         expect(icon.hasClass('pending')).toBe(false)
         for _, text of RESULTS_TEXT
@@ -33,7 +33,7 @@ describe 'buildstatus', ->
         # pending status
         $rootScope.build.started_at = (new Date()).valueOf()
         $rootScope.$digest()
-        expect(icon.attr('md-svg-icon')).toBe('build-pending')
+        expect(icon.attr('md-svg-icon')).toBe('pending')
         expect(icon.hasClass('unknown')).toBe(false)
         expect(icon.hasClass('pending')).toBe(true)
         for _, text of RESULTS_TEXT
@@ -43,7 +43,7 @@ describe 'buildstatus', ->
         $rootScope.build.complete = true
         $rootScope.build.results = 0
         $rootScope.$digest()
-        expect(icon.attr('md-svg-icon')).toBe('build-success')
+        expect(icon.attr('md-svg-icon')).toBe('checkmark')
         expect(icon.hasClass('unknown')).toBe(false)
         expect(icon.hasClass('pending')).toBe(false)
         for code, text of RESULTS_TEXT
@@ -53,7 +53,7 @@ describe 'buildstatus', ->
         for i in [1..6]
             $rootScope.build.results = i
             $rootScope.$digest()
-            expect(icon.attr('md-svg-icon')).toBe('build-fail')
+            expect(icon.attr('md-svg-icon')).toBe('crossmark')
             expect(icon.hasClass('unknown')).toBe(false)
             expect(icon.hasClass('pending')).toBe(false)
             for code, text of RESULTS_TEXT
