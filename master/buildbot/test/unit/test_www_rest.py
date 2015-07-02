@@ -641,7 +641,8 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
                 'jsonrpc': '2.0',
                 'result': {
                     'action': 'testy',
-                    'args': {'foo': 3, 'bar': 5},
+                    'args': {'foo': 3, 'bar': 5,
+                             'owner': 'anonymous'},
                     'kwargs': {'testid': 13},
                 },
             },
@@ -658,7 +659,9 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
                 'jsonrpc': '2.0',
                 'result': {
                     'action': 'testy',
-                    'args': {'foo': 3, 'bar': 5},
+                    'args': {'foo': 3, 'bar': 5,
+                             'owner': 'anonymous',
+                             },
                     'kwargs': {'testid': 13},
                 },
             },

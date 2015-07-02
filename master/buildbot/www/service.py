@@ -57,8 +57,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         www = new_config.www
 
-        self.authz = www['authz']
-        self.authz.setMaster(self.master)
+        self.authz = www.get('authz')
+        if self.authz is not None:
+            self.authz.setMaster(self.master)
         need_new_site = False
         if self.site:
             # if config params have changed, set need_new_site to True.
@@ -241,10 +242,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getUserInfos(self, request):
         session = request.getSession()
-        if hasattr(session, "user_info"):
-            return session.user_info
-        else:
-            return {"anonymous": True}
+        return getattr(session, "user_info", {"anonymous": True})
 
     def assertUserAllowed(self, request, ep, action, options):
         user_info = self.getUserInfos(request)

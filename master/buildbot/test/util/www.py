@@ -119,6 +119,7 @@ class WwwTestMixin(RequiresWwwMixin):
         master = fakemaster.make_master(wantData=True, testcase=self)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
+        master.www.getUserInfos = lambda _: getattr(self.master.session, "user_info", {"anonymous": True})
         cfg = dict(port=None, auth=auth.NoAuth(), authz=authz.Authz())
         cfg.update(kwargs)
         master.config.www = cfg
