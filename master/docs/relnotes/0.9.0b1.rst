@@ -146,6 +146,10 @@ See respective documentation for details.
 
 * :class:`~buildbot.status.github.GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
+* Buildbot UI introduces branch new Authentication, and Authorizations framework.
+
+    Please look at their respective guide in :ref:`WWW`
+
 Fixes
 ~~~~~
 
