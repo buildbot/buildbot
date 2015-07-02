@@ -375,7 +375,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
         #check slave is still available
-        ready = slavebuilder in self.getAvailableSlaves()
+        ready = slavebuilder.isAvailable()
         if ready:
             try:
                 ready = yield slavebuilder.prepare(self.builder_status, build)

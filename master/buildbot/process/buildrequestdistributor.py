@@ -126,7 +126,7 @@ class BuildChooserBase(object):
         if breq is None:
             return None
 
-        if not pendingBrdicts:
+        if pendingBrdicts is None:
             pendingBrdicts = self.unclaimedBrdicts
         
         brid = breq.id
@@ -142,7 +142,7 @@ class BuildChooserBase(object):
         if breq is None:
             return
 
-        if not pendingBrdicts:
+        if pendingBrdicts is None:
             pendingBrdicts = self.unclaimedBrdicts
         
         brdict = self._getBrdictForBuildRequest(breq, pendingBrdicts)
@@ -300,7 +300,7 @@ class BasicBuildChooser(BuildChooserBase):
     @defer.inlineCallbacks
     def _popNextSlave(self, slavepool=None):
         # use 'preferred' slaves first, if we have some ready
-        if not slavepool:
+        if slavepool is None:
             slavepool = self.slavepool
 
         if self.preferredSlaves:
