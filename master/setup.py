@@ -336,7 +336,7 @@ setup_args = {
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth']),
             ('buildbot.db.dbconfig', [
-                'DbConfig'])
+                'DbConfig']),
             ('buildbot.www.authz', [
                 'Authz', 'fnmatchStrMatcher', 'reStrMatcher']),
             ('buildbot.www.authz.endpointmatchers', [
