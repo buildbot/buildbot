@@ -467,7 +467,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     name = "generic"
     locks = []
-    releaseLockInstanse = None
+    releaseLockInstance = None
     progressMetrics = () # 'time' is implicit
     useProgress = True # set to False if step is really unpredictable
     build = None
@@ -665,8 +665,8 @@ class BuildStep(object, properties.PropertiesMixin):
             if lock.isOwner(self, access):
                 lock.release(self, access)
             else:
-                if self.releaseLockInstanse:
-                    lock.release(self.releaseLockInstanse, access)
+                if self.releaseLockInstance:
+                    lock.release(self.releaseLockInstance, access)
                 else:
                     # This should only happen if we've been interrupted
                     assert self.stopped

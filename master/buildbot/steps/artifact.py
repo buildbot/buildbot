@@ -359,7 +359,6 @@ class DownloadArtifact(ShellCommand):
         self.setCommand(command)
         ShellCommand.start(self)
 
-from buildbot import locks
 
 class AcquireBuildLocks(LoggingBuildStep):
     name = "Acquire Build Slave"
@@ -367,10 +366,7 @@ class AcquireBuildLocks(LoggingBuildStep):
     descriptionDone="Build slave acquired."
 
     def __init__(self, hideStepIf = True, locks=None, **kwargs):
-        self.initialLocks = locks
-        self.locksAvailable = False
         LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, locks=locks, **kwargs)
-
 
     def start(self):
         self.step_status.setText(["Acquiring build slave to complete build."])
@@ -382,45 +378,12 @@ class AcquireBuildLocks(LoggingBuildStep):
         if self.build.builder.builder_status.currentBigState == "idle":
             self.build.builder.builder_status.setBigState("building")
 
-        self.build.releaseLockInstanse = self
+        self.build.releaseLockInstance = self
         self.finished(SUCCESS)
         return
 
     def releaseLocks(self):
         return
-
-    def checkLocksAvailable(self, currentLocks):
-        for lock, access in currentLocks:
-            if not lock.isAvailable(self, access):
-                return False
-        return True
-
-    def setupSlaveBuilder(self, ping_success, slavebuilder):
-        # if not available builder we probably need to wait until we can get another builder
-        if ping_success:
-            self.build.setupSlaveBuilder(slavebuilder)
-
-    def findAvailableSlaveBuilder(self):
-        d = defer.succeed(None)
-        slavebuilder = None
-        if not self.locksAvailable and len(self.build.builder.getAvailableSlaves()) > 0:
-            # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
-            slavebuilder = random.choice(self.build.builder.getAvailableSlaves())
-
-        if slavebuilder is not None:
-            d = slavebuilder.ping()
-            d.addCallback(self.setupSlaveBuilder, slavebuilder)
-        return d
-
-    def startStep(self, remote):
-        currentLocks =  self.setStepLocks(self.initialLocks)
-        # TODO: there seems to be an issue when switching slaves 
-        #self.locksAvailable = self.checkLocksAvailable(currentLocks)
-
-        #d = self.findAvailableSlaveBuilder()
-        #d.addCallback((lambda _: super(LoggingBuildStep, self).startStep(remote)))
-        #return d
-        return super(LoggingBuildStep, self).startStep(remote)
 
 
 class ReleaseBuildLocks(LoggingBuildStep):
@@ -428,14 +391,14 @@ class ReleaseBuildLocks(LoggingBuildStep):
     description="Releasing builder locks..."
     descriptionDone="Build locks released."
 
-    def __init__(self, hideStepIf = True, **kwargs):
-        self.releaseLockInstanse
+    def __init__(self, hideStepIf=True, **kwargs):
+        self.releaseLockInstance = None
         LoggingBuildStep.__init__(self, hideStepIf=hideStepIf, **kwargs)
 
     def start(self):
         self.step_status.setText(["Releasing build locks."])
         self.locks = self.build.locks
-        self.releaseLockInstanse = self.build.releaseLockInstanse
+        self.releaseLockInstance = self.build.releaseLockInstance
         # release slave lock
         self.build.slavebuilder.state = IDLE
         self.build.builder.builder_status.setBigState("idle")
