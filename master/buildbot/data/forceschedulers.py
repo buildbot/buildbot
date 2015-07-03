@@ -54,8 +54,9 @@ class ForceSchedulerEndpoint(base.Endpoint):
     def control(self, action, args, kwargs):
         if action == "force":
             sched = yield self.findForceScheduler(kwargs['schedulername'])
+            if "owner" not in args:
+                args['owner'] = "user"
             try:
-                print args
                 res = yield sched.force(**args)
                 defer.returnValue(res)
             except forcesched.CollectedValidationError as e:
