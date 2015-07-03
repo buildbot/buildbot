@@ -9,7 +9,9 @@ Implementations (such as a trivial json-based endpoint and a GitHub implementati
 The format of the url is :samp:`/change_hook/{DIALECT}` where DIALECT is a package within the hooks directory.
 Change_hook is disabled by default and each DIALECT has to be enabled separately, for security reasons
 
-An example www configuration line which enables change_hook and two DIALECTS::
+An example www configuration line which enables change_hook and two DIALECTS:
+
+.. code-block:: python
 
     c['www'] = dict(
         change_hook_dialects={
@@ -77,7 +79,9 @@ The parameters are:
 
 :guilabel:`Secret`
     Any value.
-    If you provide a non-empty value (recommended), make sure that your hook is configured to use it::
+    If you provide a non-empty value (recommended), make sure that your hook is configured to use it:
+
+.. code-block:: python
 
         c['www'] = dict(
             ...,
@@ -99,7 +103,9 @@ And then press the ``Add Webhook`` button.
     The incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web server can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you either specify a secret, or you should use ``change_hook_auth`` option::
+To protect URL against unauthorized access you either specify a secret, or you should use ``change_hook_auth`` option:
+
+.. code-block:: python
 
     c['www'] = dict(...,
           change_hook_auth=["file:changehook.passwd"]))
@@ -123,7 +129,7 @@ BitBucket hook
 
 The BitBucket hook is as simple as GitHub one and it also takes no options.
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={ 'bitbucket' : True }))
@@ -142,7 +148,7 @@ This script may be useful in cases where you cannot expose the WebStatus for pub
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option.
 
-::
+.. code-block:: python
 
   c['www'] = dict(...,
         change_hook_auth=["file:changehook.passwd"]))
@@ -234,7 +240,7 @@ These parameters will be passed along to the scheduler.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option.
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_auth=["file:changehook.passwd"]
@@ -265,7 +271,7 @@ For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then po
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option.
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_auth=["file:changehook.passwd"]
