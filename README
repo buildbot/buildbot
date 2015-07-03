@@ -9,6 +9,8 @@ engine and content creation tool -- would not exist.
 Katana can be set up much like a normal Buildbot instance, but more detailed
 instructions and examples are in-progress.
 
+For now, start here: https://github.com/Unity-Technologies/katana/wiki
+
 Katana Maintainers List w/ Contact Info:
 
     Maria Marcano
