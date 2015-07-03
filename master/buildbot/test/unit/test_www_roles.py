@@ -1,8 +1,9 @@
-from twisted.trial import unittest
 from buildbot.www.authz import roles
+from twisted.trial import unittest
 
 
 class RolesFromGroups(unittest.TestCase):
+
     def setUp(self):
         self.roles = roles.RolesFromGroups("buildbot-")
 
@@ -25,6 +26,7 @@ class RolesFromGroups(unittest.TestCase):
 
 
 class RolesFromEmails(unittest.TestCase):
+
     def setUp(self):
         self.roles = roles.RolesFromEmails(employee=["homer@plant.com", "burns@plant.com"], boss=["burns@plant.com"])
 
@@ -45,6 +47,7 @@ class RolesFromEmails(unittest.TestCase):
 
 
 class RolesFromOwner(unittest.TestCase):
+
     def setUp(self):
         self.roles = roles.RolesFromOwner("ownerofbuild")
 
@@ -62,4 +65,3 @@ class RolesFromOwner(unittest.TestCase):
         ret = self.roles.getRolesFromUser(dict(
             user="homer", email="homer@plant.com"), "homer@plant.com")
         self.assertEqual(ret, ["ownerofbuild"])
-

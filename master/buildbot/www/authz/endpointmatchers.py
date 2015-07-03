@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from buildbot.data.exceptions import InvalidPathError
 import inspect
+
+from buildbot.data.exceptions import InvalidPathError
+from twisted.internet import defer
 
 
 class EndpointMatcherBase(object):
+
     def __init__(self, role, defaultDeny=True):
         self.role = role
         self.defaultDeny = defaultDeny
@@ -54,6 +56,7 @@ class EndpointMatcherBase(object):
 
 
 class Match(object):
+
     def __init__(self, master, build=None, buildrequest=None, buildset=None):
         self.master = master
         self.build = build
@@ -87,6 +90,7 @@ class Match(object):
 
 
 class AnyEndpointMatcher(EndpointMatcherBase):
+
     def __init__(self, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
 
@@ -95,6 +99,7 @@ class AnyEndpointMatcher(EndpointMatcherBase):
 
 
 class StopBuildEndpointMatcher(EndpointMatcherBase):
+
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
         EndpointMatcherBase.__init__(self, **kwargs)
@@ -134,6 +139,7 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class ForceBuildEndpointMatcher(EndpointMatcherBase):
+
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
         EndpointMatcherBase.__init__(self, **kwargs)
@@ -158,6 +164,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
 
 
 class ViewBuildsEndpointMatcher(EndpointMatcherBase):
+
     def __init__(self, branch=None, project=None, builder=None, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
         self.branch = branch
@@ -166,6 +173,7 @@ class ViewBuildsEndpointMatcher(EndpointMatcherBase):
 
 
 class BranchEndpointMatcher(EndpointMatcherBase):
+
     def __init__(self, branch, **kwargs):
         self.branch = branch
         EndpointMatcherBase.__init__(self, **kwargs)

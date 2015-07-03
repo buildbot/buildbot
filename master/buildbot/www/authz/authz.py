@@ -1,14 +1,15 @@
 import fnmatch
 import re
 
+from buildbot.interfaces import IConfigured
+from roles import RolesFromOwner
 from twisted.internet import defer
 from twisted.web.error import Error
-from roles import RolesFromOwner
-from buildbot.interfaces import IConfigured
 from zope.interface import implements
 
 
 class Forbidden(Error):
+
     def __init__(self, msg):
         Error.__init__(self, 403, msg)
 

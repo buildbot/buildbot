@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.trial import unittest
 
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.test.fake import fakedb
 from buildbot.test.util import www
 from buildbot.www.authz import endpointmatchers
-from buildbot.test.fake import fakedb
-from buildbot.schedulers.forcesched import ForceScheduler
 
 # AnyEndpointMatcher
 # ForceBuildEndpointMatcher
@@ -29,6 +29,7 @@ from buildbot.schedulers.forcesched import ForceScheduler
 
 
 class EndpointBase(www.WwwTestMixin, unittest.TestCase):
+
     def setUp(self):
         self.master = self.make_master(url='h:/a/b/')
         self.db = self.master.db
@@ -57,6 +58,7 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
 
 
 class ValidEndpointMixin(object):
+
     @defer.inlineCallbacks
     def test_invalidPath(self):
         ret = yield self.matcher.match(("foo", "bar"))
@@ -64,6 +66,7 @@ class ValidEndpointMixin(object):
 
 
 class AnyEndpointMatcher(EndpointBase):
+
     def makeMatcher(self):
         return endpointmatchers.AnyEndpointMatcher(role="foo")
 
@@ -74,6 +77,7 @@ class AnyEndpointMatcher(EndpointBase):
 
 
 class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
+
     def makeMatcher(self):
         return endpointmatchers.ViewBuildsEndpointMatcher(branch="secret", role="agent")
 
@@ -84,6 +88,7 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 
 
 class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
+
     def makeMatcher(self):
         return endpointmatchers.StopBuildEndpointMatcher(builder="builder", role="owner")
 
@@ -106,6 +111,7 @@ class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 
 
 class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
+
     def makeMatcher(self):
         return endpointmatchers.ForceBuildEndpointMatcher(builder="builder", role="owner")
 

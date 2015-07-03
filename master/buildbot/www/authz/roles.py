@@ -15,6 +15,7 @@
 
 
 class RolesFromBase(object):
+
     def __init__(self):
         pass
 
@@ -27,6 +28,7 @@ class RolesFromBase(object):
 
 
 class RolesFromGroups(RolesFromBase):
+
     def __init__(self, groupPrefix=""):
         RolesFromBase.__init__(self)
         self.groupPrefix = groupPrefix
@@ -41,6 +43,7 @@ class RolesFromGroups(RolesFromBase):
 
 
 class RolesFromEmails(RolesFromBase):
+
     def __init__(self, **kwargs):
         RolesFromBase.__init__(self)
         self.roles = {}
@@ -55,6 +58,7 @@ class RolesFromEmails(RolesFromBase):
 
 
 class RolesFromOwner(RolesFromBase):
+
     def __init__(self, role):
         RolesFromBase.__init__(self)
         self.role = role
