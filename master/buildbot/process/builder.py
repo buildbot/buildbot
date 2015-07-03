@@ -524,7 +524,8 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             db = self.master.db
             if results == RESUME:
-                d = db.buildrequests.updateBuildRequests(brids, results=results)
+                d = db.buildrequests.updateBuildRequests(brids, results=results,
+                                                         slavepool=build.build_status.resumeSlavepool)
             else:
                 d = db.buildrequests.completeBuildRequests(brids, results)
             d.addCallback(

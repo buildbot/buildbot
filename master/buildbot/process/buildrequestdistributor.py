@@ -544,6 +544,12 @@ class KatanaBuildChooser(BasicBuildChooser):
         nextBreq = yield self._chooseBuildRequest(self.resumeBrdicts)
         defer.returnValue(nextBreq)
 
+    def getResumeSlavepool(self, selectedSlavepool):
+        if selectedSlavepool == "startSlavenames":
+            return self.slavepool
+
+        return self.resumeSlavePool
+
     @defer.inlineCallbacks
     def popNextBuildToResume(self):
         nextBuild = (None, None)
@@ -554,21 +560,23 @@ class KatanaBuildChooser(BasicBuildChooser):
             defer.returnValue(nextBuild)
             return
 
+        slavepool = self.getResumeSlavepool(breq.slavepool)
+
         # run the build on a specific slave
-        if  self.buildRequestHasSelectedSlave(breq):
-            nextBuild = yield self.buildHasSelectedSlave(breq, self.resumeSlavePool)
+        if breq.slavepool != "startSlavenames" and self.buildRequestHasSelectedSlave(breq):
+            nextBuild = yield self.buildHasSelectedSlave(breq, slavepool)
             defer.returnValue(nextBuild)
             return
 
         #  2. pick a slave
-        slave = yield self._popNextSlave(self.resumeSlavePool)
+        slave = yield self._popNextSlave(slavepool)
 
         if not slave:
             defer.returnValue(nextBuild)
             return
 
         # 3. make sure slave is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq, self.resumeSlavePool)
+        slave = yield self._pickUpSlave(slave, breq, slavepool)
         if slave:
             nextBuild = (slave, breq)
 
@@ -850,6 +858,7 @@ class BuildRequestDistributor(service.Service):
 
         if not buildStarted:
             bc.resumeSlavePool = bldr.getAvailableSlavesToResume()
+            bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 

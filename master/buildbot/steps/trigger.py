@@ -30,25 +30,32 @@ class ResumableBuildStep(LoggingBuildStep):
     description="Resume Build..."
     descriptionDone="Resume Build"
 
-    def __init__(self, resumeBuild=True, **kwargs):
+    def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
         self.resumeBuild = resumeBuild
+        self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
         LoggingBuildStep.__init__(self, **kwargs)
 
     def releaseBuildLocks(self):
-        self.build.releaseLocks()
-        # reset the build locks
-        self.build.locks = []
-        # release slave lock
-        self.build.slavebuilder.state = IDLE
-        self.build.builder.builder_status.setBigState("idle")
+        if self.resumeBuild:
+            self.build.releaseLocks()
+            # reset the build locks
+            self.build.locks = []
+            #  release slave lock
+            self.build.slavebuilder.state = IDLE
+            self.build.builder.builder_status.setBigState("idle")
+        else:
+            LoggingBuildStep.releaseLocks(self)
 
     def acquireLocks(self, res=None):
-        self.releaseBuildLocks()
-        return defer.succeed(None)
+        if self.resumeBuild:
+            self.releaseBuildLocks()
+            return defer.succeed(None)
+
+        return LoggingBuildStep.acquireLocks(self, res)
 
     def releaseLocks(self):
-        # release the build locks
-        pass
+        if not self.resumeBuild:
+            LoggingBuildStep.releaseLocks(self)
 
     def finished(self, results):
         if self.resumeBuild and results == SUCCESS:
@@ -56,6 +63,7 @@ class ResumableBuildStep(LoggingBuildStep):
             # saved the a resume build status
             # in this case skip the finished time ?
             self.step_status.stepFinished(SUCCESS)
+            self.build.build_status.resumeSlavepool = self.resumeSlavepool
             self.build.buildFinished(text, RESUME)
 
         LoggingBuildStep.finished(self, results)
@@ -71,8 +79,7 @@ class Trigger(ResumableBuildStep):
 
     def __init__(self, schedulerNames=[], sourceStamp = None, sourceStamps = None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={}, 
-                 copy_properties=[], **kwargs):
+                 waitForFinish=False, set_properties={},  copy_properties=[], **kwargs):
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")

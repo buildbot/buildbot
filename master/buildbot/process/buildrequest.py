@@ -88,14 +88,16 @@ class BuildRequest(object):
 
         @returns: L{BuildRequest}, via Deferred
         """
-        def updateResults(br):
+        def updateRequest(br):
             if 'results' in brdict and brdict['results'] != br.results:
                 br.results = brdict['results']
+            if 'slavepool' in brdict and brdict['slavepool'] != br.slavepool:
+                br.slavepool = brdict['slavepool']
             return br
 
         cache = master.caches.get_cache("BuildRequests", cls._make_br)
         d = cache.get(brdict['brid'], brdict=brdict, master=master)
-        d.addCallback(updateResults)
+        d.addCallback(updateRequest)
         return d
 
     @classmethod
@@ -116,6 +118,7 @@ class BuildRequest(object):
             return brid
 
         buildrequest.buildChainID = getBuilChainID()
+        buildrequest.slavepool = brdict['slavepool'] if 'slavepool' in brdict else None
         buildrequest.results = brdict['results'] if 'results' in brdict and brdict['results'] is not None else None
 
         # fetch the buildset to get the reason

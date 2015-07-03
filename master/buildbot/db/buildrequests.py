@@ -657,7 +657,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
 
-    def updateBuildRequests(self, brids, results=None, complete=None):
+    def updateBuildRequests(self, brids, results=None, complete=None, slavepool=None):
         def thd(conn):
 
             transaction = conn.begin()
@@ -677,6 +677,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 if results:
                     q = q.values(results=results)
+
+                if slavepool:
+                    q = q.values(slavepool=slavepool)
 
                 if complete:
                     q = q.values(complete=complete)
@@ -780,4 +783,4 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 complete=bool(row.complete), results=row.results,
                 submitted_at=submitted_at, complete_at=complete_at,
                 artifactbrid=row.artifactbrid, triggeredbybrid = row.triggeredbybrid,
-                mergebrid=row.mergebrid, startbrid=row.startbrid)
+                mergebrid=row.mergebrid, startbrid=row.startbrid, slavepool=row.slavepool)

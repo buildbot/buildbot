@@ -44,6 +44,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     blamelist = []
     progress = None
     resume = []
+    resumeSlavepool = None
     started = None
     finished = None
     submitted = None
@@ -81,6 +82,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.steps = []
         self.testResults = {}
         self.resume = []
+        self.resumeSlavepool = None
         self.properties = properties.Properties()
 
     def __repr__(self):
@@ -353,7 +355,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                           'finishedTime': time.ctime(self.finished),
                           'slavename': self.slavename,
                           'lastStepName': self.currentStep.name,
-                          'lastStepNumber': self.currentStep.step_number+1}
+                          'lastStepNumber': self.currentStep.step_number+1,
+                          'resumeSlavepool': self.resumeSlavepool}
+
             self.resume.append(build_data)
             self.finished = None
             self.started = None
@@ -605,6 +609,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         if self.resume:
             result['resume'] = self.resume
+
+        if self.resumeSlavepool:
+            result['resumeSlavepool'] = self.resumeSlavepool
 
         if include_failure_url:
             result['failure_url'] = self.get_failure_of_interest()
