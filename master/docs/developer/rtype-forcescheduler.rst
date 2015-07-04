@@ -5,7 +5,7 @@ ForceScheduler
 
     :attr string name: name of this scheduler
     :attr string name: label of this scheduler to be displayed in the ui
-    :attr list if string buildername: names of the builders that this scheduler can trig
+    :attr list buildernames: names of the builders that this scheduler can trigger
     :attr jsonObject all_fields: description of the fields that will be displayed in the UI
 
     A forcescheduler initiates builds, via a formular in the web UI.
