@@ -308,6 +308,15 @@ Beyond this general information, read all of the sections below that apply to ve
 Version-specific Notes
 ~~~~~~~~~~~~~~~~~~~~~~
 
+Upgrading from Buildbot-0.8.x to Buildbot-0.9
+'''''''''''''''''''''''''''''''''''''''''''''
+
+* ``html.WebStatus`` becomes something like: (see <cfg-www>)
+
+.. code-block:: python
+
+    c['www'] = dict(port=8020, plugins=dict(waterfall_view={}, console_view={}))`` 
+
 Upgrading a Buildmaster to Buildbot-0.7.6
 '''''''''''''''''''''''''''''''''''''''''
 
