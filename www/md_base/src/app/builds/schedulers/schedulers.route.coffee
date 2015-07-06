@@ -7,7 +7,7 @@ class State extends Config
         # Register new state
         $stateProvider.state
             controller: "schedulersController"
-            controllerAs: name
+            controllerAs: "schedulers"
             templateUrl: "views/#{name}.html"
             name: name
             url: "/schedulers"

@@ -14,3 +14,7 @@ angular.module 'app', [
 
     .config ($mdIconProvider) ->
         $mdIconProvider.defaultIconSet('/icons/iconset.svg', 512)
+
+    .constant 'angularMomentConfig', {
+        preprocess: 'unix'
+    }

@@ -1,0 +1,18 @@
+div.inner(layout="row")
+  a.author(title="{{ changeitem.author }}", ng-href="mailto:{{ changeitem.email }}")
+    img(ng-if="changeitem.email", ng-src="avatar?email={{ changeitem.email }}")
+  a.comments(flex, ng-click="changeitem.toggleDetail()") {{ changeitem.comments }}
+  span.revision {{ changeitem.revision }}
+div.detail(ng-if="changeitem.showDetail")
+  div.meta
+    span.time(am-time-ago="changeitem.date", title="{{ changeitem.date|amCalendar }}")
+    span.author-name {{ changeitem.author }} 
+  div.full-comment
+    div.sub-title Comments
+    div.content {{ changeitem.comments}}
+  div.changed-files(ng-if="changeitem.files.length > 0")
+    div.sub-title Changed files
+    div.file-line(ng-repeat="file in changeitem.files") {{ file }}
+
+  inspect-data(data="changeitem.displayData")
+
