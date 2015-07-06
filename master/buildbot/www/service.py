@@ -190,7 +190,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                         return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
                     else:
                         log.msg("WebStatus: rotated http logs are not supported on this version of Twisted")
-                except ImportError, e:
+                except ImportError as e:
                     log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
 
                 # if all else fails, just call the parent method

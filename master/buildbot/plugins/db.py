@@ -170,20 +170,20 @@ class _Plugins(object):
         if self._check_extras:
             try:
                 entry.require()
-            except Exception, err:
+            except Exception as err:
                 raise PluginDBError('Requirements are not satisfied '
                                     'for %s:%s: %s' % (self._group,
                                                        entry.name,
                                                        str(err)))
         try:
             result = entry.load()
-        except Exception, err:
+        except Exception as err:
             raise PluginDBError('Unable to load %s:%s: %s' %
                                 (self._group, entry.name, str(err)))
         if self._interface:
             try:
                 verifyClass(self._interface, result)
-            except Invalid, err:
+            except Invalid as err:
                 raise PluginDBError('Plugin %s:%s does not implement %s: %s' %
                                     (self._group, entry.name,
                                      self._interface.__name__, str(err)))
@@ -234,7 +234,7 @@ class _Plugins(object):
     def __getattr__(self, name):
         try:
             return getattr(self._tree, name)
-        except PluginDBError, err:
+        except PluginDBError as err:
             raise AttributeError(str(err))
 
 

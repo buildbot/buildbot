@@ -72,7 +72,7 @@ class IndexResource(resource.Resource):
         session = request.getSession()
         try:
             yield self.config['auth'].maybeAutoLogin(request)
-        except Error, e:
+        except Error as e:
             config["on_load_warning"] = e.message
 
         if hasattr(session, "user_info"):

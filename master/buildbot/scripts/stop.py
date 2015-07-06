@@ -42,7 +42,7 @@ def stop(config, signame="TERM", wait=False):
     signum = getattr(signal, "SIG" + signame)
     try:
         os.kill(pid, signum)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.ESRCH:
             raise
         else:

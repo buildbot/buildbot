@@ -25,7 +25,7 @@ def _loadConfig(basedir, configFile, quiet):
     try:
         config.MasterConfig.loadConfig(
             basedir, configFile)
-    except config.ConfigErrors, e:
+    except config.ConfigErrors as e:
         if not quiet:
             print >> sys.stderr, "Configuration Errors:"
             for e in e.errors:
@@ -46,7 +46,7 @@ def checkconfig(config):
         basedir = configFile
         try:
             configFile = getConfigFileFromTac(basedir)
-        except (SyntaxError, ImportError), e:
+        except (SyntaxError, ImportError) as e:
             if not quiet:
                 print "Unable to load 'buildbot.tac' from '%s':" % basedir
                 print e

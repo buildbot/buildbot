@@ -75,7 +75,7 @@ class LdapUserInfo(unittest.TestCase):
         self.makeSearchSideEffect([[], [], []])
         try:
             yield self.userInfoProvider.getUserInfo("me")
-        except KeyError, e:
+        except KeyError as e:
             self.assertEqual(
                 repr(e), "KeyError('ldap search \"accpattern\" returned 0 results',)")
         else:

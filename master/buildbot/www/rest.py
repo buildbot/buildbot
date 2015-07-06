@@ -118,22 +118,22 @@ class V2RootResource(resource.Resource):
     def handleErrors(self, writeError):
         try:
             yield
-        except exceptions.InvalidPathError, e:
+        except exceptions.InvalidPathError as e:
             writeError(str(e) or "invalid path", errcode=404,
                        jsonrpccode=JSONRPC_CODES['invalid_request'])
             return
-        except exceptions.InvalidControlException, e:
+        except exceptions.InvalidControlException as e:
             writeError(str(e) or "invalid control action", errcode=501,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
-        except BadRequest, e:
+        except BadRequest as e:
             writeError(str(e) or "invalid request", errcode=400,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
-        except BadJsonRpc2, e:
+        except BadJsonRpc2 as e:
             writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
             return
-        except Exception, e:
+        except Exception as e:
             log.err(_why='while handling API request')
             writeError(repr(e), errcode=500,
                        jsonrpccode=JSONRPC_CODES["internal_error"])
@@ -151,7 +151,7 @@ class V2RootResource(resource.Resource):
 
         try:
             data = json.loads(request.content.read())
-        except Exception, e:
+        except Exception as e:
             raise BadJsonRpc2("JSON parse error: %s" % (str(e),),
                               JSONRPC_CODES["parse_error"])
 

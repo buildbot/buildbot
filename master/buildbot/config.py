@@ -165,7 +165,7 @@ class MasterConfig(util.ComparableMixin):
 
         try:
             f = open(filename, "r")
-        except IOError, e:
+        except IOError as e:
             raise ConfigErrors([
                 "unable to open configuration file %r: %s" % (filename, e),
             ])
@@ -188,7 +188,7 @@ class MasterConfig(util.ComparableMixin):
         try:
             try:
                 exec f in localDict
-            except ConfigErrors, e:
+            except ConfigErrors as e:
                 for err in e.errors:
                     error(err)
                 raise errors

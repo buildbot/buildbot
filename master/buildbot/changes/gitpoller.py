@@ -152,7 +152,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     def poll(self):
         try:
             yield self._dovccmd('init', ['--bare', self.workdir])
-        except GitError, e:
+        except GitError as e:
             log.msg(e.args[0])
             return
 
@@ -172,7 +172,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         try:
             yield self._dovccmd('fetch', [self.repourl] + refspecs,
                                 path=self.workdir)
-        except GitError, e:
+        except GitError as e:
             log.msg(e.args[0])
             return
 
@@ -210,7 +210,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             if self.usetimestamps:
                 try:
                     stamp = int(git_output)
-                except Exception, e:
+                except Exception as e:
                     log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % git_output)
                     raise e
                 return stamp

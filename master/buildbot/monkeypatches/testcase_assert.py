@@ -30,7 +30,7 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
     exception = None
     try:
         callable_obj(*args, **kwds)
-    except expected_exception, ex:  # let unexpected exceptions pass through
+    except expected_exception as ex:  # let unexpected exceptions pass through
         exception = ex
 
     if exception is None:

@@ -246,7 +246,7 @@ class JsonObject(Type):
         # make sure JSON can represent it
         try:
             json.dumps(object)
-        except Exception, e:
+        except Exception as e:
             yield "%s is not JSON-able: %s" % (name, e)
             return
 

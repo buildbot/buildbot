@@ -704,7 +704,7 @@ def run():
     config = Options()
     try:
         config.parseOptions(sys.argv[1:])
-    except usage.error, e:
+    except usage.error as e:
         print "%s:  %s" % (sys.argv[0], e)
         print
         c = getattr(config, 'subOptions', config)
