@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 import mock
 
@@ -230,8 +231,8 @@ class BuildStepMixin(object):
             # in case of unexpected result, display logs in stdout for debugging failing tests
             if result != self.exp_result:
                 for loog in self.step.logs.values():
-                    print loog.stdout
-                    print loog.stderr
+                    print(loog.stdout)
+                    print(loog.stderr)
 
             self.assertEqual(result, self.exp_result, "expected result")
             if self.exp_state_string:

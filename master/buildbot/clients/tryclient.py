@@ -47,7 +47,7 @@ class SourceStamp(object):
 
 
 def output(*msg):
-    print ' '.join(map(str, msg))
+    log.msg(' '.join(map(str, msg)))
 
 
 class SourceStampExtractor:

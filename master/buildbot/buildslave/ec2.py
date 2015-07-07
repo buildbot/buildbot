@@ -172,7 +172,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         except boto.exception.EC2ResponseError as e:
             if 'InvalidKeyPair.NotFound' not in e.body:
                 if 'AuthFailure' in e.body:
-                    print ('POSSIBLE CAUSES OF ERROR:\n'
+                    log.msg('POSSIBLE CAUSES OF ERROR:\n'
                            '  Did you sign up for EC2?\n'
                            '  Did you put a credit card number in your AWS '
                            'account?\n'

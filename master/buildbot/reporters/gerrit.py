@@ -36,6 +36,7 @@ from distutils.version import LooseVersion
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
+from twisted.python import log
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600
@@ -200,18 +201,18 @@ class GerritStatusPush(service.BuildbotService):
         def outReceived(self, data):
             vstr = "gerrit version "
             if not data.startswith(vstr):
-                print "Error: Cannot interpret gerrit version info:", data
+                log.msg("Error: Cannot interpret gerrit version info:", data)
                 return
             vers = data[len(vstr):]
-            print "gerrit version:", vers
+            log.msg("gerrit version:", vers)
             self.gerrit_version = LooseVersion(vers)
 
         def errReceived(self, data):
-            print "gerriterr:", data
+            log.msg("gerriterr:", data)
 
         def processEnded(self, status_object):
             if status_object.value.exitCode:
-                print "gerrit version status: ERROR:", status_object
+                log.msg("gerrit version status: ERROR:", status_object)
                 return
             if self.gerrit_version:
                 self.func(self.gerrit_version)
@@ -241,16 +242,16 @@ class GerritStatusPush(service.BuildbotService):
             self.status = status
 
         def outReceived(self, data):
-            print "gerritout:", data
+            log.msg("gerritout:", data)
 
         def errReceived(self, data):
-            print "gerriterr:", data
+            log.msg("gerriterr:", data)
 
         def processEnded(self, status_object):
             if status_object.value.exitCode:
-                print "gerrit status: ERROR:", status_object
+                log.msg("gerrit status: ERROR:", status_object)
             else:
-                print "gerrit status: OK"
+                log.msg("gerrit status: OK")
 
     @defer.inlineCallbacks
     def startService(self):
