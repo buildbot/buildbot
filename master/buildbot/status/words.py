@@ -270,7 +270,7 @@ class Contact(base.StatusReceiver):
             args = args.encode('ascii')
         try:
             return shlex.split(args)
-        except ValueError, e:
+        except ValueError as e:
             raise UsageError(e)
 
     def command_HELLO(self, args):

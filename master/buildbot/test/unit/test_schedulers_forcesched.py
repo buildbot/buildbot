@@ -346,7 +346,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
             req = {name: value, 'reason': 'because'}
         try:
             bsid, brids = yield sched.force(owner, builderNames=['a'], **req)
-        except Exception, e:
+        except Exception as e:
             if expectKind is not Exception:
                 # an exception is not expected
                 raise

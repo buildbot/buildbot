@@ -220,7 +220,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.config = yield threads.deferToThread(
                     config.MasterConfig.loadConfig, self.basedir, self.configFileName)
 
-            except config.ConfigErrors, e:
+            except config.ConfigErrors as e:
                 log.msg("Configuration Errors:")
                 for msg in e.errors:
                     log.msg("  " + msg)
@@ -345,7 +345,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
             yield self.reconfigServiceWithBuildbotConfig(new_config)
 
-        except config.ConfigErrors, e:
+        except config.ConfigErrors as e:
             for msg in e.errors:
                 log.msg(msg)
             failed = True

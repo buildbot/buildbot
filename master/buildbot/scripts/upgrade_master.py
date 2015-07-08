@@ -65,7 +65,7 @@ def loadConfig(config, configFileName='master.cfg'):
     try:
         master_cfg = config_module.MasterConfig.loadConfig(
             config['basedir'], configFileName)
-    except config_module.ConfigErrors, e:
+    except config_module.ConfigErrors as e:
         print "Errors loading configuration:"
         for msg in e.errors:
             print "  " + msg
@@ -138,7 +138,7 @@ def upgradeFiles(config):
                 print "        You can (and probably want to) remove it if " \
                     "you haven't modified this file."
                 os.renames(index_html, root_html)
-            except Exception, e:
+            except Exception as e:
                 print "Error moving %s to %s: %s" % (index_html, root_html,
                                                      str(e))
 
@@ -171,7 +171,7 @@ def upgradeMaster(config, _noMonkey=False):
 
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError), e:
+    except (SyntaxError, ImportError) as e:
         print "Unable to load 'buildbot.tac' from '%s':" % config['basedir']
         print e
         defer.returnValue(1)

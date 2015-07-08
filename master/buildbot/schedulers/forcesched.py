@@ -155,7 +155,7 @@ class BaseParameter(object):
 
         try:
             arg = self.parse_from_args(args)
-        except Exception, e:
+        except Exception as e:
             # an exception will just display an alert in the web UI
             # also log the exception
             if self.debug:

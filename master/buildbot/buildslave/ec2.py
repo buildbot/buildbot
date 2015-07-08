@@ -169,7 +169,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
             assert key_pair
             # key_pair.delete() # would be used to recreate
-        except boto.exception.EC2ResponseError, e:
+        except boto.exception.EC2ResponseError as e:
             if 'InvalidKeyPair.NotFound' not in e.body:
                 if 'AuthFailure' in e.body:
                     print ('POSSIBLE CAUSES OF ERROR:\n'
@@ -187,7 +187,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         try:
             group = self.conn.get_all_security_groups(security_name)[0]
             assert group
-        except boto.exception.EC2ResponseError, e:
+        except boto.exception.EC2ResponseError as e:
             if 'InvalidGroup.NotFound' in e.body:
                 self.security_group = self.conn.create_security_group(
                     security_name,

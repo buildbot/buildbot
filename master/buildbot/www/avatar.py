@@ -70,7 +70,7 @@ class AvatarResource(resource.Resource):
         for method in self.avatarMethods:
             try:
                 res = yield method.getUserAvatar(email, size, self.defaultAvatarFullUrl)
-            except resource.Redirect, r:
+            except resource.Redirect as r:
                 self.cache[email] = r
                 raise
             if res is not None:
