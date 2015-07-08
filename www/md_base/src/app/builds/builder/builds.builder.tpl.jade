@@ -1,1 +1,13 @@
-h1 builders
+div.builder-meta(layout="row")
+  div.status
+    build-status(build="builder.lastBuild")
+  h2.name(flex)
+    | {{ builder.info.name }}
+  div.force-build
+    md-button.md-primary.md-raised(md-theme="default") Force Build
+
+div.builder-content
+  md-tabs(md-border-bottom, md-center-tabs="false")
+    md-tab(label="builds")
+      div.builder-builds
+        build-item(build="build", ng-repeat="build in builder.builds")
