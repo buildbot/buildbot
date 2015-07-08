@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import mock
 
@@ -60,7 +61,7 @@ class FakeBuildRequest:
         self.properties = Properties()
 
     def mergeSourceStampsWith(self, others):
-        return [source for source in self.sources.itervalues()]
+        return [source for source in itervalues(self.sources)]
 
     def mergeReasons(self, others):
         return self.reason

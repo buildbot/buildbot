@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import itervalues
 
 import StringIO
 import mock
@@ -94,7 +95,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
         if self.proto == 'pb':
             # We find out the slave port automatically
-            slavePort = m.pbmanager.dispatchers.values()[0].port.getHost().port
+            slavePort = list(itervalues(m.pbmanager.dispatchers))[0].port.getHost().port
 
             # create a slave, and attach it to the master, it will be started, and stopped
             # along with the master

@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
@@ -53,7 +55,7 @@ class FakeUpdates(service.AsyncService):
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
-        for k, v in properties.iteritems():
+        for k, v in iteritems(properties):
             self.testcase.assertIsInstance(k, unicode)
             if sourced:
                 self.testcase.assertIsInstance(v, tuple)
@@ -240,14 +242,14 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'scheduler name', name,
                               validation.StringValidator())
         if name not in self.schedulerIds:
-            self.schedulerIds[name] = max([0] + self.schedulerIds.values()) + 1
+            self.schedulerIds[name] = max([0] + list(itervalues(self.schedulerIds))) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
         validation.verifyType(self.testcase, 'changesource name', name,
                               validation.StringValidator())
         if name not in self.changesourceIds:
-            self.changesourceIds[name] = max([0] + self.changesourceIds.values()) + 1
+            self.changesourceIds[name] = max([0] + list(itervalues(self.changesourceIds))) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):
@@ -362,7 +364,7 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
-        logid = max([0] + self.logs.keys()) + 1
+        logid = max([0] + list(self.logs)) + 1
         self.logs[logid] = dict(name=name, type=type, content=[], finished=False)
         return defer.succeed(logid)
 

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import mock
 
@@ -101,12 +102,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         for expected_ss, actual_ss in zip(sourcestamps, actual_sourcestamps):
             actual_ss = actual_ss.copy()
             # We don't care if the actual sourcestamp has *more* attributes than expected.
-            for key in actual_ss.keys():
+            for key in list(actual_ss.keys()):
                 if key not in expected_ss:
                     del actual_ss[key]
             self.assertEqual(expected_ss, actual_ss)
 
-        for brid in brids.values():
+        for brid in itervalues(brids):
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,

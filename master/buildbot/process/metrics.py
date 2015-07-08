@@ -31,6 +31,8 @@ Basic architecture:
           \/
     MetricWatcher
 """
+from future.utils import iteritems
+
 from collections import deque
 
 from buildbot import util
@@ -219,7 +221,7 @@ class MetricCountHandler(MetricHandler):
             self._counters[metric.counter] += metric.count
 
     def keys(self):
-        return self._counters.keys()
+        return list(self._counters)
 
     def get(self, counter):
         return self._counters[counter]
@@ -247,7 +249,7 @@ class MetricTimeHandler(MetricHandler):
         self._timers[metric.timer].append(metric.elapsed)
 
     def keys(self):
-        return self._timers.keys()
+        return list(self._timers)
 
     def get(self, timer):
         return self._timers[timer].average
@@ -478,13 +480,13 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
 
     def asDict(self):
         retval = {}
-        for interface, handler in self.handlers.iteritems():
+        for interface, handler in iteritems(self.handlers):
             retval.update(handler.asDict())
         return retval
 
     def report(self):
         try:
-            for interface, handler in self.handlers.iteritems():
+            for interface, handler in iteritems(self.handlers):
                 report = handler.report()
                 if not report:
                     continue

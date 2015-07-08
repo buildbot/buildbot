@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 
 from buildbot import util
 from buildbot.buildslave.protocols import base
@@ -263,7 +265,7 @@ class RemoteCommand(base.RemoteCommandImpl):
     @defer.inlineCallbacks
     def remoteUpdate(self, update):
         if self.debug:
-            for k, v in update.items():
+            for k, v in iteritems(update):
                 log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
@@ -299,7 +301,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
-        for name, loog in self.logs.items():
+        for name, loog in iteritems(self.logs):
             if self._closeWhenFinished[name]:
                 if maybeFailure:
                     loog = yield self._unwrap(loog)

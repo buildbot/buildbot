@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import uuid
 
@@ -33,7 +34,7 @@ class Consumer(object):
         if key is not None:
             self.qrefs[key].stopConsuming()
         else:
-            for qref in self.qrefs.values():
+            for qref in itervalues(self.qrefs):
                 qref.stopConsuming()
             self.qrefs = {}
 

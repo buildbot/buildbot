@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from distutils.version import LooseVersion
 from twisted.internet import defer
@@ -332,7 +333,7 @@ class Git(Source):
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         full_command = ['git']
         if self.config is not None:
-            for name, value in self.config.iteritems():
+            for name, value in iteritems(self.config):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
         full_command.extend(command)

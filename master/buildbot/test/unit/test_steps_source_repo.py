@@ -31,7 +31,7 @@ class RepoURL(unittest.TestCase):
     def oneTest(self, props, expected):
         p = Properties()
         p.update(props, "test")
-        r = repo.RepoDownloadsFromProperties(props.keys())
+        r = repo.RepoDownloadsFromProperties(list(props))
         self.assertEqual(r.getRenderingFor(p), expected)
 
     def test_parse1(self):

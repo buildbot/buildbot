@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import iteritems
+from future.utils import itervalues
+
 
 import mock
 
@@ -241,19 +244,19 @@ class BuildStepMixin(object):
 
             # in case of unexpected result, display logs in stdout for debugging failing tests
             if result != self.exp_result:
-                for loog in self.step.logs.values():
+                for loog in itervalues(self.step.logs):
                     print(loog.stdout)
                     print(loog.stderr)
 
             self.assertEqual(result, self.exp_result, "expected result")
             if self.exp_state_string:
                 stepStateString = self.master.data.updates.stepStateString
-                stepids = stepStateString.keys()
+                stepids = list(stepStateString)
                 assert stepids, "no step state strings were set"
                 self.assertEqual(stepStateString[stepids[0]],
                                  self.exp_state_string,
                                  "expected step state strings")
-            for pn, (pv, ps) in self.exp_properties.iteritems():
+            for pn, (pv, ps) in iteritems(self.exp_properties):
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
                 self.assertEqual(self.properties.getProperty(pn),
@@ -264,7 +267,7 @@ class BuildStepMixin(object):
             for pn in self.exp_missing_properties:
                 self.assertFalse(self.properties.hasProperty(pn),
                                  "unexpected property '%s'" % pn)
-            for l, contents in self.exp_logfiles.iteritems():
+            for l, contents in iteritems(self.exp_logfiles):
                 self.assertEqual(
                     self.step.logs[l].stdout, contents, "log '%s' contents" % l)
             # XXX TODO: hidden

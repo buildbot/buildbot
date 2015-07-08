@@ -17,6 +17,7 @@
 """Push events to gerrit
 
 ."""
+from future.utils import iteritems
 
 import time
 
@@ -390,7 +391,7 @@ class GerritStatusPush(service.BuildbotService):
             else:
                 add_label = _new_add_label
 
-            for label, value in labels.items():
+            for label, value in iteritems(labels):
                 command.extend(add_label(label, value))
 
         command.append(str(revision))

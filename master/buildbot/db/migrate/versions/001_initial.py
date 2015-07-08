@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import os
 import sqlalchemy as sa
 
@@ -199,8 +201,9 @@ def import_changes(migrate_engine):
                 revlink=c.revlink,
                 when_timestamp=c.when,
                 category=c.category)
-            values = dict([(k, remove_none(v)) for k, v in values.iteritems()])
-        except UnicodeDecodeError as e:
+
+            values = dict([(k, remove_none(v)) for k, v in iteritems(values)])
+        except UnicodeDecodeError, e:
             raise UnicodeError("Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py: %s" % str(e))
 
         migrate_engine.execute(changes.insert(), **values)
@@ -227,7 +230,7 @@ def import_changes(migrate_engine):
                                    changeid=c.number,
                                    filename=filename)
 
-        for propname, propvalue in c.properties.properties.items():
+        for propname, propvalue in iteritems(c.properties.properties):
             encoded_value = json.dumps(propvalue)
             migrate_engine.execute(change_properties.insert(),
                                    changeid=c.number,

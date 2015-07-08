@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 
 import re
@@ -201,7 +202,7 @@ class PyLint(ShellCommand):
 
     _re_groupname = 'errtype'
     _msgtypes_re_str = '(?P<%s>[%s])' % (
-        _re_groupname, ''.join(_MESSAGES.keys()))
+        _re_groupname, ''.join(list(_MESSAGES)))
     _default_line_re = re.compile(
         r'^%s(\d{4})?: *\d+(, *\d+)?:.+' % _msgtypes_re_str)
     _parseable_line_re = re.compile(
@@ -240,7 +241,7 @@ class PyLint(ShellCommand):
     def createSummary(self, log):
         counts, summaries = self.counts, self.summaries
         self.descriptionDone = self.descriptionDone[:]
-        for msg, fullmsg in self._MESSAGES.items():
+        for msg, fullmsg in iteritems(self._MESSAGES):
             if counts[msg]:
                 self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
                 self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))

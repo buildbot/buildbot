@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
+
+
 import os
 import urllib
 
@@ -239,7 +243,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.botmaster.builders[name].builder_status
 
     def getSlaveNames(self):
-        return self.buildslaves.slaves.keys()
+        return list(iteritems(self.buildslaves.slaves))
 
     def getSlave(self, slavename):
         return self.buildslaves.slaves[slavename].slave_status
@@ -351,7 +355,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # upgradeToVersionNN methods all set this.
             versioneds = styles.versionedsToUpgrade
             styles.doUpgrade()
-            if True in [hasattr(o, 'wasUpgraded') for o in versioneds.values()]:
+            if True in [hasattr(o, 'wasUpgraded') for o in itervalues(versioneds)]:
                 log.msg("re-writing upgraded builder pickle")
                 builder_status.saveYourself()
 
@@ -419,7 +423,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builderid = msg['builderid']
         buildername = None
         # convert builderid to buildername
-        for b in self.botmaster.builders.values():
+        for b in itervalues(self.botmaster.builders):
             if builderid == (yield b.getBuilderId()):
                 buildername = b.name
                 break

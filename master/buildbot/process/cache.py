@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot.util import lru
 from buildbot.util import service
@@ -60,7 +61,7 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.config = new_config.caches
-        for name, cache in self._caches.iteritems():
+        for name, cache in iteritems(self._caches):
             cache.set_max_size(new_config.caches.get(name,
                                                      self.DEFAULT_CACHE_SIZE))
 
@@ -71,4 +72,4 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
         return dict([
             (n, dict(hits=c.hits, refhits=c.refhits,
                      misses=c.misses, max_size=c.max_size))
-            for n, c in self._caches.iteritems()])
+            for n, c in iteritems(self._caches)])

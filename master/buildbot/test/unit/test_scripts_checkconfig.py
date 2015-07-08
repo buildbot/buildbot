@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import cStringIO
 import mock
 import os
@@ -40,7 +42,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         configFile = os.path.join('configdir', 'master.cfg')
         with open(configFile, "w") as f:
             f.write(config)
-        for filename, contents in other_files.iteritems():
+        for filename, contents in iteritems(other_files):
             if isinstance(filename, type(())):
                 fn = os.path.join('configdir', *filename)
                 dn = os.path.dirname(fn)

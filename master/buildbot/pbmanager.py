@@ -125,7 +125,7 @@ class Dispatcher(service.AsyncService):
 
     def __repr__(self):
         return "<pbmanager.Dispatcher for %s on %s>" % \
-            (", ".join(self.users.keys()), self.portstr)
+            (", ".join(list(self.users)), self.portstr)
 
     def startService(self):
         assert not self.port

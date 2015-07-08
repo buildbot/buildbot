@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import datetime
 import fnmatch
@@ -66,8 +67,8 @@ class RestRootResource(resource.Resource):
         resource.Resource.__init__(self, master)
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
-        latest = max(self.version_classes.iterkeys())
-        for version, klass in self.version_classes.iteritems():
+        latest = max(list(self.version_classes))
+        for version, klass in iteritems(self.version_classes):
             if version < min_vers:
                 continue
             child = klass(master)

@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 import mock
 import re
@@ -21,7 +23,8 @@ from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import authz
 from buildbot.www import rest
-from buildbot.www.rest import JSONRPC_CODES, BadRequest
+from buildbot.www.rest import BadRequest
+from buildbot.www.rest import JSONRPC_CODES
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -297,14 +300,14 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection(self):
         yield self.render_resource(self.rsrc, '/test')
         self.assertRestCollection(typeName='tests',
-                                  items=endpoint.testData.values(),
+                                  items=list(itervalues(endpoint.testData)),
                                   total=8)
 
     @defer.inlineCallbacks
     def do_test_api_collection_pagination(self, query, ids, links):
         yield self.render_resource(self.rsrc, '/test' + query)
         self.assertRestCollection(typeName='tests',
-                                  items=[v for k, v in endpoint.testData.iteritems()
+                                  items=[v for k, v in iteritems(endpoint.testData)
                                          if k in ids],
                                   total=8)
 
@@ -392,7 +395,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, '/test?field=success&field=info')
         self.assertRestCollection(typeName='tests',
                                   items=[{'success': v['success'], 'info': v['info']}
-                                         for v in endpoint.testData.values()],
+                                         for v in itervalues(endpoint.testData)],
                                   total=8)
 
     @defer.inlineCallbacks
@@ -407,7 +410,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_simple_filter(self):
         yield self.render_resource(self.rsrc, '/test?success=yes')
         self.assertRestCollection(typeName='tests',
-                                  items=[v for v in endpoint.testData.values()
+                                  items=[v for v in itervalues(endpoint.testData)
                                          if v['success']],
                                   total=5)
 
@@ -415,7 +418,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_operator_filter(self):
         yield self.render_resource(self.rsrc, '/test?info__lt=skipped')
         self.assertRestCollection(typeName='tests',
-                                  items=[v for v in endpoint.testData.values()
+                                  items=[v for v in itervalues(endpoint.testData)
                                          if v['info'] < 'skipped'],
                                   total=4)
 
@@ -423,7 +426,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_collection_order(self):
         yield self.render_resource(self.rsrc, '/test?order=info')
         self.assertRestCollection(typeName='tests',
-                                  items=sorted(endpoint.testData.values(),
+                                  items=sorted(list(itervalues(endpoint.testData)),
                                                key=lambda v: v['info']),
                                   total=8, orderSignificant=True)
 
@@ -444,7 +447,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, '/test?success=false&limit=2')
         # note that the limit/offset and total are *after* the filter
         self.assertRestCollection(typeName='tests',
-                                  items=sorted([v for v in endpoint.testData.values()
+                                  items=sorted([v for v in itervalues(endpoint.testData)
                                                 if not v['success']], key=lambda v: v['id'])[:2],
                                   total=3)
 

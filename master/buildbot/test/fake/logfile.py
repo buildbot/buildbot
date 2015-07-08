@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 from buildbot import util
 from buildbot.util import lineboundaries
@@ -75,7 +76,7 @@ class FakeLogFile(object):
         return defer.Deferred()
 
     def flushFakeLogfile(self):
-        for lbf in self.lbfs.values():
+        for lbf in itervalues(self.lbfs):
             lbf.flush()
 
     def finish(self):

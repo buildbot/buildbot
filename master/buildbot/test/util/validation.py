@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import iteritems
 
 import datetime
 import re
@@ -207,7 +208,7 @@ class SourcedPropertiesValidator(Validator):
         if not isinstance(object, dict):
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
-        for k, v in object.iteritems():
+        for k, v in iteritems(object):
             if not isinstance(k, unicode):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:

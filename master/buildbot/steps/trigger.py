@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot import config
 from buildbot.interfaces import ITriggerableScheduler
@@ -132,7 +134,7 @@ class Trigger(BuildStep):
                 codebase = ss.get('codebase', '')
                 assert codebase not in ss_for_trigger, "codebase specified multiple times"
                 ss_for_trigger[codebase] = ss
-            return ss_for_trigger.values()
+            return list(itervalues(ss_for_trigger))
 
         if self.alwaysUseLatest:
             return []
@@ -150,7 +152,7 @@ class Trigger(BuildStep):
                 if codebase in got:
                     ss_for_trigger[codebase]['revision'] = got[codebase]
 
-        return ss_for_trigger.values()
+        return list(itervalues(ss_for_trigger))
 
     @defer.inlineCallbacks
     def worstStatus(self, overall_results, rclist):
@@ -172,7 +174,7 @@ class Trigger(BuildStep):
                 results, brids = results
 
             if was_cb:  # errors were already logged in worstStatus
-                for builderid, br in brids.iteritems():
+                for builderid, br in iteritems(brids):
                     builderDict = yield self.master.data.get(("builders", builderid))
                     builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
                     for build in builds:
@@ -214,7 +216,7 @@ class Trigger(BuildStep):
                 yield self.addLogWithException(e)
                 results = EXCEPTION
 
-            self.brids.extend(brids.values())
+            self.brids.extend(itervalues(brids))
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from the beginning
                 url = self.master.status.getURLForBuildrequest(brid)

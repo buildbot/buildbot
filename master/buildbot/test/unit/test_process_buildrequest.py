@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import mock
 
@@ -209,7 +210,7 @@ class TestBuildRequest(unittest.TestCase):
 
         def check(br):
             # check enough of the source stamp to verify it found the changes
-            self.assertEqual([ss.ssid for ss in br.sources.values()], [234])
+            self.assertEqual([ss.ssid for ss in itervalues(br.sources)], [234])
 
             self.assertEqual(br.reason, 'triggered')
 

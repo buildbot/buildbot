@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
+
 
 from zope.interface import implements
 
@@ -86,7 +88,7 @@ class Triggerable(base.BaseScheduler):
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
-            for d, brids in self._waiters.values():
+            for d, brids in itervalues(self._waiters):
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 

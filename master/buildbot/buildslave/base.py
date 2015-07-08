@@ -13,6 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from future.utils import itervalues
 
 import time
 
@@ -497,7 +498,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
             return False
 
         if self.max_builds:
-            active_builders = [sb for sb in self.slavebuilders.values()
+            active_builders = [sb for sb in itervalues(self.slavebuilders)
                                if sb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
@@ -553,7 +554,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         and has no active builders."""
         if not self.slave_status.getGraceful():
             return
-        active_builders = [sb for sb in self.slavebuilders.values()
+        active_builders = [sb for sb in itervalues(self.slavebuilders)
                            if sb.isBusy()]
         if active_builders:
             return
