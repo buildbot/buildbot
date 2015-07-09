@@ -37,7 +37,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.tearDownScheduler()
 
     def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
-                      properties={}, codebases={'': {}}):
+                      properties={}, codebases=base.BaseScheduler.DefaultCodebases):
         sched = self.attachScheduler(
             base.BaseScheduler(name=name, builderNames=builderNames,
                                properties=properties, codebases=codebases),
@@ -56,6 +56,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_constructor_codebases_valid(self):
         codebases = {"codebase1": {"repository": "", "branch": "", "revision": ""}}
+        self.makeScheduler(codebases=codebases)
+
+    def test_constructor_codebases_valid_list(self):
+        codebases = ['codebase1']
         self.makeScheduler(codebases=codebases)
 
     def test_constructor_codebases_invalid(self):

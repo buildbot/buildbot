@@ -98,17 +98,21 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
 
         # Set the codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without changes
-        if codebases is not None:
-            if not isinstance(codebases, dict):
-                config.error("Codebases must be a dict of dicts")
+        if codebases is None:
+            codebases = BaseScheduler.DefaultCodebases
+        elif isinstance(codebases, list):
+            codebases = dict(
+                (codebase, {'repository': ''})
+                for codebase in codebases
+            )
+        elif not isinstance(codebases, dict):
+            config.error("Codebases must be a dict of dicts, or list of strings")
+        else:
             for codebase, codebase_attrs in codebases.iteritems():
                 if not isinstance(codebase_attrs, dict):
                     config.error("Codebases must be a dict of dicts")
-                if (codebases != BaseScheduler.DefaultCodebases and
-                        'repository' not in codebase_attrs):
+                if codebases != BaseScheduler.DefaultCodebases and 'repository' not in codebase_attrs:
                     config.error("The key 'repository' is mandatory in codebases")
-        else:
-            config.error("Codebases cannot be None")
 
         self.codebases = codebases
 
@@ -382,7 +386,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin):
                 # codebase has no changes
                 # create a sourcestamp that has no changes
                 cb = self.getCodebaseDict(codebase)
-                args['repository'] = cb['repository']
+                args['repository'] = cb.get('repository', '')
                 args['branch'] = cb.get('branch', None)
                 args['revision'] = cb.get('revision', None)
                 args['changeids'] = set()
