@@ -541,6 +541,10 @@ class MasterConfig(util.ComparableMixin):
             if sl.slavename in ("debug", "change", "status"):
                 msg = "slave name '%s' is reserved" % sl.slavename
                 error(msg)
+            
+            if not util.identifiers.isIdentifier(50, sl.slavename):
+                msg = "Buildslave name %r is not a 50-character identifier" % (sl.slavename,)
+                error(msg)
 
         self.slaves = config_dict['slaves']
 
