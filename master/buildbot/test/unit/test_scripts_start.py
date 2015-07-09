@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
+
 import os
 import sys
 import time
@@ -84,7 +86,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         @d.addCallback
         def cb(res):
             self.assertEquals(res, ('', '', 0))
-            print res
+            print(res)
         return d
 
     def test_start_quiet(self):
@@ -93,7 +95,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         @d.addCallback
         def cb(res):
             self.assertEquals(res, ('', '', 0))
-            print res
+            print(res)
         return d
 
     @flaky(bugNumber=2760)

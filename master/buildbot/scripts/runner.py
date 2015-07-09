@@ -18,6 +18,8 @@
 #
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
+from __future__ import print_function
+
 import sqlalchemy as sa
 import sys
 
@@ -688,7 +690,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot
-        print "Buildbot version: %s" % buildbot.version
+        print("Buildbot version: %s" % buildbot.version)
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
@@ -705,10 +707,11 @@ def run():
     try:
         config.parseOptions(sys.argv[1:])
     except usage.error as e:
-        print "%s:  %s" % (sys.argv[0], e)
-        print
+        print("%s:  %s" % (sys.argv[0], e))
+        print()
+
         c = getattr(config, 'subOptions', config)
-        print str(c)
+        print(str(c))
         sys.exit(1)
 
     subconfig = config.subOptions

@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
+
 import errno
 import os
 import signal
@@ -36,7 +38,7 @@ def stop(config, signame="TERM", wait=False):
             pid = int(f.read().strip())
     except Exception:
         if not config['quiet']:
-            print "buildmaster not running"
+            print("buildmaster not running")
         return 0
 
     signum = getattr(signal, "SIG" + signame)
@@ -47,7 +49,7 @@ def stop(config, signame="TERM", wait=False):
             raise
         else:
             if not config['quiet']:
-                print "buildmaster not running"
+                print("buildmaster not running")
             try:
                 os.unlink(pidfile)
             except OSError:
@@ -56,7 +58,7 @@ def stop(config, signame="TERM", wait=False):
 
     if not wait:
         if not quiet:
-            print "sent SIG%s to process" % signame
+            print("sent SIG%s to process" % signame)
         return 0
 
     time.sleep(0.1)
@@ -69,10 +71,10 @@ def stop(config, signame="TERM", wait=False):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                print "buildbot process %d is dead" % pid
+                print("buildbot process %d is dead" % pid)
             return 0
         time.sleep(1)
         count += 1
     if not quiet:
-        print "never saw process go away"
+        print("never saw process go away")
     return 1

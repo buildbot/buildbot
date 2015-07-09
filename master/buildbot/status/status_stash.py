@@ -121,7 +121,7 @@ class StashStatusPush(StatusReceiverMultiService,
         self.master = self.master_status.master
 
     def startService(self):
-        print """Starting up StashStatusPush"""
+        log.msg("""Starting up StashStatusPush""")
         self.summarySubscribe()
         StatusReceiverMultiService.startService(self)
 

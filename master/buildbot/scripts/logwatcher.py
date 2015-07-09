@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import print_function
 
 import os
 import platform
@@ -43,7 +43,7 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(data)
 
     def errReceived(self, data):
-        print "ERR: '%s'" % (data,)
+        print("ERR: '%s'" % (data,))
 
 
 class LogWatcher(LineOnlyReceiver):
@@ -120,7 +120,7 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
 
         if self.in_reconfig:
-            print line
+            print(line)
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires

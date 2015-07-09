@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import print_function
 
 import jinja2
 import os
@@ -32,11 +32,11 @@ def processwwwindex(config):
     master_service = WWWService(master)
 
     if not config.get('index-file'):
-        print "Path to the index.html file is required with option --index-file or -i"
+        print("Path to the index.html file is required with option --index-file or -i")
         defer.returnValue(1)
     path = config.get('index-file')
     if not os.path.isfile(path):
-        print "Invalid path to index.html"
+        print("Invalid path to index.html")
         defer.returnValue(2)
 
     main_dir = os.path.dirname(path)

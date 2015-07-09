@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 from buildbot.clients import usersclient
 from buildbot.process.users import users
@@ -44,6 +45,6 @@ def user(config):
     uc = usersclient.UsersClient(master, username, passwd, port)
     output = yield uc.send(op, bb_username, bb_password, ids, info)
     if output:
-        print output
+        print(output)
 
     defer.returnValue(0)

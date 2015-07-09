@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
+
 import copy
 import os
 import stat
@@ -22,7 +24,7 @@ from twisted.python import usage
 
 def isBuildmasterDir(dir):
     def print_error(error_message):
-        print "%s\ninvalid buildmaster directory '%s'" % (error_message, dir)
+        print("%s\ninvalid buildmaster directory '%s'" % (error_message, dir))
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
@@ -134,7 +136,7 @@ class SubcommandOptions(usage.Options):
             if os.path.isdir(d):
                 if runtime.platformType != 'win32':
                     if os.stat(d)[stat.ST_UID] != os.getuid():
-                        print "skipping %s because you don't own it" % d
+                        print("skipping %s because you don't own it" % d)
                         continue  # security, skip other people's directories
                 optfile = os.path.join(d, "options")
                 if os.path.exists(optfile):
@@ -143,7 +145,7 @@ class SubcommandOptions(usage.Options):
                             options = f.read()
                         exec options in localDict
                     except Exception:
-                        print "error while reading %s" % optfile
+                        print("error while reading %s" % optfile)
                         raise
                     break
 
