@@ -1,8 +1,6 @@
 class Rest extends Service
     constructor: ($http, $q, API) ->
         return new class RestService
-            constructor: ->
-
             execute: (config) ->
                 $q (resolve, reject) =>
                     $http(config)
