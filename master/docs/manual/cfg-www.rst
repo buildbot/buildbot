@@ -106,6 +106,11 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
         # www/console_view/src/module/view/builders-header/buildersheader.tpl.jade
         console_view/buildersheader.html
 
+    Known differences between nodejs jade and pyjade:
+
+        * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
+          This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.

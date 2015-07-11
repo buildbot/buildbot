@@ -22,3 +22,9 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     | {%- endfor -%}
     script
         | angular.module("app").constant("config", {{configjson|safe}})
+    script
+        | angular.module("app").run(function($templateCache){
+        | {% for name, html in custom_templates.items() -%}
+        |     $templateCache.put("{{name}}", {{html|safe}})
+        | {%- endfor -%}
+        | })

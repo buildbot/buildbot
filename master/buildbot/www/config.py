@@ -42,11 +42,12 @@ class IndexResource(resource.Resource):
             versions += self.config['versions']
 
         template_dir = self.config.get('custom_templates_dir')
-        if template_dir is not None and os.path.isdir(template_dir):
+        if template_dir is not None:
             del self.config['custom_templates_dir']
             template_dir = os.path.join(self.master.basedir, template_dir)
-            self.config['custom_templates'] = self.parseCustomTemplateDir(template_dir)
-
+            self.custom_templates = self.parseCustomTemplateDir(template_dir)
+        else:
+            self.custom_templates = {}
         self.config['versions'] = versions
 
     def render_GET(self, request):
@@ -81,7 +82,7 @@ class IndexResource(resource.Resource):
                         block = parser.parse()
                         compiler = pyjade.ext.html.Compiler(block, pretty=False)
                         html = compiler.compile()
-                res[template_name % (basename,)] = html
+                res[template_name % (basename,)] = json.dumps(html)
             pass
         return res
 
@@ -135,5 +136,6 @@ class IndexResource(resource.Resource):
 
         tpl = self.jinja.get_template('index.html')
         tpl = tpl.render(configjson=json.dumps(config, default=toJson),
+                         custom_templates=self.custom_templates,
                          config=self.config)
         defer.returnValue(tpl.encode("ascii"))

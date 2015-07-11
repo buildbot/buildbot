@@ -39,7 +39,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.jinja = mock.Mock()
         template = mock.Mock()
         rsrc.jinja.get_template = lambda x: template
-        template.render = lambda configjson, config: configjson
+        template.render = lambda configjson, config, custom_templates: configjson
 
         vjson = json.dumps(rsrc.getEnvironmentVersions() + custom_versions)
 
@@ -63,11 +63,12 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         self.assertIn(res, exp)
 
     def test_parseCustomTemplateDir(self):
-        exp = {'views/builds.html': '<div>\n</div>'}
+        exp = {'views/builds.html': json.dumps('<div>\n</div>')}
         try:
             import pyjade
             [pyjade]
-            exp.update({'plugin/views/plugin.html': u'<div class="myclass"><pre>this is customized</pre></div>'})
+            exp.update({'plugin/views/plugin.html':
+                        json.dumps(u'<div class="myclass"><pre>this is customized</pre></div>')})
         except ImportError:
             pass
         template_dir = util.sibpath(__file__, "test_templates_dir")
