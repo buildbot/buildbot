@@ -14,11 +14,13 @@
 # Copyright Buildbot Team Members
 
 import jinja2
+import os
 
 from buildbot.interfaces import IConfigured
 from buildbot.util import json
 from buildbot.www import resource
 from twisted.internet import defer
+from twisted.python import log
 from twisted.web.error import Error
 
 
@@ -39,10 +41,49 @@ class IndexResource(resource.Resource):
         if isinstance(self.config.get('versions'), list):
             versions += self.config['versions']
 
+        template_dir = self.config.get('custom_templates_dir')
+        if template_dir is not None and os.path.isdir(template_dir):
+            del self.config['custom_templates_dir']
+            template_dir = os.path.join(self.master.basedir, template_dir)
+            self.config['custom_templates'] = self.parseCustomTemplateDir(template_dir)
+
         self.config['versions'] = versions
 
     def render_GET(self, request):
         return self.asyncRenderHelper(request, self.renderIndex)
+
+    def parseCustomTemplateDir(self, template_dir):
+        res = {}
+        allowed_ext = [".html"]
+        try:
+            import pyjade
+            allowed_ext.append(".jade")
+        except ImportError:
+            log.msg("pyjade not installed. Ignoring .jade files from %s" % (template_dir,))
+            pyjade = None
+        for root, dirs, files in os.walk(template_dir):
+            if root == template_dir:
+                template_name = "views/%s.html"
+            else:
+                template_name = os.path.basename(root) + "/views/%s.html"
+            for f in files:
+                fn = os.path.join(root, f)
+                basename, ext = os.path.splitext(f)
+                if ext not in allowed_ext:
+                    continue
+                if ext == ".html":
+                    with open(fn) as f:
+                        html = f.read().strip()
+                if ext == ".jade":
+                    with open(fn) as f:
+                        jade = f.read()
+                        parser = pyjade.parser.Parser(jade)
+                        block = parser.parse()
+                        compiler = pyjade.ext.html.Compiler(block, pretty=False)
+                        html = compiler.compile()
+                res[template_name % (basename,)] = html
+            pass
+        return res
 
     @staticmethod
     def getEnvironmentVersions():
