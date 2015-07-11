@@ -4,10 +4,40 @@ div.builder-meta(layout="row")
   h2.name(flex)
     | {{ builder.info.name }}
   div.force-build
-    md-button.md-primary.md-raised(md-theme="default") Force Build
+    md-button.md-primary.md-raised(md-theme="default", ng-disabled="!builder.forceschedulers.length") Force Build
 
-div.builder-content
-  md-tabs(md-border-bottom, md-center-tabs="false")
-    md-tab(label="builds")
-      div.builder-builds
-        build-item(build="build", ng-repeat="build in builder.builds")
+md-tabs.builder-content(
+  md-no-ink,
+  md-border-bottom,
+  md-center-tabs="false",
+  md-autoselect,
+  md-selected="builder.selectedTab",
+)
+  md-tab(label="builds")
+    md-content.tab-content.builder-builds
+      build-item(build="build", ng-repeat="build in builder.builds")
+  md-tab(label="info")
+    md-content.tab-content.builder-info
+      div(layout-gt-md="row")
+        div.label(flex="50") tags
+        div.detail.tags
+          span(ng-if="!builder.moreInfo.tags") No tag.
+          span.tag(ng-repeat="tag in builder.moreInfo.tags") {{ tag }}
+      div(layout-gt-md="row")
+        div.label(flex="50") description
+        div.detail {{ builder.moreInfo.description || "No description" }}
+      div(layout-gt-md="row")
+        div.label(flex="50") force schedulers
+        div.detail
+          span(ng-if="!builder.moreInfo.forceschedulers") No force scheduler.
+          a(ng-repeat="scheduler in builder.moreInfo.forceschedulers", ui-sref="builds.schedulers") {{ scheduler.name }}
+      div(layout-gt-md="row")
+        div.label(flex="50") masters
+        div.detail
+          span(ng-if="!builder.moreInfo.masters") No master.
+          a(ng-repeat="master in builder.moreInfo.masters", ui-sref="builds.masters") {{ master.name }}
+      div(layout-gt-md="row")
+        div.label(flex="50") build slaves
+        div.detail
+          span(ng-if="!builder.moreInfo.slaves") No slave.
+          a(ng-repeat="slave in builder.moreInfo.slaves", ui-sref="builds.slaves") {{ slave.name }}

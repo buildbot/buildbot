@@ -2,19 +2,37 @@ class Builder extends Controller
     info: {}
     builds: []
     lastBuild: {}
+    forceschedulers: []
+    selectedTab: 0
 
-    constructor: ($scope, $state, dataService) ->
+    tabSelected: (index) ->
+        if index == 1
+            @loadMoreBuilderInfo()
+
+    loadMoreBuilderInfo: ->
+        return if @moreInfo
+
+        @moreInfo = {}
+
+        @moreInfo.tags = @info.tags
+        @moreInfo.description = @info.description
+        @moreInfo.slaves = @info.loadBuildslaves().getArray()
+        @moreInfo.masters = @info.loadMasters().getArray()
+        @moreInfo.forceschedulers = @forceschedulers
+
+    constructor: ($scope, $state, @dataService) ->
         opened = dataService.open()
         opened.closeOnDestroy($scope)
 
         builderid = $state.params.builderid
-        dataService.getBuilders(builderid: builderid).then (data) =>
+        @dataService.getBuilders(builderid: builderid).then (data) =>
             if data.length == 0
                 alert 'Builder not found!'
                 $state.go('builds')
             else
                 @info = data[0]
-                @builds = dataService.getBuilds(
+                @forceschedulers = @info.loadForceschedulers().getArray()
+                @builds = @info.loadBuilds(
                     builderid: builderid
                     order: '-buildid'
                     limit: 20
@@ -24,3 +42,4 @@ class Builder extends Controller
             @lastBuild = @builds[0] if @builds.length
 
         $scope.$watch 'builder.builds', updateLastBuilder, true
+        $scope.$watch 'builder.selectedTab', (=> @tabSelected(@selectedTab))
