@@ -76,3 +76,12 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = config.IndexResource(master, "foo")
         res = rsrc.parseCustomTemplateDir(template_dir)
         self.assertEqual(res, exp)
+
+    def test_CustomTemplateDir(self):
+        master = self.make_master(url='h:/a/b/')
+        rsrc = config.IndexResource(master, "foo")
+        master.config.www['custom_templates_dir'] = 'foo'
+        rsrc.parseCustomTemplateDir = mock.Mock(return_value="returnvalue")
+        rsrc.reconfigResource(master.config)
+        self.assertNotIn('custom_templates_dir', master.config.www)
+        self.assertEqual('returnvalue', rsrc.custom_templates)

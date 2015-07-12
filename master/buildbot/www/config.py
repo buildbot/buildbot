@@ -59,7 +59,7 @@ class IndexResource(resource.Resource):
         try:
             import pyjade
             allowed_ext.append(".jade")
-        except ImportError:
+        except ImportError:  # pragma: no cover
             log.msg("pyjade not installed. Ignoring .jade files from %s" % (template_dir,))
             pyjade = None
         for root, dirs, files in os.walk(template_dir):
