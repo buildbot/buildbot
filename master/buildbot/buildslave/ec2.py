@@ -110,6 +110,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 if not os.path.exists(aws_id_file_path):
                     aws_id_file_path = None
             if aws_id_file_path and os.path.exists(aws_id_file_path):
+                log.msg('WARNING: EC2LatentBuildSlave is using deprecated '
+                        'aws_id file')
                 with open(aws_id_file_path, 'r') as aws_file:
                     identifier = aws_file.readline().strip()
                     secret_identifier = aws_file.readline().strip()

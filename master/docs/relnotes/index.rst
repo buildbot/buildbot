@@ -46,6 +46,9 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Providing Latent AWS EC2 credentails by the .ec2/aws_id file is deprecated:
+  Instead, use the standard .aws/credentials file.
+
 Details
 -------
 
