@@ -1102,18 +1102,22 @@ class TestBuildsetsConnectorComponent(
         def checkBuildChain(buildChain, exp_chain=[]):
             self.assertEqual(buildChain, exp_chain)
 
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[8]]))
-        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-02', 'number': None, 'brid': 2},
-                                                    {'buildername': u'builder-03', 'number': 2, 'brid': 3},
-                                                    {'buildername': u'builder-09', 'number': None, 'brid': 10}])
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[2]], brid=3))
-        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-05', 'number': 3, 'brid': 6},
-                                                  {'buildername': u'builder-06', 'number': None, 'brid': 7}])
-
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[6]], brid=7))
-        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-08', 'number': 5, 'brid': 9}])
-
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[8]], brid=9))
-        d.addCallback(checkBuildChain)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain(1))
+        d.addCallback(checkBuildChain, exp_chain=[{'buildername': 'builder-02', 'number': None,
+                                                   'results': -1, 'brid': 2},
+                                                  {'buildername': 'builder-03', 'number': 2,
+                                                   'results': -1, 'brid': 3},
+                                                  {'buildername': 'builder-04', 'number': None,
+                                                   'results': -1, 'brid': 5},
+                                                  {'buildername': 'builder-05', 'number': 3,
+                                                   'results': -1, 'brid': 6},
+                                                  {'buildername': 'builder-06', 'number': None,
+                                                   'results': -1, 'brid': 7},
+                                                  {'buildername': 'builder-08', 'number': 5,
+                                                   'results': -1, 'brid': 9},
+                                                  {'buildername': 'builder-09', 'number': None,
+                                                   'results': -1, 'brid': 10},
+                                                  {'buildername': 'builder-10', 'number': None,
+                                                   'results': -1, 'brid': 11}])
 
         return d

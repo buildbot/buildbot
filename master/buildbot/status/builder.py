@@ -908,7 +908,7 @@ class BuilderStatus(styles.Versioned):
         self.latestBuildCache[k] = cache
 
     def saveLatestBuild(self, build, key=None):
-        if build.getResults() == RESUME:
+        if build and build.getResults() == RESUME:
             return
 
         cache = {"build": None, "date": datetime.datetime.now()}

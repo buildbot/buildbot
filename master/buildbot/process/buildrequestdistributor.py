@@ -893,10 +893,12 @@ class BuildRequestDistributor(service.Service):
         # this object is temporary and will go away when we're done
 
         bc = self.createBuildChooser(bldr, self.master)
+        resume_builds = False
 
         while 1:
             try:
-                resume_builds = yield self._maybeResumeBuildOnBuilder(bc, bldr)
+                if isinstance(bc, KatanaBuildChooser):
+                    resume_builds = yield self._maybeResumeBuildOnBuilder(bc, bldr)
                 new_builds = yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
 
             except AlreadyClaimedError:

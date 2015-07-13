@@ -38,6 +38,12 @@ class TestStepLocks(unittest.TestCase):
         self.builder.botmaster = self.master.botmaster
         self.build.setBuilder(self.builder)
 
+        self.build_status = FakeBuildStatus()
+        self.step_status = Mock()
+        self.step_status.finished = None
+        self.build_status.addStepWithName = lambda x, y: self.step_status
+
+
     def test_acquire_build_Lock_step(self):
         b = self.build
         slavebuilder = Mock()
@@ -48,7 +54,7 @@ class TestStepLocks(unittest.TestCase):
         self.assertEqual(len(b.locks), 0)
         step = artifact.AcquireBuildLocks(locks=[l.access('exclusive')])
         b.setStepFactories([FakeStepFactory(step)])
-        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        b.startBuild(self.build_status, None, slavebuilder)
         b.currentStep.start()
         self.assertEqual(len(b.locks), 1)
         self.assertTrue(b.locks[0][0].owners[0][0], step)
@@ -65,7 +71,7 @@ class TestStepLocks(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(step), FakeStepFactory(step2)])
         self.assertEqual(len(b.locks), 0)
 
-        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        b.startBuild(self.build_status, None, slavebuilder)
         b.currentStep.start()
         self.assertTrue(b.locks[0][0].owners[0][0], step)
 

@@ -91,6 +91,7 @@ class FakeBuilder(object):
 
     def __init__(self, **kwargs):
         self.project = 'default'
+        self.startSlavenames = []
         self.__dict__.update(kwargs)
 
 

@@ -643,7 +643,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=[],  # reclaimed so none taken!
-                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])])
+                exp_builds=[('test-slave2', [10]), ('test-slave2', [11])])
 
     @mock.patch('random.choice', nth_slave(-1))
     @defer.inlineCallbacks
@@ -671,12 +671,12 @@ class TestMaybeStartBuilds(unittest.TestCase):
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.master.db.buildrequests.assertMyClaims([11])  # reclaimed so none taken!
-        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave1', [11])])
+        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave2', [11])])
 
         # second time around the #10 will pass, adding another request and it is claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.master.db.buildrequests.assertMyClaims([10, 11])
-        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave1', [11]), ('test-slave2', [10])])
+        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave2', [11]), ('test-slave2', [10])])
 
 
     @mock.patch('random.choice', nth_slave(1))

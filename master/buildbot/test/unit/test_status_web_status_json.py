@@ -329,7 +329,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                     'friendly_name': builder_name, 'description': 'Describing my builder',
                     'project': 'Katana',
                     'state': 'offline',
-                    'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0}
+                    'slaves': ['build-slave-01'], 'startSlavenames ': [], 'currentBuilds': [], 'pendingBuilds': 0}
 
         expected_project_dict = {'comparisonURL': '../../projects/Katana/comparison?builders0=katana-buildbot%3Dkatana',
                                  'builders': [
@@ -397,7 +397,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                    'name': 'builder-01', 'tags': ['tag1', 'tag2'],
                    'url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
                    'description': 'Describing my builder',
-                   'friendly_name': 'builder-01',
+                   'friendly_name': 'builder-01', 'startSlavenames ': [],
                    'project': 'Katana', 'state': 'offline', 'slaves': ['build-slave-01'],
                    'currentBuilds': [], 'pendingBuilds': 0}],
              'latestRevisions': {}}
@@ -434,7 +434,7 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'url': 'http://localhost:8080/projects/Katana/builders/' +
                                  'builder-01?katana-buildbot_branch=katana',
                           'friendly_name': 'builder-01', 'description': 'Describing my builder',
-                          'project': 'Katana',
+                          'project': 'Katana', 'startSlavenames ': [],
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
 
     @defer.inlineCallbacks
@@ -453,7 +453,7 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'url': 'http://localhost:8080/projects/Katana/builders/' +
                                  'builder-01?katana-buildbot_branch=katana',
                           'friendly_name': 'builder-01',
-                          'description': 'Describing my builder',
+                          'description': 'Describing my builder', 'startSlavenames ': [],
                           'project': 'Katana',
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
 
@@ -506,6 +506,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                                   'katana-buildbot_branch=katana',
                     'builds': [],
                     'properties': [],
+                    'lastBuildNumber': None,
                     'reason': 'because',
                     'slaves': ['build-slave-01'],
                     'source': {'branch': 'b',

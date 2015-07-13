@@ -97,6 +97,9 @@ class FakeBuilderStatus(object):
     def setTags(self, tags):
         pass
 
+    def setStartSlavenames(self, startSlavenames):
+        pass
+
     def newBuild(self):
         bs = fakebuild.FakeBuildStatus(self, self.master, 1)
         bs.number = 1
