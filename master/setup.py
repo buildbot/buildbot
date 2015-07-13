@@ -176,6 +176,7 @@ setup_args = {
         "buildbot.steps.package.rpm",
         "buildbot.steps.source",
         "buildbot.util",
+        "buildbot.wamp",
         "buildbot.www",
         "buildbot.www.hooks",
         "buildbot.www.authz",

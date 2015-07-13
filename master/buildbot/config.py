@@ -351,6 +351,8 @@ class MasterConfig(util.ComparableMixin):
                     error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
                           " defined, recommended to remove slavePortnum and leave"
                           " only c['protocols']['pb']['port']")
+                if proto == "wamp":
+                    self.check_wamp_proto(options)
         else:
             error("c['protocols'] must be dict")
             return
