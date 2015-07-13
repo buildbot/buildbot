@@ -92,7 +92,7 @@ class TestBuildsetsConnectorComponent(
                 self.db.buildrequests.getBuildRequest(44))
         def check(brdict):
             self.assertEqual(brdict,
-                    dict(artifactbrid=None, brid=44, buildsetid=self.BSID, buildername="bbb",
+                    dict(slavepool=None, artifactbrid=None, brid=44, buildsetid=self.BSID, buildername="bbb",
                         priority=7, claimed=True, mergebrid=None, mine=True, complete=True,
                         results=75, startbrid=None, claimed_at=self.CLAIMED_AT,
                         submitted_at=self.SUBMITTED_AT, triggeredbybrid = None,

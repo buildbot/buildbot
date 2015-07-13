@@ -66,6 +66,8 @@ class FakeBuildStatus:
 
 class FakeStepStatus:
     txt = None
+    finished = None
+
     def setText(self, txt):
         self.txt = txt
 

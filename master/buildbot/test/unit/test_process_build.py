@@ -74,7 +74,12 @@ class FakeBuildStep:
 
 
 class FakeBuildStatus(Mock):
-    implements(interfaces.IProperties)   
+    implements(interfaces.IProperties)
+
+    def addStepWithName(self, name, step_type):
+        step_status = Mock()
+        step_status.finished = None
+        return step_status
         
 class FakeBuilderStatus:
     implements(interfaces.IBuilderStatus)
@@ -436,7 +441,9 @@ class TestBuild(unittest.TestCase):
         step.step_status.addLog().chunkSize = 10
         step.step_status.getLogs.return_value = []
 
-        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        build_status = FakeBuildStatus()
+
+        b.startBuild(build_status, None, slavebuilder)
 
         self.assertEqual(gotLocks, [True])
         self.assert_(('stepStarted', (), {}) in step.step_status.method_calls)

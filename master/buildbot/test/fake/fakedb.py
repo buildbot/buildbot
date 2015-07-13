@@ -983,6 +983,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 del self.claims[brid]
         return defer.succeed(None)
 
+    def updateBuildRequests(self, brids, results):
+        return defer.succeed(None)
+
     def completeBuildRequests(self, brids, results):
         for brid in brids:
             if brid in self.reqs:
@@ -1172,6 +1175,9 @@ class FakeBuildsComponent(FakeDBComponent):
                                 finish_time=epoch2datetime(row.finish_time)))
                
         return defer.succeed(ret)
+
+    def getBuildNumberForRequest(self, brid):
+        return defer.succeed([])
 
     def getBuildsAndResultForRequest(self, brid):
         ret = []
