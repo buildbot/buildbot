@@ -20,7 +20,17 @@ class Builder extends Controller
         @moreInfo.masters = @info.loadMasters().getArray()
         @moreInfo.forceschedulers = @forceschedulers
 
-    constructor: ($scope, $state, @dataService) ->
+    triggerSchedulerDialog: (scheduler, event) ->
+        @$mdDialog.show
+            parent: document.body
+            targetEvent: event
+            templateUrl: 'views/builds.forcedialog.html'
+            locals:
+                scheduler: scheduler
+            controller: 'forceDialogController'
+            controllerAs: 'forcedialog'
+
+    constructor: ($scope, $state, @$mdDialog, @dataService) ->
         opened = dataService.open()
         opened.closeOnDestroy($scope)
 

@@ -1,0 +1,31 @@
+md-dialog
+  md-toolbar
+    div.md-toolbar-tools
+      h2 Force build
+  md-dialog-content
+    div.fieldset(layout="column")
+      md-input-container
+        label Username
+        input(ng-model="forcedialog.fields.username")
+      md-input-container
+        label Build Reason
+        input(ng-model="forcedialog.fields.reason")
+
+    div.fieldset(layout="column", layout-gt-md="row")
+      md-input-container(flex, flex-gt-md="50")
+        label Project
+        input(ng-model="forcedialog.fields.project")
+      md-input-container(flex, flex-gt-md="50")
+        label Repository
+        input(ng-model="forcedialog.fields.repository")
+    div.fieldset(layout="column", layout-gt-md="row")
+      md-input-container(flex, flex-gt-md="50")
+        label Branch
+        input(ng-model="forcedialog.fields.branch")
+      md-input-container(flex, flex-gt-md="50")
+        label Revision
+        input(ng-model="forcedialog.fields.revision")
+  div.md-actions(layout="row")
+    span(flex)
+    md-button(ng-click="forcedialog.cancel()") Cancel
+    md-button.md-primary(ng-click="forcedialog.confirm()") Confirm

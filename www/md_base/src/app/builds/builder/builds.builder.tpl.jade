@@ -3,8 +3,17 @@ div.builder-meta(layout="row")
     build-status(build="builder.lastBuild")
   h2.name(flex)
     | {{ builder.info.name }}
-  div.force-build
-    md-button.md-primary.md-raised(md-theme="default", ng-disabled="!builder.forceschedulers.length") Force Build
+  md-menu.force-build(md-position-mode="target-right target")
+    md-button.md-primary.md-raised(
+      md-theme="default",
+      ng-disabled="!builder.forceschedulers.length",
+      ng-click="$mdOpenMenu()") Force Build
+    md-menu-content(width="4")
+      md-menu-item
+        md-button(disabled) FORCE BUILD
+      md-menu-divider
+      md-menu-item(ng-repeat="scheduler in builder.forceschedulers")
+        md-button(ng-click="builder.triggerSchedulerDialog(scheduler, $event)") {{ scheduler.name }}
 
 md-tabs.builder-content(
   md-no-ink,
