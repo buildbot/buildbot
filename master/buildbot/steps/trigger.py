@@ -31,7 +31,7 @@ class ResumableBuildStep(LoggingBuildStep):
     descriptionDone="Resume Build"
 
     def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
-        self.resumeBuild = resumeBuild
+        self.resumeBuild = resumeBuild if resumeBuild is not None else True
         self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
         LoggingBuildStep.__init__(self, **kwargs)
 

@@ -607,6 +607,13 @@ class MasterConfig(object):
                 for l in b.locks:
                     check_lock(l)
 
+    def checkUnknownSlave(self, builder, builder_slavenames, slavenames):
+        if builder_slavenames:
+            unknowns = set(builder_slavenames) - slavenames
+            if unknowns:
+                error("builder '%s' uses unknown slaves %s" %
+                      (builder.name, ", ".join(`u` for u in unknowns)))
+
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown slaves
@@ -615,10 +622,9 @@ class MasterConfig(object):
         seen_builddirs = set()
 
         for b in self.builders:
-            unknowns = set(b.slavenames) - slavenames
-            if unknowns:
-                error("builder '%s' uses unknown slaves %s" %
-                            (b.name, ", ".join(`u` for u in unknowns)))
+            self.checkUnknownSlave(b, b.slavenames, slavenames)
+            self.checkUnknownSlave(b, b.startSlavenames, slavenames)
+
             if not self.projects or (b.project not in self.projects.keys()):
                 error("builder '%s' uses unknown project '%s'" % (b.name, b.project))
             if b.name in seen_names:
@@ -728,9 +734,7 @@ class BuilderConfig:
                 if sn in self.slavenames:
                     error("builder '%s': startSlavenames must not contain slaves from slavenames list" % (name,))
 
-            self.startSlavenames = startSlavenames
-        else:
-            self.startSlavenames = None
+        self.startSlavenames = startSlavenames
 
         if not project:
             error(
