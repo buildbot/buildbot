@@ -54,6 +54,78 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     branchType='invalid'))
 
+    def test_mode_identify_branch(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='identify', branchType='inrepo'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', 'http://hg.mozilla.org',
+                                 '--debug', '--rev', 'default'])
+            + ExpectShell.log('stdio', stdout='using http://hg.mozilla.org\n'+
+                                              ' sending capabilities command \n'+' sending lookup command \n'+
+                                              ' preparing listkeys for "namespaces" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' preparing listkeys for "bookmarks" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' cef7825251aa517ddc1861cf07336ba7446c86c8')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_identify_revision(self):
+        self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                           mode='identify', branchType='inrepo'),
+                       dict(revision='cef78252'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', 'http://hg.mozilla.org',
+                                 '--debug', '--rev', 'cef78252'])
+            + ExpectShell.log('stdio', stdout='using http://hg.mozilla.org\n'+
+                                              ' sending capabilities command \n'+' sending lookup command \n'+
+                                              ' preparing listkeys for "namespaces" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' preparing listkeys for "bookmarks" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' cef7825251aa517ddc1861cf07336ba7446c86c8')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_identify_unknown_revision(self):
+        self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                           mode='identify', branchType='inrepo'),
+                       dict(revision='cef78252'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', 'http://hg.mozilla.org',
+                                 '--debug', '--rev', 'cef78252'])
+            + ExpectShell.log('stdio', stdout='abort: unknown revision cef78252')
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
     def test_mode_full_clean(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
