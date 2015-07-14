@@ -157,29 +157,49 @@ class Source(LoggingBuildStep, CompositeStepMixin):
              % self.name
             LoggingBuildStep.setProperty(self, name, value, source)
 
+    def updateRequestRevision(self, revision):
+        if len(self.build.requests) > 0 and not self.build.requests[0].sources[self.codebase].revision:
+            if self.codebase in self.build.requests[0].sources:
+                self.build.requests[0].sources[self.codebase].revision = revision
+
+    @defer.inlineCallbacks
+    def updateStoredSourcestamps(self, revision, sourcestampsetid):
+            ss = [{'b_codebase': self.codebase, 'b_revision': revision,
+                   'b_sourcestampsetid': sourcestampsetid}]
+            master = self.build.builder.botmaster.parent
+            result = yield master.db.sourcestamps.updateSourceStamps(ss)
+
     @defer.inlineCallbacks
     def updateBuildSourceStamps(self, sourcestamps_updated, changes=[], totalChanges=0):
         sourcestamps = self.build.build_status.getSourceStamps()
 
         for ss in sourcestamps:
             if ss.codebase == self.codebase:
-                ss.changes = changes
+                if changes:
+                    ss.changes = changes
                 ss.revision = sourcestamps_updated[self.codebase]
                 ss.totalChanges = totalChanges
                 break
 
         # update buildrequest revision, only if the revision is empty
-        if len(self.build.requests) > 0 and not self.build.requests[0].sources[self.codebase].revision:
-            if self.codebase in self.build.requests[0].sources:
-                self.build.requests[0].sources[self.codebase].revision = sourcestamps_updated[self.codebase]
+        self.updateRequestRevision(sourcestamps_updated[self.codebase])
 
         self.build.build_status.updateSourceStamps()
 
         if len(sourcestamps_updated) > 0:
-            ss = [{'b_codebase': self.codebase, 'b_revision': sourcestamps_updated[self.codebase],
-                   'b_sourcestampsetid': sourcestamps[0].sourcestampsetid}]
-            master = self.build.builder.botmaster.parent
-            result = yield master.db.sourcestamps.updateSourceStamps(ss)
+            yield self.updateStoredSourcestamps(revision=sourcestamps_updated[self.codebase],
+                                                sourcestampsetid=sourcestamps[0].sourcestampsetid)
+
+    @defer.inlineCallbacks
+    def updateBuildRevision(self, revision):
+        sourcestamps = self.build.build_status.getSourceStamps()
+        for ss in sourcestamps:
+            if ss.codebase == self.codebase:
+                ss.revision = revision
+                break
+
+        self.updateRequestRevision(revision)
+        yield self.updateStoredSourcestamps(revision=revision, sourcestampsetid=sourcestamps[0].sourcestampsetid)
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)

@@ -22,14 +22,15 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
-from buildbot.status.results import SUCCESS, RETRY
+from buildbot.status.results import SUCCESS, RETRY, FAILURE
+
 
 class Mercurial(Source):
     """ Class for Mercurial with all the smarts """
     name = "hg"
 
     renderables = [ "repourl" ]
-    possible_modes = ('incremental', 'full')
+    possible_modes = ('incremental', 'full', 'identify')
     possible_methods = (None, 'clean', 'fresh', 'clobber')
     possible_branchTypes = ('inrepo', 'dirname')
 
@@ -96,9 +97,19 @@ class Mercurial(Source):
         if errors:
             raise ConfigErrors(errors)
 
+    @defer.inlineCallbacks
+    def identifyLastRevision(self):
+        branchOrRevision = self.revision if self.revision else self.update_branch
+        command = ['identify', self.repourl, '--debug', '--rev', branchOrRevision]
+        stdout= yield self._dovccmd(command, collectStdout=True)
+        result = [rn for rn in stdout.strip().split()]
+        lastRevision = result[-1]
+        self.checkRevisionID(lastRevision)
+        yield self.updateBuildRevision(revision=lastRevision)
+        defer.returnValue(SUCCESS)
+
     def startVC(self, branch, revision, patch):
         self.revision = revision
-        self.method = self._getMethod()
 
         d = self.checkHg()
         def checkInstall(hgInstalled):
@@ -114,6 +125,13 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             self.update_branch = (branch or 'default')
 
+        if self.mode == "identify":
+            d.addCallback(lambda _: self.identifyLastRevision())
+            d.addCallback(self.finish)
+            d.addErrback(self.failed)
+            return
+
+        self.method = self._getMethod()
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
         elif self.mode == 'incremental':
@@ -279,6 +297,11 @@ class Mercurial(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
+    def checkRevisionID(self, revision):
+        if len(revision) != 40:
+            log.msg("Got Incorrect Mercurial revision %s" % (revision, ))
+            raise ValueError("Got Incorrect Mercurial revision id %s" % (revision, ))
+
     def parseGotRevision(self, _):
         if self.ended:
             return
@@ -286,8 +309,7 @@ class Mercurial(Source):
         d = self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
         def _setrev(stdout):
             revision = stdout.strip()
-            if len(revision) != 40:
-                raise ValueError("Incorrect revision id")
+            self.checkRevisionID(revision)
             log.msg("Got Mercurial revision %s" % (revision, ))
             self.updateSourceProperty('got_revision', revision)
             return 0
