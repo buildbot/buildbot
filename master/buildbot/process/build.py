@@ -301,7 +301,6 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'finished')
         yield self.master.data.updates.finishBuild(self.buildid, self.results)
-
         # mark the build as finished
         self.slavebuilder.buildFinished()
         slave.updateSlaveStatus(buildFinished=self)

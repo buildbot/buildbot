@@ -22,9 +22,10 @@ from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
 from buildbot.interfaces import IScheduler
 from buildbot.plugins.db import get_plugins
+from buildbot import statistics as stats
 
 
-__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'util', 'reporters']
+__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'util', 'reporters', 'stats']
 
 
 # Names here match the names of the corresponding Buildbot module, hence
