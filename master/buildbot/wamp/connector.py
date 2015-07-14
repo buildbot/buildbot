@@ -15,7 +15,6 @@
 
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
-from autobahn.twisted.websocket import WampWebSocketClientFactory
 from autobahn.wamp.exception import TransportLost
 
 from twisted.internet import defer
@@ -23,25 +22,6 @@ from twisted.python import failure
 from twisted.python import log
 
 from buildbot.util import service
-
-
-class BuildbotWampWebSocketClientFactory(WampWebSocketClientFactory):
-
-    def __init__(self, master, *args, **kw):
-        self.master = master
-        WampWebSocketClientFactory.__init__(self, *args, **kw)
-
-    @defer.inlineCallbacks
-    def clientConnectionFailed(self, connector, reason):
-        print "wamp router connection failed!", reason
-        yield WampWebSocketClientFactory.clientConnectionFailed(self, connector, reason)
-        yield self.master.stopService()
-
-
-class BuildbotWampService(Service):
-
-    def factory(self, *args, **kwargs):
-        return BuildbotWampWebSocketClientFactory(self.extra['master'], *args, **kwargs)
 
 
 class MasterService(ApplicationSession, service.AsyncMultiService):
@@ -54,7 +34,6 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
         self.config = config
-        self.master = config.extra['master']
         self.setServiceParent(config.extra['parent'])
 
     @defer.inlineCallbacks
@@ -68,8 +47,15 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def onLeave(self, details):
-        # first implementation: we skip the reconnection problem
-        # Just stop the service, and crash the master. Relaunch will be done by the process manager
+        # XXX We don't handle crossbar reboot, or any other disconnection well.
+        # this is a tricky problem, as we would have to reconnect with expononential backoff
+        # re-subscribe to subscriptions, queue messages until reconnection.
+        # This is quite complicated, and I believe much better handled in autobahn
+        # It is possible that such failure is practically non-existant
+        # so for now, we just crash the master
+        log.msg("Guru meditation! We have been disconnected from wamp server")
+        log.msg("We don't know how to recover this without restarting the whole system")
+        log.msg(str(details))
         yield self.master.stopService()
 
 
@@ -84,6 +70,7 @@ def make(config):
 
 
 class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+    serviceClass = Service
 
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)
@@ -115,18 +102,6 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         defer.returnValue(ret)
 
     @defer.inlineCallbacks
-    def call(self, topic, *args, **kwargs):
-        service = yield self.getService()
-        ret = yield service.call(topic, *args, **kwargs)
-        defer.returnValue(ret)
-
-    @defer.inlineCallbacks
-    def register(self, callback, topic=None, options=None):
-        service = yield self.getService()
-        ret = yield service.register(callback, topic, options)
-        defer.returnValue(ret)
-
-    @defer.inlineCallbacks
     def subscribe(self, callback, topic=None, options=None):
         service = yield self.getService()
         ret = yield service.subscribe(callback, topic, options)
@@ -144,7 +119,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         if router_url is None:
             return
         self.router_url = router_url
-        self.app = BuildbotWampService(
+        self.app = self.serviceClass(
             url=self.router_url,
             extra=dict(master=self.master, parent=self),
             realm=wamp.get('realm'),

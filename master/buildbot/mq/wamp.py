@@ -37,12 +37,12 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     @classmethod
     def messageTopic(cls, routingKey):
-        routingKey = [key if key is not None else u"1" for key in routingKey]
-        return cls.NAMESPACE + u"." + u".".join(routingKey)
+        ifNone = lambda v, default: default if v is None else v
+        return cls.NAMESPACE + u"." + u".".join([ifNone(key, "") for key in routingKey])
 
     def _produce(self, routingKey, data):
         _data = json.loads(json.dumps(data, default=toJson))
-        options = PublishOptions(excludeMe=False)
+        options = PublishOptions(exclude_me=False)
         return self.master.wamp.publish(self.messageTopic(routingKey), dict(topic=routingKey, data=_data), options=options)
 
     def startConsuming(self, callback, _filter, persistent_name=None):
