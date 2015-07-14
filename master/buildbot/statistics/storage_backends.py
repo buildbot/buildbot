@@ -25,18 +25,22 @@ except ImportError:
 
 
 class StatsStorageBase(object):
+
     """
     Base class for sub service responsible for passing on stats data to
     a storage backend
     """
+
     def postStatsValue(self, name, value, series_name, context={}):
         return defer.succeed(None)
 
 
 class InfluxStorageService(StatsStorageBase):
+
     """
     Delegates data to InfluxDB
     """
+
     def __init__(self, url, port, user, password, db, captures,
                  name="InfluxStorageService"):
         if not InfluxDBClient:

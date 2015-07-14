@@ -18,9 +18,11 @@ from twisted.internet import threads
 
 
 class Capture(object):
+
     """
     Base class for all Capture* classes.
     """
+
     def __init__(self, routingKey, callback):
         self.routingKey = routingKey
         self.callback = callback
@@ -39,10 +41,12 @@ class Capture(object):
 
 
 class CaptureProperty(Capture):
+
     """
     Convenience wrapper for getting statistics for filtering.
     Filters out build properties specifies in the config file.
     """
+
     def __init__(self, builder_name, property_name, callback=None):
         self.builder_name = builder_name
         self.property_name = property_name
@@ -81,9 +85,11 @@ class CaptureProperty(Capture):
 
 
 class CaptureBuildTimes(Capture):
+
     """
     Capture methods for capturing build start times.
     """
+
     def __init__(self, builder_name, callback):
         self.builder_name = builder_name
         routingKey = ("builders", None, "builds", None, "finished")
@@ -111,9 +117,11 @@ class CaptureBuildTimes(Capture):
 
 
 class CaptureBuildStartTime(CaptureBuildTimes):
+
     """
     Capture methods for capturing build start times.
     """
+
     def __init__(self, builder_name, callback=None):
         def default_callback(start_time):
             return start_time.isoformat()
@@ -127,9 +135,11 @@ class CaptureBuildStartTime(CaptureBuildTimes):
 
 
 class CaptureBuildEndTime(CaptureBuildTimes):
+
     """
     Capture methods for capturing build start times.
     """
+
     def __init__(self, builder_name, callback=None):
         def default_callback(end_time):
             return end_time.isoformat()
@@ -143,9 +153,11 @@ class CaptureBuildEndTime(CaptureBuildTimes):
 
 
 class CaptureBuildDuration(CaptureBuildTimes):
+
     """
     Capture methods for capturing build start times.
     """
+
     def __init__(self, builder_name, report_in='seconds', callback=None):
         def default_callback(start_time, end_time):
             divisor = 1
@@ -157,7 +169,7 @@ class CaptureBuildDuration(CaptureBuildTimes):
             duration = end_time - start_time
             # cannot use duration.total_seconds() on Python 2.6
             duration = ((duration.microseconds + (duration.seconds +
-                                                 duration.days * 24 * 3600) * 1e6) / 1e6)
+                                                  duration.days * 24 * 3600) * 1e6) / 1e6)
             return duration / divisor
 
         if not callback:
@@ -170,9 +182,11 @@ class CaptureBuildDuration(CaptureBuildTimes):
 
 
 class CaptureData(Capture):
+
     """
     Capture methods for arbitraty data that may not be stored in the Buildbot database.
     """
+
     def __init__(self, data_name, builder_name, callback=None):
         self.data_name = data_name
         self.builder_name = builder_name

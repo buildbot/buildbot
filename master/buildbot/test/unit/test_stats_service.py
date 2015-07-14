@@ -22,8 +22,8 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.statistics import capture
 from buildbot.statistics import storage_backends
-from buildbot.statistics.storage_backends import StatsStorageBase
 from buildbot.statistics.storage_backends import InfluxStorageService
+from buildbot.statistics.storage_backends import StatsStorageBase
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
@@ -44,7 +44,7 @@ class TestStatsServicesBase(unittest.TestCase):
             self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
 
         self.stats_service = fakestats.FakeStatsService(master=self.master,
-            storage_backends=[fakestats.FakeStatsStorageService()], name="FakeStatsService")
+                                                        storage_backends=[fakestats.FakeStatsStorageService()], name="FakeStatsService")
 
         self.stats_service.startService()
 
@@ -77,8 +77,8 @@ class TestStatsServicesConfiguration(TestStatsServicesBase):
     def checkEqual(self, new_storage_backends):
         # Check whether the new_storage_backends was set in reconfigService
         registeredStorageServices = \
-        [s for s in self.stats_service.registeredStorageServices
-         if isinstance(s, StatsStorageBase)]
+            [s for s in self.stats_service.registeredStorageServices
+             if isinstance(s, StatsStorageBase)]
         for s in new_storage_backends:
             if s not in registeredStorageServices:
                 raise AssertionError("reconfigService failed."
@@ -88,6 +88,7 @@ class TestStatsServicesConfiguration(TestStatsServicesBase):
 class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
     # Smooth test of influx db service. We don't want to force people to install influxdb, so we
     # just disable this unit test if the influxdb module is not installed, using SkipTest
+
     def test_influxdb_not_installed(self):
         captures = [capture.CaptureProperty('test_builder', 'test')]
         try:
@@ -97,10 +98,10 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             [influxdb]
         except ImportError:
             self.assertRaises(config.ConfigErrors,
-                lambda: InfluxStorageService(
-                    "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
-                )
-            )
+                              lambda: InfluxStorageService(
+                                  "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
+                                  )
+                              )
 
         # if instead influxdb is installed, then intialize it - no errors should be reaised
         else:
@@ -158,9 +159,11 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
 
 
 class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
+
     """
     Test the stats service from a fake step
     """
+
     def setUp(self):
         TestStatsServicesBase.setUp(self)
         self.routingKey = ("builders", self.BUILDER_IDS[0], "builds", 1, "finished")
@@ -197,7 +200,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
                                         complete_at=build['complete_at'],
                                         state_string=u'',
                                         results=0,
-            ))
+                                        ))
         yield defer.returnValue(None)
 
     @staticmethod

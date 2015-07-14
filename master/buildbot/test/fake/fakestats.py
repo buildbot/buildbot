@@ -13,18 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
 from buildbot.process import buildstep
+from buildbot.statistics import capture
 from buildbot.statistics import stats_service
 from buildbot.statistics import storage_backends
-from buildbot.statistics import capture
 from buildbot.status.results import SUCCESS
+from twisted.internet import defer
 
 
 class FakeStatsStorageService(storage_backends.StatsStorageBase):
+
     """
     Fake Storage service used in unit tests
     """
+
     def __init__(self, stats=None, name='FakeStatsStorageService'):
         self.stored_data = []
         if not stats:
@@ -42,9 +44,11 @@ class FakeStatsStorageService(storage_backends.StatsStorageBase):
 
 
 class FakeBuildStep(buildstep.BuildStep):
+
     """
     A fake build step to be used for testing.
     """
+
     def doSomething(self):
         self.setProperty("test", 10, "test")
 
@@ -54,9 +58,11 @@ class FakeBuildStep(buildstep.BuildStep):
 
 
 class FakeStatsService(stats_service.StatsService):
+
     """
     Fake StatsService for use in fakemaster
     """
+
     def __init__(self, master=None, *args, **kwargs):
         stats_service.StatsService.__init__(self, *args, **kwargs)
         self.master = master
@@ -71,9 +77,11 @@ class FakeStatsService(stats_service.StatsService):
 
 
 class FakeInfluxDBClient(object):
+
     """
     Fake Influx module for testing on systems that don't have influxdb installed.
     """
+
     def __init__(self, *args, **kwargs):
         self.points = None
 

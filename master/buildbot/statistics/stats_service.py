@@ -16,14 +16,16 @@
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import service
 from buildbot.statistics.storage_backends import StatsStorageBase
+from buildbot.util import service
 
 
 class StatsService(service.BuildbotService):
+
     """
     A middleware for passing on statistics data to all storage backends.
     """
+
     def checkConfig(self, storage_backends):
         for sb in storage_backends:
             if not isinstance(sb, StatsStorageBase):
