@@ -44,7 +44,8 @@ class TestStatsServicesBase(unittest.TestCase):
             self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
 
         self.stats_service = fakestats.FakeStatsService(master=self.master,
-                                                        storage_backends=[fakestats.FakeStatsStorageService()], name="FakeStatsService")
+                                                        storage_backends=[fakestats.FakeStatsStorageService()],
+                                                        name="FakeStatsService")
 
         self.stats_service.startService()
 
@@ -99,9 +100,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         except ImportError:
             self.assertRaises(config.ConfigErrors,
                               lambda: InfluxStorageService(
-                                  "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
-                                  )
-                              )
+                                  "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures))
 
         # if instead influxdb is installed, then intialize it - no errors should be reaised
         else:
