@@ -200,7 +200,6 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
                                         state_string=u'',
                                         results=0,
                                         ))
-        yield defer.returnValue(None)
 
     @staticmethod
     def identity(f, *args, **kwargs):
@@ -336,7 +335,6 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'builder1-test',
             {'build_number': '1', 'builder_name': 'builder1'}
         )], self.fake_storage_service.stored_data)
-        yield defer.returnValue(None)
 
     @defer.inlineCallbacks
     def test_capture_data_alt_callback(self):
@@ -359,4 +357,3 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'builder1-test',
             {'build_number': '1', 'builder_name': 'builder1'}
         )], self.fake_storage_service.stored_data)
-        yield defer.returnValue(None)

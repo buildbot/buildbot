@@ -112,9 +112,6 @@ class CaptureBuildTimes(Capture):
                 yield threads.deferToThread(svc.postStatsValue, post_data, series_name,
                                             context)
 
-        else:
-            yield defer.returnValue(None)
-
 
 class CaptureBuildStartTime(CaptureBuildTimes):
 
@@ -209,6 +206,3 @@ class CaptureData(Capture):
             for svc in self.parent_svcs:
                 yield threads.deferToThread(svc.postStatsValue, post_data, series_name,
                                             context)
-
-        else:
-            yield defer.returnValue(None)

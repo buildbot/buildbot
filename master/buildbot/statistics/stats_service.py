@@ -89,4 +89,3 @@ class StatsService(service.BuildbotService):
         msg['build_data'] = build_data
 
         self.master.mq.produce(routingKey, msg)
-        yield defer.returnValue(None)
