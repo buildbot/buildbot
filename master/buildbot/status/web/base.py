@@ -567,11 +567,15 @@ class BuildLineMixin:
         results = build.getResults()
         css_class = css_classes.get(results, "")
 
+        source_stamps = build.getSourceStamps()
+        branch = source_stamps[0].branch if source_stamps else 'unknown'
+
         rev_list = self.get_rev_list(build)
 
         values = {'class': css_class,
                   'builder_name': builder_name,
                   'buildnum': build.getNumber(),
+                  'branch': branch,
                   'results': css_class,
                   'text': " ".join(build.getText()),
                   'buildurl': path_to_build(req, build),

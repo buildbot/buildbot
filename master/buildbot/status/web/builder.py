@@ -280,6 +280,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         b = {}
 
         b['num'] = build.getNumber()
+        b['branch'] = build.getProperty('branch')
         b['link'] = path_to_build(req, build)
 
         when = build.getETA()
@@ -345,8 +346,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if not prop_match(properties):
                 continue
 
+            branch = 'Unknown'
             if source.changes:
                 for c in source.changes:
+                    if hasattr(c, 'branch'):
+                        branch = c.branch
                     changes.append({'url': path_to_change(req, c),
                                     'who': c.who,
                                     'revision': c.revision,
@@ -360,6 +364,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'changes': changes,
                 'num_changes': len(changes),
                 'properties': properties,
+                'branch': branch,
             })
 
         try:
