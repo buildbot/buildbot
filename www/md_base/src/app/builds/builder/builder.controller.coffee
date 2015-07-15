@@ -27,6 +27,7 @@ class Builder extends Controller
             templateUrl: 'views/builds.forcedialog.html'
             locals:
                 scheduler: scheduler
+                builder: @info
             controller: 'forceDialogController'
             controllerAs: 'forcedialog'
 
