@@ -20,6 +20,7 @@ from buildbot.test.util import www
 from buildbot.www import auth
 from buildbot.www import config
 from twisted.internet import defer
+from twisted.python import log
 from twisted.python import util
 from twisted.trial import unittest
 
@@ -65,12 +66,14 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
     def test_parseCustomTemplateDir(self):
         exp = {'views/builds.html': json.dumps('<div>\n</div>')}
         try:
+            # we make the test work if pyjade is present or note
+            # It is better than just skip if pyjade is not there
             import pyjade
             [pyjade]
             exp.update({'plugin/views/plugin.html':
                         json.dumps(u'<div class="myclass"><pre>this is customized</pre></div>')})
         except ImportError:
-            pass
+            log.msg("Only testing html based template override")
         template_dir = util.sibpath(__file__, "test_templates_dir")
         master = self.make_master(url='h:/a/b/')
         rsrc = config.IndexResource(master, "foo")
