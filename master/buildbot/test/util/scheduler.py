@@ -184,7 +184,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
                     break
 
         assert len(builderids) == len(builderNames)
-        bsid = self._bsidGenerator.next()
+        bsid = next(self._bsidGenerator)
         brids = dict(zip(builderids, self._bridGenerator))
         defer.returnValue((bsid, brids))
 

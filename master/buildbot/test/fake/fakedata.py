@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import types
-
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
@@ -82,11 +80,11 @@ class FakeUpdates(object):
         if files is not None:
             self.testcase.assertIsInstance(files, list)
             map(lambda f: self.testcase.assertIsInstance(f, unicode), files)
-        self.testcase.assertIsInstance(comments, (types.NoneType, unicode))
-        self.testcase.assertIsInstance(author, (types.NoneType, unicode))
-        self.testcase.assertIsInstance(revision, (types.NoneType, unicode))
-        self.testcase.assertIsInstance(when_timestamp, (types.NoneType, int))
-        self.testcase.assertIsInstance(branch, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(comments, (type(None), unicode))
+        self.testcase.assertIsInstance(author, (type(None), unicode))
+        self.testcase.assertIsInstance(revision, (type(None), unicode))
+        self.testcase.assertIsInstance(when_timestamp, (type(None), int))
+        self.testcase.assertIsInstance(branch, (type(None), unicode))
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
@@ -101,13 +99,13 @@ class FakeUpdates(object):
                                                                project=project)
             category = category(pre_change)
 
-        self.testcase.assertIsInstance(category, (types.NoneType, unicode))
-        self.testcase.assertIsInstance(revlink, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(category, (type(None), unicode))
+        self.testcase.assertIsInstance(revlink, (type(None), unicode))
         self.assertProperties(sourced=False, properties=properties)
         self.testcase.assertIsInstance(repository, unicode)
-        self.testcase.assertIsInstance(codebase, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(codebase, (type(None), unicode))
         self.testcase.assertIsInstance(project, unicode)
-        self.testcase.assertIsInstance(src, (types.NoneType, unicode))
+        self.testcase.assertIsInstance(src, (type(None), unicode))
 
         # use locals() to ensure we get all of the args and don't forget if
         # more are added
@@ -154,7 +152,7 @@ class FakeUpdates(object):
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderids, list)
         self.testcase.assertIsInstance(external_idstring,
-                                       (types.NoneType, unicode))
+                                       (type(None), unicode))
 
         self.buildsetsAdded.append(locals())
         self.buildsetsAdded[-1].pop('self')

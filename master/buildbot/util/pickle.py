@@ -19,6 +19,7 @@ import cStringIO
 import new
 import os
 import sys
+from functools import reduce
 
 from bz2 import BZ2File
 from cStringIO import StringIO

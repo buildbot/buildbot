@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from builtins import str
 
 import base64
 import binascii
@@ -327,12 +328,12 @@ def show(x):
             continue
         if k[:2] == '__' and k[-2:] == '__':
             continue
-        if t is types.StringType or t is types.UnicodeType:
+        if t is str:
             if len(v) > 80 - maxlen - 5:
                 v = repr(v[:80 - maxlen - 5]) + "..."
-        elif t in (types.IntType, types.NoneType):
+        elif t in (int, type(None)):
             v = str(v)
-        elif v in (types.ListType, types.TupleType, types.DictType):
+        elif v in (list, tuple, dict):
             v = "%s (%d elements)" % (v, len(v))
         else:
             v = str(t)

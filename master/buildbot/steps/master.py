@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from builtins import str, bytes
+
 import os
 import pprint
 import re
-import types
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
@@ -74,7 +75,7 @@ class MasterShellCommand(BuildStep):
         # render properties
         command = self.command
         # set up argv
-        if type(command) in types.StringTypes:
+        if isinstance(command, (str, bytes)):
             if runtime.platformType == 'win32':
                 argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
                 if '/c' not in argv:
@@ -95,7 +96,7 @@ class MasterShellCommand(BuildStep):
 
         self.stdio_log = stdio_log = self.addLog("stdio")
 
-        if type(command) in types.StringTypes:
+        if isinstance(command, str):
             stdio_log.addHeader(command.strip() + "\n\n")
         else:
             stdio_log.addHeader(" ".join(command) + "\n\n")

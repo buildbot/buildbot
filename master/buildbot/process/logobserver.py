@@ -108,7 +108,7 @@ class LineConsumerLogObserver(LogLineObserver):
         # data, since the observer may be instantiated during configuration as
         # well as for each execution of the step.
         self.generator = self.consumerFunction()
-        self.generator.next()
+        next(self.generator)
         # shortcut all remaining feed operations
         self.feed = self.generator.send
         self.feed(input)

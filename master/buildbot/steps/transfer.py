@@ -182,7 +182,7 @@ class DirectoryUpload(_TransferBuildStep):
             self.addURL(os.path.basename(masterdest), self.url)
 
         # we use maxsize to limit the amount of data on both sides
-        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
+        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
 
         # default arguments
         args = {
@@ -241,7 +241,7 @@ class MultipleFileUpload(_TransferBuildStep):
         return self.runTransferCommand(cmd, fileWriter)
 
     def uploadDirectory(self, source, masterdest):
-        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
+        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
 
         args = {
             'slavesrc': source,

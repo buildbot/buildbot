@@ -12,11 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 import datetime
 import fnmatch
 import mimetools
 import re
-import types
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
@@ -176,7 +176,7 @@ class V2RootResource(resource.Resource):
                                   JSONRPC_CODES["invalid_request"])
         check("jsonrpc", (str, unicode), "a string")
         check("method", (str, unicode), "a string")
-        check("id", (str, unicode, int, types.NoneType),
+        check("id", (str, unicode, int, type(None)),
               "a string, number, or null")
         check("params", (dict,), "an object")
         if data['jsonrpc'] != '2.0':

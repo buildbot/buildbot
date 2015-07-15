@@ -13,8 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-
-import types
+from functools import reduce
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -453,7 +452,7 @@ class Build(properties.PropertiesMixin):
 
         terminate = False
         text = None
-        if isinstance(results, types.TupleType):
+        if isinstance(results, tuple):
             results, text = results
         assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
         log.msg(" step '%s' complete: %s" % (step.name, Results[results]))

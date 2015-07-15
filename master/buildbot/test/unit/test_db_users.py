@@ -149,13 +149,13 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                     sorted([tuple(i) for i in infos])
                 ), (
                     [
-                        (1L, u'soap', None, None),
-                        (2L, u'lye', None, None),
-                        (3L, u'marla', u'marla', u'cancer'),
+                        (1, u'soap', None, None),
+                        (2, u'lye', None, None),
+                        (3, u'marla', u'marla', u'cancer'),
                     ], [
-                        (1L, u'IPv9', u'0578cc6.8db024'),
-                        (2L, u'git', u'Tyler Durden <tyler@mayhem.net>'),
-                        (2L, u'irc', u'durden')
+                        (1, u'IPv9', u'0578cc6.8db024'),
+                        (2, u'git', u'Tyler Durden <tyler@mayhem.net>'),
+                        (2, u'irc', u'durden')
                     ]))
             return self.db.pool.do(thd)
         d.addCallback(check_user)
