@@ -15,8 +15,10 @@
 
 import mock
 
-from autobahn.wamp.types import SubscribeOptions
 from buildbot.mq import wamp
+from buildbot.util import json
+
+from autobahn.wamp.types import SubscribeOptions
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -55,7 +57,7 @@ class FakeWampConnector(object):
         # make sure the topic is compatible with what was subscribed
         assert self.topic_match(topic)
         self.last_data = data
-        self.qref_cb(data)
+        self.qref_cb(json.loads(json.dumps(data)))
 
 
 class TopicMatch(unittest.TestCase):

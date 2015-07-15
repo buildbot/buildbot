@@ -105,10 +105,49 @@ Simple
 
 .. py:module:: buildbot.mq.simple
 
-.. py:class:: SimpleConnector
+.. py:class:: SimpleMQ
 
     The :py:class:`SimpleMQ` class implements a local equivalent of a message-queueing server.
     It is intended for Buildbot installations with only one master.
+
+Wamp
+....
+
+.. py:module:: buildbot.mq.wamp
+
+.. py:class:: WampMQ
+
+    The :py:class:`WampMQ` class implements message-queueing using a wamp router.
+    This class translates the semantics of the buildbot mq api to the semantics of the wamp messaging system.
+    A notable difference is that autobahn API does not send the original topic to the callback, so we need to include it inside the data part, for the case of the wildcard subscriber.
+    Example message that is sent via wamp is:
+
+    .. code-block:: python
+
+        topic = "org.buildbot.builds.1.new"
+        data = {
+            "topic": ['builds', '1', 'new']
+            "data": {'builderid': 10,
+                     'buildid': 1,
+                     'buildrequestid': 13,
+                     'buildslaveid': 20,
+                     'complete': False,
+                     'complete_at': None,
+                     'masterid': 824,
+                     'number': 1,
+                     'results': None,
+                     'started_at': 1,
+                     'state_string': u'created'}
+        }
+
+.. py:module:: buildbot.wamp.connector
+
+.. py:class:: WampConnector
+
+    The :py:class:`WampConnector` class implements a buildbot service for wamp.
+    It is managed outside of the mq module as this protocol can also be reused for slave protocol.
+    The connector support queuing of requests until the wamp connection is created, but do not support disconnection and reconnection.
+    There is a chicken and egg problem at the buildbot initialization phasis, so the produce messages are actually not sent with deferred.
 
 .. _queue-schema:
 

@@ -22,6 +22,7 @@ from twisted.internet import defer
 from buildbot.mq import base
 from buildbot.util import service
 from buildbot.util import toJson
+from twisted.python import log
 
 import json
 
@@ -33,7 +34,8 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
         base.MQBase.__init__(self, master)
 
     def produce(self, routingKey, data):
-        self._produce(routingKey, data)
+        d = self._produce(routingKey, data)
+        d.addErrback(log.err, "Problem while producing message on topic " + repr(routingKey))
 
     @classmethod
     def messageTopic(cls, routingKey):
@@ -43,7 +45,8 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     def _produce(self, routingKey, data):
         _data = json.loads(json.dumps(data, default=toJson))
         options = PublishOptions(exclude_me=False)
-        return self.master.wamp.publish(self.messageTopic(routingKey), dict(topic=routingKey, data=_data), options=options)
+        return self.master.wamp.publish(self.messageTopic(routingKey),
+                                        dict(topic=routingKey, data=_data), options=options)
 
     def startConsuming(self, callback, _filter, persistent_name=None):
         if persistent_name is not None:
@@ -78,7 +81,8 @@ class QueueRef(base.QueueRef):
             yield self.stopConsuming()
 
     def invoke(self, msg):
-        return base.QueueRef.invoke(self, msg[u'topic'], msg[u'data'])
+        # json will transform tuple into list, so we must convert it back to tuple
+        return base.QueueRef.invoke(self, tuple(msg[u'topic']), msg[u'data'])
 
     @defer.inlineCallbacks
     def stopConsuming(self):
