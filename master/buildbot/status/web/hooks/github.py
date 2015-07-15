@@ -114,7 +114,6 @@ class GitHubEventHandler(object):
     def handle_pull_request(self, payload):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/%d/head' % (number,)
         commits = payload['pull_request']['commits']
 
         log.msg('Processing GitHub PR #%d' % number, logLevel=logging.DEBUG)
@@ -127,7 +126,7 @@ class GitHubEventHandler(object):
         change = {
             'revision': payload['pull_request']['head']['sha'],
             'when_timestamp': dateparse(payload['pull_request']['created_at']),
-            'branch': refname,
+            'branch': payload['pull_request']['head']['ref'],
             'revlink': payload['pull_request']['_links']['html']['href'],
             'repository': payload['repository']['clone_url'],
             'category': 'pull',
