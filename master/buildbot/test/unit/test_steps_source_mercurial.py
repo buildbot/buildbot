@@ -26,11 +26,21 @@ from buildbot.process import buildstep
 
 class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
+    def updateBuildRevision(self, revision):
+        return SUCCESS
+
     def setUp(self):
+        self.patch(mercurial.Mercurial, "updateBuildRevision", self.updateBuildRevision)
         return self.setUpSourceStep()
 
     def tearDown(self):
         return self.tearDownSourceStep()
+
+    def mockForceBuildProperty(self):
+        prop = Mock()
+        prop.hasProperty = lambda p: True
+        prop.getPropertySource = lambda s: "Force Build Form"
+        self.step.build.getProperties = lambda: prop
 
     def patch_slaveVersionIsOlderThan(self, result):
         self.patch(mercurial.Mercurial, 'slaveVersionIsOlderThan', lambda x, y, z: result)
@@ -61,6 +71,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
 
+
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
@@ -87,6 +98,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
 
+        self.mockForceBuildProperty()
+
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', '--version'])
@@ -106,12 +119,28 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_mode_identify_revision_skip(self):
+        self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                           mode='identify', branchType='inrepo'),
+                       dict(revision='cef78252'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def test_mode_identify_unknown_revision(self):
         self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                            mode='identify', branchType='inrepo'),
                        dict(revision='cef78252'))
 
         self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+        self.mockForceBuildProperty()
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',

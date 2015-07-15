@@ -152,14 +152,9 @@ class Git(Source):
             d.addCallback(self.patch, patch)
         d.addCallback(self.parseGotRevision)
         d.addCallback(self.parseCommitDescription)
-        d.addCallback(self.parseChanges)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
         return d
-
-    def parseChanges(self, _):
-        #implement
-        return 0
 
     @defer.inlineCallbacks
     def full(self):
@@ -278,7 +273,7 @@ class Git(Source):
             raise buildstep.BuildStepFailed()
         log.msg("Got Git revision %s" % (revision, ))
         self.updateSourceProperty('got_revision', revision)
-    
+        yield self.updateBuildRevision(revision=revision)
         defer.returnValue(0)
 
     @defer.inlineCallbacks

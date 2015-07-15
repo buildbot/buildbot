@@ -126,7 +126,7 @@ class Mercurial(Source):
             self.update_branch = (branch or 'default')
 
         if self.mode == "identify":
-            d.addCallback(lambda _: self.identifyLastRevision())
+            d.addCallback(lambda _: self.identifyLastRevision() if self.validateRevision() else SUCCESS)
             d.addCallback(self.finish)
             d.addErrback(self.failed)
             return
@@ -141,13 +141,8 @@ class Mercurial(Source):
             d.addCallback(self.patch, patch)
 
         d.addCallback(self.parseGotRevision)
-        d.addCallback(self.parseChanges)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
-
-    def parseChanges(self, _):
-        #implement
-        return 0
 
     def shouldReboot(self, rc):
         return rc is not None and rc != SUCCESS and self._isWindowsSlave()
@@ -312,8 +307,9 @@ class Mercurial(Source):
             self.checkRevisionID(revision)
             log.msg("Got Mercurial revision %s" % (revision, ))
             self.updateSourceProperty('got_revision', revision)
-            return 0
+            return revision
         d.addCallback(_setrev)
+        d.addCallback(lambda revision: self.updateBuildRevision(revision=revision))
         return d
 
     @defer.inlineCallbacks

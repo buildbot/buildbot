@@ -22,7 +22,11 @@ from buildbot.test.fake.remotecommand import ExpectShell, Expect
 
 class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
+    def updateBuildRevision(self, revision):
+        return SUCCESS
+
     def setUp(self):
+        self.patch(git.Git, "updateBuildRevision", self.updateBuildRevision)
         return self.setUpSourceStep()
 
     def tearDown(self):

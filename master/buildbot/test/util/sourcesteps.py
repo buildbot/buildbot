@@ -52,6 +52,7 @@ class SourceStepMixin(steps.BuildStepMixin):
         ss.revision = args.get('revision', None)
         ss.project = ''
         ss.repository = ''
+        ss.codebase = ''
         ss.patch = patch
         ss.patch_info = None
         ss.changes = []

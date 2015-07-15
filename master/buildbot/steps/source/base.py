@@ -19,6 +19,7 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
 from twisted.internet import defer
 from buildbot.steps.slave import CompositeStepMixin
+from buildbot.status.results import SUCCESS
 
 class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
@@ -173,27 +174,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             result = yield master.db.sourcestamps.updateSourceStamps(ss)
 
     @defer.inlineCallbacks
-    def updateBuildSourceStamps(self, sourcestamps_updated, changes=[], totalChanges=0):
-        sourcestamps = self.build.build_status.getSourceStamps()
-
-        for ss in sourcestamps:
-            if ss.codebase == self.codebase:
-                if changes:
-                    ss.changes = changes
-                ss.revision = sourcestamps_updated[self.codebase]
-                ss.totalChanges = totalChanges
-                break
-
-        # update buildrequest revision, only if the revision is empty
-        self.updateRequestRevision(sourcestamps_updated[self.codebase])
-
-        self.build.build_status.updateSourceStamps()
-
-        if len(sourcestamps_updated) > 0:
-            yield self.updateStoredSourcestamps(revision=sourcestamps_updated[self.codebase],
-                                                sourcestampsetid=sourcestamps[0].sourcestampsetid)
-
-    @defer.inlineCallbacks
     def updateBuildRevision(self, revision):
         sourcestamps = self.build.build_status.getSourceStamps()
         for ss in sourcestamps:
@@ -203,6 +183,22 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         if self.updateRequestRevision(revision):
             yield self.updateStoredSourcestamps(revision=revision, sourcestampsetid=sourcestamps[0].sourcestampsetid)
+
+        defer.returnValue(SUCCESS)
+
+    def validateRevision(self):
+        properties = self.build.getProperties()
+        if properties.hasProperty("owner"):
+            owner = properties.getPropertySource("owner")
+            # Check the revision when forcing a build
+            if owner and "Force Build Form" in owner:
+                return True
+
+        sourcestamps = self.build.build_status.getSourceStamps()
+
+        for ss in sourcestamps:
+            if ss.codebase == self.codebase:
+                return not ss.revision
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)
