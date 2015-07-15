@@ -38,6 +38,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def onJoin(self, details):
+        log.msg("Wamp connection suceed!")
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
@@ -58,9 +59,11 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         log.msg(str(details))
         yield self.master.stopService()
 
+    def onUserError(self, e, msg):
+        log.err(e, msg)
+
 
 def make(config):
-
     if config:
         return MasterService(config)
     else:
@@ -108,7 +111,10 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         defer.returnValue(ret)
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        wamp = new_config.mq.get('wamp', {})
+        if new_config.mq.get('type', 'simple') != "wamp":
+            return
+        wamp = new_config.mq
+        log.msg("Starting wamp with config: %r", wamp)
         router_url = wamp.get('router_url', None)
 
         # This is not a good idea to allow people to switch the router via reconfig
@@ -122,7 +128,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.app = self.serviceClass(
             url=self.router_url,
             extra=dict(master=self.master, parent=self),
-            realm=wamp.get('realm'),
+            realm=wamp.get('realm', 'buildbot'),
             make=make,
             debug=wamp.get('debug_websockets', False),
             debug_wamp=wamp.get('debug_lowlevel', False),

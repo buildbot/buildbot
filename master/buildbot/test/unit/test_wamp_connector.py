@@ -27,7 +27,7 @@ class FakeMaster(service.AsyncMultiService):
 
 
 class FakeConfig(object):
-    mq = dict(wamp=dict(router_url="wss://foo", realm="bb"))
+    mq = dict(type='wamp', router_url="wss://foo", realm="bb")
 
 
 class FakeService(service.AsyncMultiService):

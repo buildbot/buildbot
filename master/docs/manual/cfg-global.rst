@@ -130,7 +130,7 @@ Wamp
         'router_url': 'ws://url/to/crossbar'
         'realm': 'buildbot'
         'debug' : False,
-        'debug_websocket' : False,
+        'debug_websockets' : False,
         'debug_lowlevel' : False,
     }
 
