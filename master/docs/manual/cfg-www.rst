@@ -88,6 +88,29 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 
     The first element of a tuple stands for the name of the component, the second stands for the corresponding version.
 
+``custom_templates_dir``
+    This directory will be parsed for custom angularJS templates to replace the one of the original website templates.
+    if the directory string is relative, it will be joined to the master's basedir.
+    Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override ``views/<filename>.html`` templates in the angularjs templateCache.
+    Unlike with the regular nodejs based angularjs build system, python only jade interpreter is used to parse the jade templates.
+    ``pip install pyjade`` is be required to use jade templates.
+    You can also override plugin's directives, but they have to be in another directory.
+
+    .. code-block:: none
+
+        # replace the template whose source is in:
+        # www/base/src/app/builders/build/build.tpl.jade
+        build.jade
+
+        # replace the template whose source is in
+        # www/console_view/src/module/view/builders-header/buildersheader.tpl.jade
+        console_view/buildersheader.html
+
+    Known differences between nodejs jade and pyjade:
+
+        * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
+          This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
+
 .. note::
 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.

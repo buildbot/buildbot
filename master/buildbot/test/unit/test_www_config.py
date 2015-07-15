@@ -20,6 +20,8 @@ from buildbot.test.util import www
 from buildbot.www import auth
 from buildbot.www import config
 from twisted.internet import defer
+from twisted.python import log
+from twisted.python import util
 from twisted.trial import unittest
 
 
@@ -38,7 +40,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.jinja = mock.Mock()
         template = mock.Mock()
         rsrc.jinja.get_template = lambda x: template
-        template.render = lambda configjson, config: configjson
+        template.render = lambda configjson, config, custom_templates: configjson
 
         vjson = json.dumps(rsrc.getEnvironmentVersions() + custom_versions)
 
@@ -60,3 +62,29 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         exp = '{"titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         exp = exp % vjson
         self.assertIn(res, exp)
+
+    def test_parseCustomTemplateDir(self):
+        exp = {'views/builds.html': json.dumps('<div>\n</div>')}
+        try:
+            # we make the test work if pyjade is present or note
+            # It is better than just skip if pyjade is not there
+            import pyjade
+            [pyjade]
+            exp.update({'plugin/views/plugin.html':
+                        json.dumps(u'<div class="myclass"><pre>this is customized</pre></div>')})
+        except ImportError:
+            log.msg("Only testing html based template override")
+        template_dir = util.sibpath(__file__, "test_templates_dir")
+        master = self.make_master(url='h:/a/b/')
+        rsrc = config.IndexResource(master, "foo")
+        res = rsrc.parseCustomTemplateDir(template_dir)
+        self.assertEqual(res, exp)
+
+    def test_CustomTemplateDir(self):
+        master = self.make_master(url='h:/a/b/')
+        rsrc = config.IndexResource(master, "foo")
+        master.config.www['custom_templates_dir'] = 'foo'
+        rsrc.parseCustomTemplateDir = mock.Mock(return_value="returnvalue")
+        rsrc.reconfigResource(master.config)
+        self.assertNotIn('custom_templates_dir', master.config.www)
+        self.assertEqual('returnvalue', rsrc.custom_templates)

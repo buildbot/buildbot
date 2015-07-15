@@ -596,7 +596,8 @@ class MasterConfig(util.ComparableMixin):
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
                        'plugins', 'auth', 'avatar_methods', 'logfileName',
                        'logRotateLength', 'maxRotatedFiles', 'versions',
-                       'change_hook_dialects', 'change_hook_auth'])
+                       'change_hook_dialects', 'change_hook_auth',
+                       'custom_templates_dir'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %
