@@ -320,9 +320,3 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             waited_for=waited_for, properties=properties_dict, builderids=builderids,
             external_idstring=external_idstring, **kw)
         defer.returnValue((bsid, brids))
-
-    @defer.inlineCallbacks
-    def reconfigService(self, *args, **kwargs):
-        if self.running:
-            yield self.stopService()
-        yield self.startService()

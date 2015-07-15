@@ -553,10 +553,15 @@ class fakeMaster(service.MasterService, service.ReconfigurableServiceMixin):
     pass
 
 
+def makeFakeMaster():
+    m = fakeMaster()
+    m.db = mock.Mock()
+    return m
+
 class BuildbotService(unittest.TestCase):
 
     def setUp(self):
-        self.master = fakeMaster()
+        self.master = makeFakeMaster()
 
     @defer.inlineCallbacks
     def prepareService(self):
@@ -591,7 +596,7 @@ class BuildbotService(unittest.TestCase):
 class BuildbotServiceManager(unittest.TestCase):
 
     def setUp(self):
-        self.master = fakeMaster()
+        self.master = makeFakeMaster()
 
     @defer.inlineCallbacks
     def prepareService(self):

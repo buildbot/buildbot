@@ -146,27 +146,3 @@ class SchedulerManager(unittest.TestCase):
         # instance
         self.assertIdentical(sch1_new.parent, self.sm)
         self.assertIdentical(sch1_new.master, self.master)
-
-    @defer.inlineCallbacks
-    def test_reconfigService_add_and_change_and_remove_no_reconfig(self):
-        sch1 = self.makeSched(self.Sched, 'sch1', attr='alpha')
-        self.new_config.schedulers = dict(sch1=sch1)
-
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
-
-        self.assertIdentical(sch1.parent, self.sm)
-        self.assertIdentical(sch1.master, self.master)
-
-        sch1_new = self.makeSched(self.Sched, 'sch1', attr='beta')
-        sch2 = self.makeSched(self.Sched, 'sch2', attr='alpha')
-        self.new_config.schedulers = dict(sch1=sch1_new, sch2=sch2)
-
-        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
-
-        # sch1 is not longer active, and sch1_new is
-        self.assertIdentical(sch1.parent, None)
-        self.assertIdentical(sch1.master, None)
-        self.assertIdentical(sch1_new.parent, self.sm)
-        self.assertIdentical(sch1_new.master, self.master)
-        self.assertIdentical(sch2.parent, self.sm)
-        self.assertIdentical(sch2.master, self.master)

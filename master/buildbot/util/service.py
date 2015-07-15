@@ -373,11 +373,22 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
 
             for n in added_names:
                 child = new_by_name[n]
-                child.setServiceParent(self)
+                # setup service's objectid
+                class_name = '%s.%s' % (child.__class__.__module__,
+                                        child.__class__.__name__)
+                objectid = yield self.master.db.state.getObjectId(
+                    child.name, class_name)
+                child.objectid = objectid
+                yield defer.maybeDeferred(child.setServiceParent, self)
 
-        # get a list of child services to reconfigure
-        reconfigurable_services = [svc for svc in self]
-
+        # As the services that were just added got
+        # reconfigServiceWithSibling called by
+        # setServiceParent->startService,
+        # we avoid calling it again by selecting
+        # in reconfigurable_services, services
+        # that were not added just now
+        reconfigurable_services = [svc for svc in self
+                                   if svc.name not in added_names]
         # sort by priority
         reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
 
