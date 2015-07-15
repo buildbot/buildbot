@@ -4,6 +4,7 @@ from twisted.internet import defer
 import os
 from twisted.python import log
 from buildbot.changes.changes import Change
+from buildbot.status.results import SUCCESS
 
 class Hg(Mercurial):
 
@@ -27,8 +28,8 @@ class Hg(Mercurial):
             buildLatestRev = (buildLatestRev.lower() == "true")
 
         if buildLatestRev == False:
-            self.updateBuildSourceStamps(sourcestamps_updated)
-            defer.returnValue(0)
+            yield self.updateBuildSourceStamps(sourcestamps_updated)
+            defer.returnValue(SUCCESS)
 
         self.master = self.build.builder.botmaster.parent
 
@@ -67,9 +68,9 @@ class Hg(Mercurial):
                                      repository=self.repourl, branch=self.update_branch, revision=node,
                                      codebase= self.codebase))
 
-        self.updateBuildSourceStamps(sourcestamps_updated, changelist, totalChanges)
+        yield self.updateBuildSourceStamps(sourcestamps_updated, changelist, totalChanges)
 
-        defer.returnValue(0)
+        defer.returnValue(SUCCESS)
 
     def _getRevDetails(self, rev):
         """Return a deferred for (date, author, files, comments) of given rev.

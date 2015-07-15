@@ -22,7 +22,7 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
-from buildbot.status.results import SUCCESS, RETRY, FAILURE
+from buildbot.status.results import SUCCESS, RETRY
 
 
 class Mercurial(Source):

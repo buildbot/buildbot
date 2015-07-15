@@ -1,7 +1,7 @@
 from buildbot.steps.source.git import Git
-from twisted.internet import defer, utils
+from twisted.internet import defer
 from buildbot.changes.changes import Change
-import os
+from buildbot.status.results import SUCCESS
 
 class GitCommand(Git):
 
@@ -25,8 +25,8 @@ class GitCommand(Git):
             buildLatestRev = (buildLatestRev.lower() == "true")
 
         if buildLatestRev == False:
-            self.updateBuildSourceStamps(sourcestamps_updated)
-            defer.returnValue(0)
+            yield self.updateBuildSourceStamps(sourcestamps_updated)
+            defer.returnValue(SUCCESS)
 
         self.master = self.build.builder.botmaster.parent
 
@@ -68,6 +68,6 @@ class GitCommand(Git):
 
             changelist.append(Change(who=author, files=None, comments=comments, when=when, repository=self.repourl, branch= self.branch,revision=rev, codebase= self.codebase))
 
-        self.updateBuildSourceStamps(sourcestamps_updated, changelist, totalChanges)
+        yield self.updateBuildSourceStamps(sourcestamps_updated, changelist, totalChanges)
 
-        defer.returnValue(0)
+        defer.returnValue(SUCCESS)

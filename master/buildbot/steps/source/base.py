@@ -158,9 +158,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             LoggingBuildStep.setProperty(self, name, value, source)
 
     def updateRequestRevision(self, revision):
-        if len(self.build.requests) > 0 and not self.build.requests[0].sources[self.codebase].revision:
+        update = len(self.build.requests) > 0 and not self.build.requests[0].sources[self.codebase].revision
+        if update:
             if self.codebase in self.build.requests[0].sources:
                 self.build.requests[0].sources[self.codebase].revision = revision
+
+        return update
 
     @defer.inlineCallbacks
     def updateStoredSourcestamps(self, revision, sourcestampsetid):
@@ -198,8 +201,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 ss.revision = revision
                 break
 
-        self.updateRequestRevision(revision)
-        yield self.updateStoredSourcestamps(revision=revision, sourcestampsetid=sourcestamps[0].sourcestampsetid)
+        if self.updateRequestRevision(revision):
+            yield self.updateStoredSourcestamps(revision=revision, sourcestampsetid=sourcestamps[0].sourcestampsetid)
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)
