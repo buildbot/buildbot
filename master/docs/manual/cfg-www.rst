@@ -395,3 +395,134 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
                   proxy_read_timeout 6000s;
             }
     }
+
+.. _Web-Authorization:
+
+Authorization rules
+~~~~~~~~~~~~~~~~~~~
+
+Endpoint matchers
++++++++++++++++++
+
+Endpoint matchers are responsible for creating rules to match REST endpoints, and requiring roles for them.
+The following sequence is implemented by each EndpointMatcher class
+
+- Check whether the requested endpoint is supported by this matcher
+- Get necessary info from data api, and decides whether it matches.
+- Looks if the users has the required role.
+
+Several endpoints  matchers are currently implemented
+
+.. py:class:: buildbot.www.authz.endpointmatchers.AnyEndpointMatcher(role)
+
+    :param role: The role which grants access to any endpoint.
+
+    AnyEndpointMatcher grants all rights to a people with given role (usually "admins")
+
+.. py:class:: buildbot.www.authz.endpointmatchers.ForceBuildEndpointMatcher(builder, role)
+
+    :param builder: name of the builder.
+    :param role: The role needed to get access to such endpoints.
+
+    ForceBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
+
+.. py:class:: buildbot.www.authz.endpointmatchers.StopBuildEndpointMatcher(builder, role)
+
+    :param builder: name of the builder.
+    :param role: The role needed to get access to such endpoints.
+
+    StopBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
+
+Role matchers
++++++++++++++
+Endpoint matchers are responsible for creating rules to match people and grant them roles.
+You can grant roles from groups information provided by the Auth plugins, or if you prefer directly to people's email.
+
+
+.. py:class:: buildbot.www.authz.roles.RolesFromGroups(groupPrefix)
+
+    :param groupPrefix: prefix to remove from each group
+
+    RolesFromGroups grants roles from the groups of the user.
+    If a user has group 'buildbot-admin', and groupPrefix is 'buildbot-', then user will be granted the role 'admin'
+
+    ex::
+
+        roleMatchers=[
+          util.RolesFromGroups(groupPrefix="buildbot-")
+        ]
+
+.. py:class:: buildbot.www.authz.roles.RolesFromEmails(roledict)
+
+    :param roledict: dictionary with key=role, and value=list of email strings
+
+    RolesFromEmails grants roles to users according to the hardcoded emails.
+
+    ex::
+
+        roleMatchers=[
+          util.RolesFromEmails(admins=["my@email.com"])
+        ]
+
+.. py:class:: buildbot.www.authz.roles.RolesFromOwner(roledict)
+
+    :param roledict: dictionary with key=role, and value=list of email strings
+
+    RolesFromOwner grants a given role when property owner matches the email of the user
+
+    ex::
+
+        roleMatchers=[
+            RolesFromOwner(role="owner")
+        ]
+
+
+Example Configs
++++++++++++++++
+
+Simple config which allows admin people to run everything::
+
+    from buildbot.plugins import *
+    authz = util.Authz(
+      allowRules=[
+        util.StopBuildEndpointMatcher(role="admins"),
+        util.ForceBuildEndpointMatcher(role="admins")
+      ],
+      roleMatchers=[
+        util.RolesFromEmails(admins=["my@email.com"])
+      ]
+    )
+    auth=util.UserPasswordAuth({'my@email.com': 'mypass'})
+    c['www']['auth'] = auth
+    c['www']['authz'] = authz
+
+More complex config with separation per branch::
+
+    from buildbot.plugins import *
+
+    authz = util.Authz(
+        stringsMatcher=util.fnmatchStrMatcher,  # simple matcher with '*' glob character
+        # stringsMatcher = util.reStrMatcher,   # if you prefer regular expressions
+        allowRules=[
+            # admins can do anything,
+            # defaultDeny=False: if user does not have the admin role, we continue parsing rules
+            util.AnyEndpointMatcher(role="admins", defaultDeny=False),
+
+            StopBuildEndpointMatcher(role="owner"),
+
+            # *-try groups can start "try" builds
+            util.ForceBuildEndpointMatcher(builder="try", role="*-try"),
+            # *-mergers groups can start "merge" builds
+            util.ForceBuildEndpointMatcher(builder="merge", role="*-mergers"),
+            # *-releasers groups can start "release" builds
+            util.ForceBuildEndpointMatcher(builder="release", role="*-releasers"),
+        ],
+        roleMatchers=[
+            RolesFromGroups(groupPrefix="buildbot-"),
+            RolesFromEmails(admins=["homer@springfieldplant.com"],
+                            reaper-try=["007@mi6.uk"]),
+            # role owner is granted when property owner matches the email of the user
+            RolesFromOwner(role="owner")
+        ]
+    )
+    c['www']['authz'] = authz

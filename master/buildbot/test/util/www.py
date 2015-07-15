@@ -22,6 +22,7 @@ import urllib
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.www import auth
+from buildbot.www import authz
 from cStringIO import StringIO
 from twisted.internet import defer
 from twisted.web import server
@@ -118,13 +119,15 @@ class WwwTestMixin(RequiresWwwMixin):
         master = fakemaster.make_master(wantData=True, testcase=self)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
-        cfg = dict(port=None, auth=auth.NoAuth())
+        master.www.getUserInfos = lambda _: getattr(self.master.session, "user_info", {"anonymous": True})
+        cfg = dict(port=None, auth=auth.NoAuth(), authz=authz.Authz())
         cfg.update(kwargs)
         master.config.www = cfg
         if url is not None:
             master.config.buildbotURL = url
         self.master.session = FakeSession()
-
+        self.master.authz = cfg["authz"]
+        self.master.authz.setMaster(self.master)
         return master
 
     def make_request(self, path=None, method='GET'):

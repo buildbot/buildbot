@@ -36,7 +36,7 @@ class forceDialog extends Controller
                     if err.data.error.code == -32602
                         for k, v of err.data.error.message
                             fields_ref[k].errors = v
-                    $rootScope.$apply()
-
+                    else
+                        $scope.error = err.data.error.message
             cancel: ->
                 modal.modal.dismiss()

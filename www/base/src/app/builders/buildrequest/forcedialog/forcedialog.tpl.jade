@@ -3,6 +3,7 @@
         h4 {{sch.label}}
     .modal-body
         div.form-horizontal
+            .alert.alert-danger(ng-show="error") {{error}}
             forcefield(field="rootfield")
     .modal-footer
       button.btn.btn-default(ng-click="cancel()") Cancel

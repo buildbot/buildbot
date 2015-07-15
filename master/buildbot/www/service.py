@@ -57,6 +57,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         www = new_config.www
 
+        self.authz = www.get('authz')
+        if self.authz is not None:
+            self.authz.setMaster(self.master)
         need_new_site = False
         if self.site:
             # if config params have changed, set need_new_site to True.
@@ -236,3 +239,11 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         credentialFactory = guard.BasicCredentialFactory('Protected area')
         wrapper = guard.HTTPAuthSessionWrapper(portal, [credentialFactory])
         return wrapper
+
+    def getUserInfos(self, request):
+        session = request.getSession()
+        return getattr(session, "user_info", {"anonymous": True})
+
+    def assertUserAllowed(self, request, ep, action, options):
+        user_info = self.getUserInfos(request)
+        return self.authz.assertUserAllowed(ep, action, options, user_info)

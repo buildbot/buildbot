@@ -1,4 +1,5 @@
 .container
+  .alert.alert-danger(ng-show="error") {{error}}
   nav
     ul.pager
       li.previous(ng-class="{'disabled': build.number == 1}")
