@@ -25,14 +25,17 @@ from twisted.python import failure
 class Triggerable(base.BaseScheduler):
     implements(ITriggerableScheduler)
 
-    compare_attrs = base.BaseScheduler.compare_attrs
+    compare_attrs = base.BaseScheduler.compare_attrs + ('reason',)
 
-    def __init__(self, name, builderNames, properties={}, **kwargs):
+    def __init__(self, name, builderNames, properties={}, reason=None, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
         self._waiters = {}
         self._bsc_subscription = None
-        self.reason = "The Triggerable scheduler named '%s' triggered this build" % name
+
+        if reason is None:
+            reason = "The Triggerable scheduler named '%s' triggered this build" % name
+        self.reason = reason
 
     def trigger(self, sourcestamps=None, set_props=None):
         """Trigger this scheduler with the optional given list of sourcestamps

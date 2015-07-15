@@ -21,6 +21,8 @@ Features
 
 * :class:`~buildbot.status.github.GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
+* :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
+
 Fixes
 ~~~~~
 
@@ -51,7 +53,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.11..eight
+   git log v0.8.12..eight
 
 Older Versions
 --------------

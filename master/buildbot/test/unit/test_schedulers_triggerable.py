@@ -48,6 +48,10 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         self.assertEqual(sched.reason, "The Triggerable scheduler named 'n' triggered this build")
 
+    def test_constructor_explicit_reason(self):
+        sched = self.makeScheduler(reason="Because I said so")
+        self.assertEqual(sched.reason, "Because I said so")
+
     def test_trigger(self):
         sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
         # no subscription should be in place yet
