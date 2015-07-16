@@ -186,7 +186,7 @@ class Mercurial(Source):
         d = self._sourcedirIsUpdatable()
         def _cmd(updatable):
             if updatable:
-                command = ['pull', self.repourl]
+                command = self.getHgPullCommand()
             else:
                 command = ['clone', '--uncompressed', self.repourl, '.', '--noupdate']
             return command
@@ -326,10 +326,16 @@ class Mercurial(Source):
         log.msg(msg)
         yield self._removeAddedFilesAndUpdate(None)
 
-    def _pullUpdate(self, res):
-        command = ['pull' , self.repourl]
+    def getHgPullCommand(self):
+        command = ['pull', self.repourl]
         if self.revision:
             command.extend(['--rev', self.revision])
+        elif self.branchType == 'inrepo':
+            command.extend(['--rev', self.update_branch])
+        return command
+
+    def _pullUpdate(self, res):
+        command = self.getHgPullCommand()
         d = self._dovccmd(command)
         d.addCallback(self._checkBranchChange)
         return d
