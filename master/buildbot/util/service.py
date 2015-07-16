@@ -273,6 +273,11 @@ class ClusteredBuildbotService(BuildbotService):
             self._activityPollCall = None
             return self._activityPollDeferred
 
+    def _callbackStartServiceDeferred(self):
+        if self._startServiceDeferred is not None:
+            self._startServiceDeferred.callback(None)
+            self._startServiceDeferred = None
+
     @defer.inlineCallbacks
     def _activityPoll(self):
         try:
@@ -295,9 +300,7 @@ class ClusteredBuildbotService(BuildbotService):
                 # if it was not callback-ed already,
                 # and keep polling to take back the service
                 # if another one lost it
-                if self._startServiceDeferred is not None:
-                    self._startServiceDeferred.callback(None)
-                    self._startServiceDeferred = None
+                self._callbackStartServiceDeferred()
                 return
 
             try:
@@ -316,7 +319,7 @@ class ClusteredBuildbotService(BuildbotService):
                 # we just call it without waiting its stop
                 # (that may open race conditions)
                 self._stopActivityPolling()
-                self._startServiceDeferred.callback(None)
+                self._callbackStartServiceDeferred()
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
             log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
