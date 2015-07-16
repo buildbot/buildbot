@@ -119,9 +119,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 'supply both or neither of identifier, secret_identifier')
             if aws_id_file_path is None:
                 home = os.environ['HOME']
-                aws_id_file_path = os.path.join(home, '.ec2', 'aws_id')
-                if not os.path.exists(aws_id_file_path):
-                    aws_id_file_path = None
+                default_path = os.path.join(home, '.ec2', 'aws_id')
+                if os.path.exists(default_path):
+                    aws_id_file_path = default_path
             if aws_id_file_path:
                 log.msg('WARNING: EC2LatentBuildSlave is using deprecated '
                         'aws_id file')
