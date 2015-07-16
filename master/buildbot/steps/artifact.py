@@ -1,11 +1,12 @@
-from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION, SKIPPED
+from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, SKIPPED
 from twisted.internet import defer
 from buildbot.steps.shell import ShellCommand
 import re
 from buildbot.util import epoch2datetime
 from buildbot.util import safeTranslate
 from buildbot.process.slavebuilder import IDLE, BUILDING
-import random
+from buildbot.steps.resumebuild import ResumeBuild, ShellCommandResumeBuild
+
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
 
@@ -34,7 +35,7 @@ def forceRebuild(build):
 
     return force_chain_rebuild or force_rebuild
 
-class FindPreviousSuccessfulBuild(LoggingBuildStep):
+class FindPreviousSuccessfulBuild(ResumeBuild):
     name = "Find Previous Successful Build"
     description="Searching for a previous successful build at the appropriate revision(s)..."
     descriptionDone="Searching complete."
@@ -42,7 +43,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
     def __init__(self, **kwargs):
         self.build_sourcestamps = []
         self.master = None
-        LoggingBuildStep.__init__(self, **kwargs)
+        ResumeBuild.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
     def start(self):
@@ -90,7 +91,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
         return
 
 
-class CheckArtifactExists(ShellCommand):
+class CheckArtifactExists(ShellCommandResumeBuild):
     name = "Check if Artifact Exists"
     description="Checking if artifacts exist from a previous build at the appropriate revision(s)..."
     descriptionDone="Searching complete."
@@ -110,7 +111,7 @@ class CheckArtifactExists(ShellCommand):
         self.artifactPath = None
         self.artifactURL = None
         self.stopBuild = stopBuild
-        ShellCommand.__init__(self, **kwargs)
+        ShellCommandResumeBuild.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
     def createSummary(self, log):
@@ -199,7 +200,7 @@ class CheckArtifactExists(ShellCommand):
                        "cd %s" % self.artifactPath, search_artifact, "; ls"]
             # ssh to the server to check if it artifact is there
             self.setCommand(command)
-            ShellCommand.start(self)
+            ShellCommandResumeBuild.start(self)
             return
 
         if len(self.build.requests) > 1:
@@ -406,4 +407,3 @@ class ReleaseBuildLocks(LoggingBuildStep):
         # notify that the slave may now be available to start a build.
         self.build.builder.botmaster.maybeStartBuildsForSlave(self.buildslave.slavename)
         return
-

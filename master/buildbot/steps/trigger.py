@@ -14,62 +14,17 @@
 # Copyright Buildbot Team Members
 
 from buildbot.interfaces import ITriggerableScheduler
-from buildbot.process.buildstep import LoggingBuildStep, BuildStep, SUCCESS, FAILURE, EXCEPTION
+from buildbot.process.buildstep import BuildStep, SUCCESS, FAILURE, EXCEPTION
 from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status.results import DEPENDENCY_FAILURE, RETRY, RESUME
+from buildbot.status.results import DEPENDENCY_FAILURE, RETRY
 from twisted.python.failure import Failure
 from buildbot.schedulers.triggerable import TriggerableSchedulerStopped
+from buildbot.steps.resumebuild import ResumeBuild
 
-from buildbot.process.slavebuilder import IDLE, BUILDING
-
-class ResumableBuildStep(LoggingBuildStep):
-    name = "Resume Build"
-    description="Resume Build..."
-    descriptionDone="Resume Build"
-
-    def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
-        self.resumeBuild = resumeBuild if resumeBuild is not None else True
-        self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
-        LoggingBuildStep.__init__(self, **kwargs)
-
-    def releaseBuildLocks(self):
-        if self.resumeBuild:
-            self.build.releaseLocks()
-            # reset the build locks
-            self.build.locks = []
-            #  release slave lock
-            self.build.slavebuilder.state = IDLE
-            self.build.builder.builder_status.setBigState("idle")
-        else:
-            LoggingBuildStep.releaseLocks(self)
-
-    def acquireLocks(self, res=None):
-        if self.resumeBuild:
-            self.releaseBuildLocks()
-            return defer.succeed(None)
-
-        return LoggingBuildStep.acquireLocks(self, res)
-
-    def releaseLocks(self):
-        if not self.resumeBuild:
-            LoggingBuildStep.releaseLocks(self)
-
-    def finished(self, results):
-        if self.resumeBuild and results == SUCCESS:
-            text = ["Build Will Be Resumed"]
-            # saved the a resume build status
-            # in this case skip the finished time ?
-            self.step_status.stepFinished(SUCCESS)
-            self.build.build_status.resumeSlavepool = self.resumeSlavepool
-            self.build.buildFinished(text, RESUME)
-
-        LoggingBuildStep.finished(self, results)
-
-
-class Trigger(ResumableBuildStep):
+class Trigger(ResumeBuild):
     name = "Trigger"
 
     renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
@@ -110,7 +65,7 @@ class Trigger(ResumableBuildStep):
         self.set_properties = properties
         self.running = False
         self.ended = False
-        ResumableBuildStep.__init__(self, **kwargs)
+        ResumeBuild.__init__(self, **kwargs)
 
     def interrupt(self, reason):
         if self.running:
