@@ -24,7 +24,7 @@ md-tabs.builder-content(
 )
   md-tab(label="builds")
     md-content.tab-content.builder-builds
-      build-item(build="build", ng-repeat="build in builder.builds")
+      build-item(build="build", builder="builder", ng-repeat="build in builder.builds")
   md-tab(label="info")
     md-content.tab-content.builder-info
       div(layout-gt-md="row")
@@ -50,3 +50,12 @@ md-tabs.builder-content(
         div.detail
           span(ng-if="!builder.moreInfo.slaves") No slave.
           a(ng-repeat="slave in builder.moreInfo.slaves", ui-sref="builds.slaves") {{ slave.name }}
+  md-tab(ng-disabled="!false", ng-if="builder.buildTabs.length > 0")
+    md-tab-label
+      md-icon.tab-divider(md-svg-icon="arrow-down")
+  md-tab.build-tab(label="#build{{ tab.number }}", ng-repeat="tab in builder.buildTabs")
+    md-content
+      div.title-bar(layout="row")
+        span(flex) #build{{ tab.number }}
+        md-button(ng-click="builder.closeBuildTab(tab)")
+          md-icon(md-svg-icon="close")

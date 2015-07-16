@@ -4,10 +4,33 @@ class Builder extends Controller
     lastBuild: {}
     forceschedulers: []
     selectedTab: 0
+    buildTabs: []
 
     tabSelected: (index) ->
         if index == 1
             @loadMoreBuilderInfo()
+
+    selectTab: (tab) ->
+        if tab == 'info'
+            @selectedTab = 1
+        else if tab.match /build\d+/
+            match = tab.match /build(\d+)/
+            number = parseInt(match[1])
+            idx = _.find @buildTabs, (t) -> t.number == number
+            if idx >= 0
+                @selectedTab = idx + 3 # plus three to skip BUILDS, INFO and divider
+            else
+                @buildTabs.push number: number
+                setTimeout (=> @selectedTab = @buildTabs.length + 2), 200
+        else
+            @selectedTab = 0
+
+    closeBuildTab: (tab) ->
+        idx = @buildTabs.indexOf(tab)
+        if idx >= 0
+            # switch to former one tab (plus 2 to skip BUILDS, INFO and divider
+            @selectedTab = (if idx == 0 then 1 else idx + 2)
+            @buildTabs.splice(idx, 1)
 
     loadMoreBuilderInfo: ->
         return if @moreInfo
@@ -36,6 +59,7 @@ class Builder extends Controller
         opened.closeOnDestroy($scope)
 
         builderid = $state.params.builderid
+        tab = $state.params.tab
         @dataService.getBuilders(builderid: builderid).then (data) =>
             if data.length == 0
                 alert 'Builder not found!'
@@ -48,6 +72,7 @@ class Builder extends Controller
                     order: '-buildid'
                     limit: 20
                 ).getArray()
+                @selectTab(tab)
 
         updateLastBuilder = =>
             @lastBuild = @builds[0] if @builds.length

@@ -10,6 +10,6 @@ class State extends Config
             controllerAs: 'builder'
             templateUrl: "views/#{name}.html"
             name: name
-            url: "/builder/:builderid"
+            url: "/builder/:builderid/:tab"
             data:
                 title: 'Builder'
