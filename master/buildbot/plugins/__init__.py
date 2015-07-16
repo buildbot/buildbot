@@ -17,7 +17,7 @@
 Buildbot plugin infrastructure
 """
 
-from buildbot import statistics as stats
+from buildbot import statistics
 from buildbot.interfaces import IBuildSlave
 from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
@@ -25,7 +25,7 @@ from buildbot.interfaces import IScheduler
 from buildbot.plugins.db import get_plugins
 
 
-__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'util', 'reporters', 'stats']
+__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'util', 'reporters', 'statistics']
 
 
 # Names here match the names of the corresponding Buildbot module, hence

@@ -44,7 +44,9 @@ class TestStatsServicesBase(unittest.TestCase):
             self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
 
         self.stats_service = fakestats.FakeStatsService(master=self.master,
-                                                        storage_backends=[fakestats.FakeStatsStorageService()],
+                                                        storage_backends=[
+                                                            fakestats.FakeStatsStorageService()
+                                                        ],
                                                         name="FakeStatsService")
 
         self.stats_service.startService()
@@ -100,7 +102,8 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         except ImportError:
             self.assertRaises(config.ConfigErrors,
                               lambda: InfluxStorageService(
-                                  "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures))
+                                  "fake_url", "fake_port", "fake_user", "fake_password",
+                                  "fake_db", captures))
 
         # if instead influxdb is installed, then intialize it - no errors should be reaised
         else:
@@ -113,7 +116,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
     def test_influx_storage_service_fake_install(self):
         # use a fake InfluxDBClient to test InfluxStorageService in systems which
         # don't have influxdb installed. Primarily useful for test coverage.
-        self.patch(storage_backends, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
+        self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         captures = [capture.CaptureProperty('test_builder', 'test')]
         new_storage_backends = [InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
@@ -121,38 +124,38 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         self.stats_service.reconfigService(new_storage_backends)
 
     def test_influx_storage_service_post_value(self):
-        # test the postStatsValue method of InfluxStorageService
-        self.patch(storage_backends, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
+        # test the thd_postStatsValue method of InfluxStorageService
+        self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         svc = InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", "fake_stats")
         post_data = {
             'name': 'test',
             'value': 'test'
         }
-        svc.postStatsValue(post_data, "test_series_name")
-        data = {}
-        data['name'] = "test_series_name"
-        data['fields'] = {
-            "name": "test",
-            "value": "test"
+        svc.thd_postStatsValue(post_data, "test_series_name")
+        data = {
+            'name': "test_series_name",
+            'fields': {
+                "name": "test",
+                "value": "test"
+            }
         }
-        data['tags'] = {}
         points = [data]
         self.assertEquals(svc.client.points, points)
 
     def test_influx_service_not_inited(self):
         self.setUpLogging()
-        self.patch(storage_backends, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
+        self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         svc = InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", "fake_stats")
         svc.inited = False
-        svc.postStatsValue("test", "test", "test")
+        svc.thd_postStatsValue("test", "test", "test")
         self.assertLogged("Service.*not initialized")
 
     def test_storage_backend_base(self):
-        # Just initlize and run postStatsValue
+        # Just initlize and run thd_postStatsValue
         svc = StatsStorageBase()
-        r = svc.postStatsValue("test", "test", "test")
+        r = svc.thd_postStatsValue("test", "test", "test")
         assert isinstance(r, defer.Deferred)
         assert r.result == None
 
@@ -308,10 +311,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         build_data = yield self.stats_service.master.data.get(('builds', 1))
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
 
-        msg = dict()
-        msg['data_name'] = 'test'
-        msg['post_data'] = {'test': 'test'}
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
 
         exp = [(routingKey, msg)]
         self.stats_service.master.mq.assertProductions(exp)
@@ -323,10 +327,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
-        msg = dict()
-        msg['data_name'] = 'test'
-        msg['post_data'] = {'test': 'test'}
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)
@@ -345,10 +350,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
-        msg = dict()
-        msg['data_name'] = 'test'
-        msg['post_data'] = {'test': 'test'}
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)

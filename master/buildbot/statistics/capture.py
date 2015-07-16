@@ -16,6 +16,8 @@
 from twisted.internet import defer
 from twisted.internet import threads
 
+from buildbot import config
+
 
 class Capture(object):
 
@@ -25,19 +27,25 @@ class Capture(object):
 
     def __init__(self, routingKey, callback):
         self.routingKey = routingKey
-        self.callback = callback
+        self._callback = callback
         # parent service and buildmaster to be set when StatsService initialized
         self.parent_svcs = []
         self.master = None
 
-    def defaultContext(self, msg):
+    def _defaultContext(self, msg):
         return {
-            "builder_name": self.builder_name,
+            "builder_name": self._builder_name,
             "build_number": str(msg['number'])
         }
 
-    def consumer(self, routingKey, msg):
+    def consume(self, routingKey, msg):
         raise NotImplementedError
+
+    @defer.inlineCallbacks
+    def _store(self, post_data, series_name, context):
+        for svc in self.parent_svcs:
+            yield threads.deferToThread(svc.thd_postStatsValue, post_data, series_name,
+                                        context)
 
 
 class CaptureProperty(Capture):
@@ -48,8 +56,8 @@ class CaptureProperty(Capture):
     """
 
     def __init__(self, builder_name, property_name, callback=None):
-        self.builder_name = builder_name
-        self.property_name = property_name
+        self._builder_name = builder_name
+        self._property_name = property_name
         routingKey = ("builders", None, "builds", None, "finished")
 
         def default_callback(props, property_name):
@@ -61,24 +69,28 @@ class CaptureProperty(Capture):
         Capture.__init__(self, routingKey, callback)
 
     @defer.inlineCallbacks
-    def consumer(self, routingKey, msg):
+    def consume(self, routingKey, msg):
         """
         Consumer for this (CaptureProperty) class. Gets the properties from data api and
         send them to the storage backends.
         """
         builder_info = yield self.master.data.get(("builders", msg['builderid']))
-        if self.builder_name == builder_info['name']:
+        if self._builder_name == builder_info['name']:
             properties = yield self.master.data.get(("builds", msg['buildid'], "properties"))
-            ret_val = self.callback(properties, self.property_name)
-            context = self.defaultContext(msg)
-            series_name = self.builder_name + "-" + self.property_name
+            try:
+                ret_val = self._callback(properties, self._property_name)
+            except KeyError:
+                config.error("CaptureProperty failed."
+                             " The property %s not found for build number %s on builder %s."
+                             % (self._property_name, msg['number'], self._builder_name))
+
+            context = self._defaultContext(msg)
+            series_name = self._builder_name + "-" + self._property_name
             post_data = {
-                "name": self.property_name,
+                "name": self._property_name,
                 "value": ret_val
             }
-            for svc in self.parent_svcs:
-                yield threads.deferToThread(svc.postStatsValue, post_data, series_name,
-                                            context)
+            self._store(post_data, series_name, context)
 
         else:
             yield defer.succeed(None)
@@ -90,27 +102,45 @@ class CaptureBuildTimes(Capture):
     Capture methods for capturing build start times.
     """
 
-    def __init__(self, builder_name, callback):
-        self.builder_name = builder_name
+    def __init__(self, builder_name, callback, time_type):
+        self._builder_name = builder_name
         routingKey = ("builders", None, "builds", None, "finished")
+        self._time_type = time_type
         Capture.__init__(self, routingKey, callback)
 
     @defer.inlineCallbacks
-    def consumer(self, routingKey, msg):
+    def consume(self, routingKey, msg):
         """
         Consumer for CaptureBuildStartTime. Gets the build start time.
         """
         builder_info = yield self.master.data.get(("builders", msg['builderid']))
-        if self.builder_name == builder_info['name']:
-            ret_val = self.callback(*self.retValParams(msg))
-            context = self.defaultContext(msg)
+        if self._builder_name == builder_info['name']:
+            try:
+                ret_val = self._callback(*self._retValParams(msg))
+            except Exception as e:
+                # catching generic exceptions is okay here since we propagate it
+                config.error(self._err_msg(msg) + " Exception raised: " + type(e).__name__ +
+                             " with message: " + e.message)
+            context = self._defaultContext(msg)
             post_data = {
                 self._time_type: ret_val
             }
-            series_name = self.builder_name + "-build-times"
-            for svc in self.parent_svcs:
-                yield threads.deferToThread(svc.postStatsValue, post_data, series_name,
-                                            context)
+            series_name = self._builder_name + "-build-times"
+            self._store(post_data, series_name, context)
+
+        else:
+            yield defer.succeed(None)
+
+    def _err_msg(self, build_data):
+        if self._time_type == "start-time":
+            capture_class = "CaptureBuildStartTime"
+        elif self._time_type == "end-time":
+            capture_class = "CaptureBuildEndTime"
+        if self._time_type == "duration":
+            capture_class = "CaptureBuildDuration "
+        msg = "%s failed on build %s on builder %s." % (capture_class, build_data['number'],
+                                                        self._builder_name)
+        return msg
 
 
 class CaptureBuildStartTime(CaptureBuildTimes):
@@ -124,10 +154,10 @@ class CaptureBuildStartTime(CaptureBuildTimes):
             return start_time.isoformat()
         if not callback:
             callback = default_callback
-        self._time_type = "start-time"
-        CaptureBuildTimes.__init__(self, builder_name, callback)
+        time_type = "start-time"
+        CaptureBuildTimes.__init__(self, builder_name, callback, time_type)
 
-    def retValParams(self, msg):
+    def _retValParams(self, msg):
         return [msg['started_at']]
 
 
@@ -142,10 +172,10 @@ class CaptureBuildEndTime(CaptureBuildTimes):
             return end_time.isoformat()
         if not callback:
             callback = default_callback
-        self._time_type = "end-time"
-        CaptureBuildTimes.__init__(self, builder_name, callback)
+        time_type = "end-time"
+        CaptureBuildTimes.__init__(self, builder_name, callback, time_type)
 
-    def retValParams(self, msg):
+    def _retValParams(self, msg):
         return [msg['complete_at']]
 
 
@@ -171,10 +201,10 @@ class CaptureBuildDuration(CaptureBuildTimes):
 
         if not callback:
             callback = default_callback
-        self._time_type = "duration"
-        CaptureBuildTimes.__init__(self, builder_name, callback)
+        time_type = "duration"
+        CaptureBuildTimes.__init__(self, builder_name, callback, time_type)
 
-    def retValParams(self, msg):
+    def _retValParams(self, msg):
         return [msg['started_at'], msg['complete_at']]
 
 
@@ -185,24 +215,34 @@ class CaptureData(Capture):
     """
 
     def __init__(self, data_name, builder_name, callback=None):
-        self.data_name = data_name
-        self.builder_name = builder_name
+        self._data_name = data_name
+        self._builder_name = builder_name
+
+        def identity(x):
+            return x
 
         if not callback:
-            callback = lambda x: x
+            callback = identity
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         Capture.__init__(self, routingKey, callback)
 
     @defer.inlineCallbacks
-    def consumer(self, routingKey, msg):
+    def consume(self, routingKey, msg):
+        """
+        Consumer for this (CaptureData) class. Gets the data sent from yieldMetricsValue and
+        sends it to the storage backends.
+        """
         build_data = msg['build_data']
         builder_info = yield self.master.data.get(("builders", build_data['builderid']))
-        if self.builder_name == builder_info['name'] and self.data_name == msg['data_name']:
-            ret_val = self.callback(msg['post_data'])
-            context = self.defaultContext(build_data)
+        if self._builder_name == builder_info['name'] and self._data_name == msg['data_name']:
+            try:
+                ret_val = self._callback(msg['post_data'])
+            except Exception as e:
+                config.error("CaptureData failed for build %s of builder %s."
+                             " Exception generated: %s with message %s"
+                             % (msg['number'], self._builder_name, type(e).__name__, e.message))
             post_data = ret_val
-            series_name = self.builder_name + "-" + self.data_name
-            for svc in self.parent_svcs:
-                yield threads.deferToThread(svc.postStatsValue, post_data, series_name,
-                                            context)
+            series_name = self._builder_name + "-" + self._data_name
+            context = self._defaultContext(build_data)
+            self._store(post_data, series_name, context)

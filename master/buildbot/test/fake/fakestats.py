@@ -38,7 +38,9 @@ class FakeStatsStorageService(storage_backends.StatsStorageBase):
         self.captures = []
 
     @defer.inlineCallbacks
-    def postStatsValue(self, post_data, series_name, context={}):
+    def thd_postStatsValue(self, post_data, series_name, context=None):
+        if not context:
+            context = {}
         self.stored_data.append((post_data, series_name, context))
         yield defer.succeed(None)
 
@@ -83,7 +85,7 @@ class FakeInfluxDBClient(object):
     """
 
     def __init__(self, *args, **kwargs):
-        self.points = None
+        self.points = []
 
     def write_points(self, points):
-        self.points = points
+        self.points.extend(points)

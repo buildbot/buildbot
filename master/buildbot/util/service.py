@@ -345,6 +345,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
 
         # get a list of child services to reconfigure
         reconfigurable_services = [svc for svc in self]
+
         # sort by priority
         reconfigurable_services.sort(key=lambda svc: -svc.reconfig_priority)
 
