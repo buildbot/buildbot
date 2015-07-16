@@ -309,7 +309,13 @@ class ClusteredBuildbotService(BuildbotService):
                 # this service is half-active, and noted as such in the db..
                 log.err(_why='WARNING: ClusteredService(%s) is only partially active' % self.name)
             finally:
-                yield self._stopActivityPolling()
+                # cannot wait for its deactivation
+                # with yield self._stopActivityPolling
+                # as we're currently executing the
+                # _activityPollCall callback
+                # we just call it without waiting its stop
+                # (that may open race conditions)
+                self._stopActivityPolling()
                 self._startServiceDeferred.callback(None)
         except Exception:
             # don't pass exceptions into LoopingCall, which can cause it to fail
