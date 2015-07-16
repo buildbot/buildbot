@@ -58,10 +58,8 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             for src in removed:
                 yield defer.maybeDeferred(
                     src.disownServiceParent)
-                src.master = None
 
             for src in added:
-                src.master = self.master
                 yield src.setServiceParent(self)
 
         num_sources = len(list(self))
