@@ -558,6 +558,7 @@ def makeFakeMaster():
     m.db = mock.Mock()
     return m
 
+
 class BuildbotService(unittest.TestCase):
 
     def setUp(self):
