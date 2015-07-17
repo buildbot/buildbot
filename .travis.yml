@@ -43,8 +43,8 @@ matrix:
       env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     # python 3 tests
-    - python: "3.4"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
+#    - python: "3.4"
+#      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
 # Dependencies installation commands
 install:
