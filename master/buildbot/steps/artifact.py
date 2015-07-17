@@ -141,9 +141,10 @@ class CheckArtifactExists(ShellCommandResumeBuild):
 
             if not artifactsfound:
                 return
-            else:
-                self.build.setProperty("artifactsfound", True, "CheckArtifactExists %s" % self.artifact)
-                self.build.setProperty("reusedOldBuild", True)
+
+            self.build.setProperty("artifactsfound", True, "CheckArtifactExists %s" % self.artifact)
+            self.build.setProperty("reusedOldBuild", True)
+            self.resumeBuild = False
 
             if self.stopBuild:
                 # update buildrequest (artifactbrid) with self.artifactBuildrequest
@@ -152,7 +153,6 @@ class CheckArtifactExists(ShellCommandResumeBuild):
                 self.step_status.stepFinished(SUCCESS)
                 self.build.result = SUCCESS
                 self.build.allStepsDone()
-                self.resumeBuild = False
         else:
             self.build.setProperty("artifactsfound", False, "CheckArtifactExists %s" % self.artifact)
             self.descriptionDone = ["Artifact not found on server %s." % self.artifactServerURL]
