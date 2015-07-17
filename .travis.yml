@@ -84,7 +84,7 @@ install:
                   boto \
                   lz4
   # install buildbot_www from pip in order to run the www tests
-  - [ $TESTS = py3 ] || pip install --pre buildbot_www
+  - "[ $TESTS = py3 ] || pip install --pre buildbot_www"
 
 
   # for python 3 we dont install everything yet..
