@@ -25,7 +25,7 @@ md-dialog.force-dialog
       md-input-container(flex, flex-gt-md="50", md-is-error="forcedialog.field_errors.revision")
         label Revision
         input(ng-model="forcedialog.fields.revision")
-    div.errors(ng-messages="forcedialog.field_errors")
+    div.errors(ng-messages="forcedialog.field_errors", ng-if="forcedialog.field_errors")
       div(ng-message="username")
         b Username: 
         | {{ forcedialog.field_errors.username }}

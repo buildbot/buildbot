@@ -24,7 +24,8 @@ md-tabs.builder-content(
 )
   md-tab(label="builds")
     md-content.tab-content.builder-builds
-      build-item(build="build", builder="builder", ng-repeat="build in builder.builds")
+      div.no-builds(ng-if="builder.builds.length == 0") No builds.
+      build-item(build="build", builder="builder.info", ng-repeat="build in builder.builds|orderBy:'-number'")
   md-tab(label="info")
     md-content.tab-content.builder-info
       div(layout-gt-md="row")

@@ -16,7 +16,7 @@ class BuildItem extends Directive
 class _BuildItem extends Controller
     constructor: (dataService) ->
         if @outBuilder
-            @builder = outBuilder
+            @builder = @outBuilder
         else if @showBuilder
             dataService.getBuilders(@build.builderid, subscribe: false).then (builders) =>
                 @builder = builders[0]

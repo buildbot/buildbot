@@ -54,6 +54,13 @@ class Builder extends Controller
             controller: 'forceDialogController'
             controllerAs: 'forcedialog'
 
+    updateLastBuild: ->
+        lastNumber = @lastBuild.number || -1
+        for build in @builds
+            if build.number > lastNumber
+                @lastBuild = build
+                return
+
     constructor: ($scope, $state, @$mdDialog, @dataService) ->
         opened = dataService.open()
         opened.closeOnDestroy($scope)
@@ -69,13 +76,10 @@ class Builder extends Controller
                 @forceschedulers = @info.loadForceschedulers().getArray()
                 @builds = @info.loadBuilds(
                     builderid: builderid
-                    order: '-buildid'
+                    order: '-number'
                     limit: 20
                 ).getArray()
                 @selectTab(tab)
 
-        updateLastBuilder = =>
-            @lastBuild = @builds[0] if @builds.length
-
-        $scope.$watch 'builder.builds', updateLastBuilder, true
-        $scope.$watch 'builder.selectedTab', (=> @tabSelected(@selectedTab))
+        $scope.$watch 'builder.builds.length', => @updateLastBuild()
+        $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)
