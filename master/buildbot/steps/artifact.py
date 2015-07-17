@@ -98,7 +98,7 @@ class CheckArtifactExists(ShellCommandResumeBuild):
     descriptionDone="Searching complete."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None,
-                 artifactServerURL=None, stopBuild=True, **kwargs):
+                 artifactServerURL=None, stopBuild=True, resumeBuild=None, **kwargs):
         self.master = None
         self.build_sourcestamps = []
         if not isinstance(artifact, list):
@@ -112,7 +112,8 @@ class CheckArtifactExists(ShellCommandResumeBuild):
         self.artifactPath = None
         self.artifactURL = None
         self.stopBuild = stopBuild
-        ShellCommandResumeBuild.__init__(self, resumeBuild=stopBuild, **kwargs)
+        resume_build_val = stopBuild if resumeBuild is None else resumeBuild
+        ShellCommandResumeBuild.__init__(self, resumeBuild=resume_build_val, **kwargs)
 
     @defer.inlineCallbacks
     def createSummary(self, log):
