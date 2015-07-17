@@ -60,12 +60,19 @@ install:
   # Install python-future for py2/3 compatability
   # Install pyjade for custom templates tests
   - |
+      [ $TESTS = py3 ] || \
       pip install -e pkg \
                   -e master \
                   -e slave \
                   txrequests \
                   future \
                   pyjade
+
+  # for python 3 we dont install everything yet..
+  - |
+      [ $TESTS != py3 ] || \
+      pip install -e slave \
+                  future
 
   # Run additional tests only in latest configuration
   # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
