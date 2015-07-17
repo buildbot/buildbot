@@ -731,7 +731,7 @@ class BuilderConfig:
                         (name,))
 
             for sn in startSlavenames:
-                if sn in self.slavenames:
+                if sn != 'Not Available' and sn in self.slavenames:
                     error("builder '%s': startSlavenames must not contain slaves from slavenames list" % (name,))
 
         self.startSlavenames = startSlavenames
