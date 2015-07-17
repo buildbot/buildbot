@@ -83,14 +83,13 @@ class CaptureProperty(Capture):
                 config.error("CaptureProperty failed."
                              " The property %s not found for build number %s on builder %s."
                              % (self._property_name, msg['number'], self._builder_name))
-
             context = self._defaultContext(msg)
             series_name = self._builder_name + "-" + self._property_name
             post_data = {
                 "name": self._property_name,
                 "value": ret_val
             }
-            self._store(post_data, series_name, context)
+            yield self._store(post_data, series_name, context)
 
         else:
             yield defer.succeed(None)
@@ -120,13 +119,13 @@ class CaptureBuildTimes(Capture):
             except Exception as e:
                 # catching generic exceptions is okay here since we propagate it
                 config.error(self._err_msg(msg) + " Exception raised: " + type(e).__name__ +
-                             " with message: " + e.message)
+                             " with message: " + str(e))
             context = self._defaultContext(msg)
             post_data = {
                 self._time_type: ret_val
             }
             series_name = self._builder_name + "-build-times"
-            self._store(post_data, series_name, context)
+            yield self._store(post_data, series_name, context)
 
         else:
             yield defer.succeed(None)
@@ -154,8 +153,7 @@ class CaptureBuildStartTime(CaptureBuildTimes):
             return start_time.isoformat()
         if not callback:
             callback = default_callback
-        time_type = "start-time"
-        CaptureBuildTimes.__init__(self, builder_name, callback, time_type)
+        CaptureBuildTimes.__init__(self, builder_name, callback, "start-time")
 
     def _retValParams(self, msg):
         return [msg['started_at']]
@@ -172,8 +170,7 @@ class CaptureBuildEndTime(CaptureBuildTimes):
             return end_time.isoformat()
         if not callback:
             callback = default_callback
-        time_type = "end-time"
-        CaptureBuildTimes.__init__(self, builder_name, callback, time_type)
+        CaptureBuildTimes.__init__(self, builder_name, callback, "end-time")
 
     def _retValParams(self, msg):
         return [msg['complete_at']]
@@ -201,8 +198,7 @@ class CaptureBuildDuration(CaptureBuildTimes):
 
         if not callback:
             callback = default_callback
-        time_type = "duration"
-        CaptureBuildTimes.__init__(self, builder_name, callback, time_type)
+        CaptureBuildTimes.__init__(self, builder_name, callback, "duration")
 
     def _retValParams(self, msg):
         return [msg['started_at'], msg['complete_at']]
@@ -241,8 +237,9 @@ class CaptureData(Capture):
             except Exception as e:
                 config.error("CaptureData failed for build %s of builder %s."
                              " Exception generated: %s with message %s"
-                             % (msg['number'], self._builder_name, type(e).__name__, e.message))
+                             % (build_data['number'], self._builder_name, type(e).__name__,
+                                str(e)))
             post_data = ret_val
             series_name = self._builder_name + "-" + self._data_name
             context = self._defaultContext(build_data)
-            self._store(post_data, series_name, context)
+            yield self._store(post_data, series_name, context)
