@@ -81,17 +81,17 @@ The parameters are:
     Any value.
     If you provide a non-empty value (recommended), make sure that your hook is configured to use it:
 
-.. code-block:: python
+    .. code-block:: python
 
-        c['www'] = dict(
-            ...,
-            change_hook_dialects={
-                'github': {
-                    'secret': 'MY-SECRET',
-                    'strict': True
-                }
-            },
-            ...))
+            c['www'] = dict(
+                ...,
+                change_hook_dialects={
+                    'github': {
+                        'secret': 'MY-SECRET',
+                        'strict': True
+                    }
+                },
+                ...))
 
 :guilabel:`Which events would you like to trigger this webhook?`
     Leave the default -- ``Just the push event`` -- other kind of events are not currently supported.
