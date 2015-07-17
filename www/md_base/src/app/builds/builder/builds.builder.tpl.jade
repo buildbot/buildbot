@@ -54,7 +54,7 @@ md-tabs.builder-content(
   md-tab(ng-disabled="!false", ng-if="builder.buildTabs.length > 0")
     md-tab-label
       md-icon.tab-divider(md-svg-icon="arrow-down")
-  md-tab.build-tab(label="#build{{ tab.number }}", ng-repeat="tab in builder.buildTabs")
+  md-tab.build-tab(label="build #{{ tab.number }}", ng-repeat="tab in builder.buildTabs")
     md-content
       div.title-bar(layout="row")
         span(flex) #build{{ tab.number }}
