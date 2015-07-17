@@ -15,15 +15,12 @@ class ResumeBuild(LoggingBuildStep):
         LoggingBuildStep.__init__(self, **kwargs)
 
     def releaseBuildLocks(self):
-        if self.resumeBuild:
-            self.build.releaseLocks()
-            # reset the build locks
-            self.build.locks = []
-            #  release slave lock
-            self.build.slavebuilder.state = IDLE
-            self.build.builder.builder_status.setBigState("idle")
-        else:
-            LoggingBuildStep.releaseLocks(self)
+        self.build.releaseLocks()
+        # reset the build locks
+        self.build.locks = []
+        #  release slave lock
+        self.build.slavebuilder.state = IDLE
+        self.build.builder.builder_status.setBigState("idle")
 
     def acquireLocks(self, res=None):
         if self.resumeBuild:
@@ -59,26 +56,18 @@ class ShellCommandResumeBuild(ShellCommand):
         ShellCommand.__init__(self, **kwargs)
 
     def releaseBuildLocks(self):
-        if self.resumeBuild:
-            self.build.releaseLocks()
-            # reset the build locks
-            self.build.locks = []
-            #  release slave lock
-            self.build.slavebuilder.state = IDLE
-            self.build.builder.builder_status.setBigState("idle")
-        else:
-            ShellCommand.releaseLocks(self)
-
-    def acquireLocks(self, res=None):
-        if self.resumeBuild:
-            self.releaseBuildLocks()
-            return defer.succeed(None)
-
-        return ShellCommand.acquireLocks(self, res)
+        self.build.releaseLocks()
+        # reset the build locks
+        self.build.locks = []
+        #  release slave lock
+        self.build.slavebuilder.state = IDLE
+        self.build.builder.builder_status.setBigState("idle")
 
     def releaseLocks(self):
-        if not self.resumeBuild:
-            ShellCommand.releaseLocks(self)
+        if self.resumeBuild:
+            self.releaseBuildLocks()
+            return
+        ShellCommand.releaseLocks(self)
 
     def finished(self, results):
         if self.resumeBuild and results == SUCCESS:
