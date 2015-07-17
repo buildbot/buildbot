@@ -11,119 +11,97 @@ python:
   - "2.7"
 
 env:
-  - TWISTED=11.1.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.1
-  - TWISTED=12.2.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.1
-  - TWISTED=13.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.1
-  - TWISTED=latest SQLALCHEMY=latest SQLALCHEMY_MIGRATE=latest
+  - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=13.0.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
 matrix:
   include:
     # Test different versions of SQLAlchemy
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=0.6.0 SQLALCHEMY_MIGRATE=0.7.1
+      env: TWISTED=12.0.0 SQLALCHEMY=0.6.0 TESTS=trial
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=0.6.8 SQLALCHEMY_MIGRATE=0.7.1
+      env: TWISTED=12.0.0 SQLALCHEMY=0.6.8 TESTS=trial
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=0.7.0 SQLALCHEMY_MIGRATE=0.7.1
+      env: TWISTED=12.0.0 SQLALCHEMY=0.7.0 TESTS=trial
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=0.7.4 SQLALCHEMY_MIGRATE=0.7.1
+      env: TWISTED=12.0.0 SQLALCHEMY=0.7.4 TESTS=trial
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=0.7.8 SQLALCHEMY_MIGRATE=0.7.1
+      env: TWISTED=12.0.0 SQLALCHEMY=0.7.8 TESTS=trial
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.6.1
+      env: TWISTED=12.0.0 SQLALCHEMY=latest TESTS=trial
 
-    # Test different versions of SQLAlchemy-migrate
+    # add extra tests in separate jobs
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.6.1
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.1
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=lint
     - python: "2.7"
-      env: TWISTED=12.0.0 SQLALCHEMY=latest SQLALCHEMY_MIGRATE=0.7.2
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=js
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
-before_install:
-  # Disable SSH host key checking. Otherwize ssh will ask confirmation from
-  # command prompt.
-  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-
-  # Install fresh Node.js from PPA
-  - sudo add-apt-repository -y ppa:chris-lea/node.js
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq nodejs
+    # python 3 tests
+    - python: "3.4"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
 # Dependencies installation commands
 install:
-  # Fetch objects and tags from upstream git repository.
-  # Required for proper work of `git describe`.
-  - git describe || true
-  - git remote add upstream git://github.com/buildbot/buildbot.git
-  - git fetch upstream --tags
-  - git fetch origin --tags
-  - |
-    DEPTH=300;
-    while [ "$(git describe 2> /dev/null)" == "" ]; do
-      DEPTH=$(($DEPTH+200));
-      git fetch origin --depth=$DEPTH --quiet;
-    done
-
-  # Determine if current configuration is latest
-  - |
-    if [[ $TRAVIS_PYTHON_VERSION == '2.7' && $TWISTED == latest && \
-          $SQLALCHEMY = latest && $SQLALCHEMY_MIGRATE = latest ]]; then
-      export IS_LATEST=true
-    else
-      export IS_LATEST=false
-    fi;
-
   # codecov is the interface to codecov.io; see after_success
   - "echo 'travis_fold:start:codecov'; pip install codecov; echo 'travis_fold:end:codecov'"
   # coveralls is the interface to coveralls.io; see after_success
   - "echo 'travis_fold:start:coveralls'; pip install coveralls; echo 'travis_fold:end:coveralls'"
   - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
   - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY; echo 'travis_fold:end:sa'"
-  - "echo 'travis_fold:start:sam'; [ $SQLALCHEMY_MIGRATE = latest ] || pip install sqlalchemy-migrate==$SQLALCHEMY_MIGRATE; echo 'travis_fold:end:sam'"
-  - (cd pkg;    python setup.py develop)
-  - (cd master; python setup.py develop)
-  - (cd slave;  python setup.py develop)
+
   # mock is preinstalled on Travis
-  # txrequests support only Python 2.6 and 2.7.
-  - pip install txrequests
+  # Install lz4 for log compression utest
+  # Install python-future for py2/3 compatability
+  # Install pyjade for custom templates tests
+  - |
+      pip install -e pkg \
+                  -e master \
+                  -e slave \
+                  txrequests \
+                  future \
+                  pyjade
 
   # Run additional tests only in latest configuration
   # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
   # latest Twisted to avoid unintended upgrades.
   # deps of txgithub cryptography requires python 2.7, so we only install txgithub for 2.7
-  - "[ $IS_LATEST = false ] || pip install txgithub"
+  - "[ $TWISTED != latest ] || [ $TRAVIS_PYTHON_VERSION != 2.7 ] || pip install txgithub"
   # Astroid 1.3.0 dropped Python-2.6 spuport
-  - "[ $IS_LATEST = false ] || pip install 'astroid<1.3.0'"
+  - "[ $TRAVIS_PYTHON_VERSION != 2.7 ] && pip install 'astroid<1.3.0'"
+
   # Note pylint version is pinned because newer versions can't import zope.interface - http://www.logilab.org/92792
-  - "[ $IS_LATEST = false ] || pip install pylint==1.1.0"
-  - "[ $IS_LATEST = false ] || pip install pyflakes"
-  - "[ $IS_LATEST = false ] || pip install sphinx"
-  - "[ $IS_LATEST = false ] || pip install pep8==1.5.7"
-  # Install lz4 for log compression utest
-  - pip install lz4
-  # Install pyjade for custom templates tests
-  - pip install pyjade
-  # Install python-future for py2/3 compatability
-  - pip install future
+  - "[ $TESTS != lint ] || pip install pylint==1.1.0 pyflakes pep8==1.5.7"
+  - "[ $TESTS != docs ] || pip install sphinx"
 
 # Tests running commands
 script:
-  - "[ $IS_LATEST = false ] || make frontend_install_tests"
+  - "[ $TESTS != js ] || make frontend_install_tests"
   # run tests under coverage for latest only (it's slower..)
-  - "[ $IS_LATEST = true ] ||                                            trial  --reporter=text --rterrors buildbot.test buildslave.test"
-  - "[ $IS_LATEST = false ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test"
+  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test"
+  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test"
 
-  # Run additional tests only in latest configuration
-  - "[ $IS_LATEST = false ] || make pylint"
-  - "[ $IS_LATEST = false ] || make pyflakes"
-  - "[ $IS_LATEST = false ] || make docs"
-  - "[ $IS_LATEST = false ] || make pep8"
+  # run tests that are know to work on py3
+  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildslave.test"
+
+  # Run additional tests in their separate job
+  - "[ $TESTS != lint ] || make pylint"
+  - "[ $TESTS != lint ] || make pyflakes"
+  - "[ $TESTS != lint ] || make pep8"
+  - "[ $TESTS != docs ] || make docs"
   - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
 notifications:
   email: false
 
 after_success:
-  - "[ $IS_LATEST = false ] || codecov"
-  - "[ $IS_LATEST = false ] || coveralls"
+  - "[ $TESTS != coverage ] || codecov"
+  - "[ $TESTS != coverage ] || coveralls"
+sudo: false
+git:
+  depth: 300
