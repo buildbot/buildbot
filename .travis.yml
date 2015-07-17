@@ -16,6 +16,20 @@ env:
   - TWISTED=13.0.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - www/base/node_modules
+    - www/codeparameter/node_modules
+    - www/console_view/node_modules
+    - www/waterfall_view/node_modules
+    - www/nestedexample/node_modules
+    - www/base/libs
+    - www/codeparameter/libs
+    - www/console_view/libs
+    - www/waterfall_view/libs
+    - www/nestedexample/libs
+
 matrix:
   include:
     # Test different versions of SQLAlchemy
