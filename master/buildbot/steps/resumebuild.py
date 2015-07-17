@@ -1,7 +1,7 @@
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.steps.shell import ShellCommand
 from buildbot.process.slavebuilder import IDLE
-from buildbot.status.results import SUCCESS, RESUME
+from buildbot.status.results import SUCCESS, RESUME, SKIPPED
 from twisted.internet import defer
 
 class ResumeBuild(LoggingBuildStep):
@@ -34,7 +34,7 @@ class ResumeBuild(LoggingBuildStep):
             LoggingBuildStep.releaseLocks(self)
 
     def finished(self, results):
-        if self.resumeBuild and results == SUCCESS:
+        if self.resumeBuild and (results == SUCCESS or results == SKIPPED):
             text = ["Build Will Be Resumed"]
             # saved the a resume build status
             # in this case skip the finished time ?
@@ -70,7 +70,7 @@ class ShellCommandResumeBuild(ShellCommand):
         ShellCommand.releaseLocks(self)
 
     def finished(self, results):
-        if self.resumeBuild and results == SUCCESS:
+        if self.resumeBuild and (results == SUCCESS or results == SKIPPED):
             text = ["Build Will Be Resumed"]
             # saved the a resume build status
             # in this case skip the finished time ?

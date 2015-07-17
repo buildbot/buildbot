@@ -82,6 +82,7 @@ class FindPreviousSuccessfulBuild(ResumeBuild):
             self.build.result = SUCCESS
             self.build.setProperty("reusedOldBuild", True)
             self.build.allStepsDone()
+            self.resumeBuild = False
         else:
             if len(self.build.requests) > 1:
                 yield self.master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
@@ -111,7 +112,7 @@ class CheckArtifactExists(ShellCommandResumeBuild):
         self.artifactPath = None
         self.artifactURL = None
         self.stopBuild = stopBuild
-        ShellCommandResumeBuild.__init__(self, **kwargs)
+        ShellCommandResumeBuild.__init__(self, resumeBuild=stopBuild, **kwargs)
 
     @defer.inlineCallbacks
     def createSummary(self, log):
@@ -151,6 +152,7 @@ class CheckArtifactExists(ShellCommandResumeBuild):
                 self.step_status.stepFinished(SUCCESS)
                 self.build.result = SUCCESS
                 self.build.allStepsDone()
+                self.resumeBuild = False
         else:
             self.build.setProperty("artifactsfound", False, "CheckArtifactExists %s" % self.artifact)
             self.descriptionDone = ["Artifact not found on server %s." % self.artifactServerURL]
