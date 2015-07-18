@@ -40,6 +40,8 @@ Features
 
 * :bb:status:`GerritStatusPush` now has parameter --notify which is used to control e-mail notifications from Gerrit.
 
+* Schedulers: the ``codebases`` parameter can now be specified in a simple list-of-strings form
+
 Fixes
 ~~~~~
 
