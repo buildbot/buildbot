@@ -7,34 +7,36 @@ class Builder extends Controller
     buildTabs: []
 
     tabSelected: (index) ->
-        if index == 1
-            @loadMoreBuilderInfo()
-
-    selectTab: (tab) ->
-        if tab == 'info'
-            @selectedTab = 1
-        else if tab.match /build\d+/
-            match = tab.match /build(\d+)/
-            number = parseInt(match[1])
-            idx = _.find @buildTabs, (t) -> t.number == number
-            if idx >= 0
-                @selectedTab = idx + 3 # plus three to skip BUILDS, INFO and divider
-            else
-                @buildTabs.push number: number
-                setTimeout (=> @selectedTab = @buildTabs.length + 2), 200
+        if index == 0
+            @$state.go 'builds.builder.buildstab', builderid: @builderid
+        else if index <= 2
+            @$state.go 'builds.builder.infotab', builderid: @builderid
         else
-            @selectedTab = 0
+            index -= 3
+            if index < @buildTabs.length
+                @$state.go 'builds.builder.buildtab', {builderid: @builderid, number: @buildTabs[index]}
+            else
+                @tabSelected(0)
 
-    closeBuildTab: (tab) ->
-        idx = @buildTabs.indexOf(tab)
-        if idx >= 0
-            # switch to former one tab (plus 2 to skip BUILDS, INFO and divider
-            @selectedTab = (if idx == 0 then 1 else idx + 2)
-            @buildTabs.splice(idx, 1)
+    closeBuildTab: (number) ->
+        idx = @buildTabs.indexOf(number)
+        @selectedTab = (if idx > 0 then idx + 2 else 1)
+        @buildTabs.splice(idx, 1) if idx >=0
+
+    selectTab: (tab, number) ->
+        if tab == 'buildstab'
+            @selectedTab = 0
+        else if tab == 'infotab'
+            @selectedTab = 1
+        else if tab == 'buildtab'
+            idx = @buildTabs.indexOf(number)
+            if idx >= 0
+                @selectedTab = idx + 3
+            else
+                @buildTabs.push(number)
+                setTimeout (=> @selectTab(tab, number)), 100
 
     loadMoreBuilderInfo: ->
-        return if @moreInfo
-
         @moreInfo = {}
 
         @moreInfo.tags = @info.tags
@@ -61,13 +63,12 @@ class Builder extends Controller
                 @lastBuild = build
                 return
 
-    constructor: ($scope, $state, @$mdDialog, @dataService) ->
+    constructor: ($scope, @$state, @$mdDialog, @dataService) ->
         opened = dataService.open()
         opened.closeOnDestroy($scope)
 
-        builderid = $state.params.builderid
-        tab = $state.params.tab
-        @dataService.getBuilders(builderid: builderid).then (data) =>
+        @builderid = $state.params.builderid
+        @dataService.getBuilders(builderid: @builderid).then (data) =>
             if data.length == 0
                 alert 'Builder not found!'
                 $state.go('builds')
@@ -75,11 +76,11 @@ class Builder extends Controller
                 @info = data[0]
                 @forceschedulers = @info.loadForceschedulers().getArray()
                 @builds = @info.loadBuilds(
-                    builderid: builderid
+                    builderid: @builderid
                     order: '-number'
                     limit: 20
                 ).getArray()
-                @selectTab(tab)
+                @loadMoreBuilderInfo()
 
-        $scope.$watch 'builder.builds.length', => @updateLastBuild()
-        $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)
+                $scope.$watch 'builder.builds.length', => @updateLastBuild()
+                $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)

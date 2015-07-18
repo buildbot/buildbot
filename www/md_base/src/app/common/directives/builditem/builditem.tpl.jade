@@ -6,7 +6,7 @@ div.inner(layout="row")
   ) {{ builditem.builder.name }}
   a.number(
     flex,
-    ui-sref="builds.builder({builderid:builditem.builder.builderid, tab:'build{{ builditem.build.number }}'})"
+    ui-sref="builds.builder.buildtab({builderid:builditem.builder.builderid, number:builditem.build.number})"
   ) \#{{ builditem.build.number }}
   span.status-text {{ builditem.build.state_string }}
   span.time(am-time-ago="builditem.build.started_at")
