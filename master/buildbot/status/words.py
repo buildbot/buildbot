@@ -870,6 +870,10 @@ class Contact(base.StatusReceiver):
         reactor.callLater(3.5, self.send, "(7^.^)7")
         reactor.callLater(5.0, self.send, "(>^.^<)")
 
+    def command_HUSTLE(self, args):
+        reactor.callLater(1.0, self.send, "/me does the hustle")
+    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"
+
     def command_SHUTDOWN(self, args):
         # FIXME: NEED TO THINK ABOUT!
         if args not in ('check', 'start', 'stop', 'now'):
