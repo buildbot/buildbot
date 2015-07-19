@@ -297,6 +297,8 @@ class TestContactChannel(unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_hello(self):
         yield self.do_test_command('hello', exp_usage=False)
+        self.assertEqual(self.sent, 'yes?')
+        yield self.do_test_command('hello', exp_usage=False)
         self.assertTrue(self.sent)
 
     @defer.inlineCallbacks
