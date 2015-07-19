@@ -297,7 +297,7 @@ class TestContactChannel(unittest.TestCase):
     @defer.inlineCallbacks
     def test_command_hustle(self):
         yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
-        self.assertTrue(self.sent)  # doesn't matter what it sent, either
+        self.assertEqual(self.actions, ['does the hustle'])
 
     @defer.inlineCallbacks
     def test_command_list(self):
