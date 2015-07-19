@@ -229,11 +229,21 @@ The ``identifier`` argument specifies the AWS `Access Key Id`, and the ``secret_
 
    Whoever has your ``identifier`` and ``secret_identifier`` values can request AWS work charged to your account, so these values need to be carefully protected.
    Another way to specify these access keys is to put them in a separate file.
+   Buildbot supports the standard AWS credentials file.
    You can then make the access privileges stricter for this separate file, and potentially let more people read your main configuration file.
+   If your master is running in EC2, you can also use IAM roles for EC2 to delegate permissions.
 
-By default, you can make an :file:`.ec2` directory in the home folder of the user running the buildbot master.
-In that directory, create a file called :file:`aws_id`.
-The first line of that file should be your access key id; the second line should be your secret access key id.
+You can make an :file:`.aws` directory in the home folder of the user running the buildbot master.
+In that directory, create a file called :file:`credentials`.
+The format of the file should be as follows, replacing ``identifier`` and ``secret_identifier`` with the credentials obtained before.
+
+::
+
+    [default]
+    aws_access_key_id = identifier
+    aws_secret_access_key = secret_identifier
+
+If you are using IAM roles, no config file is required.
 Then you can instantiate the build slave as follows.
 
 ::
@@ -244,8 +254,6 @@ Then you can instantiate the build slave as follows.
        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                       ami='ami-12345')
     ]
-
-If you want to put the key information in another file, use the ``aws_id_file_path`` initialization argument.
 
 Previous examples used a particular AMI.
 If the Buildbot master will be deployed in a process-controlled environment, it may be convenient to specify the AMI more flexibly.
