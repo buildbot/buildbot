@@ -295,7 +295,7 @@ class TestContactChannel(unittest.TestCase):
         self.assertTrue(self.sent)  # doesn't matter what it sent
 
     @defer.inlineCallbacks
-    def test_command_dance(hello):
+    def test_command_hello(self):
         yield self.do_test_command('hello', exp_usage=False)
         self.assertTrue(self.sent)
 
