@@ -158,6 +158,7 @@ class Contact(base.StatusReceiver):
 
         self.user = user
         self.channel = channel
+        self.did_say_yes = False
 
     # silliness
 
@@ -270,11 +271,16 @@ class Contact(base.StatusReceiver):
             args = args.encode('ascii')
         try:
             return shlex.split(args)
-        except ValueError, e:
+        except ValueError as e:
             raise UsageError(e)
 
     def command_HELLO(self, args):
-        self.send("yes?")
+        if self.did_say_yes:
+            greetings=["Goeie dag","Tungjatjeta","Yatasay","Ahlan bik","Voghdzuyin","hola","kaixo","Horas","Pryvitańnie","Nomoskar","Oki","Selam","Dez-mat","Zdrávejte","Mingala ba","Hola","Hafa dai","Oh-see-YOH","Nín hao","Bonjou","Zdravo","Nazdar","Hallo","Hallo","Iiti","Kotáka","Saluton","Tere","Hallo","Hallo","Bula","Helo","Hei","Goede morgen","Bonjour","Hoi","Ola","Gamardžoba","Guten Tag","Mauri","Geia!","Inuugujoq","Kem cho","Sannu","Aloha","Shalóm","Namasté","Szia","Halló","Hai","Kiana","Dia is muire dhuit","Buongiorno","Kónnichi wa","Salam","Annyeonghaseyo","Na","Sabai dii","Ave","Es mīlu tevi","Labas.","Selamat petang","Ni hao","Kia ora","Yokwe","Kwe","sain baina uu","niltze","Yá'át'ééh","Namaste","Hallo.","ږغ كول ، هركلى كول ږغ، هركلى.","Salâm","Witajcie","Olá","Kâils","Aroha","Salut","Privét","Talofa","Namo namah","ćao","Nazdar","Zdravo","Hola","Jambo","Hej","Sälü","Halo","Selam","Sàwàtdee kráp","Dumela","Merhaba","Pryvít","Adaab arz hai","Chào","Glidis","Helo","Sawubona","Hoi"]
+            self.send(random.choice(greetings))
+        else:
+            self.did_say_yes = True
+            self.send("yes?")
 
     def command_VERSION(self, args):
         self.send("buildbot-%s at your service" % version)
