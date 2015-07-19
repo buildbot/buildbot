@@ -10,7 +10,7 @@ class Builds extends Controller
     ]
 
     isHighlighted: (name, param) ->
-        return @$state.is(name, param)
+        return @$state.includes(name, param)
 
     showSideMenu: ->
         return @$mdMedia('gt-sm')

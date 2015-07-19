@@ -35,6 +35,5 @@ class State extends Config
             name: 'builds.builder.buildtab'
             url: '/buildtab/{number:int}'
             templateUrl: "views/#{name}.buildtab.html"
-            controller: ($scope, $state) ->
-                $scope.number = $state.params.number
-                $scope.builder.selectTab('buildtab', $scope.number)
+            controller: 'buildTabController'
+            controllerAs: 'buildtab'

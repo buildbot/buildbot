@@ -1,3 +1,5 @@
-div.title(layout="row")
-  h3(flex) build
-  md-button(ng-click="builder.closeBuildTab(number)") close
+div.build-tab
+  div.tab-manage-bar(layout="row")
+    h3.title(flex) BUILD \#{{ buildtab.number }}
+    a.md-button(ng-click="builder.closeBuildTab(buildtab.number)")
+      md-icon(md-svg-icon="close")
