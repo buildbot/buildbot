@@ -131,14 +131,8 @@ class CaptureBuildTimes(Capture):
             yield defer.succeed(None)
 
     def _err_msg(self, build_data):
-        if self._time_type == "start-time":
-            capture_class = "CaptureBuildStartTime"
-        elif self._time_type == "end-time":
-            capture_class = "CaptureBuildEndTime"
-        if self._time_type == "duration":
-            capture_class = "CaptureBuildDuration "
-        msg = "%s failed on build %s on builder %s." % (capture_class, build_data['number'],
-                                                        self._builder_name)
+        msg = "%s failed on build %s on builder %s." % (self.__class__.__name__,
+                                                        build_data['number'], self._builder_name)
         return msg
 
 

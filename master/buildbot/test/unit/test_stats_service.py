@@ -135,7 +135,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         context = {'x': 'y'}
         svc.thd_postStatsValue(post_data, "test_series_name", context)
         data = {
-            'name': "test_series_name",
+            'measurement': "test_series_name",
             'fields': {
                 "name": "test",
                 "value": "test"

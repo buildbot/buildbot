@@ -53,7 +53,7 @@ class InfluxStorageService(StatsStorageBase):
             return
 
         data = {
-            'name': series_name,
+            'measurement': series_name,
             'fields': post_data
         }
 
