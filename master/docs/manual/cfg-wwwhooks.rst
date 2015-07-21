@@ -62,7 +62,7 @@ The simples way to use GitHub hook is as follows:
 .. code-block:: python
 
     c['www'] = dict(...,
-        change_hook_dialects={'github': True}))
+        change_hook_dialects={'github': { }})
 
 Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
 The parameters are:
