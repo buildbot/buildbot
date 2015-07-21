@@ -302,7 +302,7 @@ class TestContactChannel(unittest.TestCase):
         yield self.do_test_command('hello', exp_usage=False)
         self.assertEqual(self.sent, ['yes?'])
         yield self.do_test_command('hello', exp_usage=False)
-        self.assertIn(self.sent, greetings)
+        self.assertIn(self.sent[0], greetings)
 
     @defer.inlineCallbacks
     def test_command_list(self):
