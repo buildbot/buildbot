@@ -16,6 +16,7 @@
 from distutils.version import LooseVersion
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import failure
 from twisted.python import log
 
 from buildbot import config as bbconfig
@@ -147,40 +148,35 @@ class Git(Source):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
+    @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        d = self.checkBranchSupport()
+        try:
+            gitInstalled = yield self.checkBranchSupport()
 
-        def checkInstall(gitInstalled):
             if not gitInstalled:
                 raise BuildSlaveTooOldError("git is not installed on slave")
-            return RC_SUCCESS
-        d.addCallback(checkInstall)
 
-        d.addCallback(lambda _: self.sourcedirIsPatched())
+            patched = yield self.sourcedirIsPatched()
 
-        def checkPatched(patched):
             if patched:
-                return self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
-            else:
-                return RC_SUCCESS
-        d.addCallback(checkPatched)
+                yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
-        if self.mode == 'incremental':
-            d.addCallback(lambda _: self.incremental())
-        elif self.mode == 'full':
-            d.addCallback(lambda _: self.full())
-        if patch:
-            d.addCallback(self.patch, patch)
-        d.addCallback(self.parseGotRevision)
-        d.addCallback(self.parseCommitDescription)
-        d.addCallback(self.finish)
-        d.addErrback(self.failed)
-        return d
+            if self.mode == 'incremental':
+                yield self.incremental()
+            elif self.mode == 'full':
+                yield self.full()
+            if patch:
+                yield self.patch(patch=patch)
+            yield self.parseGotRevision()
+            res = yield self.parseCommitDescription()
+            yield self.finish(res)
+        except Exception as e:
+            self.failed(failure.Failure())
 
     @defer.inlineCallbacks
     def full(self):
@@ -222,14 +218,26 @@ class Git(Source):
         yield self._syncSubmodule(None)
         yield self._updateSubmodule(None)
 
+    @defer.inlineCallbacks
     def clean(self):
         command = ['clean', '-f', '-f', '-d']
-        d = self._dovccmd(command)
-        d.addCallback(self._fetchOrFallback)
-        d.addCallback(self._syncSubmodule)
-        d.addCallback(self._updateSubmodule)
-        d.addCallback(self._cleanSubmodule)
-        return d
+        rc = yield self._dovccmd(command)
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+
+        rc = yield self._fetchOrFallback()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        rc = yield self._syncSubmodule()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        rc = yield self._updateSubmodule()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        rc = yield self._cleanSubmodule()
+        if rc != RC_SUCCESS:
+            raise buildstep.BuildStepFailed
+        defer.returnValue(RC_SUCCESS)
 
     @defer.inlineCallbacks
     def clobber(self):
@@ -251,42 +259,37 @@ class Git(Source):
         yield self._updateSubmodule()
         yield self._cleanSubmodule()
 
+    @defer.inlineCallbacks
     def copy(self):
-        d = self.runRmdir(self.workdir, abandonOnFailure=False)
+        yield self.runRmdir(self.workdir)
 
         old_workdir = self.workdir
         self.workdir = self.srcdir
-        d.addCallback(lambda _: self.incremental())
 
-        def copy(_):
+        try:
+            rc = yield self.incremental()
+            if rc != RC_SUCCESS:
+                raise buildstep.BuildStepFailed()
+
             cmd = buildstep.RemoteCommand('cpdir',
                                           {'fromdir': self.srcdir,
                                            'todir': old_workdir,
                                            'logEnviron': self.logEnviron,
                                            'timeout': self.timeout, })
             cmd.useLog(self.stdio_log, False)
-            d = self.runCommand(cmd)
-            return d
-        d.addCallback(copy)
-
-        def resetWorkdir(_):
+            yield self.runCommand(cmd)
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            defer.returnValue(RC_SUCCESS)
+        finally:
             self.workdir = old_workdir
-            return RC_SUCCESS
 
-        d.addCallback(resetWorkdir)
-        return d
-
+    @defer.inlineCallbacks
     def finish(self, res):
-        d = defer.succeed(res)
-
-        def _gotResults(results):
-            self.setStatus(self.cmd, results)
-            log.msg("Closing log, sending result of the command %s " %
-                    (self.cmd))
-            return results
-        d.addCallback(_gotResults)
-        d.addCallback(self.finished)
-        return d
+        self.setStatus(self.cmd, res)
+        log.msg("Closing log, sending result of the command %s " %
+                (self.cmd))
+        yield self.finished(res)
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _=None):
@@ -326,6 +329,7 @@ class Git(Source):
 
         defer.returnValue(RC_SUCCESS)
 
+    @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         full_command = ['git']
         if self.config is not None:
@@ -341,18 +345,15 @@ class Git(Source):
                                            collectStdout=collectStdout,
                                            initialStdin=initialStdin)
         cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
+        yield self.runCommand(cmd)
 
-        def evaluateCommand(cmd):
-            if abandonOnFailure and cmd.didFail():
-                log.msg("Source step failed while running command %s" % cmd)
-                raise buildstep.BuildStepFailed()
-            if collectStdout:
-                return cmd.stdout
-            else:
-                return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
-        return d
+        if abandonOnFailure and cmd.didFail():
+            log.msg("Source step failed while running command %s" % cmd)
+            raise buildstep.BuildStepFailed()
+        if collectStdout:
+            defer.returnValue(cmd.stdout)
+            return
+        defer.returnValue(cmd.rc)
 
     @defer.inlineCallbacks
     def _fetch(self, _):
@@ -481,54 +482,54 @@ class Git(Source):
 
         defer.returnValue(res)
 
+    @defer.inlineCallbacks
     def _fullCloneOrFallback(self):
         """Wrapper for _fullClone(). In the case of failure, if clobberOnFailure
            is set to True remove the build directory and try a full clone again.
         """
 
-        d = self._fullClone()
+        res = yield self._fullClone()
+        if res != RC_SUCCESS:
+            if not self.clobberOnFailure:
+                raise buildstep.BuildStepFailed()
+            res = yield self.clobber()
+        defer.returnValue(res)
 
-        def clobber(res):
-            if res != RC_SUCCESS:
-                if self.clobberOnFailure:
-                    return self.clobber()
-                else:
-                    raise buildstep.BuildStepFailed()
-            else:
-                return res
-        d.addCallback(clobber)
-        return d
-
+    @defer.inlineCallbacks
     def _doClobber(self):
         """Remove the work directory"""
-        return self.runRmdir(self.workdir)
+        rc = yield self.runRmdir(self.workdir)
+        defer.returnValue(rc)
 
     def computeSourceRevision(self, changes):
         if not changes:
             return None
         return changes[-1].revision
 
+    @defer.inlineCallbacks
     def _syncSubmodule(self, _=None):
+        rc = RC_SUCCESS
         if self.submodules:
-            return self._dovccmd(['submodule', 'sync'])
-        else:
-            return defer.succeed(RC_SUCCESS)
+            rc = yield self._dovccmd(['submodule', 'sync'])
+        defer.returnValue(rc)
 
+    @defer.inlineCallbacks
     def _updateSubmodule(self, _=None):
+        rc = RC_SUCCESS
         if self.submodules:
-            return self._dovccmd(['submodule', 'update',
-                                  '--init', '--recursive', '--force'])
-        else:
-            return defer.succeed(RC_SUCCESS)
+            rc = yield self._dovccmd(['submodule', 'update',
+                                      '--init', '--recursive', '--force'])
+        defer.returnValue(rc)
 
+    @defer.inlineCallbacks
     def _cleanSubmodule(self, _=None):
+        rc = RC_SUCCESS
         if self.submodules:
             command = ['submodule', 'foreach', 'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
-            return self._dovccmd(command)
-        else:
-            return defer.succeed(RC_SUCCESS)
+            rc = yield self._dovccmd(command)
+        defer.returnValue(rc)
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
@@ -538,27 +539,24 @@ class Git(Source):
         elif self.method is None and self.mode == 'full':
             return 'fresh'
 
+    @defer.inlineCallbacks
     def checkBranchSupport(self):
-        d = self._dovccmd(['--version'], collectStdout=True)
+        stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
-        def checkSupport(stdout):
-            gitInstalled = False
-            if 'git' in stdout:
-                gitInstalled = True
-            version = stdout.strip().split(' ')[2]
-            if LooseVersion(version) < LooseVersion("1.6.5"):
-                self.supportsBranch = False
-            return gitInstalled
-        d.addCallback(checkSupport)
-        return d
+        gitInstalled = False
+        if 'git' in stdout:
+            gitInstalled = True
+        version = stdout.strip().split(' ')[2]
+        if LooseVersion(version) < LooseVersion("1.6.5"):
+            self.supportsBranch = False
+        defer.returnValue(gitInstalled)
 
+    @defer.inlineCallbacks
     def applyPatch(self, patch):
-        d = self._dovccmd(['update-index', '--refresh'])
+        yield self._dovccmd(['update-index', '--refresh'])
 
-        def applyAlready(res):
-            return self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
-        d.addCallback(applyAlready)
-        return d
+        res = yield self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
+        defer.returnValue(res)
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
