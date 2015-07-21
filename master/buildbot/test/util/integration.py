@@ -164,7 +164,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     def tearDown(self):
         if not self._passed:
             dump = StringIO.StringIO()
-            print >> dump, "FAILED! dumping build db for debug"
+            print("FAILED! dumping build db for debug", file=dump)
             builds = yield self.master.data.get(("builds",))
             for build in builds:
                 yield self.printBuild(build, dump)
@@ -243,10 +243,10 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         print("*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
-              statusToString(build['results'])), file=out)
+                                                statusToString(build['results'])), file=out)
         for step in build['steps']:
             print("    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
-                  statusToString(step['results'])), file=out)
+                                                       statusToString(step['results'])), file=out)
             for url in step['urls']:
                 print("       url:%s (%s)" % (url['name'], url['url']), file=out)
             for log in step['logs']:
