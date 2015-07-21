@@ -295,6 +295,11 @@ class TestContactChannel(unittest.TestCase):
         self.assertTrue(self.sent)  # doesn't matter what it sent
 
     @defer.inlineCallbacks
+    def test_command_hustle(self):
+        yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
+        self.assertEqual(self.actions, ['does the hustle'])
+
+    @defer.inlineCallbacks
     def test_command_list(self):
         yield self.do_test_command('list', exp_UsageError=True)
 
