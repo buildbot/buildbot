@@ -50,7 +50,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.9..eight
+   git log v0.8.10..master
 
 Older Versions
 --------------

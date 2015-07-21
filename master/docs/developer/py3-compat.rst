@@ -10,12 +10,16 @@ Imports
 All ``__future__`` import have to happen at the top of the module, anything else is seen as a syntax error.
 All imports from the python-future package should happen below ``__future__`` imports, but before any other.
 
-Yes::
+Yes:
+
+.. code-block:: python
 
     from __future__ import print_function
     from builtins import basestring
 
-No::
+No:
+
+.. code-block:: python
 
     from twisted.application import internet
     from twisted.spread import pb
@@ -28,13 +32,17 @@ In python3, ``dict.iteritems`` is no longer available.
 While ``dict.items()`` does exist, it can be memory intensive in python2.
 For this reason, please use the python.future function ``iteritems()``.
 
-Example::
+Example:
+
+.. code-block:: python
 
     d = {"cheese": 4, "bread": 5, "milk": 1}
     for item, num in d.iteritems():
         print("We have {} {}".format(num, item))
 
-should be written as::
+should be written as:
+
+.. code-block:: python
 
     from future.utils import iteritems
     d = {"cheese": 4, "bread": 5, "milk": 1}
@@ -47,13 +55,17 @@ If a list is required, please use ``list(iteritems(dict))``.
 This is for compatibility with the six library.
 
 For iterating over dictionary keys, please use ``for key in dict:``.
-For example::
+For example:
+
+.. code-block:: python
 
     d = {"cheese": 4, "bread": 5, "milk": 1}
     for item in d:
         print("We have {}".format(item))
 
-Similarly when you want a list of keys::
+Similarly when you want a list of keys:
+
+.. code-block:: python
 
     keys = list(d)
 
@@ -62,13 +74,17 @@ New-style classes
 All classes in Python3 are newstyle, so any classes added to the code base must therefore be new-style.
 This is done by inheriting ``object``
 
-Old-style::
+Old-style:
+
+.. code-block:: python
 
     class Foo:
         def __init__(self, bar)
             self.bar = bar
 
-new-style::
+new-style:
+
+.. code-block:: python
 
     class Foo(object):
         def __init__(self, bar)
@@ -89,7 +105,9 @@ It can be both unicode and bytestring.
 In python3, this is no longer the case.
 For this reasons all string must be marked with either ``u''`` or ``b''`` to signify if the string is a unicode string or a bytestring respectively
 
-Example::
+Example:
+
+.. code-block:: python
 
     u'this is a unicode string, a string for humans to read'
     b'This is a bytestring, a string for computers to read'
@@ -98,14 +116,18 @@ Example::
 Exceptions
 ----------
 All exceptions should be written with the ``as`` statement.
-Before::
+Before:
+
+.. code-block:: python
 
     try:
         number = 5 / 0
     except ZeroDivisionError, err:
         print(err.msg)
 
-After::
+After:
+
+.. code-block:: python
 
     try:
         number = 5/0
@@ -119,13 +141,17 @@ In Python2 there is a basestring type, which both str and unicode inherit.
 In Python3, only unicode should be of this type, while bytestrings are ``type(byte)``.
 
 For this reason, we use a builtin form python future.
-Before::
+Before:
+
+.. code-block:: python
 
     s = "this is a string"
     if(isinstance(basestring)):
         print "This line will run"
 
-After::
+After:
+
+.. code-block:: python
 
     from builtins import str
     unicode_s = u"this is a unicode string"
@@ -147,11 +173,15 @@ Division
 Integer division is slightly different in Python3.
 ``//`` is integer division and ``/`` is floating point division.
 For this reason, we use ``division`` from the future module.
-Before::
+Before:
+
+.. code-block:: python
 
     2 / 3 = 0
 
-After::
+After:
+
+.. code-block:: python
 
     from __future__ import division
 

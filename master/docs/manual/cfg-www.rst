@@ -480,7 +480,9 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 Example Configs
 +++++++++++++++
 
-Simple config which allows admin people to run everything::
+Simple config which allows admin people to run everything:
+
+.. code-block:: python
 
     from buildbot.plugins import *
     authz = util.Authz(
@@ -496,7 +498,9 @@ Simple config which allows admin people to run everything::
     c['www']['auth'] = auth
     c['www']['authz'] = authz
 
-More complex config with separation per branch::
+More complex config with separation per branch:
+
+.. code-block:: python
 
     from buildbot.plugins import *
 
