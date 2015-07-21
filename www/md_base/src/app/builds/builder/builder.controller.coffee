@@ -2,16 +2,21 @@ class Builder extends Controller
     info: {}
     builds: []
     lastBuild: {}
-    forceschedulers: []
     selectedTab: 0
+    selectLock: true
+    autoSelect: true
+    forceschedulers: []
     buildTabs: []
 
     tabSelected: (index) ->
+        return if @selectLock # avoid loading one page twice
         if index == 0
             @$state.go 'builds.builder.buildstab', builderid: @builderid
-        else if index <= 2
+        else if index == 1
             @$state.go 'builds.builder.infotab', builderid: @builderid
-        else
+        else if index == 2
+            return # disabled divider tab, just skip
+        else if index > 2
             index -= 3
             if index < @buildTabs.length
                 @$state.go 'builds.builder.buildtab', {builderid: @builderid, number: @buildTabs[index]}
@@ -34,7 +39,7 @@ class Builder extends Controller
                 @selectedTab = idx + 3
             else
                 @buildTabs.push(number)
-                setTimeout (=> @selectTab(tab, number)), 100
+        @selectLock = false # unlock select when after selectTab is called for the first time
 
     loadMoreBuilderInfo: ->
         @moreInfo = {}
@@ -82,5 +87,5 @@ class Builder extends Controller
                 ).getArray()
                 @loadMoreBuilderInfo()
 
-                $scope.$watch 'builder.builds.length', => @updateLastBuild()
-                $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)
+        $scope.$watch 'builder.builds.length', => @updateLastBuild()
+        $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)
