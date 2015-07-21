@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import abc
+
 from twisted.internet import defer
 
 
@@ -23,5 +25,8 @@ class StatsStorageBase(object):
     a storage backend
     """
 
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
     def thd_postStatsValue(self, post_data, series_name, context=None):
         return defer.succeed(None)

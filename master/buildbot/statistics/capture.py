@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import abc
+
 from twisted.internet import defer
 from twisted.internet import threads
 
@@ -24,6 +26,8 @@ class Capture(object):
     """
     Base class for all Capture* classes.
     """
+
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self, routingKey, callback):
         self.routingKey = routingKey
@@ -38,6 +42,7 @@ class Capture(object):
             "build_number": str(msg['number'])
         }
 
+    @abc.abstractmethod
     def consume(self, routingKey, msg):
         raise NotImplementedError
 
@@ -134,6 +139,10 @@ class CaptureBuildTimes(Capture):
         msg = "%s failed on build %s on builder %s." % (self.__class__.__name__,
                                                         build_data['number'], self._builder_name)
         return msg
+
+    @abc.abstractmethod
+    def _retValParams(self, msg):
+        pass
 
 
 class CaptureBuildStartTime(CaptureBuildTimes):
