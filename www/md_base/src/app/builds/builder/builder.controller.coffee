@@ -29,17 +29,21 @@ class Builder extends Controller
         @buildTabs.splice(idx, 1) if idx >=0
 
     selectTab: (tab, number) ->
-        if tab == 'buildstab'
-            @selectedTab = 0
-        else if tab == 'infotab'
-            @selectedTab = 1
-        else if tab == 'buildtab'
+        # We handle build tab first to avoid repeated load as md-tabs will auto select newly added tab
+        if tab == 'buildtab'
             idx = @buildTabs.indexOf(number)
             if idx >= 0
                 @selectedTab = idx + 3
             else
                 @buildTabs.push(number)
-        @selectLock = false # unlock select when after selectTab is called for the first time
+
+        # unlock select when after build tab is handled
+        @selectLock = false
+
+        if tab == 'buildstab'
+            @selectedTab = 0
+        else if tab == 'infotab'
+            @selectedTab = 1
 
     loadMoreBuilderInfo: ->
         @moreInfo = {}
@@ -86,6 +90,10 @@ class Builder extends Controller
                     limit: 20
                 ).getArray()
                 @loadMoreBuilderInfo()
+                
+                # go to buildstab if no child state is selected
+                if @$state.is('builds.builder', builderid:@builderid)
+                    @$state.go 'builds.builder.buildstab', builderid: @builderid
 
         $scope.$watch 'builder.builds.length', => @updateLastBuild()
         $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)

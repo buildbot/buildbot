@@ -4,8 +4,6 @@ class State extends Config
         # Name of the state
         name = 'builds.builder'
 
-        $urlRouterProvider.when('/builds/builder/:builderid', '/builds/builder/:builderid/buildstab')
-
         # Register new state
         $stateProvider.state
             controller: "builderController"
