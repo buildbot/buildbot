@@ -257,6 +257,11 @@ Deprecations, Removals, and Non-Compatible Changes
   Previously, it would return the original value.
   Instead, it now returns an array with the original value as the sole element.
 
+
+* ``buildbot.tac`` does not support ``print`` statements anymore. Such files should now use ``print``
+  as a function instead (see https://docs.python.org/3.0/whatsnew/3.0.html#print-is-a-function
+  for more details). Note that this applies to both python2.x and python3.x runtimes.
+
 WebStatus
 .........
 
