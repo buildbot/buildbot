@@ -20,6 +20,11 @@
 #
 # Mercurial "changegroup" hook that notifies Buildbot when a number of
 # changsets is brought into the repository from elsewhere.
+#                                                                              
+# Your Buildmaster needs to define a PBChangeSource.  You should at least set  
+# a strong password for it.  Changing the username or port is optional.        
+# See the docs for more details:                                               
+# http://docs.buildbot.net/latest/manual/cfg-changesources.html#pbchangesource 
 #
 # Copy this file to ".hg/hgbuildbot.py" in the repository that should notify
 # Buildbot.
@@ -255,15 +260,19 @@ def strip(path, count):
     return path.split('/', count)[-1]
 
 
-def send_cs(res, s, c):
-    """Send a changeset *c* using the sender *s*."""
-    return s.send(c['branch'], c['revision'], c['comments'], c['files'],
-                  who=c['username'],
-                  category=c['category'],
-                  when=c['time'],
-                  properties=c['properties'],
-                  repository=c['repository'],
-                  vc='hg',
-                  project=c['project'],
-                  # revlink='',
-                  codebase=c['codebase'])
+def send_cs(res, sender, change):                 
+    """Send a changeset *change* via *sender*.""" 
+    return sender.send(                           
+        change['branch'],                         
+        change['revision'],                       
+        change['comments'],                       
+        change['files'],                          
+        who=change['username'],                   
+        category=change['category'],              
+        when=change['time'],                      
+        properties=change['properties'],          
+        repository=change['repository'],          
+        vc='hg',                                  
+        project=change['project'],                
+        # revlink='',                             
+        codebase=change['codebase'])              
