@@ -1,30 +1,5 @@
-div.build-tab
+div.build-tab(ng-if="buildtab.build")
   div.tab-manage-bar(layout="row")
     build-item(flex, build="buildtab.build")
     a.md-button.md-primary(ng-click="builder.closeBuildTab(buildtab.number)") close
-
-  div.build-info(layout-gt-md="row")
-    div.changes(flex-gt-md="66")
-      div.no-changes No changes to view
-    div.properties(flex-gt-md="33")
-      div.owners(ng-if="buildtab.properties.owners.length")
-        div.owner(ng-repeat="owner in buildtab.properties.owners") {{ owner }}
-      div(ng-if="buildtab.properties.revision")
-        md-icon(md-svg-icon="changes")
-        span {{ buildtab.properties.revision }}
-      div(ng-if="buildtab.properties.slave")
-        md-icon(md-svg-icon="hammer")
-        a(ui-sref="builds.slaves") {{ buildtab.properties.slave }}
-      div(ng-if="buildtab.properties.scheduler")
-        md-icon(md-svg-icon="clock")
-        a(ui-sref="builds.schedulers") {{ buildtab.properties.scheduler }}
-      div(ng-if="buildtab.properties.dir")
-        md-icon(md-svg-icon="folder")
-        span {{ buildtab.properties.dir}}
-      div(ng-if="buildtab.build.complete")
-        md-icon(md-svg-icon="time")
-        span ran for  {{ buildtab.build.complete_at|amDifference:buildtab.build.started_at:'seconds' }} seconds
-      div(ng-if="buildtab.build.started_at") 
-        md-icon(md-svg-icon="calendar")
-        | started 
-        span(am-time-ago="buildtab.build.started_at")
+  build-info(build="buildtab.build")

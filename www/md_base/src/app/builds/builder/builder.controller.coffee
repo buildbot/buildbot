@@ -1,12 +1,7 @@
 class Builder extends Controller
-    info: {}
-    builds: []
-    lastBuild: {}
     selectedTab: 0
     selectLock: true
     autoSelect: true
-    forceschedulers: []
-    buildTabs: []
 
     tabSelected: (index) ->
         return if @selectLock # avoid loading one page twice
@@ -73,6 +68,12 @@ class Builder extends Controller
                 return
 
     constructor: ($scope, @$state, @$mdDialog, @dataService) ->
+        @info = {}
+        @builds = []
+        @lastBuild = {}
+        @forceschedulers = []
+        @buildTabs = []
+        
         opened = dataService.open()
         opened.closeOnDestroy($scope)
 

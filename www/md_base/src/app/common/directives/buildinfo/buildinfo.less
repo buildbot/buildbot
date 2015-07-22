@@ -1,0 +1,43 @@
+build-info {
+  display: block;
+  font-size: 14px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  min-height: 60px;
+  padding: 5px;
+
+  .changes, .properties {
+    padding: 10px;
+  }
+
+  .properties {
+    border-left: 1px solid #eee;
+    color: #999;
+
+    &>div {
+      margin: 5px;
+      line-height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    md-icon, img.avatar {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      color: #aaa;
+    }
+
+    .owners {
+      margin-bottom: 20px;
+    }
+  }
+
+  .no-changes {
+    text-align: center;
+    color: #999;
+  }
+}
+
