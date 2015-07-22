@@ -19,7 +19,7 @@ from buildbot.statistics.capture import CaptureBuildStartTime
 from buildbot.statistics.capture import CaptureData
 from buildbot.statistics.capture import CaptureProperty
 from buildbot.statistics.stats_service import StatsService
-from buildbot.statistics.storage_backends import InfluxStorageService
+from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
 
 __all__ = [
     'StatsService', 'InfluxStorageService', 'CaptureProperty', 'CaptureBuildDuration',

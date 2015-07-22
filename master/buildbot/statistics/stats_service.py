@@ -16,7 +16,7 @@
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.statistics.storage_backends import StatsStorageBase
+from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.util import service
 
 

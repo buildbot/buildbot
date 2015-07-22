@@ -16,12 +16,12 @@
 from buildbot.process import buildstep
 from buildbot.statistics import capture
 from buildbot.statistics import stats_service
-from buildbot.statistics import storage_backends
+from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.status.results import SUCCESS
 from twisted.internet import defer
 
 
-class FakeStatsStorageService(storage_backends.StatsStorageBase):
+class FakeStatsStorageService(StatsStorageBase):
 
     """
     Fake Storage service used in unit tests

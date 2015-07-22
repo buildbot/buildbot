@@ -16,7 +16,7 @@
 from twisted.python import log
 
 from buildbot import config
-from buildbot.statistics.storage_backends import StatsStorageBase
+from buildbot.statistics.storage_backends.base import StatsStorageBase
 
 try:
     from influxdb import InfluxDBClient

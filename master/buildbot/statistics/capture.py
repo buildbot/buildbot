@@ -84,7 +84,7 @@ class CaptureProperty(Capture):
                              " The property %s not found for build number %s on builder %s."
                              % (self._property_name, msg['number'], self._builder_name))
             context = self._defaultContext(msg)
-            series_name = self._builder_name + "-" + self._property_name
+            series_name = '%s-%s' % (self._builder_name, self._property_name)
             post_data = {
                 "name": self._property_name,
                 "value": ret_val
@@ -234,6 +234,6 @@ class CaptureData(Capture):
                              % (build_data['number'], self._builder_name, type(e).__name__,
                                 str(e)))
             post_data = ret_val
-            series_name = self._builder_name + "-" + self._data_name
+            series_name = '%s-%s' % (self._builder_name, self._data_name)
             context = self._defaultContext(build_data)
             yield self._store(post_data, series_name, context)
