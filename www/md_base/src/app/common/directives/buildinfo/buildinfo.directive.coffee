@@ -12,6 +12,7 @@ class BuildInfo extends Directive
         }
 
 class _BuildInfo extends Controller
+    changesLimit: 5
     properties: {}
     raw_properties: {}
     changes: []

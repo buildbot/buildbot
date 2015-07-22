@@ -1,6 +1,9 @@
 div.inner(layout-gt-md="row")
   div.changes(flex-gt-md="66")
-    div.no-changes No changes to view
+    div.no-changes(ng-if="!buildinfo.changes.length") No changes to view
+    change-item(ng-repeat="change in buildinfo.changes|limitTo:buildinfo.changesLimit", change="change")
+    div.more-changes(ng-if="buildinfo.changesLimit < buildinfo.changes.length")
+      a(ng-click="buildinfo.changesLimit = buildinfo.changes.length") Show more
   div.properties(flex-gt-md="33")
     div.owners(ng-if="buildinfo.properties.owners.length")
       div.owner(ng-repeat="owner in buildinfo.properties.owners") 
