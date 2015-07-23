@@ -26,7 +26,7 @@ from twisted.trial import unittest
 
 
 class TestStopSlave(misc.FileIOMixin,
-                    misc.StdoutAssertionsMixin,
+                    misc.LoggingMixin,
                     unittest.TestCase):
 
     """
@@ -35,7 +35,7 @@ class TestStopSlave(misc.FileIOMixin,
     PID = 9876
 
     def setUp(self):
-        self.setUpStdoutAssertions()
+        self.setUpLogging()
 
         # patch os.chdir() to do nothing
         self.patch(os, "chdir", mock.Mock())
@@ -75,15 +75,16 @@ class TestStopSlave(misc.FileIOMixin,
         self.patch(time, "sleep", mock.Mock())
 
         # check that stopSlave() sends expected signal to right PID
-        # and print correct message to stdout
+        # and print correct message to the log
         stop.stopSlave(None, False)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
-        self.assertStdoutEqual("buildslave process %s is dead\n" % self.PID)
+
+        self.assertLogged("buildslave process %s is dead" % self.PID)
 
 
 class TestStop(misc.IsBuildslaveDirMixin,
-               misc.StdoutAssertionsMixin,
+               misc.LoggingMixin,
                unittest.TestCase):
 
     """
@@ -109,7 +110,7 @@ class TestStop(misc.IsBuildslaveDirMixin,
         """
         test calling stop() when no slave is running
         """
-        self.setUpStdoutAssertions()
+        self.setUpLogging()
 
         # patch basedir check to always succeed
         self.setupUpIsBuildslaveDir(True)
@@ -119,7 +120,8 @@ class TestStop(misc.IsBuildslaveDirMixin,
         self.patch(stop, "stopSlave", mock_stopSlave)
 
         stop.stop(self.config)
-        self.assertStdoutEqual("buildslave not running\n")
+
+        self.assertLogged("buildslave not running")
 
     def test_successful_stop(self):
         """

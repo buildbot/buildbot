@@ -24,6 +24,7 @@ from twisted.internet import defer
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
                name=unicode(sched.name),
+               button_name=unicode(sched.buttonName),
                label=unicode(sched.label),
                builder_names=map(unicode, sched.builderNames))
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
@@ -37,22 +38,29 @@ class ForceSchedulerEndpoint(base.Endpoint):
         /forceschedulers/i:schedulername
     """
 
-    def get(self, resultSpec, kwargs):
+    def findForceScheduler(self, schedulername):
+        # eventually this may be db backed. This is why the API is async
         for sched in self.master.allSchedulers():
-            if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
-                return defer.succeed(forceScheduler2Data(sched))
-        return defer.succeed(None)
+            if sched.name == schedulername and isinstance(sched, forcesched.ForceScheduler):
+                return defer.succeed(sched)
+
+    @defer.inlineCallbacks
+    def get(self, resultSpec, kwargs):
+        sched = yield self.findForceScheduler(kwargs['schedulername'])
+        if sched is not None:
+            defer.returnValue(forceScheduler2Data(sched))
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         if action == "force":
-            for sched in self.master.allSchedulers():
-                if sched.name == kwargs['schedulername'] and isinstance(sched, forcesched.ForceScheduler):
-                    try:
-                        res = yield sched.force("user", **args)
-                        defer.returnValue(res)
-                    except forcesched.CollectedValidationError as e:
-                        raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
+            sched = yield self.findForceScheduler(kwargs['schedulername'])
+            if "owner" not in args:
+                args['owner'] = "user"
+            try:
+                res = yield sched.force(**args)
+                defer.returnValue(res)
+            except forcesched.CollectedValidationError as e:
+                raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
         defer.returnValue(None)
 
 
@@ -88,6 +96,7 @@ class ForceScheduler(base.ResourceType):
 
     class EntityType(types.Entity):
         name = types.Identifier(20)
+        button_name = types.String()
         label = types.String()
         builder_names = types.List(of=types.Identifier(20))
         all_fields = types.List(of=types.JsonObject())

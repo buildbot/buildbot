@@ -90,7 +90,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
                 defer.returnValue(results.EXCEPTION)
             try:
                 arg.validateAttributes()
-            except config.ConfigErrors, e:
+            except config.ConfigErrors as e:
                 log.msg("After rendering, ShellSequence `commands` is "
                         "invalid: %s" % (e,))
                 defer.returnValue(results.EXCEPTION)

@@ -15,12 +15,15 @@
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
+
 import os
 import re
 import sys
 
 from twisted.python import reflect
 from twisted.python import usage
+from twisted.python import log
+
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -234,11 +237,10 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildslave
-        print "Buildslave version: %s" % buildslave.version
+        log.msg("Buildslave version: %s" % buildslave.version)
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
-        from twisted.python import log
         log.startLogging(sys.stderr)
 
     def postOptions(self):
@@ -251,10 +253,10 @@ def run():
     try:
         config.parseOptions()
     except usage.error as e:
-        print "%s:  %s" % (sys.argv[0], e)
-        print
+        log.msg("%s:  %s" % (sys.argv[0], e))
+        log.msg()
         c = getattr(config, 'subOptions', config)
-        print str(c)
+        log.msg(str(c))
         sys.exit(1)
 
     subconfig = config.subOptions

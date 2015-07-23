@@ -254,7 +254,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             # decode the result from its designated encoding
             try:
                 result = result.decode(self.encoding)
-            except exceptions.UnicodeError, ex:
+            except exceptions.UnicodeError as ex:
                 log.msg("P4Poller: couldn't decode changelist description: %s" % ex.encoding)
                 log.msg("P4Poller: in object: %s" % ex.object)
                 log.err("P4Poller: poll failed on %s, %s" % (self.p4port, self.p4base))

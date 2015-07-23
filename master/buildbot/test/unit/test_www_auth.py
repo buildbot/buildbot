@@ -117,7 +117,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
     def test_maybeAutoLogin_no_header(self):
         try:
             yield self.auth.maybeAutoLogin(self.request)
-        except Error, e:
+        except Error as e:
             self.assertEqual(e.status, 403)
         else:
             self.fail("403 expected")
@@ -127,7 +127,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
         self.request.input_headers['HDR'] = 'rachel'
         try:
             yield self.auth.maybeAutoLogin(self.request)
-        except Error, e:
+        except Error as e:
             self.assertEqual(e.status, 403)
         else:
             self.fail("403 expected")

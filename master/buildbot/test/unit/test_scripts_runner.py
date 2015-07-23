@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
-
 import cStringIO
 import getpass
 import mock
@@ -795,7 +792,7 @@ class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
     def test_version(self):
         try:
             self.parse('--version')
-        except SystemExit, e:
+        except SystemExit as e:
             self.assertEqual(e.args[0], 0)
         self.assertInStdout('Buildbot version:')
 
@@ -831,7 +828,7 @@ class TestRun(unittest.TestCase):
         self.patch(sys, 'argv', ['buildbot', 'my'])
         try:
             runner.run()
-        except SystemExit, e:
+        except SystemExit as e:
             self.assertEqual(e.args[0], 3)
         else:
             self.fail("didn't exit")
@@ -842,7 +839,7 @@ class TestRun(unittest.TestCase):
         self.patch(sys, 'stdout', stdout)
         try:
             runner.run()
-        except SystemExit, e:
+        except SystemExit as e:
             self.assertEqual(e.args[0], 1)
         else:
             self.fail("didn't exit")

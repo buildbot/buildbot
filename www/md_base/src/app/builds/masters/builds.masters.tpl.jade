@@ -1,0 +1,14 @@
+md-list.master-list
+  md-subheader.md-no-sticky Masters
+  md-divider
+  md-list-item.master-item(ng-repeat="master in masters.list")
+    div.master-id
+      span \#{{ master.id }}
+    div.master-title(flex)
+      h3 {{ master.name}}
+      p(ng-if="master.last_active > 0") Last active at 
+        span(am-time-ago="master.last_active")
+      p(ng-if="master.last_active == 0") Never been active.
+    div.master-state
+      span.active(ng-if="master.active") Active
+      span.inactive(ng-if="!master.active") Inactive

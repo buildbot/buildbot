@@ -62,6 +62,11 @@ There are several common arguments for schedulers, although not all are availabl
 
 ``codebases``
     When the scheduler processes data from more than one repository at the same time, a corresponding codebase definition should be passed for each repository.
+
+    This parameter can be specified either as a list of strings (simplest form; use if no special
+    overrides are needed) or as a dictionary of dictionaries (where each dict is a codebase definition
+    as described next).
+
     Each codebase definition is a dictionary with any of the keys: ``repository``, ``branch``, ``revision``.
     The codebase definitions are combined in a dictionary keyed by the name of the codebase.
 

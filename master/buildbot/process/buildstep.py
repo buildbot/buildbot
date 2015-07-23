@@ -27,6 +27,7 @@ from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
 from twisted.python import util as twutil
+from twisted.python import versions
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -253,6 +254,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         'descriptionSuffix',
         'doStepIf',
         'hideStepIf',
+        'workdir',
     ]
 
     # 'parms' holds a list of all the parameters we care about, to allow
@@ -334,7 +336,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def setBuildSlave(self, buildslave):
         self.buildslave = buildslave
 
-    @deprecate.deprecated
+    @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
         if self._workdir is None:
             self._workdir = workdir

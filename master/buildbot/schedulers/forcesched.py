@@ -155,7 +155,7 @@ class BaseParameter(object):
 
         try:
             arg = self.parse_from_args(args)
-        except Exception, e:
+        except Exception as e:
             # an exception will just display an alert in the web UI
             # also log the exception
             if self.debug:
@@ -565,11 +565,10 @@ class ForceScheduler(base.BaseScheduler):
                  username=UserNameParameter(),
                  reason=StringParameter(name="reason", default="force build", size=20),
                  reasonString="A build was forced by '%(owner)s': %(reason)s",
-                 buttonName="Force Build",
+                 buttonName=None,
                  codebases=None,
                  label=None,
-                 properties=None,
-                 ):
+                 properties=None):
         """
         Initialize a ForceScheduler.
 
@@ -669,7 +668,7 @@ class ForceScheduler(base.BaseScheduler):
         self.all_fields.extend(self.forcedProperties)
 
         self.reasonString = reasonString
-        self.buttonName = buttonName
+        self.buttonName = buttonName or name
 
     def checkIfType(self, obj, chkType):
         return isinstance(obj, chkType)
@@ -711,10 +710,7 @@ class ForceScheduler(base.BaseScheduler):
         defer.returnValue((real_properties, changeids, sourcestamps))
 
     @defer.inlineCallbacks
-    def force(self, owner, builderNames=None, builderid=None, **kwargs):
-        """
-        We check the parameters, and launch the build, if everything is correct
-        """
+    def computeBuilderNames(self, builderNames=None, builderid=None):
         if builderNames is None:
             if builderid is not None:
                 builder = yield self.master.data.get(('builders', str(builderid)))
@@ -723,7 +719,14 @@ class ForceScheduler(base.BaseScheduler):
                 builderNames = self.builderNames
         else:
             builderNames = list(set(builderNames).intersection(self.builderNames))
+        defer.returnValue(builderNames)
 
+    @defer.inlineCallbacks
+    def force(self, owner, builderNames=None, builderid=None, **kwargs):
+        """
+        We check the parameters, and launch the build, if everything is correct
+        """
+        builderNames = yield self.computeBuilderNames(builderNames, builderid)
         if not builderNames:
             raise KeyError("builderNames not specified or not supported")
 

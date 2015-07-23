@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 import os
 import sys
@@ -25,15 +26,15 @@ def _loadConfig(basedir, configFile, quiet):
     try:
         config.MasterConfig.loadConfig(
             basedir, configFile)
-    except config.ConfigErrors, e:
+    except config.ConfigErrors as e:
         if not quiet:
-            print >> sys.stderr, "Configuration Errors:"
+            print("Configuration Errors:", file=sys.stderr)
             for e in e.errors:
-                print >> sys.stderr, "  " + e
+                print("  " + e, file=sys.stderr)
         return 1
 
     if not quiet:
-        print "Config file is good!"
+        print("Config file is good!")
     return 0
 
 
@@ -46,10 +47,10 @@ def checkconfig(config):
         basedir = configFile
         try:
             configFile = getConfigFileFromTac(basedir)
-        except (SyntaxError, ImportError), e:
+        except (SyntaxError, ImportError) as e:
             if not quiet:
-                print "Unable to load 'buildbot.tac' from '%s':" % basedir
-                print e
+                print("Unable to load 'buildbot.tac' from '%s':" % basedir)
+                print(e)
             return 1
     else:
         basedir = os.getcwd()

@@ -12,8 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
+from __future__ import print_function
 
 from buildbot.scripts import base
 from buildbot.scripts import start
@@ -30,5 +29,5 @@ def restart(config):
     if stop.stop(config, wait=True) != 0:
         return 1
     if not quiet:
-        print "now restarting buildbot process.."
+        print("now restarting buildbot process..")
     return start.start(config)

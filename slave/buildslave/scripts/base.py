@@ -15,15 +15,17 @@
 
 import os
 
+from twisted.python import log
+
 
 def isBuildslaveDir(dir):
     def print_error(error_message):
-        print "%s\ninvalid buildslave directory '%s'" % (error_message, dir)
+        log.msg("%s\ninvalid buildslave directory '%s'" % (error_message, dir))
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
         contents = open(buildbot_tac).read()
-    except IOError, exception:
+    except IOError as exception:
         print_error("error reading '%s': %s" %
                     (buildbot_tac, exception.strerror))
         return False

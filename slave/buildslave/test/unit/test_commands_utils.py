@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 import os
 import shutil
@@ -108,7 +109,7 @@ class RmdirRecursive(unittest.TestCase):
             if os.path.exists(self.target):
                 shutil.rmtree(self.target)
         except Exception:
-            print "\n(target directory was not removed by test, and cleanup failed too)\n"
+            print("\n(target directory was not removed by test, and cleanup failed too)\n")
             raise
 
     def test_rmdirRecursive_easy(self):
@@ -131,7 +132,7 @@ class RmdirRecursive(unittest.TestCase):
         finally:
             # even Twisted can't clean this up very well, so try hard to
             # clean it up ourselves..
-            os.chmod("noperms/x", 0777)
+            os.chmod("noperms/x", 0o777)
             os.unlink("noperms/x")
             os.rmdir("noperms")
 

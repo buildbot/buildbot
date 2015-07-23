@@ -164,7 +164,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             try:
                 cursor = dbapi_con.cursor()
                 cursor.execute("SELECT 1")
-            except dbapi_con.OperationalError, ex:
+            except dbapi_con.OperationalError as ex:
                 if ex.args[0] in (2006, 2013, 2014, 2045, 2055):
                     # sqlalchemy will re-create the connection
                     raise sa.exc.DisconnectionError()

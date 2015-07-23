@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
-
 import os
 import re
 import sys
@@ -29,6 +26,7 @@ from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.www import auth
 from buildbot.www import avatar
+from buildbot.www.authz import authz
 from twisted.python import failure
 from twisted.python import log
 
@@ -120,6 +118,7 @@ class MasterConfig(util.ComparableMixin):
             port=None,
             plugins=dict(),
             auth=auth.NoAuth(),
+            authz=authz.Authz(),
             avatar_methods=avatar.AvatarGravatar(),
             logfileName='http.log',
         )
@@ -168,7 +167,7 @@ class MasterConfig(util.ComparableMixin):
 
         try:
             f = open(filename, "r")
-        except IOError, e:
+        except IOError as e:
             raise ConfigErrors([
                 "unable to open configuration file %r: %s" % (filename, e),
             ])
@@ -191,7 +190,7 @@ class MasterConfig(util.ComparableMixin):
         try:
             try:
                 exec f in localDict
-            except ConfigErrors, e:
+            except ConfigErrors as e:
                 for err in e.errors:
                     error(err)
                 raise errors
@@ -597,9 +596,10 @@ class MasterConfig(util.ComparableMixin):
         www_cfg = config_dict['www']
         allowed = set(['port', 'debug', 'json_cache_seconds',
                        'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins', 'auth', 'avatar_methods', 'logfileName',
+                       'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
                        'logRotateLength', 'maxRotatedFiles', 'versions',
-                       'change_hook_dialects', 'change_hook_auth'])
+                       'change_hook_dialects', 'change_hook_auth',
+                       'custom_templates_dir'])
         unknown = set(www_cfg.iterkeys()) - allowed
         if unknown:
             error("unknown www configuration parameter(s) %s" %

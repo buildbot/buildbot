@@ -12,9 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
-
+from __future__ import print_function
 
 import os
 import platform
@@ -35,7 +33,7 @@ class Reconfigurator:
     def run(self, basedir, quiet):
         # Returns "Microsoft" for Vista and "Windows" for other versions
         if platform.system() in ("Windows", "Microsoft"):
-            print "Reconfig (through SIGHUP) is not supported on Windows."
+            print("Reconfig (through SIGHUP) is not supported on Windows.")
             return
 
         with open(os.path.join(basedir, "twistd.pid"), "rt") as f:
@@ -61,29 +59,29 @@ class Reconfigurator:
     def sighup(self):
         if self.sent_signal:
             return
-        print "sending SIGHUP to process %d" % self.pid
+        print("sending SIGHUP to process %d" % self.pid)
         self.sent_signal = True
         os.kill(self.pid, signal.SIGHUP)
 
     def success(self, res):
-        print """
+        print("""
 Reconfiguration appears to have completed successfully.
-"""
+""")
 
     def failure(self, why):
         self.rc = 1
         if why.check(BuildmasterTimeoutError):
-            print "Never saw reconfiguration finish."
+            print("Never saw reconfiguration finish.")
         elif why.check(ReconfigError):
-            print """
+            print("""
 Reconfiguration failed. Please inspect the master.cfg file for errors,
 correct them, then try 'buildbot reconfig' again.
-"""
+""")
         elif why.check(IOError):
             # we were probably unable to open the file in the first place
             self.sighup()
         else:
-            print "Error while following twistd.log: %s" % why
+            print("Error while following twistd.log: %s" % why)
 
 
 @in_reactor

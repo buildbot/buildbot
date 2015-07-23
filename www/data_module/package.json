@@ -1,0 +1,34 @@
+{
+  "name": "buildbot-data",
+  "version": "1.0.0",
+  "description": "Buildbot AngularJS bbData module",
+  "readme": "README.md",
+  "devDependencies": {
+    "coffee-script": "*",
+    "del": "^1.2.0",
+    "gulp": "~3.8.6",
+    "gulp-bower": "0.0.10",
+    "gulp-coffee": "^2.3.1",
+    "gulp-concat": "^2.5.2",
+    "gulp-karma": "0.0.4",
+    "gulp-load-plugins": "^1.0.0-rc.1",
+    "gulp-ng-annotate": "^1.0.0",
+    "gulp-ng-classify": "^4.0.1",
+    "gulp-release-tasks": "0.0.3",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.2.0",
+    "gulp-util": "^3.0.5",
+    "jasmine-core": "^2.3.4",
+    "karma": "^0.12.36",
+    "karma-coffee-preprocessor": "*",
+    "karma-jasmine": "^0.2.2",
+    "karma-ng-classify-preprocessor": "*",
+    "karma-phantomjs-launcher": "*",
+    "phantomjs": "^1.9.17"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=0.10.20",
+    "npm": ">=1.4.10"
+  }
+}

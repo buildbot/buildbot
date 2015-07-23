@@ -11,7 +11,9 @@ DbConfig can get and store any jsonable object to the db for use by other master
 The design is voluntary simplistic, the focus is on the easy use rather than efficiency.
 A separate db connection is created each time get() or set() is called.
 
-Example ::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import util, buildslave
     c = BuildmasterConfig = {}

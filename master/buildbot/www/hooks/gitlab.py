@@ -88,7 +88,7 @@ def getChanges(request, options=None):
     """
     try:
         payload = json.load(request.content)
-    except Exception, e:
+    except Exception as e:
         raise ValueError("Error loading JSON: " + str(e))
     user = payload['user_name']
     repo = payload['repository']['name']

@@ -12,13 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+"""
+Push events to an abstract receiver.
 
-from __future__ import with_statement
-
-
-"""Push events to an abstract receiver.
-
-Implements the HTTP receiver."""
+Implements the HTTP receiver.
+"""
 
 import datetime
 import os

@@ -14,9 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
-
-from __future__ import with_statement
-
 import os
 
 from buildbot import config

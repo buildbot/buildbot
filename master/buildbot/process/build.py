@@ -376,7 +376,7 @@ class Build(properties.PropertiesMixin):
         owners = [r.properties['owner'] for r in self.requests
                   if "owner" in r.properties]
         if owners:
-            self.setProperty('owners', owners, self.reason)
+            self.setProperty('owners', owners, 'Build')
         self.text = []  # list of text string lists (text2)
 
     def _addBuildSteps(self, step_factories):

@@ -766,7 +766,7 @@ BuildStep URLs
 Each BuildStep has a collection of `links`.
 Each has a name and a target URL.
 The web display displays clickable links for each link, making them a useful way to point to extra information about a step.
-For example, a step that uploads a build result to an external service might include a link to the uploaded flie.
+For example, a step that uploads a build result to an external service might include a link to the uploaded file.
 
 To set one of these links, the :class:`BuildStep` should call the :meth:`~buildbot.process.buildstep.BuildStep.addURL` method with the name of the link and the target URL.
 Multiple URLs can be set.

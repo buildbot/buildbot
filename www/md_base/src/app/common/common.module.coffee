@@ -1,7 +1,6 @@
 name = 'common'
 dependencies = [
     'ui.router'
-    'restangular'
 ]
 
 # Register new module

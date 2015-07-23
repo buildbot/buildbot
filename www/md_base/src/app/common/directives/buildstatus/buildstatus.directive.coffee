@@ -19,16 +19,16 @@ class _BuildStatus extends Controller
 
             if build.complete is false and build.started_at > 0
                 @status_class = 'pending'
-                @icon = 'build-pending'
+                @icon = 'pending'
             else if build.results == 0
                 @status_class = 'success'
-                @icon = 'build-success'
+                @icon = 'checkmark'
             else if build.results >= 1 and build.results <= 6
                 @status_class = RESULTS_TEXT[build.results].toLowerCase()
-                @icon = 'build-fail'
+                @icon = 'crossmark'
             else
                 @status_class = 'unknown'
-                @icon = 'build-pending'
+                @icon = 'pending'
 
         $scope.$watch 'status.build', updateBuild, true
 

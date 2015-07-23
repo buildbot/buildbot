@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 from buildbot import config
 from buildbot.schedulers.forcesched import AnyPropertyParameter
@@ -333,11 +334,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 try:
                     import xerox
                     formated = self.formatJsonForTest(gotJson)
-                    print "You may update the test with (copied to clipboard):\n" + formated
+                    print("You may update the test with (copied to clipboard):\n" + formated)
                     xerox.copy(formated)
                     input()
                 except ImportError:
-                    print "Note: for quick fix, pip install xerox"
+                    print("Note: for quick fix, pip install xerox")
             self.assertEqual(gotJson, expectJson)
 
         sched = self.makeScheduler(properties=[prop])
@@ -346,7 +347,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
             req = {name: value, 'reason': 'because'}
         try:
             bsid, brids = yield sched.force(owner, builderNames=['a'], **req)
-        except Exception, e:
+        except Exception as e:
             if expectKind is not Exception:
                 # an exception is not expected
                 raise

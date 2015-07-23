@@ -962,6 +962,21 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.runStep()
 
     @defer.inlineCallbacks
+    def test_example_step_renderable_workdir(self):
+        @renderer
+        def rendered_workdir(_):
+            return '/alternate'
+
+        self.setupStep(ShellMixinExample(workdir=rendered_workdir))
+        self.build.workdir = '/overridden'
+        self.expectCommands(
+            ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
     def test_example_override_workdir(self):
         # Test that makeRemoteShellCommand(workdir=X) works.
         self.setupStep(SimpleShellCommand(

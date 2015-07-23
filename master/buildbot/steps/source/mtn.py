@@ -98,7 +98,7 @@ class Monotone(Source):
                 yield self.patch(None, patch)
             yield self.parseGotRevision()
             self.finish()
-        except Exception, e:
+        except Exception as e:
             self.failed(e)
 
     @defer.inlineCallbacks

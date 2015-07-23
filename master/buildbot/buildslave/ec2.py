@@ -12,11 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
-
-from __future__ import with_statement
 # Portions Copyright Canonical Ltd. 2009
-
-"""A LatentSlave that uses EC2 to instantiate the slaves on demand.
+"""
+A LatentSlave that uses EC2 to instantiate the slaves on demand.
 
 Tested with Python boto 1.5c
 """
@@ -35,8 +33,8 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 
 PENDING = 'pending'
 RUNNING = 'running'
@@ -121,16 +119,15 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 'supply both or neither of identifier, secret_identifier')
             if aws_id_file_path is None:
                 home = os.environ['HOME']
-                aws_id_file_path = os.path.join(home, '.ec2', 'aws_id')
-            if not os.path.exists(aws_id_file_path):
-                raise ValueError(
-                    "Please supply your AWS access key identifier and secret "
-                    "access key identifier either when instantiating this %s "
-                    "or in the %s file (on two lines).\n" %
-                    (self.__class__.__name__, aws_id_file_path))
-            with open(aws_id_file_path, 'r') as aws_file:
-                identifier = aws_file.readline().strip()
-                secret_identifier = aws_file.readline().strip()
+                default_path = os.path.join(home, '.ec2', 'aws_id')
+                if os.path.exists(default_path):
+                    aws_id_file_path = default_path
+            if aws_id_file_path:
+                log.msg('WARNING: EC2LatentBuildSlave is using deprecated '
+                        'aws_id file')
+                with open(aws_id_file_path, 'r') as aws_file:
+                    identifier = aws_file.readline().strip()
+                    secret_identifier = aws_file.readline().strip()
         else:
             assert aws_id_file_path is None, \
                 'if you supply the identifier and secret_identifier, ' \
@@ -171,14 +168,15 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
             assert key_pair
             # key_pair.delete() # would be used to recreate
-        except boto.exception.EC2ResponseError, e:
+        except boto.exception.EC2ResponseError as e:
             if 'InvalidKeyPair.NotFound' not in e.body:
                 if 'AuthFailure' in e.body:
-                    print ('POSSIBLE CAUSES OF ERROR:\n'
-                           '  Did you sign up for EC2?\n'
-                           '  Did you put a credit card number in your AWS '
-                           'account?\n'
-                           'Please doublecheck before reporting a problem.\n')
+                    log.msg('POSSIBLE CAUSES OF ERROR:\n'
+                            '  Did you supply your AWS credentials?\n'
+                            '  Did you sign up for EC2?\n'
+                            '  Did you put a credit card number in your AWS '
+                            'account?\n'
+                            'Please doublecheck before reporting a problem.\n')
                 raise
             # make one; we would always do this, and stash the result, if we
             # needed the key (for instance, to SSH to the box).  We'd then
@@ -189,7 +187,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         try:
             group = self.conn.get_all_security_groups(security_name)[0]
             assert group
-        except boto.exception.EC2ResponseError, e:
+        except boto.exception.EC2ResponseError as e:
             if 'InvalidGroup.NotFound' in e.body:
                 self.security_group = self.conn.create_security_group(
                     security_name,

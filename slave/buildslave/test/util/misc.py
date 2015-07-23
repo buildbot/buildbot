@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 
 import __builtin__
-import io
 import errno
 import mock
 import os
 import shutil
-import sys
+import re
+
+from twisted.python import log
 
 from buildslave.scripts import base
 
@@ -145,24 +146,22 @@ class FileIOMixin(object):
         self.patch(__builtin__, "open", self.open)
 
 
-class StdoutAssertionsMixin(object):
+class LoggingMixin(object):
 
-    """
-    Mix this in to be able to assert on stdout during the test
-    """
+    def setUpLogging(self):
+        self._logEvents = []
+        log.addObserver(self._logEvents.append)
+        self.addCleanup(log.removeObserver, self._logEvents.append)
 
-    def setUpStdoutAssertions(self):
-        self.stdout = io.BytesIO()
-        self.patch(sys, 'stdout', self.stdout)
+    def assertLogged(self, *args):
+        for regexp in args:
+            r = re.compile(regexp)
+            for event in self._logEvents:
+                msg = log.textFromEventDict(event)
+                if msg is not None and r.search(msg):
+                    return
+            self.fail(
+                "%r not matched in log output.\n%s " % (regexp, self._logEvents))
 
     def assertWasQuiet(self):
-        self.assertEqual(self.stdout.getvalue(), '')
-
-    def assertInStdout(self, exp):
-        self.assertIn(exp, self.stdout.getvalue())
-
-    def assertStdoutEqual(self, exp, msg=None):
-        self.assertEqual(exp, self.stdout.getvalue(), msg)
-
-    def getStdout(self):
-        return self.stdout.getvalue().strip()
+        self.assertEqual(self._logEvents, [])

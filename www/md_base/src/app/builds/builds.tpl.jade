@@ -1,1 +1,53 @@
-h1 Builds
+div.menu(ng-if="builds.showSideMenu()")
+  div.grid-menu
+    md-button.menu-item.no-select(
+      ng-click="builds.gotoMenuItem(item.value)",
+      ng-class="{highlighted: builds.isHighlighted(item.value)}",
+      ng-repeat="item in builds.menuItems"
+    )
+      md-icon(md-svg-icon="{{ item.icon }}")
+      span.title {{ item.title }}
+
+  div.builders-menu
+    div.menu-title BUILDERS
+    div.search-input
+      input(type="text", placeholder="Filter builders", ng-model="builds.builderFilter")
+    div.builders
+      div.no-builder(ng-if="builds.builders.length == 0")
+        | No builders has been configured yet.
+      div.menu-item.no-select(
+        layout="row",
+        ng-repeat="builder in builds.builders|filter:builds.builderFilter",
+        ng-class="{highlighted: builds.isHighlighted('builds.builder', {builderid: builder.builderid})}"
+      )
+        div(flex)
+          a.builder-title(ng-click="builds.gotoBuilder(builder)") {{ builder.name }}
+          div.tags
+            a.tag(ng-repeat="tag in builder.tags", ng-click="builds.builderFilter = tag") {{tag}}
+        div.builder-id \#{{ builder.builderid }}
+
+md-menu.drop-menu(ng-if="!builds.showSideMenu()")
+  md-button(ng-click="$mdOpenMenu()") navigate to
+  md-menu-content(width="6")
+    md-menu-item(
+      ng-repeat="item in builds.menuItems"
+    )
+      md-button(ng-click="builds.gotoMenuItem(item.value)")
+        md-icon(md-svg-icon="{{ item.icon }}")
+        | {{ item.title }}
+
+    md-menu-divider
+    div.drop-menu-builders
+      div.title BUILDERS
+      div.no-builder(ng-if="builds.builders.length == 0")
+        | No builders has been configured yet.
+
+      md-menu-item(
+        ng-repeat="builder in builds.builders"
+      )
+        md-button(ng-click="builds.gotoBuilder(builder)") {{ builder.name }}
+
+
+md-content.sub-content(flex, ui-view="")
+  div.placeholder
+    | Choose something to view

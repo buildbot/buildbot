@@ -11,4 +11,5 @@ It is intended both for developers writing patches that will be included in Buil
 
     general
     apis
+    py3-compat
     classes

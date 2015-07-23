@@ -5,6 +5,13 @@
 Reporters
 ---------
 
+.. warning::
+
+   Report targets are being migrated to Data API and not all status targets had been ported.
+   These have an explicit warning before their description and are marked as such in the section title (to make it easier to distinguish them in the table of contents).
+   As the old status targets are migrated to the new API, the warnings and markings will be removed.
+   (Remember this is a beta version.)
+
 .. contents::
     :depth: 2
     :local:
@@ -43,7 +50,7 @@ MailNotifier
 
 .. py:class:: buildbot.reporter.mail.MailNotifier
 
-The buildbot can send email when builds finish.
+The Buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
 It is also quite common to send a message to a mailing list (usually named `builds` or similar) about every build.
 
@@ -92,7 +99,7 @@ If your SMTP host requires authentication before it allows you to send emails, t
 
 .. note::
 
-   If for some reaons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :file:`contrib/check-smtp.py` to see if it works at all.
+   If for some reasons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :file:`contrib/check-smtp.py` to see if it works at all.
 
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
@@ -105,7 +112,7 @@ If you want to require Transport Layer Security (TLS), then you can also set ``u
 
 .. note::
 
-   If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in the log while using TLS, this can be due *either* to the server not supporting TLS or to a missing `PyOpenSSL`_ package on the buildmaster system.
+   If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in the log while using TLS, this can be due *either* to the server not supporting TLS or to a missing `PyOpenSSL`_ package on the BuildMaster system.
 
 In some cases it is desirable to have different information then what is provided in a standard MailNotifier message.
 For this purpose MailNotifier provides the argument ``messageFormatter`` (a function) which allows for the creation of messages with unique content.
@@ -231,7 +238,7 @@ Another example of a function delivering a customized html email containing the 
             return {
                 'body': u"\n".join(text),
                 'type': 'html'
-                }
+            }
 
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,
@@ -365,7 +372,7 @@ MailNotifier arguments
 
 ``messageFormatter``
     This is a optional function that can be used to generate a custom mail message.
-    A :func:`messageFormatter` function takes the mail mode (``mode``), builder name (``name``), the build data api results (``build``), the result code (``results``), and a reference to the BuildMaster object (``master``), which can then be used to create additional data api calls.
+    A :func:`messageFormatter` function takes the mail mode (``mode``), builder name (``name``), the build Data API results (``build``), the result code (``results``), and a reference to the BuildMaster object (``master``), which can then be used to create additional Data API calls.
     It returns a dictionary.
     The ``body`` key gives a string that is the complete text of the message.
     The ``type`` key is the message type ('plain' or 'html').
@@ -383,7 +390,7 @@ As a help to those writing :func:`messageFormatter` functions, the following tab
 Name of the builder that generated this event
     ``name``
 
-Title of the buildmaster
+Title of the BuildMaster
     ``master.config.title``
 
 MailNotifier mode
@@ -423,10 +430,12 @@ List of responsible users
 
 .. index:: IRC
 
-IRC Bot
-~~~~~~~
+IRC Bot (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. py:class:: buildbot.status.words.IRC
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
 
 
 The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
@@ -452,7 +461,7 @@ The following parameters are accepted by this class:
 
 ``host``
     (mandatory)
-    The IRC server adress to connect to.
+    The IRC server address to connect to.
 
 ``nick``
     (mandatory)
@@ -461,7 +470,7 @@ The following parameters are accepted by this class:
 ``channels``
     (mandatory)
     This is a list of channels to join on the IRC server.
-    Each channel can be a string (e.g. ``#buildbot``), or a dictionnary ``{'channel': '#buildbot', 'password': 'secret'}`` if each channel requires a different password.
+    Each channel can be a string (e.g. ``#buildbot``), or a dictionary ``{'channel': '#buildbot', 'password': 'secret'}`` if each channel requires a different password.
     A global password can be set with the ``password`` parameter.
 
 ``pm_to_nicks``
@@ -487,12 +496,12 @@ The following parameters are accepted by this class:
 
 ``notify_events``
     (optional)
-    A dictionnary of events to be notified on the IRC channels.
+    A dictionary of events to be notified on the IRC channels.
     This parameter can be changed during run-time by sending the ``notify`` command to the bot.
 
 ``showBlameList``
     (optional, disabled by default)
-    Whether or not to display the blamelist for failed builds.
+    Whether or not to display the blame list for failed builds.
 
 ``useRevisions``
     (optional, disabled by default)
@@ -521,11 +530,10 @@ The following parameters are accepted by this class:
     This allow users to shutdown the master.
 
 
-To use the service, you address messages at the buildbot, either normally (``botnickname: status``) or with private messages (``/msg botnickname status``).
-The buildbot will respond in kind.
+To use the service, you address messages at the Buildbot, either normally (``botnickname: status``) or with private messages (``/msg botnickname status``).
+The Buildbot will respond in kind.
 
-
-If you issue a command that is currently not available, the buildbot will respond with an error message.
+If you issue a command that is currently not available, the Buildbot will respond with an error message.
 If the ``noticeOnChannel=True`` option was used, error messages will be sent as channel notices instead of messaging.
 
 Some of the commands currently available:
@@ -581,11 +589,11 @@ Some of the commands currently available:
     Use :command:`help commands` to get a list of known commands.
 
 :samp:`shutdown {ARG}`
-    Control the shutdown process of the buildbot master.
+    Control the shutdown process of the Buildbot master.
     Available arguments are:
 
     ``check``
-        Check if the buildbot master is running or shutting down
+        Check if the Buildbot master is running or shutting down
 
     ``start``
         Start clean shutdown
@@ -611,7 +619,7 @@ If the ``allowForce=True`` option was used, some additional commands will be ava
 :samp:`force build [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
     Tell the given :class:`Builder` to start a build of the latest code.
     The user requesting the build and *REASON* are recorded in the :class:`Build` status.
-    The buildbot will announce the build's status when it finishes.The user can specify a branch and/or revision with the optional parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`.
+    The Buildbot will announce the build's status when it finishes.The user can specify a branch and/or revision with the optional parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`.
     The user can also give a list of properties with :samp:`--props={PROP1=VAL1,PROP2=VAL2..}`.
 
 :samp:`stop build {BUILDER} {REASON}`
@@ -632,8 +640,13 @@ Setting random defaults like this means multiple IRC bots are less likely to den
 
 .. bb:reporter:: StatusPush
 
-StatusPush
-~~~~~~~~~~
+StatusPush (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
+
 
 .. @cindex StatusPush
 .. py:class:: buildbot.status.status_push.StatusPush
@@ -654,8 +667,13 @@ If no items were popped from ``self.queue``, ``retryDelay`` seconds will be wait
 
 .. bb:reporter:: HttpStatusPush
 
-HttpStatusPush
-~~~~~~~~~~~~~~
+HttpStatusPush (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
+
 
 .. @cindex HttpStatusPush
 .. @stindex buildbot.status.status_push.HttpStatusPush
@@ -667,7 +685,7 @@ HttpStatusPush
     c['services'].append(sp)
 
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
-It is useful to create a status front end outside of buildbot for better scalability.
+It is useful to create a status front end outside of Buildbot for better scalability.
 
 .. bb:reporter:: GerritStatusPush
 
@@ -750,8 +768,13 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. bb:reporter:: GitHubStatus
 
-GitHubStatus
-~~~~~~~~~~~~
+GitHubStatus (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
+
 
 .. @cindex GitHubStatus
 .. py:class:: buildbot.status.github.GitHubStatus
@@ -808,8 +831,13 @@ Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional
 This is required if you work with GitHub Enterprise installation.
 This feature requires ``txgithub`` of version 0.2.0 or better.
 
-StashStatusPush
-~~~~~~~~~~~~~~~
+StashStatusPush (not migrated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   Not yet migrated to the new Data API based reporter API.
+
 
 .. @cindex StashStatusPush
 .. py:class:: buildbot.status.status_stash.StashStatusPush

@@ -12,8 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
+from __future__ import print_function
 
 import jinja2
 import os
@@ -30,10 +29,10 @@ from twisted.python import util
 def makeBasedir(config):
     if os.path.exists(config['basedir']):
         if not config['quiet']:
-            print "updating existing installation"
+            print("updating existing installation")
         return
     if not config['quiet']:
-        print "mkdir", config['basedir']
+        print("mkdir", config['basedir'])
     os.mkdir(config['basedir'])
 
 
@@ -52,11 +51,11 @@ def makeTAC(config):
             oldcontents = f.read()
         if oldcontents == contents:
             if not config['quiet']:
-                print "buildbot.tac already exists and is correct"
+                print("buildbot.tac already exists and is correct")
             return
         if not config['quiet']:
-            print "not touching existing buildbot.tac"
-            print "creating buildbot.tac.new instead"
+            print("not touching existing buildbot.tac")
+            print("creating buildbot.tac.new instead")
         tacfile += ".new"
     with open(tacfile, "wt") as f:
         f.write(contents)
@@ -66,7 +65,7 @@ def makeSampleConfig(config):
     source = util.sibpath(__file__, "sample.cfg")
     target = os.path.join(config['basedir'], "master.cfg.sample")
     if not config['quiet']:
-        print "creating %s" % target
+        print("creating %s" % target)
     with open(source, "rt") as f:
         config_sample = f.read()
     if config['db']:
@@ -81,12 +80,12 @@ def makePublicHtml(config):
     webdir = os.path.join(config['basedir'], "public_html")
     if os.path.exists(webdir):
         if not config['quiet']:
-            print "public_html/ already exists: not replacing"
+            print("public_html/ already exists: not replacing")
         return
     else:
         os.mkdir(webdir)
     if not config['quiet']:
-        print "populating public_html/"
+        print("populating public_html/")
 
 
 @defer.inlineCallbacks
@@ -104,7 +103,7 @@ def createDB(config, _noMonkey=False):
     db = connector.DBConnector(master, config['basedir'])
     yield db.setup(check_version=False, verbose=not config['quiet'])
     if not config['quiet']:
-        print "creating database (%s)" % (master_cfg.db['db_url'],)
+        print("creating database (%s)" % (master_cfg.db['db_url'],))
     yield db.model.upgrade()
 
 
@@ -118,6 +117,6 @@ def createMaster(config):
     yield createDB(config)
 
     if not config['quiet']:
-        print "buildmaster configured in %s" % (config['basedir'],)
+        print("buildmaster configured in %s" % (config['basedir'],))
 
     defer.returnValue(0)

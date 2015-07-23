@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 import inspect
 import os
@@ -101,7 +102,7 @@ class DBThreadPool(threadpool.ThreadPool):
         log_msg = log.msg
         if verbose:
             def _log_msg(m):
-                print m
+                print(m)
             log_msg = _log_msg
 
         pool_size = 5
@@ -191,7 +192,7 @@ class DBThreadPool(threadpool.ThreadPool):
                     rv = callable(arg, *args, **kwargs)
                     assert not isinstance(rv, sa.engine.ResultProxy), \
                         "do not return ResultProxy objects!"
-                except sa.exc.OperationalError, e:
+                except sa.exc.OperationalError as e:
                     text = e.orig.args[0]
                     if not isinstance(text, basestring):
                         raise

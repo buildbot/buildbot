@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import print_function
 
 import os
 import sys
@@ -30,7 +30,7 @@ class Follower:
 
     def follow(self, basedir):
         self.rc = 0
-        print "Following twistd.log until startup finished.."
+        print("Following twistd.log until startup finished..")
         lw = LogWatcher(os.path.join(basedir, "twistd.log"))
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
@@ -38,29 +38,29 @@ class Follower:
         return self.rc
 
     def _success(self, _):
-        print "The buildmaster appears to have (re)started correctly."
+        print("The buildmaster appears to have (re)started correctly.")
         self.rc = 0
         reactor.stop()
 
     def _failure(self, why):
         if why.check(BuildmasterTimeoutError):
-            print """
+            print("""
 The buildmaster took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'BuildMaster is Running' to verify correct startup.
-"""
+""")
         elif why.check(ReconfigError):
-            print """
+            print("""
 The buildmaster appears to have encountered an error in the master.cfg config
 file during startup. Please inspect and fix master.cfg, then restart the
 buildmaster.
-"""
+""")
         else:
-            print """
+            print("""
 Unable to confirm that the buildmaster started correctly. You may need to
 stop it, fix the config file, and restart.
-"""
-            print why
+""")
+            print(why)
         self.rc = 1
         reactor.stop()
 

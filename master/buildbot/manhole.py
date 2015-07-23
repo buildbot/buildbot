@@ -12,9 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
-
+from __future__ import print_function
 
 import base64
 import binascii
@@ -319,7 +317,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 
 def show(x):
     """Display the data attributes of an object in a readable format"""
-    print "data attributes of %r" % (x,)
+    print("data attributes of %r" % (x,))
     names = dir(x)
     maxlen = max([0] + [len(n) for n in names])
     for k in names:
@@ -338,5 +336,5 @@ def show(x):
             v = "%s (%d elements)" % (v, len(v))
         else:
             v = str(t)
-        print "%*s : %s" % (maxlen, k, v)
+        print("%*s : %s" % (maxlen, k, v))
     return x

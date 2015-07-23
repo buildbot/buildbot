@@ -397,6 +397,21 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectLogfile('property changes', r"res: u'abcdef'")
         return self.runStep()
 
+    def test_renderable_workdir(self):
+        self.setupStep(
+            shell.SetPropertyFromCommand(property="res", command="cmd", workdir=properties.Interpolate('wkdir')))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', usePTY='slave-config',
+                        command="cmd")
+            + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                           state_string="property 'res' set")
+        self.expectProperty("res", "abcdef")  # note: stripped
+        self.expectLogfile('property changes', r"res: u'abcdef'")
+        return self.runStep()
+
     def test_run_property_no_strip(self):
         self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd",
                                                     strip=False))

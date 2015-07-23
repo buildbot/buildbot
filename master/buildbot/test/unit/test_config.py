@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
-
 import __builtin__
 import mock
 import os
@@ -58,7 +55,7 @@ global_defaults = dict(
     multiMaster=False,
     manhole=None,
     www=dict(port=None, plugins={},
-             auth={'name': 'NoAuth'},
+             auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
              logfileName='http.log'),
 )
@@ -817,6 +814,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_www(self.filename, {})
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
+                                    authz={},
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -825,6 +823,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                           dict(www=dict(port=9888)))
         self.assertResults(www=dict(port=9888,
                                     plugins={}, auth={'name': 'NoAuth'},
+                                    authz={},
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -834,6 +833,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=None,
                                     plugins={'waterfall': {'foo': 'bar'}},
                                     auth={'name': 'NoAuth'},
+                                    authz={},
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -843,6 +843,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertResults(www=dict(port=None,
                                     allowed_origins=['a', 'b'],
                                     plugins={}, auth={'name': 'NoAuth'},
+                                    authz={},
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http.log'))
 
@@ -851,6 +852,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                           dict(www=dict(logfileName='http-access.log')))
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
+                                    authz={},
                                     avatar_methods={'name': 'gravatar'},
                                     logfileName='http-access.log'))
 
@@ -862,6 +864,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
+                                    authz={},
                                     avatar_methods={'name': 'gravatar'},
                                     versions=custom_versions,
                                     logfileName='http.log'))

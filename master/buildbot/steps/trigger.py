@@ -210,7 +210,7 @@ class Trigger(BuildStep):
             # the deferred lists, just let the db writes be serial.
             try:
                 bsid, brids = yield idsDeferred
-            except Exception, e:
+            except Exception as e:
                 yield self.addLogWithException(e)
                 results = EXCEPTION
 

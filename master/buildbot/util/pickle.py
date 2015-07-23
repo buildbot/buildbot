@@ -12,8 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
+from __future__ import print_function
 
 import cPickle
 import cStringIO
@@ -180,7 +179,7 @@ class ChangeMaster:  # pragma: no cover
                 newfiles.append(filename)
             c.files = newfiles
         if not quiet:
-            print "converted %d strings" % nconvert
+            print("converted %d strings" % nconvert)
 substituteClasses['buildbot.changes.changes', 'ChangeMaster'] = ChangeMaster
 
 
@@ -764,17 +763,17 @@ class StepProgress:
 
     def start(self):
         if self.debug:
-            print "StepProgress.start[%s]" % self.name
+            print("StepProgress.start[%s]" % self.name)
         self.startTime = util.now()
 
     def setProgress(self, metric, value):
         """The step calls this as progress is made along various axes."""
         if self.debug:
-            print "setProgress[%s][%s] = %s" % (self.name, metric, value)
+            print("setProgress[%s][%s] = %s" % (self.name, metric, value))
         self.progress[metric] = value
         if self.debug:
             r = self.remaining()
-            print " step remaining:", r
+            print(" step remaining:", r)
         self.buildProgress.newProgress()
 
     def finish(self):
@@ -782,7 +781,7 @@ class StepProgress:
         overall. It should be called after the last .setProgress has been
         done for each axis."""
         if self.debug:
-            print "StepProgress.finish[%s]" % self.name
+            print("StepProgress.finish[%s]" % self.name)
         self.stopTime = util.now()
         self.buildProgress.stepFinished(self.name)
 
@@ -877,7 +876,7 @@ class BuildProgress(pb.Referenceable):
     def newProgress(self):
         r = self.remaining()
         if self.debug:
-            print " remaining:", r
+            print(" remaining:", r)
         if r is not None:
             self.sendAllUpdates()
 
@@ -1017,15 +1016,15 @@ class Expectations:
             new_ = self.wavg(old, current)
             self.times[name] = new_
             if self.debug:
-                print "new expected time[%s] = %s, old %s, cur %s" % \
-                      (name, new_, old, current)
+                print("new expected time[%s] = %s, old %s, cur %s" %
+                      (name, new_, old, current))
 
             for metric, current in stepprogress.progress.items():
                 old = self.steps[name].get(metric)
                 new_ = self.wavg(old, current)
                 if self.debug:
-                    print "new expectation[%s][%s] = %s, old %s, cur %s" % \
-                          (name, metric, new_, old, current)
+                    print("new expectation[%s][%s] = %s, old %s, cur %s" %
+                          (name, metric, new_, old, current))
                 self.steps[name][metric] = new_
 
     def expectedBuildTime(self):

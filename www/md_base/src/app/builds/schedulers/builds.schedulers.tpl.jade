@@ -1,0 +1,7 @@
+md-list.scheduler-list
+  md-subheader.md-no-sticky Schedulers
+  md-divider
+  md-list-item.scheduler-item(ng-repeat="scheduler in schedulers.list")
+    span.scheduler-id \#{{ scheduler.id }}
+    p.scheduler-name(flex) {{ scheduler.name }}
+    span.scheduler-master {{ scheduler.master || "No master" }}

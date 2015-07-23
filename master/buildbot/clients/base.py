@@ -15,6 +15,7 @@
 
 
 from twisted.spread import pb
+from twisted.python import log
 
 
 class StatusClient(pb.Referenceable):
@@ -28,47 +29,47 @@ class StatusClient(pb.Referenceable):
         self.events = events
 
     def connected(self, remote):
-        print "connected"
+        log.msg("connected")
         self.remote = remote
         remote.callRemote("subscribe", self.events, 5, self)
 
     def remote_builderAdded(self, buildername, builder):
-        print "builderAdded", buildername
+        log.msg("builderAdded", buildername)
 
     def remote_builderRemoved(self, buildername):
-        print "builderRemoved", buildername
+        log.msg("builderRemoved", buildername)
 
     def remote_builderChangedState(self, buildername, state, eta):
-        print "builderChangedState", buildername, state, eta
+        log.msg("builderChangedState", buildername, state, eta)
 
     def remote_buildStarted(self, buildername, build):
-        print "buildStarted", buildername
+        log.msg("buildStarted", buildername)
 
     def remote_buildFinished(self, buildername, build, results):
-        print "buildFinished", results
+        log.msg("buildFinished", results)
 
     def remote_buildETAUpdate(self, buildername, build, eta):
-        print "ETA", buildername, eta
+        log.msg("ETA", buildername, eta)
 
     def remote_stepStarted(self, buildername, build, stepname, step):
-        print "stepStarted", buildername, stepname
+        log.msg("stepStarted", buildername, stepname)
 
     def remote_stepFinished(self, buildername, build, stepname, step, results):
-        print "stepFinished", buildername, stepname, results
+        log.msg("stepFinished", buildername, stepname, results)
 
     def remote_stepETAUpdate(self, buildername, build, stepname, step,
                              eta, expectations):
-        print "stepETA", buildername, stepname, eta
+        log.msg("stepETA", buildername, stepname, eta)
 
     def remote_logStarted(self, buildername, build, stepname, step,
                           logname, log):
-        print "logStarted", buildername, stepname
+        log.msg("logStarted", buildername, stepname)
 
     def remote_logFinished(self, buildername, build, stepname, step,
                            logname, log):
-        print "logFinished", buildername, stepname
+        log.msg("logFinished", buildername, stepname)
 
     def remote_logChunk(self, buildername, build, stepname, step, logname, log,
                         channel, text):
         ChunkTypes = ["STDOUT", "STDERR", "HEADER"]
-        print "logChunk[%s]: %s" % (ChunkTypes[channel], text)
+        log.msg("logChunk[%s]: %s" % (ChunkTypes[channel], text))

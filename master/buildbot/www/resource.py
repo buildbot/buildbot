@@ -60,7 +60,7 @@ class Resource(resource.Resource):
             writeError = writeErrorDefault
         try:
             d = _callable(request)
-        except Exception, e:
+        except Exception as e:
             d = defer.fail(e)
 
         @d.addCallback

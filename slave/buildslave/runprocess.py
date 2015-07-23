@@ -17,6 +17,8 @@
 Support for running 'shell commands'
 """
 
+from future.utils import iteritems
+
 import os
 import re
 import signal
@@ -317,7 +319,7 @@ class RunProcess(object):
         if not os.path.exists(workdir):
             os.makedirs(workdir)
         if environ:
-            for key, v in environ.iteritems():
+            for key, v in iteritems(environ):
                 if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
@@ -335,11 +337,11 @@ class RunProcess(object):
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
-            for key in os.environ.keys():
+            for key in os.environ:
                 # setting a key to None will delete it from the slave environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
-            for key, v in environ.iteritems():
+            for key, v in iteritems(environ):
                 if v is not None:
                     if not isinstance(v, basestring):
                         raise RuntimeError("'env' values must be strings or "

@@ -128,7 +128,7 @@ class BuildslaveManager(service.BuildbotServiceManager):
                 old_conn.loseConnection()
                 log.msg("Connected slave '%s' ping timed out after %d seconds"
                         % (buildslaveName, self.PING_TIMEOUT))
-            except Exception, e:
+            except Exception as e:
                 old_conn.loseConnection()
                 log.msg("Got error while trying to ping connected slave %s:"
                         "%s" % (buildslaveName, e))
@@ -138,7 +138,7 @@ class BuildslaveManager(service.BuildbotServiceManager):
             yield conn.remotePrint(message="attached")
             info = yield conn.remoteGetSlaveInfo()
             log.msg("Got slaveinfo from '%s'" % buildslaveName)
-        except Exception, e:
+        except Exception as e:
             log.msg("Failed to communicate with slave '%s'\n"
                     "%s" % (buildslaveName, e))
             defer.returnValue(False)

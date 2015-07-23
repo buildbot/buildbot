@@ -1,3 +1,5 @@
+# coding: utf-8
+
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -158,6 +160,7 @@ class Contact(base.StatusReceiver):
 
         self.user = user
         self.channel = channel
+        self.did_say_yes = False
 
     # silliness
 
@@ -274,7 +277,16 @@ class Contact(base.StatusReceiver):
             raise UsageError(e)
 
     def command_HELLO(self, args):
-        self.send("yes?")
+        if self.did_say_yes:
+<<<<<<< HEAD
+=======
+            # List of 'Hi' in 100 languages. If you update this remember to also adjust master/buildbot/test/unit/test_status_words.py
+>>>>>>> 391d42c532450ee39f195ed7208133cf7b506102
+            greetings = ["ږغ كول ، هركلى كول ږغ، هركلى", "Goeie dag", "Tungjatjeta", "Yatasay", "Ahlan bik", "Voghdzuyin", "hola", "kaixo", "Horas", "Pryvitańnie", "Nomoskar", "Oki", "Selam", "Dez-mat", "Zdrávejte", "Mingala ba", "Hola", "Hafa dai", "Oh-see-YOH", "Nín hao", "Bonjou", "Zdravo", "Nazdar", "Hallo", "Hallo", "Iiti", "Kotáka", "Saluton", "Tere", "Hallo", "Hallo", "Bula", "Helo", "Hei", "Goede morgen", "Bonjour", "Hoi", "Ola", "Gamardžoba", "Guten Tag", "Mauri", "Geia!", "Inuugujoq", "Kem cho", "Sannu", "Aloha", "Shalóm", "Namasté", "Szia", "Halló", "Hai", "Kiana", "Dia is muire dhuit", "Buongiorno", "Kónnichi wa", "Salam", "Annyeonghaseyo", "Na", "Sabai dii", "Ave", "Es mīlu tevi", "Labas.", "Selamat petang", "Ni hao", "Kia ora", "Yokwe", "Kwe", "sain baina uu", "niltze", "Yá'át'ééh", "Namaste", "Hallo.", "Salâm", "Witajcie", "Olá", "Kâils", "Aroha", "Salut", "Privét", "Talofa", "Namo namah", "ćao", "Nazdar", "Zdravo", "Hola", "Jambo", "Hej", "Sälü", "Halo", "Selam", "Sàwàtdee kráp", "Dumela", "Merhaba", "Pryvít", "Adaab arz hai", "Chào", "Glidis", "Helo", "Sawubona", "Hoi"]
+            self.send(random.choice(greetings))
+        else:
+            self.did_say_yes = True
+            self.send("yes?")
 
     def command_VERSION(self, args):
         self.send("buildbot-%s at your service" % version)
@@ -869,6 +881,10 @@ class Contact(base.StatusReceiver):
         reactor.callLater(3.0, self.send, "(>^.^)>")
         reactor.callLater(3.5, self.send, "(7^.^)7")
         reactor.callLater(5.0, self.send, "(>^.^<)")
+
+    def command_HUSTLE(self, args):
+        self.act("does the hustle")
+    command_HUSTLE.usage = "dondon on #qutebrowser: qutebrowser-bb needs to learn to do the hustle"
 
     def command_SHUTDOWN(self, args):
         # FIXME: NEED TO THINK ABOUT!

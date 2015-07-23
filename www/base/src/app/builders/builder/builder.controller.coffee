@@ -25,7 +25,8 @@ class Builder extends Controller
             actions = []
             _.forEach forceschedulers, (sch) ->
                 actions.push
-                    caption: sch.name
+                    caption: sch.button_name
+                    extra_class: "btn-primary"
                     action: -> $state.go("builder.forcebuilder", scheduler:sch.name)
 
             # reinstall contextual actions when coming back from forcesched

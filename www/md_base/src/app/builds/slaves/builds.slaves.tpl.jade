@@ -1,0 +1,18 @@
+md-list.slave-list
+  md-subheader.md-no-sticky Slaves
+  md-divider
+  div.slave-item(ng-repeat="slave in slaves.list", layout="row", layout-md="column")
+    div.slave-title(flex-gt-md="50")
+      h3 {{ slave.name }}
+      p
+        | Connected to 
+        ng-pluralize(
+          count="slave.connected_to.length",
+          when="{'0': 'no master.','one': '1 master.','other': '{} masters.'}")
+      p
+        | Configured on 
+        ng-pluralize(
+          count="slave.configured_on.length",
+          when="{'0': 'no builder.','one': '1 builder.','other': '{} builders.'}")
+    div.slave-info(flex-gt-md="50")
+      inspect-data(data="slave.slaveinfo")

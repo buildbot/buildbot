@@ -12,8 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from __future__ import with_statement
+from __future__ import print_function
 
 import os
 import sys
@@ -32,30 +31,30 @@ from twisted.python import util
 
 def checkBasedir(config):
     if not config['quiet']:
-        print "checking basedir"
+        print("checking basedir")
 
     if not base.isBuildmasterDir(config['basedir']):
         return False
 
     if runtime.platformType != 'win32':  # no pids on win32
         if not config['quiet']:
-            print "checking for running master"
+            print("checking for running master")
         pidfile = os.path.join(config['basedir'], 'twistd.pid')
         if os.path.exists(pidfile):
-            print "'%s' exists - is this master still running?" % (pidfile,)
+            print("'%s' exists - is this master still running?" % (pidfile,))
             return False
 
     tac = base.getConfigFromTac(config['basedir'])
     if tac:
         if isinstance(tac.get('rotateLength', 0), str):
-            print "ERROR: rotateLength is a string, it should be a number"
-            print "ERROR: Please, edit your buildbot.tac file and run again"
-            print "ERROR: See http://trac.buildbot.net/ticket/2588 for more details"
+            print("ERROR: rotateLength is a string, it should be a number")
+            print("ERROR: Please, edit your buildbot.tac file and run again")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
         if isinstance(tac.get('maxRotatedFiles', 0), str):
-            print "ERROR: maxRotatedFiles is a string, it should be a number"
-            print "ERROR: Please, edit your buildbot.tac file and run again"
-            print "ERROR: See http://trac.buildbot.net/ticket/2588 for more details"
+            print("ERROR: maxRotatedFiles is a string, it should be a number")
+            print("ERROR: Please, edit your buildbot.tac file and run again")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
 
     return True
@@ -63,18 +62,19 @@ def checkBasedir(config):
 
 def loadConfig(config, configFileName='master.cfg'):
     if not config['quiet']:
-        print "checking %s" % configFileName
+        print("checking %s" % configFileName)
 
     try:
         master_cfg = config_module.MasterConfig.loadConfig(
             config['basedir'], configFileName)
-    except config_module.ConfigErrors, e:
-        print "Errors loading configuration:"
+    except config_module.ConfigErrors as e:
+        print("Errors loading configuration:")
+
         for msg in e.errors:
-            print "  " + msg
+            print("  " + msg)
         return
     except Exception:
-        print "Errors loading configuration:"
+        print("Errors loading configuration:")
         traceback.print_exc(file=sys.stdout)
         return
 
@@ -90,38 +90,38 @@ def installFile(config, target, source, overwrite=False):
         if old_contents != new_contents:
             if overwrite:
                 if not config['quiet']:
-                    print "%s has old/modified contents" % target
-                    print " overwriting it with new contents"
+                    print("%s has old/modified contents" % target)
+                    print(" overwriting it with new contents")
                 with open(target, "wt") as f:
                     f.write(new_contents)
             else:
                 if not config['quiet']:
-                    print "%s has old/modified contents" % target
-                    print " writing new contents to %s.new" % target
+                    print("%s has old/modified contents" % target)
+                    print(" writing new contents to %s.new" % target)
                 with open(target + ".new", "wt") as f:
                     f.write(new_contents)
         # otherwise, it's up to date
     else:
         if not config['quiet']:
-            print "creating %s" % target
+            print("creating %s" % target)
         with open(target, "wt") as f:
             f.write(new_contents)
 
 
 def upgradeFiles(config):
     if not config['quiet']:
-        print "upgrading basedir"
+        print("upgrading basedir")
 
     webdir = os.path.join(config['basedir'], "public_html")
     if not os.path.exists(webdir):
         if not config['quiet']:
-            print "creating public_html"
+            print("creating public_html")
         os.mkdir(webdir)
 
     templdir = os.path.join(config['basedir'], "templates")
     if not os.path.exists(templdir):
         if not config['quiet']:
-            print "creating templates"
+            print("creating templates")
         os.mkdir(templdir)
 
     installFile(config, os.path.join(config['basedir'], "master.cfg.sample"),
@@ -132,24 +132,24 @@ def upgradeFiles(config):
     root_html = os.path.join(templdir, "root.html")
     if os.path.exists(index_html):
         if os.path.exists(root_html):
-            print "Notice: %s now overrides %s" % (root_html, index_html)
-            print "        as the latter is not used by buildbot anymore."
-            print "        Decide which one you want to keep."
+            print("Notice: %s now overrides %s" % (root_html, index_html))
+            print("        as the latter is not used by buildbot anymore.")
+            print("        Decide which one you want to keep.")
         else:
             try:
-                print "Notice: Moving %s to %s." % (index_html, root_html)
-                print "        You can (and probably want to) remove it if " \
-                    "you haven't modified this file."
+                print("Notice: Moving %s to %s." % (index_html, root_html))
+                print("        You can (and probably want to) remove it if "
+                    "you haven't modified this file.")
                 os.renames(index_html, root_html)
-            except Exception, e:
-                print "Error moving %s to %s: %s" % (index_html, root_html,
-                                                     str(e))
+            except Exception as e:
+                print("Error moving %s to %s: %s" % (index_html, root_html,
+                                                     str(e)))
 
 
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
-        print "upgrading database (%s)" % (master_cfg.db['db_url'])
+        print("upgrading database (%s)" % (master_cfg.db['db_url']))
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
@@ -174,9 +174,10 @@ def upgradeMaster(config, _noMonkey=False):
 
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError), e:
-        print "Unable to load 'buildbot.tac' from '%s':" % config['basedir']
-        print e
+    except (SyntaxError, ImportError) as e:
+        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'])
+        print(e)
+
         defer.returnValue(1)
         return
     master_cfg = loadConfig(config, configFile)
@@ -188,6 +189,6 @@ def upgradeMaster(config, _noMonkey=False):
     yield upgradeDatabase(config, master_cfg)
 
     if not config['quiet']:
-        print "upgrade complete"
+        print("upgrade complete")
 
     defer.returnValue(0)

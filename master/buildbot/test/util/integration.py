@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
 
 import StringIO
 import mock
@@ -163,7 +164,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     def tearDown(self):
         if not self._passed:
             dump = StringIO.StringIO()
-            print >> dump, "FAILED! dumping build db for debug"
+            print("FAILED! dumping build db for debug", file=dump)
             builds = yield self.master.data.get(("builds",))
             for build in builds:
                 yield self.printBuild(build, dump)
@@ -241,20 +242,20 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     def printBuild(self, build, out=sys.stdout):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print >> out, "*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
-                                                        statusToString(build['results']))
+        print("*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
+                                                statusToString(build['results'])), file=out)
         for step in build['steps']:
-            print >> out, "    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
-                                                               statusToString(step['results']))
+            print("    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
+                                                       statusToString(step['results'])), file=out)
             for url in step['urls']:
-                print >> out, "       url:%s (%s)" % (url['name'], url['url'])
+                print("       url:%s (%s)" % (url['name'], url['url']), file=out)
             for log in step['logs']:
-                print >> out, "        log:%s (%d)" % (log['name'], log['num_lines'])
+                print("        log:%s (%d)" % (log['name'], log['num_lines']), file=out)
                 if step['results'] != SUCCESS:
                     self.printLog(log, out)
 
     def printLog(self, log, out):
-        print >> out, " " * 8 + "*********** LOG: %s *********" % (log['name'],)
+        print(" " * 8 + "*********** LOG: %s *********" % (log['name'],), file=out)
         if log['type'] == 's':
             for line in log['contents']['content'].splitlines():
                 linetype = line[0]
@@ -265,7 +266,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
                 if linetype == 'e':
                     # red
                     line = "\x1b[31m" + line + "\x1b[0m"
-                print " " * 8 + line
+                print(" " * 8 + line)
         else:
-            print >> out, log['contents']['content']
-        print >> out, " " * 8 + "********************************"
+            print(log['contents']['content'], file=out)
+        print(" " * 8 + "********************************", file=out)

@@ -173,6 +173,8 @@ setup_args = {
         "buildbot.steps.source",
         "buildbot.util",
         "buildbot.www",
+        "buildbot.www.hooks",
+        "buildbot.www.authz",
     ] + ([] if BUILDING_WHEEL else [  # skip tests for wheels (save 50% of the archive)
         "buildbot.test",
         "buildbot.test.util",
@@ -284,6 +286,7 @@ setup_args = {
         ]),
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
+            ('buildbot.reporters.gerrit', ['GerritStatusPush']),
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though
@@ -333,7 +336,11 @@ setup_args = {
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth']),
             ('buildbot.db.dbconfig', [
-                'DbConfig'])
+                'DbConfig']),
+            ('buildbot.www.authz', [
+                'Authz', 'fnmatchStrMatcher', 'reStrMatcher']),
+            ('buildbot.www.authz.endpointmatchers', [
+                'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher']),
         ])
     ])
 }

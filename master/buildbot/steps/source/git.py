@@ -216,23 +216,7 @@ class Git(Source):
             yield self._fullCloneOrFallback()
             return
 
-        # test for existence of the revision; rc=1 indicates it does not exist
-        if self.revision:
-            rc = yield self._dovccmd(['cat-file', '-e', self.revision],
-                                     abandonOnFailure=False)
-        else:
-            rc = 1
-
-        # if revision exists checkout to that revision
-        # else fetch and update
-        if rc == RC_SUCCESS:
-            yield self._dovccmd(['reset', '--hard', self.revision, '--'])
-
-            if self.branch != 'HEAD':
-                yield self._dovccmd(['branch', '-M', self.branch],
-                                    abandonOnFailure=False)
-        else:
-            yield self._fetchOrFallback()
+        yield self._fetchOrFallback()
 
         yield self._syncSubmodule(None)
         yield self._updateSubmodule(None)
@@ -375,15 +359,25 @@ class Git(Source):
 
     @defer.inlineCallbacks
     def _fetch(self, _):
-        command = ['fetch', '-t', self.repourl, self.branch]
-        # If the 'progress' option is set, tell git fetch to output
-        # progress information to the log. This can solve issues with
-        # long fetches killed due to lack of output, but only works
-        # with Git 1.7.2 or later.
-        if self.prog:
-            command.append('--progress')
+        fetch_required = True
 
-        yield self._dovccmd(command)
+        # If the revision already exists in the repo, we dont need to fetch.
+        if self.revision:
+            rc = yield self._dovccmd(['cat-file', '-e', self.revision],
+                                     abandonOnFailure=False)
+            if rc == RC_SUCCESS:
+                fetch_required = False
+
+        if fetch_required:
+            command = ['fetch', '-t', self.repourl, self.branch]
+            # If the 'progress' option is set, tell git fetch to output
+            # progress information to the log. This can solve issues with
+            # long fetches killed due to lack of output, but only works
+            # with Git 1.7.2 or later.
+            if self.prog:
+                command.append('--progress')
+
+            yield self._dovccmd(command)
 
         if self.revision:
             rev = self.revision
@@ -393,6 +387,7 @@ class Git(Source):
         abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
         res = yield self._dovccmd(command, abandonOnFailure)
 
+        # Rename the branch if needed.
         if res == RC_SUCCESS and self.branch != 'HEAD':
             # Ignore errors
             yield self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
