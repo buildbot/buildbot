@@ -297,18 +297,17 @@ class TestContactChannel(unittest.TestCase):
         self.assertTrue(self.sent)  # doesn't matter what it sent
 
     @defer.inlineCallbacks
-<<<<<<< HEAD
     def test_command_hustle(self):
         yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
         self.assertEqual(self.actions, ['does the hustle'])
-=======
+
+    @defer.inlineCallbacks
     def test_command_hello(self):
         greetings = ["ږغ كول ، هركلى كول ږغ، هركلى", "Goeie dag", "Tungjatjeta", "Yatasay", "Ahlan bik", "Voghdzuyin", "hola", "kaixo", "Horas", "Pryvitańnie", "Nomoskar", "Oki", "Selam", "Dez-mat", "Zdrávejte", "Mingala ba", "Hola", "Hafa dai", "Oh-see-YOH", "Nín hao", "Bonjou", "Zdravo", "Nazdar", "Hallo", "Hallo", "Iiti", "Kotáka", "Saluton", "Tere", "Hallo", "Hallo", "Bula", "Helo", "Hei", "Goede morgen", "Bonjour", "Hoi", "Ola", "Gamardžoba", "Guten Tag", "Mauri", "Geia!", "Inuugujoq", "Kem cho", "Sannu", "Aloha", "Shalóm", "Namasté", "Szia", "Halló", "Hai", "Kiana", "Dia is muire dhuit", "Buongiorno", "Kónnichi wa", "Salam", "Annyeonghaseyo", "Na", "Sabai dii", "Ave", "Es mīlu tevi", "Labas.", "Selamat petang", "Ni hao", "Kia ora", "Yokwe", "Kwe", "sain baina uu", "niltze", "Yá'át'ééh", "Namaste", "Hallo.", "Salâm", "Witajcie", "Olá", "Kâils", "Aroha", "Salut", "Privét", "Talofa", "Namo namah", "ćao", "Nazdar", "Zdravo", "Hola", "Jambo", "Hej", "Sälü", "Halo", "Selam", "Sàwàtdee kráp", "Dumela", "Merhaba", "Pryvít", "Adaab arz hai", "Chào", "Glidis", "Helo", "Sawubona", "Hoi"]
         yield self.do_test_command('hello', exp_usage=False)
         self.assertEqual(self.sent, ['yes?'])
         yield self.do_test_command('hello', exp_usage=False)
         self.assertIn(self.sent[0], greetings)
->>>>>>> 391d42c532450ee39f195ed7208133cf7b506102
 
     @defer.inlineCallbacks
     def test_command_list(self):
