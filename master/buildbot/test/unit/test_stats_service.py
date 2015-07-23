@@ -22,8 +22,8 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.statistics import capture
 from buildbot.statistics import storage_backends
-from buildbot.statistics.storage_backends import InfluxStorageService
-from buildbot.statistics.storage_backends import StatsStorageBase
+from buildbot.statistics.storage_backends.base import StatsStorageBase
+from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
@@ -44,7 +44,9 @@ class TestStatsServicesBase(unittest.TestCase):
             self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
 
         self.stats_service = fakestats.FakeStatsService(master=self.master,
-                                                        storage_backends=[fakestats.FakeStatsStorageService()],
+                                                        storage_backends=[
+                                                            fakestats.FakeStatsStorageService()
+                                                        ],
                                                         name="FakeStatsService")
 
         self.stats_service.startService()
@@ -100,7 +102,8 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         except ImportError:
             self.assertRaises(config.ConfigErrors,
                               lambda: InfluxStorageService(
-                                  "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures))
+                                  "fake_url", "fake_port", "fake_user", "fake_password",
+                                  "fake_db", captures))
 
         # if instead influxdb is installed, then intialize it - no errors should be reaised
         else:
@@ -113,7 +116,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
     def test_influx_storage_service_fake_install(self):
         # use a fake InfluxDBClient to test InfluxStorageService in systems which
         # don't have influxdb installed. Primarily useful for test coverage.
-        self.patch(storage_backends, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
+        self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         captures = [capture.CaptureProperty('test_builder', 'test')]
         new_storage_backends = [InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", captures
@@ -121,38 +124,40 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         self.stats_service.reconfigService(new_storage_backends)
 
     def test_influx_storage_service_post_value(self):
-        # test the postStatsValue method of InfluxStorageService
-        self.patch(storage_backends, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
+        # test the thd_postStatsValue method of InfluxStorageService
+        self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         svc = InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", "fake_stats")
         post_data = {
             'name': 'test',
             'value': 'test'
         }
-        svc.postStatsValue(post_data, "test_series_name")
-        data = {}
-        data['name'] = "test_series_name"
-        data['fields'] = {
-            "name": "test",
-            "value": "test"
+        context = {'x': 'y'}
+        svc.thd_postStatsValue(post_data, "test_series_name", context)
+        data = {
+            'measurement': "test_series_name",
+            'fields': {
+                "name": "test",
+                "value": "test"
+            },
+            'tags': {'x': 'y'}
         }
-        data['tags'] = {}
         points = [data]
         self.assertEquals(svc.client.points, points)
 
     def test_influx_service_not_inited(self):
         self.setUpLogging()
-        self.patch(storage_backends, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
+        self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         svc = InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", "fake_stats")
-        svc.inited = False
-        svc.postStatsValue("test", "test", "test")
+        svc._inited = False
+        svc.thd_postStatsValue("test", "test", "test")
         self.assertLogged("Service.*not initialized")
 
     def test_storage_backend_base(self):
-        # Just initlize and run postStatsValue
+        # Just initlize and run thd_postStatsValue
         svc = StatsStorageBase()
-        r = svc.postStatsValue("test", "test", "test")
+        r = svc.thd_postStatsValue("test", "test", "test")
         assert isinstance(r, defer.Deferred)
         assert r.result == None
 
@@ -181,25 +186,26 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.fake_storage_service.captures = captures
         self.stats_service.reconfigService([self.fake_storage_service])
 
+    def get_dict(self, build):
+        return dict(
+            buildid=1,
+            number=build['number'],
+            builderid=build['builderid'],
+            buildrequestid=build['buildrequestid'],
+            buildslaveid=build['buildslaveid'],
+            masterid=build['masterid'],
+            started_at=build['started_at'],
+            complete=True,
+            complete_at=build['complete_at'],
+            state_string=u'',
+            results=0,
+        )
+
     @defer.inlineCallbacks
     def end_build_call_consumers(self):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build = yield self.master.db.builds.getBuild(buildid=1)
-
-        self.master.mq.callConsumer(self.routingKey,
-                                    dict(
-                                        buildid=1,
-                                        number=build['number'],
-                                        builderid=build['builderid'],
-                                        buildrequestid=build['buildrequestid'],
-                                        buildslaveid=build['buildslaveid'],
-                                        masterid=build['masterid'],
-                                        started_at=build['started_at'],
-                                        complete=True,
-                                        complete_at=build['complete_at'],
-                                        state_string=u'',
-                                        results=0,
-                                        ))
+        self.master.mq.callConsumer(self.routingKey, self.get_dict(build))
 
     @staticmethod
     def identity(f, *args, **kwargs):
@@ -217,6 +223,17 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'builder1-test_name',
             {'build_number': '1', 'builder_name': 'builder1'}
         )], self.fake_storage_service.stored_data)
+
+    @defer.inlineCallbacks
+    def test_property_capturing_error(self):
+        self.setup_fake_storage([capture.CaptureProperty('builder1', 'test')])
+        self.setupBuild()
+        self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
+        self.master.db.builds.finishBuild(buildid=1, results=0)
+        build = yield self.master.db.builds.getBuild(buildid=1)
+        cap = self.fake_storage_service.captures[0]
+        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
+                           config.ConfigErrors)
 
     @defer.inlineCallbacks
     def test_property_capturing_alt_callback(self):
@@ -299,6 +316,29 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.assertEqual('duration', self.fake_storage_service.stored_data[0][0].keys()[0])
 
     @defer.inlineCallbacks
+    def test_build_times_capturing_error(self):
+        def cb(*args, **kwargs):
+            raise TypeError
+        self.setup_fake_storage([capture.CaptureBuildStartTime('builder1', cb)])
+        self.setupBuild()
+        self.master.db.builds.setBuildProperty(1, 'test_name', 'test_value', 'test_source')
+        self.master.db.builds.finishBuild(buildid=1, results=0)
+        build = yield self.master.db.builds.getBuild(buildid=1)
+        cap = self.fake_storage_service.captures[0]
+        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
+                           config.ConfigErrors)
+
+        self.setup_fake_storage([capture.CaptureBuildEndTime('builder1', cb)])
+        cap = self.fake_storage_service.captures[0]
+        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
+                           config.ConfigErrors)
+
+        self.setup_fake_storage([capture.CaptureBuildDuration('builder1', callback=cb)])
+        cap = self.fake_storage_service.captures[0]
+        self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
+                           config.ConfigErrors)
+
+    @defer.inlineCallbacks
     def test_yield_metrics_value(self):
         self.setup_fake_storage([capture.CaptureBuildStartTime('builder1')])
         self.setupBuild()
@@ -308,10 +348,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         build_data = yield self.stats_service.master.data.get(('builds', 1))
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
 
-        msg = dict()
-        msg['data_name'] = 'test'
-        msg['post_data'] = {'test': 'test'}
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
 
         exp = [(routingKey, msg)]
         self.stats_service.master.mq.assertProductions(exp)
@@ -323,10 +364,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
-        msg = dict()
-        msg['data_name'] = 'test'
-        msg['post_data'] = {'test': 'test'}
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)
@@ -345,10 +387,11 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         self.master.db.builds.finishBuild(buildid=1, results=0)
         build_data = yield self.stats_service.master.data.get(('builds', 1))
 
-        msg = dict()
-        msg['data_name'] = 'test'
-        msg['post_data'] = {'test': 'test'}
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)
@@ -357,3 +400,22 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'builder1-test',
             {'build_number': '1', 'builder_name': 'builder1'}
         )], self.fake_storage_service.stored_data)
+
+    @defer.inlineCallbacks
+    def test_capture_data_error(self):
+        def cb(*args, **kwargs):
+            raise TypeError
+        self.setup_fake_storage([capture.CaptureData('test', 'builder1', cb)])
+        self.setupBuild()
+        self.master.db.builds.finishBuild(buildid=1, results=0)
+        build_data = yield self.stats_service.master.data.get(('builds', 1))
+
+        msg = {
+            'data_name': 'test',
+            'post_data': {'test': 'test'},
+            'build_data': build_data
+        }
+
+        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        cap = self.fake_storage_service.captures[0]
+        self.assertFailure(cap.consume(routingKey, msg), config.ConfigErrors)

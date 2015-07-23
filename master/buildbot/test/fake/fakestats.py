@@ -16,12 +16,12 @@
 from buildbot.process import buildstep
 from buildbot.statistics import capture
 from buildbot.statistics import stats_service
-from buildbot.statistics import storage_backends
+from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.status.results import SUCCESS
 from twisted.internet import defer
 
 
-class FakeStatsStorageService(storage_backends.StatsStorageBase):
+class FakeStatsStorageService(StatsStorageBase):
 
     """
     Fake Storage service used in unit tests
@@ -38,7 +38,9 @@ class FakeStatsStorageService(storage_backends.StatsStorageBase):
         self.captures = []
 
     @defer.inlineCallbacks
-    def postStatsValue(self, post_data, series_name, context={}):
+    def thd_postStatsValue(self, post_data, series_name, context=None):
+        if not context:
+            context = {}
         self.stored_data.append((post_data, series_name, context))
         yield defer.succeed(None)
 
@@ -83,7 +85,7 @@ class FakeInfluxDBClient(object):
     """
 
     def __init__(self, *args, **kwargs):
-        self.points = None
+        self.points = []
 
     def write_points(self, points):
-        self.points = points
+        self.points.extend(points)

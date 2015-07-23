@@ -12,16 +12,3 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from buildbot.statistics.capture import CaptureBuildDuration
-from buildbot.statistics.capture import CaptureBuildEndTime
-from buildbot.statistics.capture import CaptureBuildStartTime
-from buildbot.statistics.capture import CaptureData
-from buildbot.statistics.capture import CaptureProperty
-from buildbot.statistics.stats_service import StatsService
-from buildbot.statistics.storage_backends.influxdb_client import InfluxStorageService
-
-__all__ = [
-    'StatsService', 'InfluxStorageService', 'CaptureProperty', 'CaptureBuildDuration',
-    'CaptureBuildStartTime', 'CaptureBuildEndTime', 'CaptureData'
-]

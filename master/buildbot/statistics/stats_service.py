@@ -16,7 +16,7 @@
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.statistics.storage_backends import StatsStorageBase
+from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.util import service
 
 
@@ -54,7 +54,7 @@ class StatsService(service.BuildbotService):
             for cap in svc.captures:
                 cap.parent_svcs.append(svc)
                 cap.master = self.master
-                consumer = yield self.master.mq.startConsuming(cap.consumer, cap.routingKey)
+                consumer = yield self.master.mq.startConsuming(cap.consume, cap.routingKey)
                 self.consumers.append(consumer)
 
     @defer.inlineCallbacks
@@ -83,9 +83,10 @@ class StatsService(service.BuildbotService):
         build_data = yield self.master.data.get(('builds', buildid))
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
 
-        msg = dict()
-        msg['data_name'] = data_name
-        msg['post_data'] = post_data
-        msg['build_data'] = build_data
+        msg = {
+            'data_name': data_name,
+            'post_data': post_data,
+            'build_data': build_data
+        }
 
         self.master.mq.produce(routingKey, msg)
