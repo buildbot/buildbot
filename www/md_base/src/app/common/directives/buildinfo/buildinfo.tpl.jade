@@ -5,27 +5,33 @@ div.inner(layout-gt-md="row")
     div.more-changes(ng-if="buildinfo.changesLimit < buildinfo.changes.length")
       a(ng-click="buildinfo.changesLimit = buildinfo.changes.length") Show more
   div.properties(flex-gt-md="33")
-    div.owners(ng-if="buildinfo.properties.owners.length")
-      div.owner(ng-repeat="owner in buildinfo.properties.owners") 
-        img.avatar(ng-if="owner.email", ng-src="avatar?email={{ onwer.email }}")
-        md-icon(ng-if="!owner.email", md-svg-icon="person")
-        span {{ owner.name }}
-    div(ng-if="buildinfo.properties.revision")
-      md-icon(md-svg-icon="changes")
-      span {{ buildinfo.properties.revision }}
-    div(ng-if="buildinfo.properties.slave")
-      md-icon(md-svg-icon="hammer")
-      a(ui-sref="builds.slaves") {{ buildinfo.properties.slave }}
-    div(ng-if="buildinfo.properties.scheduler")
-      md-icon(md-svg-icon="clock")
-      a(ui-sref="builds.schedulers") {{ buildinfo.properties.scheduler }}
-    div(ng-if="buildinfo.properties.dir")
-      md-icon(md-svg-icon="folder")
-      span {{ buildinfo.properties.dir}}
-    div(ng-if="buildinfo.build.complete")
-      md-icon(md-svg-icon="time")
-      span ran for  {{ buildinfo.build.complete_at|amDifference:buildinfo.build.started_at:'seconds' }} seconds
-    div(ng-if="buildinfo.build.started_at") 
-      md-icon(md-svg-icon="calendar")
-      | started 
-      span(am-time-ago="buildinfo.build.started_at")
+    div.switch
+      a.md-button(ng-click="buildinfo.showRaw = false", ng-class="{selected: !buildinfo.showRaw}") summary
+      a.md-button(ng-click="buildinfo.showRaw = true", ng-class="{selected: buildinfo.showRaw}") raw
+    div.summary(ng-if="!buildinfo.showRaw")
+      div.owners(ng-if="buildinfo.properties.owners.length")
+        div.owner(ng-repeat="owner in buildinfo.properties.owners") 
+          img.avatar(ng-if="owner.email", ng-src="avatar?email={{ onwer.email }}")
+          md-icon(ng-if="!owner.email", md-svg-icon="person")
+          span {{ owner.name }}
+      div(ng-if="buildinfo.properties.revision")
+        md-icon(md-svg-icon="changes")
+        span {{ buildinfo.properties.revision }}
+      div(ng-if="buildinfo.properties.slave")
+        md-icon(md-svg-icon="hammer")
+        a(ui-sref="builds.slaves") {{ buildinfo.properties.slave }}
+      div(ng-if="buildinfo.properties.scheduler")
+        md-icon(md-svg-icon="clock")
+        a(ui-sref="builds.schedulers") {{ buildinfo.properties.scheduler }}
+      div(ng-if="buildinfo.properties.dir")
+        md-icon(md-svg-icon="folder")
+        span {{ buildinfo.properties.dir}}
+      div(ng-if="buildinfo.build.complete")
+        md-icon(md-svg-icon="time")
+        span ran for  {{ buildinfo.build.complete_at|amDifference:buildinfo.build.started_at:'seconds' }} seconds
+      div(ng-if="buildinfo.build.started_at") 
+        md-icon(md-svg-icon="calendar")
+        | started 
+        span(am-time-ago="buildinfo.build.started_at")
+    div.raw(ng-if="buildinfo.showRaw")
+      inspect-data(data="buildinfo.raw_properties")

@@ -12,10 +12,12 @@ class BuildInfo extends Directive
         }
 
 class _BuildInfo extends Controller
+    showRaw: false
     changesLimit: 5
+
+    changes: []
     properties: {}
     raw_properties: {}
-    changes: []
 
     constructor: ->
         @build.loadProperties().then (data) => @processProperties(data[0])

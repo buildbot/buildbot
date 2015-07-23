@@ -14,7 +14,23 @@ build-info {
     border-left: 1px solid #eee;
     color: #999;
 
-    &>div {
+    .switch {
+      text-align: center;
+      border-bottom: 1px solid #eee;
+
+      .md-button {
+        line-height: 20px;
+        font-size: 12px;
+        min-height: 20px;
+      }
+
+      .md-button.selected {
+        background: #673ab7;
+        color: white;
+      }
+    }
+
+    .summary>div {
       margin: 5px;
       line-height: 20px;
       overflow: hidden;
