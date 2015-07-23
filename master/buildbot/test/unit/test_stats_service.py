@@ -150,7 +150,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         self.patch(storage_backends.influxdb_client, 'InfluxDBClient', fakestats.FakeInfluxDBClient)
         svc = InfluxStorageService(
             "fake_url", "fake_port", "fake_user", "fake_password", "fake_db", "fake_stats")
-        svc.inited = False
+        svc._inited = False
         svc.thd_postStatsValue("test", "test", "test")
         self.assertLogged("Service.*not initialized")
 

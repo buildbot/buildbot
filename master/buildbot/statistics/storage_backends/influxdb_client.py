@@ -42,13 +42,12 @@ class InfluxStorageService(StatsStorageBase):
         self.name = name
 
         self.captures = captures
-        self.inited = False
         self.client = InfluxDBClient(self.url, self.port, self.user,
                                      self.password, self.db)
-        self.inited = True
+        self._inited = True
 
     def thd_postStatsValue(self, post_data, series_name, context=None):
-        if not self.inited:
+        if not self._inited:
             log.err("Service {0} not initialized".format(self.name))
             return
 
