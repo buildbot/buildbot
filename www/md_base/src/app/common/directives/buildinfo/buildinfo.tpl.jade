@@ -10,7 +10,7 @@ div.inner(layout-gt-md="row")
       a.md-button(ng-click="buildinfo.showRaw = true", ng-class="{selected: buildinfo.showRaw}") raw
     div.summary(ng-if="!buildinfo.showRaw")
       div.owner(ng-repeat="owner in buildinfo.properties.owners") 
-        img.avatar(ng-if="owner.email", ng-src="avatar?email={{ onwer.email }}")
+        img.avatar(ng-if="owner.email", ng-src="avatar?email={{ owner.email }}")
         md-icon(ng-if="!owner.email", md-svg-icon="person")
         a(ng-href="mailto:{{ owner.email }}") {{ owner.name }}
       div(ng-if="buildinfo.properties.revision")
