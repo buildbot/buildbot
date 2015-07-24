@@ -40,8 +40,9 @@ from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
 
-# Used in command_HELLO and it's test/ 'Hi' in 100 languages.
+# Used in command_HELLO and it's test. 'Hi' in 100 languages.
 GREETINGS = ["ږغ كول ، هركلى كول ږغ، هركلى", "Goeie dag", "Tungjatjeta", "Yatasay", "Ahlan bik", "Voghdzuyin", "hola", "kaixo", "Horas", "Pryvitańnie", "Nomoskar", "Oki", "Selam", "Dez-mat", "Zdrávejte", "Mingala ba", "Hola", "Hafa dai", "Oh-see-YOH", "Nín hao", "Bonjou", "Zdravo", "Nazdar", "Hallo", "Hallo", "Iiti", "Kotáka", "Saluton", "Tere", "Hallo", "Hallo", "Bula", "Helo", "Hei", "Goede morgen", "Bonjour", "Hoi", "Ola", "Gamardžoba", "Guten Tag", "Mauri", "Geia!", "Inuugujoq", "Kem cho", "Sannu", "Aloha", "Shalóm", "Namasté", "Szia", "Halló", "Hai", "Kiana", "Dia is muire dhuit", "Buongiorno", "Kónnichi wa", "Salam", "Annyeonghaseyo", "Na", "Sabai dii", "Ave", "Es mīlu tevi", "Labas.", "Selamat petang", "Ni hao", "Kia ora", "Yokwe", "Kwe", "sain baina uu", "niltze", "Yá'át'ééh", "Namaste", "Hallo.", "Salâm", "Witajcie", "Olá", "Kâils", "Aroha", "Salut", "Privét", "Talofa", "Namo namah", "ćao", "Nazdar", "Zdravo", "Hola", "Jambo", "Hej", "Sälü", "Halo", "Selam", "Sàwàtdee kráp", "Dumela", "Merhaba", "Pryvít", "Adaab arz hai", "Chào", "Glidis", "Helo", "Sawubona", "Hoi"]
+
 
 # This should probably move to the irc class.
 def maybeColorize(text, color, useColors):
@@ -161,7 +162,7 @@ class Contact(base.StatusReceiver):
 
         self.user = user
         self.channel = channel
-        self.did_say_yes = False
+        self._did_say_yes = False
 
     # silliness
 
@@ -278,10 +279,10 @@ class Contact(base.StatusReceiver):
             raise UsageError(e)
 
     def command_HELLO(self, args):
-        if self.did_say_yes:
+        if self._did_say_yes:
             self.send(random.choice(GREETINGS))
         else:
-            self.did_say_yes = True
+            self._did_say_yes = True
             self.send("yes?")
 
     def command_VERSION(self, args):
