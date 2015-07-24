@@ -121,21 +121,10 @@ try:
 except ImportError:
     pass
 else:
-    if sys.version_info[:2] >= (2, 6):
-        setup_args['install_requires'] = [
-            'twisted >= 8.0.0',
-            'future',
-        ]
-    else:
-        # Latest supported on Python 2.5 version of Twisted is 12.10, and
-        # pip/easy_install currently can't select correct version of Twisted.
-        # Twisted depends on zope.interface, which became incompatible with
-        # Python 2.5 starting from 4.0.0 release.
-        setup_args['install_requires'] = [
-            'twisted >= 8.0.0, <= 12.1.0',
-            'zope.interface < 4.0.0',
-            'future',
-        ]
+    setup_args['install_requires'] = [
+        'twisted >= 8.0.0',
+        'future',
+    ]
     setup_args['extras_require'] = {
         'test': [
             'mock',
