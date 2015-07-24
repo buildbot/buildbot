@@ -167,7 +167,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             print("FAILED! dumping build db for debug", file=dump)
             builds = yield self.master.data.get(("builds",))
             for build in builds:
-                yield self.printBuild(build, dump)
+                yield self.printBuild(build, dump, withLogs=True)
         m = self.master
         # stop the service
         yield m.stopService()
@@ -239,7 +239,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             build["properties"] = yield self.master.data.get(("builds", build['buildid'], "properties"))
 
     @defer.inlineCallbacks
-    def printBuild(self, build, out=sys.stdout):
+    def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         print("*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
@@ -251,7 +251,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
                 print("       url:%s (%s)" % (url['name'], url['url']), file=out)
             for log in step['logs']:
                 print("        log:%s (%d)" % (log['name'], log['num_lines']), file=out)
-                if step['results'] != SUCCESS:
+                if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
     def printLog(self, log, out):
