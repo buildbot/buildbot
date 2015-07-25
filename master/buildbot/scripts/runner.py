@@ -656,6 +656,8 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.cleanupdb.cleanupDatabase"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        # when this command has several maintainance jobs, we should make
+        # them optional here. For now there is only one.
     ]
     optParameters = [
     ]
@@ -665,7 +667,12 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
 
     longdesc = """
     This command takes an existing buildmaster working directory and
-    do some optimization on the database
+    do some optimization on the database.
+
+    This command is frontend for various database maintainance jobs:
+
+    - optimiselogs: This optimization groups logs into bigger chunks
+      to apply higher level of compression.
 
     This command uses the database specified in
     the master configuration file.  If you wish to use a database other than

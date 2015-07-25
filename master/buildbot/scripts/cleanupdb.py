@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import print_function
 from __future__ import with_statement
 
 import os
 import sys
-import time
 
-from .upgrade_master import checkBasedir
-from .upgrade_master import loadConfig
+from buildbot import config as config_module
 from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster
@@ -32,11 +31,11 @@ from twisted.internet import defer
 @defer.inlineCallbacks
 def doCleanupDatabase(config, master_cfg):
     if not config['quiet']:
-        print "cleaning database (%s)" % (master_cfg.db['db_url'])
+        print("cleaning database (%s)" % (master_cfg.db['db_url']))
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
-    print master.config.logCompressionMethod
+    print(master.config.logCompressionMethod)
     db = connector.DBConnector(master, basedir=config['basedir'])
 
     yield db.setup(check_version=False, verbose=not config['quiet'])
@@ -49,14 +48,16 @@ def doCleanupDatabase(config, master_cfg):
         i += 1
         if not config['quiet'] and percent != i * 100 / len(res):
             percent = i * 100 / len(res)
-            print " {}%  {} saved".format(percent, saved)
+            print(" {0}%  {1} saved".format(percent, saved))
             saved = 0
             sys.stdout.flush()
 
     if master_cfg.db['db_url'].startswith("sqlite"):
         if not config['quiet']:
-            print "executing sqlite vacuum function..."
+            print("executing sqlite vacuum function...")
 
+        # sqlite vacuum function rebuild the whole database to claim
+        # free disk space back
         def thd(engine):
             r = engine.execute("vacuum;")
             r.close()
@@ -64,25 +65,32 @@ def doCleanupDatabase(config, master_cfg):
 
 
 @in_reactor
-@defer.inlineCallbacks
-def cleanupDatabase(config, _noMonkey=False):
-    if not _noMonkey:  # pragma: no cover
+def cleanupDatabase(config, _noMonkey=False):  # pragma: no cover
+    # we separate the actual implementation to protect unit tests
+    # from @in_reactor which stops the reactor
+    if not _noMonkey:
         monkeypatches.patch_all()
+    return _cleanupDatabase(config, _noMonkey=False)
 
-    if not checkBasedir(config):
+
+@defer.inlineCallbacks
+def _cleanupDatabase(config, _noMonkey=False):
+
+    if not base.checkBasedir(config):
         defer.returnValue(1)
         return
 
+    config['basedir'] = os.path.abspath(config['basedir'])
     os.chdir(config['basedir'])
 
-    try:
+    with base.captureErrors((SyntaxError, ImportError),
+                            "Unable to load 'buildbot.tac' from '%s':" % (config['basedir'],)):
         configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError), e:
-        print "Unable to load 'buildbot.tac' from '%s':" % config['basedir']
-        print e
-        defer.returnValue(1)
-        return
-    master_cfg = loadConfig(config, configFile)
+
+    with base.captureErrors(config_module.ConfigErrors,
+                            "Unable to load '%s' from '%s':" % (configFile, config['basedir'])):
+        master_cfg = base.loadConfig(config, configFile)
+
     if not master_cfg:
         defer.returnValue(1)
         return
@@ -90,6 +98,6 @@ def cleanupDatabase(config, _noMonkey=False):
     yield doCleanupDatabase(config, master_cfg)
 
     if not config['quiet']:
-        print "cleanup complete"
+        print("cleanup complete")
 
     defer.returnValue(0)

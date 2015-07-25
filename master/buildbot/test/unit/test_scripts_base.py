@@ -17,9 +17,11 @@ import os
 import string
 import textwrap
 
+from buildbot import config as config_module
 from buildbot.scripts import base
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from twisted.python import runtime
 from twisted.python import usage
 from twisted.trial import unittest
@@ -267,3 +269,92 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     # NOTE: testing the ownership check requires patching os.stat, which causes
     # other problems since it is so heavily used.
+
+
+def mkconfig(**kwargs):
+    config = dict(quiet=False, replace=False, basedir='test')
+    config.update(kwargs)
+    return config
+
+
+class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
+                     unittest.TestCase):
+
+    def setUp(self):
+        self.setUpDirs('test')
+        self.setUpStdoutAssertions()
+
+    def tearDown(self):
+        self.tearDownDirs()
+
+    def activeBasedir(self, extra_lines=()):
+        with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
+            f.write("from twisted.application import service\n")
+            f.write("service.Application('buildmaster')\n")
+            f.write("\n".join(extra_lines))
+
+    def test_checkBasedir(self):
+        self.activeBasedir()
+        rv = base.checkBasedir(mkconfig())
+        self.assertTrue(rv)
+        self.assertInStdout('checking basedir')
+
+    def test_checkBasedir_quiet(self):
+        self.activeBasedir()
+        rv = base.checkBasedir(mkconfig(quiet=True))
+        self.assertTrue(rv)
+        self.assertWasQuiet()
+
+    def test_checkBasedir_no_dir(self):
+        rv = base.checkBasedir(mkconfig(basedir='doesntexist'))
+        self.assertFalse(rv)
+        self.assertInStdout('invalid buildmaster directory')
+
+    @skipUnlessPlatformIs('posix')
+    def test_checkBasedir_active_pidfile(self):
+        self.activeBasedir()
+        open(os.path.join('test', 'twistd.pid'), 'w').close()
+        rv = base.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('still running')
+
+    def test_checkBasedir_invalid_rotateLength(self):
+        self.activeBasedir(extra_lines=['rotateLength="32"'])
+        rv = base.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('ERROR')
+        self.assertInStdout('rotateLength')
+
+    def test_checkBasedir_invalid_maxRotatedFiles(self):
+        self.activeBasedir(extra_lines=['maxRotatedFiles="64"'])
+        rv = base.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('ERROR')
+        self.assertInStdout('maxRotatedFiles')
+
+    def test_loadConfig(self):
+        @classmethod
+        def loadConfig(cls, basedir, filename):
+            return config_module.MasterConfig()
+        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
+        cfg = base.loadConfig(mkconfig())
+        self.assertIsInstance(cfg, config_module.MasterConfig)
+        self.assertInStdout('checking')
+
+    def test_loadConfig_ConfigErrors(self):
+        @classmethod
+        def loadConfig(cls, basedir, filename):
+            raise config_module.ConfigErrors(['oh noes'])
+        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
+        cfg = base.loadConfig(mkconfig())
+        self.assertIdentical(cfg, None)
+        self.assertInStdout('oh noes')
+
+    def test_loadConfig_exception(self):
+        @classmethod
+        def loadConfig(cls, basedir, filename):
+            raise RuntimeError()
+        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
+        cfg = base.loadConfig(mkconfig())
+        self.assertIdentical(cfg, None)
+        self.assertInStdout('RuntimeError')

@@ -142,6 +142,21 @@ This checks if the buildmaster configuration is well-formed and contains no depr
 If no arguments are used or the base directory is passed as the argument the config file specified in :file:`buildbot.tac` is checked.
 If the argument is the path to a config file then it will be checked without using the :file:`buildbot.tac` file.
 
+
+.. bb:cmdline:: cleanupdb
+
+cleanupdb
++++++++++
+
+.. code-block:: none
+
+    buildbot cleanupdb {BASEDIR|CONFIG_FILE} [-q]
+
+This command is frontend for various database maintainance jobs:
+
+- optimiselogs: This optimization groups logs into bigger chunks
+  to apply higher level of compression.
+
 Developer Tools
 ~~~~~~~~~~~~~~~
 

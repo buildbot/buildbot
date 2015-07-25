@@ -83,7 +83,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         tbl = self.db.model.logs
         return self._getLog((tbl.c.slug == slug) & (tbl.c.stepid == stepid))
 
-    def getLogs(self, stepid):
+    def getLogs(self, stepid=None):
         def thd(conn):
             tbl = self.db.model.logs
             q = tbl.select()
@@ -241,19 +241,18 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # get the set of chunks
             tbl = self.db.model.logchunks
-            q = sa.select([tbl.c.first_line, tbl.c.last_line, sa.func.length(tbl.c.content), tbl.c.compressed])
+            q = sa.select([tbl.c.first_line, tbl.c.last_line, sa.func.length(tbl.c.content),
+                           tbl.c.compressed])
             q = q.where(tbl.c.logid == logid)
             q = q.order_by(tbl.c.first_line)
             rows = conn.execute(q)
             uncompressed_length = 0
             numchunks = 0
             totlength = 0
-            totlines = 0
             for row in rows:
                 if row.compressed == 0:
                     uncompressed_length += row.length_1
                 totlength += row.length_1
-                totlines = row.last_line - row.first_line
                 numchunks += 1
 
             # do nothing if its not worth.
@@ -265,7 +264,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             rows = conn.execute(q)
             wholelog = ""
             for row in rows:
-                wholelog += self.COMPRESSION_BYID[row.compressed](row.content).decode('utf-8') + "\n"
+                wholelog += self.COMPRESSION_BYID[row.compressed]["read"](row.content).decode('utf-8') + "\n"
 
             d = tbl.delete()
             d = d.where(tbl.c.logid == logid)

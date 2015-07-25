@@ -15,70 +15,14 @@
 from __future__ import print_function
 
 import os
-import sys
-import traceback
 
-from buildbot import config as config_module
 from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
 from twisted.internet import defer
-from twisted.python import runtime
 from twisted.python import util
-
-
-def checkBasedir(config):
-    if not config['quiet']:
-        print("checking basedir")
-
-    if not base.isBuildmasterDir(config['basedir']):
-        return False
-
-    if runtime.platformType != 'win32':  # no pids on win32
-        if not config['quiet']:
-            print("checking for running master")
-        pidfile = os.path.join(config['basedir'], 'twistd.pid')
-        if os.path.exists(pidfile):
-            print("'%s' exists - is this master still running?" % (pidfile,))
-            return False
-
-    tac = base.getConfigFromTac(config['basedir'])
-    if tac:
-        if isinstance(tac.get('rotateLength', 0), str):
-            print("ERROR: rotateLength is a string, it should be a number")
-            print("ERROR: Please, edit your buildbot.tac file and run again")
-            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
-            return False
-        if isinstance(tac.get('maxRotatedFiles', 0), str):
-            print("ERROR: maxRotatedFiles is a string, it should be a number")
-            print("ERROR: Please, edit your buildbot.tac file and run again")
-            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
-            return False
-
-    return True
-
-
-def loadConfig(config, configFileName='master.cfg'):
-    if not config['quiet']:
-        print("checking %s" % configFileName)
-
-    try:
-        master_cfg = config_module.MasterConfig.loadConfig(
-            config['basedir'], configFileName)
-    except config_module.ConfigErrors as e:
-        print("Errors loading configuration:")
-
-        for msg in e.errors:
-            print("  " + msg)
-        return
-    except Exception:
-        print("Errors loading configuration:")
-        traceback.print_exc(file=sys.stdout)
-        return
-
-    return master_cfg
 
 
 def installFile(config, target, source, overwrite=False):
@@ -139,7 +83,7 @@ def upgradeFiles(config):
             try:
                 print("Notice: Moving %s to %s." % (index_html, root_html))
                 print("        You can (and probably want to) remove it if "
-                    "you haven't modified this file.")
+                      "you haven't modified this file.")
                 os.renames(index_html, root_html)
             except Exception as e:
                 print("Error moving %s to %s: %s" % (index_html, root_html,
@@ -166,7 +110,7 @@ def upgradeMaster(config, _noMonkey=False):
     if not _noMonkey:  # pragma: no cover
         monkeypatches.patch_all()
 
-    if not checkBasedir(config):
+    if not base.checkBasedir(config):
         defer.returnValue(1)
         return
 
@@ -180,7 +124,7 @@ def upgradeMaster(config, _noMonkey=False):
 
         defer.returnValue(1)
         return
-    master_cfg = loadConfig(config, configFile)
+    master_cfg = base.loadConfig(config, configFile)
     if not master_cfg:
         defer.returnValue(1)
         return

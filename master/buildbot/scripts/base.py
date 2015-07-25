@@ -17,9 +17,77 @@ from __future__ import print_function
 import copy
 import os
 import stat
+import sys
+import traceback
 
 from twisted.python import runtime
+
+from buildbot import config as config_module
+from contextlib import contextmanager
+from twisted.internet import defer
 from twisted.python import usage
+
+
+@contextmanager
+def captureErrors(errors, msg):
+    try:
+        yield
+    except errors as e:
+        print(msg)
+        print(e)
+        defer.returnValue(1)
+
+
+def checkBasedir(config):
+    if not config['quiet']:
+        print("checking basedir")
+
+    if not isBuildmasterDir(config['basedir']):
+        return False
+
+    if runtime.platformType != 'win32':  # no pids on win32
+        if not config['quiet']:
+            print("checking for running master")
+        pidfile = os.path.join(config['basedir'], 'twistd.pid')
+        if os.path.exists(pidfile):
+            print("'%s' exists - is this master still running?" % (pidfile,))
+            return False
+
+    tac = getConfigFromTac(config['basedir'])
+    if tac:
+        if isinstance(tac.get('rotateLength', 0), str):
+            print("ERROR: rotateLength is a string, it should be a number")
+            print("ERROR: Please, edit your buildbot.tac file and run again")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            return False
+        if isinstance(tac.get('maxRotatedFiles', 0), str):
+            print("ERROR: maxRotatedFiles is a string, it should be a number")
+            print("ERROR: Please, edit your buildbot.tac file and run again")
+            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            return False
+
+    return True
+
+
+def loadConfig(config, configFileName='master.cfg'):
+    if not config['quiet']:
+        print("checking %s" % configFileName)
+
+    try:
+        master_cfg = config_module.MasterConfig.loadConfig(
+            config['basedir'], configFileName)
+    except config_module.ConfigErrors as e:
+        print("Errors loading configuration:")
+
+        for msg in e.errors:
+            print("  " + msg)
+        return
+    except Exception:
+        print("Errors loading configuration:")
+        traceback.print_exc(file=sys.stdout)
+        return
+
+    return master_cfg
 
 
 def isBuildmasterDir(dir):

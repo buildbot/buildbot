@@ -103,7 +103,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getLogs(self):
         @self.assertArgSpecMatches(self.db.logs.getLogs)
-        def getLogs(self, stepid):
+        def getLogs(self, stepid=None):
             pass
 
     def test_signature_getLogLines(self):
