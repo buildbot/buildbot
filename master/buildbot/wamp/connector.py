@@ -110,6 +110,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         ret = yield service.subscribe(callback, topic, options)
         defer.returnValue(ret)
 
+    @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         if new_config.mq.get('type', 'simple') != "wamp":
             return
@@ -135,6 +136,6 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             debug_app=wamp.get('debug', False)
         )
 
-        self.app.setServiceParent(self)
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        yield self.app.setServiceParent(self)
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
+                                                                                   new_config)
