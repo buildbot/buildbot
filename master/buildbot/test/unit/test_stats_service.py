@@ -154,13 +154,6 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
         svc.thd_postStatsValue("test", "test", "test")
         self.assertLogged("Service.*not initialized")
 
-    def test_storage_backend_base(self):
-        # Just initlize and run thd_postStatsValue
-        svc = StatsStorageBase()
-        r = svc.thd_postStatsValue("test", "test", "test")
-        assert isinstance(r, defer.Deferred)
-        assert r.result == None
-
 
 class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
 
