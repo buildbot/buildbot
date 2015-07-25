@@ -90,8 +90,10 @@ class Log(object):
     @defer.inlineCallbacks
     def finish(self):
         assert not self.finished
+        yield self.lock.acquire()
         self.finished = True
         yield self.master.data.updates.finishLog(self.logid)
+        yield self.lock.release()
 
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
