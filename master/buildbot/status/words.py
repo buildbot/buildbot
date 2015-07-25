@@ -162,7 +162,7 @@ class Contact(base.StatusReceiver):
 
         self.user = user
         self.channel = channel
-        self._did_say_yes = False
+        self._next_HELLO = 'yes?'
 
     # silliness
 
@@ -279,11 +279,8 @@ class Contact(base.StatusReceiver):
             raise UsageError(e)
 
     def command_HELLO(self, args):
-        if self._did_say_yes:
-            self.send(random.choice(GREETINGS))
-        else:
-            self._did_say_yes = True
-            self.send("yes?")
+        self.send(self._next_HELLO)
+        self._next_HELLO = random.choice(GREETINGS)
 
     def command_VERSION(self, args):
         self.send("buildbot-%s at your service" % version)
