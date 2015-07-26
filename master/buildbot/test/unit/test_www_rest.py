@@ -21,7 +21,7 @@ from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import authz
 from buildbot.www import rest
-from buildbot.www.rest import JSONRPC_CODES
+from buildbot.www.rest import JSONRPC_CODES, BadRequest
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -198,6 +198,11 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.master.data._scanModule(endpoint)
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
+
+        endpoint.TestEndpoint.rtype = mock.MagicMock()
+        endpoint.TestsEndpoint.rtype = mock.MagicMock()
+        endpoint.Test.isCollection = True
+        endpoint.Test.rtype = endpoint.Test
 
     def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
@@ -453,9 +458,9 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_api_details_none(self):
         yield self.render_resource(self.rsrc, '/test/0')
         self.assertRequest(
-            contentJson=dict(error="not found while getting from endpoint for /test/n:testid with arguments"
-                             " ResultSpec(**{'fields': None, 'limit': None, 'order': None, 'filters': [], "
-                             "'offset': None}) and {'testid': 0}"),
+            contentJson={u'error': u"not found while getting from endpoint for /test/n:testid with arguments"
+                                   " ResultSpec(**{'limit': None, 'filters': [], 'offset': None, "
+                                   "'fields': None, 'order': None, 'properties': []}) and {'testid': 0}"},
             contentType='text/plain; charset=utf-8',
             responseCode=404)
 
@@ -488,6 +493,71 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertRestError(message="RuntimeError('oh noes',)",
                              responseCode=500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+
+    def test_decode_result_spec_raise_bad_request_on_bad_property_value(self):
+        expected_props = [None, 'test2']
+        self.make_request('/test')
+        self.request.args = {'property': expected_props}
+        self.assertRaises(BadRequest, lambda: self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint))
+
+    def test_decode_result_spec_limit(self):
+        expected_limit = 5
+        self.make_request('/test')
+        self.request.args = {'limit': str(expected_limit)}
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+        self.assertEqual(spec.limit, expected_limit)
+
+    def test_decode_result_spec_order(self):
+        expected_order = 'info',
+        self.make_request('/test')
+        self.request.args = {'order': expected_order}
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.Test)
+        self.assertEqual(spec.order, expected_order)
+
+    def test_decode_result_spec_offset(self):
+        expected_offset = 5
+        self.make_request('/test')
+        self.request.args = {'offset': str(expected_offset)}
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+        self.assertEqual(spec.offset, expected_offset)
+
+    def test_decode_result_spec_properties(self):
+        expected_props = ['test1', 'test2']
+        self.make_request('/test')
+        self.request.args = {'property': expected_props}
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
+        self.assertEqual(spec.properties[0].values, expected_props)
+
+    def test_decode_result_spec_not_a_collection_limit(self):
+        def expectRaiseBadRequest():
+            limit = 5
+            self.make_request('/test')
+            self.request.args = {'limit': limit}
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+
+    def test_decode_result_spec_not_a_collection_order(self):
+        def expectRaiseBadRequest():
+            order = 'info',
+            self.make_request('/test')
+            self.request.args = {'order': order}
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+
+    def test_decode_result_spec_not_a_collection_offset(self):
+        def expectRaiseBadRequest():
+            offset = 0
+            self.make_request('/test')
+            self.request.args = {'offset': offset}
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+
+    def test_decode_result_spec_not_a_collection_properties(self):
+        expected_props = ['test1', 'test2']
+        self.make_request('/test')
+        self.request.args = {'property': expected_props}
+        spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
+        self.assertEqual(spec.properties[0].values, expected_props)
 
 
 class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):

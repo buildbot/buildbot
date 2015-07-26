@@ -32,42 +32,42 @@ class Filter(unittest.TestCase):
 
     def test_eq(self):
         f = resultspec.Filter('num', 'eq', [10])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10))),
                          mklist('num', 10))
 
     def test_eq_plural(self):
         f = resultspec.Filter('num', 'eq', [10, 15, 20])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10, 15))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 10, 15))
 
     def test_ne(self):
         f = resultspec.Filter('num', 'ne', [10])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10))),
                          mklist('num', 5))
 
     def test_ne_plural(self):
         f = resultspec.Filter('num', 'ne', [10, 15, 20])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10, 15))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 5))
 
     def test_lt(self):
         f = resultspec.Filter('num', 'lt', [10])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10, 15))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 5))
 
     def test_le(self):
         f = resultspec.Filter('num', 'le', [10])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10, 15))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 5, 10))
 
     def test_gt(self):
         f = resultspec.Filter('num', 'gt', [10])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10, 15))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 15))
 
     def test_ge(self):
         f = resultspec.Filter('num', 'ge', [10])
-        self.assertEqual(list(f._apply(mklist('num', 5, 10, 15))),
+        self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 10, 15))
 
 
@@ -227,6 +227,15 @@ class ResultSpec(unittest.TestCase):
         f = resultspec.Filter(field='x', op='gt', values=[23])
         self.assertRaises(AssertionError, lambda:
                           resultspec.ResultSpec(filters=[f]).apply(data))
+
+    def test_popProperties(self):
+        expected = ['prop1', 'prop2']
+        rs = resultspec.ResultSpec(properties=[
+            resultspec.Property('property', 'eq', expected)
+        ])
+        self.assertEqual(len(rs.properties), 1)
+        self.assertEqual(rs.popProperties(), expected)
+        self.assertEqual(len(rs.properties), 0)
 
     def test_popFilter(self):
         rs = resultspec.ResultSpec(filters=[

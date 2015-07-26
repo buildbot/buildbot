@@ -27,6 +27,13 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 
+# override resultSpec implementation to be noop
+class MockedResultSpec(resultspec.ResultSpec):
+
+    def apply(self, data):
+        return data
+
+
 class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = builds.BuildEndpoint
@@ -77,6 +84,13 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         build = yield self.callGet(('builders', 77, 'builds', 5))
         self.validateData(build)
         self.assertEqual(build['buildid'], 15)
+
+    @defer.inlineCallbacks
+    def test_properties_injection(self):
+        resultSpec = MockedResultSpec(filters=[resultspec.Filter('property', 'eq', [False])])
+        build = yield self.callGet(('builders', 77, 'builds', 5), resultSpec=resultSpec)
+        self.validateData(build)
+        self.assertIn('properties', build)
 
 
 class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -130,19 +144,18 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_complete(self):
-        # override resultSpec implementation to be noop
-        class MyResultSpec(resultspec.ResultSpec):
-
-            def apply(self, data):
-                return data
-
-        resultSpec = MyResultSpec(
-            filters=[resultspec.Filter('complete', 'eq', [False])])
-
-        builds = yield self.callGet(('builds',),
-                                    resultSpec=resultSpec)
+        resultSpec = MockedResultSpec(filters=[resultspec.Filter('complete', 'eq', [False])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
+    def test_properties_injection(self):
+        resultSpec = MockedResultSpec(filters=[resultspec.Filter('property', 'eq', [False])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
+        for b in builds:
+            self.validateData(b)
+            self.assertIn('properties', b)
 
 
 class Build(interfaces.InterfaceTests, unittest.TestCase):
@@ -156,7 +169,8 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                        'number': 1,
                        'results': None,
                        'started_at': epoch2datetime(1),
-                       'state_string': u'created'}
+                       'state_string': u'created',
+                       'properties': {}}
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
