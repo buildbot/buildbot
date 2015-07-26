@@ -28,7 +28,7 @@ from twisted.trial import unittest
 
 
 def nth_slave(n):
-    def pick_nth_by_name(builder, slaves=None):
+    def pick_nth_by_name(builder, slaves=None, br=None):
         if slaves is None:
             slaves = builder
         slaves = slaves[:]
@@ -402,7 +402,10 @@ class TestMaybeStartBuilds(TestBRDBase):
     # _maybeStartBuildsOnBuilder
 
     @defer.inlineCallbacks
-    def do_test_maybeStartBuildsOnBuilder(self, rows=[], exp_claims=[], exp_builds=[]):
+    def do_test_maybeStartBuildsOnBuilder(self, rows=None, exp_claims=None, exp_builds=None):
+        rows = rows or []
+        exp_claims = exp_claims or []
+        exp_builds = exp_builds or []
         yield self.master.db.insertTestData(rows)
 
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
@@ -802,19 +805,29 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=exp_claims, exp_builds=exp_builds)
 
+    def test_nextSlave_gets_buildrequest(self):
+        def nextSlave(bldr, lst, br=None):
+            self.assertNotEqual(br, None)
+        return self.do_test_nextSlave(nextSlave)
+
+    def test_nextSlave_2args_in_signature(self):
+        def nextSlave(builder, lst):
+            return lst[0] if lst else None
+        return self.do_test_nextSlave(nextSlave)
+
     def test_nextSlave_default(self):
         import random
         self.patch(random, 'choice', nth_slave(2))
         return self.do_test_nextSlave(None, exp_choice=2)
 
     def test_nextSlave_simple(self):
-        def nextSlave(bldr, lst):
+        def nextSlave(bldr, lst, br=None):
             self.assertIdentical(bldr, self.bldr)
             return lst[1]
         return self.do_test_nextSlave(nextSlave, exp_choice=1)
 
     def test_nextSlave_deferred(self):
-        def nextSlave(bldr, lst):
+        def nextSlave(bldr, lst, br=None):
             self.assertIdentical(bldr, self.bldr)
             return defer.succeed(lst[1])
         return self.do_test_nextSlave(nextSlave, exp_choice=1)
