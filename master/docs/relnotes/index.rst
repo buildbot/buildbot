@@ -25,6 +25,9 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* The :py:class:`~buildbot.config.BuilderConfig` ``nextSlave`` keyword argument takes a callable.
+  This callable now receives :py:class:`~buildbot.process.buildrequest.BuildRequest` instance in its signature as 3rd parameter.
+  **For retro-compatibility, all callable taking only 2 parameters will still work**.
 
 Slave
 -----
