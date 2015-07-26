@@ -162,7 +162,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
-            self.nextSlave = lambda _, slaves: random.choice(
+            self.nextSlave = lambda _, slaves, __: random.choice(
                 slaves) if slaves else None
 
         self.slavepool = self.bldr.getAvailableSlaves()
@@ -181,14 +181,14 @@ class BasicBuildChooser(BuildChooserBase):
         nextBuild = (None, None)
 
         while True:
-            #  1. pick a slave
-            slave = yield self._popNextSlave()
-            if not slave:
-                break
-
-            #  2. pick a build
+            #  1. pick a build
             breq = yield self._getNextUnclaimedBuildRequest()
             if not breq:
+                break
+
+            #  2. pick a slave
+            slave = yield self._popNextSlave(breq)
+            if not slave:
                 break
 
             # either satisfy this build or we leave it for another day
@@ -202,7 +202,7 @@ class BasicBuildChooser(BuildChooserBase):
                     break
                 # try a different slave
                 recycledSlaves.append(slave)
-                slave = yield self._popNextSlave()
+                slave = yield self._popNextSlave(breq)
 
             # recycle the slaves that we didnt use to the head of the queue
             # this helps ensure we run 'nextSlave' only once per slave choice
@@ -243,7 +243,7 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
-    def _popNextSlave(self):
+    def _popNextSlave(self, buildrequest):
         # use 'preferred' slaves first, if we have some ready
         if self.preferredSlaves:
             slave = self.preferredSlaves.pop(0)
@@ -252,7 +252,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         while self.slavepool:
             try:
-                slave = yield self.nextSlave(self.bldr, self.slavepool)
+                slave = yield self.nextSlave(self.bldr, self.slavepool, buildrequest)
             except Exception:
                 slave = None
 
