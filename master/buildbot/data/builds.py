@@ -20,6 +20,24 @@ from twisted.internet import defer
 
 class Db2DataMixin(object):
 
+    def _generate_filtered_properties(self, props, filters):
+        """
+        This method returns Build's properties according to property filters.
+
+        .. seealso::
+
+            `Official Documentation <http://docs.buildbot.net/latest/developer/rtype-build.html>`_
+
+        :param props: The Build's properties as a dict (from db)
+        :param filters: Desired properties keys as a list (from API URI)
+
+        """
+        # by default none properties are returned
+        if props and filters:  # pragma: no cover
+            return (props
+                    if '*' in filters
+                    else dict(((k, v) for k, v in props.iteritems() if k in filters)))
+
     def db2data(self, dbdict):
         data = {
             'buildid': dbdict['id'],
@@ -33,6 +51,7 @@ class Db2DataMixin(object):
             'complete': dbdict['complete_at'] is not None,
             'state_string': dbdict['state_string'],
             'results': dbdict['results'],
+            'properties': {}
         }
         return defer.succeed(data)
 
@@ -53,8 +72,21 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
             bldr = kwargs['builderid']
             num = kwargs['number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+
+        data = yield self.db2data(dbdict) if dbdict else None
+        # In some cases, data could be None
+        if data:
+            filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
+            # Avoid to request DB for Build's properties if not specified
+            if filters:  # pragma: no cover
+                try:
+                    props = yield self.master.db.builds.getBuildProperties(data['buildid'])
+                except (KeyError, TypeError):
+                    props = {}
+                filtered_properties = self._generate_filtered_properties(props, filters)
+                if filtered_properties:
+                    data['properties'] = filtered_properties
+        defer.returnValue(data)
 
     def startConsuming(self, callback, options, kwargs):
         builderid = kwargs.get('builderid')
@@ -97,8 +129,19 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
             buildrequestid=kwargs.get('buildrequestid'),
             buildslaveid=kwargs.get('buildslaveid'),
             complete=complete)
-        defer.returnValue(
-            [(yield self.db2data(dbdict)) for dbdict in builds])
+        # returns properties' list
+        filters = resultSpec.popProperties()
+        buildscol = []
+        for b in builds:
+            data = yield self.db2data(b)
+            # Avoid to request DB for Build's properties if not specified
+            if filters:  # pragma: no cover
+                props = yield self.master.db.builds.getBuildProperties(b['id'])
+                filtered_properties = self._generate_filtered_properties(props, filters)
+                if filtered_properties:
+                    data['properties'] = filtered_properties
+            buildscol.append(data)
+        defer.returnValue(buildscol)
 
 
 class Build(base.ResourceType):
@@ -125,6 +168,7 @@ class Build(base.ResourceType):
         complete_at = types.NoneOk(types.DateTime())
         results = types.NoneOk(types.Integer())
         state_string = types.String()
+        properties = types.NoneOk(types.SourcedProperties())
     entityType = EntityType(name)
 
     @defer.inlineCallbacks

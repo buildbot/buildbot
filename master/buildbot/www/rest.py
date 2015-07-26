@@ -134,7 +134,7 @@ class V2RootResource(resource.Resource):
         except BadJsonRpc2 as e:
             writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
             return
-        except Forbidden, e:
+        except Forbidden as e:
             # There is nothing in jsonrc spec about forbidden error, so pick invalid request
             writeError(e.message, errcode=403, jsonrpccode=JSONRPC_CODES["invalid_request"])
             return
@@ -237,7 +237,7 @@ class V2RootResource(resource.Resource):
 
         entityType = endpoint.rtype.entityType
         limit = offset = order = fields = None
-        filters = []
+        filters, properties = [], []
         for arg in reqArgs:
             if arg == 'order':
                 order = reqArgs[arg]
@@ -258,6 +258,13 @@ class V2RootResource(resource.Resource):
                     offset = int(reqArgs[arg][0])
                 except Exception:
                     raise BadRequest('invalid offset')
+                continue
+            elif arg == 'property':
+                try:
+                    props = [v.decode('utf-8') for v in reqArgs[arg]]
+                except Exception:
+                    raise BadRequest('invalid property value for %s' % arg)
+                properties.append(resultspec.Property(arg, 'eq', props))
                 continue
             elif arg in entityType.fieldNames:
                 field = entityType.fields[arg]
@@ -294,9 +301,9 @@ class V2RootResource(resource.Resource):
                 if filter.field not in fieldsSet:
                     raise BadRequest("cannot filter on un-selected fields")
 
-        # bulid the result spec
-        rspec = resultspec.ResultSpec(fields=fields, limit=limit,
-                                      offset=offset, order=order, filters=filters)
+        # build the result spec
+        rspec = resultspec.ResultSpec(fields=fields, limit=limit, offset=offset,
+                                      order=order, filters=filters, properties=properties)
 
         # for singular endpoints, only allow fields
         if not endpoint.isCollection:
