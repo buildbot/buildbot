@@ -10,7 +10,7 @@ Buildbot is based on original work from `Brian Warner
 <mailto:warner-buildbot @ lothar . com>`_, and currently maintained by
 `Dustin J. Mitchell <dustin@buildbot.net>`_. Visit us on http://buildbot.net !
 
-|travis-badge|_ |coveralls-badge|_
+|travis-badge|_ |codecov-badge|_
 
 Buildbot consists of several components:
 
@@ -29,5 +29,3 @@ Related repositories:
 .. _travis-badge: https://travis-ci.org/buildbot/buildbot
 .. |codecov-badge| image:: https://img.shields.io/codecov/buildbot/buildbot.svg
 .. _codecov-badge: https://codecov.io/buildbot/buildbot?branch=master
-.. |coveralls-badge| image:: https://img.shields.io/coveralls/buildbot/buildbot.svg
-.. _coveralls-badge: https://coveralls.io/r/buildbot/buildbot?branch=master
