@@ -391,6 +391,10 @@ else:
             'pylint==1.1.0',
             'pyflakes',
         ],
+        'bundle': [
+            'buildbot-www',
+            'buildbot-slave'
+        ]
     }
 
     if os.getenv('NO_INSTALL_REQS'):
