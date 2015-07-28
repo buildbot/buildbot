@@ -11,14 +11,14 @@ class GlPageWithSidebar extends Directive
         }
 
 class _glPageWithSidebar extends Controller
-    constructor: (@$scope, glMenuService, @$timeout) ->
-        @sidebarPinned = false
+    constructor: (@$scope, glMenuService, @$timeout, @$window) ->
+        @sidebarPinned = @$window.innerWidth > 800
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
         @activeGroup = null
         @inSidebar = false
-        @sidebarActive = false
+        @sidebarActive = @sidebarPinned
 
     toggleGroup: (group) ->
         if @activeGroup!=group
@@ -44,4 +44,3 @@ class _glPageWithSidebar extends Controller
                 @sidebarActive = false
                 @activeGroup = null
             ), 500
-
