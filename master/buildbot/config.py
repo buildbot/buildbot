@@ -539,11 +539,6 @@ class MasterConfig(util.ComparableMixin):
                 error(msg)
                 return
 
-            # if sl.slavename in ("debug", "change", "status"):
-            #     msg = "slave name '%s' is reserved" % sl.slavename
-            #     error(msg)
-
-            #if not util.identifiers.isIdentifier(50, sl.slavename):
             def validate(slavename):
                 if slavename in ("debug", "change", "status"):
                     yield "slave name '%s' is reserved" % slavename
