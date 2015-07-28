@@ -15,8 +15,6 @@
 
 import abc
 
-from twisted.internet import defer
-
 
 class StatsStorageBase(object):
 
@@ -29,4 +27,4 @@ class StatsStorageBase(object):
 
     @abc.abstractmethod
     def thd_postStatsValue(self, post_data, series_name, context=None):
-        return defer.succeed(None)
+        pass

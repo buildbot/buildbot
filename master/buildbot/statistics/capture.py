@@ -44,7 +44,7 @@ class Capture(object):
 
     @abc.abstractmethod
     def consume(self, routingKey, msg):
-        raise NotImplementedError
+        pass
 
     @defer.inlineCallbacks
     def _store(self, post_data, series_name, context):
