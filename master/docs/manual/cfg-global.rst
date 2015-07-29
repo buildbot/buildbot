@@ -592,19 +592,18 @@ Read more about metrics in the :ref:`Metrics` section in the developer documenta
 Statistics Service
 ~~~~~~~~~~~~~~~~~~
 
-The Statistics Service (or stats service) is a new service being introduced in Buildbot Nine.
-This service supports for collecting arbitrary data from within a running Buildbot instance and export it do a number of storage backends.
+The Statistics Service (stats service for short) supports for collecting arbitrary data from within a running Buildbot instance and export it do a number of storage backends.
 Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage backend.
 Also, InfluxDB (or any other storage backend) is not a mandatory dependency.
 Buildbot can run without it although :class:`StatsService` will be of no use in such a case.
-At present, :class:`StatsService` can only keep track of build properties and build times (start, end, duration).
+At present, :class:`StatsService` can keep track of build properties, build times (start, end, duration) and arbitrary data produced inside Buildbot (more on this later).
 
 Example usage:
 
 ::
 
-    captures = [stats.CaptureProperty('runtests', 'tree-size-KiB'),
-                stats.CaptureBuildDuration('runtests')]
+    captures = [stats.CaptureProperty('Builder1', 'tree-size-KiB'),
+                stats.CaptureBuildDuration('Builder2')]
     c['services'] = []
     c['services'].append(stats.StatsService(
         storage_backends=[
@@ -619,9 +618,13 @@ Statistics Service
 
 **class StatsService:**
 
-This is the main class for statistics service. It is initialized in the master configuration as show in the example above. It takes two arguments:
+This is the main class for statistics service.
+It is initialized in the master configuration as show in the example above.
+It takes two arguments:
 
-   * ``storage_backends``: A list of storage backends (see :ref:`storage-backends`). In the example above, ``stats.InfluxStorageService`` is an instance of a storage backend. Each storage backend is an instances of subclasses of :py:class:`statsStorageBase`.
+   * ``storage_backends``: A list of storage backends (see :ref:`storage-backends`).
+     In the example above, ``stats.InfluxStorageService`` is an instance of a storage backend.
+     Each storage backend is an instances of subclasses of :py:class:`statsStorageBase`.
    * ``name``: The name of this service.
 
 :py:meth:`yieldMetricsValue`: This method can be used to send arbitrary data for storage. (See :ref:`yieldMetricsValue` for more.)
@@ -637,50 +640,131 @@ Instance of this class declares which properties must be captured and sent to th
 
    * ``builder_name``: The name of builder in which the property is recorded.
    * ``property_name``: The name of property needed to be recorded as a statistic.
-   * ``callback=None``: (Optional) A custom callback function for this class. This callback function should take in two arguments - `build_properties` (dict) and `property_name` (str) and return a string that will be sent for storage in the storage backends.
+   * ``callback=None``: (Optional) A custom callback function for this class.
+     This callback function should take in two arguments - `build_properties` (dict) and `property_name` (str) and return a string that will be sent for storage in the storage backends.
+   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+     All properties matching this regular expression will be sent for storage.
+
+
+**class CapturePropertyAllBuilders:**
+
+Instance of this class declares which properties must be captured on all builders and sent to the :ref:`storage-backends`. It takes the following arguments:
+
+   * ``property_name``: The name of property needed to be recorded as a statistic.
+   * ``callback=None``: (Optional) A custom callback function for this class.
+     This callback function should take in two arguments - `build_properties` (dict) and `property_name` (str) and return a string that will be sent for storage in the storage backends.
+   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+     All properties matching this regular expression will be sent for storage.
+
 
 **class CaptureBuildStartTime:**
 
-Instance of this class declares which builders start times are to be captured and sent to :ref:`storage-backends`. It takes the following arguments:
+Instance of this class declares which builders' start times are to be captured and sent to :ref:`storage-backends`. It takes the following arguments:
 
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: (Optional) A custom callback function for this class. This callback function should take in a Python datetime object and return a string that will be sent for storage in the storage backends.
+   * ``callback=None``: (Optional) A custom callback function for this class.
+     This callback function should take in a Python datetime object and return a string that will be sent for storage in the storage backends.
+
+
+**class CaptureBuildStartTimeAllBuilders:**
+
+Instance of this class declares start times of all builders to be captured and sent to :ref:`storage-backends`. It takes the following arguments:
+
+   * ``callback=None``: (Optional) A custom callback function for this class.
+     This callback function should take in a Python datetime object and return a string that will be sent for storage in the storage backends.
 
 
 **class CaptureBuildEndTime:**
 
-Exactly like :py:class:`CaptureBuildStartTime` except it declares the builders whose end time is to be recorded. The arguments are same as :py:class:`CaptureBuildStartTime`.
+Exactly like :py:class:`CaptureBuildStartTime` except it declares the builders whose end time is to be recorded.
+The arguments are same as :py:class:`CaptureBuildStartTime`.
+
+
+**class CaptureBuildEndTimeAllBuilders:**
+
+Exactly like :py:class:`CaptureBuildStartTimeAllBuilders` except it declares all builders' end time to be recorded.
+The arguments are same as :py:class:`CaptureBuildStartTimeAllBuilders`.
 
 
 **class CaptureBuildDuration:**
 
-Instance of this class declares the builders whose build durations are to be recorded. It takes the following arguments:
+Instance of this class declares the builders whose build durations are to be recorded.
+It takes the following arguments:
 
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``report_in='seconds'``: Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``. This is the units in which the build time will be reported.
-   * ``callback=None``: (Optional) A custom callback function for this class. This callback function should take in two Python datetime objects - a ``start_time`` and an ``end_time`` and return a string that will be sent for storage in the storage backends.
+   * ``report_in='seconds'``: Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``.
+     This is the units in which the build time will be reported.
+   * ``callback=None``: (Optional) A custom callback function for this class.
+     This callback function should take in two Python datetime objects - a ``start_time`` and an ``end_time`` and return a string that will be sent for storage in the storage backends.
+
+
+**class CaptureBuildDurationAllBuilders:**
+
+Instance of this class declares build durations to be recorded for all builders.
+It takes the following arguments:
+
+   * ``builder_name``: The name of builder whose times are to be recorded.
+   * ``report_in='seconds'``: Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``.
+     This is the units in which the build time will be reported.
+   * ``callback=None``: (Optional) A custom callback function for this class.
+     This callback function should take in two Python datetime objects - a ``start_time`` and an ``end_time`` and return a string that will be sent for storage in the storage backends.
+
 
 
 **class CaptureData:**
 
-A capture class for capturing arbitrary data that is not stored as build-data. Needs to be used in conjunction with ``yieldMetricsValue`` (See :ref:`yieldMetricsValue`). Takes the following arguments:
+Instance of this capture class is for capturing arbitrary data that is not stored as build-data.
+Needs to be used in conjunction with ``yieldMetricsValue`` (See :ref:`yieldMetricsValue`). Takes the following arguments:
 
-   * ``data_name``: The name of data to be captured. Same as in ``yieldMetricsValue``.
+   * ``data_name``: The name of data to be captured.
+     Same as in ``yieldMetricsValue``.
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: The callback function for this class. This callback receives the data sent to  ``yieldMetricsValue`` as ``post_data`` (See :ref:`yieldMetricsValue`). It must return a string that is to be sent to the storage backends for storage.
+   * ``callback=None``: The callback function for this class.
+     This callback receives the data sent to  ``yieldMetricsValue`` as ``post_data`` (See :ref:`yieldMetricsValue`).
+     It must return a string that is to be sent to the storage backends for storage.
+
+
+**class CaptureDataAllBuilders:**
+
+Instance of this capture class for capturing arbitrary data that is not stored as build-data on all builders
+Needs to be used in conjunction with ``yieldMetricsValue`` (See :ref:`yieldMetricsValue`). Takes the following arguments:
+
+   * ``data_name``: The name of data to be captured.
+     Same as in ``yieldMetricsValue``.
+   * ``callback=None``: The callback function for this class.
+     This callback receives the data sent to  ``yieldMetricsValue`` as ``post_data`` (See :ref:`yieldMetricsValue`).
+     It must return a string that is to be sent to the storage backends for storage.
+
 
 .. _yieldMetricsValue:
 
 Using ``StatsService.yieldMetricsValue``
 ++++++++++++++++++++++++++++++++++++++++
 
-Advanced users can modify ``BuildSteps`` to use ``StatsService.yieldMetricsValue`` which will send arbitrary data for storage to the ``StatsService``. It takes the following arguments:
+Advanced users can modify ``BuildSteps`` to use ``StatsService.yieldMetricsValue`` which will send arbitrary data for storage to the ``StatsService``.
+It takes the following arguments:
 
    * ``data_name``: The name of the data being sent or storage.
-   * ``post_data``: A dictionary of key value pair that is sent for storage. The keys will act as columns in a database and the value is stored under that column.
-   * ``buildid``: The integer build id of the current build. Obtainable in all ``BuildSteps``.
+   * ``post_data``: A dictionary of key value pair that is sent for storage.
+     The keys will act as columns in a database and the value is stored under that column.
+   * ``buildid``: The integer build id of the current build.
+     Obtainable in all ``BuildSteps``.
 
 Along with using ``yieldMetricsValue``, the user will also need to use the ``CaptureData`` capture class.
+As an example, we can add the following to a build step:
+
+::
+
+    yieldMetricsValue('test_data_name', {'some_data': 'some_value'}, buildid)
+
+Then, we can add in the master configuration a capture class like this:
+
+::
+
+    captures = [CaptureBuildData('test_data_name', 'Builder1')]
+
+Pass this ``captures`` list to a storage backend (as shown in the example at the top of this section) for capturing this data.
+
 
 .. _storage-backends:
 

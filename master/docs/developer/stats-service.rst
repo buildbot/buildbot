@@ -15,14 +15,15 @@ Stats Service
 
 .. py:class:: StatsService
 
-   An instance of this class functions as a :class:`BuildbotService`. The instance of the running
-   service is initialized in the master configuration file (see :bb:cfg:`stats-service` for more).
+   An instance of this class functions as a :class:`BuildbotService`.
+   The instance of the running service is initialized in the master configuration file (see :bb:cfg:`stats-service` for more).
    The running service is accessible everywhere in Buildbot via the :class:`BuildMaster`.
    The service is available at ``self.master.namedServices['<service-name>']``.
    It takes the following intialization arguments:
 
    * ``storage_backends``: A list of storage backends. These are instance of subclasses of :class:`StatsStorageBase`.
-   * ``name``: The name of this service. This name can be used to access the running instance of this service using ``self.master.namedServices[name]``.
+   * ``name``: The name of this service.
+     This name can be used to access the running instance of this service using ``self.master.namedServices[name]``.
 
    Please see :bb:cfg:`stats-service` for examples.
 
@@ -41,7 +42,7 @@ Stats Service
 
    .. py:method:: registerConsumers(self)
 
-      Internal method called to register all consumers (methods from Capture classes) to the MQ layer.
+      Internal method for this class called to register all consumers (methods from Capture classes) to the MQ layer.
 
    .. py:method:: stopService(self)
 
@@ -58,9 +59,8 @@ Stats Service
       :type post_data: dict
       :param buildid: The integer build id of the current build. Obtainable in all ``BuildSteps``.
 
-      This method should be called to post data that is not generated and stored as build-data in
-      the database. This method generates the ``stats-yield-data`` event to the mq layer
-      which is then consumed in :py:class:`postData`.
+      This method should be called to post data that is not generated and stored as build-data in the database.
+      This method generates the ``stats-yield-data`` event to the mq layer which is then consumed in :py:class:`postData`.
 
 .. _storage-backend:
 
@@ -68,27 +68,41 @@ Stats Service
 Storage backends
 ----------------
 
-Storage backends are responsible for storing any stats-data sent to them.
+Storage backends are responsible for storing any statistics/data sent to them.
 A storage backend will generally be some sort of a database-server running on a machine.
-(*Note*: This machine may be different from the one running :class:`BuildMaster`)
+.. note:: This machine may be different from the one running :class:`BuildMaster`
 
 Data is captured according to the master config file and then, is sent to each of the storage backends provided by the master configuration (see :bb:cfg:`stats-service`).
 
-Each storage backend has a Python client defined as part of :mod:`buildbot.statistics.storage_backends`
-to aid in posting data by :class:`StatsService`
+Each storage backend has a Python client defined as part of :mod:`buildbot.statistics.storage_backends` to aid in posting data by :class:`StatsService`
 
 Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage backend.
 
 .. py:class:: StatsStorageBase
 
-   A base class for all storage services
+   A abstract base class for all storage services. It cannot be directly initialized - it would raise a ``TypeError`` otherwise.
+
+   .. py:method:: thd_postStatsValue(self, post_data, series_name, context={})
+
+      :param post_data: A dict of key-value pairs that is sent for storage.
+                        The keys of this dict can be thought of as columns in a database and the value is the data stored for that column.
+      :type post_data: dict
+      :param series_name: The name of the time-series for this statistic.
+      :type series_name: str
+      :param context: (Optional) Any other contextual information about the data.
+                      Dict of key-value pairs.
+      :type context: dict
+
+      An abstract method that needs to be implemented by every child class of this class.
+      Not doing so will result result in a ``TypeError`` when starting Buildbot.
+
 
 .. py:class:: InfluxStorageService
 
    `InfluxDB <http://influxdb.com>`_ is a distributed, time series database that employs a key-value pair storage system.
 
    This class is a Buildbot client to the InfluxDB storage backend.
-   It is available in the configuration as ``stats.InfluxStorageService``
+   It is available in the configuration as ``statistics.InfluxStorageService``
    It takes the following initialization arguments:
 
    * ``url``: The URL where the service is running.
@@ -96,16 +110,19 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
    * ``user``: Username of a InfluxDB user.
    * ``password``: Password for ``user``.
    * ``db``: The name of database to be used.
-   * ``captures``: A list of instances of subclasses of :py:class:`Capture`. This tells which stats are to be stored in this storage backend.
+   * ``captures``: A list of instances of subclasses of :py:class:`Capture`.
+     This tells which stats are to be stored in this storage backend.
    * ``name=None``: (Optional) The name of this storage backend.
 
-   .. py:method:: postStatsValue(self, post_data, series_name, context={})
+   .. py:method:: thd_postStatsValue(self, post_data, series_name, context={})
 
-      :param post_data: A dict of key-value pairs that is sent for storage. The keys of this dict can be thought of as columns in a database and the value is the data stored for that column.
+      :param post_data: A dict of key-value pairs that is sent for storage.
+                        The keys of this dict can be thought of as columns in a database and the value is the data stored for that column.
       :type post_data: dict
       :param series_name: The name of the time-series for this statistic.
       :type series_name: str
-      :param context: (Optional) Any other contextual information about the data. Dict of key-value pairs.
+      :param context: (Optional) Any other contextual information about the data.
+                      Dict of key-value pairs.
       :type context: dict
 
       This method constructs a dictionary of data to be sent to InfluxDB in the proper format and sends the data to the influxDB instance.
@@ -114,142 +131,369 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
 Capture Classes
 ---------------
 
-Capture classes are used for declaring the data that needs to be sent to storage backends for storage.
+Capture classes are used for declaring which data needs to captured and sent to storage backends for storage.
 
 .. py:class:: Capture
 
-   A base class for all capture classes. Not to be used directly. Initlized with the following parameters:
+   This is the abstract base class for all capture classes.
+   Not to be used directly.
+   Initlized with the following parameters:
 
-   * ``routingKey``: (tuple) The routing key to be used by :class:`StatsService` to register consumers to the MQ lasyer for the subclass of this class.
-   * ``callback``: The callback registered with the MQ layer for the consumer of a subclass of this class. Each subclass must provide a default callback for this purpose.
+   * ``routingKey``: (tuple) The routing key to be used by :class:`StatsService` to register consumers to the MQ layer for the subclass of this class.
+   * ``callback``: The callback registered with the MQ layer for the consumer of a subclass of this class.
+     Each subclass must provide a default callback for this purpose.
 
-   .. py:method:: defaultContext(self, msg):
+   .. py:method:: _defaultContext(self, msg):
 
       A method for providing default context to the storage backends.
 
-   .. py:method:: consumer(self, routingKey, msg):
+   .. py:method:: consume(self, routingKey, msg):
 
-      Raises ``NotImplementedError``. Each subclass of this method should implement its own consumer.
-      The consumer, when calles (from the mq layer), receives the following arguments:
+      This is an abstract method - each subclass of this class should implement its own consume method.
+      If not, then the subclass can't be instantiated.
+      The consume method, when called (from the mq layer), receives the following arguments:
 
-      * ``routingKey``: The routing key which was registered to the MQ layer. Same as the ``routingKey`` provided to instantiate this class.
+      * ``routingKey``: The routing key which was registered to the MQ layer.
+        Same as the ``routingKey`` provided to instantiate this class.
       * ``msg``: The message that was sent by the producer.
+
+   .. py:method:: _store(self, post_data, series_name, context):
+
+      This is an abstract method of this class.
+      It must be implemented by all subclasses of this class.
+      It takes the following arguments:
+
+      * ``post_data``: (dict) The key-value pair being sent to the storage backend.
+      * ``series_name``: (str) The name of the series to which this data is stored.
+      * ``context``: (dict) Any additional information pertaining to data being sent.
+
+
+.. py:class:: CapturePropertyBase
+
+   This is a base class for both :class:`CaptureProperty` and :class:`CapturePropertyAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
+   Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
+   It is intialized with the following arguments:
+
+   * ``property_name``: The name of property needed to be recorded as a statistic.
+     This can be a regular expression if ``regex=True`` (see below).
+   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
+     A default callback needs to be prois provided for this.
+
+   **The default callback:**
+
+     .. py:function:: default_callback(props, property_name)
+
+     It returns property value for ``property_name``.
+     It receives the following arguments:
+
+     * ``props``: A dictionary of all build properties.
+     * ``property_name``: Name of the build property to return.
+
+
+   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+     All properties matching this regular expression will be sent for storage.
+
+   .. py:method:: consume(self, routingKey, msg)
+
+      The consumer for all CaptureProperty classes described below.
+      This method filters out the correct properties as per the configuration file and sends those properties for storage.
+      The subclasses of this method do not need to implement this method as it takes care of all the functionaltiy itself.
+      See :class:`Capture` for more.
+
+   .. py:method:: _builder_name_matches(self, builder_info):
+
+      This is an abstract method and needs to be implemented by all subclasses of this class.
+      This is a helper method to the ``consume`` method metioned above.
+      It checks whether a builder is allowed to send properties to the storage backend according to the configuration file.
+      It takes one argument:
+
+      * ``builder_info``: (dict) The dictionary returned by the data API containing the builder information.
+
 
 .. py:class:: CaptureProperty
 
-   The capture class to use for capturing build properties. It is available in the configuration as ``stats.CaptureProperty``
+   The capture class for capturing build properties.
+   It is available in the configuration as ``statistics.CaptureProperty``
 
    It takes the following arguments:
 
    * ``builder_name``: The name of builder in which the property is recorded.
    * ``property_name``: The name of property needed to be recorded as a statistic.
-   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends. A default callback is provided for this.
+   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
+     A default callback is provided for this (see :class:`CapturePropertyBase` for more).
+   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+     All properties matching this regular expression will be sent for storage.
 
-   **The default callback:**
+   .. py:method:: _builder_name_matches(self, builder_info)
 
-     .. py:function:: default_callback
+      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
+      See :class:`CapturePropertyBase` for more information on this method.
 
-     Defined in ``CaptureProperty.__init__``. Receives:
 
-     * ``props``: A dictionary of all build properties.
-     * ``property_name``: Name of the build property to return.
+.. py:class:: CapturePropertyAllBuilders
 
-     It returns property value for ``property_name``.
+   The capture class to use for capturing build properties on all builders.
+   It is available in the configuration as ``statistics.CaptureProperty``
 
-   .. py:method:: consumer(self, routingKey, msg)
+   It takes the following arguments:
 
-   The consumer for this class. See :class:`Capture` for more.
+   * ``property_name``: The name of property needed to be recorded as a statistic.
+   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
+     A default callback is provided for this (see :class:`CapturePropertyBase` for more).
+   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+     All properties matching this regular expression will be sent for storage.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      Since this class is used to capture a property over all builders, it simply returns ``True`` in all cases which means that all builders are allowed to post the property set
+      in ``property_name`` to storage backends.
 
 
 .. py:class:: CaptureBuildTimes
 
-   A base class for all Capture classes that deal with build times (start/end/duration). Not to be used directly. Initialized with:
+   A base class for all Capture classes that deal with build times (start/end/duration).
+   Not to be used directly.
+   Initialized with:
 
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback``: The callback function that is used by subclass of this class to post-process data before formatting it and sending it to the appropriate storage backends. A default callback is provided for this. Each subclass must provide a deafault callback that is used in initialization of this class should the user not provide a callback.
+   * ``callback``: The callback function that is used by subclass of this class to post-process data before formatting it and sending it to the appropriate storage backends.
+     A default callback is provided for this.
+     Each subclass must provide a deafault callback that is used in initialization of this class should the user not provide a callback.
 
-   :py:meth:`consumer(self, routingKey, msg)`
+   .. py:method:: consume(self, routingKey, msg)
 
-     The consumer for all subclasses of this class. See :class:`Capture` for more.
-     **Note**: This consumer requires all subclasses to implement:
+      The consumer for all subclasses of this class.
+      See :class:`Capture` for more.
+      .. note:: This consumer requires all subclasses to implement:
 
-     * ``self._time_type`` (property): A string used as a key in ``post_data`` sent to sotrage services.
-     * ``self.retValParams(msg)`` (method): A method that takes in the ``msg`` this consumer gets and returns a list of arguments for the capture callback.
+      * ``self._time_type`` (property): A string used as a key in ``post_data`` sent to sotrage services.
+      * ``self._retValParams(msg)`` (method): A method that takes in the ``msg`` this consumer gets and returns a list of arguments for the capture callback.
+
+   .. py:method:: _retValParams(self, msg)
+
+      This is an abstract method which needs to be implemented by subclassses.
+      This method needs to return a list of parameters that will be passed to the ``callback`` function.
+      See individual build ``CaptureBuild*`` classes for more.
+
+   .. py:method:: _err_msg(self, build_data, builder_name)
+
+      A helper method that returns an error message for the ``consume`` method.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      This is an abstract method and needs to be implemented by all subclasses of this class.
+      This is a helper method to the ``consume`` method metioned above.
+      It checks whether a builder is allowed to send build times to the storage backend according to the configuration file.
+      It takes one argument:
+
+      * ``builder_info``: (dict) The dictionary returned by the data API containing the builder information.
 
 
 .. py:class:: CaptureBuildStartTime
 
-   A capture class for capturing build start times. Takes the following arguments:
+   A capture class for capturing build start times.
+   It takes the following arguments:
 
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: The callback function for this class. See :class:`CaptureBuildTimes` for more.
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
 
-      .. py:function:: default_callback
+      .. py:function:: default_callback(start_time)
 
-      Defined in ``CaptureBuildStartTime.__init__``. It returns the start time in ISO format. It takes one argument:
+      It returns the start time in ISO format.
+      It takes one argument:
 
       * ``start_time``: A python datetime object that denotes the build start time.
 
-   .. py:method:: retValParams(self, msg)
+   .. py:method:: _retValParams(self, msg)
 
-   Returns a list containing one Python datetime object (start time) from ``msg`` dictionary.
+      Returns a list containing one Python datetime object (start time) from ``msg`` dictionary.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
+      See :class:`CaptureBuildTimes` for more information on this method.
+
+
+.. py:class:: CaptureBuildStartTimeAllBuilders
+
+   A capture class for capturing build start times from all builders.
+   It is a subclass of :class:`CaptureBuildStartTime`.
+   It takes the following arguments:
+
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
+
+   **The default callback:**
+
+      See ``CaptureBuildStartTime.__init__`` for the definition.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      Returns ``True`` for all builders.
 
 
 .. py:class:: CaptureBuildEndTime
 
-   A capture class for capturing build end times. Takes the following arguments:
+   A capture class for capturing build end times.
+   Takes the following arguments:
 
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: The callback function for this class. See :class:`CaptureBuildTimes` for more.
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
 
-      .. py:function:: default_callback
+      .. py:function:: default_callback(end_time)
 
-      Defined in ``CaptureBuildEndTime.__init__``. It returns the end time in ISO format. It takes one argument:
+      It returns the end time in ISO format.
+      It takes one argument:
 
       * ``end_time``: A python datetime object that denotes the build end time.
 
-   .. py:method:: retValParams(self, msg)
+   .. py:method:: _retValParams(self, msg)
 
    Returns a list containing two Python datetime object (start time and end time) from ``msg`` dictionary.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
+      See :class:`CaptureBuildTimes` for more information on this method.
+
+
+.. py:class:: CaptureBuildEndTimeAllBuilders
+
+   A capture class for capturing build end times from all builders.
+   It is a subclass of :class:`CaptureBuildEndTime`.
+   It takes the following arguments:
+
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
+
+   **The default callback:**
+
+      See ``CaptureBuildEndTime.__init__`` for the definition.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      Returns ``True`` for all builders.
 
 
 .. py:class:: CaptureBuildDuration
 
-   A capture class for capturing build duration. Takes the following arguments:
+   A capture class for capturing build duration.
+   Takes the following arguments:
 
    * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``report_in='seconds'``: Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``. This is the units in which the build time will be reported.
-   * ``callback=None``: The callback function for this class. See :class:`CaptureBuildTimes` for more.
+   * ``report_in='seconds'``: Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``.
+     This is the units in which the build time will be reported.
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
 
-      .. py:function:: default_callback
+      .. py:function:: default_callback(start_time, end_time)
 
-      Defined in ``CaptureBuildDuration.__init__``. It returns the duration of the build as per the ``report_in`` argument. It receives:
+      It returns the duration of the build as per the ``report_in`` argument.
+      It receives the following arguments:
+
       * ``start_time``: A python datetime object that denotes the build start time.
       * ``end_time``: A python datetime object that denotes the build end time.
 
-   .. py:method:: retValParams(self, msg)
+   .. py:method:: _retValParams(self, msg)
 
    Returns a list containing one Python datetime object (end time) from ``msg`` dictionary.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
+      See :class:`CaptureBuildTimes` for more information on this method.
+
+
+.. py:class:: CaptureBuildDurationAllBuilders
+
+   A capture class for capturing build durations from all builders.
+   It is a subclass of :class:`CaptureBuildDuration`.
+   It takes the following arguments:
+
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
+
+   **The default callback:**
+
+      See ``CaptureBuildDuration.__init__`` for the definition.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      Returns ``True`` for all builders.
+
+
+.. py:class:: CaptureDataBase
+
+   This is a base class for both :class:`CaptureData` and :class:`CaptureDataAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
+   Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
+   It is intialized with the following arguments:
+
+   * ``data_name``: The name of data to be captured.
+     Same as in :meth:`yieldMetricsValue`.
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
+
+   **The default callback:**
+
+      The default callback takes a value ``x`` and return it without changing.
+      As such, ``x`` itself acts as the ``post_data`` sent to the storage backends.
+
+   .. py:method:: consume(self, routingKey, msg)
+
+      The consumer for this class.
+      See :class:`Capture` for more.
+
+   .. py:method:: _builder_name_matches(self, builder_info):
+
+      This is an abstract method and needs to be implemented by all subclasses of this class.
+      This is a helper method to the ``consume`` method metioned above.
+      It checks whether a builder is allowed to send properties to the storage backend according to the configuration file.
+      It takes one argument:
+
+      * ``builder_info``: (dict) The dictionary returned by the data API containing the builder information.
 
 
 .. py:class:: CaptureData
 
-   A capture class for capturing arbitrary data that is not stored as build-data. See :meth:`yieldMetricsValue` for more. Takes the following arguments:
+   A capture class for capturing arbitrary data that is not stored as build-data.
+   See :meth:`yieldMetricsValue` for more.
+   Takes the following arguments for initliazation:
 
-   * ``data_name``: The name of data to be captured. Same as in :meth:`yieldMetricsValue`.
-   * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: The callback function for this class. See :class:`CaptureBuildTimes` for more.
+   * ``data_name``: The name of data to be captured.
+     Same as in :meth:`yieldMetricsValue`.
+   * ``builder_name``: The name of the builder on which the data is captured.
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
 
-      The default callback takes a value ``x`` and return it without changing. As such, ``x`` acts as the ``post_data`` sent to the storage backends.
+     See :class:`CaptureDataBase` of definition.
 
-   .. py:method:: consumer(self, routingKey, msg)
+   .. py:method:: _builder_name_matches(self, builder_info)
 
-   The consumer for this class. See :class:`Capture` for more.
+      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
+      See :class:`CaptureBuildTimes` for more information on this method.
+
+
+.. py:class:: CaptureDataAllBuilders
+
+   A capture class to capture arbitrary data on all builders.
+   See :meth:`yieldMetricsValue` for more.
+   It takes the following arguments:
+
+   * ``data_name``: The name of data to be captured.
+     Same as in :meth:`yieldMetricsValue`.
+   * ``callback=None``: The callback function for this class.
+     See :class:`CaptureBuildTimes` for more.
+
+   .. py:method:: _builder_name_matches(self, builder_info)
+
+      Returns ``True`` for all builders.
