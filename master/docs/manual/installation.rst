@@ -26,8 +26,7 @@ At a bare minimum, you'll need the following for both the buildmaster and a buil
 
 Python: http://www.python.org
 
-  Buildbot requires Python-2.6 or later on the master, although Python-2.7 is recommended.
-  The slave runs on Python-2.5.
+  Both Buildbot master and Buildbot slave require Python-2.6, although Python-2.7 is recommended.
 
   Note that this should be a "normal" build of Python.
   Builds of Python with debugging enabled or other unusual build parameters are likely to cause incorrect behavior.
@@ -69,14 +68,6 @@ sqlite3: http://www.sqlite.org
   Buildbot requires SQLite to store its state.
   Version 3.7.0 or higher is recommended, although Buildbot will run against earlier versions -- at the risk of "Database is locked" errors.
   The minimum version is 3.4.0, below which parallel database queries and schema introspection fail.
-
-pysqlite: http://pypi.python.org/pypi/pysqlite
-
-  The SQLite Python package is required for Python-2.5 and earlier (it is already included in Python-2.5 and later, but the version in Python-2.5 has nasty bugs)
-
-simplejson: http://pypi.python.org/pypi/simplejson
-
-  The simplejson package is required for Python-2.5 and earlier (it is already included as json in Python-2.6 and later)
 
 Jinja2: http://jinja.pocoo.org/
 
