@@ -28,7 +28,8 @@ class FakeRemoteCommand(object):
     active = False
 
     def __init__(self, remote_command, args,
-            ignore_updates=False, collectStdout=False, decodeRC={0:SUCCESS}):
+            ignore_updates=False, collectStdout=False,
+            collectStderr=False, decodeRC={0:SUCCESS}):
         # copy the args and set a few defaults
         self.remote_command = remote_command
         self.args = args.copy()
@@ -40,6 +41,8 @@ class FakeRemoteCommand(object):
         self.decodeRC = decodeRC
         if collectStdout:
             self.stdout = ''
+        if collectStderr:
+            self.stderr = ''
 
     def run(self, step, remote):
         # delegate back to the test case
@@ -76,6 +79,7 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True, collectStdout=False,
+                 collectStderr=False,
                  interruptSignal=None, initialStdin=None, decodeRC={0:SUCCESS}):
         args = dict(workdir=workdir, command=command, env=env or {},
                 want_stdout=want_stdout, want_stderr=want_stderr,
@@ -83,7 +87,7 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                 timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                 usePTY=usePTY, logEnviron=logEnviron)
         FakeRemoteCommand.__init__(self, "shell", args,
-                collectStdout=collectStdout, decodeRC=decodeRC)
+                collectStdout=collectStdout, collectStderr=collectStderr, decodeRC=decodeRC)
 
 
 class FakeLogFile(object):

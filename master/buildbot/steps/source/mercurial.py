@@ -316,7 +316,8 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS}, checkResultFunc=None):
+    def _dovccmd(self, command, collectStdout=False, collectStderr=False, initialStdin=None,
+                 decodeRC={0:SUCCESS}, checkResultFunc=None):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--traceback'] + command,
@@ -324,6 +325,7 @@ class Mercurial(Source):
                                            logEnviron=self.logEnviron,
                                            timeout=self.timeout,
                                            collectStdout=collectStdout,
+                                           collectStderr=collectStderr,
                                            initialStdin=initialStdin,
                                            decodeRC=decodeRC)
         cmd.useLog(self.stdio_log, False)
@@ -475,7 +477,7 @@ class Mercurial(Source):
             recover_from_errors = ['path ends in directory separator: .hglf']
 
             for error in recover_from_errors:
-                if error in cmd.stdout:
+                if (error in cmd.stdout) or (error in cmd.stderr):
                     return False
             return True
 
@@ -486,7 +488,7 @@ class Mercurial(Source):
 
             return cmd.rc
 
-        d = self._dovccmd(command, collectStdout=True, checkResultFunc=checkUpdated)
+        d = self._dovccmd(command, collectStdout=True, collectStderr=True, checkResultFunc=checkUpdated)
         d.addCallback(lambda rc: self.clobber(rc) if rc != SUCCESS else SUCCESS)
         return d
 
