@@ -206,6 +206,8 @@ class RemoteCommand(pb.Referenceable):
     def addStderr(self, data):
         if 'stdio' in self.logs:
             self.logs['stdio'].addStderr(data)
+        if self.collectStdout:
+            self.stdout += data
 
     def addHeader(self, data):
         if 'stdio' in self.logs:

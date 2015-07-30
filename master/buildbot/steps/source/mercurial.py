@@ -316,7 +316,7 @@ class Mercurial(Source):
         d.addCallback(self._checkBranchChange)
         return d
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS}):
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC={0:SUCCESS}, checkResultFunc=None):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--traceback'] + command,
@@ -337,7 +337,10 @@ class Mercurial(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        d.addCallback(lambda _: evaluateCommand(cmd))
+        if checkResultFunc:
+            d.addCallback(lambda _: checkResultFunc(cmd))
+        else:
+            d.addCallback(lambda _: evaluateCommand(cmd))
         return d
 
     def computeSourceRevision(self, changes):
@@ -467,7 +470,24 @@ class Mercurial(Source):
             command += ['--rev', self.revision]
         elif self.branchType == 'inrepo':
             command += ['--rev', self.update_branch]
-        d = self._dovccmd(command)
+
+        def expectedFailure(cmd):
+            recover_from_errors = ['path ends in directory separator: .hglf']
+
+            for error in recover_from_errors:
+                if error in cmd.stdout:
+                    return False
+            return True
+
+        def checkUpdated(cmd):
+            if cmd.didFail() and expectedFailure(cmd):
+                log.msg("Source step failed while running command %s" % cmd)
+                raise buildstep.BuildStepFailed()
+
+            return cmd.rc
+
+        d = self._dovccmd(command, collectStdout=True, checkResultFunc=checkUpdated)
+        d.addCallback(lambda rc: self.clobber(rc) if rc != SUCCESS else SUCCESS)
         return d
 
     def checkHg(self):
