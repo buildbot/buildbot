@@ -175,8 +175,10 @@ class GitHubBuildBot(resource.Resource):
             logging.info("Branch %r deleted, ignoring", branch)
         else:
             changes = []
-
             for change in payload['commits']:
+                if self.head_commit \
+                        and change['id'] != payload['head_commit']['id']:
+                    continue
                 changes.append(self.process_change(
                     change, branch, user, repo, repo_url, project))
         return changes
@@ -275,6 +277,9 @@ def setup_options():
                            "perspective broker.",
                       default="change:changepw", dest="auth")
 
+    parser.add_option("--head-commit", action="store_true",
+                      help="If set, only trigger builds for commits at head")
+
     parser.add_option("--secret",
                       help="If provided then use the X-Hub-Signature header "
                            "to verify that the request is coming from "
@@ -334,6 +339,7 @@ def run_hook(options):
     github_bot.master = options.buildmaster
     github_bot.secret = options.secret
     github_bot.auth = options.auth
+    github_bot.head_commit = options.head_commit
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
