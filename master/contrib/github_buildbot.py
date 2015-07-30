@@ -135,7 +135,8 @@ class GitHubBuildBot(resource.Resource):
             project = request.args.get('project', None)
             if project:
                 project = project[0]
-            self.process_change(payload, user, repo, repo_url, project, request)
+            changes = self.process_changes(payload, user, repo, repo_url, project)
+            self.send_changes(changes, request)
             return server.NOT_DONE_YET
 
         except Exception, e:
@@ -143,7 +144,22 @@ class GitHubBuildBot(resource.Resource):
             request.setResponseCode(INTERNAL_SERVER_ERROR)
             return json.dumps({"error": e.message})
 
-    def process_change(self, payload, user, repo, repo_url, project, request):
+    def process_change(self, change, branch, user, repo, repo_url, project):
+        files = change['added'] + change['removed'] + change['modified']
+        who = "%s <%s>" % (
+            change['author']['username'], change['author']['email'])
+
+        return \
+            {'revision': change['id'],
+             'revlink': change['url'],
+             'who': who,
+             'comments': change['message'],
+             'repository': repo_url,
+             'files': files,
+             'project': project,
+             'branch': branch}
+
+    def process_changes(self, payload, user, repo, repo_url, project):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -161,20 +177,14 @@ class GitHubBuildBot(resource.Resource):
             changes = []
 
             for change in payload['commits']:
-                files = change['added'] + change['removed'] + change['modified']
-                who = "%s <%s>" % (
-                    change['author']['username'], change['author']['email'])
+                changes.append(self.process_change(
+                    change, branch, user, repo, repo_url, project))
+        return changes
 
-                changes.append(
-                    {'revision': change['id'],
-                     'revlink': change['url'],
-                     'who': who,
-                     'comments': change['message'],
-                     'repository': payload['repository']['url'],
-                     'files': files,
-                     'project': project,
-                     'branch': branch})
-
+    def send_changes(self, changes, request):
+        """
+        Submit the changes, if any
+        """
         if not changes:
             logging.warning("No changes found")
             request.setResponseCode(OK)
