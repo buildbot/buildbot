@@ -58,8 +58,8 @@ class GitHubStatus(StatusReceiverMultiService):
 
     implements(IStatusReceiver)
 
-    def __init__(self, token, repoOwner, repoName, sha=None,
-                 startDescription=None, endDescription=None,
+    def __init__(self, token, repoOwner=None, repoName=None, repo=None,
+                 sha=None, startDescription=None, endDescription=None,
                  baseURL=None, context=None):
         """
         Token for GitHub API.
@@ -67,9 +67,16 @@ class GitHubStatus(StatusReceiverMultiService):
         if not GitHubAPI:
             config.error('GitHubStatus requires txgithub package installed')
 
+        if repoOwner and repoName and repo:
+            config.error(
+                'Specify repoOwner and repoName or repo, but not both')
+        if (repoOwner or repoName) and not (repoOwner and repoName):
+            config.error('Specify both or none of repoOwner and repoName')
+
         StatusReceiverMultiService.__init__(self)
 
         self._sha = sha or Interpolate("%(src::revision)s")
+        self._repo = repo or Interpolate("%(src::project)s")
         self._repoOwner = repoOwner
         self._repoName = repoName
         self._context = context or Interpolate("buildbot/%(prop:buildername)s")
@@ -168,12 +175,16 @@ class GitHubStatus(StatusReceiverMultiService):
         """
         Return a dictionary with GitHub related properties from `build`.
         """
-        repoOwner, repoName, sha, context = yield defer.gatherResults([
+        repo, repoOwner, repoName, sha, context = yield defer.gatherResults([
+            build.render(self._repo),
             build.render(self._repoOwner),
             build.render(self._repoName),
             build.render(self._sha),
             build.render(self._context),
         ])
+
+        if repo:
+            repoOwner, repoName = repo.split('/')
 
         if not repoOwner or not repoName:
             defer.returnValue({})
