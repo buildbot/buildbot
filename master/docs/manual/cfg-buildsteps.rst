@@ -2294,10 +2294,7 @@ For previous versions, no environment variables are available (the slave environ
 Triggering Schedulers
 ---------------------
 
-.. py:class:: Trigger(schedulerNames=[], sourceStamp=None, sourceStamps=None,
-                 updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={},
-                 copy_properties=[], parent_relationship="triggered from")
+.. py:class:: buildbot.steps.trigger.Trigger
 
 The counterpart to the :bb:Sched:`Triggerable` scheduler is the :bb:step:`Trigger` build step::
 
@@ -2311,31 +2308,34 @@ The SourceStamps to use for the triggered build are controlled by the arguments 
 
 Hyperlinks are added to the build detail web pages for each triggered build.
 
-:param schedulerNames:
+``schedulerNames``
     lists the :bb:sched:`Triggerable` schedulers that should be triggered when this step is executed.
 
     .. note::
 
         It is possible, but not advisable, to create a cycle where a build continually triggers itself, because the schedulers are specified by name.
-:param waitForFinish:
-    * If ``True``, the step will not finish until all of the builds from the triggered schedulers have finished.
-    * If ``False`` (the default) or not given, then the buildstep succeeds immediately after triggering the schedulers.
 
-:param updateSourceStamp:
-    * If ``True`` (the default), then step updates the source stamps given to the :bb:sched:`Triggerable` schedulers to include ``got_revision`` (the revision actually used in this build) as ``revision`` (the revision to use in the triggered builds).
-        This is useful to ensure that all of the builds use exactly the same source stamps, even if other :class:`Change`\s have occurred while the build was running.
-    * If ``False`` (and neither of the other arguments are specified), then the exact same SourceStamps are used.
+``waitForFinish``
+    If ``True``, the step will not finish until all of the builds from the triggered schedulers have finished.
 
-:param alwaysUseLatest:
+    If ``False`` (the default) or not given, then the buildstep succeeds immediately after triggering the schedulers.
+
+``updateSourceStamp``
+    If ``True`` (the default), then step updates the source stamps given to the :bb:sched:`Triggerable` schedulers to include ``got_revision`` (the revision actually used in this build) as ``revision`` (the revision to use in the triggered builds).
+    This is useful to ensure that all of the builds use exactly the same source stamps, even if other :class:`Change`\s have occurred while the build was running.
+
+    If ``False`` (and neither of the other arguments are specified), then the exact same SourceStamps are used.
+
+``alwaysUseLatest``
     If ``True``, then no SourceStamps are given, corresponding to using the latest revisions of the repositories specified in the Source steps.
     This is useful if the triggered builds use to a different source repository.
 
-:param sourceStamps:
+``sourceStamps``
     Accepts a list of dictionaries containing the keys ``branch``, ``revision``, ``repository``, ``project``, and optionally ``patch_level``, ``patch_body``, ``patch_subdir``, ``patch_author`` and ``patch_comment`` and creates the corresponding SourceStamps.
     If only one sourceStamp has to be specified then the argument ``sourceStamp`` can be used for a dictionary containing the keys mentioned above.
     The arguments ``updateSourceStamp``, ``alwaysUseLatest``, and ``sourceStamp`` can be specified using properties.
 
-:param set_properties:
+``set_properties``
     allows control of the properties that are passed to the triggered scheduler.
     The parameter takes a dictionary mapping property names to values.
     You may use :ref:`Interpolate` here to dynamically construct new property values.
@@ -2343,7 +2343,9 @@ Hyperlinks are added to the build detail web pages for each triggered build.
 
         set_properties={"my_prop1" : Property("my_prop1")}
 
-The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
+    .. note::
+
+        The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
 Dynamic Trigger
 +++++++++++++++
