@@ -501,6 +501,140 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_update_failed_hg_recovers(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='fresh', branchType='inrepo'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', '--branch'])
+            + ExpectShell.log('stdio', stdout='default')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'locate', 'set:added()'])
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'update',
+                                 '--clean', '--rev', 'default'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                              stdout='Traceback (most recent call last): File "mercurial\dispatch.pyc", ' +
+                              'line 133, in _runcatch File "mercurial\dispatch.pyc", line 806, ' +
+                              'in _dispatch File "mercurial\dispatch.pyc", line 585, in runcommand File ' +
+                              '"mercurial\dispatch.pyc", line 897, in _runcommand File "mercurial\dispatch.pyc",' +
+                              ' line 868, in checkargs File "mercurial\dispatch.pyc", line 803, in <lambda> ' +
+                              'File "mercurial\util.pyc", line 512, in check File "mercurial\extensions.pyc", ' +
+                              'line 151, in wrap File "mercurial\util.pyc", line 512, in ' +
+                              'check File "hgext\largefiles\overrides.pyc", line 325, in overrideupdate File ' +
+                              '"mercurial\util.pyc", line 512, in check File "mercurial\commands.pyc", ' +
+                              'line 5866, in update File "mercurial\hg.pyc", line 473, in clean File ' +
+                              '"mercurial\extensions.pyc", line 196, in wrap File ' +
+                              '"hgext\largefiles\overrides.pyc", line 699, in hgupdaterepo File' +
+                              ' "hgext\largefiles\lfcommands.pyc", ' +
+                              'line 449, in updatelfiles File "hgext\largefiles\lfcommands.pyc", ' +
+                              'line 479, in _updatelfile File "hgext\largefiles\lfutil.pyc", line 276, ' +
+                              'in readstandin File "mercurial\context.pyc", line 1247, in data File ' +
+                              '"mercurial\localrepo.pyc", line 806, in wread File "mercurial\scmutil.pyc", ' +
+                              'line 225, in read File "mercurial\scmutil.pyc", line 336, in __call__ File ' +
+                              '"mercurial\scmutil.pyc", line 143, in __call__ ' +
+                              'Abort: path ends in directory separator: .hglf\ ' +
+                              'abort: path ends in directory separator: .hglf')
+            + 255,
+            Expect('rmdir', dict(dir='wkdir/.hg',
+                                      logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'update',
+                                 '--clean', '--rev', 'default'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'parents',
+                                    '--template', '{node}\\n'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_update_fails(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='fresh', branchType='inrepo',
+                                    clobberOnBranchChange=False),
+            dict(branch='defaultz'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'defaultz'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', '--branch'])
+            + ExpectShell.log('stdio', stdout='default')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'locate', 'set:added()'])
+            + 1,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'update',
+                                 '--clean', '--rev', 'defaultz'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                              stdout='File "mercurial\localrepo.pyc", line 405, in __getitem__' +
+                              'File "mercurial\context.pyc", line 301, in __init__ ' +
+                              'RepoLookupError: unknown revision \'defaultz\' ' +
+                              'abort: unknown revision \'defaultz\'!')
+            + 255
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
     def test_mode_full_fresh_no_existing_repo(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
