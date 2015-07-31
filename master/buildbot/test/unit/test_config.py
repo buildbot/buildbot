@@ -760,6 +760,29 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.assertConfigError(self.errors, "is reserved")
             self.errors.errors[:] = []  # clear out the errors
 
+    def test_load_slaves_not_identifiers(self):
+        for name in (u"123 no initial digits", u"spaces not allowed",
+                     u'a/b', u'\N{SNOWMAN}', u"a.b.c.d", u"a-b_c.d9",):
+            self.cfg.load_slaves(self.filename,
+                                 dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+            self.assertConfigError(self.errors, "is not an identifier")
+            self.errors.errors[:] = []  # clear out the errors
+
+    def test_load_slaves_too_long(self):
+        name = u"a" * 51
+        self.cfg.load_slaves(self.filename,
+                             dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+        self.assertConfigError(self.errors, "is longer than")
+        self.errors.errors[:] = []  # clear out the errors
+
+    def test_load_slaves_empty(self):
+        name = u""
+        self.cfg.load_slaves(self.filename,
+                             dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+        self.errors.errors[:] = self.errors.errors[1:2] # only get necessary error
+        self.assertConfigError(self.errors, "cannot be an empty string")
+        self.errors.errors[:] = []  # clear out the errors
+
     def test_load_slaves(self):
         sl = buildslave.BuildSlave('foo', 'x')
         self.cfg.load_slaves(self.filename,
