@@ -317,7 +317,7 @@ class Mercurial(Source):
         return d
 
     def _dovccmd(self, command, collectStdout=False, collectStderr=False, initialStdin=None,
-                 decodeRC={0:SUCCESS}, checkResultFunc=None):
+                 decodeRC={0:SUCCESS}, evaluateCommandFunc=None):
         if not command:
             raise ValueError("No command specified")
         cmd = buildstep.RemoteShellCommand(self.workdir, ['hg', '--traceback'] + command,
@@ -339,8 +339,8 @@ class Mercurial(Source):
                 return cmd.stdout
             else:
                 return cmd.rc
-        if checkResultFunc:
-            d.addCallback(lambda _: checkResultFunc(cmd))
+        if evaluateCommandFunc:
+            d.addCallback(lambda _: evaluateCommandFunc(cmd))
         else:
             d.addCallback(lambda _: evaluateCommand(cmd))
         return d
@@ -488,7 +488,7 @@ class Mercurial(Source):
 
             return cmd.rc
 
-        d = self._dovccmd(command, collectStdout=True, collectStderr=True, checkResultFunc=checkUpdated)
+        d = self._dovccmd(command, collectStdout=True, collectStderr=True, evaluateCommandFunc=checkUpdated)
         d.addCallback(lambda rc: self.clobber(rc) if rc != SUCCESS else SUCCESS)
         return d
 
