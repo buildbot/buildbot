@@ -779,7 +779,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         name = u""
         self.cfg.load_slaves(self.filename,
                              dict(slaves=[buildslave.BuildSlave(name, 'x')]))
-        self.errors.errors[:] = self.errors.errors[1:2] # only get necessary error
+        self.errors.errors[:] = self.errors.errors[1:2]  # only get necessary error
         self.assertConfigError(self.errors, "cannot be an empty string")
         self.errors.errors[:] = []  # clear out the errors
 
