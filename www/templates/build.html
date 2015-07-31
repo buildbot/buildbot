@@ -108,12 +108,6 @@
                             {{ elapsed }}
                         </td>
                     </tr>
-                    {% if raw_elapsed %}
-                    <tr>
-                        <td>Timing</td>
-                        <td>{{ raw_elapsed }}</td>
-                    </tr>
-                    {% endif %}
                 </table>
             </div>
             <h2 class="head-2">
@@ -231,10 +225,18 @@
                         <td>
                             Last Step
                         </td>
-                        <td >
-                          {{rb.lastStepNumber }} {{ rb.lastStepName }}
+                        <td > {{ rb.lastStepName }}
                         </td>
                     </tr>
+                    {% if rb.elapsed %}
+                    <tr>
+                        <td>
+                            Elapsed
+                        </td>
+                        <td> {{ rb.elapsed}}
+                        </td>
+                    </tr>
+                    {% endif %}
                 </table>
             </div>
             {% endfor %}

@@ -115,6 +115,7 @@ def setUpFakeMasterStatus(fakemaster):
 
 def fakeBuildStatus(master, builder, num):
     build_status = BuildStatus(builder.builder_status, master, num)
+    build_status.started = 1422441500
     build_status.finished = 1422441501.21
     build_status.reason = 'A build was forced by user@localhost'
     build_status.slavename = 'build-slave-01'
@@ -163,7 +164,7 @@ class TestBuildJsonResource(unittest.TestCase):
                                                         'revision': 'abcdef123456789',
                                                         'url': u'https://github.com/test/repo/commit/abcdef123456789'}],
                           'results': 0, 'number': 1, 'currentStep': None,
-                          'times': (None, 1422441501.21, 1422441501.21),
+                          'times': (1422441500, 1422441501.21),
                           'buildChainID': None, 'owners': None, 'submittedTime': None,
                           'blame': [],
                           'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
@@ -266,7 +267,7 @@ class TestPastBuildsJsonResource(unittest.TestCase):
                     'slave_friendly_name': 'build-slave-01', 'slave_url': None,
                     'sourceStamps': [], 'steps': [], 'buildChainID': None, 'owners': None,
                      'submittedTime': None,
-                    'text': [], 'times': (None, 1422441501.21, 1422441501.21),
+                    'text': [], 'times': (1422441500, 1422441501.21),
                     'url': {
                         'path':
                             'http://localhost:8080/builders/builder-01/builds/%d?katana-buildbot_branch=katana' % num,
@@ -393,7 +394,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                      'reason': 'A build was forced by user@localhost',
                      'eta': None, 'builderFriendlyName': 'builder-01',
                      'failure_url': None, 'slave_friendly_name': 'build-slave-01',
-                     'times': (None, 1422441501.21, 1422441501.21)},
+                     'times': (1422441500, 1422441501.21)},
                    'name': 'builder-01', 'tags': ['tag1', 'tag2'],
                    'url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
                    'description': 'Describing my builder',

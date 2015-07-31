@@ -168,21 +168,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         be complete (asking again later may give you more of them)."""
         return self.steps
 
-    def getTimes(self, include_raw_build_time=False):
-        if not include_raw_build_time:
-            return (self.started, self.finished)
-        else:
-            rawBuildTime = self.finished
-            if rawBuildTime is None:
-                rawBuildTime = 0
-                
-            for s in self.steps:
-                step_type = s.getStepType()
-                if step_type == AcquireBuildLocksType or step_type == TriggerType:
-                    times = s.getTimes()
-                    if times[0] is not None and times[1] is not None:
-                        rawBuildTime -= (times[1] - times[0])
-            return self.started, self.finished, rawBuildTime
+    def getTimes(self):
+        return (self.started, self.finished)
 
     _sentinel = [] # used as a sentinel to indicate unspecified initial_value
     def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
@@ -349,13 +336,14 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.finished = util.now()
 
         if self.results == RESUME:
-            build_data = {'start' : self.started,
+            build_data = {'start': self.started,
                           'finished': self.finished,
                           'startTime': time.ctime(self.started),
                           'finishedTime': time.ctime(self.finished),
                           'slavename': self.slavename,
                           'lastStepName': self.currentStep.name,
                           'lastStepNumber': self.currentStep.step_number+1,
+                          'elapsed': util.formatInterval(self.finished - self.started),
                           'resumeSlavepool': self.resumeSlavepool}
 
             self.resume.append(build_data)
@@ -622,7 +610,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             result['artifacts'] = self.get_artifacts()
 
         # Transient
-        result['times'] = self.getTimes(include_raw_build_time=True)
+        result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
         result['slave'] = self.getSlavename()
