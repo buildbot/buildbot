@@ -46,7 +46,7 @@ class Tests(interfaces.InterfaceTests):
         fakedb.LogChunk(logid=201, first_line=0, last_line=1, compressed=0,
                         content=textwrap.dedent("""\
                     line zero
-                    line 1""")),
+                    line 1""" + "x" * 200)),
         fakedb.LogChunk(logid=201, first_line=2, last_line=4, compressed=0,
                         content=textwrap.dedent("""\
                     line TWO
@@ -76,7 +76,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def checkTestLogLines(self):
-        expLines = ['line zero', 'line 1', 'line TWO', '', 'line 2**2',
+        expLines = ['line zero', 'line 1' + "x" * 200, 'line TWO', '', 'line 2**2',
                     'another line', 'yet another line']
         for first_line in range(0, 7):
             for last_line in range(first_line, 7):
@@ -103,7 +103,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getLogs(self):
         @self.assertArgSpecMatches(self.db.logs.getLogs)
-        def getLogs(self, stepid):
+        def getLogs(self, stepid=None):
             pass
 
     def test_signature_getLogLines(self):

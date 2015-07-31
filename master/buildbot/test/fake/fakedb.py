@@ -2042,7 +2042,7 @@ class FakeLogsComponent(FakeDBComponent):
             return defer.succeed(None)
         return defer.succeed(self._row2dict(row))
 
-    def getLogs(self, stepid):
+    def getLogs(self, stepid=None):
         return defer.succeed([
             self._row2dict(row)
             for row in self.logs.itervalues()

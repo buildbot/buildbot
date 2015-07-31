@@ -19,11 +19,11 @@ from buildbot import config as config_module
 from buildbot.db import connector
 from buildbot.db import masters
 from buildbot.db import model
+from buildbot.scripts import base
 from buildbot.scripts import upgrade_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from buildbot.test.util.decorators import skipUnlessPlatformIs
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -51,12 +51,12 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         def checkBasedir(config):
             self.calls.append('checkBasedir')
             return basedirOk
-        self.patch(upgrade_master, 'checkBasedir', checkBasedir)
+        self.patch(base, 'checkBasedir', checkBasedir)
 
         def loadConfig(config, configFileName='master.cfg'):
             self.calls.append('loadConfig')
             return config_module.MasterConfig() if configOk else False
-        self.patch(upgrade_master, 'loadConfig', loadConfig)
+        self.patch(base, 'loadConfig', loadConfig)
 
         def upgradeFiles(config):
             self.calls.append('upgradeFiles')
@@ -119,12 +119,6 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def tearDown(self):
         self.tearDownDirs()
 
-    def activeBasedir(self, extra_lines=()):
-        with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
-            f.write("from twisted.application import service\n")
-            f.write("service.Application('buildmaster')\n")
-            f.write("\n".join(extra_lines))
-
     def writeFile(self, path, contents):
         with open(path, 'wt') as f:
             f.write(contents)
@@ -134,72 +128,6 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
             return f.read()
 
     # tests
-
-    def test_checkBasedir(self):
-        self.activeBasedir()
-        rv = upgrade_master.checkBasedir(mkconfig())
-        self.assertTrue(rv)
-        self.assertInStdout('checking basedir')
-
-    def test_checkBasedir_quiet(self):
-        self.activeBasedir()
-        rv = upgrade_master.checkBasedir(mkconfig(quiet=True))
-        self.assertTrue(rv)
-        self.assertWasQuiet()
-
-    def test_checkBasedir_no_dir(self):
-        rv = upgrade_master.checkBasedir(mkconfig(basedir='doesntexist'))
-        self.assertFalse(rv)
-        self.assertInStdout('invalid buildmaster directory')
-
-    @skipUnlessPlatformIs('posix')
-    def test_checkBasedir_active_pidfile(self):
-        self.activeBasedir()
-        open(os.path.join('test', 'twistd.pid'), 'w').close()
-        rv = upgrade_master.checkBasedir(mkconfig())
-        self.assertFalse(rv)
-        self.assertInStdout('still running')
-
-    def test_checkBasedir_invalid_rotateLength(self):
-        self.activeBasedir(extra_lines=['rotateLength="32"'])
-        rv = upgrade_master.checkBasedir(mkconfig())
-        self.assertFalse(rv)
-        self.assertInStdout('ERROR')
-        self.assertInStdout('rotateLength')
-
-    def test_checkBasedir_invalid_maxRotatedFiles(self):
-        self.activeBasedir(extra_lines=['maxRotatedFiles="64"'])
-        rv = upgrade_master.checkBasedir(mkconfig())
-        self.assertFalse(rv)
-        self.assertInStdout('ERROR')
-        self.assertInStdout('maxRotatedFiles')
-
-    def test_loadConfig(self):
-        @classmethod
-        def loadConfig(cls, basedir, filename):
-            return config_module.MasterConfig()
-        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
-        cfg = upgrade_master.loadConfig(mkconfig())
-        self.assertIsInstance(cfg, config_module.MasterConfig)
-        self.assertInStdout('checking')
-
-    def test_loadConfig_ConfigErrors(self):
-        @classmethod
-        def loadConfig(cls, basedir, filename):
-            raise config_module.ConfigErrors(['oh noes'])
-        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
-        cfg = upgrade_master.loadConfig(mkconfig())
-        self.assertIdentical(cfg, None)
-        self.assertInStdout('oh noes')
-
-    def test_loadConfig_exception(self):
-        @classmethod
-        def loadConfig(cls, basedir, filename):
-            raise RuntimeError()
-        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
-        cfg = upgrade_master.loadConfig(mkconfig())
-        self.assertIdentical(cfg, None)
-        self.assertInStdout('RuntimeError')
 
     def test_installFile(self):
         self.writeFile('test/srcfile', 'source data')
