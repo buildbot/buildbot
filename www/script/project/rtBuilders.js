@@ -152,6 +152,9 @@ define(function (require) {
                     builderTags = data.tags,
                     branch_type = rtBuilders.getBranchType(),
                     hasBranch = function (b) {
+                        if (branch_type === undefined) {
+                            return true;
+                        }
                         return b.toLowerCase() === branch_type.toLowerCase();
                     };
 
