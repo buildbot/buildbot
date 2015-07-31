@@ -14,10 +14,23 @@ Builds
     :attr timestamp complete_at: time at which this build was complete, or None if it's still running
     :attr integer results: the results of the build (see :ref:`Build-Result-Codes`), or None if not complete
     :attr unicode state_string: a string giving detail on the state of the build.
+    :attr dict properties: a dictionary of properties attached to build.
 
-    .. todo::
+    .. note:: *properties*
 
-        * Currently build properties aren't available in this resource type
+        This properties dict is only filled out if the `properties filterspec` is set.
+
+        Meaning that, `property filter` allows one to request the Builds DATA API like so:
+
+            * api/v2/builds?property=propKey1&property=propKey2 (returns Build's properties which match given keys)
+            * api/v2/builds?property=* (returns all Build's properties)
+            * api/v2/builds?propKey1&property=propKey2&limit=30 (filters combination)
+
+        .. important::
+
+            When combined with ``field`` filter, to get properties, one should ensure **properties** ``field`` is set.
+
+            * api/v2/builds?field=buildid&field=properties&property=slavename&property=user
 
     .. note::
 

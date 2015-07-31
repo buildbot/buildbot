@@ -127,7 +127,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuild(self):
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuild(50)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
@@ -142,7 +142,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildByNumber(self):
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
         bdict = yield self.db.builds.getBuildByNumber(builderid=77, number=5)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict['id'], 50)
 
     @defer.inlineCallbacks
@@ -150,7 +150,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds()
         for bdict in bdicts:
-            validation.verifyDbDict(self, 'builddict', bdict)
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[50], self.threeBdicts[51],
                           self.threeBdicts[52]])
@@ -160,7 +160,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(builderid=88)
         for bdict in bdicts:
-            validation.verifyDbDict(self, 'builddict', bdict)
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[51]])
 
@@ -169,7 +169,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(buildrequestid=42)
         for bdict in bdicts:
-            validation.verifyDbDict(self, 'builddict', bdict)
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[50], self.threeBdicts[52]])
 
@@ -178,7 +178,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(buildslaveid=13)
         for bdict in bdicts:
-            validation.verifyDbDict(self, 'builddict', bdict)
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[50], self.threeBdicts[51]])
 
@@ -187,7 +187,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(complete=True)
         for bdict in bdicts:
-            validation.verifyDbDict(self, 'builddict', bdict)
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
                          [self.threeBdicts[52]])
 
@@ -200,7 +200,7 @@ class Tests(interfaces.InterfaceTests):
                                                    buildrequestid=41, buildslaveid=13, masterid=88,
                                                    state_string=u'test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
                                  'started_at': epoch2datetime(TIME1),
@@ -219,7 +219,7 @@ class Tests(interfaces.InterfaceTests):
                                                    buildrequestid=41, buildslaveid=13, masterid=88,
                                                    state_string=u'test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 11)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
@@ -233,7 +233,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.builds.setBuildStateString(buildid=50,
                                                  state_string=u'test test2')
         bdict = yield self.db.builds.getBuild(50)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
@@ -246,7 +246,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
         yield self.db.builds.finishBuild(buildid=50, results=7, _reactor=clock)
         bdict = yield self.db.builds.getBuild(50)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, buildslaveid=13,
                                      started_at=epoch2datetime(TIME1),
@@ -314,7 +314,7 @@ class RealTests(Tests):
                                                    state_string=u'test test2', _reactor=clock,
                                                    _race_hook=raceHook)
         bdict = yield self.db.builds.getBuild(id)
-        validation.verifyDbDict(self, 'builddict', bdict)
+        validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 8)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,

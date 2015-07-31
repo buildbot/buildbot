@@ -550,7 +550,10 @@ message['builds'].add(None,
                               **_build
                           )))
 
-dbdict['builddict'] = DictValidator(
+# As build's properties are fetched at DATA API level,
+# a distinction shall be made as both are not equal.
+# Validates DB layer
+dbdict['dbbuilddict'] = buildbase = DictValidator(
     id=IntValidator(),
     number=IntValidator(),
     builderid=IntValidator(),
@@ -562,6 +565,9 @@ dbdict['builddict'] = DictValidator(
     state_string=StringValidator(),
     results=NoneOk(IntValidator()),
 )
+
+# Validates DATA API layer
+dbdict['builddict'] = DictValidator(properties=NoneOk(SourcedPropertiesValidator()), **buildbase.keys)
 
 # steps
 

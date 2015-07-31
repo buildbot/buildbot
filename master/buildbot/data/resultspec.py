@@ -16,8 +16,12 @@
 from buildbot.data import base
 
 
-class Filter(object):
+class FieldBase(object):
+    """
+    This class implements a basic behavior
+    to wrap value into a `Field` instance
 
+    """
     __slots__ = ['field', 'op', 'values']
 
     singular_operators = {
@@ -39,7 +43,7 @@ class Filter(object):
         self.op = op
         self.values = values
 
-    def _apply(self, data):
+    def apply(self, data):
         fld = self.field
         v = self.values
         if len(v) == 1:
@@ -49,6 +53,20 @@ class Filter(object):
             v = set(v)
         f = ops[self.op]
         return (d for d in data if f(d[fld], v))
+
+
+class Property(FieldBase):
+    """
+    Wraps ``property`` type value(s)
+
+    """
+
+
+class Filter(FieldBase):
+    """
+    Wraps ``filter`` type value(s)
+
+    """
 
 
 def nonecmp(a, b):
@@ -65,19 +83,29 @@ def nonecmp(a, b):
 
 class ResultSpec(object):
 
-    __slots__ = ['filters', 'fields', 'order', 'limit', 'offset']
+    __slots__ = ['filters', 'fields', 'properties', 'order', 'limit', 'offset']
 
-    def __init__(self, filters=None, fields=None, order=None,
+    def __init__(self, filters=None, fields=None, properties=None, order=None,
                  limit=None, offset=None):
         self.filters = filters or []
+        self.properties = properties or []
         self.fields = fields
         self.order = order
         self.limit = limit
         self.offset = offset
 
     def __repr__(self):
-        return "ResultSpec(**" + repr(dict(filters=self.filters, fields=self.fields, order=self.order,
-                                           limit=self.limit, offset=self.offset)) + ")"
+        return "ResultSpec(**" + repr(dict(filters=self.filters, fields=self.fields, properties=self.properties,
+                                           order=self.order, limit=self.limit, offset=self.offset)) + ")"
+
+    def popProperties(self):
+        values = []
+        for p in self.properties:
+            if p.field == 'property' and p.op == 'eq':
+                self.properties.remove(p)
+                values = p.values
+                break
+        return values
 
     def popFilter(self, field, op):
         for f in self.filters:
@@ -155,7 +183,7 @@ class ResultSpec(object):
 
             # link the filters together and then flatten to list
             for f in self.filters:
-                data = f._apply(data)
+                data = f.apply(data)
             data = list(data)
 
             if total is None:
@@ -180,8 +208,9 @@ class ResultSpec(object):
             if self.offset is not None or self.limit is not None:
                 if offset is not None or limit is not None:
                     raise AssertionError("endpoint must clear offset/limit")
-                end = (self.offset or 0) + self.limit \
-                    if self.limit is not None else None
+                end = ((self.offset or 0) + self.limit
+                       if self.limit is not None
+                       else None)
                 data = data[self.offset:end]
                 offset = self.offset
                 limit = self.limit
