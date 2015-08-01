@@ -41,13 +41,12 @@ class Builder extends Controller
             @selectedTab = 1
 
     loadMoreBuilderInfo: ->
-        @moreInfo = {}
-
-        @moreInfo.tags = @info.tags
-        @moreInfo.description = @info.description
-        @moreInfo.slaves = @info.loadBuildslaves().getArray()
-        @moreInfo.masters = @info.loadMasters().getArray()
-        @moreInfo.forceschedulers = @forceschedulers
+        @moreInfo =
+            tags: @info.tags
+            description: @info.description
+            slaves: @info.loadBuildslaves().getArray()
+            masters: @info.loadMasters().getArray()
+            forceschedulers: @forceschedulers
 
     triggerSchedulerDialog: (scheduler, event) ->
         @$mdDialog.show
@@ -78,18 +77,18 @@ class Builder extends Controller
         opened.closeOnDestroy($scope)
 
         @builderid = $state.params.builderid
-        @dataService.getBuilders(builderid: @builderid).then (data) =>
+        @dataService.getBuilders(@builderid).then (data) =>
             if data.length == 0
                 alert 'Builder not found!'
                 $state.go('builds')
             else
                 @info = data[0]
                 @forceschedulers = @info.loadForceschedulers().getArray()
-                @builds = @info.loadBuilds(
+                @builds = @info.loadBuilds
                     builderid: @builderid
                     order: '-number'
                     limit: 20
-                ).getArray()
+                .getArray()
                 @loadMoreBuilderInfo()
                 
                 # go to buildstab if no child state is selected

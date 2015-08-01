@@ -28,7 +28,7 @@ class ForceDialog extends Controller
             jsonrpc: '2.0'
             method: 'force'
             params: param
-        res.then (=> @forceBuildSuccess()), ((data) => @forceBuildFail(data.error))
+        res.then (=> @forceBuildSuccess()), (data) => @forceBuildFail(data.error)
 
     constructor: (@builder, @scheduler, @dataService, @restService, @$mdDialog) ->
         parseFields = (field) =>
