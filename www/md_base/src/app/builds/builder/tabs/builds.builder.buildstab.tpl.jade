@@ -1,0 +1,3 @@
+md-content.tab-content.builder-builds
+    div.no-builds(ng-if="builder.builds.length == 0") No builds.
+    build-item(build="build", builder="builder.info", ng-repeat="build in builder.builds|orderBy:'-number'")

@@ -15,9 +15,8 @@ class BuildItem extends Directive
 
 class _BuildItem extends Controller
     constructor: (dataService) ->
-        # TODO: add links to builders and builds after the corresponding pages has finished
         if @outBuilder
-            @builder = outBuilder
+            @builder = @outBuilder
         else if @showBuilder
             dataService.getBuilders(@build.builderid, subscribe: false).then (builders) =>
                 @builder = builders[0]

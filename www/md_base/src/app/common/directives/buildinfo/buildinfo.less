@@ -1,0 +1,62 @@
+build-info {
+  display: block;
+  font-size: 14px;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  min-height: 60px;
+  padding: 5px;
+
+  .changes, .properties {
+    padding: 10px;
+  }
+
+  .properties {
+    border-left: 1px solid #eee;
+    color: #999;
+
+    .switch {
+      text-align: center;
+      border-bottom: 1px solid #eee;
+
+      .md-button {
+        line-height: 20px;
+        font-size: 12px;
+        min-height: 20px;
+      }
+
+      .md-button.selected {
+        background: #673ab7;
+        color: white;
+      }
+    }
+
+    .summary>div {
+      margin: 5px;
+      line-height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    md-icon, img.avatar {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 5px;
+      color: #aaa;
+    }
+
+    img.avatar {
+      border-radius: 50%;
+      padding: 2px;
+      vertical-align: bottom;
+    }
+  }
+
+  .no-changes, .more-changes {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+  }
+}
+

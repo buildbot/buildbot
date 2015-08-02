@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider) ->
+    constructor: ($urlRouterProvider, $stateProvider) ->
 
         # Name of the state
         name = 'builds.builder'
@@ -10,6 +10,28 @@ class State extends Config
             controllerAs: 'builder'
             templateUrl: "views/#{name}.html"
             name: name
-            url: "/builder/:builderid"
+            url: '/builder/:builderid'
             data:
                 title: 'Builder'
+
+        # Dummy state for navigating among tabs
+        $stateProvider.state
+            name: 'builds.builder.buildstab'
+            url: '/buildstab'
+            templateUrl: "views/#{name}.buildstab.html"
+            controller: ($scope) ->
+                $scope.builder.selectTab('buildstab')
+
+        $stateProvider.state
+            name: 'builds.builder.infotab'
+            url: '/infotab'
+            templateUrl: "views/#{name}.infotab.html"
+            controller: ($scope) ->
+                $scope.builder.selectTab('infotab')
+
+        $stateProvider.state
+            name: 'builds.builder.buildtab'
+            url: '/buildtab/{number:int}'
+            templateUrl: "views/#{name}.buildtab.html"
+            controller: 'buildTabController'
+            controllerAs: 'buildtab'

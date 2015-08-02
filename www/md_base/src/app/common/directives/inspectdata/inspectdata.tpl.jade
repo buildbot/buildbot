@@ -11,4 +11,4 @@ div.inspect-data
         div.expand-button(ng-click="collapsed = !collapsed", ng-class="{collapsed: collapsed}")
           md-icon(md-svg-icon="arrow-down")
         pre(ng-show="collapsed") {{ item.value.value }}
-        pre(ng-show="!collapsed") {{ item.value.value_long }}
+        pre.expand-content(ng-show="!collapsed") {{ item.value.value_long }}

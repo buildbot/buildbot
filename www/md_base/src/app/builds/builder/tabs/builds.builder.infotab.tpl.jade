@@ -1,0 +1,24 @@
+md-content.tab-content.builder-info
+  div(layout-gt-md="row")
+    div.label(flex="50") tags
+    div.detail.tags
+      span(ng-if="!builder.moreInfo.tags.length") No tag
+      span.tag(ng-repeat="tag in builder.moreInfo.tags") {{ tag }}
+  div(layout-gt-md="row")
+    div.label(flex="50") description
+    div.detail {{ builder.moreInfo.description || "No description" }}
+  div(layout-gt-md="row")
+    div.label(flex="50") force schedulers
+    div.detail
+      span(ng-if="!builder.moreInfo.forceschedulers") No force scheduler.
+      a(ng-repeat="scheduler in builder.moreInfo.forceschedulers", ui-sref="builds.schedulers") {{ scheduler.name }}
+  div(layout-gt-md="row")
+    div.label(flex="50") masters
+    div.detail
+      span(ng-if="!builder.moreInfo.masters") No master.
+      a(ng-repeat="master in builder.moreInfo.masters", ui-sref="builds.masters") {{ master.name }}
+  div(layout-gt-md="row")
+    div.label(flex="50") build slaves
+    div.detail
+      span(ng-if="!builder.moreInfo.slaves") No slave.
+      a(ng-repeat="slave in builder.moreInfo.slaves", ui-sref="builds.slaves") {{ slave.name }}
