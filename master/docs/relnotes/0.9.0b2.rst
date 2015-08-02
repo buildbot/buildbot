@@ -58,7 +58,7 @@ Changes for Developers
 Slave
 -----
 
-* buildbot-slave now requires python 2.6
+* buildbot-slave now requires Python 2.6
 
 Features
 ~~~~~~~~
@@ -73,8 +73,8 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Providing Latent AWS EC2 credentails by the .ec2/aws_id file is deprecated:
-  Use the standard .aws/credentials file, instead.
+* Providing Latent AWS EC2 credentails by the :file:`.ec2/aws_id` file is deprecated:
+  Use the standard :file:`.aws/credentials` file, instead.
 
 Details
 -------
@@ -83,7 +83,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.10..master
+   git log v0.9.0b1..v0.9.0b2
 
 Older Versions
 --------------

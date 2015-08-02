@@ -55,8 +55,8 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
-    0.9.0b1
     0.9.0b2
+    0.9.0b1
     0.8.10
     0.8.9
     0.8.8
