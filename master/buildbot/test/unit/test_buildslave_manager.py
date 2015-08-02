@@ -51,6 +51,7 @@ class TestBuildSlaveManager(unittest.TestCase):
                                              wantMq=True, wantData=True)
         self.master.mq = self.master.mq
         self.buildslaves = bslavemanager.BuildslaveManager(self.master)
+        self.buildslaves.setServiceParent(self.master)
         # slaves expect a botmaster as well as a manager.
         self.botmaster = botmaster.BotMaster(self.master)
         self.master.botmaster = self.botmaster

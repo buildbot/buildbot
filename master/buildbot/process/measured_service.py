@@ -13,10 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process.measured_service import MeasuredBuildbotServiceManager
+from twisted.internet import defer
+
+from buildbot.process import metrics
+from buildbot.util.service import BuildbotServiceManager
 
 
-class SchedulerManager(MeasuredBuildbotServiceManager):
-    name = "SchedulerManager"
-    managed_services_name = "schedulers"
-    config_attr = "schedulers"
+class MeasuredBuildbotServiceManager(BuildbotServiceManager):
+    managed_services_name = "services"
+
+    @defer.inlineCallbacks
+    def reconfigServiceWithBuildbotConfig(self, new_config):
+        timer = metrics.Timer("{0}.reconfigServiceWithBuildbotConfig".format(self.name))
+        timer.start()
+        yield super(MeasuredBuildbotServiceManager, self).reconfigServiceWithBuildbotConfig(new_config)
+        metrics.MetricCountEvent.log("num_{0}".format(self.managed_services_name),
+                                     len(list(self)), absolute=True)
+        timer.stop()

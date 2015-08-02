@@ -225,7 +225,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         # set the schedulerid, and claim the scheduler on another master
         self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
-        sched.startService()
+        yield sched.startService()
         sched.clock.advance(sched.POLL_INTERVAL_SEC / 2)
         sched.clock.advance(sched.POLL_INTERVAL_SEC / 5)
         sched.clock.advance(sched.POLL_INTERVAL_SEC / 5)
@@ -235,7 +235,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(sched.serviceid, sched.objectid)  # objectid is attached by the test helper
 
         # clear that masterid
+        yield sched.stopService()
         self.setSchedulerToMaster(None)
+        yield sched.startService()
         sched.clock.advance(sched.POLL_INTERVAL_SEC)
         self.assertTrue(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
@@ -295,9 +297,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         ]
         exp_sourcestamps = [
             {'repository': 'svn://B..', 'branch': 'stable',
-                'revision': 'BB', 'codebase': 'cbB', 'project': ''},
+             'revision': 'BB', 'codebase': 'cbB', 'project': ''},
             {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
-                'revision': '13579', 'codebase': 'cbA'},
+             'revision': '13579', 'codebase': 'cbA'},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
             codebases, sourcestamps, exp_sourcestamps)
@@ -314,9 +316,9 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         ]
         exp_sourcestamps = [
             {'repository': 'svn://B..', 'branch': 'stable',
-                'revision': '24680', 'codebase': 'cbB', 'project': ''},
+             'revision': '24680', 'codebase': 'cbB', 'project': ''},
             {'repository': 'svn://A..', 'branch': 'AA', 'project': '',
-                'revision': '13579', 'codebase': 'cbA'},
+             'revision': '13579', 'codebase': 'cbA'},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
             codebases, sourcestamps, exp_sourcestamps)
@@ -324,7 +326,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def test_addBuildsetForSourceStampsWithDefaults_no_repository(self):
         exp_sourcestamps = [
             {'repository': '', 'branch': None,
-                'revision': None, 'codebase': '', 'project': ''},
+             'revision': None, 'codebase': '', 'project': ''},
         ]
         return self.do_addBuildsetForSourceStampsWithDefaults(
             {'': {}}, [], exp_sourcestamps)
@@ -415,20 +417,19 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_addBuildsetForChanges_codebases_set_multiple_codebases(self):
-        codebases = {'cbA': dict(
-            repository='svn://A..',
-            branch='stable',
-            revision='13579'),
-            'cbB': dict(
-                repository='svn://B..',
-                branch='stable',
-                revision='24680'),
-            'cbC': dict(
-                repository='svn://C..',
-                branch='stable',
-                revision='12345'),
-            'cbD': dict(
-                repository='svn://D..')}
+        codebases = {'cbA': dict(repository='svn://A..',
+                                 branch='stable',
+                                 revision='13579'),
+                     'cbB': dict(
+                         repository='svn://B..',
+                         branch='stable',
+                         revision='24680'),
+                     'cbC': dict(
+                         repository='svn://C..',
+                         branch='stable',
+                         revision='12345'),
+                     'cbD': dict(
+                         repository='svn://D..')}
         # Scheduler gets codebases that can be used to create extra sourcestamps
         # for repositories that have no changes
         sched = self.makeScheduler(name='n', builderNames=['b', 'c'],

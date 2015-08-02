@@ -41,13 +41,15 @@ class ChangeSourceMixin(object):
         assert not hasattr(self.master, 'addChange')  # just checking..
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
     def tearDownChangeSource(self):
         "Tear down the mixin - returns a deferred."
         if not self.started:
-            return defer.succeed(None)
+            return
         if self.changesource.running:
-            return defer.maybeDeferred(self.changesource.stopService)
-        return defer.succeed(None)
+            yield defer.maybeDeferred(self.changesource.stopService)
+        yield self.changesource.disownServiceParent()
+        return
 
     def attachChangeSource(self, cs):
         "Set up a change source for testing; sets its .master attribute"
@@ -57,6 +59,7 @@ class ChangeSourceMixin(object):
             self.changesource.master = self.master
         except AttributeError:
             self.changesource.setServiceParent(self.master)
+
         # also, now that changesources are ClusteredServices, setting up
         # the clock here helps in the unit tests that check that behavior
         self.changesource.clock = task.Clock()
@@ -64,7 +67,7 @@ class ChangeSourceMixin(object):
     def startChangeSource(self):
         "start the change source as a service"
         self.started = True
-        self.changesource.startService()
+        return self.changesource.startService()
 
     def stopChangeSource(self):
         "stop the change source again; returns a deferred"

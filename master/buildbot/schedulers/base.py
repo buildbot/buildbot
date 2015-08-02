@@ -17,7 +17,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.changes import changes
 from buildbot.process.properties import Properties
-from buildbot.util.service import ClusteredService
+from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
 from twisted.internet import defer
 from twisted.python import failure
@@ -25,18 +25,18 @@ from twisted.python import log
 from zope.interface import implements
 
 
-class BaseScheduler(ClusteredService, StateMixin):
+class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
     implements(interfaces.IScheduler)
 
     DEFAULT_CODEBASES = {'': {}}
 
-    compare_attrs = ClusteredService.compare_attrs + \
+    compare_attrs = ClusteredBuildbotService.compare_attrs + \
         ('builderNames', 'properties', 'codebases')
 
     def __init__(self, name, builderNames, properties=None,
                  codebases=DEFAULT_CODEBASES):
-        ClusteredService.__init__(self, name)
+        super(BaseScheduler, self).__init__(name=name)
 
         ok = True
         if not isinstance(builderNames, (list, tuple)):
@@ -58,7 +58,6 @@ class BaseScheduler(ClusteredService, StateMixin):
         self.properties.update(properties, "Scheduler")
         self.properties.setProperty("scheduler", name, "Scheduler")
         self.objectid = None
-        self.master = None
 
         # Set the codebases that are necessary to process the changes
         # These codebases will always result in a sourcestamp with or without

@@ -114,7 +114,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_startService(self):
         # start it
-        self.sched.startService()
+        yield self.sched.startService()
 
         # check that it has set the basedir correctly
         self.assertEqual(self.sched.watcher.basedir, self.jobdir)

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import mock
 import weakref
 
 from buildbot import config
@@ -166,6 +167,7 @@ class FakeMaster(service.MasterService):
     def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
         service.MasterService.__init__(self)
         self._master_id = master_id
+        self.objectids = []
         self.config = config.MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
@@ -178,6 +180,18 @@ class FakeMaster(service.MasterService):
         self.masterid = master_id
         self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
         self.log_rotation = FakeLogRotation()
+        self.db = mock.Mock()
+        self.next_objectid = 0
+
+        def getObjectId(sched_name, class_name):
+            k = (sched_name, class_name)
+            try:
+                rv = self.objectids[k]
+            except KeyError:
+                rv = self.objectids[k] = self.next_objectid
+                self.next_objectid += 1
+            return defer.succeed(rv)
+        self.db.state.getObjectId = getObjectId
 
     def getObjectId(self):
         return defer.succeed(self._master_id)

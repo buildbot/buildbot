@@ -20,7 +20,7 @@ from buildbot.util import service
 from twisted.trial import unittest
 
 
-class FakeChangeSource(service.AsyncService):
+class FakeChangeSource(service.ClusteredBuildbotService):
     pass
 
 
@@ -33,8 +33,7 @@ class TestChangeManager(unittest.TestCase):
 
     def make_sources(self, n):
         for i in range(n):
-            src = FakeChangeSource()
-            src.setName('ChangeSource %d' % i)
+            src = FakeChangeSource(name='ChangeSource %d' % i)
             yield src
 
     def test_reconfigService_add(self):
