@@ -25,6 +25,7 @@ Features
 * UI templates can now be customizable.
   You can provide html or jade overrides to the www plugins, end then customize your look and feel.
 
+* UI side bar is now fixed by default for large screens.
 
 Fixes
 ~~~~~
