@@ -25,26 +25,17 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* The :py:class:`~buildbot.config.BuilderConfig` ``nextSlave`` keyword argument takes a callable.
-  This callable now receives :py:class:`~buildbot.process.buildrequest.BuildRequest` instance in its signature as 3rd parameter.
-  **For retro-compatibility, all callable taking only 2 parameters will still work**.
-
 Slave
 -----
 
 Features
 ~~~~~~~~
 
-* Schedulers: the ``codebases`` parameter can now be specified in a simple list-of-strings form.
-
 Fixes
 ~~~~~
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* Providing Latent AWS EC2 credentails by the .ec2/aws_id file is deprecated:
-  Instead, use the standard .aws/credentials file.
 
 Details
 -------
@@ -65,6 +56,7 @@ Newer versions are also available here:
     :maxdepth: 1
 
     0.9.0b1
+    0.9.0b2
     0.8.10
     0.8.9
     0.8.8
