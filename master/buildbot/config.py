@@ -25,6 +25,7 @@ from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.util import identifiers as util_identifiers
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -541,8 +542,17 @@ class MasterConfig(util.ComparableMixin):
                 error(msg)
                 return
 
-            if sl.slavename in ("debug", "change", "status"):
-                msg = "slave name '%s' is reserved" % sl.slavename
+            def validate(slavename):
+                if slavename in ("debug", "change", "status"):
+                    yield "slave name %r is reserved" % slavename
+                if not util_identifiers.ident_re.match(slavename):
+                    yield "slave name %r is not an identifier" % slavename
+                if not slavename:
+                    yield "slave name %r cannot be an empty string" % slavename
+                if len(slavename) > 50:
+                    yield "slave name %r is longer than %d characters" % (slavename, 50)
+
+            for msg in validate(sl.slavename):
                 error(msg)
 
         self.slaves = config_dict['slaves']
