@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 import mock
+import os
 import weakref
 
 from buildbot import config
