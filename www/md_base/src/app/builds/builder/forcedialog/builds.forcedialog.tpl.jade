@@ -1,0 +1,51 @@
+md-dialog.force-dialog
+  md-toolbar
+    div.md-toolbar-tools
+      h2 Force build
+  md-dialog-content
+    div.fieldset(layout="column")
+      md-input-container(md-is-error="forcedialog.field_errors.username")
+        label Username
+        input(ng-model="forcedialog.fields.username")
+      md-input-container(md-is-error="forcedialog.field_errors.reason")
+        label Build Reason
+        input(ng-model="forcedialog.fields.reason")
+
+    div.fieldset(layout="column", layout-gt-md="row")
+      md-input-container(flex, flex-gt-md="50", md-is-error="forcedialog.field_errors.project")
+        label Project
+        input(ng-model="forcedialog.fields.project")
+      md-input-container(flex, flex-gt-md="50", md-is-error="forcedialog.field_errors.repository")
+        label Repository
+        input(ng-model="forcedialog.fields.repository")
+    div.fieldset(layout="column", layout-gt-md="row")
+      md-input-container(flex, flex-gt-md="50", md-is-error="forcedialog.field_errors.branch")
+        label Branch
+        input(ng-model="forcedialog.fields.branch")
+      md-input-container(flex, flex-gt-md="50", md-is-error="forcedialog.field_errors.revision")
+        label Revision
+        input(ng-model="forcedialog.fields.revision")
+    div.errors(ng-messages="forcedialog.field_errors", ng-if="forcedialog.field_errors")
+      div(ng-message="username")
+        b Username: 
+        | {{ forcedialog.field_errors.username }}
+      div(ng-message="reason")
+        b Reason: 
+        | {{ forcedialog.field_errors.reason}}
+      div(ng-message="project")
+        b Project: 
+        | {{ forcedialog.field_errors.project }}
+      div(ng-message="repository")
+        b Repository: 
+        | {{ forcedialog.field_errors.repository }}
+      div(ng-message="branch")
+        b Branch: 
+        | {{ forcedialog.field_errors.branch }}
+      div(ng-message="revision")
+        b Revision: 
+        | {{ forcedialog.field_errors.revision }}
+
+  div.md-actions(layout="row")
+    span(flex)
+    md-button(ng-click="forcedialog.cancel()") Cancel
+    md-button.md-primary(ng-click="forcedialog.confirm()") Confirm

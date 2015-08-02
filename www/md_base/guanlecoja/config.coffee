@@ -52,7 +52,7 @@ config =
                 version: '0.10.1'
                 files: 'angular-moment.js'
             'buildbot-data':
-                version: '~1.0.8'
+                version: '~1.0.9'
                 files: 'dist/buildbot-data.js'
             lodash:
                 version: '~2.4.1'
