@@ -17,13 +17,14 @@ Features
 
 * Mercurial hook was updated and modernized.
   It is no longer necessary to fork.
-  You can now extend PYTHONPATH via the hook config which allows you to use a buildbot-venv instead of installing buildbot to the system site-packages.
+  One can now extend PYTHONPATH via the hook configuration.
+  Among others, it permits to use a buildbot virtualenv instead of installing buildbot in all the system.
   Added documentation inside the hook.
   Misc. clean-up and reorganization in order to make the code a bit more readable.
 
 
 * UI templates can now be customizable.
-  You can provide html or jade overrides to the www plugins, end then customize your look and feel.
+  You can provide html or jade overrides to the www plugins, to customize the UI
 
 * UI side bar is now fixed by default for large screens.
 
@@ -32,12 +33,12 @@ Fixes
 
 * Fix setup for missing www.hooks module
 
-* Fix setup to install only on recent version of pip.
+* Fix setup to install only on recents version of pip (>=1.4).
   This prevents unexpected upgrade to nine from people who just use ``pip install -U buildbot``
 
 * Fix a crash in the git hook.
 
-* add checks to enforce slavenames are identifiers.
+* Add checks to enforce slavenames are identifiers.
 
 
 Deprecations, Removals, and Non-Compatible Changes
@@ -67,13 +68,13 @@ Features
 Fixes
 ~~~~~
 
-* Fix a race condition in the integration tests
+* Fix a two race conditions in the integration tests
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Providing Latent AWS EC2 credentails by the .ec2/aws_id file is deprecated:
-  Instead, use the standard .aws/credentials file.
+  Use the standard .aws/credentials file, instead.
 
 Details
 -------
