@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import mock
-import types
 
 from buildbot.data import base
 from buildbot.data import resultspec
@@ -87,7 +86,7 @@ class EndpointMixin(interfaces.InterfaceTests):
             if self.ep.isCollection:
                 self.assertIsInstance(rv, (list, base.ListResult))
             else:
-                self.assertIsInstance(rv, (dict, types.NoneType))
+                self.assertIsInstance(rv, (dict, type(None)))
             return rv
         return d
 

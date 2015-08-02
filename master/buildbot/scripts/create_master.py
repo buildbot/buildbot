@@ -73,7 +73,7 @@ def makeSampleConfig(config):
                                               config['db'])
     with open(target, "wt") as f:
         f.write(config_sample)
-    os.chmod(target, 0600)
+    os.chmod(target, 0o600)
 
 
 def makePublicHtml(config):

@@ -21,7 +21,6 @@ import locale
 import re
 import string
 import time
-import types
 import urlparse
 
 from twisted.python import reflect
@@ -169,7 +168,7 @@ def none_or_str(x):
 
 
 def ascii2unicode(x):
-    if isinstance(x, (unicode, types.NoneType)):
+    if isinstance(x, (unicode, type(None))):
         return x
     return unicode(x, 'ascii')
 

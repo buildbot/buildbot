@@ -296,7 +296,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     # already exhausted
                     continue
                 try:
-                    next_build[i] = g.next()
+                    next_build[i] = next(g)
                 except StopIteration:
                     next_build[i] = None
                     sources[i] = None

@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import re
-import types
 
 from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
@@ -54,14 +53,14 @@ class ChangeFilter(ComparableMixin):
 
     def createChecks(self, *checks):
         def mklist(x):
-            if x is not None and not isinstance(x, types.ListType):
+            if x is not None and not isinstance(x, list):
                 return [x]
             return x
 
         def mklist_br(x):  # branch needs to be handled specially
             if x is NotABranch:
                 return None
-            if not isinstance(x, types.ListType):
+            if not isinstance(x, list):
                 return [x]
             return x
 

@@ -1,9 +1,9 @@
-import build
-import builder
-import buildrequest
-import buildset
-import master
-import slave
+from buildbot.status import build
+from buildbot.status import builder
+from buildbot.status import buildrequest
+from buildbot.status import buildset
+from buildbot.status import master
+from buildbot.status import slave
 
 # styles.Versioned requires this, as it keys the version numbers on the fully
 # qualified class name; see master/buildbot/test/regressions/test_unpickling.py
