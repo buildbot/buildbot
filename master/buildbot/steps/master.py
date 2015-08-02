@@ -13,7 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from builtins import str, bytes
+from builtins import bytes
+from builtins import str
 
 import os
 import pprint
