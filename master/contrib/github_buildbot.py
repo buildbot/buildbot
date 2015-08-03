@@ -8,8 +8,8 @@ If your github repository is private, you must add a ssh key to the github
 repository for the user who initiated the build on the buildslave.
 
 This version of github_buildbot.py parses v3 of the github webhook api, with the
-"application.vnd.github.v3+json" payload. Configure *only* "push" events to
-trigger this webhook.
+"application.vnd.github.v3+json" payload. Configure *only* "push" and/or
+"pull_request" events to trigger this webhook.
 
 """
 
@@ -105,10 +105,10 @@ class GitHubBuildBot(resource.Resource):
             request.setResponseCode(OK)
             return json.dumps({"result": "pong"})
 
-        # Reject non-push, non-ping events
-        if event_type != "push":
+        # Reject events not involving code changes
+        if event_type not in ("push", "pull_request"):
             logging.info(
-                "Rejecting request.  Expected a push event but received %r instead.",
+                "Rejecting request. Received unsupported event %r.",
                 event_type)
             request.setResponseCode(BAD_REQUEST)
             return json.dumps({"error": "Bad Request."})
@@ -132,7 +132,11 @@ class GitHubBuildBot(resource.Resource):
             user = payload['sender']['login']
             repo = payload['repository']['full_name']
             repo_url = payload['repository']['html_url']
-            changes = self.process_changes(payload, user, repo, repo_url)
+            changes = None
+            if event_type == "push":
+                changes = self.process_changes(payload, user, repo, repo_url)
+            elif event_type == "pull_request":
+                changes = self.process_changes_pr(payload, user, repo, repo_url)
             self.send_changes(changes, request)
             return server.NOT_DONE_YET
 
@@ -143,10 +147,13 @@ class GitHubBuildBot(resource.Resource):
 
     def process_change(self, change, branch, user, repo, repo_url):
         files = change['added'] + change['removed'] + change['modified']
-        who = change['author']['name']
+        who = ""
         if 'username' in change['author']:
             who = change['author']['username']
-        who = "%s <%s>" % (who, change['author']['email'])
+        else:
+            who = change['author']['name']
+        if 'email' in change['author']:
+            who = "%s <%s>" % (who, change['author']['email'])
 
         return \
             {'revision': change['id'],
@@ -188,6 +195,44 @@ class GitHubBuildBot(resource.Resource):
                     continue
                 changes.append(self.process_change(
                     change, branch, user, repo, repo_url))
+        return changes
+
+    def process_changes_pr(self, payload, user, repo, repo_url):
+        """
+        Consumes the JSON as a python object and actually starts the build.
+
+        :arguments:
+            payload
+                Python Object that represents the JSON sent by GitHub Service
+                Hook.
+        """
+        changes = None
+
+        branch = "refs/pull/{}/head".format(payload['number'])
+
+        if payload['action'] not in ("opened", "synchronize"):
+            logging.info("PR %r %r, ignoring",
+                         payload['number'], payload['action'])
+            return None
+        else:
+            changes = []
+
+            # Create a synthetic change
+            change = {
+                'id': payload['pull_request']['head']['sha'],
+                'message': payload['pull_request']['body'],
+                'timestamp': payload['pull_request']['updated_at'],
+                'url': payload['pull_request']['html_url'],
+                'author': {
+                    'username': payload['pull_request']['user']['login'],
+                },
+                'added': [],
+                'removed': [],
+                'modified': [],
+            }
+
+            changes.append(self.process_change(
+                change, branch, user, repo, repo_url))
         return changes
 
     def send_changes(self, changes, request):
