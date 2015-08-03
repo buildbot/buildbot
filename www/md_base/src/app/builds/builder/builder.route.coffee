@@ -19,15 +19,21 @@ class State extends Config
             name: 'builds.builder.buildstab'
             url: '/buildstab'
             templateUrl: "views/#{name}.buildstab.html"
-            controller: ($scope) ->
-                $scope.builder.selectTab('buildstab')
+            controller: [
+                '$scope',
+                ($scope) ->
+                    $scope.builder.selectTab('buildstab')
+            ]
 
         $stateProvider.state
             name: 'builds.builder.infotab'
             url: '/infotab'
             templateUrl: "views/#{name}.infotab.html"
-            controller: ($scope) ->
-                $scope.builder.selectTab('infotab')
+            controller: [
+                '$scope',
+                ($scope) ->
+                    $scope.builder.selectTab('infotab')
+            ]
 
         $stateProvider.state
             name: 'builds.builder.buildtab'
