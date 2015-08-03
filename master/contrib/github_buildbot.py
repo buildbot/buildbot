@@ -16,6 +16,7 @@ trigger this webhook.
 import hmac
 import logging
 import os
+import re
 import sys
 
 from hashlib import sha1
@@ -167,14 +168,22 @@ class GitHubBuildBot(resource.Resource):
                 Hook.
         """
         changes = None
-        branch = payload['ref'].split('/')[-1]
+        refname = payload['ref']
+
+        m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
+        if not m:
+            logging.info(
+                "Ignoring refname `%s': Not a branch or a tag", refname)
+            return changes
+
+        branch = m.group(2)
 
         if payload['deleted'] is True:
             logging.info("Branch %r deleted, ignoring", branch)
         else:
             changes = []
             for change in payload['commits']:
-                if self.head_commit \
+                if (self.head_commit or m.group(1) == 'tags') \
                         and change['id'] != payload['head_commit']['id']:
                     continue
                 changes.append(self.process_change(
