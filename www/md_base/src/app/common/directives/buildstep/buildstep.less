@@ -1,0 +1,46 @@
+build-step {
+  display: block;
+  background: #444;
+  color: #eee;
+  font-family: monospace;
+  border-bottom: 1px solid #333;
+
+  .meta {
+    height: 30px;
+    padding: 5px;
+    line-height: 20px;
+    font-size: 14px;
+
+    .caret {
+      width: 0;
+      height: 10px;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid #999;
+    }
+
+    .name, .state-dot-container {
+      padding: 0 5px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .caret-container, .state-dot-container {
+      width: 20px;
+      height: 20px;
+      padding: 5px;
+    }
+
+    .state-dot {
+      width: 10px;
+      height: 10px;
+      background: #eee;
+      border-radius: 50%;
+    }
+
+    .name, .state-string, .duration {
+      margin: 0 5px;
+    }
+  }
+}

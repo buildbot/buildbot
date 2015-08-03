@@ -1,0 +1,9 @@
+div.meta(layout="row")
+  span.caret-container
+    div.caret
+  span.name {{ buildstep.step.name }}
+  span.state-string(flex) {{ buildstep.step.state_string }}
+  span.duration
+    | {{ buildstep.duration }}s
+  span.state-dot-container
+    div.state-dot

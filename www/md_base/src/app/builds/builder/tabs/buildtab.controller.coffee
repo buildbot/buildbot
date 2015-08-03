@@ -1,5 +1,6 @@
 class BuildTab extends Controller
     build: null
+    steps: []
     number: ''
 
     constructor: ($scope, $state, dataService) ->
@@ -13,4 +14,5 @@ class BuildTab extends Controller
                 alert 'No such build found'
             else
                 @build = data[0]
+                @steps = @build.loadSteps().getArray()
                 $scope.builder.selectTab('buildtab', @number)
