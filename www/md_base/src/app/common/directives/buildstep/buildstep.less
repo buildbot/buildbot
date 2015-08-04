@@ -2,14 +2,15 @@ build-step {
   display: block;
   background: #444;
   color: #eee;
-  font-family: monospace;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #3f3f3f;
 
   .meta {
     height: 30px;
     padding: 5px;
     line-height: 20px;
     font-size: 14px;
+    cursor: pointer;
+    font-family: monospace;
 
     .caret {
       width: 0;
@@ -17,6 +18,13 @@ build-step {
       border-top: 5px solid transparent;
       border-bottom: 5px solid transparent;
       border-left: 8px solid #999;
+      -webkit-transition: -webkit-transform 0.2s ease-in-out;
+      transition: transform 0.2s ease-in-out;
+
+      &.expand {
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+      }
     }
 
     .name, .state-dot-container {
@@ -41,6 +49,35 @@ build-step {
 
     .name, .state-string, .duration {
       margin: 0 5px;
+    }
+  }
+
+  .logs {
+    background: #3f3f3f;
+
+    .log-switch {
+      margin-left: 20px;
+      height: 30px;
+    }
+
+    .log-switch .md-button {
+      font-size: 12px;
+      margin: 5px;
+      height: 20px;
+      min-height: 20px;
+      min-width: 30px;
+      line-height: 20px;
+
+      &.selected {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    .download-button md-icon {
+      width: 20px;
+      height: 20px;
+      padding: 2px;
+      color: #eee;
     }
   }
 }
