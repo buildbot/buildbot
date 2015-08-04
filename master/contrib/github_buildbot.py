@@ -154,11 +154,16 @@ class GitHubBuildBot(resource.Resource):
         if 'email' in change['author']:
             who = "%s <%s>" % (who, change['author']['email'])
 
+        comments = change['message']
+        if len(comments) > 1024:
+            trim = " ... (trimmed, commit message exceeds 1024 characters)"
+            comments = comments[:1024 - len(trim)] + trim
+
         return \
             {'revision': change['id'],
              'revlink': change['url'],
              'who': who,
-             'comments': change['message'],
+             'comments': comments,
              'repository': repo_url,
              'files': files,
              'project': repo,
