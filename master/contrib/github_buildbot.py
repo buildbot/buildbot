@@ -129,14 +129,13 @@ class GitHubBuildBot(resource.Resource):
                 return json.dumps({"error": "Bad Request."})
 
             logging.debug("Payload: %r", payload)
-            user = payload['sender']['login']
             repo = payload['repository']['full_name']
             repo_url = payload['repository']['html_url']
             changes = None
             if event_type == "push":
-                changes = self.process_changes(payload, user, repo, repo_url)
+                changes = self.process_changes(payload, repo, repo_url)
             elif event_type == "pull_request":
-                changes = self.process_changes_pr(payload, user, repo, repo_url)
+                changes = self.process_changes_pr(payload, repo, repo_url)
             self.send_changes(changes, request)
             return server.NOT_DONE_YET
 
@@ -145,7 +144,7 @@ class GitHubBuildBot(resource.Resource):
             request.setResponseCode(INTERNAL_SERVER_ERROR)
             return json.dumps({"error": e.message})
 
-    def process_change(self, change, branch, user, repo, repo_url):
+    def process_change(self, change, branch, repo, repo_url):
         files = change['added'] + change['removed'] + change['modified']
         who = ""
         if 'username' in change['author']:
@@ -165,7 +164,7 @@ class GitHubBuildBot(resource.Resource):
              'project': repo,
              'branch': branch}
 
-    def process_changes(self, payload, user, repo, repo_url):
+    def process_changes(self, payload, repo, repo_url):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -194,10 +193,10 @@ class GitHubBuildBot(resource.Resource):
                         and change['id'] != payload['head_commit']['id']:
                     continue
                 changes.append(self.process_change(
-                    change, branch, user, repo, repo_url))
+                    change, branch, repo, repo_url))
         return changes
 
-    def process_changes_pr(self, payload, user, repo, repo_url):
+    def process_changes_pr(self, payload, repo, repo_url):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -232,7 +231,7 @@ class GitHubBuildBot(resource.Resource):
             }
 
             changes.append(self.process_change(
-                change, branch, user, repo, repo_url))
+                change, branch, repo, repo_url))
         return changes
 
     def send_changes(self, changes, request):
