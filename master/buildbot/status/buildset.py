@@ -20,7 +20,7 @@ from twisted.internet import defer
 from zope.interface import implements
 
 
-class BuildSetStatus:
+class BuildSetStatus(object):
     implements(interfaces.IBuildSetStatus)
 
     def __init__(self, bsdict, status):
@@ -75,7 +75,7 @@ class BuildSetStatus:
         return d
 
 
-class BuildSetSummaryNotifierMixin:
+class BuildSetSummaryNotifierMixin(object):
 
     _buildsetCompleteConsumer = None
 

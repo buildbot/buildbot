@@ -26,11 +26,11 @@ from buildbot.steps.shell import SetPropertyFromCommand
 from buildbot.steps.shell import ShellCommand
 
 
-class FakeSlaveBuilder:
+class FakeSlaveBuilder(object):
     slave = None
 
 
-class FakeBuildStatus:
+class FakeBuildStatus(object):
 
     def __init__(self):
         self.names = []
@@ -51,7 +51,7 @@ class FakeBuildStatus:
         self.progress = p
 
 
-class FakeBuildRequest:
+class FakeBuildRequest(object):
 
     def __init__(self, reason, sources, buildername):
         self.reason = reason

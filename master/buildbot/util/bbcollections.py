@@ -18,7 +18,7 @@ from collections import defaultdict
 assert defaultdict
 
 
-class KeyedSets:
+class KeyedSets(object):
 
     def __init__(self):
         self.d = dict()

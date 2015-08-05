@@ -19,7 +19,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 
 
-class Sender:
+class Sender(object):
 
     def __init__(self, master, auth=('change', 'changepw'), encoding='utf8'):
         self.username, self.password = auth

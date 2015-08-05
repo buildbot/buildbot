@@ -26,7 +26,7 @@ from twisted.internet import reactor
 from twisted.python.runtime import platformType
 
 
-class Follower:
+class Follower(object):
 
     def follow(self, basedir):
         self.rc = 0

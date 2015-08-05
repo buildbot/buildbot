@@ -12,7 +12,7 @@ from twisted.python import log
 from twisted.spread import pb
 
 
-class ViewCvsPoller:
+class ViewCvsPoller(object):
 
     def __init__(self):
 

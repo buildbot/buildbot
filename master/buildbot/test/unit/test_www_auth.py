@@ -26,7 +26,7 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 
 
-class AuthResourceMixin:
+class AuthResourceMixin(object):
 
     def setUpAuthResource(self):
         self.master = self.make_master(url='h:/a/b/')

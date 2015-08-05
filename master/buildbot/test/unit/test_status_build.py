@@ -23,7 +23,7 @@ from twisted.trial import unittest
 from zope.interface import implements
 
 
-class FakeBuilderStatus:
+class FakeBuilderStatus(object):
     implements(interfaces.IBuilderStatus)
 
 

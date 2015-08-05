@@ -103,7 +103,7 @@ class ComparableMixin(object):
     implements(IConfigured)
     compare_attrs = []
 
-    class _None:
+    class _None(object):
         pass
 
     def __hash__(self):
@@ -203,7 +203,7 @@ def toJson(obj):
 # is always false.
 
 
-class NotABranch:
+class NotABranch(object):
 
     def __nonzero__(self):
         return False

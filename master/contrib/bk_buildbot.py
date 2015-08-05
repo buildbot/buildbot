@@ -68,7 +68,7 @@ class Options(usage.Options):
             raise usage.error("You must pass --repository")
 
 
-class ChangeSender:
+class ChangeSender(object):
 
     def getChanges(self, opts):
         """Generate and stash a list of Change dictionaries, ready to be sent

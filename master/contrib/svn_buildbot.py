@@ -150,7 +150,7 @@ def split_file_branches(changed_file):
 split_file = split_file_dummy
 
 
-class ChangeSender:
+class ChangeSender(object):
 
     def getChanges(self, opts):
         """Generate and stash a list of Change dictionaries, ready to be sent

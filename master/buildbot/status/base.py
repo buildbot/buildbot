@@ -22,7 +22,7 @@ from buildbot import util
 from buildbot.interfaces import IStatusReceiver
 
 
-class StatusReceiverBase:
+class StatusReceiverBase(object):
     implements(IStatusReceiver)
 
     def requestSubmitted(self, request):

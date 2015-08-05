@@ -168,7 +168,7 @@ class AbstractSlaveBuilder(object):
         self.remoteCommands = None
 
 
-class Ping:
+class Ping(object):
     running = False
 
     def ping(self, conn):

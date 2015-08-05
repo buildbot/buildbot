@@ -82,7 +82,7 @@ class TracBuildBotWatcher(Component):
             data = {'names': master.getAllBuilders()}
             return 'bbw_allbuilders.html', data, 'text/html'
         else:
-            class Foo:
+            class Foo(object):
                 pass
             b = Foo()
             b.name = str(builder)

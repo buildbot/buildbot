@@ -78,7 +78,7 @@ KERNEL=="vda*", SYMLINK+="sda%%n"
 HERE
 """
 
-class VMBuilder:
+class VMBuilder(object):
 
     """ Class that executes ubuntu-vm-builder with appropriate options """
 

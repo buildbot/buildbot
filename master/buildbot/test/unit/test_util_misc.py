@@ -71,7 +71,7 @@ class deferredLocked(unittest.TestCase):
     def test_method(self):
         testcase = self
 
-        class C:
+        class C(object):
 
             @util.deferredLocked('aLock')
             def check_locked(self, arg1, arg2):

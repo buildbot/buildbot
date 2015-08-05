@@ -766,7 +766,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
-        class TestCallable:
+        class TestCallable(object):
 
             def __call__(self, branch):
                 return branch == "refs/heads/master"

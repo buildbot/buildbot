@@ -28,7 +28,7 @@ from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.util import service
 
 
-class Dispatcher:
+class Dispatcher(object):
     implements(portal.IRealm)
 
     def __init__(self):
@@ -65,7 +65,7 @@ class DontCareChecker(checkers.InMemoryUsernamePasswordDatabaseDontUse):
         return credentials.username
 
 
-class FakeLog:
+class FakeLog(object):
 
     def addStdout(self, data):
         sys.stdout.write(data)

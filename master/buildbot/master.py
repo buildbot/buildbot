@@ -504,7 +504,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         return d
 
 
-class Control:
+class Control(object):
     implements(interfaces.IControl)
 
     def __init__(self, master):

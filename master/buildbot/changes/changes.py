@@ -27,7 +27,7 @@ from buildbot import util
 from buildbot.process.properties import Properties
 
 
-class Change:
+class Change(object):
 
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change

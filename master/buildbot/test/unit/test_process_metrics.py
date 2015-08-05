@@ -216,7 +216,7 @@ class TestReconfig(TestMetricBase):
         # (service will be stopped by tearDown)
 
 
-class _LogObserver:
+class _LogObserver(object):
 
     def __init__(self):
         self.events = []
