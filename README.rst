@@ -16,7 +16,11 @@ Buildbot consists of several components:
 
 * master
 * slave
-* www
+* www/base
+* www/console_view
+* www/waterfall_view
+
+and so on
 
 See the README in each subdirectory for more information
 
