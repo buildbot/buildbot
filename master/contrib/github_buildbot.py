@@ -182,10 +182,10 @@ class GitHubBuildBot(resource.Resource):
                 "Ignoring refname `%s': Not a branch or a tag", refname)
             return changes
 
-        branch = m.group(2)
+        refname = m.group(2)
 
         if payload['deleted'] is True:
-            logging.info("Branch %r deleted, ignoring", branch)
+            logging.info("%r deleted, ignoring", refname)
         else:
             changes = []
             for change in payload['commits']:
@@ -193,7 +193,7 @@ class GitHubBuildBot(resource.Resource):
                         and change['id'] != payload['head_commit']['id']:
                     continue
                 changes.append(self.process_change(
-                    change, branch, repo, repo_url))
+                    change, refname, repo, repo_url))
         return changes
 
     def handle_pull_request(self, payload, repo, repo_url):
