@@ -1,6 +1,6 @@
 beforeEach module 'app'
 
-describe 'buildstep', ->
+describe 'buildlog', ->
 
     $compile = $rootScope = $httpBackend = dataService = scope = null
     injected = ($injector) ->
