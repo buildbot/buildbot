@@ -94,7 +94,23 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         default value will then match all changes.
         """
 
-        LoggingBuildStep.__init__(self, **kwargs)
+        descriptions_for_mode = {
+            "clobber": "checkout",
+            "export": "exporting"}
+        descriptionDones_for_mode = {
+            "clobber": "checkout",
+            "export": "export"}
+
+        if not description:
+            description = [descriptions_for_mode.get(mode, "updating")]
+        if not descriptionDone:
+            descriptionDone = [descriptionDones_for_mode.get(mode, "update")]
+        if not descriptionSuffix and codebase:
+            descriptionSuffix = [codebase]
+
+        LoggingBuildStep.__init__(self, description=description,
+            descriptionDone=descriptionDone, descriptionSuffix=descriptionSuffix,
+            **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
@@ -111,35 +127,6 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         self.env = env
         self.timeout = timeout
         self.retry = retry
-
-        descriptions_for_mode = {
-            "clobber": "checkout",
-            "export": "exporting"}
-        descriptionDones_for_mode = {
-            "clobber": "checkout",
-            "export": "export"}
-        if description:
-            self.description = description
-        else:
-            self.description = [
-                descriptions_for_mode.get(mode, "updating")]
-        if isinstance(self.description, str):
-            self.description = [self.description]
-
-        if descriptionDone:
-            self.descriptionDone = descriptionDone
-        else:
-            self.descriptionDone = [
-                descriptionDones_for_mode.get(mode, "update")]
-        if isinstance(self.descriptionDone, str):
-            self.descriptionDone = [self.descriptionDone]
-
-        if descriptionSuffix:
-            self.descriptionSuffix = descriptionSuffix
-        else:
-            self.descriptionSuffix = self.codebase or None  # want None in lieu of ''
-        if isinstance(self.descriptionSuffix, str):
-            self.descriptionSuffix = [self.descriptionSuffix]
 
     def updateSourceProperty(self, name, value, source=''):
         """

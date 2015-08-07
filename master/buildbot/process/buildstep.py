@@ -159,6 +159,13 @@ class BuildStep(object, properties.PropertiesMixin):
         if not isinstance(self.name, str):
             config.error("BuildStep name must be a string: %r" % (self.name,))
 
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
+
         self._acquiringLock = None
         self.stopped = False
         self.master = None
