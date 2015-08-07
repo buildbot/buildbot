@@ -83,14 +83,11 @@ class CapturePropertyBase(Capture):
 
         if self._builder_name_matches(builder_info):
             properties = yield self.master.data.get(("builds", msg['buildid'], "properties"))
-            filtered_prop_names = []
+
             if self._regex:
-                prop_names = properties.keys()
-                for pn in prop_names:
-                    if re.match(self._property_name, pn):
-                        filtered_prop_names.append(pn)
+                filtered_prop_names = [pn for pn in properties if re.match(self._property_name, pn)]
             else:
-                filtered_prop_names.append(self._property_name)
+                filtered_prop_names = [self._property_name]
 
             for pn in filtered_prop_names:
                 try:
@@ -100,7 +97,7 @@ class CapturePropertyBase(Capture):
                                  " The property %s not found for build number %s on builder %s."
                                  % (pn, msg['number'], builder_info['name']))
                 context = self._defaultContext(msg, builder_info['name'])
-                series_name = builder_info['name'] + "-" + pn
+                series_name = "%s-%s" % (builder_info['name'], pn)
                 post_data = {
                     "name": pn,
                     "value": ret_val
@@ -128,9 +125,7 @@ class CaptureProperty(CapturePropertyBase):
         CapturePropertyBase.__init__(self, property_name, callback, regex)
 
     def _builder_name_matches(self, builder_info):
-        if self._builder_name == builder_info['name']:
-            return True
-        return False
+        return self._builder_name == builder_info['name']
 
 
 class CapturePropertyAllBuilders(CapturePropertyBase):
@@ -139,13 +134,8 @@ class CapturePropertyAllBuilders(CapturePropertyBase):
     Capture class for filtering out build properties for all builds.
     """
 
-    def __init__(self, property_name, callback=None, regex=False):
-        CapturePropertyBase.__init__(self, property_name, callback, regex)
-
     def _builder_name_matches(self, builder_info):
-        """
-        Since we need to match all builders, we simply return True here.
-        """
+        # Since we need to match all builders, we simply return True here.
         return True
 
 
@@ -172,13 +162,14 @@ class CaptureBuildTimes(Capture):
                 ret_val = self._callback(*self._retValParams(msg))
             except Exception as e:
                 # catching generic exceptions is okay here since we propagate it
-                config.error(self._err_msg(msg, builder_info['name']) + " Exception raised: " + type(e).__name__ +
-                             " with message: " + str(e))
+                config.error("%s Exception raised: %s with message: %s" %
+                             (self._err_msg(msg, builder_info['name']), type(e).__name__, str(e)))
+
             context = self._defaultContext(msg, builder_info['name'])
             post_data = {
                 self._time_type: ret_val
             }
-            series_name = builder_info['name'] + "-build-times"
+            series_name = "%s-build-times" % builder_info['name']
             yield self._store(post_data, series_name, context)
 
         else:
@@ -215,9 +206,7 @@ class CaptureBuildStartTime(CaptureBuildTimes):
         return [msg['started_at']]
 
     def _builder_name_matches(self, builder_info):
-        if self._builder_name == builder_info['name']:
-            return True
-        return False
+        return self._builder_name == builder_info['name']
 
 
 class CaptureBuildStartTimeAllBuilders(CaptureBuildStartTime):
@@ -230,7 +219,7 @@ class CaptureBuildStartTimeAllBuilders(CaptureBuildStartTime):
         CaptureBuildStartTime.__init__(self, None, callback)
 
     def _builder_name_matches(self, builder_info):
-        """Match all builders so simply return True."""
+        # Match all builders so simply return True
         return True
 
 
@@ -251,9 +240,7 @@ class CaptureBuildEndTime(CaptureBuildTimes):
         return [msg['complete_at']]
 
     def _builder_name_matches(self, builder_info):
-        if self._builder_name == builder_info['name']:
-            return True
-        return False
+        return self._builder_name == builder_info['name']
 
 
 class CaptureBuildEndTimeAllBuilders(CaptureBuildEndTime):
@@ -266,7 +253,7 @@ class CaptureBuildEndTimeAllBuilders(CaptureBuildEndTime):
         CaptureBuildEndTime.__init__(self, None, callback)
 
     def _builder_name_matches(self, builder_info):
-        """Match all builders so simply return True."""
+        # Match all builders so simply return True
         return True
 
 
@@ -298,9 +285,7 @@ class CaptureBuildDuration(CaptureBuildTimes):
         return [msg['started_at'], msg['complete_at']]
 
     def _builder_name_matches(self, builder_info):
-        if self._builder_name == builder_info['name']:
-            return True
-        return False
+        return self._builder_name == builder_info['name']
 
 
 class CaptureBuildDurationAllBuilders(CaptureBuildDuration):
@@ -313,7 +298,7 @@ class CaptureBuildDurationAllBuilders(CaptureBuildDuration):
         CaptureBuildDuration.__init__(self, None, report_in, callback)
 
     def _builder_name_matches(self, builder_info):
-        """Match all builders so simply return True."""
+        # Match all builders so simply return True
         return True
 
 
@@ -372,9 +357,7 @@ class CaptureData(CaptureDataBase):
         CaptureDataBase.__init__(self, data_name, callback)
 
     def _builder_name_matches(self, builder_info):
-        if self._builder_name == builder_info['name']:
-            return True
-        return False
+        return self._builder_name == builder_info['name']
 
 
 class CaptureDataAllBuilders(CaptureDataBase):
