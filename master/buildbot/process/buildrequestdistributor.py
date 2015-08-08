@@ -287,7 +287,7 @@ class BasicBuildChooser(BuildChooserBase):
         return self.bldr.canStartBuild(slave, breq)
 
 
-class BuildRequestDistributor(service.AsyncService):
+class BuildRequestDistributor(service.AsyncMultiService):
 
     """
     Special-purpose class to handle distributing build requests to builders by
@@ -303,8 +303,8 @@ class BuildRequestDistributor(service.AsyncService):
     BuildChooser = BasicBuildChooser
 
     def __init__(self, botmaster):
+        service.AsyncMultiService.__init__(self)
         self.botmaster = botmaster
-        self.master = botmaster.master
 
         # lock to ensure builders are only sorted once at any time
         self.pending_builders_lock = defer.DeferredLock()

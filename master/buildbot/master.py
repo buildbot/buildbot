@@ -141,10 +141,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.buildslaves = bslavemanager.BuildslaveManager(self)
         self.buildslaves.setServiceParent(self)
 
-        self.change_svc = ChangeManager(self)
+        self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)
 
-        self.botmaster = BotMaster(self)
+        self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self)
 
         self.scheduler_manager = SchedulerManager()
@@ -153,22 +153,22 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
 
-        self.db = dbconnector.DBConnector(self, self.basedir)
+        self.db = dbconnector.DBConnector(self.basedir)
         self.db.setServiceParent(self)
 
-        self.mq = mqconnector.MQConnector(self)
+        self.mq = mqconnector.MQConnector()
         self.mq.setServiceParent(self)
 
-        self.data = dataconnector.DataConnector(self)
+        self.data = dataconnector.DataConnector()
         self.data.setServiceParent(self)
 
-        self.www = wwwservice.WWWService(self)
+        self.www = wwwservice.WWWService()
         self.www.setServiceParent(self)
 
-        self.debug = debug.DebugServices(self)
+        self.debug = debug.DebugServices()
         self.debug.setServiceParent(self)
 
-        self.status = Status(self)
+        self.status = Status()
         self.status.setServiceParent(self)
 
         self.service_manager = service.BuildbotServiceManager()

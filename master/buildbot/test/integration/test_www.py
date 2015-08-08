@@ -63,14 +63,17 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         master = fakemaster.FakeMaster()
 
         master.config.db = dict(db_url=self.db_url)
-        master.db = dbconnector.DBConnector(master, 'basedir')
+        master.db = dbconnector.DBConnector('basedir')
+        master.db.setServiceParent(master)
         yield master.db.setup(check_version=False)
 
         master.config.mq = dict(type='simple')
-        master.mq = mqconnector.MQConnector(master)
+        master.mq = mqconnector.MQConnector()
+        master.mq.setServiceParent(master)
         master.mq.setup()
 
-        master.data = dataconnector.DataConnector(master)
+        master.data = dataconnector.DataConnector()
+        master.data.setServiceParent(master)
 
         master.config.www = dict(
             port='tcp:0:interface=127.0.0.1',
@@ -78,7 +81,8 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             auth=auth.NoAuth(),
             avatar_methods=[],
             logfileName='http.log')
-        master.www = wwwservice.WWWService(master)
+        master.www = wwwservice.WWWService()
+        master.www.setServiceParent(master)
         yield master.www.startService()
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 

@@ -61,6 +61,7 @@ class TestBRDBase(unittest.TestCase):
         self.master.caches = fakemaster.FakeCaches()
         self.master.config.prioritizeBuilders = prioritizeBuilders
         self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
+        self.brd.parent = self.botmaster
         self.brd.startService()
 
         # TODO: this is a terrible way to detect the "end" of the test -

@@ -20,10 +20,7 @@ from twisted.python import log
 
 
 class MQBase(service.AsyncService):
-
-    def __init__(self, master):
-        self.setName('mq-implementation')
-        self.master = master
+    name = 'mq-implementation'
 
 
 class QueueRef(object):

@@ -25,11 +25,10 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
             'keys': set(['debug']),
         },
     }
+    name = 'mq'
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('mq')
-        self.master = master
         self.impl = None  # set in setup
         self.impl_type = None  # set in setup
 
@@ -42,7 +41,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         assert typ in self.classes  # this is checked by MasterConfig
         self.impl_type = typ
         cls = namedObject(self.classes[typ]['class'])
-        self.impl = cls(self.master)
+        self.impl = cls()
 
         # set up the impl as a child service
         self.impl.setServiceParent(self)

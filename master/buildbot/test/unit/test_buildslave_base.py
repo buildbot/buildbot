@@ -106,9 +106,9 @@ class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
-        self.botmaster = botmaster.FakeBotMaster(self.master)
-        self.buildslaves = bslavemanager.FakeBuildslaveManager(self.master)
-        self.master.botmaster = self.botmaster
+        self.master.buildslaves.disownServiceParent()
+        self.buildslaves = bslavemanager.FakeBuildslaveManager()
+        self.buildslaves.setServiceParent(self.master)
         self.master.buildslaves = self.buildslaves
         self.sl.setServiceParent(self.master.buildslaves)
         self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
@@ -132,7 +132,9 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
-        self.buildslaves = bslavemanager.FakeBuildslaveManager(self.master)
+        self.master.buildslaves.disownServiceParent()
+        self.buildslaves = bslavemanager.FakeBuildslaveManager()
+        self.buildslaves.setServiceParent(self.master)
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)

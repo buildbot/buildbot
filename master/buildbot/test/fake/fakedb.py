@@ -29,6 +29,7 @@ from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
 from buildbot.util import json
+from buildbot.util import service
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -2375,7 +2376,7 @@ class FakeTagsComponent(FakeDBComponent):
         return defer.succeed(id)
 
 
-class FakeDBConnector(object):
+class FakeDBConnector(service.AsyncMultiService):
 
     """
     A stand-in for C{master.db} that operates without an actual database
@@ -2386,10 +2387,10 @@ class FakeDBConnector(object):
     see their documentation for more.
     """
 
-    def __init__(self, master, testcase):
+    def __init__(self, testcase):
+        service.AsyncMultiService.__init__(self)
         # reset the id generator, for stable id's
         Row._next_id = 1000
-        self.master = master
         self.t = testcase
         self.checkForeignKeys = False
         self._components = []

@@ -24,7 +24,7 @@ from buildbot.util import ascii2unicode
 from buildbot.util import config
 
 
-class ReconfigurableServiceMixin:
+class ReconfigurableServiceMixin(object):
 
     reconfig_priority = 128
 
@@ -45,7 +45,9 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-class AsyncService(service.Service):
+# twisted 16's Service is now an new style class, better put everybody new style
+# to catch issues even on twisted < 16
+class AsyncService(service.Service, object):
 
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
@@ -54,6 +56,13 @@ class AsyncService(service.Service):
         parent = service.IServiceCollection(parent, parent)
         self.parent = parent
         yield self.parent.addService(self)
+
+    # We recurse over the parent services until we find a MasterService
+    @property
+    def master(self):
+        if self.parent is None:
+            return None
+        return self.parent.master
 
 
 class AsyncMultiService(AsyncService, service.MultiService):
@@ -90,13 +99,6 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return service.startService()
         else:
             return defer.succeed(None)
-
-    # We recurse over the parent services until we find a MasterService
-    @property
-    def master(self):
-        if self.parent is None:
-            return None
-        return self.parent.master
 
 
 class MasterService(AsyncMultiService):

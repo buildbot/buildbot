@@ -18,10 +18,7 @@ from buildbot.util import subscription
 
 
 class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-
-    def __init__(self, master):
-        service.AsyncMultiService.__init__(self)
-        self.master = master
+    pass
 
 
 class Connection(object):

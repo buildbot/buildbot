@@ -18,11 +18,10 @@ from twisted.internet import defer
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+    name = 'debug_services'
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('debug_services')
-        self.master = master
 
         self.debug_port = None
         self.debug_password = None

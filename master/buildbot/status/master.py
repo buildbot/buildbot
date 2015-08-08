@@ -34,12 +34,8 @@ from zope.interface import implements
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.master = master
-        self.botmaster = master.botmaster
-        self.buildslaves = master.buildslaves
-        self.basedir = master.basedir
         self.watchers = []
         # No default limit to the log size
         self.logMaxSize = None
@@ -51,6 +47,18 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self._buildset_sub = None
         self._build_request_sub = None
         self._change_sub = None
+
+    @property
+    def botmaster(self):
+        return self.master.botmaster
+
+    @property
+    def buildslaves(self):
+        return self.master.buildslaves
+
+    @property
+    def basedir(self):
+        return self.master.basedir
 
     # service management
 
