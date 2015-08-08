@@ -48,7 +48,8 @@ class ChangeSourceMixin(object):
             return
         if self.changesource.running:
             yield defer.maybeDeferred(self.changesource.stopService)
-        yield self.changesource.disownServiceParent()
+        if self.changesource.parent:
+            yield self.changesource.disownServiceParent()
         return
 
     def attachChangeSource(self, cs):

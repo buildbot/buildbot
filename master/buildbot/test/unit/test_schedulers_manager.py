@@ -124,7 +124,6 @@ class SchedulerManager(unittest.TestCase):
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sch1.parent, None)
-        self.assertIdentical(sch1.master, None)
 
     @defer.inlineCallbacks
     def test_reconfigService_class_name_change(self):
