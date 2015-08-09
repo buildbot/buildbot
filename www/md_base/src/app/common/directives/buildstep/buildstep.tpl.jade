@@ -6,7 +6,7 @@ div.meta(layout="row", ng-click="buildstep.toggleExpand()")
   span.duration
     | {{ buildstep.duration }}s
   span.state-dot-container
-    div.state-dot
+    div.state-dot(ng-class="buildstep.state_class")
 div.logs(ng-if="buildstep.isExpanded")
   div.log-switch(layout="row")
     a.md-button(

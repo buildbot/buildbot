@@ -16,9 +16,21 @@ class _BuildStep extends Controller
     selectedLog: null
     isExpanded: false
 
-    constructor: ->
-        @updateDuration()
+    constructor: ($scope, RESULTS_TEXT) ->
+        $scope.$watch 'buildstep.step', (=> @updateState(RESULTS_TEXT)), true
         @step.loadLogs()
+
+    updateState: (RESULTS_TEXT) ->
+        @updateDuration()
+
+        if @step.complete is false and @step.started_at > 0
+            @state_class = 'pending'
+        else if @step.results == 0
+            @state_class = 'success'
+        else if @step.results >= 1 and @step.results <= 6
+            @state_class = RESULTS_TEXT[@step.results].toLowerCase()
+        else
+            @state_class = 'unknown'
 
     updateDuration: ->
         if @step.complete
@@ -28,7 +40,6 @@ class _BuildStep extends Controller
             @duration = moment().unix() - @step.started_at
         else
             @duration = 0
-        setTimeout (=> @updateDuration()), 500
 
     toggleExpand: ->
         if @isExpanded
