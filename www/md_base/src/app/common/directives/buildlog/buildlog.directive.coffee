@@ -7,21 +7,36 @@ class BuildLog extends Directive
             controllerAs: 'log'
             bindToController: true
             scope:
-                log: '='
+                raw_log: '=log'
         }
 
 class _BuildLog extends Controller
     lines: 0
+    contents: []
     contentsLength: 0
 
-    constructor: ($scope, $element) ->
+    constructor: (@$scope, @$element) ->
         # Using directly DOM maniplution instead of ng-repeat to improve page performance
         @codeTable = angular.element('<table></table>')
-        $element.append(@codeTable)
+        @$element.append(@codeTable)
 
-        # Binding contents watch functions
-        @contents = @log.loadContents().getArray()
-        $scope.$watch 'log.contents.length', => @updateContents()
+        # Refresh contents if log is changed
+        @$scope.$watch 'log.raw_log', => @bindContents()
+        @$scope.$watch 'log.contents.length', => @updateContents()
+
+
+    bindContents: ->
+
+        # Restore initial state
+        @lines = 0
+        @contents = []
+        @contentsLength = 0
+        @codeTable.html('')
+
+        # Load and process contents
+        @log = @raw_log
+        @contents = @log.contents or @log.loadContents().getArray()
+        @updateContents()
 
     addLine: (lineno, line) ->
         @codeTable.append """
