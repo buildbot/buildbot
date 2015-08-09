@@ -45,7 +45,7 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-class AsyncService(service.Service):
+class AsyncService(service.Service, object):
 
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
