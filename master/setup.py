@@ -399,7 +399,7 @@ else:
         # version.
         'sqlalchemy-migrate==0.7.2',
         'python-dateutil>=1.5',
-        'autobahn >= 0.10.2',
+        'autobahn >= 0.10.2 <= 0.10.5',
     ]
 
     setup_args['extras_require'] = {
