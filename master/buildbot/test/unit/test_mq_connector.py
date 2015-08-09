@@ -17,6 +17,7 @@ import mock
 
 from buildbot.mq import base
 from buildbot.mq import connector
+from buildbot.test.fake import fakemaster
 from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -40,9 +41,10 @@ class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):
 class MQConnector(unittest.TestCase):
 
     def setUp(self):
-        self.master = mock.Mock(name='master')
+        self.master = fakemaster.make_master()
         self.mqconfig = self.master.config.mq = {}
-        self.conn = connector.MQConnector(self.master)
+        self.conn = connector.MQConnector()
+        self.conn.setServiceParent(self.master)
 
     def patchFakeMQ(self, name='fake'):
         self.patch(connector.MQConnector, 'classes',

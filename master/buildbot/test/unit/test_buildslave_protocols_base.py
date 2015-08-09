@@ -27,7 +27,8 @@ class TestListener(unittest.TestCase):
 
     def test_constructor(self):
         master = fakemaster.make_master()
-        listener = base.Listener(master)
+        listener = base.Listener()
+        listener.setServiceParent(master)
         self.assertEqual(listener.master, master)
 
 

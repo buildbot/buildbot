@@ -145,7 +145,8 @@ class Contact(base.StatusReceiver):
         """
         assert user or channel, "At least one of user or channel must be set"
         self.bot = bot
-        self.master = bot.master
+        # hack for self.master, but this module needs a much bigger rework
+        self.setServiceParent(bot.master)
         self.notify_events = {}
         self.subscribed = []
         self.build_subscriptions = []

@@ -204,8 +204,8 @@ class TestFakeDB(unittest.TestCase, Tests):
     def setUp(self):
         self.clock = task.Clock()
         self.clock.advance(SOMETIME)
-        self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self.master, self)
+        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 

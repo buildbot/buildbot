@@ -21,7 +21,6 @@ import sys
 
 from buildbot import config as config_module
 from buildbot import monkeypatches
-from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
@@ -36,8 +35,7 @@ def doCleanupDatabase(config, master_cfg):
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
     print(master.config.logCompressionMethod)
-    db = connector.DBConnector(master, basedir=config['basedir'])
-
+    db = master.db
     yield db.setup(check_version=False, verbose=not config['quiet'])
     res = yield db.logs.getLogs()
     i = 0

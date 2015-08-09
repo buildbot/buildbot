@@ -53,8 +53,10 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.buildslaves = bslavemanager.BuildslaveManager(self.master)
         self.buildslaves.setServiceParent(self.master)
         # slaves expect a botmaster as well as a manager.
-        self.botmaster = botmaster.BotMaster(self.master)
+        self.master.botmaster.disownServiceParent()
+        self.botmaster = botmaster.BotMaster()
         self.master.botmaster = self.botmaster
+        self.master.botmaster.setServiceParent(self.master)
 
         self.new_config = mock.Mock()
         self.buildslaves.startService()

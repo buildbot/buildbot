@@ -517,7 +517,8 @@ class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self.master, self)
+        self.db = fakedb.FakeDBConnector(self)
+        self.db.setServiceParent(self.master)
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 

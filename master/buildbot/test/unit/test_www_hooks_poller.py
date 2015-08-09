@@ -43,8 +43,8 @@ class TestPollingChangeHook(unittest.TestCase):
         self.request.method = "GET"
 
         master = self.request.site.master
-        master.change_svc = ChangeManager(master)
-
+        master.change_svc = ChangeManager()
+        master.change_svc.setServiceParent(master)
         self.changesrc = self.Subclass("example", 21)
         self.changesrc.setServiceParent(master.change_svc)
         if activate:

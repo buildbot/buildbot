@@ -33,12 +33,10 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         if new_config.manhole != self.manhole:
             if self.manhole:
                 yield self.manhole.disownServiceParent()
-                self.manhole.master = None
                 self.manhole = None
 
             if new_config.manhole:
                 self.manhole = new_config.manhole
-                self.manhole.master = self.master
                 yield self.manhole.setServiceParent(self)
 
         # chain up
@@ -52,5 +50,4 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
         # clean up
         if self.manhole:
-            self.manhole.master = None
             self.manhole = None

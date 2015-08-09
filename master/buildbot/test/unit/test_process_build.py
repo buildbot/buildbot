@@ -31,7 +31,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
 from buildbot.test.fake.fakebuild import FakeBuildStatus
-from buildbot.test.fake.fakemaster import FakeBotMaster
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
@@ -130,8 +129,6 @@ class TestBuild(unittest.TestCase):
 
         self.request = r
         self.master = fakemaster.make_master(wantData=True, testcase=self)
-
-        self.master.botmaster = FakeBotMaster(master=self.master)
 
         self.slave = slave.FakeSlave(self.master)
         self.slave.attached(None)

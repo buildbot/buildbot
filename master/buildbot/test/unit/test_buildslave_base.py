@@ -18,7 +18,6 @@ import mock
 from buildbot import config
 from buildbot import locks
 from buildbot.buildslave import base
-from buildbot.test.fake import botmaster
 from buildbot.test.fake import bslavemanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -133,7 +132,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
                                              testcase=self)
         self.botmaster = self.master.botmaster
         self.master.buildslaves.disownServiceParent()
-        self.buildslaves = bslavemanager.FakeBuildslaveManager()
+        self.buildslaves = self.master.buildslaves = bslavemanager.FakeBuildslaveManager()
         self.buildslaves.setServiceParent(self.master)
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
@@ -282,46 +281,38 @@ class TestAbstractBuildSlave(unittest.TestCase):
         bs.stopMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
+    @defer.inlineCallbacks
     def test_setServiceParent_started(self):
         master = self.master
-        bm = botmaster.FakeBotMaster(master)
-        bsmanager = bslavemanager.FakeBuildslaveManager(master)
-        master.botmaster = bm
-        master.buildslaves = bsmanager
-        bm.startService()
-        bsmanager.startService()
+        bsmanager = master.buildslaves
+        yield master.startService()
         bs = ConcreteBuildSlave('bot', 'pass')
         bs.setServiceParent(bsmanager)
         self.assertEqual(bs.manager, bsmanager)
         self.assertEqual(bs.parent, bsmanager)
+        self.assertEqual(bsmanager.master, master)
         self.assertEqual(bs.master, master)
 
+    @defer.inlineCallbacks
     def test_setServiceParent_masterLocks(self):
         """
         http://trac.buildbot.net/ticket/2278
         """
         master = self.master
-        bm = botmaster.FakeBotMaster(master)
-        bsmanager = bslavemanager.FakeBuildslaveManager(master)
-        master.botmaster = bm
-        master.buildslaves = bsmanager
-        bm.startService()
-        bsmanager.startService()
+        bsmanager = master.buildslaves
+        yield master.startService()
         lock = locks.MasterLock('masterlock')
         bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(bsmanager)
 
+    @defer.inlineCallbacks
     def test_setServiceParent_slaveLocks(self):
         """
         http://trac.buildbot.net/ticket/2278
         """
         master = self.master
-        bm = botmaster.FakeBotMaster(master)
-        bsmanager = bslavemanager.FakeBuildslaveManager(master)
-        master.botmaster = bm
-        master.buildslaves = bsmanager
-        bm.startService()
-        bsmanager.startService()
+        bsmanager = master.buildslaves
+        yield master.startService()
         lock = locks.SlaveLock('lock')
         bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(bsmanager)

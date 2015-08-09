@@ -16,6 +16,7 @@
 import mock
 
 from buildbot.changes import manager
+from buildbot.test.fake import fakemaster
 from buildbot.util import service
 from twisted.trial import unittest
 
@@ -27,8 +28,9 @@ class FakeChangeSource(service.ClusteredBuildbotService):
 class TestChangeManager(unittest.TestCase):
 
     def setUp(self):
-        self.master = mock.Mock()
-        self.cm = manager.ChangeManager(self.master)
+        self.master = fakemaster.make_master()
+        self.cm = manager.ChangeManager()
+        self.cm.setServiceParent(self.master)
         self.new_config = mock.Mock()
 
     def make_sources(self, n):
