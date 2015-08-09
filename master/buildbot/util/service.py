@@ -45,7 +45,7 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-class AsyncService(service.Service):
+class AsyncService(service.Service, object):
 
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
@@ -91,12 +91,34 @@ class AsyncMultiService(AsyncService, service.MultiService):
         else:
             return defer.succeed(None)
 
+    # Assuming this instance is a child service of the BuildMaster, self.master
+    # is a link to the master.  Since this only occurs when the service
+    # hierarchy is established (so, after the constructor and an synchronous
+    # call to setServiceParent), it's also possible to set self.master
+    # directly.
+
+    def disownServiceParent(self):
+        try:
+            del self.__master
+        except AttributeError:
+            pass
+        return service.MultiService.disownServiceParent(self)
+
     # We recurse over the parent services until we find a MasterService
-    @property
-    def master(self):
+    def __get_master(self):
+        try:
+            return self.__master
+        except AttributeError:
+            pass
         if self.parent is None:
             return None
-        return self.parent.master
+        self.__master = m = self.parent.master
+        return m
+
+    def __set_master(self, master):
+        self.__master = master
+
+    master = property(__get_master, __set_master)
 
 
 class MasterService(AsyncMultiService):
