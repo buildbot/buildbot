@@ -35,11 +35,12 @@ class _BuildStep extends Controller
     updateDuration: ->
         if @step.complete
             @duration = @step.complete_at - @step.started_at
-            return
         else if @step.started_at > 0
             @duration = moment().unix() - @step.started_at
         else
             @duration = 0
+
+        @duration = Math.round(@duration)
 
     toggleExpand: ->
         if @isExpanded
