@@ -18,11 +18,10 @@ from twisted.internet import defer
 
 
 class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+    name = 'debug_services'
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('debug_services')
-        self.master = master
 
         self.debug_port = None
         self.debug_password = None
@@ -34,12 +33,10 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         if new_config.manhole != self.manhole:
             if self.manhole:
                 yield self.manhole.disownServiceParent()
-                self.manhole.master = None
                 self.manhole = None
 
             if new_config.manhole:
                 self.manhole = new_config.manhole
-                self.manhole.master = self.master
                 yield self.manhole.setServiceParent(self)
 
         # chain up
@@ -53,5 +50,4 @@ class DebugServices(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
         # clean up
         if self.manhole:
-            self.manhole.master = None
             self.manhole = None

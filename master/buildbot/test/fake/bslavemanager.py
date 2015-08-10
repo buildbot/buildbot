@@ -19,10 +19,9 @@ from twisted.internet import defer
 
 class FakeBuildslaveManager(service.AsyncMultiService):
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
         self.setName('buildslaves')
-        self.master = master
 
         # BuildslaveRegistration instances keyed by buildslave name
         self.registrations = {}

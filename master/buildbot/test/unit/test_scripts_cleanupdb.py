@@ -104,7 +104,8 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                                                   'buildslaves'])
         master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
-        self.db = DBConnector(master, self.basedir)
+        self.db = DBConnector(self.basedir)
+        self.db.setServiceParent(master)
         self.db.pool = self.db_pool
 
         # we reuse the fake db background data from db.logs unit tests

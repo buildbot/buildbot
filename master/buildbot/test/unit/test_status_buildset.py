@@ -50,7 +50,6 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
             return {"Builder0": builders[0], "Builder1": builders[1], "Builder2": builders[2]}[buildername]
 
         notifier.master_status.getBuilder = fakeGetBuilder
-        notifier.master.db = fakedb.FakeDBConnector(notifier.master, self)
 
         notifier.master.db.insertTestData([
             fakedb.Master(id=92),

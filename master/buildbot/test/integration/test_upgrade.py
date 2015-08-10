@@ -113,7 +113,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
 
         self.master = master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
-        self.db = connector.DBConnector(master, self.basedir)
+        self.db = connector.DBConnector(self.basedir)
+        self.db.setServiceParent(master)
         yield self.db.setup(check_version=False)
 
         querylog.log_from_engine(self.db.pool.engine)
@@ -674,7 +675,8 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
         @d.addCallback
         def make_dbc(_):
             master = fakemaster.make_master()
-            self.db = connector.DBConnector(master, self.basedir)
+            self.db = connector.DBConnector(self.basedir)
+            self.db.setServiceParent(master)
             return self.db.setup(check_version=False)
         # note the connector isn't started, as we're testing upgrades
         return d

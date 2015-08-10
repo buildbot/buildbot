@@ -286,7 +286,7 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
         self.manual_component = manual.CommandlineUserManager(username="user",
                                                               passwd="userpw",
                                                               port="9990")
-        self.manual_component.master = self.master
+        self.manual_component.setServiceParent(self.master)
 
     def test_no_userpass(self):
         d = defer.maybeDeferred(lambda: manual.CommandlineUserManager())

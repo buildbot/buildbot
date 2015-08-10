@@ -64,10 +64,9 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
     # periodic cleanup actions on this schedule.
     CLEANUP_PERIOD = 3600
 
-    def __init__(self, master, basedir):
+    def __init__(self, basedir):
         service.AsyncMultiService.__init__(self)
         self.setName('db')
-        self.master = master
         self.basedir = basedir
 
         # not configured yet - we don't build an engine until the first
@@ -77,6 +76,9 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         # set up components
         self._engine = None  # set up in reconfigService
         self.pool = None  # set up in reconfigService
+
+    def setServiceParent(self, p):
+        d = service.AsyncMultiService.setServiceParent(self, p)
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.changesources = changesources.ChangeSourcesConnectorComponent(self)
@@ -97,6 +99,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                                                    self._doCleanup)
         self.cleanup_timer.setServiceParent(self)
+        return d
 
     def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']

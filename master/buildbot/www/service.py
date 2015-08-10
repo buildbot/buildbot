@@ -36,11 +36,10 @@ from zope.interface import implements
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+    name = 'www'
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('www')
-        self.master = master
 
         self.port = None
         self.port_service = None

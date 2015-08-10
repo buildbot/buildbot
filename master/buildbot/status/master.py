@@ -34,12 +34,8 @@ from zope.interface import implements
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.master = master
-        self.botmaster = master.botmaster
-        self.buildslaves = master.buildslaves
-        self.basedir = master.basedir
         self.watchers = []
         # No default limit to the log size
         self.logMaxSize = None
@@ -51,6 +47,18 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self._buildset_sub = None
         self._build_request_sub = None
         self._change_sub = None
+
+    @property
+    def botmaster(self):
+        return self.master.botmaster
+
+    @property
+    def buildslaves(self):
+        return self.master.buildslaves
+
+    @property
+    def basedir(self):
+        return self.master.basedir
 
     # service management
 
@@ -72,20 +80,9 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # remove the old listeners, then add the new
         for sr in list(self):
-            yield defer.maybeDeferred(lambda:
-                                      sr.disownServiceParent())
-
-            # WebStatus instances tend to "hang around" longer than we'd like -
-            # if there's an ongoing HTTP request, or even a connection held
-            # open by keepalive, then users may still be talking to an old
-            # WebStatus.  So WebStatus objects get to keep their `master`
-            # attribute, but all other status objects lose theirs.  And we want
-            # to test this without importing WebStatus, so we use name
-            if not sr.__class__.__name__.endswith('WebStatus'):
-                sr.master = None
+            yield sr.disownServiceParent()
 
         for sr in new_config.status:
-            sr.master = self.master
             yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing

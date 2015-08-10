@@ -29,13 +29,16 @@ class DBConnectorComponent(object):
 
     def __init__(self, connector):
         self.db = connector
-        self.master = connector.master
 
         # set up caches
         for method in dir(self.__class__):
             o = getattr(self, method)
             if isinstance(o, CachedMethod):
                 setattr(self, method, o.get_cached_method(self))
+
+    @property
+    def master(self):
+        return self.db.master
 
     _isCheckLengthNecessary = None
 

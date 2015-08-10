@@ -97,8 +97,9 @@ def upgradeDatabase(config, master_cfg):
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
-    db = connector.DBConnector(master, basedir=config['basedir'])
-
+    master.db.disownServiceParent()
+    db = connector.DBConnector(basedir=config['basedir'])
+    db.setServiceParent(master)
     yield db.setup(check_version=False, verbose=not config['quiet'])
     yield db.model.upgrade()
     yield db.masters.setAllMastersActiveLongTimeAgo()

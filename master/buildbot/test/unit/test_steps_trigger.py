@@ -106,7 +106,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         m = self.master
         m.db.checkForeignKeys = True
         self.build.builder.botmaster = m.botmaster
-        m.status = master.Status(m)
+        m.status = master.Status()
+        m.status.setServiceParent(m)
         m.config.buildbotURL = "baseurl/"
         m.scheduler_manager = FakeSchedulerManager()
 

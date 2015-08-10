@@ -172,13 +172,14 @@ class FakeMaster(service.MasterService):
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.basedir = 'basedir'
-        self.botmaster = FakeBotMaster(master=self)
-        self.botmaster.parent = self
+        self.botmaster = FakeBotMaster()
+        self.botmaster.setServiceParent(self)
         self.status = FakeStatus()
         self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
-        self.buildslaves = bslavemanager.FakeBuildslaveManager(self)
+        self.buildslaves = bslavemanager.FakeBuildslaveManager()
+        self.buildslaves.setServiceParent(self)
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()
         self.next_objectid = 0
@@ -211,10 +212,12 @@ def make_master(wantMq=False, wantDb=False, wantData=False,
         wantMq = wantDb = True
     if wantMq:
         assert testcase is not None, "need testcase for wantMq"
-        master.mq = fakemq.FakeMQConnector(master, testcase)
+        master.mq = fakemq.FakeMQConnector(testcase)
+        master.mq.setServiceParent(master)
     if wantDb:
         assert testcase is not None, "need testcase for wantDb"
-        master.db = fakedb.FakeDBConnector(master, testcase)
+        master.db = fakedb.FakeDBConnector(testcase)
+        master.db.setServiceParent(master)
     if wantData:
         master.data = fakedata.FakeDataConnector(master, testcase)
     return master

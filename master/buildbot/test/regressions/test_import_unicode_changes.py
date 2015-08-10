@@ -28,7 +28,8 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
         def make_dbc(_):
             master = fakemaster.make_master()
             master.config.db['db_url'] = self.db_url
-            self.db = DBConnector(master, self.basedir)
+            self.db = DBConnector(self.basedir)
+            self.db.setServiceParent(master)
             return self.db.setup(check_version=False)
 
         # note the connector isn't started, as we're testing upgrades

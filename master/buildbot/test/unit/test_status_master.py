@@ -19,6 +19,7 @@ from buildbot.changes import changes
 from buildbot.status import base
 from buildbot.status import master
 from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -30,11 +31,13 @@ class FakeStatusReceiver(base.StatusReceiver):
 class TestStatus(unittest.TestCase):
 
     def makeStatus(self):
-        m = mock.Mock(name='master')
-        self.db = m.db = fakedb.FakeDBConnector(m, self)
+        m = fakemaster.make_master(wantData=True, testcase=self)
+        self.db = m.db
         m.basedir = r'C:\BASEDIR'
         m.botmaster.builderNames = []
-        s = master.Status(m)
+        s = master.Status()
+        s.setServiceParent(m)
+        m.startService()
         return s
 
     def test_getBuildSets(self):
@@ -57,10 +60,7 @@ class TestStatus(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):
-        m = mock.Mock(name='master')
-        status = master.Status(m)
-        status.startService()
-
+        status = self.makeStatus()
         config = mock.Mock()
 
         # add a status reciever
@@ -68,7 +68,7 @@ class TestStatus(unittest.TestCase):
         config.status = [sr0]
 
         yield status.reconfigServiceWithBuildbotConfig(config)
-
+        m = status.master
         self.assertTrue(sr0.running)
         self.assertIdentical(sr0.master, m)
 
@@ -104,7 +104,7 @@ class TestStatus(unittest.TestCase):
     @defer.inlineCallbacks
     def test_change_consumer_cb_nobody_interested(self):
         m = mock.Mock(name='master')
-        status = master.Status(m)
+        status = master.Status()
 
         yield status.change_consumer_cb('change.13.new',
                                         dict(changeid=13))
@@ -138,4 +138,5 @@ class TestStatus(unittest.TestCase):
         self.assertTrue(watcher.changeAdded.called)
         args, kwargs = watcher.changeAdded.call_args
         self.assertEqual(args[0]['m'], status.master)
+        print args
         self.assertEqual(args[0]['c']['changeid'], 13)

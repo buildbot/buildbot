@@ -32,11 +32,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     them."""
 
     debug = 0
+    name = "botmaster"
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName("botmaster")
-        self.master = master
 
         self.builders = {}
         self.builderNames = []

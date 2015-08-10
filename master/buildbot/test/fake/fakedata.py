@@ -17,19 +17,19 @@ from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import json
+from buildbot.util import service
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 
 
-class FakeUpdates(object):
+class FakeUpdates(service.AsyncService):
 
     # unlike "real" update methods, all of the fake methods are here in a
     # single class.
 
-    def __init__(self, master, testcase):
-        self.master = master
+    def __init__(self, testcase):
         self.testcase = testcase
 
         # test cases should assert the values here:
@@ -415,18 +415,21 @@ class FakeUpdates(object):
             masterid=masterid)
 
 
-class FakeDataConnector(object):
+class FakeDataConnector(service.AsyncMultiService):
     # FakeDataConnector delegates to the real DataConnector so it can get all
     # of the proper getter and consumer behavior; it overrides all of the
     # relevant updates with fake methods, though.
 
     def __init__(self, master, testcase):
-        self.master = master
-        self.updates = FakeUpdates(master, testcase)
+        service.AsyncMultiService.__init__(self)
+        self.setServiceParent(master)
+        self.updates = FakeUpdates(testcase)
+        self.updates.setServiceParent(self)
 
         # get, startConsuming, and control are delegated to a real connector,
         # after some additional assertions
-        self.realConnector = connector.DataConnector(master)
+        self.realConnector = connector.DataConnector()
+        self.realConnector.setServiceParent(self)
         self.rtypes = self.realConnector.rtypes
 
     def _scanModule(self, mod):

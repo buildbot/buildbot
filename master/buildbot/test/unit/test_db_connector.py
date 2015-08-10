@@ -40,8 +40,8 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
 
         self.master = fakemaster.make_master()
         self.master.config = config.MasterConfig()
-        self.db = connector.DBConnector(self.master,
-                                        os.path.abspath('basedir'))
+        self.db = connector.DBConnector(os.path.abspath('basedir'))
+        self.db.setServiceParent(self.master)
 
     @defer.inlineCallbacks
     def tearDown(self):

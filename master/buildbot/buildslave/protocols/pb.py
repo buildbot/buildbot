@@ -25,9 +25,8 @@ from twisted.spread import pb
 class Listener(base.Listener):
     name = "pbListener"
 
-    def __init__(self, master):
-        assert master
-        base.Listener.__init__(self, master)
+    def __init__(self):
+        base.Listener.__init__(self)
 
         # username : (password, portstr, PBManager registration)
         self._registrations = {}
