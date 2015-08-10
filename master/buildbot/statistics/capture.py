@@ -344,6 +344,10 @@ class CaptureDataBase(Capture):
             context = self._defaultContext(build_data, builder_info['name'])
             yield self._store(post_data, series_name, context)
 
+    @abc.abstractmethod
+    def _builder_name_matches(self, builder_info):
+        pass
+
 
 class CaptureData(CaptureDataBase):
 
@@ -365,9 +369,6 @@ class CaptureDataAllBuilders(CaptureDataBase):
     """
     Capture methods for arbitraty data that may not be stored in the Buildbot database.
     """
-
-    def __init__(self, data_name, callback=None):
-        CaptureDataBase.__init__(self, data_name, callback)
 
     def _builder_name_matches(self, builder_info):
         return True
