@@ -1121,3 +1121,35 @@ class TestBuildsetsConnectorComponent(
                                                    'results': -1, 'brid': 11}])
 
         return d
+
+    def test_getBuildRequestInQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2"),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=9, complete=1),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1", results=0, complete=1)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1300103810),
+                       fakedb.BuildRequestClaim(brid=4, objectid=self.MASTER_ID, claimed_at=1300103810)]
+
+        def fakeRequest(brid, bsid, results, complete):
+            return {'slavepool': None,
+                    'artifactbrid': None,
+                    'buildername': 'bldr1',
+                    'claimed_at': None,
+                    'results': results,
+                    'mine': False,
+                    'triggeredbybrid': None,
+                    'submitted_at': None,
+                    'claimed': False,
+                    'complete': complete,
+                    'complete_at': None,
+                    'buildsetid': bsid,
+                    'priority': 0,
+                    'mergebrid': None,
+                    'brid': brid,
+                    'startbrid': None}
+
+        d = self.insertTestData(breqs + breqsclaims)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestInQueue(buildername="bldr1"))
+        d.addCallback(lambda queue: self.assertEqual(queue, [fakeRequest(1, 1, -1, False), fakeRequest(3, 3, 9, True)]))
+        return d
