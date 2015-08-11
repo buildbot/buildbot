@@ -205,12 +205,19 @@ class Mercurial(Source):
         return slave_os or slave_env
 
     def _requestReboot(self):
+        command = None
         if self._isWindowsSlave():
+            command = ["shutdown", "/r", "/t", "5", "/c", "Mercurial command: restart requested"]
+
+        elif self.build.slavebuilder.slave.slave_system == 'posix':
+            command = ["sudo", "reboot"]
+
+        if command:
             log.msg("About to reboot slave: " + self.build.slavebuilder.slave.slavename)
             # shutdown graceful so it doesnt pickup new jobs while restarting
             self.build.slavebuilder.slave.slave_status.setGraceful(True)
             cmd = buildstep.RemoteShellCommand(self.workdir,
-                                           ["shutdown", "/r", "/t", "5", "/c", "Mercurial command: restart requested"],
+                                           command,
                                            logEnviron=self.logEnviron,
                                            collectStdout=True)
             cmd.useLog(self.stdio_log, False)
@@ -308,12 +315,28 @@ class Mercurial(Source):
         log.msg(msg)
         yield self._removeAddedFilesAndUpdate(None)
 
+    def checkExpectedFailure(self, cmd, errors):
+        for error in errors:
+            if (error in cmd.stdout) or (error in cmd.stderr):
+                return False
+
+        return True
+
     def _pullUpdate(self, res):
         command = ['pull' , self.repourl]
         if self.revision:
             command.extend(['--rev', self.revision])
-        d = self._dovccmd(command)
-        d.addCallback(self._checkBranchChange)
+
+        errors = ['could not lock repository']
+
+        def checkPull(cmd):
+            if cmd.didFail() and self.checkExpectedFailure(cmd, errors):
+                raise buildstep.BuildStepFailed()
+
+            return cmd.rc
+
+        d = self._dovccmd(command, collectStdout=True, collectStderr=True, evaluateCommandFunc=checkPull)
+        d.addCallback(lambda rc: self._requestReboot() if rc != SUCCESS else self._checkBranchChange(rc))
         return d
 
     def _dovccmd(self, command, collectStdout=False, collectStderr=False, initialStdin=None,
@@ -473,16 +496,10 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             command += ['--rev', self.update_branch]
 
-        def expectedFailure(cmd):
-            recover_from_errors = ['path ends in directory separator: .hglf']
-
-            for error in recover_from_errors:
-                if (error in cmd.stdout) or (error in cmd.stderr):
-                    return False
-            return True
+        errors = ['path ends in directory separator: .hglf']
 
         def checkUpdated(cmd):
-            if cmd.didFail() and expectedFailure(cmd):
+            if cmd.didFail() and self.checkExpectedFailure(cmd, errors):
                 log.msg("Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
 
