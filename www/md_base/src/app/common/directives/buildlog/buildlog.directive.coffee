@@ -24,7 +24,6 @@ class _BuildLog extends Controller
         @$scope.$watch 'log.raw_log', => @bindContents()
         @$scope.$watch 'log.contents.length', => @updateContents()
 
-
     bindContents: ->
 
         # Restore initial state
