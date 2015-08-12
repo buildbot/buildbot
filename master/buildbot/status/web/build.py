@@ -386,7 +386,7 @@ class StatusResourceBuild(HtmlResource):
         (start, end) = b.getTimes()
         cxt['start'] = time.ctime(start)
         cxt['elapsed'] = None
-        if end:
+        if end and start:
             cxt['end'] = time.ctime(end)
             cxt['elapsed'] = util.formatInterval(end - start)
         elif start:
