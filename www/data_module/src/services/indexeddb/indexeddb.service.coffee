@@ -25,18 +25,27 @@ class IndexedDB extends Service
                     .finally => @open().then -> resolve()
 
             get: (url, query = {}) ->
-                [tableName, q, id] = @processUrl(url)
-                angular.extend query, q
+                $q (resolve, reject) =>
+                    [tableName, q, id] = @processUrl(url)
+                    angular.extend query, q
 
-                if not SPECIFICATION[tableName]? then return $q.resolve([])
+                    if not SPECIFICATION[tableName]?
+                        resolve([])
+                        return
 
-                table = @db[tableName]
-                @db.transaction 'r', table, =>
+                    table = @db[tableName]
+                    @db.transaction 'r', table, =>
 
-                    # convert promise to $q implementation
-                    if id? then return $q.resolve table.get(id)
+                        # convert promise to $q implementation
+                        if id?
+                            table.get(id).then (e) ->
+                                for k, v of e
+                                    try
+                                        e[k] = angular.fromJson(v)
+                                    catch error then # ignore
+                                resolve(e)
+                                return
 
-                    $q (resolve, reject) =>
                         table.toArray().then (array) =>
                             array = array.map (e) ->
                                 for k, v of e
