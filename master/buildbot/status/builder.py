@@ -231,7 +231,13 @@ class BuilderStatus(styles.Versioned):
 
             log.msg("Loading builder %s's build %d from on-disk pickle" % (self.name, number))
             with open(filename, "rb") as f:
-                build = load(f)
+                try:
+                    build = load(f)
+                except ImportError as err:
+                    log.msg("ImportError loading builder %s's build %d from disk pickle" % (self.name, number))
+                    log.msg(str(err))
+                    return None
+
             build.setProcessObjects(self, self.master)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
