@@ -207,7 +207,7 @@ A change source is generally configured with information about a source reposito
 This determines the extent of the information that is passed down to the schedulers.
 
 There are many ways a change source can learn about changes; it can periodically poll the repository for changes, or the VCS can be configured (for example through hook scripts triggered by commits) to push changes into the change source.
-While these two methods are probably the most common, they are not the only possibilities; it is possible for example to have a change source detect changes by parsing some email sent to a mailing list when a commit happen, and yet other methods exist.
+While these two methods are probably the most common, they are not the only possibilities; it is possible for example to have a change source detect changes by parsing some email sent to a mailing list when a commit happens, and yet other methods exist.
 The manual again has the details.
 
 To complete our example, here's a change source that polls a SVN repository every 2 minutes::
@@ -263,10 +263,10 @@ Status targets
 
 Now that the basics are in place, let's go back to the builders, which is where the real work happens.
 `Status targets` are simply the means Buildbot uses to inform the world about what's happening, that is, how builders are doing.
-There are many status target: a web interface, a mail notifier, an IRC notifier, and others.
+There are many status targets: a web interface, a mail notifier, an IRC notifier, and others.
 They are described fairly well in the manual.
 
-One thing I've found useful is the ability to pass a domain name as the lookup argument to a ``mailNotifier``, which allows to take an unqualified username as it appears in the SVN change and create a valid email address by appending the given domain name to it::
+One thing I've found useful is the ability to pass a domain name as the lookup argument to a ``mailNotifier``, which allows you to take an unqualified username as it appears in the SVN change and create a valid email address by appending the given domain name to it::
 
     from buildbot.plugins import status
 
