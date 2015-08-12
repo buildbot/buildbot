@@ -52,7 +52,7 @@ config =
                 version: '0.10.1'
                 files: 'angular-moment.js'
             'buildbot-data':
-                version: '~1.0.9'
+                version: '~1.0.10'
                 files: 'dist/buildbot-data.js'
             lodash:
                 version: '~2.4.1'
@@ -75,6 +75,12 @@ config =
             'reconnectingWebsocket':
                 version: 'master'
                 files: ['reconnecting-websocket.js']
+            tabex:
+                version: '*'
+                files: 'dist/tabex.js'
+            dexie:
+                version: '*'
+                files: 'dist/latest/Dexie.js'
 
         testdeps:
             'angular-mocks':
