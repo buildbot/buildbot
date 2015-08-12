@@ -347,6 +347,82 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=["update"])
         return self.runStep()
 
+    def test_pull_fails_hg_recovers(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='fresh', branchType='inrepo'))
+        self.build.slavebuilder.slave.slave_environ = {}
+        self.build.slavebuilder.slave.slave_system = 'posix'
+        self.build.slavebuilder.slave.slavename = 'test-slave'
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                              stdout='abort: could not lock repository /Users/builduser/buildslave/unity/build:'+
+                                     ' Invalid argument')
+            + 255,
+            ExpectShell(workdir='wkdir',
+                        command=['sudo', 'reboot'])
+            + 0
+        )
+        self.expectOutcome(result=RETRY, status_text=['update', 'failed'])
+        return self.runStep()
+
+    def test_pull_fails(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='fresh', branchType='inrepo'))
+        self.build.slavebuilder.slave.slave_environ = {}
+        self.build.slavebuilder.slave.slave_system = 'posix'
+        self.build.slavebuilder.slave.slavename = 'test-slave'
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                              stdout='abort: error: Name or service not known')
+            + 255
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
+
     def test_update_failed_hg_recovers(self):
         self.setupStep(
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
