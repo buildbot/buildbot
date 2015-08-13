@@ -95,7 +95,7 @@ Open up the config again and introduce a syntax error by removing the first sing
 
 .. code-block:: none
 
-  c[title'] = "Pyflakes"
+  c[title'] = "Pyflakes
   c[titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
 This creates a Python ``SyntaxError``.
