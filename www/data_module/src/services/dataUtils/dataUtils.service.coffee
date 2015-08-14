@@ -1,48 +1,52 @@
 class DataUtils extends Service
-    constructor: ->
-        return new class DataUtils
-            constructor: ->
 
-            # capitalize first word
-            capitalize: (w) ->
-                w[0].toUpperCase() + w[1..-1].toLowerCase()
+    # capitalize first word
+    capitalize: (string) ->
+        string[0].toUpperCase() + string[1..].toLowerCase()
 
-            # returns the type of the endpoint
-            type: (e) ->
-                splitted = e.split('/')
-                while true
-                    name = splitted.pop()
-                    parsed = parseInt(name)
-                    break if splitted.length is 0 or not (angular.isNumber(parsed) and not isNaN(parsed))
-                return name
+    # returns the type of the endpoint
+    type: (arg) ->
+        a = @copyOrSplit(arg)
+        a = a.filter (e) -> e isnt '*'
+        # if the argument count is even, the last argument is an id
+        if a.length % 2 is 0 then a.pop()
+        a.pop()
 
-            # singularize the type name
-            singularType: (e) ->
-                @type(e).replace(/s$/, '')
+    # singularize the type name
+    singularType: (arg) ->
+        @type(arg).replace(/s$/, '')
 
-            # id of the type
-            classId: (e) ->
-                 @singularType(e) + 'id'
+    socketPath: (arg) ->
+        a = @copyOrSplit(arg)
+        # if the argument count is even, the last argument is an id
+        stars = ['*']
+        # is it odd?
+        if a.length % 2 is 1 then stars.push('*')
+        a.concat(stars).join('/')
 
-            # capitalized type name
-            className: (e) ->
-                @capitalize(@singularType(e))
+    restPath: (arg) ->
+        a = @copyOrSplit(arg)
+        a = a.filter (e) -> e isnt '*'
+        a.join('/')
 
-            socketPath: (args) ->
-                # if the argument count is even, the last argument is an id
-                stars = ['*']
-                # is it odd?
-                if args.length % 2 is 1
-                    stars.push('*')
-                args.concat(stars).join('/')
+    endpointPath: (arg) ->
+        # if the argument count is even, the last argument is an id
+        a = @copyOrSplit(arg)
+        a = a.filter (e) -> e isnt '*'
+        # is it even?
+        if a.length % 2 is 0 then a.pop()
+        a.join('/')
 
-            restPath: (args) ->
-                args.slice().join('/')
+    copyOrSplit: (arrayOrString) ->
+        if angular.isArray(arrayOrString)
+            # return a copy
+            arrayOrString[..]
+        else if angular.isString(arrayOrString)
+            # split the string to get an array
+            arrayOrString.split('/')
+        else
+            throw new TypeError("Parameter 'arrayOrString' must be a array or a string, not #{typeof arrayOrString}")
 
-            endpointPath: (args) ->
-                # if the argument count is even, the last argument is an id
-                argsCopy = args.slice()
-                # is it even?
-                if argsCopy.length % 2 is 0
-                    argsCopy.pop()
-                argsCopy.join('/')
+    unWrap: (data, path) ->
+        type = @type(path)
+        data[type]
