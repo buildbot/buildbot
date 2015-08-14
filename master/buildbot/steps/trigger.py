@@ -19,7 +19,7 @@ from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status.results import DEPENDENCY_FAILURE, RETRY
+from buildbot.status.results import DEPENDENCY_FAILURE, RETRY, WARNINGS, SKIPPED, CANCELED
 from twisted.python.failure import Failure
 from buildbot.schedulers.triggerable import TriggerableSchedulerStopped
 from buildbot.steps.resumebuild import ResumeBuild
@@ -139,7 +139,7 @@ class Trigger(ResumeBuild):
             self.finished(result)
 
     def checkDisconection(self, result, results):
-        if isinstance(results, Failure) and results.check(TriggerableSchedulerStopped):
+        if (isinstance(results, Failure) and results.check(TriggerableSchedulerStopped)) or results == RETRY:
             result = RETRY
             self.addErrorResult(results)
         return result
@@ -206,7 +206,7 @@ class Trigger(ResumeBuild):
             result = self.checkDisconection(result, results)
 
         else:
-            result = SUCCESS
+            result = results if results in (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED) else SUCCESS
 
         if brids:
             master = self.build.builder.botmaster.parent
