@@ -52,6 +52,7 @@ class FakeBuildslaveManager(service.AsyncMultiService):
         assert buildslaveName not in self.connections
         self.connections[buildslaveName] = conn
         conn.info = {}
+
         def remove():
             del self.connections[buildslaveName]
         return defer.succeed(True)

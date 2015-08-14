@@ -16,8 +16,8 @@
 import os
 
 from buildbot.buildslave.base import BuildSlave
-from twisted.internet import defer
 from buildbot.config import error
+from twisted.internet import defer
 
 
 class LocalBuildSlave(BuildSlave):
