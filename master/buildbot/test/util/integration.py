@@ -29,7 +29,6 @@ from buildbot.status.results import SUCCESS
 from buildbot.status.results import statusToString
 from buildbot.test.util import dirs
 from buildslave.bot import BuildSlave
-from buildslave.bot import LocalBuildSlave
 
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
@@ -55,22 +54,25 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
         self.configfile = os.path.join(self.basedir, 'master.cfg')
+        slaveclass = "BuildSlave"
         if self.proto == 'pb':
             proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
         elif self.proto == 'null':
             proto = '{"null": {}}'
+            slaveclass = "LocalBuildSlave"
         # We create a master.cfg, which loads the configuration from the
         # test module. Only the slave config is kept there, as it should not
         # be changed
         open(self.configfile, "w").write(textwrap.dedent("""
-            from buildbot.buildslave import BuildSlave
-            from %s import %s
-            c = BuildmasterConfig = %s()
-            c['slaves'] = [BuildSlave("local1", "localpw")]
-            c['protocols'] = %s
-            """ % (self.__class__.__module__,
-                   configFunc, configFunc,
-                   proto)))
+            from buildbot.plugins import buildslave
+            from {module} import {configFunc}
+            c = BuildmasterConfig = {configFunc}()
+            c['slaves'] = [buildslave.{slaveclass}("local1", "localpw")]
+            c['protocols'] = {proto}
+            """).format(module=self.__class__.__module__,
+                        configFunc=configFunc,
+                        proto=proto,
+                        slaveclass=slaveclass))
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         self.master = m
@@ -100,8 +102,9 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             # along with the master
             s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
         elif self.proto == 'null':
-            s = LocalBuildSlave("local1", self.basedir, False)
-        s.setServiceParent(m)
+            s = None
+        if s is not None:
+            s.setServiceParent(m)
 
     def setUp(self):
         if self.testCasesHandleTheirSetup:

@@ -27,6 +27,8 @@ class LocalBuildSlave(BuildSlaveBase):
         yield BuildSlaveBase.startService(self)
         self.slavename = self.name
         conn = Connection(self.parent, self)
-        res = yield self.parent.buildslaves.newConnection(conn, self.name)
+        # I don't have a master property, but my parent has.
+        master = self.parent.master
+        res = yield master.buildslaves.newConnection(conn, self.name)
         if res:
-            yield self.parent.buildslaves.slaves[self.name].attached(conn)
+            yield self.parent.attached(conn)

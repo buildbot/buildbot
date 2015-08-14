@@ -235,7 +235,8 @@ setup_args = {
             ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
             ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
             ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave'])
+            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave']),
+            ('buildbot.buildslave.local', ['LocalBuildSlave']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
@@ -386,7 +387,7 @@ except ImportError:
 else:
     # dependencies
     setup_args['install_requires'] = [
-        'twisted >= 11.0.0, <= 15.0.0',
+        'twisted >= 11.0.0',
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'future'
