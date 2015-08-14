@@ -186,7 +186,8 @@ The log output should contain a line like this:
 
 .. code-block:: none
 
-  2009-08-01 15:35:20+0200 [-] adding IStatusReceiver <buildbot.status.words.IRC instance at 0x300d290>
+  2015-08-14 20:00:33+0000 [-] Starting factory <buildbot.status.words.IrcStatusFactory instance at 0x7fee15c640e0>
+  2015-08-14 20:00:48+0000 [IrcStatusBot,client] <buildbot.status.words.IrcStatusBot instance at 0x7fee1653f1b8>: I have joined #buildbot-test
 
 You should see the bot now joining in your IRC client.
 In your IRC channel, type:
