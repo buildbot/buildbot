@@ -44,6 +44,10 @@ class ResumeBuild(LoggingBuildStep):
 
         LoggingBuildStep.finished(self, results)
 
+    def start(self):
+        self.finished(SUCCESS)
+        return
+
 
 class ShellCommandResumeBuild(ShellCommand):
     name = "Resume Build"
