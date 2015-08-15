@@ -17,20 +17,20 @@ import re
 import sys
 import warnings
 
-from types import MethodType
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
+from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
-from buildbot.util import identifiers as util_identifiers
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
 from twisted.python import failure
 from twisted.python import log
+from types import MethodType
 
 
 class ConfigErrors(Exception):

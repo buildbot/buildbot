@@ -142,7 +142,7 @@ class WampMQ(unittest.TestCase):
 class FakeConfig(object):
     mq = dict(type='wamp', router_url="wss://foo", realm="buildbot",
               debug_websockets=False,  # set if connection looks bad
-              debug_lowlevel=True,  # set if protocol looks bad
+              debug_lowlevel=False,  # set if protocol looks bad
               )
 
 
