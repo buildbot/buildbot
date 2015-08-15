@@ -617,6 +617,139 @@ Several methods are added to each "restangularized" objects, aside from get(), p
     Call the control data api.
     This builds up a POST with jsonapi encoded parameters
 
+DataService
+.............
+
+DataService is the future replacement of BuildbotService for accessing the Buildbot data API.
+It has a modern interface for accessing data. It uses IndexedDB for storing cached data as a single data store,
+and LocalStorage for broadcasting events between browser tabs. DataService works in a master/slave architecture.
+The master browser tab is responsible for keeping the requested data up to date in the IndexedDB and notify slaves when a data is ready to be used or it is updated.
+It handles both the Rest API calls and the WebSocket subscriptions globally.
+
+It uses the following libraries:
+
+* Dexie.js (https://github.com/dfahlander/Dexie.js) - Minimalistic IndexedDB API with bulletproof transactions
+* Tabex (https://github.com/nodeca/tabex) - Master election and in browser message bus
+
+The DataService is available as a standalone AngularJS module.
+Installation via bower:
+
+  .. code-block:: none
+
+      bower install buildbot-data --save
+
+Inject the ``bbData`` module to your application:
+
+  .. code-block:: javascript
+
+      angular.module('myApp', ['bbData'])
+
+Methods:
+
+* ``.get(endpoint, [id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+
+  * call .getArray() on the returned promise to get the updating Collection before it's filled with the initial data
+
+  .. code-block:: coffeescript
+
+      # assign builds to $scope.builds once the Collection is filled
+      dataService.get('builds', builderid: 1).then (builds) ->
+          $scope.builds = builds
+          # load steps for every build
+          builds.forEach (b) -> b.loadSteps()
+
+      # assign builds to $scope.builds before the Collection is filled using the .getArray() function
+      $scope.builds = dataService.get('builds', builderid: 1).getArray()
+
+* ``.getXXX([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+
+  * it's higly advised to use these instead of the ``.get('string')`` function
+  * XXX can be the following: Builds, Builders, Buildrequests, Buildsets, Buildslaves, Changes, Changesources, Forceschedulers, Masters, Schedulers, Sourcestamps
+  * call .getArray() on the returned promise to get the updating Collection before it's filled with the initial data
+
+  .. code-block:: coffeescript
+
+      # assign builds to $scope.builds once the Collection is filled
+      dataService.getBuilds(builderid: 1).then (builds) ->
+          $scope.builds = builds
+          # load steps for every build
+          builds.forEach (b) -> b.loadSteps()
+
+      # assign builds to $scope.builds before the Collection is filled using the .getArray() function
+      $scope.builds = dataService.getBuilds(builderid: 1).getArray()
+
+* ``.open(scope)``: returns a DataAccessor, handles bindings, open a new accessor every time you need updating data in a controller
+
+  .. code-block:: coffeescript
+
+      # open a new accessor every time you need updating data in a controller
+      class DemoController extends Controller
+          constructor: ($scope, dataService) ->
+              # automatically closes all the bindings when the $scope is destroyed
+              opened = dataService.open($scope)
+              # alternative syntax:
+              #   opened = dataService.open()
+              #   opened.closeOnDestroy($scope)
+              # closing it manually is also possible:
+              #   opened.close()
+
+              # request new data, it updates automatically
+              @builders = opened.getBuilders(limit: 10, order: '-started_at').getArray()
+
+* ``.control(url, method, [params])``: returns a promise, sends a JSON RPC2 POST request to the server
+
+  .. code-block:: coffeescript
+
+      # open a new accessor every time you need updating data in a controller
+      dataService.control('Forceschedulers/force', 'force').then (response) ->
+          $log.debug(response)
+      , (reason) ->
+          $log.error(reason)
+
+* ``.clearCache()``: clears the IndexedDB tables and reloads the current page
+
+  .. code-block:: coffeescript
+
+      class DemoController extends Controller
+          constructor: (@dataService) ->
+          onClick: -> @dataService.clearCache()
+
+Methods on the Wrapper classes:
+
+* ``.getXXX([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+
+  * same as dataService.getXXX, but with relative endpoint
+
+  .. code-block:: coffeescript
+
+      # assign builds to $scope.builds once the Collection is filled
+      dataService.getBuilds(builderid: 1).then (builds) ->
+          $scope.builds = builds
+          # get steps for every build
+          builds.forEach (b) ->
+              b.getSteps().then (steps) ->
+                  # assign completed test to every build
+                  b.complete_steps = steps.map (s) -> s.complete
+
+* ``.loadXXX([id], [query])``: returns a promise<Collection>, the Collection contains all the requested data, it is also assigned to wrapperInstance.xxx
+
+  .. code-block:: coffeescript
+
+      $q (resolve) ->
+          # get builder with id = 1
+          dataService.getBuilders(1).then (builders) ->
+              builders.forEach (builder) ->
+                  # load all builds
+                  builder.loadBuilds().then (builds) ->
+                      builds.forEach (build) ->
+                          # load all buildsteps
+                          build.loadSteps().then -> resolve(builders[0])
+      .then (builder) ->
+          # builder has a builds field, and the builds have a steps field containing the corresponding data
+          $log.debug(builder)
+
+* ``.control(method, params)``: returns a promise, sends a JSON RPC2 POST request to the server
+
 RecentStorage
 .............
 

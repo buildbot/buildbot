@@ -26,59 +26,49 @@ class IndexedDB extends Service
 
             get: (url, query = {}) ->
                 $q (resolve, reject) =>
-                    [tableName, q, id] = @processUrl(url)
-                    angular.extend query, q
+                    @processUrl(url).then ([tableName, q, id]) =>
+                        angular.extend query, q
 
-                    if not SPECIFICATION[tableName]?
-                        resolve([])
-                        return
+                        if not SPECIFICATION[tableName]?
+                            resolve([])
+                            return
 
-                    table = @db[tableName]
-                    @db.transaction 'r', table, =>
+                        table = @db[tableName]
+                        @db.transaction 'r', table, =>
 
-                        # convert promise to $q implementation
-                        if id?
-                            table.get(id).then (e) ->
-                                for k, v of e
-                                    try
-                                        e[k] = angular.fromJson(v)
-                                    catch error then # ignore
-                                resolve(e)
+                            # convert promise to $q implementation
+                            if id?
+                                table.get(id).then (e) => resolve dataUtilsService.parse(e)
                                 return
 
-                        table.toArray().then (array) =>
-                            array = array.map (e) ->
-                                for k, v of e
-                                    try
-                                        e[k] = angular.fromJson(v)
-                                    catch error then # ignore
-                                return e
+                            table.toArray().then (array) =>
+                                array = array.map (e) => dataUtilsService.parse(e)
 
-                            # 1. filtering
-                            filters = []
-                            for fieldAndOperator, value of query
-                                if ['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0
-                                    filters[fieldAndOperator] = value
-                            array = @filter(array, filters, tableName)
+                                # 1. filtering
+                                filters = []
+                                for fieldAndOperator, value of query
+                                    if ['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0
+                                        filters[fieldAndOperator] = value
+                                array = @filter(array, filters, tableName)
 
-                            # 2. sorting
-                            order = query?.order
-                            array = @sort(array, order)
+                                # 2. sorting
+                                order = query?.order
+                                array = @sort(array, order)
 
-                            # 3. pagination
-                            offset = query?.offset
-                            limit = query?.limit
-                            array = @paginate(array, offset, limit)
+                                # 3. pagination
+                                offset = query?.offset
+                                limit = query?.limit
+                                array = @paginate(array, offset, limit)
 
-                            # TODO 4. properties
-                            property = query?.property
-                            array = @properties(array, property)
+                                # TODO 4. properties
+                                property = query?.property
+                                array = @properties(array, property)
 
-                            # 5. fields
-                            fields = query?.field
-                            array = @fields(array, fields)
+                                # 5. fields
+                                fields = query?.field
+                                array = @fields(array, fields)
 
-                            resolve(array)
+                                resolve(array)
 
             filter: (array, filters, tableName) ->
                 array.filter (v) ->
@@ -92,18 +82,7 @@ class IndexedDB extends Service
                             when 'le' then cmp = v[field] <= value
                             when 'gt' then cmp = v[field] >  value
                             when 'ge' then cmp = v[field] >= value
-                            else
-                                # TODO unhandled cases: masters, forceschedulers
-                                # eventually the SPECIFICATION must contain these
-                                switch tableName
-                                    when 'buildslaves'
-                                        if field in ['builderid', 'masterid']
-                                            for i in v['configured_on']
-                                                cmp = i[field] is value
-                                                if cmp then break
-                                    when 'forceschedulers' then cmp = true
-                                    when 'masters' then cmp = true
-                                    else cmp = v[field] == value
+                            else cmp = v[field] == value or (angular.isArray(v[field]) and value in v[field])
                         if !cmp then return false
                     return true
 
@@ -161,59 +140,61 @@ class IndexedDB extends Service
 
                 return array
 
-            numberOrString: (str = null) ->
-                # if already a number
-                if angular.isNumber(str) then return str
-                # else parse string to integer
-                number = parseInt str, 10
-                if !isNaN(number) then number else str
-
             processUrl: (url) ->
-                [root, id, path...] = url.split('/')
-                specification = SPECIFICATION[root]
-                query = {}
-                if path.length == 0
-                    id = @numberOrString(id)
-                    if angular.isString(id) and specification.identifier
-                        query[specification.identifier] = id
-                        id = null
-                    return [root, query, id]
+                $q (resolve, reject) =>
+                    [root, id, path...] = url.split('/')
+                    specification = SPECIFICATION[root]
+                    query = {}
+                    if path.length == 0
+                        id = dataUtilsService.numberOrString(id)
+                        if angular.isString(id) and specification.identifier
+                            query[specification.identifier] = id
+                            id = null
+                        resolve [root, query, id]
+                        return
 
-                pathString = path.join('/')
-                match = specification.paths.filter (p) ->
-                    replaced = p
-                        .replace ///#{SPECIFICATION.FIELDTYPES.IDENTIFIER}\:\w+///g, '[a-zA-Z]+'
-                        .replace ///#{SPECIFICATION.FIELDTYPES.NUMBER}\:\w+///g, '\\d+'
-                    ///^#{replaced}$///.test(pathString)
-                .pop()
-                if not match?
-                    throw new Error("No child path (#{path.join('/')}) found for root (#{root})")
+                    pathString = path.join('/')
+                    match = specification.paths.filter (p) ->
+                        replaced = p
+                            .replace ///#{SPECIFICATION.FIELDTYPES.IDENTIFIER}\:\w+///g, '[a-zA-Z]+'
+                            .replace ///#{SPECIFICATION.FIELDTYPES.NUMBER}\:\w+///g, '\\d+'
+                        ///^#{replaced}$///.test(pathString)
+                    .pop()
+                    if not match?
+                        throw new Error("No child path (#{path.join('/')}) found for root (#{root})")
 
-                match = match.split('/')
+                    match = match.split('/')
 
-                if path.length % 2 is 0
-                    fieldValue = @numberOrString path.pop()
-                    [fieldType, fieldName] = match.pop().split(':')
-                tableName = path.pop()
-                match.pop()
-                parentFieldValue = @numberOrString(path.pop() or id)
-                parentFieldName = match.pop()?.split(':').pop() or SPECIFICATION[root].id
+                    if path.length % 2 is 0
+                        fieldValue = dataUtilsService.numberOrString path.pop()
+                        [fieldType, fieldName] = match.pop().split(':')
+                    tableName = path.pop()
+                    match.pop()
+                    parentFieldValue = dataUtilsService.numberOrString(path.pop() or id)
+                    parentFieldName = match.pop()?.split(':').pop() or SPECIFICATION[root].id
+                    parentName = match.pop() or root
+                    parentId = SPECIFICATION[parentName].id
 
-                if fieldName is SPECIFICATION[tableName]?.id
-                    id = fieldValue
-                else
-                    query[parentFieldName] = parentFieldValue
-                    if fieldName? then query[fieldName] = fieldValue
-                    id = null
-
-                return [tableName, query, id]
+                    if fieldName is SPECIFICATION[tableName]?.id
+                        id = fieldValue
+                        resolve [tableName, query, id]
+                    else
+                        if parentFieldName isnt parentId
+                            @get(url.split('/')[...-2].join('/')).then (array) ->
+                                query[parentId] = array[0][parentId]
+                                if fieldName? then query[fieldName] = fieldValue
+                                resolve [tableName, query, null]
+                        else
+                            query[parentFieldName] = parentFieldValue
+                            if fieldName? then query[fieldName] = fieldValue
+                            resolve [tableName, query, null]
 
             processSpecification: (specification) ->
                 # IndexedDB tables
                 stores = {}
                 for name, s of specification
                     if angular.isArray(s.fields)
-                        a = s.fields[..]
+                        a = s.fields.map (e) -> e.split(':')[0]
                         i = a.indexOf(s.id)
                         if i > -1 then a[i] = "&#{a[i]}"
                         else a.unshift('++id')

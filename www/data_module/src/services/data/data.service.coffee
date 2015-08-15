@@ -2,8 +2,7 @@ class Data extends Provider
     cache: true
     config = null
     constructor: ->
-        config =
-            cache: @cache
+        config = cache: @cache
 
     ### @ngInject ###
     $get: ($log, $injector, $q, $window, Collection, restService, dataUtilsService, tabexService, indexedDBService, SPECIFICATION) ->

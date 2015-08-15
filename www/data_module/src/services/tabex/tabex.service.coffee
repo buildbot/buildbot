@@ -141,15 +141,32 @@ class Tabex extends Service
                             return
 
                     restPath = dataUtilsService.restPath(path)
+                    [parentName, parentId] = @getParent(restPath)
+                    parentIdName = SPECIFICATION[parentName]?.id
                     restService.get(restPath, query).then (data) =>
                         type = dataUtilsService.type(restPath)
                         data = dataUtilsService.unWrap(data, type)
                         db.transaction 'rw', db[type], ->
                             if not angular.isArray(data) then data = [data]
-                            for i in data then for k, v of i
-                                if angular.isObject(i[k])
-                                    i[k] = angular.toJson(v)
-                                db[type].put(i)
+                            data.forEach (i) ->
+                                idName = SPECIFICATION[type]?.id
+                                id = i[idName]
+                                put = ->
+                                    if parentIdName? then i[parentIdName] ?= [parentId]
+                                    for k, v of i
+                                        if angular.isObject(i[k])
+                                            i[k] = angular.toJson(v)
+                                    db[type].put(i)
+                                if id?
+                                    db[type].get(id).then (e) ->
+                                        e = dataUtilsService.parse(e)
+                                        if e? and parentIdName? and angular.isArray(e[parentIdName])
+                                            if parentId not in e[parentIdName]
+                                                i[parentIdName] = e[parentIdName].concat(parentId)
+                                            else i[parentIdName] = e[parentIdName]
+                                    .finally -> put()
+                                else put()
+
                         .then ->
                             db.transaction 'rw', db.paths, ->
                                 db.paths.put(tracking)
@@ -162,6 +179,14 @@ class Tabex extends Service
                     @emit path, query, EVENTS.READY
                 , (error) =>
                     $log.error(error)
+
+            getParent: (restPath) ->
+                path = restPath.split('/')
+                if path % 2 == 0 then path.pop()
+                path.pop()
+                id = dataUtilsService.numberOrString path.pop()
+                name = path.pop()
+                return [name, id]
 
             activatePaths: ->
                 paths = angular.copy(@trackedPaths)
