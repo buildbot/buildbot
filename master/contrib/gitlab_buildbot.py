@@ -205,8 +205,8 @@ def select_builders(git, project_id, mr_id, try_user, try_pass, try_server, proj
     builder_regex = '%s.*%s' % (project, ubranch)
     try:
         builders_str = subprocess.check_output(
-           "buildbot try -c pb --username=%s --passwd=%s -m %s --get-builder-names | grep -w '%s'" % (
-        try_user, try_pass, try_server, builder_regex), shell=True)
+            "buildbot try -c pb --username=%s --passwd=%s -m %s --get-builder-names | grep -w '%s'" % (
+                try_user, try_pass, try_server, builder_regex), shell=True)
     except:
         msg = "Sorry, can't run try build, there seem to be no try builders whose name matches grep -w %s" % builder_regex
         git.addcommenttomergerequest(project_id, mr_id, msg)
