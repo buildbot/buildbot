@@ -30,8 +30,8 @@ import json
 class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     NAMESPACE = u"org.buildbot.mq"
 
-    def __init__(self, master):
-        base.MQBase.__init__(self, master)
+    def __init__(self):
+        base.MQBase.__init__(self)
 
     def produce(self, routingKey, data):
         d = self._produce(routingKey, data)
@@ -42,11 +42,14 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
         ifNone = lambda v, default: default if v is None else v
         return cls.NAMESPACE + u"." + u".".join([ifNone(key, "") for key in routingKey])
 
+    @classmethod
+    def routingKeyFromMessageTopic(cls, topic):
+        return tuple(topic[len(WampMQ.NAMESPACE) + 1:].split("."))
+
     def _produce(self, routingKey, data):
         _data = json.loads(json.dumps(data, default=toJson))
         options = PublishOptions(exclude_me=False)
-        return self.master.wamp.publish(self.messageTopic(routingKey),
-                                        dict(topic=routingKey, data=_data), options=options)
+        return self.master.wamp.publish(self.messageTopic(routingKey), _data, options=options)
 
     def startConsuming(self, callback, _filter, persistent_name=None):
         if persistent_name is not None:
@@ -71,18 +74,23 @@ class QueueRef(base.QueueRef):
     def subscribe(self, service, _filter):
         self.filter = _filter
         self.emulated = False
+        options = dict(details_arg='details')
         if None in _filter:
-            options = SubscribeOptions(match=u"wildcard")
-        else:
-            options = None
+            options["match"] = u"wildcard"
+        options = SubscribeOptions(**options)
         _filter = WampMQ.messageTopic(_filter)
         self.unreg = yield service.subscribe(self.invoke, _filter, options=options)
         if self.callback is None:
             yield self.stopConsuming()
 
-    def invoke(self, msg):
-        # json will transform tuple into list, so we must convert it back to tuple
-        return base.QueueRef.invoke(self, tuple(msg[u'topic']), msg[u'data'])
+    def invoke(self, msg, details):
+        if details.topic is not None:
+            # in the case of a wildcard, wamp router sends the topic
+            topic = WampMQ.routingKeyFromMessageTopic(details.topic)
+        else:
+            # in the case of an exact match, then we can use our own topic
+            topic = self.filter
+        return base.QueueRef.invoke(self, topic, msg)
 
     @defer.inlineCallbacks
     def stopConsuming(self):

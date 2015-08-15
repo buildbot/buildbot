@@ -34,11 +34,12 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
         self.config = config
+        self.leaving = False
         self.setServiceParent(config.extra['parent'])
 
     @defer.inlineCallbacks
     def onJoin(self, details):
-        log.msg("Wamp connection suceed!")
+        log.msg("Wamp connection succeed!")
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
@@ -48,6 +49,9 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def onLeave(self, details):
+        if self.leaving:
+            return
+
         # XXX We don't handle crossbar reboot, or any other disconnection well.
         # this is a tricky problem, as we would have to reconnect with expononential backoff
         # re-subscribe to subscriptions, queue messages until reconnection.
@@ -74,11 +78,10 @@ def make(config):
 
 class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     serviceClass = Service
+    name = "wamp"
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('wamp')
-        self.master = master
         self.app = self.router_url = None
         self.serviceDeferred = defer.Deferred()
         self.service = None
@@ -93,6 +96,12 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
             d.callback(service)
             return service
         return d
+
+    def stopService(self):
+        if self.service is not None:
+            self.service.leaving = True
+
+        service.AsyncMultiService.stopService(self)
 
     @defer.inlineCallbacks
     def publish(self, topic, data, options=None):

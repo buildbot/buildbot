@@ -15,15 +15,11 @@
 
 import mock
 
+from buildbot.test.fake import fakemaster
 from buildbot.util import service
 from buildbot.wamp import connector
 from twisted.internet import defer
 from twisted.trial import unittest
-
-
-class FakeMaster(service.AsyncMultiService):
-    name = "master"
-    masterid = 1
 
 
 class FakeConfig(object):
@@ -58,8 +54,9 @@ class WampConnector(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
-        master = FakeMaster()
-        self.connector = TestedWampConnector(master)
+        master = fakemaster.make_master()
+        self.connector = TestedWampConnector()
+        self.connector.setServiceParent(master)
         yield master.startService()
         yield self.connector.reconfigServiceWithBuildbotConfig(FakeConfig())
 
@@ -68,7 +65,8 @@ class WampConnector(unittest.TestCase):
         d = self.connector.getService()
         self.connector.app.gotConnection()
         yield d
-        self.connector.service.publish.assert_called_with("org.buildbot.1.connected")
+        # 824 is the hardcoded masterid of fakemaster
+        self.connector.service.publish.assert_called_with("org.buildbot.824.connected")
 
     @defer.inlineCallbacks
     def test_subscribe(self):

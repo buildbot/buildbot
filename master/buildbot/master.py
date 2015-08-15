@@ -157,7 +157,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.db = dbconnector.DBConnector(self.basedir)
         self.db.setServiceParent(self)
 
-        self.wamp = wampconnector.WampConnector(self)
+        self.wamp = wampconnector.WampConnector()
         self.wamp.setServiceParent(self)
 
         self.mq = mqconnector.MQConnector()
