@@ -15,7 +15,7 @@ class _BuildLog extends Controller
     contents: []
     contentsLength: 0
 
-    constructor: (@$scope, @$element) ->
+    constructor: (@$scope, @$element, @$sanitize) ->
         # Using directly DOM maniplution instead of ng-repeat to improve page performance
         @codeTable = angular.element('<table></table>')
         @$element.append(@codeTable)
@@ -41,7 +41,7 @@ class _BuildLog extends Controller
         @codeTable.append """
         <tr>
             <td class="lineno no-select">#{lineno}</td>
-            <td class="code"><span>#{line}</span></td>
+            <td class="code"><span>#{@$sanitize(line)}</span></td>
         </tr>
         """
 
