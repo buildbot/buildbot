@@ -50,24 +50,11 @@ class MasterShellCommand(BuildStep):
     flunkOnFailure = True
 
     def __init__(self, command,
-                 description=None, descriptionDone=None, descriptionSuffix=None,
                  env=None, path=None, usePTY=0, interruptSignal="KILL",
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
 
         self.command = command
-        if description:
-            self.description = description
-        if isinstance(self.description, str):
-            self.description = [self.description]
-        if descriptionDone:
-            self.descriptionDone = descriptionDone
-        if isinstance(self.descriptionDone, str):
-            self.descriptionDone = [self.descriptionDone]
-        if descriptionSuffix:
-            self.descriptionSuffix = descriptionSuffix
-        if isinstance(self.descriptionSuffix, str):
-            self.descriptionSuffix = [self.descriptionSuffix]
         self.env = env
         self.path = path
         self.usePTY = usePTY

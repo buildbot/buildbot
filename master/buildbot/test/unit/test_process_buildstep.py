@@ -276,9 +276,18 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(step.describe(), description)
         self.assertEqual(step.describe(done=True), descriptionDone)
 
-        step2 = buildstep.BuildStep()
-        self.assertEqual(step2.describe(), [step2.name])
-        self.assertEqual(step2.describe(done=True), [step2.name])
+    def test_describe_empty(self):
+        description = 'oogaBooga'
+        descriptionDone = 'oogaBooga done!'
+        step = buildstep.BuildStep(description=description,
+                                   descriptionDone=descriptionDone)
+        self.assertEqual(step.describe(), [description])
+        self.assertEqual(step.describe(done=True), [descriptionDone])
+
+    def test_describe_str(self):
+        step = buildstep.BuildStep()
+        self.assertEqual(step.describe(), [step.name])
+        self.assertEqual(step.describe(done=True), [step.name])
 
     def test_describe_suffix(self):
         description = ['oogaBooga']
@@ -805,7 +814,7 @@ class TestShellMixin(steps.BuildStepMixin,
         # BuildStep arg
         self.assertEqual(MySubclass().description, None)
         self.assertEqual(MySubclass(description='charming').description,
-                         'charming')
+                         ['charming'])
 
     @defer.inlineCallbacks
     def test_example(self):
