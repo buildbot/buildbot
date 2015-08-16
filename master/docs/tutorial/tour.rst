@@ -95,7 +95,7 @@ Open up the config again and introduce a syntax error by removing the first sing
 
 .. code-block:: none
 
-  c[title'] = "Pyflakes"
+  c[title'] = "Pyflakes
   c[titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
 
 This creates a Python ``SyntaxError``.
@@ -109,27 +109,28 @@ This time, the output looks like:
 
 .. code-block:: none
 
-    2011-12-04 10:12:28-0600 [-] loading configuration from /home/dustin/tmp/buildbot/master/master.cfg
-    2011-12-04 10:12:28-0600 [-] configuration update started
-    2011-12-04 10:12:28-0600 [-] error while parsing config file
-    2011-12-04 10:12:28-0600 [-] Unhandled Error
-            Traceback (most recent call last):
-            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/buildbot-0.8.5-py2.7.egg/buildbot/master.py", line 197, in loadTheConfigFile
-                d = self.loadConfig(f)
-            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/buildbot-0.8.5-py2.7.egg/buildbot/master.py", line 579, in loadConfig
-                d.addCallback(do_load)
-            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/Twisted-11.1.0-py2.7-linux-x86_64.egg/twisted/internet/defer.py", line 298, in addCallback
-                callbackKeywords=kw)
-            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/Twisted-11.1.0-py2.7-linux-x86_64.egg/twisted/internet/defer.py", line 287, in addCallbacks
-                self._runCallbacks()
-            --- <exception caught here> ---
-            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/Twisted-11.1.0-py2.7-linux-x86_64.egg/twisted/internet/defer.py", line 545, in _runCallbacks
-                current.result = callback(current.result, *args, **kw)
-            File "/home/dustin/tmp/buildbot/sandbox/lib/python2.7/site-packages/buildbot-0.8.5-py2.7.egg/buildbot/master.py", line 226, in do_load
-                exec f in localDict
-            exceptions.SyntaxError: EOL while scanning string literal (master.cfg, line 17)
+    2015-08-14 18:40:46+0000 [-] beginning configuration update
+    2015-08-14 18:40:46+0000 [-] Loading configuration from '/data/buildbot/master/master.cfg'
+    2015-08-14 18:40:46+0000 [-] error while parsing config file:
+	    Traceback (most recent call last):
+	      File "/usr/local/lib/python2.7/dist-packages/buildbot/master.py", line 265, in reconfig
+		d = self.doReconfig()
+	      File "/usr/local/lib/python2.7/dist-packages/twisted/internet/defer.py", line 1274, in unwindGenerator
+		return _inlineCallbacks(None, gen, Deferred())
+	      File "/usr/local/lib/python2.7/dist-packages/twisted/internet/defer.py", line 1128, in _inlineCallbacks
+		result = g.send(result)
+	      File "/usr/local/lib/python2.7/dist-packages/buildbot/master.py", line 289, in doReconfig
+		self.configFileName)
+	    --- <exception caught here> ---
+	      File "/usr/local/lib/python2.7/dist-packages/buildbot/config.py", line 156, in loadConfig
+		exec f in localDict
+	    exceptions.SyntaxError: EOL while scanning string literal (master.cfg, line 103)
 
-    Never saw reconfiguration finish.
+    2015-08-14 18:40:46+0000 [-] error while parsing config file: EOL while scanning string literal (master.cfg, line 103) (traceback in logfile)
+    2015-08-14 18:40:46+0000 [-] reconfig aborted without making any changes
+
+    Reconfiguration failed. Please inspect the master.cfg file for errors,
+    correct them, then try 'buildbot reconfig' again.
 
 This time, it's clear that there was a mistake in the configuration.
 Luckily, the Buildbot master will ignore the wrong configuration and keep running with the previous configuration.
@@ -185,7 +186,8 @@ The log output should contain a line like this:
 
 .. code-block:: none
 
-  2009-08-01 15:35:20+0200 [-] adding IStatusReceiver <buildbot.status.words.IRC instance at 0x300d290>
+  2015-08-14 20:00:33+0000 [-] Starting factory <buildbot.status.words.IrcStatusFactory instance at 0x7fee15c640e0>
+  2015-08-14 20:00:48+0000 [IrcStatusBot,client] <buildbot.status.words.IrcStatusBot instance at 0x7fee1653f1b8>: I have joined #buildbot-test
 
 You should see the bot now joining in your IRC client.
 In your IRC channel, type:
