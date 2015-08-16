@@ -94,7 +94,7 @@ class TopicMatch(unittest.TestCase):
 class WampMQ(unittest.TestCase):
 
     """
-        Excercices the code with a faked wamp router:
+        Stimulate the code with a fake wamp router:
         A router which only accepts one subscriber on one topic
     """
 
@@ -166,9 +166,9 @@ class WampMQReal(unittest.TestCase):
             raise unittest.SkipTest(self.HOW_TO_RUN)
         self.master = fakemaster.make_master()
         self.mq = wamp.WampMQ()
-        self.mq.setServiceParent(self.master)
+        yield self.mq.setServiceParent(self.master)
         self.connector = self.master.wamp = connector.WampConnector()
-        self.connector.setServiceParent(self.master)
+        yield self.connector.setServiceParent(self.master)
         yield self.master.startService()
         config = FakeConfig()
         config.mq['router_url'] = os.environ["WAMP_ROUTER_URL"]

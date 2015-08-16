@@ -119,25 +119,24 @@ Wamp
 
     The :py:class:`WampMQ` class implements message-queueing using a wamp router.
     This class translates the semantics of the buildbot mq api to the semantics of the wamp messaging system.
-    A notable difference is that autobahn API does not send the original topic to the callback, so we need to include it inside the data part, for the case of the wildcard subscriber.
+    The message route is translated to a wamp topic by joining with dot and prefixing with buildbot namespace.
     Example message that is sent via wamp is:
 
     .. code-block:: python
 
-        topic = "org.buildbot.builds.1.new"
+        topic = "org.buildbot.mq.builds.1.new"
         data = {
-            "topic": ['builds', '1', 'new']
-            "data": {'builderid': 10,
-                     'buildid': 1,
-                     'buildrequestid': 13,
-                     'buildslaveid': 20,
-                     'complete': False,
-                     'complete_at': None,
-                     'masterid': 824,
-                     'number': 1,
-                     'results': None,
-                     'started_at': 1,
-                     'state_string': u'created'}
+            'builderid': 10,
+            'buildid': 1,
+            'buildrequestid': 13,
+            'buildslaveid': 20,
+            'complete': False,
+            'complete_at': None,
+            'masterid': 824,
+            'number': 1,
+            'results': None,
+            'started_at': 1,
+            'state_string': u'created'
         }
 
 .. py:module:: buildbot.wamp.connector
@@ -147,6 +146,7 @@ Wamp
     The :py:class:`WampConnector` class implements a buildbot service for wamp.
     It is managed outside of the mq module as this protocol can also be reused for slave protocol.
     The connector support queuing of requests until the wamp connection is created, but do not support disconnection and reconnection.
+    Reconnection will be supported as part of a next release of AutobahnPython (https://github.com/tavendo/AutobahnPython/issues/295).
     There is a chicken and egg problem at the buildbot initialization phasis, so the produce messages are actually not sent with deferred.
 
 .. _queue-schema:

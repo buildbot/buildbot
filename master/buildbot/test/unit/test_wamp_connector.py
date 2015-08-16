@@ -56,7 +56,7 @@ class WampConnector(unittest.TestCase):
     def setUp(self):
         master = fakemaster.make_master()
         self.connector = TestedWampConnector()
-        self.connector.setServiceParent(master)
+        yield self.connector.setServiceParent(master)
         yield master.startService()
         yield self.connector.reconfigServiceWithBuildbotConfig(FakeConfig())
 
