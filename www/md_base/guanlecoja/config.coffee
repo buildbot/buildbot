@@ -42,6 +42,9 @@ config =
             'angular-aria':
                 version: ANGULAR_TAG
                 files: 'angular-aria.js'
+            'angular-sanitize':
+                version: ANGULAR_TAG
+                files: 'angular-sanitize.js'
             'angular-material':
                 version: ANGULAR_MATERIAL_TAG
                 files: 'angular-material.js'
