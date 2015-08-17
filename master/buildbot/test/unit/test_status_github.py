@@ -488,3 +488,28 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.assertLogError(
             error,
             u'Fail to send status "state" for owner/name at sha.')
+
+    def test_repoOverDefined(self):
+        """
+        GitHubStatus will fail to init if all of repoOwner, repoName, and repo
+        are defined.
+        """
+        self.assertRaisesConfigError(
+            'Specify repoOwner and repoName or repo, but not both',
+            lambda: GitHubStatus(
+                token='token', repoOwner='owner', repoName='name',
+                repo='owner/name'))
+
+    def test_repoUnderDefined(self):
+        """
+        GitHubStatus will fail to init if not both repoOwner and repoName
+        are defined.
+        """
+        self.assertRaisesConfigError(
+            'Specify both or none of repoOwner and repoName',
+            lambda: GitHubStatus(
+                token='token', repoOwner='owner'))
+        self.assertRaisesConfigError(
+            'Specify both or none of repoOwner and repoName',
+            lambda: GitHubStatus(
+                token='token', repoName='name'))
