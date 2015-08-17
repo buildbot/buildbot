@@ -1,0 +1,139 @@
+build-step {
+  display: block;
+  background: #444;
+  color: #eee;
+  border-bottom: 1px solid #363636;
+
+  .meta {
+    height: 30px;
+    padding: 5px;
+    line-height: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: monospace;
+
+    .caret {
+      width: 0;
+      height: 10px;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 8px solid #999;
+      -webkit-transition: -webkit-transform 0.2s ease-in-out;
+      transition: transform 0.2s ease-in-out;
+
+      &.expand {
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+      }
+    }
+
+    .state-string {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .name, .state-dot-container {
+      padding: 0 5px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .caret-container, .state-dot-container {
+      width: 20px;
+      height: 20px;
+      padding: 5px;
+    }
+
+    .state-dot {
+      width: 10px;
+      height: 10px;
+      background: #eee;
+      border-radius: 50%;
+
+      &.success {
+          background: #8d4;
+      }
+      &.warnings {
+          background: #fa3;
+      }
+      &.failure {
+          background: #e88;
+      }
+      &.skipped {
+          background: #AADDEE;
+      }
+      &.exception {
+          background: #c6c;
+      }
+      &.retry {
+          background: #ecc;
+      }
+      &.cancelled {
+          background: #ecc;
+      }
+      &.unknown {
+          background: #EEE;
+      }
+      &.pending {
+          background: #E7D100;
+          -webkit-animation: pending-scaleout 1.0s infinite ease-in-out;
+          animation: pending-scaleout 1.0s infinite ease-in-out;
+      }
+    }
+
+    .name, .state-string, .duration {
+      margin: 0 5px;
+    }
+  }
+
+  .logs {
+    background: #3f3f3f;
+
+    .log-switch {
+      padding-left: 25px;
+      height: 32px;
+      border-top: 1px solid #363636;
+      border-bottom: 1px solid #363636;
+    }
+
+    .log-switch .md-button {
+      font-size: 12px;
+      margin: 5px;
+      height: 20px;
+      min-height: 20px;
+      min-width: 30px;
+      line-height: 20px;
+
+      &.selected {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    .download-button md-icon {
+      width: 18px;
+      height: 18px;
+      padding: 2px;
+      color: #eee;
+    }
+  }
+}
+
+@-webkit-keyframes pending-scaleout {
+  0% { -webkit-transform: scale(0.5) }
+  100% {
+    -webkit-transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pending-scaleout {
+  0% { 
+    -webkit-transform: scale(0.5);
+    transform: scale(0.5);
+  } 100% {
+    -webkit-transform: scale(2);
+    transform: scale(2);
+    opacity: 0;
+  }
+}

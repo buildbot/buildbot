@@ -2,6 +2,7 @@ angular.module 'app', [
     'ngAria',
     'ngAnimate',
     'ngMaterial',
+    'ngSanitize',
     'bbData'
     'ui.router',
     'ng-sortable',
