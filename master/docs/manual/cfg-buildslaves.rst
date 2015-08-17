@@ -117,6 +117,29 @@ Note that if you want to have a :class:`MailNotifier` for buildslave-missing ema
 
 .. index:: BuildSlaves; latent
 
+.. _Local-Buildslaves:
+
+Local Buildslaves
+~~~~~~~~~~~~~~~~~
+For smaller setups, you may want to just run the slaves on the same machine as the master.
+To simplify the maintainance, you may even want to run them in the same process.
+
+This is what LocalBuildSlave is for.
+Instead of configuring a ``buildslave.BuildSlave``, you have to configure a ``buildslave.LocalBuildSlave``.
+As the slave is running on the same process, password is not necessary.
+You can run as many local slaves as long as your machine CPU and memory is allowing.
+
+A configuration for two slaves would look like::
+
+    from buildbot.plugins import buildslave
+    c['slaves'] = [
+        buildslave.LocalBuildSlave('bot1'),
+        buildslave.LocalBuildSlave('bot2'),
+    ]
+
+
+.. index:: BuildSlaves; latent
+
 .. _Latent-Buildslaves:
 
 Latent Buildslaves
