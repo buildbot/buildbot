@@ -20,6 +20,7 @@ from twisted.internet import threads
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.errors import CaptureCallbackError
 from buildbot.statistics import capture
 from buildbot.statistics import storage_backends
 from buildbot.statistics.storage_backends.base import StatsStorageBase
@@ -269,7 +270,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         build = yield self.master.db.builds.getBuild(buildid=1)
         cap = self.fake_storage_service.captures[0]
         self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           config.ConfigErrors)
+                           CaptureCallbackError)
 
     @defer.inlineCallbacks
     def test_property_capturing_alt_callback(self):
@@ -386,17 +387,17 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         build = yield self.master.db.builds.getBuild(buildid=1)
         cap = self.fake_storage_service.captures[0]
         self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           config.ConfigErrors)
+                           CaptureCallbackError)
 
         self.setupFakeStorage([capture.CaptureBuildEndTime('builder1', cb)])
         cap = self.fake_storage_service.captures[0]
         self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           config.ConfigErrors)
+                           CaptureCallbackError)
 
         self.setupFakeStorage([capture.CaptureBuildDuration('builder1', callback=cb)])
         cap = self.fake_storage_service.captures[0]
         self.assertFailure(cap.consume(self.routingKey, self.get_dict(build)),
-                           config.ConfigErrors)
+                           CaptureCallbackError)
 
     @defer.inlineCallbacks
     def test_yield_metrics_value(self):
@@ -499,4 +500,4 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
 
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         cap = self.fake_storage_service.captures[0]
-        self.assertFailure(cap.consume(routingKey, msg), config.ConfigErrors)
+        self.assertFailure(cap.consume(routingKey, msg), CaptureCallbackError)

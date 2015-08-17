@@ -19,7 +19,7 @@ import re
 from twisted.internet import defer
 from twisted.internet import threads
 
-from buildbot import config
+from buildbot.errors import CaptureCallbackError
 
 
 class Capture(object):
@@ -93,9 +93,10 @@ class CapturePropertyBase(Capture):
                 try:
                     ret_val = self._callback(properties, pn)
                 except KeyError:
-                    config.error("CaptureProperty failed."
-                                 " The property %s not found for build number %s on builder %s."
-                                 % (pn, msg['number'], builder_info['name']))
+                    raise CaptureCallbackError("CaptureProperty failed."
+                                               " The property %s not found for build number %s on"
+                                               " builder %s."
+                                               % (pn, msg['number'], builder_info['name']))
                 context = self._defaultContext(msg, builder_info['name'])
                 series_name = "%s-%s" % (builder_info['name'], pn)
                 post_data = {
@@ -162,8 +163,9 @@ class CaptureBuildTimes(Capture):
                 ret_val = self._callback(*self._retValParams(msg))
             except Exception as e:
                 # catching generic exceptions is okay here since we propagate it
-                config.error("%s Exception raised: %s with message: %s" %
-                             (self._err_msg(msg, builder_info['name']), type(e).__name__, str(e)))
+                raise CaptureCallbackError("%s Exception raised: %s with message: %s" %
+                                           (self._err_msg(msg, builder_info['name']),
+                                            type(e).__name__, str(e)))
 
             context = self._defaultContext(msg, builder_info['name'])
             post_data = {
@@ -335,10 +337,10 @@ class CaptureDataBase(Capture):
             try:
                 ret_val = self._callback(msg['post_data'])
             except Exception as e:
-                config.error("CaptureData failed for build %s of builder %s."
-                             " Exception generated: %s with message %s"
-                             % (build_data['number'], builder_info['name'], type(e).__name__,
-                                str(e)))
+                raise CaptureCallbackError("CaptureData failed for build %s of builder %s."
+                                           " Exception generated: %s with message %s"
+                                           % (build_data['number'], builder_info['name'],
+                                              type(e).__name__, str(e)))
             post_data = ret_val
             series_name = '%s-%s' % (builder_info['name'], self._data_name)
             context = self._defaultContext(build_data, builder_info['name'])
