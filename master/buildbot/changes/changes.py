@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import time
 
 from buildbot.util import datetime2epoch
@@ -75,7 +77,7 @@ class Change:
         change.files = sorted(chdict['files'])
 
         change.properties = Properties()
-        for n, (v, s) in chdict['properties'].iteritems():
+        for n, (v, s) in iteritems(chdict['properties']):
             change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)

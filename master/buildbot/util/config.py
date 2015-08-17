@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import re
 
@@ -51,7 +52,7 @@ class _DictConfigured(object):
         self.value = value
 
     def getConfigDict(self):
-        return dict([(k, IConfigured(v).getConfigDict()) for k, v in self.value.iteritems()])
+        return dict([(k, IConfigured(v).getConfigDict()) for k, v in iteritems(self.value)])
 
 registerAdapter(_DictConfigured, dict, IConfigured)
 

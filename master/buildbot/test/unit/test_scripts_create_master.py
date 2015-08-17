@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
+
 import mock
 import os
 
@@ -64,7 +66,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
         def check(rc):
             self.assertEqual(rc, 0)
             self.assertEqual(calls, functions)
-            for repl in repls.values():
+            for repl in itervalues(repls):
                 repl.assert_called_with(config)
         return d
 

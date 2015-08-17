@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import cgi
 import mock
@@ -200,7 +201,7 @@ class WwwTestMixin(RequiresWwwMixin):
         if responseCode is not None:
             got['responseCode'] = self.request.responseCode
             exp['responseCode'] = responseCode
-        for header, value in headers.iteritems():
+        for header, value in iteritems(headers):
             got[header] = self.request.headers.get(header)
             exp[header] = value
         self.assertEqual(got, exp)

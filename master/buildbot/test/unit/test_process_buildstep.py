@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import mock
 
@@ -412,8 +413,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
     def checkSummary(self, got, step, build=None):
-        self.failUnless(all(isinstance(k, unicode) for k in got.keys()))
-        self.failUnless(all(isinstance(k, unicode) for k in got.values()))
+        self.failUnless(all(isinstance(k, unicode) for k in got))
+        self.failUnless(all(isinstance(k, unicode) for k in itervalues(got)))
         exp = {u'step': step}
         if build:
             exp[u'build'] = build

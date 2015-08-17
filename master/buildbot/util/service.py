@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 from twisted.application import service
 from twisted.internet import defer
@@ -335,14 +336,14 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
     def getConfigDict(self):
         return {'name': self.name,
                 'childs': [v.getConfigDict()
-                           for v in self.namedServices.values()]}
+                           for v in itervalues(self.namedServices)]}
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
 
         # arrange childs by name
         old_by_name = self.namedServices
-        old_set = set(old_by_name.iterkeys())
+        old_set = set(old_by_name)
         new_config_attr = getattr(new_config, self.config_attr)
         if isinstance(new_config_attr, list):
             new_by_name = dict([(s.name, s)
@@ -351,7 +352,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             new_by_name = new_config_attr
         else:
             raise TypeError("config.%s should be a list or dictionary" % (self.config_attr))
-        new_set = set(new_by_name.iterkeys())
+        new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs
         removed_names, added_names = util.diffSets(old_set, new_set)

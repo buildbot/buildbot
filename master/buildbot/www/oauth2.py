@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import requests
 
@@ -120,7 +121,7 @@ class OAuth2Auth(auth.AuthBase):
                     content = json.loads(response.content)
                 except ValueError:
                     content = parse_qs(response.content)
-                    for k, v in content.items():
+                    for k, v in iteritems(content):
                         content[k] = v[0]
             else:
                 content = response.content

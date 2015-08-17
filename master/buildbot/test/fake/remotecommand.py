@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -194,7 +195,7 @@ class Expect(object):
         if behavior == 'rc':
             command.rc = args[0]
             d = defer.succeed(None)
-            for log in command.logs.values():
+            for log in itervalues(command.logs):
                 if hasattr(log, 'unwrap'):
                     # We're handling an old style log that was
                     # used in an old style step. We handle the necessary

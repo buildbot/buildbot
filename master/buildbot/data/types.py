@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import iteritems
+
 
 import datetime
 import re
@@ -180,7 +182,7 @@ class SourcedProperties(Type):
         if not isinstance(object, dict):  # we want a dict, and NOT a subclass
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
-        for k, v in object.iteritems():
+        for k, v in iteritems(object):
             if not isinstance(k, unicode):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:
@@ -230,7 +232,7 @@ class Dict(Type):
                     fields=[dict(name=k,
                                  type=v.name,
                                  type_spec=v.getSpec())
-                            for k, v in self.contents.items()
+                            for k, v in iteritems(self.contents)
                             ])
 
 
@@ -264,7 +266,7 @@ class Entity(Type):
 
     def __init__(self, name):
         fields = {}
-        for k, v in self.__class__.__dict__.iteritems():
+        for k, v in iteritems(self.__class__.__dict__):
             if isinstance(v, Type):
                 fields[k] = v
         self.fields = fields
@@ -300,5 +302,5 @@ class Entity(Type):
                     fields=[dict(name=k,
                                  type=v.name,
                                  type_spec=v.getSpec())
-                            for k, v in self.fields.items()
+                            for k, v in iteritems(self.fields)
                             ])

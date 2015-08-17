@@ -493,7 +493,7 @@ class RealTests(Tests):
 
                 # one buildset_sourcestamps row
                 r = conn.execute(self.db.model.buildset_sourcestamps.select())
-                self.assertEqual(r.keys(), [u'id', u'buildsetid', u'sourcestampid'])
+                self.assertEqual(list(r.keys()), [u'id', u'buildsetid', u'sourcestampid'])
                 self.assertEqual(r.fetchall(), [(1, bsid, 234)])
             return self.db.pool.do(thd)
         d.addCallback(check)

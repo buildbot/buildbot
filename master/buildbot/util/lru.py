@@ -70,7 +70,7 @@ class LRUCache(object):
         return result
 
     def keys(self):
-        return self.cache.keys()
+        return list(self.cache)
 
     def set_max_size(self, max_size):
         if self.max_size == max_size:

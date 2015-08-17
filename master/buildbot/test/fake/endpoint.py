@@ -15,6 +15,7 @@
 
 # This is a static resource type and set of endpoints uesd as common data by
 # tests.
+from future.utils import itervalues
 
 from buildbot.data import base
 from buildbot.data import types
@@ -38,7 +39,7 @@ class TestsEndpoint(base.Endpoint):
 
     def get(self, resultSpec, kwargs):
         # results are sorted by ID for test stability
-        return defer.succeed(sorted(testData.values(), key=lambda v: v['id']))
+        return defer.succeed(sorted(itervalues(testData), key=lambda v: v['id']))
 
 
 class RawTestsEndpoint(base.Endpoint):

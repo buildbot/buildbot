@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 
 from builtins import bytes
 from builtins import str
@@ -111,7 +113,7 @@ class MasterShellCommand(BuildStep):
         else:
             assert isinstance(self.env, dict)
             env = self.env
-            for key, v in self.env.iteritems():
+            for key, v in iteritems(self.env):
                 if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
@@ -126,7 +128,7 @@ class MasterShellCommand(BuildStep):
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
-            for key, v in env.iteritems():
+            for key, v in iteritems(env):
                 if v is not None:
                     if not isinstance(v, basestring):
                         raise RuntimeError("'env' values must be strings or "

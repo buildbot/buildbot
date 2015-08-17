@@ -12,8 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from __future__ import absolute_import
+from future.utils import itervalues
 
 from buildbot.buildslave.protocols import base
 from twisted.internet import defer
@@ -236,7 +236,7 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the slave buildbot process to exit.
         def old_way():
             d = None
-            for b in self.buildslave.slavebuilders.values():
+            for b in itervalues(self.buildslave.slavebuilders):
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break

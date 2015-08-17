@@ -321,7 +321,7 @@ class Contact(base.StatusReceiver):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
-        self.send("The following events are being notified: %r" % self.notify_events.keys())
+        self.send("The following events are being notified: %r" % list(self.notify_events))
 
     def notify_for(self, *events):
         for event in events:

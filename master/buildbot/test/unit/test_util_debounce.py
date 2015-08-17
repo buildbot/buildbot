@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 from buildbot.util import debounce
 from twisted.internet import defer
@@ -52,7 +53,7 @@ class DebounceTest(unittest.TestCase):
     def scenario(self, events):
         dbs = dict((k, DebouncedClass())
                    for k in set([n for n, _, _ in events]))
-        for db in dbs.values():
+        for db in itervalues(dbs):
             db.maybe._reactor = self.clock
         while events:
             n, t, e = events.pop(0)
@@ -85,7 +86,7 @@ class DebounceTest(unittest.TestCase):
                 db.stopDeferreds.pop()
             else:
                 self.fail("unknown scenario event %s" % e)
-            for db in dbs.values():
+            for db in itervalues(dbs):
                 self.assertEqual(db.calls, db.expCalls)
 
     def test_called_once(self):

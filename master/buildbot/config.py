@@ -12,25 +12,28 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
+
 import os
 import re
 import sys
 import warnings
 
-from types import MethodType
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
+from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
-from buildbot.util import identifiers as util_identifiers
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
 from twisted.python import failure
 from twisted.python import log
+from types import MethodType
 
 
 class ConfigErrors(Exception):
@@ -340,7 +343,7 @@ class MasterConfig(util.ComparableMixin):
 
         protocols = config_dict.get('protocols', {})
         if isinstance(protocols, dict):
-            for proto, options in protocols.iteritems():
+            for proto, options in iteritems(protocols):
                 if not isinstance(proto, str):
                     error("c['protocols'] keys must be strings")
                 if not isinstance(options, dict):
@@ -453,8 +456,7 @@ class MasterConfig(util.ComparableMixin):
             if not isinstance(caches, dict):
                 error("c['caches'] must be a dictionary")
             else:
-                valPairs = caches.items()
-                for (name, value) in valPairs:
+                for (name, value) in iteritems(caches):
                     if not isinstance(value, int):
                         error("value for cache size '%s' must be an integer"
                               % name)
@@ -611,7 +613,8 @@ class MasterConfig(util.ComparableMixin):
                        'logRotateLength', 'maxRotatedFiles', 'versions',
                        'change_hook_dialects', 'change_hook_auth',
                        'custom_templates_dir'])
-        unknown = set(www_cfg.iterkeys()) - allowed
+        unknown = set(list(www_cfg)) - allowed
+
         if unknown:
             error("unknown www configuration parameter(s) %s" %
                   (', '.join(unknown),))
@@ -659,7 +662,7 @@ class MasterConfig(util.ComparableMixin):
 
         # check that all builders are implemented on this master
         unscheduled_buildernames = set([b.name for b in self.builders])
-        for s in self.schedulers.itervalues():
+        for s in itervalues(self.schedulers):
             for n in s.listBuilderNames():
                 if n in unscheduled_buildernames:
                     unscheduled_buildernames.remove(n)
@@ -674,7 +677,7 @@ class MasterConfig(util.ComparableMixin):
 
         all_buildernames = set([b.name for b in self.builders])
 
-        for s in self.schedulers.itervalues():
+        for s in itervalues(self.schedulers):
             for n in s.listBuilderNames():
                 if n not in all_buildernames:
                     error("Unknown builder '%s' in scheduler '%s'"
@@ -734,7 +737,7 @@ class MasterConfig(util.ComparableMixin):
     def check_ports(self):
         ports = set()
         if self.protocols:
-            for proto, options in self.protocols.iteritems():
+            for proto, options in iteritems(self.protocols):
                 if proto == 'null':
                     port = -1
                 else:

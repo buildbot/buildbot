@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import os
 import shutil
 import stat
@@ -65,7 +67,7 @@ def uploadTarFile(filename, **members):
     def behavior(command):
         f = StringIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
-        for name, content in members.iteritems():
+        for name, content in iteritems(members):
             archive.addfile(tarfile.TarInfo(name), StringIO(content))
         writer = command.args['writer']
         writer.remote_write(f.getvalue())

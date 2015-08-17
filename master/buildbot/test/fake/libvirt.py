@@ -48,7 +48,7 @@ class Connection(object):
         return d
 
     def listDomainsID(self):
-        return self.domains.keys()
+        return list(self.domains)
 
     def lookupByName(self, name):
         return self.domains[name]

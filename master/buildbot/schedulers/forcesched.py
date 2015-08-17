@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 import email.utils as email_utils
 import re
@@ -33,7 +35,7 @@ class CollectedValidationError(ValueError):
 
     def __init__(self, errors):
         self.errors = errors
-        ValueError.__init__(self, "\n".join([k + ":" + v for k, v in errors.iteritems()]))
+        ValueError.__init__(self, "\n".join([k + ":" + v for k, v in iteritems(errors)]))
 
 
 class ValidationErrorCollector(object):
@@ -47,7 +49,7 @@ class ValidationErrorCollector(object):
         try:
             res = yield defer.maybeDeferred(fn, *args, **kwargs)
         except CollectedValidationError as e:
-            for name, e in e.errors.iteritems():
+            for name, e in iteritems(e.errors):
                 self.errors[name] = e
         except ValueError as e:
             self.errors[name] = str(e)
@@ -515,7 +517,7 @@ class CodebaseParameter(NestedParameter):
 
         fields_dict = dict(branch=branch, revision=revision,
                            repository=repository, project=project)
-        for k, v in fields_dict.items():
+        for k, v in iteritems(fields_dict):
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
             elif isinstance(v, basestring):
@@ -704,7 +706,7 @@ class ForceScheduler(base.BaseScheduler):
         changeids = map(lambda a: type(a) == int and a or a.number, changeids)
 
         real_properties = Properties()
-        for pname, pvalue in properties.items():
+        for pname, pvalue in iteritems(properties):
             real_properties.setProperty(pname, pvalue, "Force Build Form")
 
         defer.returnValue((real_properties, changeids, sourcestamps))
@@ -732,7 +734,7 @@ class ForceScheduler(base.BaseScheduler):
 
         # Currently the validation code expects all kwargs to be lists
         # I don't want to refactor that now so much sure we comply...
-        kwargs = dict((k, [v]) if not isinstance(v, list) else (k, v) for k, v in kwargs.items())
+        kwargs = dict((k, [v]) if not isinstance(v, list) else (k, v) for k, v in iteritems(kwargs))
 
         # probably need to clean that out later as the IProperty is already a
         # validation mechanism
@@ -754,9 +756,9 @@ class ForceScheduler(base.BaseScheduler):
         r = self.reasonString % {'owner': owner, 'reason': reason}
 
         # turn sourcestamps into a list
-        for cb, ss in sourcestamps.iteritems():
+        for cb, ss in iteritems(sourcestamps):
             ss['codebase'] = cb
-        sourcestamps = sourcestamps.values()
+        sourcestamps = list(itervalues(sourcestamps))
 
         # everything is validated, we can create our source stamp, and buildrequest
         res = yield self.addBuildsetForSourceStampsWithDefaults(

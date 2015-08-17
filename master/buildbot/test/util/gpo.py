@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -67,7 +68,7 @@ class GetProcessOutputMixin:
 
     def _check_env(self, env):
         env = env or {}
-        for var, value in self._gpo_expect_env.items():
+        for var, value in iteritems(self._gpo_expect_env):
             self.assertEqual(env.get(var), value,
                              'Expected environment to have %s = %r' % (var, value))
 

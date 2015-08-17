@@ -17,6 +17,7 @@ Push events to an abstract receiver.
 
 Implements the HTTP receiver.
 """
+from future.utils import iteritems
 
 import datetime
 import os
@@ -239,7 +240,7 @@ class StatusPush(StatusReceiverMultiService):
         packet['started'] = self.state['started']
         packet['event'] = event
         packet['payload'] = {}
-        for obj_name, obj in objs.items():
+        for obj_name, obj in iteritems(objs):
             if hasattr(obj, 'asDict'):
                 obj = obj.asDict()
             if self.filter:

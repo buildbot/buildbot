@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import itertools
 import os
@@ -260,14 +261,14 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         # initial run, don't parse all history
         if not self.lastRev:
             return
-        if newRev in self.lastRev.values():
+        if newRev in itervalues(self.lastRev):
             # TODO: no new changes on this branch
             # should we just use the lastRev again, but with a different branch?
             pass
 
         # get the change list
         revListArgs = ([r'--format=%H', r'%s' % newRev] +
-                       [r'^%s' % rev for rev in self.lastRev.values()] +
+                       [r'^%s' % rev for rev in itervalues(self.lastRev)] +
                        [r'--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)

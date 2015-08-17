@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot import util
 from buildbot.changes import base
@@ -156,7 +157,7 @@ class GerritChangeSource(base.ChangeSource):
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
-            for k, v in event.items():
+            for k, v in iteritems(event):
                 name = "%s.%s" % (base, k)
                 if isinstance(v, dict):
                     flatten(properties, name, v)

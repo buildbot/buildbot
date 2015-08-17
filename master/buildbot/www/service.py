@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import os
 
@@ -129,7 +130,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
         root = self.apps.get('base').resource
-        for key, plugin in new_config.www.get('plugins', {}).items():
+        for key, plugin in iteritems(new_config.www.get('plugins', {})):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))

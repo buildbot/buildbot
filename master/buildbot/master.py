@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from future.utils import iteritems
 
 import datetime
 import os
@@ -432,7 +432,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                                for f in kwargs['files']]
         if kwargs.get('properties'):
             kwargs['properties'] = dict((ascii2unicode(k), v)
-                                        for k, v in kwargs['properties'].iteritems())
+                                        for k, v in iteritems(kwargs['properties']))
 
         # pass the converted call on to the data API
         changeid = yield self.data.updates.addChange(**kwargs)

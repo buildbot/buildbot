@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import sqlalchemy as sa
 import sqlalchemy.exc
@@ -35,7 +36,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             upd_q = tbl.update(
                 ((tbl.c.schedulerid == schedulerid)
                  & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
-            for changeid, important in classifications.items():
+            for changeid, important in iteritems(classifications):
                 transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type

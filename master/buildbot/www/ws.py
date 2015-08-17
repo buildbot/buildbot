@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
+from future.utils import itervalues
 
 from buildbot.util import json
 from buildbot.util import toJson
@@ -109,7 +110,7 @@ class WsProtocol(WebSocketServerProtocol):
 
     def connectionLost(self, reason):
         log.msg("connection lost", system=self)
-        for qref in self.qrefs.values():
+        for qref in itervalues(self.qrefs):
             qref.stopConsuming()
         self.qrefs = None  # to be sure we don't add any more
 

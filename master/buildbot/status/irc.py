@@ -211,7 +211,7 @@ class IRC(base.StatusReceiverMultiService):
                  ):
         base.StatusReceiverMultiService.__init__(self)
 
-        deprecated_params = kwargs.keys()
+        deprecated_params = list(kwargs)
         if deprecated_params:
             config.error("%s are deprecated" % (",".join(deprecated_params)))
 

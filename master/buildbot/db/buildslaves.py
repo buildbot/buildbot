@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import sqlalchemy as sa
 
@@ -175,7 +176,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                     continue
                 rv[row.buildslaveid]['connected_to'].append(row.masterid)
 
-            return rv.values()
+            return list(itervalues(rv))
         return self.db.pool.do(thd)
 
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):

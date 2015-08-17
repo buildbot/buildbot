@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import iteritems
 
 from buildbot import config
 from buildbot.schedulers.forcesched import AnyPropertyParameter
@@ -364,7 +365,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         if expectKind is None:
             expect_props[name] = (expect, 'Force Build Form')
         elif expectKind is dict:
-            for k, v in expect.iteritems():
+            for k, v in iteritems(expect):
                 expect_props[k] = (v, 'Force Build Form')
         else:
             self.fail("expectKind is wrong type!")

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -32,7 +33,7 @@ class ShellArg(results.ResultComputingConfigMixin):
                          "must not be None" % (name,))
         self.command = command
         self.logfile = logfile
-        for k, v in kwargs.iteritems():
+        for k, v in iteritems(kwargs):
             if k not in self.resultConfig:
                 config.error("the parameter '%s' is not "
                              "handled by ShellArg" % (k,))

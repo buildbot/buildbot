@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import __builtin__
 import mock
 import os
@@ -162,7 +164,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
-        for file, contents in other_files.items():
+        for file, contents in iteritems(other_files):
             with open(file, "w") as f:
                 f.write(contents)
 
@@ -187,7 +189,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         expected.update(global_defaults)
         got = dict([
             (attr, getattr(cfg, attr))
-            for attr, exp in expected.iteritems()])
+            for attr, exp in iteritems(expected)])
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
@@ -363,7 +365,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.failIf(self.errors, self.errors.errors)
         got = dict([
             (attr, getattr(self.cfg, attr))
-            for attr, exp in expected.iteritems()])
+            for attr, exp in iteritems(expected)])
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
 
@@ -1160,7 +1162,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def assertAttributes(self, cfg, **expected):
         got = dict([
             (attr, getattr(cfg, attr))
-            for attr, exp in expected.iteritems()])
+            for attr, exp in iteritems(expected)])
         self.assertEqual(got, expected)
 
     # tests

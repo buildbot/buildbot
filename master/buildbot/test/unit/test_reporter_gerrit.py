@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot.reporters import utils
 from buildbot.reporters.gerrit import GERRIT_LABEL_REVIEWED
@@ -159,7 +160,7 @@ class TestGerritStatusPush(unittest.TestCase):
                 fakedb.BuildProperty(buildid=20 + i, name="slavename", value="sl"),
                 fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),
             ])
-            for k, v in self.TEST_PROPS.items():
+            for k, v in iteritems(self.TEST_PROPS):
                 self.db.insertTestData([
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                     ])

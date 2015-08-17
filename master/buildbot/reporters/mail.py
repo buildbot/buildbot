@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from future.utils import iteritems
 
 import re
 
@@ -371,7 +371,7 @@ class MailNotifier(service.BuildbotService):
                 props = Properties.fromDict(builds[0]['properties'])
                 extraHeaders = yield props.render(extraHeaders)
 
-            for k, v in extraHeaders.items():
+            for k, v in iteritems(extraHeaders):
                 if k in m:
                     twlog.msg("Warning: Got header " + k +
                               " in self.extraHeaders "
