@@ -374,24 +374,6 @@ class Builder(config.ReconfigurableServiceMixin,
         # update the big status accordingly
         self.updateBigStatus()
 
-        #check slave is still available
-        ready = slavebuilder.isAvailable()
-        if ready:
-            try:
-                ready = yield slavebuilder.prepare(self.builder_status, build)
-            except:
-                log.err(failure.Failure(), 'while preparing slavebuilder:')
-                ready = False
-
-        # If prepare returns True then it is ready and we start a build
-        # If it returns false then we don't start a new build.
-        if not ready:
-            log.msg("slave %s can't build %s after all; re-queueing the "
-                    "request" % (build, slavebuilder))
-            run_cleanups()
-            defer.returnValue(False)
-            return
-
         # ping the slave to make sure they're still there. If they've
         # fallen off the map (due to a NAT timeout or something), this
         # will fail in a couple of minutes, depending upon the TCP
@@ -414,11 +396,35 @@ class Builder(config.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
+        #check slave is still available
+        ready = slavebuilder.isAvailable()
+        if ready:
+            try:
+                ready = yield slavebuilder.prepare(self.builder_status, build)
+            except:
+                log.err(failure.Failure(), 'while preparing slavebuilder:')
+                ready = False
+
+        # If prepare returns True then it is ready and we start a build
+        # If it returns false then we don't start a new build.
+        if not ready:
+            log.msg("slave %s can't build %s after all; re-queueing the "
+                    "request" % (build, slavebuilder))
+            run_cleanups()
+            defer.returnValue(False)
+            return
+
         # The buildslave is ready to go. slavebuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
-        slavebuilder.buildStarted()
-        cleanups.append(lambda : slavebuilder.buildFinished())
+        if slavebuilder.buildStarted():
+            cleanups.append(lambda : slavebuilder.buildFinished())
+        else:
+            log.msg("slave %s can't build %s after all; re-queueing the "
+                    "request" % (build, slavebuilder))
+            run_cleanups()
+            defer.returnValue(False)
+            return
 
         # tell the remote that it's starting a build, too
         try:

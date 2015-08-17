@@ -74,7 +74,10 @@ class AbstractSlaveBuilder(pb.Referenceable):
         return self.state not in (IDLE, LATENT)
 
     def buildStarted(self):
-        self.state = BUILDING
+        canStart = self.state in (IDLE, LATENT)
+        if canStart:
+            self.state = BUILDING
+        return canStart
 
     def buildFinished(self):
         self.state = IDLE
