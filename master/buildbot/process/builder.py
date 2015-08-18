@@ -441,6 +441,7 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             bs = build_status
             bs.builder = self.builder_status
+            bs.slavename = slavebuilder.slave.slavename
             bs.waitUntilFinished().addCallback(self.builder_status._buildFinished)
             # update the steps to use finished steps
 

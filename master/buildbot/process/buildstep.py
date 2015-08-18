@@ -594,14 +594,17 @@ class BuildStep(object, properties.PropertiesMixin):
             doStep = defer.maybeDeferred(func, self)
         return doStep
 
-    def _startStep_2(self, res):
-        if self.stopped:
-            self.finished(EXCEPTION)
-            return
+    @defer.inlineCallbacks
+    def checkStepExecuted(self):
 
-        if self.progress:
-            self.progress.start()
+        def getResult(doStep):
+            result = all([s == True for s in doStep if s is not None])
+            return result
 
+        result = yield self.gatherDoStepIfResults(callback=getResult, setRender=False)
+        defer.returnValue(result)
+
+    def gatherDoStepIfResults(self, callback, setRender=True):
         dl = []
         if isinstance(self.doStepIf, list):
             for func in self.doStepIf:
@@ -610,20 +613,29 @@ class BuildStep(object, properties.PropertiesMixin):
         else:
             dl = [self.getDoStepIfDefer(self.doStepIf)]
 
-        renderables = []
-        accumulateClassList(self.__class__, 'renderables', renderables)
+        if setRender:
+            renderables = []
+            accumulateClassList(self.__class__, 'renderables', renderables)
+            def setRenderable(res, attr):
+                setattr(self, attr, res)
+            for renderable in renderables:
+                d = self.build.render(getattr(self, renderable))
+                d.addCallback(setRenderable, renderable)
+                dl.append(d)
 
-        def setRenderable(res, attr):
-            setattr(self, attr, res)
-
-        for renderable in renderables:
-            d = self.build.render(getattr(self, renderable))
-            d.addCallback(setRenderable, renderable)
-            dl.append(d)
         dl = defer.gatherResults(dl)
-
-        dl.addCallback(self._startStep_3)
+        dl.addCallback(callback)
         return dl
+
+    def _startStep_2(self, res):
+        if self.stopped:
+            self.finished(EXCEPTION)
+            return
+
+        if self.progress:
+            self.progress.start()
+
+        return self.gatherDoStepIfResults(callback=self._startStep_3)
 
     @defer.inlineCallbacks
     def _startStep_3(self, doStep):
