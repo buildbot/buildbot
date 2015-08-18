@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from __future__ import unicode_literals
 from autobahn.wamp.exception import TransportLost
 from autobahn.wamp.types import PublishOptions
 from autobahn.wamp.types import SubscribeOptions
@@ -28,7 +28,7 @@ import json
 
 
 class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
-    NAMESPACE = u"org.buildbot.mq"
+    NAMESPACE = "org.buildbot.mq"
 
     def __init__(self):
         base.MQBase.__init__(self)
@@ -40,10 +40,14 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     @classmethod
     def messageTopic(cls, routingKey):
         ifNone = lambda v, default: default if v is None else v
-        return cls.NAMESPACE + u"." + u".".join([ifNone(key, "") for key in routingKey])
+        # replace None values by "" in routing key
+        routingKey = [ifNone(key, "") for key in routingKey]
+        # then join them with "dot", and add the prefix
+        return cls.NAMESPACE + "." + ".".join(routingKey)
 
     @classmethod
     def routingKeyFromMessageTopic(cls, topic):
+        # just split the topic, and remove the NAMESPACE prefix
         return tuple(topic[len(WampMQ.NAMESPACE) + 1:].split("."))
 
     def _produce(self, routingKey, data):
@@ -74,9 +78,9 @@ class QueueRef(base.QueueRef):
     def subscribe(self, service, _filter):
         self.filter = _filter
         self.emulated = False
-        options = dict(details_arg='details')
+        options = dict(details_arg=str('details'))
         if None in _filter:
-            options["match"] = u"wildcard"
+            options["match"] = "wildcard"
         options = SubscribeOptions(**options)
         _filter = WampMQ.messageTopic(_filter)
         self.unreg = yield service.subscribe(self.invoke, _filter, options=options)
