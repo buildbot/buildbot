@@ -911,6 +911,9 @@ class TestShellMixin(steps.BuildStepMixin,
         self.assertEqual(MySubclass().logEncoding, None)
         self.assertEqual(MySubclass(logEncoding='latin-1').logEncoding,
                          'latin-1')
+        self.assertEqual(MySubclass().description, None)
+        self.assertEqual(MySubclass(description='charming').description,
+                         ['charming'])
 
     @defer.inlineCallbacks
     def test_example(self):
