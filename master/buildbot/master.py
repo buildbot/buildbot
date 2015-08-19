@@ -55,6 +55,7 @@ from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
+from buildbot.wamp import connector as wampconnector
 from buildbot.www import service as wwwservice
 
 #
@@ -156,6 +157,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.db = dbconnector.DBConnector(self.basedir)
         self.db.setServiceParent(self)
 
+        self.wamp = wampconnector.WampConnector()
+        self.wamp.setServiceParent(self)
+
         self.mq = mqconnector.MQConnector()
         self.mq.setServiceParent(self)
 
@@ -186,7 +190,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             yield self.data.updates.expireMasters((self.masterHouskeepingTimer % (24 * 60)) == 0)
             self.masterHouskeepingTimer += 1
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
-        self.masterHeartbeatService.setServiceParent(self)
+        # we do setServiceParent only when the master is configured
+        # master should advertise itself only at that time
 
     # setup and reconfig handling
 
@@ -284,12 +289,12 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         log.msg("BuildMaster is running")
 
     @defer.inlineCallbacks
-    def stopService(self):
-        if self.running:
-            yield service.AsyncMultiService.stopService(self)
+    def stopService(self, _reactor=reactor):
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
                 name=self.name, masterid=self.masterid)
+        if self.running:
+            yield service.AsyncMultiService.stopService(self)
 
         log.msg("BuildMaster is stopped")
         self._master_initialized = False
@@ -327,6 +332,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.reconfig_requested = False
                 self.reconfig()
             return res
+
+        @d.addCallback
+        def advertiseItself(res):
+            if self.masterHeartbeatService.parent is None:
+                self.masterHeartbeatService.setServiceParent(self)
 
         d.addErrback(log.err, 'while reconfiguring')
 

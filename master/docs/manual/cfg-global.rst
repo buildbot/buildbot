@@ -120,6 +120,40 @@ For example, if a change is received, but the master shuts down before the sched
 
 The ``debug`` key, which defaults to False, can be used to enable logging of every message produced on this master.
 
+Wamp
+++++
+
+.. code-block:: python
+
+    c['mq'] = {
+        'type' : 'wamp',
+        'router_url': 'ws://url/to/crossbar'
+        'realm': 'buildbot'
+        'debug' : False,
+        'debug_websockets' : False,
+        'debug_lowlevel' : False,
+    }
+
+This is a MQ implementation using `wamp <http://wamp.ws/>`_ protocol.
+This implementation uses `Python Autobahn <http://autobahn.ws>`_ wamp client library, and is fully asynchronous (no use of threads)
+To use this implementation, you need a wamp router like `Crossbar <http://crossbar.io>`_.
+The implementation does not yet support wamp authentication yet.
+This MQ allows buildbot to run in multi-master mode.
+
+Note that this implementation also does not support message persistence across a restart of the master.
+For example, if a change is received, but the master shuts down before the schedulers can create build requests for it, then those schedulers will not be notified of the change when the master starts again.
+
+`router_url` key is mandatory, and should point to your router websocket url.
+Buildbot is only supporting wamp over websocket, which is a sub-protocol of http.
+SSL is supported using ``wss://`` instead of ``ws://``.
+You must use a router with very reliable connection to the master.
+If for some reason, the wamp connection is lost, then the master will stop, and should be restarted via a process manager.
+
+`realm` key is optional and defaults to ``buildbot``, and configures the wamp realm to use for your buildbot messages.
+
+The ``debug`` key, which defaults to False, can be used to enable logging of every message produced on this master.
+``debug_websocket`` and ``debug_lowlevel``, enable more debug logs in autobahn.
+
 .. bb:cfg:: multiMaster
 
 .. _Multi-master-mode:

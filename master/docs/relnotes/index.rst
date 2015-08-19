@@ -6,8 +6,8 @@ Release Notes for Buildbot |version|
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot 0.9.1
-Buildbot 0.9.1 was released on the ...
+The following are the release notes for Buildbot 0.9.0b2
+Buildbot 0.9.0b2 was released on the ...
 
 Master
 ------
@@ -32,6 +32,10 @@ Slave
 
 Features
 ~~~~~~~~
+
+* Buildbot now supports wamp as a mq backend.
+  This allows to run a multi-master configuration.
+  See :ref:`MQ-Specification`.
 
 Fixes
 ~~~~~
