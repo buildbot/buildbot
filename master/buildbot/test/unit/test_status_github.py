@@ -43,6 +43,7 @@ else:
     from buildbot.status.github import _getGitHubState
 
 from buildbot.test.fake.fakebuild import FakeBuild
+from buildbot.test.util import config
 from buildbot.test.util import logging
 
 
@@ -53,7 +54,8 @@ class MarkerError(Exception):
     """
 
 
-class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
+class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin,
+                       config.ConfigErrorsMixin):
 
     """
     Unit tests for `GitHubStatus`.
@@ -488,3 +490,59 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.assertLogError(
             error,
             u'Fail to send status "state" for owner/name at sha.')
+
+    def test_repoOverDefined(self):
+        """
+        GitHubStatus will fail to init if all of repoOwner, repoName, and repo
+        are defined.
+        """
+        self.assertRaisesConfigError(
+            'Specify repoOwner and repoName or repo, but not both',
+            lambda: GitHubStatus(
+                token='token', repoOwner='owner', repoName='name',
+                repo='owner/name'))
+
+    def test_repoUnderDefined(self):
+        """
+        GitHubStatus will fail to init if not both repoOwner and repoName
+        are defined.
+        """
+        self.assertRaisesConfigError(
+            'Specify both or none of repoOwner and repoName',
+            lambda: GitHubStatus(
+                token='token', repoOwner='owner'))
+        self.assertRaisesConfigError(
+            'Specify both or none of repoOwner and repoName',
+            lambda: GitHubStatus(
+                token='token', repoName='name'))
+
+
+class TestGitHubStatus2(TestGitHubStatus):
+
+    """
+    Unit tests for `GitHubStatus` using the repo parameter.
+    """
+
+    def setUp(self):
+        super(TestGitHubStatus2, self).setUp()
+
+        self.status = GitHubStatus(
+            token='token', repo='owner/name')
+
+    def test_getGitHubRepoProperties_skip_no_owner(self):
+        self.status._repo = Interpolate('/name')
+        self.status._sha = Interpolate('sha')
+
+        d = self.status._getGitHubRepoProperties(self.build)
+        result = self.successResultOf(d)
+
+        self.assertEqual({}, result)
+
+    def test_getGitHubRepoProperties_skip_no_name(self):
+        self.status._repo = Interpolate('owner/')
+        self.status._sha = Interpolate('sha')
+
+        d = self.status._getGitHubRepoProperties(self.build)
+        result = self.successResultOf(d)
+
+        self.assertEqual({}, result)

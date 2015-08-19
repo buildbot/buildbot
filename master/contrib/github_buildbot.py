@@ -8,14 +8,15 @@ If your github repository is private, you must add a ssh key to the github
 repository for the user who initiated the build on the buildslave.
 
 This version of github_buildbot.py parses v3 of the github webhook api, with the
-"application.vnd.github.v3+json" payload. Configure *only* "push" events to
-trigger this webhook.
+"application.vnd.github.v3+json" payload. Configure *only* "push" and/or
+"pull_request" events to trigger this webhook.
 
 """
 
 import hmac
 import logging
 import os
+import re
 import sys
 
 from hashlib import sha1
@@ -100,20 +101,16 @@ class GitHubBuildBot(resource.Resource):
         event_type = request.getHeader("X-GitHub-Event")
         logging.debug("X-GitHub-Event: %r", event_type)
 
-        if event_type == "ping":
-            request.setResponseCode(OK)
-            return json.dumps({"result": "pong"})
+        handler = getattr(self, 'handle_%s' % event_type, None)
 
-        # Reject non-push, non-ping events
-        if event_type != "push":
+        if handler is None:
             logging.info(
-                "Rejecting request.  Expected a push event but received %r instead.",
+                "Rejecting request. Received unsupported event %r.",
                 event_type)
             request.setResponseCode(BAD_REQUEST)
             return json.dumps({"error": "Bad Request."})
 
         try:
-
             content_type = request.getHeader("Content-Type")
 
             if content_type == "application/json":
@@ -128,14 +125,10 @@ class GitHubBuildBot(resource.Resource):
                 return json.dumps({"error": "Bad Request."})
 
             logging.debug("Payload: %r", payload)
-            user = payload['pusher']['name']
-            repo = payload['repository']['name']
-            repo_url = payload['repository']['url']
-            self.private = payload['repository']['private']
-            project = request.args.get('project', None)
-            if project:
-                project = project[0]
-            self.process_change(payload, user, repo, repo_url, project, request)
+            repo = payload['repository']['full_name']
+            repo_url = payload['repository']['html_url']
+            changes = handler(payload, repo, repo_url)
+            self.send_changes(changes, request)
             return server.NOT_DONE_YET
 
         except Exception, e:
@@ -143,7 +136,35 @@ class GitHubBuildBot(resource.Resource):
             request.setResponseCode(INTERNAL_SERVER_ERROR)
             return json.dumps({"error": e.message})
 
-    def process_change(self, payload, user, repo, repo_url, project, request):
+    def process_change(self, change, branch, repo, repo_url):
+        files = change['added'] + change['removed'] + change['modified']
+        who = ""
+        if 'username' in change['author']:
+            who = change['author']['username']
+        else:
+            who = change['author']['name']
+        if 'email' in change['author']:
+            who = "%s <%s>" % (who, change['author']['email'])
+
+        comments = change['message']
+        if len(comments) > 1024:
+            trim = " ... (trimmed, commit message exceeds 1024 characters)"
+            comments = comments[:1024 - len(trim)] + trim
+
+        return \
+            {'revision': change['id'],
+             'revlink': change['url'],
+             'who': who,
+             'comments': comments,
+             'repository': repo_url,
+             'files': files,
+             'project': repo,
+             'branch': branch}
+
+    def handle_ping(self, *_):
+        return None
+
+    def handle_push(self, payload, repo, repo_url):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -153,28 +174,70 @@ class GitHubBuildBot(resource.Resource):
                 Hook.
         """
         changes = None
-        branch = payload['ref'].split('/')[-1]
+        refname = payload['ref']
+
+        m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
+        if not m:
+            logging.info(
+                "Ignoring refname `%s': Not a branch or a tag", refname)
+            return changes
+
+        refname = m.group(2)
 
         if payload['deleted'] is True:
-            logging.info("Branch %r deleted, ignoring", branch)
+            logging.info("%r deleted, ignoring", refname)
+        else:
+            changes = []
+            for change in payload['commits']:
+                if (self.head_commit or m.group(1) == 'tags') \
+                        and change['id'] != payload['head_commit']['id']:
+                    continue
+                changes.append(self.process_change(
+                    change, refname, repo, repo_url))
+        return changes
+
+    def handle_pull_request(self, payload, repo, repo_url):
+        """
+        Consumes the JSON as a python object and actually starts the build.
+
+        :arguments:
+            payload
+                Python Object that represents the JSON sent by GitHub Service
+                Hook.
+        """
+        changes = None
+
+        branch = "refs/pull/{}/head".format(payload['number'])
+
+        if payload['action'] not in ("opened", "synchronize"):
+            logging.info("PR %r %r, ignoring",
+                         payload['number'], payload['action'])
+            return None
         else:
             changes = []
 
-            for change in payload['commits']:
-                files = change['added'] + change['removed'] + change['modified']
-                who = "%s <%s>" % (
-                    change['author']['username'], change['author']['email'])
+            # Create a synthetic change
+            change = {
+                'id': payload['pull_request']['head']['sha'],
+                'message': payload['pull_request']['body'],
+                'timestamp': payload['pull_request']['updated_at'],
+                'url': payload['pull_request']['html_url'],
+                'author': {
+                    'username': payload['pull_request']['user']['login'],
+                },
+                'added': [],
+                'removed': [],
+                'modified': [],
+            }
 
-                changes.append(
-                    {'revision': change['id'],
-                     'revlink': change['url'],
-                     'who': who,
-                     'comments': change['message'],
-                     'repository': payload['repository']['url'],
-                     'files': files,
-                     'project': project,
-                     'branch': branch})
+            changes.append(self.process_change(
+                change, branch, repo, repo_url))
+        return changes
 
+    def send_changes(self, changes, request):
+        """
+        Submit the changes, if any
+        """
         if not changes:
             logging.warning("No changes found")
             request.setResponseCode(OK)
@@ -265,6 +328,9 @@ def setup_options():
                            "perspective broker.",
                       default="change:changepw", dest="auth")
 
+    parser.add_option("--head-commit", action="store_true",
+                      help="If set, only trigger builds for commits at head")
+
     parser.add_option("--secret",
                       help="If provided then use the X-Hub-Signature header "
                            "to verify that the request is coming from "
@@ -324,6 +390,7 @@ def run_hook(options):
     github_bot.master = options.buildmaster
     github_bot.secret = options.secret
     github_bot.auth = options.auth
+    github_bot.head_commit = options.head_commit
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
