@@ -16,7 +16,7 @@
 import time
 from zope.interface import implements
 from buildbot import interfaces
-from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, RESUME, SUCCESS
+from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, SUCCESS, RESUME, CANCELED, NOT_REBUILT
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 
@@ -99,7 +99,7 @@ class SlaveStatus:
 
     @defer.inlineCallbacks
     def buildFinished(self, build):
-        shouldUpdateHealth = build.results != RESUME and \
+        shouldUpdateHealth = build.results not in (RESUME, CANCELED, NOT_REBUILT) and \
                              (self.health != SUCCESS or build.results != SUCCESS)
         if shouldUpdateHealth:
             yield self.updateHealth()
