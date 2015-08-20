@@ -222,7 +222,7 @@ class Build(properties.PropertiesMixin):
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
-        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
+        slavebuilder.slave.updateStatusBuildStarted(build=build_status)
 
         # then narrow SlaveLocks down to the right slave
         self.locks = [(l.getLock(self.slavebuilder.slave), a) 
@@ -238,11 +238,11 @@ class Build(properties.PropertiesMixin):
             return res
         d.addBoth(_uncount_build)
 
-        def _release_slave(res, slave, bs):
+        def _release_slave(res):
             self.slavebuilder.buildFinished()
-            slave.updateSlaveStatus(buildFinished=bs)
             return res
-        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
+        d.addCallback(_release_slave)
+        d.addCallback(lambda res: slavebuilder.slave.updateStatusBuildFinished(result=res, build=build_status))
 
         try:
             self.setupBuild(expectations) # create .steps

@@ -347,11 +347,15 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         else:
             return defer.succeed(None)
 
-    def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
-        if buildStarted:
-            self.slave_status.buildStarted(buildStarted)
-        if buildFinished:
-            self.slave_status.buildFinished(buildFinished)
+    def updateStatusBuildStarted(self, build):
+        self.slave_status.buildStarted(build)
+
+    @defer.inlineCallbacks
+    def updateStatusBuildFinished(self, result, build=None):
+        if build:
+            yield self.slave_status.buildFinished(build)
+
+        defer.returnValue(result)
 
     @metrics.countMethod('AbstractBuildSlave.attached()')
     def attached(self, bot):

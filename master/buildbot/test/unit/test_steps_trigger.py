@@ -566,6 +566,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         sb.name = 'test-slave-1'
         sb.isAvailable.return_value = 1
         sb.slave = Mock()
+        sb.slave.updateStatusBuildFinished = lambda result, build: result
         sb.slave.properties = properties.Properties()
         sb.prepare = lambda x, y: True
         sb.ping = lambda: True

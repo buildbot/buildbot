@@ -131,7 +131,7 @@ class StopBuildActionResource(ActionResource):
             if bldc:
                 bldc.stopBuild(reason)
 
-        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
+        defer.returnValue(path_to_build(req, self.build_status))
 
 class StopBuildChainActionResource(ActionResource):
 
@@ -226,7 +226,7 @@ class StopBuildChainActionResource(ActionResource):
 
                 build.stopBuild(reason)
 
-        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
+        defer.returnValue(path_to_build(req, self.build_status))
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):

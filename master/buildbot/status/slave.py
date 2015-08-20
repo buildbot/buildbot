@@ -16,8 +16,9 @@
 import time
 from zope.interface import implements
 from buildbot import interfaces
-from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE
+from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, RESUME, SUCCESS
 from buildbot.util.eventual import eventually
+from twisted.internet import defer
 
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
@@ -95,8 +96,13 @@ class SlaveStatus:
 
     def buildStarted(self, build):
         self.runningBuilds.append(build)
+
+    @defer.inlineCallbacks
     def buildFinished(self, build):
-        self.updateHealth()
+        shouldUpdateHealth = build.results != RESUME and \
+                             (self.health != SUCCESS or build.results != SUCCESS)
+        if shouldUpdateHealth:
+            yield self.updateHealth()
         self.runningBuilds.remove(build)
 
     def getGraceful(self):
@@ -129,25 +135,17 @@ class SlaveStatus:
 
         return my_builders
 
+    @defer.inlineCallbacks
     def getRecentBuilds(self, num_builds=15):
         status = self.master.status
-        n = 0
-        my_builders = self.getBuilders()
-        recent_builds = []
+        builds = yield status.generateFinishedBuildsAsync(num_builds=num_builds, slavename=self.name)
+        defer.returnValue(builds)
 
-        for rb in status.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
-            if rb.getSlavename() == self.name:
-                n += 1
-                recent_builds.append(rb)
-                if n > num_builds:
-                    return recent_builds
-
-        return recent_builds
-
+    @defer.inlineCallbacks
     def updateHealth(self):
         num_builds = 15
         health = 0
-        builds = self.getRecentBuilds(num_builds)
+        builds = yield self.getRecentBuilds(num_builds)
 
         if len(builds) == 0:
             self.health = 0
