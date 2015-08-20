@@ -63,7 +63,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                  spot_instance=False, max_spot_price=1.6, volumes=None,
                  placement=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX',
-                 **kwargs):
+                 instance_profile_arn=None, **kwargs):
 
         if not boto:
             config.error("The python module 'boto' is needed to use a "
@@ -125,6 +125,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.retry = retry
         self.attempt = 1
         self.product_description = product_description
+        self.instance_profile_arn = instance_profile_arn
         if None not in [placement, region]:
             self.placement = '%s%s' % (region, placement)
         else:
@@ -297,7 +298,8 @@ class EC2LatentWorker(AbstractLatentWorker):
         reservation = image.run(
             key_name=self.keypair_name, security_groups=[self.security_name],
             instance_type=self.instance_type, user_data=self.user_data,
-            placement=self.placement)
+            placement=self.placement,
+            instance_profile_arn=self.instance_profile_arn)
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(
             reservation)
