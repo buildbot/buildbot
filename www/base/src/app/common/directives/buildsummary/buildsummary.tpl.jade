@@ -1,19 +1,19 @@
-.panel.panel-default(ng-class="results2class(build)")
-  .panel-heading.no-select(ng-click="toggleDetails()")
+.panel.panel-default(ng-class="results2class(buildsummary.build)")
+  .panel-heading.no-select(ng-click="buildsummary.toggleDetails()")
     span(ng-if="prefix") {{prefix}}&nbsp;
-    a(ui-sref="build({builder:builder.builderid, build:build.number})")
-      | {{builder.name}}/{{build.number}}
+    a(ui-sref="build({builder:buildsummary.builder.builderid, build:buildsummary.build.number})")
+      | {{buildsummary.builder.name}}/{{buildsummary.build.number}}
     .pull-right
-      span(ng-show="build.complete")
-          | {{(build.complete_at - build.started_at)| durationformat:'LLL' }}
-      span(ng-show="!build.complete")
-          | {{(now - build.started_at)| durationformat:'LLL' }}
+      span(ng-show="buildsummary.build.complete")
+          | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
+      span(ng-show="!buildsummary.build.complete")
+          | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
       span
-        | &nbsp;{{build.state_string}}&nbsp;
-      .label(ng-class="results2class(build)")
-        | {{results2text(build)}}
+        | &nbsp;{{buildsummary.build.state_string}}&nbsp;
+      .label(ng-class="results2class(buildsummary.build)")
+        | {{results2text(buildsummary.build)}}
   ul.list-group.no-select
-    li.list-group-item(ng-if="isStepDisplayed(step)", ng-repeat="step in steps",
+    li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)", ng-repeat="step in buildsummary.steps",
                        ng-click="step.fulldisplay=!step.fulldisplay")
       span.pull-right(ng-if="step.started_at")
         | {{ step.duration| durationformat:'LLL' }}
@@ -26,15 +26,15 @@
       div.anim-stepdetails(ng-show="step.fulldisplay")
         ul
           li(ng-repeat="log in step.logs")
-            a(ng-href="api/v2/logs/{{log.id}}/raw")
+            a(ng-href="api/v2/logs/{{log.logid}}/raw")
                 i.fa.fa-download
             | &nbsp;
-            a(ui-sref="log({builder:builder.builderid, build:build.number, step: step.number, log:log.slug})")
+            a(ui-sref="log({builder:buildsummary.builder.builderid, build:buildsummary.build.number, step: step.number, log:log.slug})")
                 | {{log.name}}
             | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
       ul
         li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
           a(target="_blank", ng-href="{{url.url}}") {{url.name}}
       ul.list-unstyled
-        li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
-          buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')
+        li(ng-if='buildsummary.isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
+          buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='buildsummary.getBuildRequestIDFromURL(url.url)')

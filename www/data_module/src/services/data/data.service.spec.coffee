@@ -3,8 +3,8 @@ describe 'Data service', ->
     beforeEach module 'bbData', (dataServiceProvider, $provide) ->
         _dataServiceProvider = dataServiceProvider
         $provide.constant 'SPECIFICATION',
-            asd: root: true
-            bsd: root: false
+            asd: id: 'asdid'
+            bsd: paths: []
 
         $provide.constant '$state', new class State
             reload: jasmine.createSpy('reload')
@@ -26,7 +26,7 @@ describe 'Data service', ->
     it '`s cache should be true', ->
         expect(dataService.cache).toBeTruthy()
 
-    it 'should generate functions for every root in the specification', ->
+    it 'should generate functions for every endpoint in the specification', ->
         expect(dataService.getAsd).toBeDefined()
         expect(angular.isFunction(dataService.getAsd)).toBeTruthy()
 
@@ -116,54 +116,54 @@ describe 'Data service', ->
 
             expect(id1).not.toEqual(id2)
 
-        describe 'open(scope)', ->
+    describe 'open(scope)', ->
 
-            it 'should return a class with close, closeOnDestroy and getXXX functions', ->
-                scope = $rootScope.$new()
-                dataAccessor = dataService.open(scope)
-                expect(angular.isFunction(dataAccessor.close)).toBeTruthy()
-                expect(angular.isFunction(dataAccessor.closeOnDestroy)).toBeTruthy()
+        it 'should return a class with close, closeOnDestroy and getXXX functions', ->
+            scope = $rootScope.$new()
+            dataAccessor = dataService.open(scope)
+            expect(angular.isFunction(dataAccessor.close)).toBeTruthy()
+            expect(angular.isFunction(dataAccessor.closeOnDestroy)).toBeTruthy()
 
-            it 'should generate functions for every root in the specification', ->
-                dataAccessor = dataService.open()
-                expect(dataAccessor.getAsd).toBeDefined()
-                expect(angular.isFunction(dataAccessor.getAsd)).toBeTruthy()
+        it 'should generate functions for every endpoint in the specification', ->
+            dataAccessor = dataService.open()
+            expect(dataAccessor.getAsd).toBeDefined()
+            expect(angular.isFunction(dataAccessor.getAsd)).toBeTruthy()
 
-                expect(dataAccessor.getBsd).not.toBeDefined()
-                expect(angular.isFunction(dataAccessor.getBsd)).toBeFalsy()
+            expect(dataAccessor.getBsd).not.toBeDefined()
+            expect(angular.isFunction(dataAccessor.getBsd)).toBeFalsy()
 
-                spyOn(dataService, 'get').and.callThrough()
-                dataAccessor.getAsd(1)
-                dataAccessor.getAsd(2, param: 3)
-                dataAccessor.getAsd(4, subscribe: false)
-                expect(dataService.get).toHaveBeenCalledWith('asd', 1, subscribe: true)
-                expect(dataService.get).toHaveBeenCalledWith('asd', 2, param: 3, subscribe: true)
-                expect(dataService.get).toHaveBeenCalledWith('asd', 4, subscribe: false)
+            spyOn(dataService, 'get').and.callThrough()
+            dataAccessor.getAsd(1)
+            dataAccessor.getAsd(2, param: 3)
+            dataAccessor.getAsd(4, subscribe: false)
+            expect(dataService.get).toHaveBeenCalledWith('asd', 1, subscribe: true)
+            expect(dataService.get).toHaveBeenCalledWith('asd', 2, param: 3, subscribe: true)
+            expect(dataService.get).toHaveBeenCalledWith('asd', 4, subscribe: false)
 
-            it 'should unsubscribe on destroy event', ->
-                scope = $rootScope.$new()
-                spyOn(scope, '$on').and.callThrough()
+        it 'should unsubscribe on destroy event', ->
+            scope = $rootScope.$new()
+            spyOn(scope, '$on').and.callThrough()
 
-                dataAccessor = dataService.open(scope)
-                expect(scope.$on).toHaveBeenCalledWith('$destroy', jasmine.any(Function))
+            dataAccessor = dataService.open(scope)
+            expect(scope.$on).toHaveBeenCalledWith('$destroy', jasmine.any(Function))
 
-                spyOn(dataAccessor, 'close').and.callThrough()
-                expect(dataAccessor.close).not.toHaveBeenCalled()
-                scope.$destroy()
-                expect(dataAccessor.close).toHaveBeenCalled()
+            spyOn(dataAccessor, 'close').and.callThrough()
+            expect(dataAccessor.close).not.toHaveBeenCalled()
+            scope.$destroy()
+            expect(dataAccessor.close).toHaveBeenCalled()
 
-            it 'should call unsubscribe on each element', ->
-                dataAccessor = dataService.open()
-                el1 = unsubscribe: jasmine.createSpy('unsubscribe1')
-                el2 = unsubscribe: jasmine.createSpy('unsubscribe2')
-                el3 = {}
+        it 'should call unsubscribe on each element', ->
+            dataAccessor = dataService.open()
+            el1 = unsubscribe: jasmine.createSpy('unsubscribe1')
+            el2 = unsubscribe: jasmine.createSpy('unsubscribe2')
+            el3 = {}
 
-                dataAccessor.collections.push(el1)
-                dataAccessor.collections.push(el2)
-                dataAccessor.collections.push(el3)
+            dataAccessor.collections.push(el1)
+            dataAccessor.collections.push(el2)
+            dataAccessor.collections.push(el3)
 
-                expect(el1.unsubscribe).not.toHaveBeenCalled()
-                expect(el2.unsubscribe).not.toHaveBeenCalled()
-                dataAccessor.close()
-                expect(el1.unsubscribe).toHaveBeenCalled()
-                expect(el2.unsubscribe).toHaveBeenCalled()
+            expect(el1.unsubscribe).not.toHaveBeenCalled()
+            expect(el2.unsubscribe).not.toHaveBeenCalled()
+            dataAccessor.close()
+            expect(el1.unsubscribe).toHaveBeenCalled()
+            expect(el2.unsubscribe).toHaveBeenCalled()

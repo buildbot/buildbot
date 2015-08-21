@@ -1,5 +1,5 @@
 class Builders extends Controller
-    constructor: ($scope, buildbotService, resultsService, bbSettingsService, $stateParams, $location) ->
+    constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams, $location) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         $scope.connected2class = (slave) ->
@@ -29,14 +29,13 @@ class Builders extends Controller
             all_tags.sort()
             return all_tags
 
-
         $scope.tags_filter = $location.search()["tags"]
         $scope.tags_filter ?= []
-        console.log "params", $location.search()
+        $log.debug "params", $location.search()
 
         $scope.$watch  "tags_filter", (tags, old) ->
             if old?
-                console.log "go", tags
+                $log.debug "go", tags
                 $location.search("tags", tags)
         , true
         $scope.isBuilderFiltered = (builder, index) ->
@@ -59,10 +58,10 @@ class Builders extends Controller
                 $scope.tags_filter.splice(i, 1)
 
         $scope.builders = []
-        buildbotService.all('builders').bind $scope,
-            onchild: (builder) ->
-                builder.all('masters').bind $scope, dest: builder
-                builder.all('buildslaves').bind $scope,
-                    dest: builder
-                builder.some('builds', {limit:20, order:"-number"}).bind $scope,
-                    dest: builder
+        opened = dataService.open($scope)
+        opened.getBuilders().then (builders) ->
+            $scope.builders = builders
+            builders.forEach (builder) ->
+                builder.loadMasters()
+                builder.loadBuildslaves()
+                builder.loadBuilds(limit:20, order:'-number')

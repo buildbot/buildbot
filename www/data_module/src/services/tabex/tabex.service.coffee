@@ -8,7 +8,7 @@ class Tabex extends Service
             ROLES =
                 MASTER: 'bb.role.master'
                 SLAVE: 'bb.role.slave'
-            _ROLES: ROLES
+            _ROLES: ROLES # used in testing
 
             EVENTS =
                 READY: 'bb.event.ready'
@@ -39,6 +39,7 @@ class Tabex extends Service
             getSpecification: (type) -> SPECIFICATION[type]
 
             masterHandler: (data) =>
+                # the master handles the data requests and the WebSocket connection
                 if data.node_id is data.master_id
                     @role = ROLES.MASTER
                     @initialRoleDeferred.resolve()
@@ -46,6 +47,7 @@ class Tabex extends Service
                 else
                     @role = ROLES.SLAVE
                     @initialRoleDeferred.resolve()
+                    # close the WebSocket connection if it's open
                     socketService.close()
 
             refreshHandler: (data) =>
@@ -122,18 +124,17 @@ class Tabex extends Service
             load: (path, query, dbPaths = []) ->
                 $q (resolve, reject) =>
                     db = indexedDBService.db
-                    tracking =
-                        path: path
-                        query: angular.toJson(query)
 
-                    # in cache
                     t = dataUtilsService.type(path)
                     specification = @getSpecification(t)
-                    for item in dbPaths
+                    # test if cached and active
+                    for dbPath in dbPaths
+                        dbPath.query = angular.fromJson(dbPath.query)
                         inCache =
-                            item.path is tracking.path and
-                            item.query is tracking.query
-                        elapsed = new Date() - new Date(item.lastActive)
+                            (dbPath.path is path and
+                            (angular.equals(dbPath.query, query) or angular.equals(dbPath.query, {}))) or
+                            (dbPath.path is t and angular.equals(dbPath.query, {}))
+                        elapsed = new Date() - new Date(dbPath.lastActive)
                         active = elapsed < 2000 or specification.static == true
 
                         if inCache and active
@@ -143,33 +144,44 @@ class Tabex extends Service
                     restPath = dataUtilsService.restPath(path)
                     [parentName, parentId] = @getParent(restPath)
                     parentIdName = SPECIFICATION[parentName]?.id
+                    if parentIdName? then parentIdName = "_#{parentIdName}"
                     restService.get(restPath, query).then (data) =>
                         type = dataUtilsService.type(restPath)
                         data = dataUtilsService.unWrap(data, type)
                         db.transaction 'rw', db[type], ->
                             if not angular.isArray(data) then data = [data]
                             data.forEach (i) ->
+                                put = (element) ->
+                                    for k, v of element
+                                        if angular.isObject(element[k])
+                                            element[k] = angular.toJson(v)
+                                    db[type].put(element)
+
                                 idName = SPECIFICATION[type]?.id
                                 id = i[idName]
-                                put = ->
-                                    if parentIdName? then i[parentIdName] ?= [parentId]
-                                    for k, v of i
-                                        if angular.isObject(i[k])
-                                            i[k] = angular.toJson(v)
-                                    db[type].put(i)
                                 if id?
                                     db[type].get(id).then (e) ->
                                         e = dataUtilsService.parse(e)
-                                        if e? and parentIdName? and angular.isArray(e[parentIdName])
+                                        for k, v of i then e[k] = v
+                                        if parentIdName?
+                                            e[parentIdName] ?= []
                                             if parentId not in e[parentIdName]
-                                                i[parentIdName] = e[parentIdName].concat(parentId)
-                                            else i[parentIdName] = e[parentIdName]
-                                    .finally -> put()
-                                else put()
+                                                e[parentIdName].push(parentId)
+                                        put(e)
+                                    .catch ->
+                                        if parentIdName? then i[parentIdName] = [parentId]
+                                        put(i)
+                                else
+                                    if parentIdName? then i[parentIdName] = [parentId]
+                                    put(i)
 
                         .then ->
                             db.transaction 'rw', db.paths, ->
-                                db.paths.put(tracking)
+                                # cached path informations
+                                db.paths.put {
+                                    path: path
+                                    query: angular.toJson(query)
+                                }
                             .then -> resolve()
                             .catch (error) -> reject(error)
                         .catch (error) -> reject(error)
@@ -206,7 +218,8 @@ class Tabex extends Service
                 delete query.subscribe
                 # if subscribe is false, we just load the data
                 if subscribe == false
-                    @load(path, query).then -> listener(EVENTS.READY)
+                    indexedDBService.db.paths.toArray().then (dbPaths) =>
+                        @load(path, query, dbPaths).then -> listener(EVENTS.READY)
                     return
                 # if subscribe is true, we subscribe on events
                 channel =

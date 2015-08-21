@@ -12,7 +12,7 @@ class Data extends Provider
                 self = @
                 angular.extend(@, config)
                 # generate loadXXX functions for root endpoints
-                endpoints = Object.keys(SPECIFICATION).filter (e) -> SPECIFICATION[e].root
+                endpoints = Object.keys(SPECIFICATION).filter (e) -> SPECIFICATION[e].id?
                 @constructor.generateEndpoints(endpoints)
 
             clearCache: ->
@@ -33,6 +33,34 @@ class Data extends Provider
                 # up to date collection, this will be returned
                 collection = @createCollection(restPath, query)
                 collection.subscribe()
+
+            # register return values for the mocked get function
+            mocks: {}
+            spied: false
+            when: (args...) ->
+                [url, query, returnValue] = args
+                if not returnValue?
+                    [query, returnValue] = [{}, query]
+                if jasmine? and not @spied
+                    spyOn(@, 'get').and.callFake(@_mockGet)
+                    @spied = true
+
+                @mocks[url] ?= {}
+                @mocks[url][query] = returnValue
+
+            # register return values with the .when function
+            # when testing get will return the given values
+            _mockGet: (args...) ->
+                [url, query] = @processArguments(args)
+                queryWithoutSubscribe = angular.copy(query)
+                delete queryWithoutSubscribe.subscribe
+                returnValue = @mocks[url]?[query] or @mocks[url]?[queryWithoutSubscribe]
+                if not returnValue? then throw new Error("No return value for: #{url} (#{angular.toJson(query)})")
+                collection = @createCollection(url, query)
+                collection.from(returnValue)
+                p = $q.resolve(collection)
+                p.getArray = -> collection
+                return p
 
             # for easier testing
             createCollection: (args...) ->
@@ -70,8 +98,8 @@ class Data extends Provider
                     collections = []
                     constructor: ->
                         @collections = collections
-                        # generate loadXXX functions for root endpoints
-                        endpoints = Object.keys(SPECIFICATION).filter (e) -> SPECIFICATION[e].root
+                        # generate getXXX functions for root endpoints
+                        endpoints = Object.keys(SPECIFICATION).filter (e) -> SPECIFICATION[e].id?
                         @constructor.generateEndpoints(endpoints)
 
                         if scope? then @closeOnDestroy(scope)
