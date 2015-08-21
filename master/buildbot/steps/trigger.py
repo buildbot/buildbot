@@ -257,6 +257,7 @@ class Trigger(ResumeBuild):
             else:
                 add_links(res_builds)
 
+        log.msg("Trigger scheduler result %d " % result)
         self.finishIfRunning(result)
         return
 

@@ -20,6 +20,7 @@ from twisted.internet import defer, task
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+from twisted.python import log
 import re
 
 class TriggerableSchedulerStopped(StandardError):
@@ -128,4 +129,6 @@ class Triggerable(base.BaseScheduler):
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
+        log.msg("Triggerable scheduler is finishing buildset")
+        log.msg((result, brids))
         d.callback((result, brids))
