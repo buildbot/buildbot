@@ -242,7 +242,9 @@ class Build(properties.PropertiesMixin):
             self.slavebuilder.buildFinished()
             return res
         d.addCallback(_release_slave)
-        d.addCallback(lambda res: slavebuilder.slave.updateStatusBuildFinished(result=res, build=build_status))
+        d.addCallback(lambda res:
+                      slavebuilder.slave.updateStatusBuildFinished(result=res, build=build_status)
+                      if (slavebuilder and slavebuilder.slave) else res)
 
         try:
             self.setupBuild(expectations) # create .steps
