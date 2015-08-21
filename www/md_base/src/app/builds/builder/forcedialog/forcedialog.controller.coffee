@@ -1,6 +1,6 @@
 class ForceDialog extends Controller
-
-    fields: {}
+    data: {}
+    fields: []
     field_errors: null
 
     cancel: ->
@@ -8,7 +8,7 @@ class ForceDialog extends Controller
 
     confirm: ->
         param = builderid: @builder.builderid
-        _.extend param, @fields
+        _.extend param, @data
         @forceBuild param
 
     forceBuildSuccess: ->
@@ -31,11 +31,13 @@ class ForceDialog extends Controller
         res.then (=> @forceBuildSuccess()), (data) => @forceBuildFail(data.error)
 
     constructor: (@builder, @scheduler, @dataService, @restService, @$mdDialog) ->
+        @fields = @scheduler.all_fields
+
         parseFields = (field) =>
             if field.nested
                 parseFields(subfield) for subfield in field.fields
             else if field.name
-                @fields[field.name] = field.default
+                @data[field.name] = field.default
 
-        parseFields(field) for field in @scheduler.all_fields
+        parseFields(field) for field in @fields
 
