@@ -194,7 +194,7 @@ class IndexedDB extends Service
                 stores = {}
                 for name, s of specification
                     if angular.isArray(s.fields)
-                        a = s.fields.map (e) -> e.split(':')[0]
+                        a = s.fields[..]
                         i = a.indexOf(s.id)
                         if i > -1 then a[i] = "&#{a[i]}"
                         else a.unshift('++id')

@@ -295,15 +295,15 @@ describe 'IndexedDB service', ->
                 test1:
                     id: 'id1'
                     fields: [
-                        'id1:number'
-                        'field1:string'
-                        'field2:timestamp'
+                        'id1'
+                        'field1'
+                        'field2'
                     ]
                 test2:
                     id: null
                     fields: [
-                        'fieldA:number'
-                        'fieldB:string'
+                        'fieldA'
+                        'fieldB'
                     ]
 
             result = indexedDBService.processSpecification(specification)

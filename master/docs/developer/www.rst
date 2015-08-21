@@ -634,7 +634,7 @@ It uses the following libraries:
 The DataService is available as a standalone AngularJS module.
 Installation via bower:
 
-  .. code-block:: none
+  .. code-block:: shell
 
       bower install buildbot-data --save
 
@@ -646,26 +646,11 @@ Inject the ``bbData`` module to your application:
 
 Methods:
 
-* ``.get(endpoint, [id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+``.getXs([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
 
-  * call .getArray() on the returned promise to get the updating Collection before it's filled with the initial data
-
-  .. code-block:: coffeescript
-
-      # assign builds to $scope.builds once the Collection is filled
-      dataService.get('builds', builderid: 1).then (builds) ->
-          $scope.builds = builds
-          # load steps for every build
-          builds.forEach (b) -> b.loadSteps()
-
-      # assign builds to $scope.builds before the Collection is filled using the .getArray() function
-      $scope.builds = dataService.get('builds', builderid: 1).getArray()
-
-* ``.getXXX([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
-
-  * it's higly advised to use these instead of the ``.get('string')`` function
-  * XXX can be the following: Builds, Builders, Buildrequests, Buildsets, Buildslaves, Changes, Changesources, Forceschedulers, Masters, Schedulers, Sourcestamps
-  * call .getArray() on the returned promise to get the updating Collection before it's filled with the initial data
+  * it's highly advised to use these instead of the lower level ``.get('string')`` function
+  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Buildslaves``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
+  * call ``.getArray()`` on the returned promise to get the Collection before it's filled with the initial data
 
   .. code-block:: coffeescript
 
@@ -678,7 +663,26 @@ Methods:
       # assign builds to $scope.builds before the Collection is filled using the .getArray() function
       $scope.builds = dataService.getBuilds(builderid: 1).getArray()
 
-* ``.open(scope)``: returns a DataAccessor, handles bindings, open a new accessor every time you need updating data in a controller
+``.get(endpoint, [id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+
+  * call ``.getArray()`` on the returned promise to get the Collection before it's filled with the initial data
+
+  .. code-block:: coffeescript
+
+      # assign builds to $scope.builds once the Collection is filled
+      builderid = 1
+      dataService.get("builders/#{builderid}/builds", limit: 1).then (builds) ->
+          $scope.builds = builds
+          # load steps for every build
+          builds.forEach (b) -> b.loadSteps()
+
+      # assign builds to $scope.builds before the Collection is filled using the .getArray() function
+      $scope.builds = dataService.get('builds', builderid: 1).getArray()
+
+``.open(scope)``: returns a DataAccessor, handles bindings
+
+  * open a new accessor every time you need updating data in a controller
+  * it registers a $destroy event handling function on the scope, it automatically unsubscribes from updates that has been requested by the DataAccessor
 
   .. code-block:: coffeescript
 
@@ -696,17 +700,17 @@ Methods:
               # request new data, it updates automatically
               @builders = opened.getBuilders(limit: 10, order: '-started_at').getArray()
 
-* ``.control(url, method, [params])``: returns a promise, sends a JSON RPC2 POST request to the server
+``.control(url, method, [params])``: returns a promise, sends a JSON RPC2 POST request to the server
 
   .. code-block:: coffeescript
 
       # open a new accessor every time you need updating data in a controller
-      dataService.control('Forceschedulers/force', 'force').then (response) ->
+      dataService.control('forceschedulers/force', 'force').then (response) ->
           $log.debug(response)
       , (reason) ->
           $log.error(reason)
 
-* ``.clearCache()``: clears the IndexedDB tables and reloads the current page
+``.clearCache()``: clears the IndexedDB tables and reloads the current page
 
   .. code-block:: coffeescript
 
@@ -714,11 +718,11 @@ Methods:
           constructor: (@dataService) ->
           onClick: -> @dataService.clearCache()
 
-Methods on the Wrapper classes:
+Methods on the object returned by the ``.getXs()`` methods:
 
-* ``.getXXX([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+``.getXs([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
 
-  * same as dataService.getXXX, but with relative endpoint
+  * same as ``dataService.getXs``, but with relative endpoint
 
   .. code-block:: coffeescript
 
@@ -731,7 +735,9 @@ Methods on the Wrapper classes:
                   # assign completed test to every build
                   b.complete_steps = steps.map (s) -> s.complete
 
-* ``.loadXXX([id], [query])``: returns a promise<Collection>, the Collection contains all the requested data, it is also assigned to wrapperInstance.xxx
+``.loadXs([id], [query])``: returns a promise<Collection>, the Collection contains all the requested data, which is also assigned to ``o.Xs``
+
+  * ``o.loadXs()`` is equivalent to ``o.getXs().then (xs) -> o.xs = xs``
 
   .. code-block:: coffeescript
 
@@ -748,7 +754,7 @@ Methods on the Wrapper classes:
           # builder has a builds field, and the builds have a steps field containing the corresponding data
           $log.debug(builder)
 
-* ``.control(method, params)``: returns a promise, sends a JSON RPC2 POST request to the server
+``.control(method, params)``: returns a promise, sends a JSON RPC2 POST request to the server
 
 RecentStorage
 .............
