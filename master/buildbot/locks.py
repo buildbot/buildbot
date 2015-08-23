@@ -23,7 +23,8 @@ from twisted.python import log
 if False:  # for debugging
     debuglog = log.msg
 else:
-    debuglog = lambda m: None
+    def debuglog(_):
+        return None
 
 
 class BaseLock(object):
