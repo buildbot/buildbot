@@ -23,7 +23,7 @@ class _ForcebuildForm extends Controller
         elem.attr(attributes) if attributes
         return elem
 
-    labelElemnt: (text) ->
+    labelElement: (text) ->
         text = text.trim().replace /:$/, ''
         return null if not text
         label = @element 'label'
@@ -101,7 +101,7 @@ class _ForcebuildForm extends Controller
             'required': field.required
             'ng-model': "form.model.#{ field.name }"
             'md-is-error': "form.errors.#{ field.name }"
-        container.append @labelElemnt field.label
+        container.append @labelElement field.label
         container.append input
         elem.append container
         return elem
@@ -113,7 +113,7 @@ class _ForcebuildForm extends Controller
             'required': field.required
             'ng-model': "form.model.#{ field.name }"
             'md-is-error': "form.errors.#{ field.name }"
-        container.append @labelElemnt field.label
+        container.append @labelElement field.label
         container.append textarea
         elem.append container
         return elem
@@ -126,7 +126,7 @@ class _ForcebuildForm extends Controller
             'required': field.required
             'ng-model': "form.model.#{ field.name }"
             'md-is-error': "form.errors.#{ field.name }"
-        container.append @labelElemnt field.label
+        container.append @labelElement field.label
         container.append input
         elem.append container
         return elem
@@ -152,7 +152,7 @@ class _ForcebuildForm extends Controller
             f = @element 'md-option', value: choice
             f.text(choice)
             select.append f
-        container.append @labelElemnt field.label
+        container.append @labelElement field.label
         container.append select
         elem.append container
         return elem
