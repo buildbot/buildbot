@@ -27,6 +27,7 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 class WsProtocol(WebSocketServerProtocol):
 
     def __init__(self, master):
+        WebSocketServerProtocol.__init__(self)
         self.master = master
         self.qrefs = {}
 
