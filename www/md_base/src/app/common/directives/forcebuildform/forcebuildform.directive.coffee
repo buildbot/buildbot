@@ -16,7 +16,6 @@ class _ForcebuildForm extends Controller
 
     constructor: ($scope, $element, $compile) ->
         elem = $compile(@buildfields())($scope)
-        console.log elem
         $element.append elem
 
     element: (tag, attributes) ->
@@ -38,7 +37,6 @@ class _ForcebuildForm extends Controller
         return elem
 
     buildfield: (field) ->
-        console.log field
         if field.type == 'nested'
             # Build layout
             switch field.layout

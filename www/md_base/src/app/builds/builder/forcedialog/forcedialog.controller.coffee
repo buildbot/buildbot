@@ -16,21 +16,17 @@ class ForceDialog extends Controller
         @$mdDialog.hide()
 
     forceBuildFail: (error) ->
-        if error.code == -32602
+        if error.code == -32602 # Non-networking error
             @field_errors = data.error.message
         else
             alert "Unexpected error occurs, please try again."
             @field_errors = null
 
     forceBuild: (param) ->
-        res = @restService.post 'forceschedulers/force',
-            id: @dataService.getNextId()
-            jsonrpc: '2.0'
-            method: 'force'
-            params: param
+        res = @dataService.control 'forceschedulers/force', 'force', param
         res.then (=> @forceBuildSuccess()), (data) => @forceBuildFail(data.error)
 
-    constructor: (@builder, @scheduler, @dataService, @restService, @$mdDialog) ->
+    constructor: (@builder, @scheduler, @dataService, @$mdDialog) ->
         @fields = @scheduler.all_fields
 
         parseFields = (field) =>
