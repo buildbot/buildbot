@@ -13,16 +13,18 @@ Here is a diagram demonstrating the working of the stats service:
 Stats Service
 -------------
 
-.. py:class:: StatsService
+.. py:class:: buildbot.statistics.stats_service.StatsService
 
    An instance of this class functions as a :class:`BuildbotService`.
-   The instance of the running service is initialized in the master configuration file (see :bb:cfg:`stats-service` for more).
+   The instance of the running service is initialized in the master configuration file (see :bb:cfg:`stats-service` for more information).
    The running service is accessible everywhere in Buildbot via the :class:`BuildMaster`.
    The service is available at ``self.master.namedServices['<service-name>']``.
    It takes the following intialization arguments:
 
-   * ``storage_backends``: A list of storage backends. These are instance of subclasses of :class:`StatsStorageBase`.
-   * ``name``: The name of this service.
+   ``storage_backends``
+     A list of storage backends. These are instance of subclasses of :class:`StatsStorageBase`.
+   ``name``
+     The name of this service.
      This name can be used to access the running instance of this service using ``self.master.namedServices[name]``.
 
    Please see :bb:cfg:`stats-service` for examples.
@@ -78,7 +80,7 @@ Each storage backend has a Python client defined as part of :mod:`buildbot.stati
 
 Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage backend.
 
-.. py:class:: StatsStorageBase
+.. py:class:: buildbot.statistis.storage_backends.base.StatsStorageBase
 
    A abstract base class for all storage services. It cannot be directly initialized - it would raise a ``TypeError`` otherwise.
 
@@ -97,7 +99,7 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
       Not doing so will result result in a ``TypeError`` when starting Buildbot.
 
 
-.. py:class:: InfluxStorageService
+.. py:class:: buildbot.statistics.storage_backends.influxdb_client.InfluxStorageService
 
    `InfluxDB <http://influxdb.com>`_ is a distributed, time series database that employs a key-value pair storage system.
 
@@ -105,14 +107,21 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
    It is available in the configuration as ``statistics.InfluxStorageService``
    It takes the following initialization arguments:
 
-   * ``url``: The URL where the service is running.
-   * ``port``: The port on which the service is listening.
-   * ``user``: Username of a InfluxDB user.
-   * ``password``: Password for ``user``.
-   * ``db``: The name of database to be used.
-   * ``captures``: A list of instances of subclasses of :py:class:`Capture`.
+   ``url``
+     The URL where the service is running.
+   ``port``
+     The port on which the service is listening.
+   ``user``
+     Username of a InfluxDB user.
+   ``password``
+     Password for ``user``.
+   ``db``
+     The name of database to be used.
+   ``captures``
+     A list of instances of subclasses of :py:class:`Capture`.
      This tells which stats are to be stored in this storage backend.
-   * ``name=None``: (Optional) The name of this storage backend.
+   ``name=None``
+     (Optional) The name of this storage backend.
 
    .. py:method:: thd_postStatsValue(self, post_data, series_name, context={})
 
@@ -133,14 +142,16 @@ Capture Classes
 
 Capture classes are used for declaring which data needs to captured and sent to storage backends for storage.
 
-.. py:class:: Capture
+.. py:class:: buildbot.statistics.capture.Capture
 
    This is the abstract base class for all capture classes.
    Not to be used directly.
    Initlized with the following parameters:
 
-   * ``routingKey``: (tuple) The routing key to be used by :class:`StatsService` to register consumers to the MQ layer for the subclass of this class.
-   * ``callback``: The callback registered with the MQ layer for the consumer of a subclass of this class.
+   ``routingKey``
+     (tuple) The routing key to be used by :class:`StatsService` to register consumers to the MQ layer for the subclass of this class.
+   ``callback``
+     The callback registered with the MQ layer for the consumer of a subclass of this class.
      Each subclass must provide a default callback for this purpose.
 
    .. py:method:: _defaultContext(self, msg):
@@ -153,9 +164,11 @@ Capture classes are used for declaring which data needs to captured and sent to 
       If not, then the subclass can't be instantiated.
       The consume method, when called (from the mq layer), receives the following arguments:
 
-      * ``routingKey``: The routing key which was registered to the MQ layer.
+      ``routingKey``
+        The routing key which was registered to the MQ layer.
         Same as the ``routingKey`` provided to instantiate this class.
-      * ``msg``: The message that was sent by the producer.
+      ``msg``
+        The message that was sent by the producer.
 
    .. py:method:: _store(self, post_data, series_name, context):
 
@@ -163,20 +176,25 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It must be implemented by all subclasses of this class.
       It takes the following arguments:
 
-      * ``post_data``: (dict) The key-value pair being sent to the storage backend.
-      * ``series_name``: (str) The name of the series to which this data is stored.
-      * ``context``: (dict) Any additional information pertaining to data being sent.
+      ``post_data``
+        (dict) The key-value pair being sent to the storage backend.
+      ``series_name``
+        (str) The name of the series to which this data is stored.
+      ``context``
+        (dict) Any additional information pertaining to data being sent.
 
 
-.. py:class:: CapturePropertyBase
+.. py:class:: buildbot.statistics.capture.CapturePropertyBase
 
    This is a base class for both :class:`CaptureProperty` and :class:`CapturePropertyAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
    Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
    It is intialized with the following arguments:
 
-   * ``property_name``: The name of property needed to be recorded as a statistic.
+   ``property_name``
+     The name of property needed to be recorded as a statistic.
      This can be a regular expression if ``regex=True`` (see below).
-   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
+   ``callback=None``
+     The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
      A default callback needs to be prois provided for this.
 
    **The default callback:**
@@ -186,11 +204,14 @@ Capture classes are used for declaring which data needs to captured and sent to 
      It returns property value for ``property_name``.
      It receives the following arguments:
 
-     * ``props``: A dictionary of all build properties.
-     * ``property_name``: Name of the build property to return.
+     ``props``
+       A dictionary of all build properties.
+     ``property_name``
+       Name of the build property to return.
 
 
-   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+   ``regex=False``
+     If this is set to ``True``, then the property name can be a regular expression.
      All properties matching this regular expression will be sent for storage.
 
    .. py:method:: consume(self, routingKey, msg)
@@ -207,21 +228,26 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It checks whether a builder is allowed to send properties to the storage backend according to the configuration file.
       It takes one argument:
 
-      * ``builder_info``: (dict) The dictionary returned by the data API containing the builder information.
+      ``builder_info``
+        (dict) The dictionary returned by the data API containing the builder information.
 
 
-.. py:class:: CaptureProperty
+.. py:class:: buildbot.statistics.capture.CaptureProperty
 
    The capture class for capturing build properties.
    It is available in the configuration as ``statistics.CaptureProperty``
 
    It takes the following arguments:
 
-   * ``builder_name``: The name of builder in which the property is recorded.
-   * ``property_name``: The name of property needed to be recorded as a statistic.
-   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
+   ``builder_name``
+     The name of builder in which the property is recorded.
+   ``property_name``
+     The name of property needed to be recorded as a statistic.
+   ``callback=None``
+     The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
      A default callback is provided for this (see :class:`CapturePropertyBase` for more).
-   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+   ``regex=False``
+     If this is set to ``True``, then the property name can be a regular expression.
      All properties matching this regular expression will be sent for storage.
 
    .. py:method:: _builder_name_matches(self, builder_info)
@@ -230,17 +256,20 @@ Capture classes are used for declaring which data needs to captured and sent to 
       See :class:`CapturePropertyBase` for more information on this method.
 
 
-.. py:class:: CapturePropertyAllBuilders
+.. py:class:: buildbot.statistics.capture.CapturePropertyAllBuilders
 
    The capture class to use for capturing build properties on all builders.
    It is available in the configuration as ``statistics.CaptureProperty``
 
    It takes the following arguments:
 
-   * ``property_name``: The name of property needed to be recorded as a statistic.
-   * ``callback=None``: The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
+   ``property_name``
+     The name of property needed to be recorded as a statistic.
+   ``callback=None``
+     The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
      A default callback is provided for this (see :class:`CapturePropertyBase` for more).
-   * ``regex=False``: If this is set to ``True``, then the property name can be a regular expression.
+   ``regex=False``
+     If this is set to ``True``, then the property name can be a regular expression.
      All properties matching this regular expression will be sent for storage.
 
    .. py:method:: _builder_name_matches(self, builder_info)
@@ -249,14 +278,16 @@ Capture classes are used for declaring which data needs to captured and sent to 
       in ``property_name`` to storage backends.
 
 
-.. py:class:: CaptureBuildTimes
+.. py:class:: buildbot.statistics.capture.CaptureBuildTimes
 
    A base class for all Capture classes that deal with build times (start/end/duration).
    Not to be used directly.
    Initialized with:
 
-   * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback``: The callback function that is used by subclass of this class to post-process data before formatting it and sending it to the appropriate storage backends.
+   ``builder_name``
+     The name of builder whose times are to be recorded.
+   ``callback``
+     The callback function that is used by subclass of this class to post-process data before formatting it and sending it to the appropriate storage backends.
      A default callback is provided for this.
      Each subclass must provide a deafault callback that is used in initialization of this class should the user not provide a callback.
 
@@ -266,8 +297,10 @@ Capture classes are used for declaring which data needs to captured and sent to 
       See :class:`Capture` for more.
       .. note:: This consumer requires all subclasses to implement:
 
-      * ``self._time_type`` (property): A string used as a key in ``post_data`` sent to sotrage services.
-      * ``self._retValParams(msg)`` (method): A method that takes in the ``msg`` this consumer gets and returns a list of arguments for the capture callback.
+      ``self._time_type`` (property)
+        A string used as a key in ``post_data`` sent to sotrage services.
+      ``self._retValParams(msg)`` (method)
+        A method that takes in the ``msg`` this consumer gets and returns a list of arguments for the capture callback.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -286,16 +319,19 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It checks whether a builder is allowed to send build times to the storage backend according to the configuration file.
       It takes one argument:
 
-      * ``builder_info``: (dict) The dictionary returned by the data API containing the builder information.
+      ``builder_info``
+        (dict) The dictionary returned by the data API containing the builder information.
 
 
-.. py:class:: CaptureBuildStartTime
+.. py:class:: buildbot.statistics.capture.CaptureBuildStartTime
 
    A capture class for capturing build start times.
    It takes the following arguments:
 
-   * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: The callback function for this class.
+   ``builder_name``
+     The name of builder whose times are to be recorded.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -305,7 +341,8 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It returns the start time in ISO format.
       It takes one argument:
 
-      * ``start_time``: A python datetime object that denotes the build start time.
+      ``start_time``
+        A python datetime object that denotes the build start time.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -317,13 +354,14 @@ Capture classes are used for declaring which data needs to captured and sent to 
       See :class:`CaptureBuildTimes` for more information on this method.
 
 
-.. py:class:: CaptureBuildStartTimeAllBuilders
+.. py:class:: buildbot.statistics.capture.CaptureBuildStartTimeAllBuilders
 
    A capture class for capturing build start times from all builders.
    It is a subclass of :class:`CaptureBuildStartTime`.
    It takes the following arguments:
 
-   * ``callback=None``: The callback function for this class.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -335,13 +373,15 @@ Capture classes are used for declaring which data needs to captured and sent to 
       Returns ``True`` for all builders.
 
 
-.. py:class:: CaptureBuildEndTime
+.. py:class:: buildbot.statistics.capture.CaptureBuildEndTime
 
    A capture class for capturing build end times.
    Takes the following arguments:
 
-   * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``callback=None``: The callback function for this class.
+   ``builder_name``
+     The name of builder whose times are to be recorded.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -351,7 +391,8 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It returns the end time in ISO format.
       It takes one argument:
 
-      * ``end_time``: A python datetime object that denotes the build end time.
+      ``end_time``
+        A python datetime object that denotes the build end time.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -363,13 +404,14 @@ Capture classes are used for declaring which data needs to captured and sent to 
       See :class:`CaptureBuildTimes` for more information on this method.
 
 
-.. py:class:: CaptureBuildEndTimeAllBuilders
+.. py:class:: buildbot.statistics.capture.CaptureBuildEndTimeAllBuilders
 
    A capture class for capturing build end times from all builders.
    It is a subclass of :class:`CaptureBuildEndTime`.
    It takes the following arguments:
 
-   * ``callback=None``: The callback function for this class.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -381,15 +423,18 @@ Capture classes are used for declaring which data needs to captured and sent to 
       Returns ``True`` for all builders.
 
 
-.. py:class:: CaptureBuildDuration
+.. py:class:: buildbot.statistics.capture.CaptureBuildDuration
 
    A capture class for capturing build duration.
    Takes the following arguments:
 
-   * ``builder_name``: The name of builder whose times are to be recorded.
-   * ``report_in='seconds'``: Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``.
+   ``builder_name``
+     The name of builder whose times are to be recorded.
+   ``report_in='seconds'``
+     Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``.
      This is the units in which the build time will be reported.
-   * ``callback=None``: The callback function for this class.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -399,8 +444,10 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It returns the duration of the build as per the ``report_in`` argument.
       It receives the following arguments:
 
-      * ``start_time``: A python datetime object that denotes the build start time.
-      * ``end_time``: A python datetime object that denotes the build end time.
+      ``start_time``
+        A python datetime object that denotes the build start time.
+      ``end_time``
+        A python datetime object that denotes the build end time.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -412,13 +459,14 @@ Capture classes are used for declaring which data needs to captured and sent to 
       See :class:`CaptureBuildTimes` for more information on this method.
 
 
-.. py:class:: CaptureBuildDurationAllBuilders
+.. py:class:: buildbot.statistics.capture.CaptureBuildDurationAllBuilders
 
    A capture class for capturing build durations from all builders.
    It is a subclass of :class:`CaptureBuildDuration`.
    It takes the following arguments:
 
-   * ``callback=None``: The callback function for this class.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -430,15 +478,17 @@ Capture classes are used for declaring which data needs to captured and sent to 
       Returns ``True`` for all builders.
 
 
-.. py:class:: CaptureDataBase
+.. py:class:: buildbot.statistics.capture.CaptureDataBase
 
    This is a base class for both :class:`CaptureData` and :class:`CaptureDataAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
    Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
    It is intialized with the following arguments:
 
-   * ``data_name``: The name of data to be captured.
+   ``data_name``
+     The name of data to be captured.
      Same as in :meth:`yieldMetricsValue`.
-   * ``callback=None``: The callback function for this class.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -458,19 +508,23 @@ Capture classes are used for declaring which data needs to captured and sent to 
       It checks whether a builder is allowed to send properties to the storage backend according to the configuration file.
       It takes one argument:
 
-      * ``builder_info``: (dict) The dictionary returned by the data API containing the builder information.
+      ``builder_info``
+        (dict) The dictionary returned by the data API containing the builder information.
 
 
-.. py:class:: CaptureData
+.. py:class:: buildbot.statistics.capture.CaptureData
 
    A capture class for capturing arbitrary data that is not stored as build-data.
    See :meth:`yieldMetricsValue` for more.
    Takes the following arguments for initliazation:
 
-   * ``data_name``: The name of data to be captured.
+   ``data_name``
+     The name of data to be captured.
      Same as in :meth:`yieldMetricsValue`.
-   * ``builder_name``: The name of the builder on which the data is captured.
-   * ``callback=None``: The callback function for this class.
+   ``builder_name``
+     The name of the builder on which the data is captured.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    **The default callback:**
@@ -483,15 +537,17 @@ Capture classes are used for declaring which data needs to captured and sent to 
       See :class:`CaptureBuildTimes` for more information on this method.
 
 
-.. py:class:: CaptureDataAllBuilders
+.. py:class:: buildbot.statistics.capture.CaptureDataAllBuilders
 
    A capture class to capture arbitrary data on all builders.
    See :meth:`yieldMetricsValue` for more.
    It takes the following arguments:
 
-   * ``data_name``: The name of data to be captured.
+   ``data_name``
+     The name of data to be captured.
      Same as in :meth:`yieldMetricsValue`.
-   * ``callback=None``: The callback function for this class.
+   ``callback=None``
+     The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
    .. py:method:: _builder_name_matches(self, builder_info)
