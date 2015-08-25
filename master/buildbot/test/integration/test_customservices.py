@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
+
+from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and slave environment,
 # with one builder and a custom step
