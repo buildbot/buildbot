@@ -8,7 +8,7 @@ class ForceDialog extends Controller
 
     confirm: ->
         param = builderid: @builder.builderid
-        _.extend param, @data
+        angular.extend param, @data
         @forceBuild param
 
     forceBuildSuccess: ->
