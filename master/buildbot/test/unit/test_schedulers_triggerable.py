@@ -26,6 +26,7 @@ from buildbot.schedulers import triggerable
 from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
+from buildbot.test.util.decorators import flaky
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
@@ -159,6 +160,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(reason="Because I said so")
         self.assertEqual(sched.reason, "Because I said so")
 
+    @flaky(bugNumber=3339)
     def test_trigger(self):
         sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
         # no subscription should be in place yet
