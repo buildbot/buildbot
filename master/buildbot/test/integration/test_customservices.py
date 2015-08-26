@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
+
+from buildbot.test.util.decorators import flaky
+from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and slave environment,
 # with one builder and a custom step
@@ -24,6 +26,7 @@ from twisted.internet import defer
 
 class CustomServiceMaster(RunMasterBase):
 
+    @flaky(bugNumber=3340)
     @defer.inlineCallbacks
     def test_customService(self):
 
