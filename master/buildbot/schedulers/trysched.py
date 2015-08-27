@@ -289,7 +289,7 @@ class RemoteBuildRequest(pb.Referenceable):
         builds = yield self.master.data.get(('buildrequests', self.brid, 'builds'))
         for build in builds:
             if build['buildid'] in reportedBuilds:
-                return
+                continue
             reportedBuilds.add(build['buildid'])
             yield subscriber.callRemote('newbuild',
                                         RemoteBuild(self.master, build, self.builderName),

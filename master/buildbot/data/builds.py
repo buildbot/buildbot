@@ -143,6 +143,14 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
             buildscol.append(data)
         defer.returnValue(buildscol)
 
+    def startConsuming(self, callback, options, kwargs):
+        builderid = kwargs.get('builderid')
+        if builderid is not None:
+            path = ('builders', str(builderid), 'builds', None, None)
+        else:
+            path = ('builds', None, None)
+        return self.master.mq.startConsuming(callback, path)
+
 
 class Build(base.ResourceType):
 
