@@ -23,7 +23,6 @@ from buildbot.clients import tryclient
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import www
-from buildbot.test.util.decorators import flaky
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -133,7 +132,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         # stub out printStatus, as it's timing-based and thus causes
         # occasional test failures.
-        self.patch(tryclient.Try, 'printStatus', lambda: None)
+        self.patch(tryclient.Try, 'printStatus', lambda _: None)
 
         def output(*msg):
             msg = ' '.join(map(str, msg))
@@ -234,7 +233,6 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-    @flaky(bugNumber=2762)
     @defer.inlineCallbacks
     def test_userpass_wait(self):
         yield self.startMaster(
