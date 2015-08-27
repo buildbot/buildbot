@@ -138,5 +138,4 @@ class TestStatus(unittest.TestCase):
         self.assertTrue(watcher.changeAdded.called)
         args, kwargs = watcher.changeAdded.call_args
         self.assertEqual(args[0]['m'], status.master)
-        print args
         self.assertEqual(args[0]['c']['changeid'], 13)
