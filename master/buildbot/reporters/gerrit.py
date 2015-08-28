@@ -363,10 +363,11 @@ class GerritStatusPush(service.BuildbotService):
             revision = getProperty(build, "got_revision") or build.getProperty("revision")
 
             if isinstance(revision, dict):
-                revision = None
                 # in case of the revision is a codebase revision, we just take the revisionfor current codebase
                 if codebase is not None:
                     revision = revision[codebase]
+                else:
+                    revision = None
 
             if project is not None and revision is not None:
                 self.sendCodeReview(project, revision, result)
