@@ -88,3 +88,30 @@ describe 'Data utils service', ->
 
             result = dataUtilsService.unWrap(data, 'bnm/1/asd/2')
             expect(result).toBe(data.asd)
+
+    describe 'parse(object)', ->
+
+        it 'should parse fields from JSON', ->
+            test =
+                a: 1
+                b: 'asd3'
+                c: angular.toJson(['a', 1, 2])
+                d: angular.toJson({asd: [], bsd: {}})
+
+            copy = angular.copy(test)
+            copy.c = angular.toJson(copy.c)
+            copy.d = angular.toJson(copy.d)
+
+            parsed = dataUtilsService.parse(test)
+
+            expect(parsed).toEqual(test)
+
+    describe 'numberOrString(string)', ->
+
+        it 'should convert a string to a number if possible', ->
+            result = dataUtilsService.numberOrString('12')
+            expect(result).toBe(12)
+
+        it 'should return the string if it is not a number', ->
+            result = dataUtilsService.numberOrString('w3as')
+            expect(result).toBe('w3as')

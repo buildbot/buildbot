@@ -29,25 +29,33 @@ class Wrapper extends Factory
                 specification = SPECIFICATION[root]
                 match = specification.paths.filter (p) ->
                     replaced = p
-                        .replace ///\w+\:\w+///g, '\\*'
+                        .replace ///\w+\:\w+///g, '(\\*|\\w+|\\d+)'
                     ///^#{replaced}$///.test(pathString)
                 .pop()
                 if not match?
                     parameter = @getId()
-
-                # second last element
-                for e in match.split('/') by -1
-                    if e.indexOf(':') > -1
-                        [fieldType, fieldName] = e.split(':')
-                        parameter = @[fieldName]
+                    $log.debug specification.paths, pathString
+                else
+                    # second last element
+                    for e in match.split('/') by -1
+                        if e.indexOf(':') > -1
+                            [fieldType, fieldName] = e.split(':')
+                            parameter = @[fieldName]
+                            break
 
                 dataService.get(@getEndpoint(), parameter, args...)
+
+            control: (method, params) ->
+                dataService.control(@getEndpoint(), method, params)
 
             # generate endpoint functions for the class
             @generateFunctions: (endpoints) ->
                 endpoints.forEach (e) =>
                     # capitalize endpoint names
                     E = dataUtilsService.capitalize(e)
+                    # adds getXXX functions to the prototype
+                    @::["get#{E}"] = (args...) ->
+                        return @get(e, args...)
                     # adds loadXXX functions to the prototype
                     @::["load#{E}"] = (args...) ->
                         p = @get(e, args...)
