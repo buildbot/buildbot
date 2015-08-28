@@ -18,6 +18,8 @@ Features
 
 * :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
 
+* :bb:reporter:`GerritStatusPush` now accepts a ``builders`` parameter.
+
 Fixes
 ~~~~~
 
