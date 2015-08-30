@@ -61,6 +61,8 @@ The slave-side Bot object has the following remote methods:
         OS the slave is running (extracted from Python's os.name)
     ``basedir``
         base directory where slave is running
+    ``numcpus``
+        number of CPUs on the slave, either as configured or as detected (since buildbot-slave version 0.9.0)
 
 :meth:`~buildslave.bot.Bot.remote_getVersion`
     Returns the slave's version
