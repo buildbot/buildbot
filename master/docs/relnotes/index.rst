@@ -14,7 +14,7 @@ Master
 
 Features
 ~~~~~~~~
-
+* ``hello`` now returns 'Hello' in a random language if invoked more than once.
 
 * :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
 
