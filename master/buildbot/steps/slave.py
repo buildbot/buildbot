@@ -250,11 +250,12 @@ class CompositeStepMixin():
         d.addCallback(lambda res: commandComplete(cmd))
         return d
 
-    def runRmdir(self, dir, **kwargs):
+    def runRmdir(self, dir, timeout=None, **kwargs):
         """ remove a directory from the slave """
-        return self.runRemoteCommand('rmdir',
-                                     {'dir': dir, 'logEnviron': self.logEnviron},
-                                     **kwargs)
+        cmd_args = {'dir': dir, 'logEnviron': self.logEnviron}
+        if timeout:
+            cmd_args['timeout'] = timeout
+        return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
 
     def pathExists(self, path):
         """ test whether path exists"""
