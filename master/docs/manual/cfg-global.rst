@@ -600,7 +600,7 @@ At present, :class:`StatsService` can keep track of build properties, build time
 
 Example usage:
 
-::
+.. code-block:: python
 
     captures = [stats.CaptureProperty('Builder1', 'tree-size-KiB'),
                 stats.CaptureBuildDuration('Builder2')]
@@ -609,7 +609,6 @@ Example usage:
         storage_backends=[
             stats.InfluxStorageService('localhost', 8086, 'root', 'root', 'test', captures)
         ], name="StatsService"))
-
 
 The ``services`` configuration value should be initialized as a list and a :class:`StatsService` instance should be appended to it as shown in the example above.
 
@@ -630,7 +629,7 @@ Statistics Service
    ``name``
      The name of this service.
 
-:py:meth:`yieldMetricsValue`: This method can be used to send arbitrary data for storage. (See :ref:`yieldMetricsValue` for more.)
+:py:meth:`yieldMetricsValue`: This method can be used to send arbitrary data for storage. (See :ref:`yieldMetricsValue` for more information.)
 
 .. _capture-classes:
 
@@ -654,7 +653,6 @@ Capture Classes
      If this is set to ``True``, then the property name can be a regular expression.
      All properties matching this regular expression will be sent for storage.
 
-
 .. py:class:: buildbot.statistics.capture.CapturePropertyAllBuilders
    :noindex:
 
@@ -670,7 +668,6 @@ Capture Classes
      If this is set to ``True``, then the property name can be a regular expression.
      All properties matching this regular expression will be sent for storage.
 
-
 .. py:class:: buildbot.statistics.capture.CaptureBuildStartTime
    :noindex:
 
@@ -683,7 +680,6 @@ Capture Classes
      (Optional) A custom callback function for this class.
      This callback function should take in a Python datetime object and return a string that will be sent for storage in the storage backends.
 
-
 .. py:class:: buildbot.statistics.capture.CaptureBuildStartTimeAllBuilders
    :noindex:
 
@@ -694,20 +690,17 @@ Capture Classes
      (Optional) A custom callback function for this class.
      This callback function should take in a Python datetime object and return a string that will be sent for storage in the storage backends.
 
-
 .. py:class:: buildbot.statistics.capture.CaptureBuildEndTime
    :noindex:
 
    Exactly like :py:class:`CaptureBuildStartTime` except it declares the builders whose end time is to be recorded.
    The arguments are same as :py:class:`CaptureBuildStartTime`.
 
-
 .. py:class:: buildbot.statistics.capture.CaptureBuildEndTimeAllBuilders
    :noindex:
 
    Exactly like :py:class:`CaptureBuildStartTimeAllBuilders` except it declares all builders' end time to be recorded.
    The arguments are same as :py:class:`CaptureBuildStartTimeAllBuilders`.
-
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildDuration
    :noindex:
@@ -724,7 +717,6 @@ Capture Classes
      (Optional) A custom callback function for this class.
      This callback function should take in two Python datetime objects - a ``start_time`` and an ``end_time`` and return a string that will be sent for storage in the storage backends.
 
-
 .. py:class:: buildbot.statistics.capture.CaptureBuildDurationAllBuilders
    :noindex:
 
@@ -739,8 +731,6 @@ Capture Classes
    ``callback=None``
      (Optional) A custom callback function for this class.
      This callback function should take in two Python datetime objects - a ``start_time`` and an ``end_time`` and return a string that will be sent for storage in the storage backends.
-
-
 
 .. py:class:: buildbot.statistics.capture.CaptureData
    :noindex:
@@ -759,11 +749,10 @@ Capture Classes
      This callback receives the data sent to  ``yieldMetricsValue`` as ``post_data`` (See :ref:`yieldMetricsValue`).
      It must return a string that is to be sent to the storage backends for storage.
 
-
 .. py:class:: buildbot.statistics.capture.CaptureDataAllBuilders
    :noindex:
 
-   Instance of this capture class for capturing arbitrary data that is not stored as build-data on all builders
+   Instance of this capture class for capturing arbitrary data that is not stored as build-data on all builders.
    Needs to be used in conjunction with ``yieldMetricsValue`` (See :ref:`yieldMetricsValue`).
    Takes the following arguments:
 
@@ -774,7 +763,6 @@ Capture Classes
      The callback function for this class.
      This callback receives the data sent to  ``yieldMetricsValue`` as ``post_data`` (See :ref:`yieldMetricsValue`).
      It must return a string that is to be sent to the storage backends for storage.
-
 
 .. _yieldMetricsValue:
 
@@ -796,18 +784,17 @@ It takes the following arguments:
 Along with using ``yieldMetricsValue``, the user will also need to use the ``CaptureData`` capture class.
 As an example, we can add the following to a build step:
 
-::
+.. code-block:: python
 
     yieldMetricsValue('test_data_name', {'some_data': 'some_value'}, buildid)
 
 Then, we can add in the master configuration a capture class like this:
 
-::
+.. code-block:: python
 
     captures = [CaptureBuildData('test_data_name', 'Builder1')]
 
 Pass this ``captures`` list to a storage backend (as shown in the example at the top of this section) for capturing this data.
-
 
 .. _storage-backends:
 
@@ -842,7 +829,6 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
      This tells which statistics are to be stored in this storage backend.
    ``name=None``
      (Optional) The name of this storage backend.
-
 
 .. bb:cfg:: user_managers
 
