@@ -20,9 +20,9 @@ import os
 import re
 import sys
 
+from twisted.python import log
 from twisted.python import reflect
 from twisted.python import usage
-from twisted.python import log
 
 
 # the create/start/stop commands should all be run as the same user,
@@ -129,6 +129,8 @@ class CreateSlaveOptions(MakerBase):
          "Use --umask=022 to be world-readable"],
         ["maxdelay", None, 300,
          "Maximum time between connection attempts"],
+        ["numcpus", None, "None",
+         "Number of available cpus to use on a build. "],
         ["log-size", "s", "10000000",
          "size at which to rotate twisted log files"],
         ["log-count", "l", "10",
@@ -213,6 +215,11 @@ class CreateSlaveOptions(MakerBase):
         if not re.match(r'^\d+$', self['umask']) and \
                 self['umask'] != 'None':
             raise usage.UsageError("umask parameter needs to be an number"
+                                   " or None")
+
+        if not re.match(r'^\d+$', self['numcpus']) and \
+                self['numcpus'] != 'None':
+            raise usage.UsageError("numcpus parameter needs to be an number"
                                    " or None")
 
         if self['allow-shutdown'] not in [None, 'signal', 'file']:

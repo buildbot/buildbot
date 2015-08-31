@@ -36,7 +36,7 @@ if basedir == '.':
 # directory; do not edit it.
 application = service.Application('buildslave')
 """,
-"""
+                    """
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
@@ -47,7 +47,7 @@ except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
 """,
-"""
+                    """
 buildmaster_host = %(host)r
 port = %(port)d
 slavename = %(name)r
@@ -56,11 +56,12 @@ keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
 maxdelay = %(maxdelay)d
+numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
 
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               allow_shutdown=allow_shutdown)
+               numcpus=numcpus, allow_shutdown=allow_shutdown)
 s.setServiceParent(application)
 
 """]
@@ -156,7 +157,7 @@ def _makeInfoFiles(basedir, quiet):
 
         if not quiet:
             log.msg("Creating %s, you need to edit it appropriately." %
-                os.path.join("info", file))
+                    os.path.join("info", file))
 
         try:
             open(filepath, "wt").write(contents)
