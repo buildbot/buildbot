@@ -337,7 +337,6 @@ class GerritStatusPush(service.BuildbotService):
 
             result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']],
                                          self.master, self.summaryArg))
-            print builds
             self.sendCodeReviews(builds[0], result)
 
     def sendCodeReviews(self, build, result):
