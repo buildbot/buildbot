@@ -233,6 +233,25 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_file_workdir(self):
+        self.make_command(fs.StatFile, dict(
+            file='test-file',
+            workdir='wd'
+        ), True)
+        os.mkdir(os.path.join(self.basedir, 'wd'))
+        open(os.path.join(self.basedir, 'wd', 'test-file'), "w")
+
+        d = self.run_command()
+
+        def check(_):
+            import stat
+            self.assertTrue(stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
+            self.assertIn({'rc': 0},
+                          self.get_updates(),
+                          self.builder.show())
+        d.addCallback(check)
+        return d
+
 
 class TestGlobPath(CommandTestMixin, unittest.TestCase):
 
