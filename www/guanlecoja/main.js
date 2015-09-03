@@ -1,6 +1,6 @@
 (function() {
-  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, lazypipe, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, wrap, _,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  var _, annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, lazypipe, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, wrap,
+    indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   run_sequence = require('run-sequence');
 
@@ -44,7 +44,7 @@
 
   bower = require('gulp-bower-deps');
 
-  templateCache = require('./gulp-angular-templatecache');
+  templateCache = require('gulp-angular-templatecache');
 
   lr = require('gulp-livereload');
 
@@ -61,7 +61,7 @@
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, catch_errors, coffeeCompile, config, coverage, defaultHelp, dev, devHelp, jadeCompile, notests, prod, script_sources, _ref;
+    var buildConfig, catch_errors, coffeeCompile, config, coverage, defaultHelp, dev, devHelp, jadeCompile, notests, prod, ref, script_sources;
     run_sequence.use(gulp);
     gulp = gulp_help(gulp, {
       afterPrintCallback: function(tasks) {
@@ -71,14 +71,14 @@
         return console.log("");
       }
     });
-    prod = __indexOf.call(argv._, "prod") >= 0;
-    dev = __indexOf.call(argv._, "dev") >= 0;
+    prod = indexOf.call(argv._, "prod") >= 0;
+    dev = indexOf.call(argv._, "dev") >= 0;
     coverage = argv.coverage;
     notests = argv.notests;
     config = require("./defaultconfig.coffee");
     buildConfig = require(path.join(process.cwd(), "guanlecoja", "config.coffee"));
     _.merge(config, buildConfig);
-    if (((_ref = buildConfig.karma) != null ? _ref.files : void 0) != null) {
+    if (((ref = buildConfig.karma) != null ? ref.files : void 0) != null) {
       config.karma.files = buildConfig.karma.files;
     }
     if (buildConfig.buildtasks != null) {
@@ -98,9 +98,9 @@
         var error;
         error = gutil.colors.bold.red;
         if (e.fileName != null) {
-          gutil.log(error("" + e.plugin + ":" + e.name + ": " + e.fileName + " +" + e.lineNumber));
+          gutil.log(error(e.plugin + ":" + e.name + ": " + e.fileName + " +" + e.lineNumber));
         } else {
-          gutil.log(error("" + e.plugin + ":" + e.name));
+          gutil.log(error(e.plugin + ":" + e.name));
         }
         gutil.log(error(e.message));
         gutil.beep();
@@ -222,7 +222,7 @@
       return null;
     });
     gulp.task("karma", false, function() {
-      var classified, karmaconf, r, scripts_index, _i, _len, _ref1;
+      var classified, i, karmaconf, len, r, ref1, scripts_index;
       karmaconf = {
         basePath: config.dir.build,
         action: dev ? 'watch' : 'run'
@@ -241,9 +241,9 @@
           '**/tests.js': ['sourcemap'],
           '**/*.coffee': ['coverage']
         };
-        _ref1 = karmaconf.coverageReporter.reporters;
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          r = _ref1[_i];
+        ref1 = karmaconf.coverageReporter.reporters;
+        for (i = 0, len = ref1.length; i < len; i++) {
+          r = ref1[i];
           if (r.dir === "coverage") {
             r.dir = config.dir.coverage;
           }
