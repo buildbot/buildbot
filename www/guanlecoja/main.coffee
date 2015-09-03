@@ -21,6 +21,7 @@ karma = require 'gulp-karma'
 remember = require 'gulp-remember'
 uglify = require 'gulp-uglify'
 jade = require 'gulp-jade'
+wrap = require 'gulp-wrap'
 rename = require 'gulp-rename'
 bower = require 'gulp-bower-deps'
 templateCache = require './gulp-angular-templatecache'
@@ -29,11 +30,13 @@ cssmin = require 'gulp-minify-css'
 less = require 'gulp-less'
 fixtures2js = require 'gulp-fixtures2js'
 gulp_help = require 'gulp-help'
+lazypipe = require('lazypipe')
 
 # dependencies for webserver
 connect = require('connect')
 
 module.exports =  (gulp) ->
+    run_sequence.use(gulp)
     # standard gulp is not cs friendly (cgulp is). you need to register coffeescript first to be able to load cs files
     gulp = gulp_help gulp, afterPrintCallback: (tasks) ->
         console.log(gutil.colors.underline("Options:"))
@@ -102,6 +105,27 @@ module.exports =  (gulp) ->
     unless config.templates_apart
         script_sources = script_sources.concat(config.files.templates)
 
+    if config.templates_as_js
+        jadeCompile = lazypipe()
+        .pipe jade, client:true
+        .pipe(rename, extname: "") # remove two extensions ".tpl.js"
+        .pipe(rename, extname: "")
+        .pipe(wrap, "window.#{config.templates_global}['<%= file.relative %>'] = <%= contents %>;")
+        .pipe(concat, "templates.js")
+        .pipe(wrap, "window.#{config.templates_global}={}; <%= contents %>")
+    else
+        jadeCompile = lazypipe()
+        .pipe jade
+        .pipe rename, (p) ->
+            if config.name? and config.name isnt 'app'
+                p.dirname = path.join(config.name, "views")
+            else
+                p.dirname = "views"
+            p.basename = p.basename.replace(".tpl","")
+
+    coffeeCompile = lazypipe()
+    .pipe ngClassify, config.ngclassify(config)
+    .pipe coffee
 
     # main scripts task.
     # if coffee_coverage, we only pre-process ngclassify, and karma will do the rest
@@ -117,17 +141,9 @@ module.exports =  (gulp) ->
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
             .pipe cached('scripts')
             # coffee build
-            .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify(config)))))
-            .pipe(catch_errors(gif("*.coffee", coffee())))
+            .pipe(catch_errors(gif("*.coffee", coffeeCompile())))
             # jade build
-            .pipe(catch_errors(gif("*.jade", jade())))
-            .pipe gif "*.html", rename (p) ->
-                if config.name? and config.name isnt 'app'
-                    p.dirname = path.join(config.name, "views")
-                else
-                    p.dirname = "views"
-                p.basename = p.basename.replace(".tpl","")
-                null
+            .pipe(catch_errors(gif("*.jade", jadeCompile())))
             .pipe remember('scripts')
             .pipe(gif("*.html", templateCache({module:config.name})))
             .pipe concat("scripts.js")

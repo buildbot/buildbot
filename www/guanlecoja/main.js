@@ -1,5 +1,5 @@
 (function() {
-  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, _,
+  var annotate, argv, bower, cached, coffee, concat, connect, cssmin, fixtures2js, fs, gif, gulp_help, gutil, jade, karma, lazypipe, less, lr, ngClassify, path, remember, rename, run_sequence, sourcemaps, templateCache, uglify, wrap, _,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   run_sequence = require('run-sequence');
@@ -38,6 +38,8 @@
 
   jade = require('gulp-jade');
 
+  wrap = require('gulp-wrap');
+
   rename = require('gulp-rename');
 
   bower = require('gulp-bower-deps');
@@ -54,10 +56,13 @@
 
   gulp_help = require('gulp-help');
 
+  lazypipe = require('lazypipe');
+
   connect = require('connect');
 
   module.exports = function(gulp) {
-    var buildConfig, catch_errors, config, coverage, defaultHelp, dev, devHelp, notests, prod, script_sources, _ref;
+    var buildConfig, catch_errors, coffeeCompile, config, coverage, defaultHelp, dev, devHelp, jadeCompile, notests, prod, script_sources, _ref;
+    run_sequence.use(gulp);
     gulp = gulp_help(gulp, {
       afterPrintCallback: function(tasks) {
         console.log(gutil.colors.underline("Options:"));
@@ -119,19 +124,30 @@
     if (!config.templates_apart) {
       script_sources = script_sources.concat(config.files.templates);
     }
-    gulp.task('scripts', false, function() {
-      if (coverage && config.coffee_coverage) {
-        return gulp.src(script_sources).pipe(catch_errors(ngClassify(config.ngclassify(config)))).pipe(gulp.dest(path.join(config.dir.coverage, "src")));
-      }
-      return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify(config))))).pipe(catch_errors(gif("*.coffee", coffee()))).pipe(catch_errors(gif("*.jade", jade()))).pipe(gif("*.html", rename(function(p) {
+    if (config.templates_as_js) {
+      jadeCompile = lazypipe().pipe(jade, {
+        client: true
+      }).pipe(rename, {
+        extname: ""
+      }).pipe(rename, {
+        extname: ""
+      }).pipe(wrap, "window." + config.templates_global + "['<%= file.relative %>'] = <%= contents %>;").pipe(concat, "templates.js").pipe(wrap, "window." + config.templates_global + "={}; <%= contents %>");
+    } else {
+      jadeCompile = lazypipe().pipe(jade).pipe(rename, function(p) {
         if ((config.name != null) && config.name !== 'app') {
           p.dirname = path.join(config.name, "views");
         } else {
           p.dirname = "views";
         }
-        p.basename = p.basename.replace(".tpl", "");
-        return null;
-      }))).pipe(remember('scripts')).pipe(gif("*.html", templateCache({
+        return p.basename = p.basename.replace(".tpl", "");
+      });
+    }
+    coffeeCompile = lazypipe().pipe(ngClassify, config.ngclassify(config)).pipe(coffee);
+    gulp.task('scripts', false, function() {
+      if (coverage && config.coffee_coverage) {
+        return gulp.src(script_sources).pipe(catch_errors(ngClassify(config.ngclassify(config)))).pipe(gulp.dest(path.join(config.dir.coverage, "src")));
+      }
+      return gulp.src(script_sources).pipe(gif(dev || config.sourcemaps, sourcemaps.init())).pipe(cached('scripts')).pipe(catch_errors(gif("*.coffee", coffeeCompile()))).pipe(catch_errors(gif("*.jade", jadeCompile()))).pipe(remember('scripts')).pipe(gif("*.html", templateCache({
         module: config.name
       }))).pipe(concat("scripts.js")).pipe(gif(prod, annotate())).pipe(gif(prod, uglify())).pipe(gif(dev || config.sourcemaps, sourcemaps.write("."))).pipe(gulp.dest(config.dir.build)).pipe(gif(dev, lr()));
     });

@@ -114,6 +114,7 @@ create a "guanlecoja/config.coffee" with the configuration variables:
 * `coffee_coverage`(boolean): Enable code coverage on coffeescript. At the moment, this restricts you to CS 1.6, so you might want to disable it. It is anyway only used when building with --coverage
 * `vendors_apart`(boolean): Put the vendor scripts apart in a `vendor.js` file. Putting third party code apart can help doing better cache control when your app is continuously deployed.
 * `templates_apart`(boolean): Put the template cache in another file.
+* `templates_as_js`(boolean): Compile the templates as client side templates (needs jade-runtime.js bower dependency).
 * `sourcemaps`(boolean): Force generation of sourcemaps even in prod mode. This is useful if you are using guanlecoja to build libs (e.g. guanlecoja.ui)
 
 * `preparetasks`(list of strings): list of tasks to do before building (like fetching bower)
