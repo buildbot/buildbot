@@ -19,6 +19,7 @@ import re
 from twisted.internet import defer
 from twisted.internet import threads
 
+from buildbot import config
 from buildbot.errors import CaptureCallbackError
 
 
@@ -266,6 +267,11 @@ class CaptureBuildDuration(CaptureBuildTimes):
     """
 
     def __init__(self, builder_name, report_in='seconds', callback=None):
+        if report_in not in ['seconds', 'minutes', 'hours']:
+            config.error("Error during initialization of class %s."
+                         " `report_in` parameter must be one of 'seconds', 'minutes' or 'hours'"
+                         % (self.__class__.__name__))
+
         def default_callback(start_time, end_time):
             divisor = 1
             # it's a closure

@@ -361,6 +361,10 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.build_time_capture_helper('hours')
         self.assertEqual('duration', self.fake_storage_service.stored_data[0][0].keys()[0])
 
+    def test_build_duration_report_in_error(self):
+        self.assertRaises(config.ConfigErrors,
+                          lambda: capture.CaptureBuildDuration('builder1', report_in='foobar'))
+
     @defer.inlineCallbacks
     def test_build_duration_capturing_alt_callback(self):
         def cb(*args, **kwargs):
