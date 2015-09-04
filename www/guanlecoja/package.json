@@ -66,17 +66,17 @@
     "rimraf": "~2.4.3",
     "serve-static": "~1.10.0",
     "lodash": "^3.10.0",
-    "gulp-util": "~3.0.6",
-    "body-parser": "~1.13.3",
     "mime": "^1.2.11",
     "run-sequence": "~1.1.2"
   },
   "dependencies": {
-    "consolidate": "^0.13.1",
-    "coffee-script": "~1.10.0",
-    "gulp-ng-classify": "~4.0.0",
 
-    "gulp-karma": "~0.0.4",
+    "body-parser": "~1.13.3",
+    "coffee-script": "~1.10.0",
+
+    "gulp-ng-classify": "~4.0.0",
+    "gulp-util": "~3.0.6",
+
     "karma": "~0.13.9",
     "karma-coverage": "^0.5.1",
     "karma-jasmine": "~0.3.6",
@@ -86,9 +86,9 @@
   "main": "./main",
   "bin": {},
   "engines": {
-    "node": "~0.8 || ~0.10"
+    "node": "~0.8 || ~0.10 || ~0.12"
   },
-  "version": "0.4.1",
+  "version": "0.4.3",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}

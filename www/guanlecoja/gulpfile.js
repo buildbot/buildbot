@@ -31,6 +31,8 @@ gulp.task('vendors', function(){
       ignore: ['./lib-cov/connect'],
 	}))
 	.on('error', gutil.log)
+	/* hack in order to have bower browserified */
+	/* bower tried to open ../package.json to find out its version */
 	.pipe(replace(/var pkg = require\(path/, 'var pkg = {version:"1"}; //'))
     .pipe(rename('vendors.js'))
     .pipe(uglify())

@@ -25,6 +25,7 @@ module.exports =
     fixtures2js: require 'gulp-fixtures2js'
     gulp_help: require 'gulp-help'
     lazypipe: require 'lazypipe'
+    karma: require 'gulp-karma'
 
     _: require('lodash')
     coffee: require 'gulp-coffee'

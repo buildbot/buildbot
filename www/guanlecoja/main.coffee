@@ -7,8 +7,9 @@ vendors = global.vendors
 # ng-classify is in coffee, so it does not work with browserify out of the box
 ngClassify = require 'gulp-ng-classify'
 path = require 'path'
+
 # karma does not work with browserify
-karma = require 'gulp-karma'
+karma = require 'karma'
 
 
 # utilities
@@ -45,6 +46,8 @@ lazypipe = vendors.lazypipe
 # dependencies for webserver
 connect = vendors.connect
 serveStatic = vendors.static
+
+# this cannot be browserified, because browserify's require does not support registering
 require "coffee-script/register"
 
 module.exports =  (gulp) ->
@@ -273,11 +276,11 @@ module.exports =  (gulp) ->
         null
 
     # karma configuration, we build a lot of the config file automatically
-    gulp.task "karma", false, ->
+    gulp.task "karma", false, (done) ->
         karmaconf =
             basePath: config.dir.build
-            action: if dev then 'watch' else 'run'
-
+        if not dev
+            karmaconf.singleRun = true
         _.merge(karmaconf, config.karma)
 
         if config.vendors_apart
@@ -305,9 +308,8 @@ module.exports =  (gulp) ->
                 classified = script_sources.map (p) ->
                     path.join("coverage", p)
                 karmaconf.files.splice.apply(karmaconf.files, [scripts_index, 1].concat(classified))
-
-        gulp.src karmaconf.files
-            .pipe karma(karmaconf)
+         new karma.Server(karmaconf, done).start()
+         return null
 
     gulp.task "notests", false, ->
         null
