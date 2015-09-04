@@ -23,14 +23,17 @@ gulp.task('vendors', function(){
 	  commondir: false,
 	  detectGlobals: false,
 	  insertGlobals : false,
-          // those packages need to access files from the package
-	  exclude: ['readline', 'karma', 'mime', 'body-parser', 'consolidate'],
+      // those packages need to access files from the package
+	  // readline is required in a deadcode path
+	  // body-parser use dynamic parsing of its source code
+	  // consolidate requires tons of template package deps and is a dep of gulp-wrap > 0.8, and thus gulp-wrap should not be upgraded
+	  exclude: ['karma', 'readline', 'body-parser'],
       ignore: ['./lib-cov/connect'],
 	}))
 	.on('error', gutil.log)
 	.pipe(replace(/var pkg = require\(path/, 'var pkg = {version:"1"}; //'))
     .pipe(rename('vendors.js'))
-//    .pipe(uglify())
+    .pipe(uglify())
 	.pipe(gulp.dest('.'));
 });
 
