@@ -199,17 +199,17 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function that is used by ``CaptureProperty.consumer`` to post-process data before formatting it and sending it to the appropriate storage backends.
      A default callback needs to be prois provided for this.
 
-   **The default callback:**
+     The default callback:
 
-     .. py:function:: default_callback(props, property_name)
+       .. py:function:: default_callback(props, property_name)
 
-     It returns property value for ``property_name``.
-     It receives the following arguments:
+       It returns property value for ``property_name``.
+       It receives the following arguments:
 
-     ``props``
-       A dictionary of all build properties.
-     ``property_name``
-       (str) Name of the build property to return.
+       ``props``
+         A dictionary of all build properties.
+       ``property_name``
+         (str) Name of the build property to return.
 
    ``regex=False``
      If this is set to ``True``, then the property name can be a regular expression.
@@ -252,7 +252,6 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
       See :class:`CapturePropertyBase` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CapturePropertyAllBuilders
@@ -273,7 +272,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      Since this class is used to capture a property over all builders, it simply returns ``True`` in all cases which means that all builders are allowed to post the property set in ``property_name`` to storage backends.
+      See :class:`CapturePropertyBase` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildTimes
 
@@ -330,15 +329,15 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function for this class.
      See :class:`CaptureBuildTimes` for more information.
 
-   **The default callback:**
+     The default callback:
 
-      .. py:function:: default_callback(start_time)
+        .. py:function:: default_callback(start_time)
 
-      It returns the start time in ISO format.
-      It takes one argument:
+        It returns the start time in ISO format.
+        It takes one argument:
 
-      ``start_time``
-        A python datetime object that denotes the build start time.
+        ``start_time``
+          A python datetime object that denotes the build start time.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -346,7 +345,6 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
       See :class:`CaptureBuildTimes` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildStartTimeAllBuilders
@@ -359,13 +357,13 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function for this class.
      See :class:`CaptureBuildTimes` for more information.
 
-   **The default callback:**
+     The default callback:
 
-      See ``CaptureBuildStartTime.__init__`` for the definition.
+        See ``CaptureBuildStartTime.__init__`` for the definition.
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      Returns ``True`` for all builders.
+      See :class:`CaptureBuildTimes` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildEndTime
 
@@ -378,15 +376,15 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function for this class.
      See :class:`CaptureBuildTimes` for more information.
 
-   **The default callback:**
+     The default callback:
 
-      .. py:function:: default_callback(end_time)
+        .. py:function:: default_callback(end_time)
 
-      It returns the end time in ISO format.
-      It takes one argument:
+        It returns the end time in ISO format.
+        It takes one argument:
 
-      ``end_time``
-        A python datetime object that denotes the build end time.
+        ``end_time``
+          A python datetime object that denotes the build end time.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -394,7 +392,6 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
       See :class:`CaptureBuildTimes` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildEndTimeAllBuilders
@@ -407,13 +404,13 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function for this class.
      See :class:`CaptureBuildTimes` for more information.
 
-   **The default callback:**
+     The default callback:
 
-      See ``CaptureBuildEndTime.__init__`` for the definition.
+        See ``CaptureBuildEndTime.__init__`` for the definition.
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      Returns ``True`` for all builders.
+      See :class:`CaptureBuildTimes` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildDuration
 
@@ -429,17 +426,17 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function for this class.
      See :class:`CaptureBuildTimes` for more information.
 
-   **The default callback:**
+     The default callback:
 
-      .. py:function:: default_callback(start_time, end_time)
+        .. py:function:: default_callback(start_time, end_time)
 
-      It returns the duration of the build as per the ``report_in`` argument.
-      It receives the following arguments:
+        It returns the duration of the build as per the ``report_in`` argument.
+        It receives the following arguments:
 
-      ``start_time``
-        A python datetime object that denotes the build start time.
-      ``end_time``
-        A python datetime object that denotes the build end time.
+        ``start_time``
+          A python datetime object that denotes the build start time.
+        ``end_time``
+          A python datetime object that denotes the build end time.
 
    .. py:method:: _retValParams(self, msg)
 
@@ -447,7 +444,6 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
       See :class:`CaptureBuildTimes` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureBuildDurationAllBuilders
@@ -460,13 +456,13 @@ Capture classes are used for declaring which data needs to captured and sent to 
      The callback function for this class.
      See :class:`CaptureBuildTimes` for more.
 
-   **The default callback:**
+     The default callback:
 
-      See ``CaptureBuildDuration.__init__`` for the definition.
+        See ``CaptureBuildDuration.__init__`` for the definition.
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      Returns ``True`` for all builders.
+      See :class:`CaptureBuildTimes` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureDataBase
 
@@ -479,19 +475,18 @@ Capture classes are used for declaring which data needs to captured and sent to 
      Same as in :meth:`yieldMetricsValue`.
    ``callback=None``
      The callback function for this class.
-     See :class:`CaptureBuildTimes` for more.
 
-   **The default callback:**
+     The default callback:
 
-      The default callback takes a value ``x`` and return it without changing.
-      As such, ``x`` itself acts as the ``post_data`` sent to the storage backends.
+        The default callback takes a value ``x`` and return it without changing.
+        As such, ``x`` itself acts as the ``post_data`` sent to the storage backends.
 
    .. py:method:: consume(self, routingKey, msg)
 
       The consumer for this class.
       See :class:`Capture` for more.
 
-   .. py:method:: _builder_name_matches(self, builder_info):
+   .. py:method:: _builder_name_matches(self, builder_info)
 
       This is an abstract method and needs to be implemented by all subclasses of this class.
       This is a helper method to the ``consume`` method metioned above.
@@ -514,16 +509,14 @@ Capture classes are used for declaring which data needs to captured and sent to 
      (str) The name of the builder on which the data is captured.
    ``callback=None``
      The callback function for this class.
-     See :class:`CaptureBuildTimes` for more.
 
-   **The default callback:**
+     The default callback:
 
-     See :class:`CaptureDataBase` of definition.
+        See :class:`CaptureDataBase` of definition.
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      This method matches whether the ``builder_name`` used to initialize this class instance is the same as the builder for the curent build.
-      See :class:`CaptureBuildTimes` for more information on this method.
+      See :class:`CaptureDataBase` for more information on this method.
 
 .. py:class:: buildbot.statistics.capture.CaptureDataAllBuilders
 
@@ -536,8 +529,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
      Same as in :meth:`yieldMetricsValue`.
    ``callback=None``
      The callback function for this class.
-     See :class:`CaptureBuildTimes` for more.
 
    .. py:method:: _builder_name_matches(self, builder_info)
 
-      Returns ``True`` for all builders.
+      See :class:`CaptureDataBase` for more information on this method.
