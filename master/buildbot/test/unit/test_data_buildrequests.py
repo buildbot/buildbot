@@ -532,3 +532,6 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         buildset['submitted_at'] = None
         self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': None,
                                     'sourcestamps': None, 'parent_buildid': None, 'results': -1, 'parent_relationship': None, 'reason': u'rebuild', 'external_idstring': u'extid', 'complete': False})
+
+        properties = yield self.master.data.get(('buildsets', new_bsid, 'properties'))
+        self.assertEqual(properties, {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
