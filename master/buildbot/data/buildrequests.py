@@ -243,3 +243,18 @@ class BuildRequest(base.ResourceType):
     @defer.inlineCallbacks
     def unclaimExpiredRequests(self, old, _reactor=reactor):
         yield self.master.db.buildrequests.unclaimExpiredRequests(old, _reactor=_reactor)
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def rebuildBuildrequest(self, buildrequest):
+
+        # goal is to make a copy of the original buildset
+        buildset = yield self.master.data.get(('buildsets', buildrequest['buildsetid']))
+        properties = yield self.master.data.get(('buildsets', buildrequest['buildsetid'], 'properties'))
+        ssids = [ss['ssid'] for ss in buildset['sourcestamps']]
+        res = yield self.master.data.updates.addBuildset(waited_for=False, scheduler=u'rebuild',
+                                                         sourcestamps=ssids, reason=u'rebuild',
+                                                         properties=properties, builderids=[buildrequest['builderid']], external_idstring=buildset['external_idstring'],
+                                                         parent_buildid=buildset['parent_buildid'], parent_relationship=buildset['parent_relationship'],
+                                                         )
+        defer.returnValue(res)

@@ -225,6 +225,9 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, "old", old, validation.IntValidator())
         return defer.succeed(None)
 
+    def rebuildBuildrequest(self, buildrequest):
+        return defer.succeed(None)
+
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
         for n in builderNames:

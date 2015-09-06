@@ -46,7 +46,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Master(id=88),
             fakedb.Buildslave(id=13, name='sl'),
             fakedb.Buildset(id=8822),
-            fakedb.BuildRequest(id=82, buildsetid=8822),
+            fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
             fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
                          buildrequestid=82, number=3),
             fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
@@ -91,6 +91,26 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         build = yield self.callGet(('builders', 77, 'builds', 5), resultSpec=resultSpec)
         self.validateData(build)
         self.assertIn('properties', build)
+
+    @defer.inlineCallbacks
+    def test_action_stop(self):
+        yield self.callControl("stop", {}, ('builders', 77, 'builds', 5))
+        self.master.mq.assertProductions([(('control', 'builds', '15', 'stop'), {'reason': 'no reason'})])
+
+    @defer.inlineCallbacks
+    def test_action_stop_reason(self):
+        yield self.callControl("stop", {'reason': 'because'}, ('builders', 77, 'builds', 5))
+        self.master.mq.assertProductions([(('control', 'builds', '15', 'stop'), {'reason': 'because'})])
+
+    @defer.inlineCallbacks
+    def test_action_rebuild(self):
+        self.patch(self.master.data.updates, "rebuildBuildrequest",
+                   mock.Mock(spec=self.master.data.updates.rebuildBuildrequest, return_value=(1, [2])))
+        r = yield self.callControl("rebuild", {}, ('builders', 77, 'builds', 5))
+        self.assertEqual(r, (1, [2]))
+
+        buildrequest = yield self.master.data.get(('buildrequests', 82))
+        self.master.data.updates.rebuildBuildrequest.assert_called_with(buildrequest)
 
 
 class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
