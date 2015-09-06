@@ -1,35 +1,76 @@
 class Build extends Controller
-    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams, recentStorage, glBreadcrumbService, glTopbarContextualActionsService,
-                $state) ->
+    constructor: ($rootScope, $scope, $location, buildbotService, $stateParams,
+                  recentStorage, glBreadcrumbService, glTopbarContextualActionsService,
+                  $state) ->
 
         builderid = _.parseInt($stateParams.builder)
         buildnumber = _.parseInt($stateParams.build)
 
         $scope.last_build = true
         $scope.is_stopping = false
+        $scope.is_rebuilding = false
 
-        $scope.$watch 'build.complete', (n, o) ->
-            if n == true
-                glTopbarContextualActionsService.setContextualActions []
+        doRebuild = ->
+            $scope.is_rebuilding = true
 
-            else if n == false and not $scope.is_stopping
-                glTopbarContextualActionsService.setContextualActions [
-                        caption: "Stop"
-                        extra_class: "btn-danger"
-                        action: ->
-                            $scope.is_stopping = true
-                            buildbotService.one("builds", $scope.build.buildid).control("stop").then (->), (why) ->
-                                $scope.is_stopping = false
-                                $scope.error = "Cannot stop: " + why.data.error.message
-                                glTopbarContextualActionsService.setContextualActions []
-                ]
+            success = (res) ->
+                console.log res
+                $scope.is_rebuilding = false
+                refreshContextMenu()
+                brid = _.values(res.result[1])[0]
+                $state.go "buildrequest",
+                    buildrequest: brid
+                    redirect_to_build: true
 
-        $scope.$watch 'is_stopping', (n, o) ->
-            if n == true
-                glTopbarContextualActionsService.setContextualActions [
+            failure = (why) ->
+                $scope.is_rebuilding = false
+                $scope.error = "Cannot rebuild: " + why.data.error.message
+                refreshContextMenu()
+
+            buildbotService.one("builds", $scope.build.buildid).control("rebuild").then(success, failure)
+
+        doStop = ->
+            $scope.is_stopping = true
+
+            success = (res) ->
+                $scope.is_stopping = false
+                refreshContextMenu()
+
+            failure = (why) ->
+                $scope.is_stopping = false
+                $scope.error = "Cannot Stop: " + why.data.error.message
+                refreshContextMenu()
+
+            buildbotService.one("builds", $scope.build.buildid).control("stop").then(success, failure)
+
+        refreshContextMenu = ->
+            actions = []
+            if not $scope.build?
+                return
+            if $scope.build.complete
+                if $scope.is_rebuilding
+                    actions.push
+                        caption: "Rebuilding..."
+                        icon: "spinner fa-spin"
+                        action: doRebuild
+                else
+                    actions.push
+                        caption: "Rebuild"
+                        extra_class: "btn-default"
+                        action: doRebuild
+            else
+                if $scope.is_stopping
+                    actions.push
                         caption: "Stopping..."
                         icon: "spinner fa-spin"
-                ]
+                        action: doStop
+                else
+                    actions.push
+                        caption: "Stop"
+                        extra_class: "btn-default"
+                        action: doStop
+            glTopbarContextualActionsService.setContextualActions(actions)
+        $scope.$watch('build.complete', refreshContextMenu)
 
         buildbotService.bindHierarchy($scope, $stateParams, ['builders', 'builds'])
         .then ([builder, build]) ->
