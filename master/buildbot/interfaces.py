@@ -24,6 +24,8 @@ Define the interfaces that are implemented by various buildbot classes.
 
 from zope.interface import Attribute
 from zope.interface import Interface
+from zope.interface.exceptions import DoesNotImplement
+from zope.interface.verify import verifyObject
 
 # exceptions that can be raised while trying to start a build
 
@@ -193,6 +195,14 @@ class IRenderable(Interface):
 
         @param iprops: the L{IProperties} provider supplying the properties.
         """
+
+
+def isRenderable(obj):
+    try:
+        verifyObject(IRenderable, obj)
+        return True
+    except DoesNotImplement:
+        return False
 
 
 class IProperties(Interface):
