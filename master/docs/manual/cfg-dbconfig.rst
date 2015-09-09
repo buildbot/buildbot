@@ -15,15 +15,15 @@ Example:
 
 .. code-block:: python
 
-    from buildbot.plugins import util, buildslave
+    from buildbot.plugins import util, buildworker
     c = BuildmasterConfig = {}
     c['db_url'] = 'mysql://user@pass:mysqlserver/buildbot'
     dbConfig = util.DbConfig(BuildmasterConfig, basedir)
-    slaves = dbConfig.get("slaves")
-    c['slaves'] = [
-        buildslave.BuildSlave(slave['name'], slave['passwd'],
-                              properties=slave.get('properties')),
-        for slave in slaves
+    workers = dbConfig.get("workers")
+    c['workers'] = [
+        buildworker.BuildWorker(worker['name'], worker['passwd'],
+                              properties=worker.get('properties')),
+        for worker in workers
     ]
 
 

@@ -45,8 +45,8 @@ There are three sub-classes implemented:
 
         from buildbot.process.metrics import MetricAlarmEvent, ALARM_OK
 
-        # num_slaves looks ok
-        MetricAlarmEvent.log('num_slaves', level=ALARM_OK)
+        # num_workers looks ok
+        MetricAlarmEvent.log('num_workers', level=ALARM_OK)
 
 Metric Handlers
 ---------------

@@ -19,7 +19,7 @@ suitable hook script to deliver changes to the buildmaster is still missing.
 The 'buildbot restart BASEDIR' command will perform a 'buildbot stop' and
 'buildbot start', and will attempt to wait for the buildbot process to shut
 down in between. This is useful when you need to upgrade the code on your
-buildmaster or buildslave and want to take it down for a minimum amount of
+buildmaster or buildworker and want to take it down for a minimum amount of
 time.
 
 *** build properties

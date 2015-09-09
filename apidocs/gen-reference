@@ -2,6 +2,6 @@
 echo $(dirname $0)
 cd $(dirname $0)
 cd ..
-find master slave -name '*.pyc' -exec rm \{} \; || exit 1
+find master worker -name '*.pyc' -exec rm \{} \; || exit 1
 # excludes both test suites
-python docs/epyrun -o docs/reference --exclude="buildbot\\.test" --exclude="buildslave\\.test" buildbot buildslave
+python docs/epyrun -o docs/reference --exclude="buildbot\\.test" --exclude="buildworker\\.test" buildbot buildworker

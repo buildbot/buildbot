@@ -122,9 +122,9 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.status.builder import BuildSetStatus
         assert BuildSetStatus
 
-    def test_status_builder_SlaveStatus(self):
-        from buildbot.status.builder import SlaveStatus
-        assert SlaveStatus
+    def test_status_builder_WorkerStatus(self):
+        from buildbot.status.builder import WorkerStatus
+        assert WorkerStatus
 
     def test_status_builder_Status(self):
         from buildbot.status.builder import Status

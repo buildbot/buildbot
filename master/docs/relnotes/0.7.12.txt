@@ -40,7 +40,7 @@ Log files can be compressed on the master side using either gzip or bzip2.
 ** Builder.ping no longer accepts timeout argument (bug #664).
 
 The implementation was not robust enough and could cause the master to
-unexpectedly disconnect the slave.
+unexpectedly disconnect the worker.
 
 ** MailNotifier's customMesg replaced by messageFormatter
 
@@ -51,7 +51,7 @@ memory exhaustion.
 ** Suppression of selected compiler warnings
 
 The WarningCountingShellCommand class has been extended with the ability to
-upload from the slave a file contain warnings to be ignored. See the
+upload from the worker a file contain warnings to be ignored. See the
 documentation of the suppressionFile argument to the Compile build step.
 
 ** New buildstep `MTR'

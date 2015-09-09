@@ -8,7 +8,7 @@
 #   {
 #      "webuser" : "fred",
 #      "webpass" : "fredspassword",
-#      "slavepass" : "buildbotslavepassword"
+#      "workerpass" : "buildbotworkerpassword"
 #   }
 #
 # 2) a master.cfg file that reads the declarative configuration, e.g.
@@ -20,9 +20,9 @@
 # configuration as described below, e.g.  for a project that needs to be
 # built on two different operating systems, you might have
 #   {
-#       "slaves" : [
-#           { "os":"osx107",  "name":"slave1.example.com" },
-#           { "os":"win7",    "name":"slave2.example.com" }
+#       "workers" : [
+#           { "os":"osx107",  "name":"worker1.example.com" },
+#           { "os":"win7",    "name":"worker2.example.com" }
 #       ],
 #       "projects" : [
 #           {
@@ -69,14 +69,14 @@
 # but sometimes it can get you out of a jam.
 #
 # 3) Chained builds
-# You can chain builds between different slave types by listing
-# the slave types separated by > in the "os" field, e.g.
+# You can chain builds between different worker types by listing
+# the worker types separated by > in the "os" field, e.g.
 #    { "os":"osx107>win7", "branch":"master" }
-# will run the job on a slave marked 'osx107', then on one marked 'win'.
-# But you have to copy any intermediate results between the slaves
+# will run the job on a worker marked 'osx107', then on one marked 'win'.
+# But you have to copy any intermediate results between the workers
 # yourself in the buildshim, using e.g. scp.
 # We use this e.g. for stuff that has to be built on Mac but
-# signed on Windows, or built on one set of slaves and tested
+# signed on Windows, or built on one set of workers and tested
 # on another.  The buildshim has to figure out which link in
 # the chain it is itself, by e.g. looking at what operating
 # system it's running on.
@@ -89,7 +89,7 @@ import os
 import random
 import socket
 
-from buildbot.buildslave import BuildSlave
+from buildbot.buildworker import BuildWorker
 from buildbot.changes import filter
 from buildbot.changes.gitpoller import GitPoller
 from buildbot.config import BuilderConfig
@@ -116,7 +116,7 @@ class SimpleConfig(dict):
 
     Example json file master.json:
     {
-        "slaves" : [
+        "workers" : [
             { "os":"osx107",  "name":"peanuts-north"        },
             { "os":"ubu1004", "name":"peanuts-west-ubu1004" },
             { "os":"ubu1204", "name":"peanuts-west-ubu1204" },
@@ -143,12 +143,12 @@ class SimpleConfig(dict):
         ]
     }
     Legend:
-    "slaves":
+    "workers":
        "os" is an arbitary tag used below to specify where builders should run.
-       "name" is the name of the buildslave instance (my scripts name them using
-           the name of the project plus the hostname of the slave).
+       "name" is the name of the buildworker instance (my scripts name them using
+           the name of the project plus the hostname of the worker).
            In this example, peanuts is the project, west is
-           a machine running ubuntu 10.04 and ubuntu 12.04 slaves in
+           a machine running ubuntu 10.04 and ubuntu 12.04 workers in
            LXC containers, and north and south are plain old mac and
            windows machines.
     "projects":
@@ -156,7 +156,7 @@ class SimpleConfig(dict):
        "repourl" is where the source code comes from.
        "builders":
           "branch" is which branch of the source code to build.
-          "os" means "build this on any buildslave from the list above
+          "os" means "build this on any buildworker from the list above
           which has a matching os tag".
           If a '>'-separated list of os tags is given, the build is run
           on each one sequentially, e.g. so you can build on one machine
@@ -197,21 +197,21 @@ class SimpleConfig(dict):
         # It's hard to keep port numbers straight for multiple projects,
         # so let's assign each project a slot number,
         # and use 8010 + slotnum for the http port,
-        # 9010 + slotnum for the slave port, etc.
+        # 9010 + slotnum for the worker port, etc.
         # FIXME: get slot from masterjson
         slot = 0
         self.__http_port = 8010 + slot
-        self['slavePortnum'] = 9010 + slot
+        self['workerPortnum'] = 9010 + slot
 
         # SECRETS
         # Avoid checking secrets into git by keeping them in a json file.
         try:
             s = json.load(open(os.path.expanduser(secretsfile)))
             self.__auth = auth.BasicAuth([(s["webuser"].encode('ascii', 'ignore'), s["webpass"].encode('ascii', 'ignore'))])
-            # For the moment, all slaves have same password
-            self.slavepass = s["slavepass"].encode('ascii', 'ignore')
+            # For the moment, all workers have same password
+            self.workerpass = s["workerpass"].encode('ascii', 'ignore')
         except Exception:
-            exit("%s must be a json file containing webuser, webpass, and slavepass; ascii only, no commas in quotes" % secretsfile)
+            exit("%s must be a json file containing webuser, webpass, and workerpass; ascii only, no commas in quotes" % secretsfile)
 
         # STATUS TARGETS
         self['status'] = []
@@ -261,20 +261,20 @@ class SimpleConfig(dict):
 
         self['buildbotURL'] = "http://" + socket.gethostname() + ":%d/" % self.__http_port
 
-        # SLAVES
-        self._os2slaves = {}
-        self['slaves'] = []
-        slaveconfigs = masterjson["slaves"]
-        for slaveconfig in slaveconfigs:
-            sname = slaveconfig["name"].encode('ascii', 'ignore')
-            sos = slaveconfig["os"].encode('ascii', 'ignore')
+        # WORKERS
+        self._os2workers = {}
+        self['workers'] = []
+        workerconfigs = masterjson["workers"]
+        for workerconfig in workerconfigs:
+            sname = workerconfig["name"].encode('ascii', 'ignore')
+            sos = workerconfig["os"].encode('ascii', 'ignore')
             # Restrict to a single build at a time because our buildshims
             # typically assume they have total control of machine, and use sudo apt-get, etc. with abandon.
-            s = BuildSlave(sname, self.slavepass, max_builds=1)
-            self['slaves'].append(s)
-            if sos not in self._os2slaves:
-                self._os2slaves[sos] = []
-            self._os2slaves[sos].append(sname)
+            s = BuildWorker(sname, self.workerpass, max_builds=1)
+            self['workers'].append(s)
+            if sos not in self._os2workers:
+                self._os2workers[sos] = []
+            self._os2workers[sos].append(sname)
 
         # These will be built up over the course of one or more calls to addSimpleProject
         self['change_source'] = []
@@ -308,7 +308,7 @@ class SimpleConfig(dict):
 
         self['builders'].append(
             BuilderConfig(name=buildername,
-                          slavenames=self._os2slaves[sos],
+                          workernames=self._os2workers[sos],
                           factory=factory,
                           category=category))
 
@@ -331,7 +331,7 @@ class SimpleConfig(dict):
 
         # BUILDERS AND SCHEDULERS
         # For each builder in config file, see what OS they want to
-        # run on, and assign them to suitable slaves.
+        # run on, and assign them to suitable workers.
         # Also create a force scheduler that knows about all the builders.
         branchnames = []
         buildernames = []
@@ -357,7 +357,7 @@ class SimpleConfig(dict):
                 SingleBranchScheduler(
                     name=buildername,
                     change_filter=filter.ChangeFilter(branch=sbranch, repository=repourl),
-                    treeStableTimer=1 * 60,  # Set this just high enough so you don't swamp the slaves, or to None if you don't want changes batched
+                    treeStableTimer=1 * 60,  # Set this just high enough so you don't swamp the workers, or to None if you don't want changes batched
                     builderNames=[buildername]))
             buildernames.append(buildername)
 

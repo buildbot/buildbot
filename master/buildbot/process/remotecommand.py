@@ -16,7 +16,7 @@ from future.utils import iteritems
 
 
 from buildbot import util
-from buildbot.buildslave.protocols import base
+from buildbot.buildworker.protocols import base
 from buildbot.process import metrics
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -62,7 +62,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.ignore_updates = ignore_updates
         self.decodeRC = decodeRC
         self.conn = None
-        self.buildslave = None
+        self.buildworker = None
         self.step = None
         self.builder_name = None
         self.commandID = None
@@ -94,7 +94,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # _finished is called with an error for unknown commands, errors
         # that occur while the command is starting (including OSErrors in
         # exec()), StaleBroker (when the connection was lost before we
-        # started), and pb.PBConnectionLost (when the slave isn't responding
+        # started), and pb.PBConnectionLost (when the worker isn't responding
         # over this connection, perhaps it had a power failure, or NAT
         # weirdness). If this happens, self.deferred is fired right away.
         d.addErrback(self._finished)
@@ -152,7 +152,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             log.msg(" but our .conn went away")
             return defer.succeed(None)
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
-            log.msg("RemoteCommand.disconnect: lost slave")
+            log.msg("RemoteCommand.disconnect: lost worker")
             self.conn = None
             self._finished(why)
             return defer.succeed(None)
@@ -162,7 +162,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         d = self.conn.remoteInterruptCommand(self.builder_name,
                                              self.commandID, str(why))
-        # the slave may not have remote_interruptCommand
+        # the worker may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d
 
@@ -174,13 +174,13 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def remote_update(self, updates):
         """
-        I am called by the slave's L{buildbot.slave.bot.SlaveBuilder} so
+        I am called by the worker's L{buildbot.worker.bot.WorkerBuilder} so
         I can receive updates from the running remote command.
 
         @type  updates: list of [object, int]
         @param updates: list of updates from the remote command
         """
-        self.buildslave.messageReceivedFromSlave()
+        self.buildworker.messageReceivedFromWorker()
         max_updatenum = 0
         for (update, num) in updates:
             # log.msg("update[%d]:" % num)
@@ -188,7 +188,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                 if self.active and not self.ignore_updates:
                     self.remoteUpdate(update)
             except Exception:
-                # log failure, terminate build, let slave retire the update
+                # log failure, terminate build, let worker retire the update
                 self._finished(Failure())
                 # TODO: what if multiple updates arrive? should
                 # skip the rest but ack them all
@@ -198,16 +198,16 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def remote_complete(self, failure=None):
         """
-        Called by the slave's L{buildbot.slave.bot.SlaveBuilder} to
+        Called by the worker's L{buildbot.worker.bot.WorkerBuilder} to
         notify me the remote command has finished.
 
         @type  failure: L{twisted.python.failure.Failure} or None
 
         @rtype: None
         """
-        self.buildslave.messageReceivedFromSlave()
+        self.buildworker.messageReceivedFromWorker()
         # call the real remoteComplete a moment later, but first return an
-        # acknowledgement so the slave can retire the completion message.
+        # acknowledgement so the worker can retire the completion message.
         if self.active:
             eventually(self._finished, failure)
         return None
@@ -333,7 +333,7 @@ class RemoteShellCommand(RemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20 * 60, maxTime=None, sigtermTime=None,
-                 logfiles=None, usePTY="slave-config", logEnviron=True,
+                 logfiles=None, usePTY="worker-config", logEnviron=True,
                  collectStdout=False, collectStderr=False,
                  interruptSignal=None,
                  initialStdin=None, decodeRC=None,
@@ -382,11 +382,11 @@ class RemoteShellCommand(RemoteCommand):
     def _start(self):
         self.args['command'] = self.command
         if self.remote_command == "shell":
-            # non-ShellCommand slavecommands are responsible for doing this
+            # non-ShellCommand workercommands are responsible for doing this
             # fixup themselves
-            if self.step.slaveVersion("shell", "old") == "old":
+            if self.step.workerVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
-            if self.step.slaveVersionIsOlderThan("shell", "2.16"):
+            if self.step.workerVersionIsOlderThan("shell", "2.16"):
                 self.args.pop('sigtermTime', None)
         what = "command '%s' in dir '%s'" % (self.fake_command,
                                              self.args['workdir'])

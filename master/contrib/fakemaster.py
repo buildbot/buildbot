@@ -3,9 +3,9 @@
 # usage: python fakemaster.py
 #
 # This starts a fake master instance listenting on port 9010
-# You should then connect a buildslave to localhost:9010
+# You should then connect a buildworker to localhost:9010
 # commands are read from fakemaster's stdin (one line per command) and executed
-# on the buildslave. stderr/stdout from the buildslave are output on
+# on the buildworker. stderr/stdout from the buildworker are output on
 # fakemaster's stdout/stderr.
 #
 # Original Author: Chris AtLee <catlee@mozilla.com>
@@ -93,18 +93,18 @@ class FakeBot(pb.Avatar):
         self.parent.stdio.bot = None
         self.parent.stdio.transport.write('\ndetached\n# ')
 
-    def messageReceivedFromSlave(self):
+    def messageReceivedFromWorker(self):
         pass
 
     def perspective_keepalive(self):
         pass
 
-    def slaveVersion(self, name, version):
+    def workerVersion(self, name, version):
         pass
 
     def runCommand(self, cmd):
         cmd = RemoteShellCommand(workdir='.', command=cmd)
-        cmd.buildslave = self
+        cmd.buildworker = self
         cmd.logs['stdio'] = FakeLog()
         cmd._closeWhenFinished['stdio'] = False
         d = cmd.run(self, self.builder)
@@ -140,13 +140,13 @@ class FakeMaster(service.MasterService):
         self.dispatcher.master = self
         self.portal = p = portal.Portal(self.dispatcher)
         p.registerChecker(DontCareChecker())
-        self.slavefactory = pb.PBServerFactory(p)
-        self.slavePort = port
+        self.workerfactory = pb.PBServerFactory(p)
+        self.workerPort = port
         self.stdio = CmdInterface()
 
     def startService(self):
-        self.slavePort = strports.service(self.slavePort, self.slavefactory)
-        self.slavePort.setServiceParent(self)
+        self.workerPort = strports.service(self.workerPort, self.workerfactory)
+        self.workerPort.setServiceParent(self)
 
         stdio.StandardIO(self.stdio)
         return service.MasterService.startService(self)

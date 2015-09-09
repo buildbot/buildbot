@@ -184,35 +184,35 @@ class RealMasterLock(BaseLock):
         BaseLock.__init__(self, lockid.name, lockid.maxCount)
         self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
 
-    def getLock(self, slave):
+    def getLock(self, worker):
         return self
 
 
-class RealSlaveLock:
+class RealWorkerLock:
 
     def __init__(self, lockid):
         self.name = lockid.name
         self.maxCount = lockid.maxCount
-        self.maxCountForSlave = lockid.maxCountForSlave
-        self.description = "<SlaveLock(%s, %s, %s)>" % (self.name,
+        self.maxCountForWorker = lockid.maxCountForWorker
+        self.description = "<WorkerLock(%s, %s, %s)>" % (self.name,
                                                         self.maxCount,
-                                                        self.maxCountForSlave)
+                                                        self.maxCountForWorker)
         self.locks = {}
 
     def __repr__(self):
         return self.description
 
-    def getLock(self, slave):
-        slavename = slave.slavename
-        if slavename not in self.locks:
-            maxCount = self.maxCountForSlave.get(slavename,
+    def getLock(self, worker):
+        workername = worker.workername
+        if workername not in self.locks:
+            maxCount = self.maxCountForWorker.get(workername,
                                                  self.maxCount)
-            lock = self.locks[slavename] = BaseLock(self.name, maxCount)
-            desc = "<SlaveLock(%s, %s)[%s] %d>" % (self.name, maxCount,
-                                                   slavename, id(lock))
+            lock = self.locks[workername] = BaseLock(self.name, maxCount)
+            desc = "<WorkerLock(%s, %s)[%s] %d>" % (self.name, maxCount,
+                                                   workername, id(lock))
             lock.description = desc
-            self.locks[slavename] = lock
-        return self.locks[slavename]
+            self.locks[workername] = lock
+        return self.locks[workername]
 
 
 class LockAccess(util.ComparableMixin):
@@ -220,7 +220,7 @@ class LockAccess(util.ComparableMixin):
     """ I am an object representing a way to access a lock.
 
     @param lockid: LockId instance that should be accessed.
-    @type  lockid: A MasterLock or SlaveLock instance.
+    @type  lockid: A MasterLock or WorkerLock instance.
 
     @param mode: Mode of accessing the lock.
     @type  mode: A string, either 'counting' or 'exclusive'.
@@ -235,7 +235,7 @@ class LockAccess(util.ComparableMixin):
         if not _skipChecks:
             # these checks fail with mock < 0.8.0 when lockid is a Mock
             # TODO: remove this in Buildbot-0.9.0+
-            assert isinstance(lockid, (MasterLock, SlaveLock))
+            assert isinstance(lockid, (MasterLock, WorkerLock))
             assert mode in ['counting', 'exclusive']
 
 
@@ -244,7 +244,7 @@ class BaseLockId(util.ComparableMixin):
     """ Abstract base class for LockId classes.
 
     Sets up the 'access()' function for the LockId's available to the user
-    (MasterLock and SlaveLock classes).
+    (MasterLock and WorkerLock classes).
     Derived classes should add
     - Comparison with the L{util.ComparableMixin} via the L{compare_attrs}
       class variable.
@@ -264,7 +264,7 @@ class BaseLockId(util.ComparableMixin):
         return self.access('counting')
 
 
-# master.cfg should only reference the following MasterLock and SlaveLock
+# master.cfg should only reference the following MasterLock and WorkerLock
 # classes. They are identifiers that will be turned into real Locks later,
 # via the BotMaster.getLockByID method.
 class MasterLock(BaseLockId):
@@ -278,7 +278,7 @@ class MasterLock(BaseLockId):
     same time.
 
     Use this to protect a resource that is shared among all builders and all
-    slaves, for example to limit the load on a common SVN repository.
+    workers, for example to limit the load on a common SVN repository.
     """
 
     compare_attrs = ['name', 'maxCount']
@@ -289,36 +289,36 @@ class MasterLock(BaseLockId):
         self.maxCount = maxCount
 
 
-class SlaveLock(BaseLockId):
+class WorkerLock(BaseLockId):
 
-    """I am a semaphore that limits simultaneous actions on each buildslave.
+    """I am a semaphore that limits simultaneous actions on each buildworker.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.
     Only a limited number of such builds or steps will be able to run
-    simultaneously on any given buildslave. By default this number is one,
+    simultaneously on any given buildworker. By default this number is one,
     but my maxCount parameter can be raised to allow two or three or more
-    operations to happen on a single buildslave at the same time.
+    operations to happen on a single buildworker at the same time.
 
     Use this to protect a resource that is shared among all the builds taking
-    place on each slave, for example to limit CPU or memory load on an
+    place on each worker, for example to limit CPU or memory load on an
     underpowered machine.
 
-    Each buildslave will get an independent copy of this semaphore. By
+    Each buildworker will get an independent copy of this semaphore. By
     default each copy will use the same owner count (set with maxCount), but
-    you can provide maxCountForSlave with a dictionary that maps slavename to
-    owner count, to allow some slaves more parallelism than others.
+    you can provide maxCountForWorker with a dictionary that maps workername to
+    owner count, to allow some workers more parallelism than others.
 
     """
 
-    compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
-    lockClass = RealSlaveLock
+    compare_attrs = ['name', 'maxCount', '_maxCountForWorkerList']
+    lockClass = RealWorkerLock
 
-    def __init__(self, name, maxCount=1, maxCountForSlave=None):
+    def __init__(self, name, maxCount=1, maxCountForWorker=None):
         self.name = name
         self.maxCount = maxCount
-        if maxCountForSlave is None:
-            maxCountForSlave = {}
-        self.maxCountForSlave = maxCountForSlave
+        if maxCountForWorker is None:
+            maxCountForWorker = {}
+        self.maxCountForWorker = maxCountForWorker
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForSlaveList = tuple(sorted(self.maxCountForSlave.items()))
+        self._maxCountForWorkerList = tuple(sorted(self.maxCountForWorker.items()))

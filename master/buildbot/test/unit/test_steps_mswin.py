@@ -50,7 +50,7 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(
                 workdir='wkdir',
                 command=command,
-                usePTY="slave-config"
+                usePTY="worker-config"
             )
             + expected_code
         )

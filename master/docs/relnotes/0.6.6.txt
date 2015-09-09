@@ -21,7 +21,7 @@ will need TwistedWeb, TwistedWords, and/or TwistedMail if you use status
 targets that require them). The test suite should skip all tests that cannot
 be run because of missing Twisted modules.
 
-The master/slave's basedir is now prepended to sys.path before starting the
+The master/worker's basedir is now prepended to sys.path before starting the
 daemon. This used to happen implicitly (as a result of twistd's setup
 preamble), but 0.6.5 internalized the invocation of twistd and did not copy
 this behavior. This change restores the ability to access "private.py"-style

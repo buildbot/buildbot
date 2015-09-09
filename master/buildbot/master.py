@@ -35,7 +35,7 @@ import buildbot.pbmanager
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches
-from buildbot.buildslave import manager as bslavemanager
+from buildbot.buildworker import manager as bworkermanager
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
@@ -139,8 +139,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.pbmanager = buildbot.pbmanager.PBManager()
         self.pbmanager.setServiceParent(self)
 
-        self.buildslaves = bslavemanager.BuildslaveManager(self)
-        self.buildslaves.setServiceParent(self)
+        self.buildworkers = bworkermanager.BuildworkerManager(self)
+        self.buildworkers.setServiceParent(self)
 
         self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)

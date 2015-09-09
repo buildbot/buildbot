@@ -26,7 +26,7 @@ findfile() {
     local file="$1"
     test -f "dist/$file" && echo "dist/$file"
     test -f "master/dist/$file" && echo "master/dist/$file"
-    test -f "slave/dist/$file" && echo "slave/dist/$file"
+    test -f "worker/dist/$file" && echo "worker/dist/$file"
     test -f "$file" && echo "$file"
 }
 
@@ -44,7 +44,7 @@ findlabels() {
     echo $labels
 }
 
-for file in {buildbot,buildbot-slave}-$VERSION.{tar.gz,zip}{,.asc}; do
+for file in {buildbot,buildbot-worker}-$VERSION.{tar.gz,zip}{,.asc}; do
     labels=`findlabels "$file"`
     file=`findfile "$file"`
     echo "Uploading $file with labels $labels"

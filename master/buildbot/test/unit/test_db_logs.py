@@ -29,13 +29,13 @@ from twisted.trial import unittest
 class Tests(interfaces.InterfaceTests):
 
     backgroundData = [
-        fakedb.Buildslave(id=47, name='linux'),
+        fakedb.Buildworker(id=47, name='linux'),
         fakedb.Buildset(id=20),
         fakedb.Builder(id=88, name='b1'),
         fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
         fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
-                     builderid=88, buildslaveid=47),
+                     builderid=88, buildworkerid=47),
         fakedb.Step(id=101, buildid=30, number=1, name='one'),
         fakedb.Step(id=102, buildid=30, number=2, name='two'),
     ]
@@ -484,7 +484,7 @@ class TestRealDB(unittest.TestCase,
         d = self.setUpConnectorComponent(
             table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                          'masters', 'buildrequests', 'buildsets',
-                         'buildslaves'])
+                         'buildworkers'])
 
         @d.addCallback
         def finish_setup(_):

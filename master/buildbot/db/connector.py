@@ -20,7 +20,7 @@ from buildbot.db import builders
 from buildbot.db import buildrequests
 from buildbot.db import builds
 from buildbot.db import buildsets
-from buildbot.db import buildslaves
+from buildbot.db import buildworkers
 from buildbot.db import changes
 from buildbot.db import changesources
 from buildbot.db import enginestrategy
@@ -88,7 +88,7 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
-        self.buildslaves = buildslaves.BuildslavesConnectorComponent(self)
+        self.buildworkers = buildworkers.BuildworkersConnectorComponent(self)
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)

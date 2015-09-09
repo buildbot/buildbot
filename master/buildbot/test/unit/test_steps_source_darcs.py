@@ -235,12 +235,12 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        workerdest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -319,7 +319,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.darcs-context', workdir='wkdir',
+                                        workerdest='.darcs-context', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='.',
@@ -365,7 +365,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'))

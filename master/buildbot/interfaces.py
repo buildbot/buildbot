@@ -28,7 +28,7 @@ from zope.interface import Interface
 # exceptions that can be raised while trying to start a build
 
 
-class NoSlaveError(Exception):
+class NoWorkerError(Exception):
     pass
 
 
@@ -36,11 +36,11 @@ class BuilderInUseError(Exception):
     pass
 
 
-class BuildSlaveTooOldError(Exception):
+class BuildWorkerTooOldError(Exception):
     pass
 
 
-class LatentBuildSlaveFailedToSubstantiate(Exception):
+class LatentBuildWorkerFailedToSubstantiate(Exception):
     pass
 
 
@@ -147,21 +147,21 @@ class ILogObserver(Interface):
         pass
 
 
-class IBuildSlave(IPlugin):
+class IBuildWorker(IPlugin):
     # callback methods from the manager
     pass
 
 
-class ILatentBuildSlave(IBuildSlave):
+class ILatentBuildWorker(IBuildWorker):
 
-    """A build slave that is not always running, but can run when requested.
+    """A build worker that is not always running, but can run when requested.
     """
     substantiated = Attribute('Substantiated',
-                              'Whether the latent build slave is currently '
+                              'Whether the latent build worker is currently '
                               'substantiated with a real instance.')
 
     def substantiate():
-        """Request that the slave substantiate with a real instance.
+        """Request that the worker substantiate with a real instance.
 
         Returns a deferred that will callback when a real instance has
         attached."""
@@ -169,16 +169,16 @@ class ILatentBuildSlave(IBuildSlave):
     # there is an insubstantiate too, but that is not used externally ATM.
 
     def buildStarted(sb):
-        """Inform the latent build slave that a build has started.
+        """Inform the latent build worker that a build has started.
 
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        @param sb: a L{LatentWorkerBuilder}.  The sb is the one for whom the
         build finished.
         """
 
     def buildFinished(sb):
-        """Inform the latent build slave that a build has finished.
+        """Inform the latent build worker that a build has finished.
 
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        @param sb: a L{LatentWorkerBuilder}.  The sb is the one for whom the
         build finished.
         """
 
@@ -346,11 +346,11 @@ class IStatus(Interface):
         """Return the IBuilderStatus object for a given named Builder. Raises
         KeyError if there is no Builder by that name."""
 
-    def getSlaveNames():
-        """Return a list of buildslave names, suitable for passing to
-        getSlave()."""
-    def getSlave(name):
-        """Return the ISlaveStatus object for a given named buildslave."""
+    def getWorkerNames():
+        """Return a list of buildworker names, suitable for passing to
+        getWorker()."""
+    def getWorker(name):
+        """Return the IWorkerStatus object for a given named buildworker."""
 
     def getBuildSets():
         """
@@ -472,7 +472,7 @@ class IBuildRequestStatus(Interface):
         IBuildStatus object) for each Build that is created to satisfy this
         request. There may be multiple Builds created in an attempt to handle
         the request: they may be interrupted by the user or abandoned due to
-        a lost slave. The last Build (the one which actually gets to run to
+        a lost worker. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):
@@ -482,23 +482,23 @@ class IBuildRequestStatus(Interface):
         Deferred."""
 
 
-class ISlaveStatus(Interface):
+class IWorkerStatus(Interface):
 
     def getName():
-        """Return the name of the build slave."""
+        """Return the name of the build worker."""
 
     def getAdmin():
-        """Return a string with the slave admin's contact data."""
+        """Return a string with the worker admin's contact data."""
 
     def getHost():
-        """Return a string with the slave host info."""
+        """Return a string with the worker host info."""
 
     def isConnected():
-        """Return True if the slave is currently online, False if not."""
+        """Return True if the worker is currently online, False if not."""
 
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
-        recent message was received from the buildslave."""
+        recent message was received from the buildworker."""
 
 
 class ISchedulerStatus(Interface):
@@ -528,8 +528,8 @@ class IBuilderStatus(Interface):
         'idle', or 'building'. 'builds' is a list of IBuildStatus objects
         (possibly empty) representing the currently active builds."""
 
-    def getSlaves():
-        """Return a list of ISlaveStatus objects for the buildslaves that are
+    def getWorkers():
+        """Return a list of IWorkerStatus objects for the buildworkers that are
         used by this builder."""
 
     def getPendingBuildRequestStatuses():
@@ -726,8 +726,8 @@ class IBuildStatus(Interface):
     # Once you know the build has finished, the following methods are legal.
     # Before ths build has finished, they all return None.
 
-    def getSlavename():
-        """Return the name of the buildslave which handled this build."""
+    def getWorkername():
+        """Return the name of the buildworker which handled this build."""
 
     def getText():
         """Returns a list of strings to describe the build. These are
@@ -772,7 +772,7 @@ class IStatusEvent(Interface):
     def getTimes():
         """Returns a tuple of (start, end) like IBuildStepStatus, but end==0
         indicates that this is a 'point event', which has no duration.
-        SlaveConnect/Disconnect are point events. Ping is not: it starts
+        WorkerConnect/Disconnect are point events. Ping is not: it starts
         when requested and ends when the response (positive or negative) is
         returned"""
 
@@ -946,11 +946,11 @@ class IStatusReceiver(IPlugin):
     def builderRemoved(builderName):
         """The Builder has been removed."""
 
-    def slaveConnected(slaveName):
-        """The slave has connected."""
+    def workerConnected(workerName):
+        """The worker has connected."""
 
-    def slaveDisconnected(slaveName):
-        """The slave has disconnected."""
+    def workerDisconnected(workerName):
+        """The worker has disconnected."""
 
     def checkConfig(otherStatusReceivers):
         """Verify that there are no other status receivers which conflict with
@@ -993,13 +993,13 @@ class IBuilderControl(Interface):
         there is nothing to control anymore."""
 
     def ping():
-        """Attempt to contact the slave and see if it is still alive. This
-        returns a Deferred which fires with either True (the slave is still
-        alive) or False (the slave did not respond). As a side effect, adds an
+        """Attempt to contact the worker and see if it is still alive. This
+        returns a Deferred which fires with either True (the worker is still
+        alive) or False (the worker did not respond). As a side effect, adds an
         event to this builder's column in the waterfall display containing the
         results of the ping. Note that this may not fail for a long time, it is
         implemented in terms of the timeout on the underlying TCP connection."""
-        # TODO: this ought to live in ISlaveControl, maybe with disconnect()
+        # TODO: this ought to live in IWorkerControl, maybe with disconnect()
         # or something. However the event that is emitted is most useful in
         # the Builder column, so it kinda fits here too.
 
@@ -1011,7 +1011,7 @@ class IBuildRequestControl(Interface):
         IBuildControl object) for each Build that is created to satisfy this
         request. There may be multiple Builds created in an attempt to handle
         the request: they may be interrupted by the user or abandoned due to
-        a lost slave. The last Build (the one which actually gets to run to
+        a lost worker. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):

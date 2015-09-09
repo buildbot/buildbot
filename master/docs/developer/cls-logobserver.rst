@@ -5,7 +5,7 @@ LogObservers
 
 .. py:class:: LogObserver
 
-    This is a base class for objects which receive logs from slave commands as they are produced.
+    This is a base class for objects which receive logs from worker commands as they are produced.
     It does not provide an interface for reading logs - such access should occur directly through the Data API.
 
     See :ref:`Adding-LogObservers` for help creating and using a custom log observer.

@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildWorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.remotetransfer import StringFileWriter
@@ -68,7 +68,7 @@ class CVS(Source):
         @d.addCallback
         def checkInstall(cvsInstalled):
             if not cvsInstalled:
-                raise BuildSlaveTooOldError("CVS is not installed on slave")
+                raise BuildWorkerTooOldError("CVS is not installed on worker")
             return 0
         d.addCallback(self.checkLogin)
 
@@ -305,7 +305,7 @@ class CVS(Source):
         }
 
         cmd = remotecommand.RemoteCommand('uploadFile',
-                                          dict(slavesrc='Root', **args),
+                                          dict(workersrc='Root', **args),
                                           ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
@@ -323,7 +323,7 @@ class CVS(Source):
 
         myFileWriter.buffer = ""
         cmd = remotecommand.RemoteCommand('uploadFile',
-                                          dict(slavesrc='Repository', **args),
+                                          dict(workersrc='Repository', **args),
                                           ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
@@ -337,7 +337,7 @@ class CVS(Source):
         # we can't update (unless we remove those tags with cvs update -A)
         myFileWriter.buffer = ""
         cmd = buildstep.RemoteCommand('uploadFile',
-                                      dict(slavesrc='Entries', **args),
+                                      dict(workersrc='Entries', **args),
                                       ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:

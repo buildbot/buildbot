@@ -1,0 +1,12 @@
+WORKER_RUNNER=/usr/bin/buildworker
+
+# NOTE: WORKER_ENABLED has changed its behaviour in version 0.8.4. Use
+# 'true|yes|1' to enable instance and 'false|no|0' to disable. Other
+# values will be considered as syntax error.
+
+WORKER_ENABLED[1]=0                    # 1-enabled, 0-disabled
+WORKER_NAME[1]="buildworker #1"         # short name printed on start/stop
+WORKER_USER[1]="buildbot"              # user to run worker as
+WORKER_BASEDIR[1]=""                   # basedir to worker (absolute path)
+WORKER_OPTIONS[1]=""                   # buildbot options
+WORKER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot

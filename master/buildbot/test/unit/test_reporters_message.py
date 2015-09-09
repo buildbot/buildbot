@@ -40,20 +40,20 @@ class TestMessage(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildworker(id=13, name='sl'),
             fakedb.Buildset(id=98, results=results1, reason="testReason1"),
             fakedb.Buildset(id=99, results=results2, reason="testReason2"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
             fakedb.BuildRequest(id=12, buildsetid=99, builderid=80),
-            fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, buildslaveid=13,
+            fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, buildworkerid=13,
                          masterid=92, results=results1),
-            fakedb.Build(id=21, number=1, builderid=80, buildrequestid=12, buildslaveid=13,
+            fakedb.Build(id=21, number=1, builderid=80, buildrequestid=12, buildworkerid=13,
                          masterid=92, results=results1),
         ])
         for _id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
             ])
 
@@ -78,7 +78,7 @@ class TestMessage(unittest.TestCase):
 
             Buildbot URL: http://localhost:8080/
 
-            Buildslave for this Build: sl
+            Buildworker for this Build: sl
 
             Build Reason: because
             Blamelist: him@bar, me@foo

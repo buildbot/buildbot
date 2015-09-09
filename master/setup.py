@@ -122,7 +122,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
 
 scripts = ["bin/buildbot"]
-# sdist is usually run on a non-Windows platform, but the buildslave.bat file
+# sdist is usually run on a non-Windows platform, but the buildworker.bat file
 # still needs to get packaged.
 if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildbot.bat")
@@ -151,8 +151,8 @@ setup_args = {
 
     'packages': [
         "buildbot",
-        "buildbot.buildslave",
-        "buildbot.buildslave.protocols",
+        "buildbot.buildworker",
+        "buildbot.buildworker.protocols",
         "buildbot.changes",
         "buildbot.clients",
         "buildbot.data",
@@ -231,13 +231,13 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
-        ('buildbot.buildslave', [
-            ('buildbot.buildslave.base', ['BuildSlave']),
-            ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
-            ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
-            ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave']),
-            ('buildbot.buildslave.local', ['LocalBuildSlave']),
+        ('buildbot.buildworker', [
+            ('buildbot.buildworker.base', ['BuildWorker']),
+            ('buildbot.buildworker.ec2', ['EC2LatentBuildWorker']),
+            ('buildbot.buildworker.libvirt', ['LibVirtWorker']),
+            ('buildbot.buildworker.openstack', ['OpenStackLatentBuildWorker']),
+            ('buildbot.buildworker.docker', ['DockerLatentBuildWorker']),
+            ('buildbot.buildworker.local', ['LocalBuildWorker']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
@@ -267,7 +267,7 @@ setup_args = {
                 'Configure', 'WarningCountingShellCommand', 'Compile',
                 'Test', 'PerlModuleTest']),
             ('buildbot.steps.shellsequence', ['ShellSequence']),
-            ('buildbot.steps.slave', [
+            ('buildbot.steps.worker', [
                 'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
                 'RemoveDirectory', 'MakeDirectory']),
             ('buildbot.steps.source.bzr', ['Bzr']),
@@ -296,7 +296,7 @@ setup_args = {
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though
-            ('buildbot.buildslave.libvirt', ['Connection']),
+            ('buildbot.buildworker.libvirt', ['Connection']),
             ('buildbot.changes.filter', ['ChangeFilter']),
             ('buildbot.changes.gerritchangesource', ['GerritChangeFilter']),
             ('buildbot.changes.svnpoller', [
@@ -305,10 +305,10 @@ setup_args = {
                 ('svn.split_file_branches', 'split_file_branches'),
                 ('svn.split_file_alwaystrunk', 'split_file_alwaystrunk')]),
             ('buildbot.config', ['BuilderConfig']),
-            ('buildbot.locks', ['MasterLock', 'SlaveLock']),
+            ('buildbot.locks', ['MasterLock', 'WorkerLock']),
             ('buildbot.manhole', [
                 'AuthorizedKeysManhole', 'PasswordManhole', 'TelnetManhole']),
-            ('buildbot.process.builder', ['enforceChosenSlave']),
+            ('buildbot.process.builder', ['enforceChosenWorker']),
             ('buildbot.process.factory', [
                 'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
@@ -321,7 +321,7 @@ setup_args = {
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
-                'BuildslaveChoiceParameter', 'ChoiceStringParameter',
+                'BuildworkerChoiceParameter', 'ChoiceStringParameter',
                 'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
                 'StringParameter', 'TextParameter', 'UserNameParameter']),
@@ -413,7 +413,7 @@ else:
         ],
         'bundle': [
             'buildbot-www',
-            'buildbot-slave'
+            'buildbot-worker'
         ]
     }
 

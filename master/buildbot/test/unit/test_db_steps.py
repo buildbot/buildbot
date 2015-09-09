@@ -37,15 +37,15 @@ class Tests(interfaces.InterfaceTests):
     # common sample data
 
     backgroundData = [
-        fakedb.Buildslave(id=47, name='linux'),
+        fakedb.Buildworker(id=47, name='linux'),
         fakedb.Buildset(id=20),
         fakedb.Builder(id=88, name='b1'),
         fakedb.BuildRequest(id=41, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
         fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
-                     builderid=88, buildslaveid=47),
+                     builderid=88, buildworkerid=47),
         fakedb.Build(id=31, buildrequestid=41, number=8, masterid=88,
-                     builderid=88, buildslaveid=47),
+                     builderid=88, buildworkerid=47),
     ]
     stepRows = [
         fakedb.Step(id=70, number=0, name='one', buildid=30,
@@ -339,7 +339,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['steps', 'builds', 'builders', 'masters',
-                         'buildrequests', 'buildsets', 'buildslaves'])
+                         'buildrequests', 'buildsets', 'buildworkers'])
 
         @d.addCallback
         def finish_setup(_):

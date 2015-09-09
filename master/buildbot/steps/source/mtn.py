@@ -20,7 +20,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildWorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.status.results import SUCCESS
@@ -78,7 +78,7 @@ class Monotone(Source):
         try:
             monotoneInstalled = yield self.checkMonotone()
             if not monotoneInstalled:
-                raise BuildSlaveTooOldError("Monotone is not installed on slave")
+                raise BuildWorkerTooOldError("Monotone is not installed on worker")
 
             yield self._checkDb()
             yield self._retryPull()
@@ -186,7 +186,7 @@ class Monotone(Source):
         if len(files) == 0:
             rc = 0
         else:
-            if self.slaveVersionIsOlderThan('rmdir', '2.14'):
+            if self.workerVersionIsOlderThan('rmdir', '2.14'):
                 rc = yield self.removeFiles(files)
             else:
                 rc = yield self.runRmdir(files, abandonOnFailure=False)
@@ -308,10 +308,10 @@ class Monotone(Source):
                                     workdir='.')
             elif stdout.find("too new, cannot use") >= 0 or \
                     stdout.find("database has no tables") >= 0:
-                # The database is of a newer format which the slave's
+                # The database is of a newer format which the worker's
                 # mtn version can not handle. Drop it and pull again
                 # with that monotone version installed on the
-                # slave. Do the same if it's an empty file.
+                # worker. Do the same if it's an empty file.
                 yield self.runRmdir(self.database)
                 db_needs_init = True
             elif stdout.find("not a monotone database") >= 0:

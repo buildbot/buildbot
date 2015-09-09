@@ -18,7 +18,7 @@ import re
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildWorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
@@ -54,7 +54,7 @@ class P4(Source):
                  p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=(), p4line_end='local',
                  p4viewspec=None, p4viewspec_suffix='...',
-                 p4client=Interpolate('buildbot_%(prop:slavename)s_%(prop:buildername)s'),
+                 p4client=Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s'),
                  p4client_spec_options='allwrite rmdir',
                  p4extra_args=None,
                  p4bin='p4',
@@ -116,7 +116,7 @@ class P4(Source):
         @d.addCallback
         def checkInstall(p4Installed):
             if not p4Installed:
-                raise BuildSlaveTooOldError("p4 is not installed on slave")
+                raise BuildWorkerTooOldError("p4 is not installed on worker")
             return 0
 
         if self.use_tickets and self.p4passwd:

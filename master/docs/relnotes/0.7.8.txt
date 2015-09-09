@@ -44,8 +44,8 @@ Properties than to write custom BuildSteps.
 
 ** Other improvements
 
-The /buildslaves web page shows which slaves are currently running builds.
-Offline slaves are displayed in bold.
+The /buildworkers web page shows which workers are currently running builds.
+Offline workers are displayed in bold.
 
 Buildbot's setup.py now provides metadata to setuptools (if installed): an
 entry_points script was added, and a dependency upon twisted-2.4.x or newer
@@ -85,8 +85,8 @@ scheduled for removal in an upcoming release:
 c['sources'] (plural) was replaced by c['change_source'] (singular) in 0.7.6,
 and will be removed by 0.8.0.
 
-c['bots'] was replaced by c['buildslaves'] in 0.7.6, and will be removed by
-0.8.0 . c['bots'] only accepts BuildSlave instances, not name/passwd tuples.
+c['bots'] was replaced by c['buildworkers'] in 0.7.6, and will be removed by
+0.8.0 . c['bots'] only accepts BuildWorker instances, not name/passwd tuples.
 
 The html.Waterfall status target was replaced by html.WebStatus in 0.7.6, and
 will be removed by 0.8.0.

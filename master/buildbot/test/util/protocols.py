@@ -37,9 +37,9 @@ class ConnectionInterfaceTest(interfaces.InterfaceTests):
         def remotePrint(self, message):
             pass
 
-    def test_sig_remoteGetSlaveInfo(self):
-        @self.assertArgSpecMatches(self.conn.remoteGetSlaveInfo)
-        def remoteGetSlaveInfo(self):
+    def test_sig_remoteGetWorkerInfo(self):
+        @self.assertArgSpecMatches(self.conn.remoteGetWorkerInfo)
+        def remoteGetWorkerInfo(self):
             pass
 
     def test_sig_remoteSetBuilderList(self):

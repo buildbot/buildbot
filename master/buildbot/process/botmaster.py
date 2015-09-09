@@ -28,8 +28,8 @@ from twisted.python import log
 
 class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
-    """This is the master-side service which manages remote buildbot slaves.
-    It provides them with BuildSlaves, and distributes build requests to
+    """This is the master-side service which manages remote buildbot workers.
+    It provides them with BuildWorkers, and distributes build requests to
     them."""
 
     debug = 0
@@ -50,7 +50,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.shuttingDown = False
 
-        self.lastSlavePortnum = None
+        self.lastWorkerPortnum = None
 
         # subscription to new build requests
         self.buildrequest_consumer = None
@@ -112,17 +112,17 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
-    @metrics.countMethod('BotMaster.slaveLost()')
-    def slaveLost(self, bot):
-        metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
+    @metrics.countMethod('BotMaster.workerLost()')
+    def workerLost(self, bot):
+        metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
         for name, b in iteritems(self.builders):
-            if bot.slavename in b.config.slavenames:
+            if bot.workername in b.config.workernames:
                 b.detached(bot)
 
-    @metrics.countMethod('BotMaster.getBuildersForSlave()')
-    def getBuildersForSlave(self, slavename):
+    @metrics.countMethod('BotMaster.getBuildersForWorker()')
+    def getBuildersForWorker(self, workername):
         return [b for b in itervalues(self.builders)
-                if slavename in b.config.slavenames]
+                if workername in b.config.workernames]
 
     def getBuildernames(self):
         return self.builderNames
@@ -237,15 +237,15 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.
-        @param lockid: a locks.MasterLock or locks.SlaveLock instance
-        @return: a locks.RealMasterLock or locks.RealSlaveLock instance
+        @param lockid: a locks.MasterLock or locks.WorkerLock instance
+        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
         """
-        assert isinstance(lockid, (locks.MasterLock, locks.SlaveLock))
+        assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
         if lockid not in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         # if the master.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and SlaveLock (marker) instances
+        # that this requires that MasterLock and WorkerLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
@@ -266,14 +266,14 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         """
         self.brd.maybeStartBuildsOn([buildername])
 
-    def maybeStartBuildsForSlave(self, buildslave_name):
+    def maybeStartBuildsForWorker(self, buildworker_name):
         """
-        Call this when something suggests that a particular slave may now be
+        Call this when something suggests that a particular worker may now be
         available to start a build.
 
-        @param buildslave_name: the name of the slave
+        @param buildworker_name: the name of the worker
         """
-        builders = self.getBuildersForSlave(buildslave_name)
+        builders = self.getBuildersForWorker(buildworker_name)
         self.brd.maybeStartBuildsOn([b.name for b in builders])
 
     def maybeStartBuildsForAllBuilders(self):

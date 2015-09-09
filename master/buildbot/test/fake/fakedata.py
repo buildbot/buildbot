@@ -44,7 +44,7 @@ class FakeUpdates(service.AsyncService):
         self.builderIds = {}  # { name : id }; users can add schedulers here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
-        self.buildslaveIds = {}  # { name : id }; users can add buildslaves here
+        self.buildworkerIds = {}  # { name : id }; users can add buildworkers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
         self.claimedBuildRequests = set([])
@@ -277,12 +277,12 @@ class FakeUpdates(service.AsyncService):
         self.changesourceMasters[changesourceid] = masterid
         return defer.succeed(True)
 
-    def addBuild(self, builderid, buildrequestid, buildslaveid):
+    def addBuild(self, builderid, buildrequestid, buildworkerid):
         validation.verifyType(self.testcase, 'builderid', builderid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'buildrequestid', buildrequestid,
                               validation.IntValidator())
-        validation.verifyType(self.testcase, 'buildslaveid', buildslaveid,
+        validation.verifyType(self.testcase, 'buildworkerid', buildworkerid,
                               validation.IntValidator())
         return defer.succeed((10, 1))
 
@@ -388,32 +388,32 @@ class FakeUpdates(service.AsyncService):
         self.logs[logid]['content'].append(content)
         return defer.succeed(None)
 
-    def findBuildslaveId(self, name):
-        validation.verifyType(self.testcase, 'buildslave name', name,
+    def findBuildworkerId(self, name):
+        validation.verifyType(self.testcase, 'buildworker name', name,
                               validation.IdentifierValidator(50))
         # this needs to actually get inserted into the db (fake or real) since
-        # getBuildslave will get called later
-        return self.master.db.buildslaves.findBuildslaveId(name)
+        # getBuildworker will get called later
+        return self.master.db.buildworkers.findBuildworkerId(name)
 
-    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
-        return self.master.db.buildslaves.buildslaveConnected(
-            buildslaveid=buildslaveid,
+    def buildworkerConnected(self, buildworkerid, masterid, workerinfo):
+        return self.master.db.buildworkers.buildworkerConnected(
+            buildworkerid=buildworkerid,
             masterid=masterid,
-            slaveinfo=slaveinfo)
+            workerinfo=workerinfo)
 
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
-        return self.master.db.buildslaves.buildslaveConfigured(
-            buildslaveid=buildslaveid,
+    def buildworkerConfigured(self, buildworkerid, masterid, builderids):
+        return self.master.db.buildworkers.buildworkerConfigured(
+            buildworkerid=buildworkerid,
             masterid=masterid,
             builderids=builderids)
 
-    def buildslaveDisconnected(self, buildslaveid, masterid):
-        return self.master.db.buildslaves.buildslaveDisconnected(
-            buildslaveid=buildslaveid,
+    def buildworkerDisconnected(self, buildworkerid, masterid):
+        return self.master.db.buildworkers.buildworkerDisconnected(
+            buildworkerid=buildworkerid,
             masterid=masterid)
 
-    def deconfigureAllBuidslavesForMaster(self, masterid):
-        return self.master.db.buildslaves.deconfigureAllBuidslavesForMaster(
+    def deconfigureAllBuidworkersForMaster(self, masterid):
+        return self.master.db.buildworkers.deconfigureAllBuidworkersForMaster(
             masterid=masterid)
 
 

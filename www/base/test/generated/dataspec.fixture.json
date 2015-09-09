@@ -311,7 +311,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1087,7 +1087,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1146,7 +1146,7 @@
     "path": "builders/n:builderid/builds/n:number"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -1180,7 +1180,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -1194,7 +1194,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1216,13 +1216,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "builders/n:builderid/buildslaves"
+    "plural": "buildworkers", 
+    "path": "builders/n:builderid/buildworkers"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -1256,7 +1256,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -1270,7 +1270,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1292,13 +1292,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "builders/n:builderid/buildslaves/i:name"
+    "plural": "buildworkers", 
+    "path": "builders/n:builderid/buildworkers/i:name"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -1332,7 +1332,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -1346,7 +1346,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1368,10 +1368,10 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "builders/n:builderid/buildslaves/n:buildslaveid"
+    "plural": "buildworkers", 
+    "path": "builders/n:builderid/buildworkers/n:buildworkerid"
   }, 
   {
     "type": "master", 
@@ -1676,7 +1676,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1765,7 +1765,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -1854,7 +1854,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -3232,7 +3232,7 @@
     "path": "buildsets/n:bsid/properties"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -3266,7 +3266,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -3280,7 +3280,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -3302,13 +3302,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "buildslaves"
+    "plural": "buildworkers", 
+    "path": "buildworkers"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -3342,7 +3342,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -3356,7 +3356,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -3378,13 +3378,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "buildslaves/i:name"
+    "plural": "buildworkers", 
+    "path": "buildworkers/i:name"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -3418,7 +3418,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -3432,7 +3432,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -3454,10 +3454,10 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "buildslaves/n:buildslaveid"
+    "plural": "buildworkers", 
+    "path": "buildworkers/n:buildworkerid"
   }, 
   {
     "type": "change", 
@@ -4413,7 +4413,7 @@
     "path": "masters/n:masterid/builders/n:builderid"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -4447,7 +4447,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -4461,7 +4461,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -4483,13 +4483,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "masters/n:masterid/builders/n:builderid/buildslaves"
+    "plural": "buildworkers", 
+    "path": "masters/n:masterid/builders/n:builderid/buildworkers"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -4523,7 +4523,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -4537,7 +4537,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -4559,13 +4559,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "masters/n:masterid/builders/n:builderid/buildslaves/i:name"
+    "plural": "buildworkers", 
+    "path": "masters/n:masterid/builders/n:builderid/buildworkers/i:name"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -4599,7 +4599,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -4613,7 +4613,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -4635,13 +4635,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "masters/n:masterid/builders/n:builderid/buildslaves/n:buildslaveid"
+    "plural": "buildworkers", 
+    "path": "masters/n:masterid/builders/n:builderid/buildworkers/n:buildworkerid"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -4675,7 +4675,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -4689,7 +4689,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -4711,13 +4711,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "masters/n:masterid/buildslaves"
+    "plural": "buildworkers", 
+    "path": "masters/n:masterid/buildworkers"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -4751,7 +4751,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -4765,7 +4765,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -4787,13 +4787,13 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "masters/n:masterid/buildslaves/i:name"
+    "plural": "buildworkers", 
+    "path": "masters/n:masterid/buildworkers/i:name"
   }, 
   {
-    "type": "buildslave", 
+    "type": "buildworker", 
     "type_spec": {
       "fields": [
         {
@@ -4827,7 +4827,7 @@
             "name": "jsonobject"
           }, 
           "type": "jsonobject", 
-          "name": "slaveinfo"
+          "name": "workerinfo"
         }, 
         {
           "type_spec": {
@@ -4841,7 +4841,7 @@
             "name": "integer"
           }, 
           "type": "integer", 
-          "name": "buildslaveid"
+          "name": "buildworkerid"
         }, 
         {
           "type_spec": {
@@ -4863,10 +4863,10 @@
           "name": "connected_to"
         }
       ], 
-      "type": "buildslave"
+      "type": "buildworker"
     }, 
-    "plural": "buildslaves", 
-    "path": "masters/n:masterid/buildslaves/n:buildslaveid"
+    "plural": "buildworkers", 
+    "path": "masters/n:masterid/buildworkers/n:buildworkerid"
   }, 
   {
     "type": "changesource", 

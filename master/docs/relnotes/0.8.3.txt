@@ -12,10 +12,10 @@ publicly exposed PB port should use these parameters to limit sendchange
 access.
 
 Previous versions of Buildbot should never be configured with a PBChangeSource
-and a publicly accessible slave port, as that arrangement  allows anyone to
+and a publicly accessible worker port, as that arrangement  allows anyone to
 connect and inject a change into the Buildmaster without any authentication at
 all, aside from the hard-coded 'change'/'changepw' credentials.  In many cases,
-this can lead to arbitrary code injection on slaves.
+this can lead to arbitrary code injection on workers.
 
 ** Experiemental Gerrit and Repo support
 
@@ -33,7 +33,7 @@ evaluation-time.
 
 ** New 'SetPropertiesFromEnv' step
 
-This step uses the slave environment to set build properties.
+This step uses the worker environment to set build properties.
 
 ** Deprecations and Removals
 
@@ -46,12 +46,12 @@ non-functional, and has been removed. (#1059)
 *** The misnamed sendchange option 'username' has been renamed to 'who'; the old
 option continues to work, but is deprecated and will be removed. (#1711)
 
-* Slave Changes
+* Worker Changes
 
-** Slave-initiated Graceful Shutdown
+** Worker-initiated Graceful Shutdown
 
-If the allow_shutdown parameter in buildbot.tac is set, then the slave can be
-gracefully shut down locally by the slave admin.  The shutdown operates by the
-slave informing the master that it would like to shut down; the master then
-finishes any active builds on the slave, and instructs the slave to shut down.
+If the allow_shutdown parameter in buildbot.tac is set, then the worker can be
+gracefully shut down locally by the worker admin.  The shutdown operates by the
+worker informing the master that it would like to shut down; the master then
+finishes any active builds on the worker, and instructs the worker to shut down.
 See the documentation for more information.

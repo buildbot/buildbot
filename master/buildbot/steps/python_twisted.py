@@ -116,9 +116,9 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
     def outLineReceived(self, line):
         # different versions of Twisted emit different per-test lines with
         # the bwverbose reporter.
-        #  2.0.0: testSlave (buildbot.test.test_runner.Create) ... [OK]
-        #  2.1.0: buildbot.test.test_runner.Create.testSlave ... [OK]
-        #  2.4.0: buildbot.test.test_runner.Create.testSlave ... [OK]
+        #  2.0.0: testWorker (buildbot.test.test_runner.Create) ... [OK]
+        #  2.1.0: buildbot.test.test_runner.Create.testWorker ... [OK]
+        #  2.4.0: buildbot.test.test_runner.Create.testWorker ... [OK]
         # Let's just handle the most recent version, since it's the easiest.
         # Note that doctests create lines line this:
         #  Doctest: viff.field.GF ... [OK]
@@ -175,8 +175,8 @@ class Trial(ShellCommand):
 
     name = "trial"
     progressMetrics = ('output', 'tests', 'test.log')
-    # note: the slash only works on unix buildslaves, of course, but we have
-    # no way to know what the buildslave uses as a separator.
+    # note: the slash only works on unix buildworkers, of course, but we have
+    # no way to know what the buildworker uses as a separator.
     # TODO: figure out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
@@ -379,7 +379,7 @@ class Trial(ShellCommand):
                 cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
                 # this bit produces a list, which can be used
-                # by buildslave.runprocess.RunProcess
+                # by buildworker.runprocess.RunProcess
                 ppath = e.get('PYTHONPATH', self.testpath)
                 if isinstance(ppath, str):
                     ppath = [ppath]

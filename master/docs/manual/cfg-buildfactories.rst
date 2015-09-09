@@ -35,7 +35,7 @@ For example, a build factory which consists of an SVN checkout followed by a ``m
 This factory would then be attached to one builder (or several, if desired)::
 
     c['builders'].append(
-        BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f))
+        BuilderConfig(name='quick', workernames=['bot1', 'bot2'], factory=f))
 
 It is also possible to pass a list of steps into the :class:`BuildFactory` when it is created.
 Using :meth:`addStep` is usually simpler, but there are cases where it is more convenient to create the list of steps ahead of time, perhaps using some Python tricks to generate the steps.
@@ -72,7 +72,7 @@ The following attributes can be set on a build factory after it is created, e.g.
     (defaults to 'build'): workdir given to every build step created by this factory as default.
     The workdir can be overridden in a build step definition.
 
-    If this attribute is set to a string, that string will be used for constructing the workdir (buildslave base + builder builddir + workdir).
+    If this attribute is set to a string, that string will be used for constructing the workdir (buildworker base + builder builddir + workdir).
     The attribute can also be a Python callable, for more complex cases, as described in :ref:`Factory-Workdir-Functions`.
 
 .. _DynamicBuildFactories:
@@ -197,7 +197,7 @@ Optional Arguments:
 
 ``configureEnv``
     The environment used for the initial configuration step.
-    This accepts a dictionary which will be merged into the buildslave's normal environment.
+    This accepts a dictionary which will be merged into the buildworker's normal environment.
     This is commonly used to provide things like ``CFLAGS="-O2 -g"`` (to turn off debug symbols during the compile).
     Defaults to an empty dictionary.
 

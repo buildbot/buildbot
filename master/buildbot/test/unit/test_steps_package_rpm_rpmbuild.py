@@ -41,7 +41,7 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
                         '`pwd`" --define "_sourcedir `pwd`" --define "_specdir '
                         '`pwd`" --define "_srcrpmdir `pwd`" --define "dist .el6" '
                         '-ba foo.spec',
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log('stdio',
                               stdout='lalala')
             + 0)
@@ -57,7 +57,7 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
                         '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
                         '--define "_srcrpmdir `pwd`" --define "dist .el6" '
                         '--define "_release 0" -ba foo.spec',
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
             + 0)

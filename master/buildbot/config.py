@@ -114,7 +114,7 @@ class MasterConfig(util.ComparableMixin):
         )
         self.schedulers = {}
         self.builders = []
-        self.slaves = []
+        self.workers = []
         self.change_sources = []
         self.status = []
         self.user_managers = []
@@ -137,7 +137,7 @@ class MasterConfig(util.ComparableMixin):
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "services", "slavePortnum", "slaves", "status", "title", "titleURL",
+        "schedulers", "services", "workerPortnum", "workers", "status", "title", "titleURL",
         "user_managers", "validation", 'www'
     ])
     compare_attrs = list(_known_config_keys)
@@ -242,7 +242,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
             config.load_builders(filename, config_dict)
-            config.load_slaves(filename, config_dict)
+            config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
             config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
@@ -350,9 +350,9 @@ class MasterConfig(util.ComparableMixin):
                     error("c['protocols']['%s'] must be a dict" % proto)
                     return
                 if (proto == "pb" and options.get("port") and
-                        'slavePortnum' in config_dict):
-                    error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
-                          " defined, recommended to remove slavePortnum and leave"
+                        'workerPortnum' in config_dict):
+                    error("Both c['workerPortnum'] and c['protocols']['pb']['port']"
+                          " defined, recommended to remove workerPortnum and leave"
                           " only c['protocols']['pb']['port']")
                 if proto == "wamp":
                     self.check_wamp_proto(options)
@@ -362,12 +362,12 @@ class MasterConfig(util.ComparableMixin):
         self.protocols = protocols
 
         # saved for backward compatability
-        if 'slavePortnum' in config_dict:
-            slavePortnum = config_dict.get('slavePortnum')
-            if isinstance(slavePortnum, int):
-                slavePortnum = "tcp:%d" % slavePortnum
+        if 'workerPortnum' in config_dict:
+            workerPortnum = config_dict.get('workerPortnum')
+            if isinstance(workerPortnum, int):
+                workerPortnum = "tcp:%d" % workerPortnum
             pb_options = self.protocols.get('pb', {})
-            pb_options['port'] = slavePortnum
+            pb_options['port'] = workerPortnum
             self.protocols['pb'] = pb_options
 
         if 'multiMaster' in config_dict:
@@ -526,40 +526,40 @@ class MasterConfig(util.ComparableMixin):
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
                 warnings.warn("Absolute path '%s' for builder may cause "
-                              "mayhem.  Perhaps you meant to specify slavebuilddir "
+                              "mayhem.  Perhaps you meant to specify workerbuilddir "
                               "instead.")
 
         self.builders = builders
 
-    def load_slaves(self, filename, config_dict):
-        if 'slaves' not in config_dict:
+    def load_workers(self, filename, config_dict):
+        if 'workers' not in config_dict:
             return
-        slaves = config_dict['slaves']
+        workers = config_dict['workers']
 
-        if not isinstance(slaves, (list, tuple)):
-            error("c['slaves'] must be a list")
+        if not isinstance(workers, (list, tuple)):
+            error("c['workers'] must be a list")
             return
 
-        for sl in slaves:
-            if not interfaces.IBuildSlave.providedBy(sl):
-                msg = "c['slaves'] must be a list of BuildSlave instances"
+        for sl in workers:
+            if not interfaces.IBuildWorker.providedBy(sl):
+                msg = "c['workers'] must be a list of BuildWorker instances"
                 error(msg)
                 return
 
-            def validate(slavename):
-                if slavename in ("debug", "change", "status"):
-                    yield "slave name %r is reserved" % slavename
-                if not util_identifiers.ident_re.match(slavename):
-                    yield "slave name %r is not an identifier" % slavename
-                if not slavename:
-                    yield "slave name %r cannot be an empty string" % slavename
-                if len(slavename) > 50:
-                    yield "slave name %r is longer than %d characters" % (slavename, 50)
+            def validate(workername):
+                if workername in ("debug", "change", "status"):
+                    yield "worker name %r is reserved" % workername
+                if not util_identifiers.ident_re.match(workername):
+                    yield "worker name %r is not an identifier" % workername
+                if not workername:
+                    yield "worker name %r cannot be an empty string" % workername
+                if len(workername) > 50:
+                    yield "worker name %r is longer than %d characters" % (workername, 50)
 
-            for msg in validate(sl.slavename):
+            for msg in validate(sl.workername):
                 error(msg)
 
-        self.slaves = config_dict['slaves']
+        self.workers = config_dict['workers']
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])
@@ -656,8 +656,8 @@ class MasterConfig(util.ComparableMixin):
         if self.multiMaster:
             return
 
-        if not self.slaves:
-            error("no slaves are configured")
+        if not self.workers:
+            error("no workers are configured")
 
         if not self.builders:
             error("no builders are configured")
@@ -707,15 +707,15 @@ class MasterConfig(util.ComparableMixin):
 
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
-        # to unknown slaves
-        slavenames = set([s.slavename for s in self.slaves])
+        # to unknown workers
+        workernames = set([s.workername for s in self.workers])
         seen_names = set()
         seen_builddirs = set()
 
         for b in self.builders:
-            unknowns = set(b.slavenames) - slavenames
+            unknowns = set(b.workernames) - workernames
             if unknowns:
-                error("builder '%s' uses unknown slaves %s" %
+                error("builder '%s' uses unknown workers %s" %
                       (b.name, ", ".join(repr(u) for u in unknowns)))
             if b.name in seen_names:
                 error("duplicate builder name '%s'" % b.name)
@@ -755,16 +755,16 @@ class MasterConfig(util.ComparableMixin):
 
         if ports:
             return
-        if self.slaves:
-            error("slaves are configured, but c['protocols'] not")
+        if self.workers:
+            error("workers are configured, but c['protocols'] not")
 
 
 class BuilderConfig(util_config.ConfiguredMixin):
 
-    def __init__(self, name=None, slavename=None, slavenames=None,
-                 builddir=None, slavebuilddir=None, factory=None,
+    def __init__(self, name=None, workername=None, workernames=None,
+                 builddir=None, workerbuilddir=None, factory=None,
                  tags=None, category=None,
-                 nextSlave=None, nextBuild=None, locks=None, env=None,
+                 nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
                  canStartBuild=None):
 
@@ -787,35 +787,35 @@ class BuilderConfig(util_config.ConfiguredMixin):
             error("builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
-        # slavenames can be a single slave name or a list, and should also
-        # include slavename, if given
-        if isinstance(slavenames, str):
-            slavenames = [slavenames]
-        if slavenames:
-            if not isinstance(slavenames, list):
-                error("builder '%s': slavenames must be a list or a string" %
+        # workernames can be a single worker name or a list, and should also
+        # include workername, if given
+        if isinstance(workernames, str):
+            workernames = [workernames]
+        if workernames:
+            if not isinstance(workernames, list):
+                error("builder '%s': workernames must be a list or a string" %
                       (name,))
         else:
-            slavenames = []
+            workernames = []
 
-        if slavename:
-            if not isinstance(slavename, str):
-                error("builder '%s': slavename must be a string" % (name,))
-            slavenames = slavenames + [slavename]
-        if not slavenames:
-            error("builder '%s': at least one slavename is required" % (name,))
+        if workername:
+            if not isinstance(workername, str):
+                error("builder '%s': workername must be a string" % (name,))
+            workernames = workernames + [workername]
+        if not workernames:
+            error("builder '%s': at least one workername is required" % (name,))
 
-        self.slavenames = slavenames
+        self.workernames = workernames
 
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
         self.builddir = builddir
 
-        # slavebuilddir defaults to builddir
-        if slavebuilddir is None:
-            slavebuilddir = builddir
-        self.slavebuilddir = slavebuilddir
+        # workerbuilddir defaults to builddir
+        if workerbuilddir is None:
+            workerbuilddir = builddir
+        self.workerbuilddir = workerbuilddir
 
         # remainder are optional
 
@@ -840,14 +840,14 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.tags = tags
 
-        self.nextSlave = nextSlave
-        if nextSlave and not callable(nextSlave):
-            error('nextSlave must be a callable')
-            # Keeping support of the previous nextSlave API
-        if nextSlave and (nextSlave.func_code.co_argcount == 2 or
-                          (isinstance(nextSlave, MethodType) and
-                           nextSlave.func_code.co_argcount == 3)):
-            self.nextSlave = lambda x, y, z: nextSlave(x, y)  # pragma: no cover
+        self.nextWorker = nextWorker
+        if nextWorker and not callable(nextWorker):
+            error('nextWorker must be a callable')
+            # Keeping support of the previous nextWorker API
+        if nextWorker and (nextWorker.func_code.co_argcount == 2 or
+                          (isinstance(nextWorker, MethodType) and
+                           nextWorker.func_code.co_argcount == 3)):
+            self.nextWorker = lambda x, y, z: nextWorker(x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
@@ -869,15 +869,15 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # constructor!
         rv = {
             'name': self.name,
-            'slavenames': self.slavenames,
+            'workernames': self.workernames,
             'factory': self.factory,
             'builddir': self.builddir,
-            'slavebuilddir': self.slavebuilddir,
+            'workerbuilddir': self.workerbuilddir,
         }
         if self.tags:
             rv['tags'] = self.tags
-        if self.nextSlave:
-            rv['nextSlave'] = self.nextSlave
+        if self.nextWorker:
+            rv['nextWorker'] = self.nextWorker
         if self.nextBuild:
             rv['nextBuild'] = self.nextBuild
         if self.locks:

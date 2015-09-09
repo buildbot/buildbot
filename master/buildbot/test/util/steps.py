@@ -28,7 +28,7 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
-from buildbot.test.fake import slave
+from buildbot.test.fake import worker
 from twisted.internet import defer
 from twisted.internet import task
 
@@ -93,7 +93,7 @@ class BuildStepMixin(object):
     @ivar step: the step under test
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
-    @ivar buildslave: mock buildslave object
+    @ivar buildworker: mock buildworker object
     @ivar properties: build properties (L{Properties} instance)
     """
 
@@ -113,34 +113,34 @@ class BuildStepMixin(object):
         del remotecommand.FakeRemoteCommand.testcase
 
     # utilities
-    def _getSlaveCommandVersionWrapper(self):
-        originalGetSlaveCommandVersion = self.step.build.getSlaveCommandVersion
+    def _getWorkerCommandVersionWrapper(self):
+        originalGetWorkerCommandVersion = self.step.build.getWorkerCommandVersion
 
-        def getSlaveCommandVersion(cmd, oldversion):
+        def getWorkerCommandVersion(cmd, oldversion):
             if cmd == 'shell':
-                if hasattr(self, 'slaveShellCommandVersion'):
-                    return self.slaveShellCommandVersion
-            return originalGetSlaveCommandVersion(cmd, oldversion)
+                if hasattr(self, 'workerShellCommandVersion'):
+                    return self.workerShellCommandVersion
+            return originalGetWorkerCommandVersion(cmd, oldversion)
 
-        return getSlaveCommandVersion
+        return getWorkerCommandVersion
 
-    def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
+    def setupStep(self, step, worker_version={'*': "99.99"}, worker_env={},
                   buildFiles=[], wantDefaultWorkdir=True, wantData=True,
                   wantDb=False, wantMq=False):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
         arguments are handled correctly.  It then creates a comfortable
-        environment for the slave to run in, replete with a fake build and a
-        fake slave.
+        environment for the worker to run in, replete with a fake build and a
+        fake worker.
 
         As a convenience, it can set the step's workdir with C{'wkdir'}.
 
-        @param slave_version: slave version to present, as a dictionary mapping
+        @param worker_version: worker version to present, as a dictionary mapping
             command name to version.  A command name of '*' will apply for all
             commands.
 
-        @param slave_env: environment from the slave at slave startup
+        @param worker_env: environment from the worker at worker startup
 
         @param wantData(bool): Set to True to add data API connector to master.
             Default value: True.
@@ -167,14 +167,14 @@ class BuildStepMixin(object):
         b.allFiles = lambda: buildFiles
         b.master = self.master
 
-        def getSlaveVersion(cmd, oldversion):
-            if cmd in slave_version:
-                return slave_version[cmd]
-            if '*' in slave_version:
-                return slave_version['*']
+        def getWorkerVersion(cmd, oldversion):
+            if cmd in worker_version:
+                return worker_version[cmd]
+            if '*' in worker_version:
+                return worker_version['*']
             return oldversion
-        b.getSlaveCommandVersion = getSlaveVersion
-        b.slaveEnvironment = slave_env.copy()
+        b.getWorkerCommandVersion = getWorkerVersion
+        b.workerEnvironment = worker_env.copy()
         step.setBuild(b)
 
         # watch for properties being set
@@ -184,9 +184,9 @@ class BuildStepMixin(object):
 
         step.progress = mock.Mock(name="progress")
 
-        # step.buildslave
+        # step.buildworker
 
-        self.buildslave = step.buildslave = slave.FakeSlave(self.master)
+        self.buildworker = step.buildworker = worker.FakeWorker(self.master)
 
         # step overrides
 
@@ -286,9 +286,9 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
-        self.step.build.getSlaveCommandVersion = self._getSlaveCommandVersionWrapper()
+        self.step.build.getWorkerCommandVersion = self._getWorkerCommandVersionWrapper()
 
-        self.conn = mock.Mock(name="SlaveBuilder(connection)")
+        self.conn = mock.Mock(name="WorkerBuilder(connection)")
         self.step.setupProgress()
         d = self.step.startStep(self.conn)
 

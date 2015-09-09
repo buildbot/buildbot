@@ -7,17 +7,17 @@ which were deprecated in the previous release, have now been removed. In
 addition, Builders must now always be configured with dictionaries: the
 support for configuring them with tuples has been removed.
 
-** master/slave creation and startup changed
+** master/worker creation and startup changed
 
 The buildbot no longer uses .tap files to store serialized representations of
-the buildmaster/buildslave applications. Instead, this release now uses .tac
+the buildmaster/buildworker applications. Instead, this release now uses .tac
 files, which are human-readable scripts that create new instances (rather
 than .tap files, which were pickles of pre-created instances). 'mktap
 buildbot' is gone.
 
 You will need to update your buildbot directories to handle this. The
-procedure is the same as creating a new buildmaster or buildslave: use
-'buildbot master BASEDIR' or 'buildbot slave BASEDIR ARGS..'. This will
+procedure is the same as creating a new buildmaster or buildworker: use
+'buildbot master BASEDIR' or 'buildbot worker BASEDIR ARGS..'. This will
 create a 'buildbot.tac' file in the target directory. The 'buildbot start
 BASEDIR' will use twistd to start the application.
 
@@ -55,7 +55,7 @@ Arch client) instead of 'tla' was added. A Source step for Cogito (the new
 linux kernel VC system) was contributed by Brandon Philips. All Source steps
 now accept a retry= argument to indicate that failing VC checkouts should be
 retried a few times (SF#1200395), note that this requires an updated
-buildslave.
+buildworker.
 
 The 'buildbot sendchange' command was added, to be used in VC hook scripts to
 send changes at a pb.PBChangeSource . contrib/arch_buildbot.py was added to

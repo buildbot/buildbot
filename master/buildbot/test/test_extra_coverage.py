@@ -19,8 +19,8 @@
 
 modules = []  # for the benefit of pyflakes
 
-from buildbot import buildslave
-modules.extend([buildslave])
+from buildbot import buildworker
+modules.extend([buildworker])
 from buildbot.changes import p4poller
 from buildbot.changes import svnpoller
 modules.extend([p4poller, svnpoller])
@@ -56,10 +56,10 @@ from buildbot.util import eventual
 modules.extend([eventual])
 
 # requires libboto
-# import buildbot.ec2buildslave
+# import buildbot.ec2buildworker
 
 # requires libvirt
-# import buildbot.libvirtbuildslave
+# import buildbot.libvirtbuildworker
 
 # requires pycrypto
 # import buildbot.manhole

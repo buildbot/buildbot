@@ -41,11 +41,11 @@ Windows users get something similar, using %APPDATA%/buildbot instead of
 
 ** windows ShellCommands are launched with 'cmd.exe'
 
-The buildslave has been modified to run all list-based ShellCommands by
+The buildworker has been modified to run all list-based ShellCommands by
 prepending [os.environ['COMSPEC'], '/c'] to the argv list before execution.
-This should allow the buildslave's PATH to be searched for commands,
+This should allow the buildworker's PATH to be searched for commands,
 improving the chances that it can run the same 'trial -o foo' commands as a
-unix buildslave. The potential downside is that spaces in argv elements might
+unix buildworker. The potential downside is that spaces in argv elements might
 be re-parsed, or quotes might be re-interpreted. The consensus on the mailing
 list was that this is a useful thing to do, but please report any problems
 you encounter with it.

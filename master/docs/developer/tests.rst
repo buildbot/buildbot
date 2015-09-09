@@ -1,10 +1,10 @@
 Buildbot's Test Suite
 =====================
 
-Buildbot's tests are under ``buildbot.test`` and, for the buildslave,
-``buildslave.test``.  Tests for the slave are similar to the master, although
+Buildbot's tests are under ``buildbot.test`` and, for the buildworker,
+``buildworker.test``.  Tests for the worker are similar to the master, although
 in some cases helpful functionality on the master is not re-implemented on the
-slave.
+worker.
 
 Suites
 ------

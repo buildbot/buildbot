@@ -36,7 +36,7 @@ external tools, so the values are fixed.
 .. py:data:: RETRY
 
     Value: 4; color: purple; a run that should be retried, usually due to a
-    slave disconnection.
+    worker disconnection.
 
 .. py:data:: CANCELLED
 

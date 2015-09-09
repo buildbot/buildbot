@@ -109,7 +109,7 @@ describe 'buildinfo', ->
         # 2. Test property summary
         mockproperties =
             revision: 'abcdefasfasdfasdffwjpeofiasdpvio'
-            slave: 'slavetest'
+            worker: 'workertest'
             scheduler: 'testscheduler'
             dir: '/test/work/dir'
 
@@ -121,7 +121,7 @@ describe 'buildinfo', ->
         
         expect(content.length).toBe(4)
         expect(content.eq(0).text()).toBe(mockproperties.revision)
-        expect(content.eq(1).text()).toBe(mockproperties.slave)
+        expect(content.eq(1).text()).toBe(mockproperties.worker)
         expect(content.eq(2).text()).toBe(mockproperties.scheduler)
         expect(content.eq(3).text()).toBe(mockproperties.dir)
         expect(content.eq(3).children().eq(1).attr('title')).toBe(mockproperties.dir)

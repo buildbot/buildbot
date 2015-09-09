@@ -361,17 +361,17 @@ PBChangeSource
 :bb:chsrc:`PBChangeSource` actually listens on a TCP port for clients to connect and push change notices *into* the Buildmaster.
 This is used by the built-in ``buildbot sendchange`` notification tool, as well as several version-control hook scripts.
 This change is also useful for creating new kinds of change sources that work on a `push` model instead of some kind of subscription scheme, for example a script which is run out of an email :file:`.forward` file.
-This ChangeSource always runs on the same TCP port as the slaves.
-It shares the same protocol, and in fact shares the same space of "usernames", so you cannot configure a :bb:chsrc:`PBChangeSource` with the same name as a slave.
+This ChangeSource always runs on the same TCP port as the workers.
+It shares the same protocol, and in fact shares the same space of "usernames", so you cannot configure a :bb:chsrc:`PBChangeSource` with the same name as a worker.
 
-If you have a publicly accessible slave port, and are using :bb:chsrc:`PBChangeSource`, *you must establish a secure username and password for the change source*.
-If your sendchange credentials are known (e.g., the defaults), then your buildmaster is susceptible to injection of arbitrary changes, which (depending on the build factories) could lead to arbitrary code execution on buildslaves.
+If you have a publicly accessible worker port, and are using :bb:chsrc:`PBChangeSource`, *you must establish a secure username and password for the change source*.
+If your sendchange credentials are known (e.g., the defaults), then your buildmaster is susceptible to injection of arbitrary changes, which (depending on the build factories) could lead to arbitrary code execution on buildworkers.
 
 The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
 ``port``
     which port to listen on.
-    If ``None`` (which is the default), it shares the port used for buildslave connections.
+    If ``None`` (which is the default), it shares the port used for buildworker connections.
 
 ``user``
     The user account that the client program must use to connect.
@@ -415,10 +415,10 @@ Then, in one of your bazaar conf files (e.g., :file:`~/.bazaar/locations.conf`),
     'change' is recommended.
 
   * ``buildbot_server``
-    (required to send to a buildbot master) the URL of the buildbot master to which you will connect (as of this writing, the same server and port to which slaves connect).
+    (required to send to a buildbot master) the URL of the buildbot master to which you will connect (as of this writing, the same server and port to which workers connect).
 
   * ``buildbot_port``
-    (optional, defaults to 9989) the port of the buildbot master to which you will connect (as of this writing, the same server and port to which slaves connect)
+    (optional, defaults to 9989) the port of the buildbot master to which you will connect (as of this writing, the same server and port to which workers connect)
 
   * ``buildbot_pqm``
     (optional, defaults to not pqm) Normally, the user that commits the revision is the user that is responsible for the change.
@@ -944,7 +944,7 @@ By default this class adds a change to the buildbot system for each of the follo
     A change is proposed for review.
     Automatic checks like :file:`checkpatch.pl` can be automatically triggered.
     Beware of what kind of automatic task you trigger.
-    At this point, no trusted human has reviewed the code, and a patch could be specially crafted by an attacker to compromise your buildslaves.
+    At this point, no trusted human has reviewed the code, and a patch could be specially crafted by an attacker to compromise your buildworkers.
 
 ``ref-updated``
     A change has been merged into the repository.

@@ -17,7 +17,7 @@ from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
 
 
-# This integration test creates a master and slave environment,
+# This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
@@ -52,6 +52,6 @@ def masterConfig():
     f.addStep(steps.ShellCommand(command='echo hello'))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f)]
     return c

@@ -249,12 +249,12 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.FileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.FileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        workerdest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -695,7 +695,7 @@ class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             bzr.Bzr(repourl='http://bzr.squid-cache.org/bzr/squid3/trunk',
                     mode='full', method='fresh'))

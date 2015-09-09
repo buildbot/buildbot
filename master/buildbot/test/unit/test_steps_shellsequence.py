@@ -51,7 +51,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
                                         workdir='build'))
         self.properties.setProperty("project", "BUILDBOT-TEST", "TEST")
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST',
-                                        usePTY="slave-config")
+                                        usePTY="worker-config")
                             + 0 + Expect.log('stdio make BUILDBOT-TEST'))
         # TODO: need to factor command-summary stuff into a utility method and use it here
         self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
@@ -86,9 +86,9 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1',
-                                        usePTY="slave-config") + 0,
+                                        usePTY="worker-config") + 0,
                             ExpectShell(workdir='build', command='deploy p1',
-                                        usePTY="slave-config") + 0 +
+                                        usePTY="worker-config") + 0 +
                             Expect.log('stdio deploy p1'))
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
@@ -101,9 +101,9 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
             shellsequence.ShellSequence(commands=[arg1, arg2, arg3],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1',
-                                        usePTY="slave-config") + 0,
+                                        usePTY="worker-config") + 0,
                             ExpectShell(workdir='build', command='deploy p1',
-                                        usePTY="slave-config") + 0)
+                                        usePTY="worker-config") + 0)
         self.expectOutcome(result=SUCCESS, state_string="'deploy p1'")
         return self.runStep()
 
@@ -116,9 +116,9 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1',
-                                        usePTY="slave-config") + 1,
+                                        usePTY="worker-config") + 1,
                             ExpectShell(workdir='build', command='deploy p1',
-                                        usePTY="slave-config") + 0)
+                                        usePTY="worker-config") + 0)
         self.expectOutcome(result=WARNINGS, state_string="'deploy p1'")
         return self.runStep()
 
@@ -130,6 +130,6 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
         self.expectCommands(ExpectShell(workdir='build', command='make p1',
-                                        usePTY="slave-config") + 1)
+                                        usePTY="worker-config") + 1)
         self.expectOutcome(result=FAILURE, state_string="'make p1'")
         return self.runStep()

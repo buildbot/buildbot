@@ -15,7 +15,7 @@ Buildbot is based on original work from `Brian Warner
 Buildbot consists of several components:
 
 * master
-* slave
+* worker
 * www/base
 * www/console_view
 * www/waterfall_view

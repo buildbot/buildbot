@@ -23,7 +23,7 @@ except ImportError:
     from StringIO import StringIO
 
 
-from buildbot.buildslave.protocols import base
+from buildbot.buildworker.protocols import base
 
 """
 module for regrouping all FileWriterImpl and FileReaderImpl away from steps
@@ -51,7 +51,7 @@ class FileWriter(base.FileWriterImpl):
 
     def remote_write(self, data):
         """
-        Called from remote slave to write L{data} to L{fp} within boundaries
+        Called from remote worker to write L{data} to L{fp} within boundaries
         of L{maxsize}
 
         @type  data: C{string}
@@ -70,7 +70,7 @@ class FileWriter(base.FileWriterImpl):
 
     def remote_close(self):
         """
-        Called by remote slave to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transfered
         """
         self.fp.close()
         self.fp = None
@@ -112,7 +112,7 @@ class DirectoryWriter(FileWriter):
 
     def remote_unpack(self):
         """
-        Called by remote slave to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transfered
         """
         # Make sure remote_close is called, otherwise atomic rename wont happen
         self.remote_close()
@@ -143,7 +143,7 @@ class FileReader(base.FileReaderImpl):
 
     def remote_read(self, maxlength):
         """
-        Called from remote slave to read at most L{maxlength} bytes of data
+        Called from remote worker to read at most L{maxlength} bytes of data
 
         @type  maxlength: C{integer}
         @param maxlength: Maximum number of data bytes that can be returned
@@ -159,7 +159,7 @@ class FileReader(base.FileReaderImpl):
 
     def remote_close(self):
         """
-        Called by remote slave to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transfered
         """
         if self.fp is not None:
             self.fp.close()
@@ -171,7 +171,7 @@ class StringFileWriter(base.FileWriterImpl):
     """
     FileWriter class that just puts received data into a buffer.
 
-    Used to upload a file from slave for inline processing rather than
+    Used to upload a file from worker for inline processing rather than
     writing into a file on master.
     """
 
@@ -190,7 +190,7 @@ class StringFileReader(FileReader):
     """
     FileWriter class that just buid send data from a string.
 
-    Used to download a file to slave from local string rather than first
+    Used to download a file to worker from local string rather than first
     writing into a file on master.
     """
 

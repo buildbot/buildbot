@@ -35,7 +35,7 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(cppcheck.Cppcheck(enable=['all'], inconclusive=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
-                        'cppcheck', '.', '--enable=all', '--inconclusive'], usePTY='slave-config')
+                        'cppcheck', '.', '--enable=all', '--inconclusive'], usePTY='worker-config')
             + ExpectShell.log('stdio', stdout='Checking file1.c...')
             + 0)
         self.expectOutcome(result=SUCCESS, state_string="cppcheck")
@@ -45,7 +45,7 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
-                        'cppcheck', 'file1.c', '--enable=warning,performance'], usePTY='slave-config')
+                        'cppcheck', 'file1.c', '--enable=warning,performance'], usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('Checking file1.c...\n'
@@ -60,7 +60,7 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(cppcheck.Cppcheck(extra_args=['--my-param=5']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
-                        'cppcheck', '.', '--my-param=5'], usePTY='slave-config')
+                        'cppcheck', '.', '--my-param=5'], usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('Checking file1.c...\n'
@@ -77,7 +77,7 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(cppcheck.Cppcheck(
             binary=P('a'), source=[P('.'), P('f.c')], extra_args=[P('--p'), P('--p')]))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', command=['a', '.', 'f.c', '--p', '--p'], usePTY='slave-config')
+            ExpectShell(workdir='wkdir', command=['a', '.', 'f.c', '--p', '--p'], usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout='Checking file1.c...')

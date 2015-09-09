@@ -20,13 +20,13 @@ from buildbot.process import remotetransfer
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
-from buildbot.steps.slave import CompositeStepMixin
+from buildbot.steps.worker import CompositeStepMixin
 from twisted.python import log
 
 
 class Source(LoggingBuildStep, CompositeStepMixin):
 
-    """This is a base class to generate a source tree in the buildslave.
+    """This is a base class to generate a source tree in the buildworker.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
     startVC(). The class as a whole builds up the self.args dictionary, then
@@ -71,7 +71,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         The source stamp helps avoid a race condition in which someone
         commits a change after the master has decided to start a build
-        but before the slave finishes checking out the sources. At best
+        but before the worker finishes checking out the sources. At best
         this results in a build which contains more changes than the
         buildmaster thinks it has (possibly resulting in the wrong
         person taking the blame for any problems that result), at worst
@@ -81,7 +81,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         @type logEnviron: boolean
         @param logEnviron: If this option is true (the default), then the
                            step's logfile will describe the environment
-                           variables on the slave. In situations where the
+                           variables on the worker. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
 
@@ -227,7 +227,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         def _downloadFile(buf, filename):
             filereader = remotetransfer.StringFileReader(buf)
             args = {
-                'slavedest': filename,
+                'workerdest': filename,
                 'maxsize': None,
                 'reader': filereader,
                 'blocksize': 16 * 1024,

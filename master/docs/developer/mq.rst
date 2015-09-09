@@ -15,7 +15,7 @@ The content of the messages is sufficient to reconstruct the updated state, allo
 
 This split nature immediately brings to light the problem of synchronizing the two interfaces.
 Queueing systems can introduce queueing delays as messages propagate.
-Likewise, database systems may introduce a delay between committed modifications and the modified data appearing in queries; for example, with MySQL master/slave replication, there can be several seconds' delay before a slave is updated.
+Likewise, database systems may introduce a delay between committed modifications and the modified data appearing in queries; for example, with MySQL master/worker replication, there can be several seconds' delay before a worker is updated.
 
 Buildbot's MQ connector simply relays messages, and makes no attempt to coordinate the timing of those messages with the corresponding database updates.
 It is up to higher layers to apply such coordination.
@@ -129,7 +129,7 @@ Wamp
             'builderid': 10,
             'buildid': 1,
             'buildrequestid': 13,
-            'buildslaveid': 20,
+            'buildworkerid': 20,
             'complete': False,
             'complete_at': None,
             'masterid': 824,
@@ -144,7 +144,7 @@ Wamp
 .. py:class:: WampConnector
 
     The :py:class:`WampConnector` class implements a buildbot service for wamp.
-    It is managed outside of the mq module as this protocol can also be reused for slave protocol.
+    It is managed outside of the mq module as this protocol can also be reused for worker protocol.
     The connector support queuing of requests until the wamp connection is created, but do not support disconnection and reconnection.
     Reconnection will be supported as part of a next release of AutobahnPython (https://github.com/tavendo/AutobahnPython/issues/295).
     There is a chicken and egg problem at the buildbot initialization phasis, so the produce messages are actually not sent with deferred.

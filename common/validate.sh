@@ -1,5 +1,5 @@
 #! /bin/bash
-TEST='buildbot.test buildslave.test'
+TEST='buildbot.test buildworker.test'
 
 # some colors
 # plain
@@ -145,7 +145,7 @@ if ! $quick; then
 elif [ -z `which cctrial` ]; then
     warning "Skipping Python Tests ('pip install cctrial' for quick tests)"
 else
-    cctrial -H buildbot buildslave || not_ok "Python tests failed"
+    cctrial -H buildbot buildworker || not_ok "Python tests failed"
 fi
 
 status "checking formatting"

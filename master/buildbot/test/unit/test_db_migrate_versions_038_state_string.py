@@ -36,7 +36,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                           sa.Column('number', sa.Integer, nullable=False),
                           sa.Column('builderid', sa.Integer),
                           sa.Column('buildrequestid', sa.Integer, nullable=False),
-                          sa.Column('buildslaveid', sa.Integer),
+                          sa.Column('buildworkerid', sa.Integer),
                           sa.Column('masterid', sa.Integer, nullable=False),
                           sa.Column('started_at', sa.Integer, nullable=False),
                           sa.Column('complete_at', sa.Integer),

@@ -12,10 +12,10 @@ patch -p0 < epydoc-3.0.1-python-2.6.patch
 cd /tmp
 
 wget http://pypi.python.org/packages/source/b/buildbot/buildbot-0.8.7.tar.gz
-wget http://pypi.python.org/packages/source/b/buildbot-slave/buildbot-slave-0.8.7.tar.gz
+wget http://pypi.python.org/packages/source/b/buildbot-worker/buildbot-worker-0.8.7.tar.gz
 tar -xzf buildbot-0.8.7.tar.gz
-tar -xzf buildbot-slave-0.8.7.tar.gz
+tar -xzf buildbot-worker-0.8.7.tar.gz
 
 git clone https://github.com/buildbot/buildbot.git
 cd buildbot/apidocs
-PYTHONPATH="/tmp/epydoc-3.0.1:/tmp/buildbot-0.8.7:/tmp/buildbot-slave-0.8.7${PYTHONPATH:+:}${PYTHONPATH}" make
+PYTHONPATH="/tmp/epydoc-3.0.1:/tmp/buildbot-0.8.7:/tmp/buildbot-worker-0.8.7${PYTHONPATH:+:}${PYTHONPATH}" make

@@ -23,7 +23,7 @@ from buildbot.process.factory import BuildFactory
 from buildbot.status.results import CANCELLED
 from buildbot.test.util.integration import RunMasterBase
 
-# This integration test creates a master and slave environment,
+# This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them. the triggered build never ends
 # so that we can reliabily stop it recursively
 
@@ -47,11 +47,11 @@ def setupTriggerConfiguration(triggeredFactory, nextBuild=None):
     f.addStep(steps.ShellCommand(command='echo world'))
 
     mainBuilder = BuilderConfig(name="main",
-                                slavenames=["local1"],
+                                workernames=["local1"],
                                 factory=f)
 
     triggeredBuilderKwargs = {'name': "triggered",
-                              'slavenames': ["local1"],
+                              'workernames': ["local1"],
                               'factory': triggeredFactory}
 
     if nextBuild is not None:

@@ -19,9 +19,9 @@ Features
 * The master now poll the database for pending tasks when running buildbot in multi-master mode.
 
 
-* The algorithm to match build requests to slaves has been rewritten :pull:`615`.
+* The algorithm to match build requests to workers has been rewritten :pull:`615`.
   The new algorithm automatically takes locks into account, and will not schedule a build only to have it wait on a lock.
-  The algorithm also introduces a ``canStartBuild`` builder configuration option which can be used to prevent a build request being assigned to a slave.
+  The algorithm also introduces a ``canStartBuild`` builder configuration option which can be used to prevent a build request being assigned to a worker.
 
 * ``buildbot stop`` and ``buildbot restart`` now accept ``--clean`` to stop or restart the master cleanly (allowing all running builds to complete first).
 
@@ -30,14 +30,14 @@ Features
 
 * :bb:step:`CopyDirectory` has been added.
 
-* :bb:sched:`BuildslaveChoiceParameter` has been added to provide a way to explicitly choose a buildslave
+* :bb:sched:`BuildworkerChoiceParameter` has been added to provide a way to explicitly choose a buildworker
   for a given build.
 
 * default.css now wraps preformatted text by default.
 
-* Slaves can now be paused through the web status.
+* Workers can now be paused through the web status.
 
-* The latent buildslave support is less buggy, thanks :pull:`646`.
+* The latent buildworker support is less buggy, thanks :pull:`646`.
 
 * The ``treeStableTimer`` for ``AnyBranchScheduler`` now maintains separate timers for separate branches, codebases, projects, and repositories.
 
@@ -45,7 +45,7 @@ Features
 
 * The build request DB connector method :py:meth:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent.getBuildRequests` can now filter by branch and repository.
 
-* A new :bb:step:`SetProperty` step has been added in ``buildbot.steps.master`` which can set a property directly without accessing the slave.
+* A new :bb:step:`SetProperty` step has been added in ``buildbot.steps.master`` which can set a property directly without accessing the worker.
 
 * The new :bb:step:`LogRenderable` step logs Python objects, which can contain renderables, to the logfile.
   This is helpful for debugging property values during a build.
@@ -62,10 +62,10 @@ Features
 
 * The list of force schedulers in the web UI is now sorted by name.
 
-* OpenStack-based Latent Buildslave support was added.
+* OpenStack-based Latent Buildworker support was added.
   See :pull:`666`.
 
-* Master-side support for P4 is available, and provides a great deal more flexibility than the old slave-side step.
+* Master-side support for P4 is available, and provides a great deal more flexibility than the old worker-side step.
   See :pull:`596`.
 
 * Master-side support for Repo is available.
@@ -105,7 +105,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``SetProperty`` step in ``buildbot.steps.shell`` has been renamed to :bb:step:`SetPropertyFromCommand`.
 
-* The EC2 and libvirt latent slaves have been moved to ``buildbot.buildslave.ec2`` and ``buildbot.buildslave.libirt`` respectively.
+* The EC2 and libvirt latent workers have been moved to ``buildbot.buildworker.ec2`` and ``buildbot.buildworker.libirt`` respectively.
 
 * Pre v0.8.7 versions of buildbot supported passing keyword arguments to ``buildbot.process.BuildFactory.addStep``, but this was dropped.
   Support was added again, while still being deprecated, to ease transition.
@@ -123,17 +123,17 @@ Changes for Developers
 * bb:sched:`ChoiceStringParameter` has a new method ``getChoices`` that can be used to generate
   content dynamically for Force scheduler forms.
 
-Slave
------
+Worker
+------
 
 Features
 ~~~~~~~~
 
-* The fix for Twisted bug #5079 is now applied on the slave side, too.
+* The fix for Twisted bug #5079 is now applied on the worker side, too.
   This fixes a perspective broker memory leak in older versions of Twisted.
   This fix was added on the master in Buildbot-0.8.4 (see :bug:`1958`).
 
-* The ``--nodaemon`` option to ``buildslave start`` now correctly prevents the slave from forking before running.
+* The ``--nodaemon`` option to ``buildworker start`` now correctly prevents the worker from forking before running.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

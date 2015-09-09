@@ -74,7 +74,7 @@ install:
       [ $TESTS = py3 ] || \
       pip install -e pkg \
                   -e master \
-                  -e slave \
+                  -e worker \
                   txrequests \
                   future \
                   pyjade \
@@ -87,7 +87,7 @@ install:
   # for python 3 we dont install everything yet..
   - |
       [ $TESTS != py3 ] || \
-      pip install -e slave \
+      pip install -e worker \
                   future
 
   # Run additional tests only in latest configuration
@@ -106,11 +106,11 @@ install:
 script:
   - "[ $TESTS != js ] || make frontend_install_tests"
   # run tests under coverage for latest only (it's slower..)
-  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test"
-  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test"
+  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildworker.test"
+  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildworker.test"
 
   # run tests that are know to work on py3
-  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildslave.test"
+  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildworker.test"
 
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"

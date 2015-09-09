@@ -45,7 +45,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     currentStep = None
     text = []
     results = None
-    slavename = "???"
+    workername = "???"
 
     set_runtime_properties = True
 
@@ -171,8 +171,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def getResults(self):
         return self.results
 
-    def getSlavename(self):
-        return self.slavename
+    def getWorkername(self):
+        return self.workername
 
     def getTestResults(self):
         return self.testResults
@@ -239,8 +239,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         # the world about us
         self.builder.buildStarted(self)
 
-    def setSlavename(self, slavename):
-        self.slavename = slavename
+    def setWorkername(self, workername):
+        self.workername = workername
 
     def setText(self, text):
         assert isinstance(text, (list, tuple))
@@ -424,7 +424,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
-        result['slave'] = self.getSlavename()
+        result['worker'] = self.getWorkername()
         # TODO(maruel): Add.
         # result['test_results'] = self.getTestResults()
         result['logs'] = [[l.getName(),

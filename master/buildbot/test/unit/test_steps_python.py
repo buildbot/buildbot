@@ -83,7 +83,7 @@ epydoc_output = '''\
   [...............
 +---------------------------------------------------------------------
 | In /home/dustin/code/buildbot/t/buildbot/master/buildbot/
-| ec2buildslave.py:
+| ec2buildworker.py:
 | Import failed (but source code parsing was successful).
 |     Error: ImportError: No module named boto (line 19)
 |
@@ -92,7 +92,7 @@ Warning: Unable to extract the base list for
          twisted.web.resource.EncodingResourceWrapper: Bad dotted name
   [......
 +---------------------------------------------------------------------
-| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/buildslave/
+| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/buildworker/
 | ec2.py:
 | Import failed (but source code parsing was successful).
 |     Error: ImportError: No module named boto (line 28)
@@ -120,7 +120,7 @@ class BuildEPYDoc(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.BuildEPYDoc())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'epydocs'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log('stdio',
                               stdout=epydoc_output)
             + 1,
@@ -142,7 +142,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
             + python.PyLint.RC_OK)
@@ -153,7 +153,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
@@ -169,7 +169,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
@@ -187,7 +187,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
@@ -203,7 +203,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W: 11: Bad indentation. Found 6 spaces, expected 4\n'
@@ -221,7 +221,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W: 11,0: Bad indentation. Found 6 spaces, expected 4\n'
@@ -239,7 +239,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W: 11, 0: Bad indentation. Found 6 spaces, expected 4\n'
@@ -256,7 +256,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W0311: 11: Bad indentation.\n'
@@ -274,7 +274,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('W0311: 11,0: Bad indentation.\n'
@@ -291,7 +291,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('test.py:9: [W0311] Bad indentation.\n'
@@ -308,7 +308,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('test.py:9: [W] Bad indentation.\n'
@@ -329,7 +329,7 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['pylint'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout=('test.py:9: [W0311(bad-indentation), ] Bad indentation. Found 6 spaces, expected 4\n'
@@ -355,7 +355,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + 0)
         self.expectOutcome(result=SUCCESS, state_string='pyflakes')
         return self.runStep()
@@ -364,7 +364,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout="foo.py:1: 'bar' imported but unused\n")
@@ -379,7 +379,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout="foo.py:1: undefined name 'bar'\n")
@@ -394,7 +394,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout="foo.py:2: redefinition of unused 'foo' from line 1\n")
@@ -409,7 +409,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout="foo.py:1: 'from module import *' used; unable to detect undefined names\n")
@@ -424,7 +424,7 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(python.PyFlakes())
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
-                        usePTY='slave-config')
+                        usePTY='worker-config')
             + ExpectShell.log(
                 'stdio',
                 stdout="foo.py:2: redefinition of function 'bar' from line 1\n")
@@ -455,7 +455,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
     def test_success(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
                               stdout=log_output_success)
@@ -467,7 +467,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
     def test_failure(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
                               stdout='oh noes!')
@@ -480,7 +480,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
     def test_nochange(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
                               stdout=log_output_nochange)
@@ -493,7 +493,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
     def test_warnings(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sphinx-build', '.', '_build'])
             + ExpectShell.log('stdio',
                               stdout=log_output_warnings)
@@ -518,7 +518,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                                      defines=dict(empty=None, t=True, f=False, s="str"),
                                      mode='full'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['/path/to/sphinx-build', '-b', 'css',
                                  '-t', 'a', '-t', 'b', '-D', 'empty',
                                  '-D', 'f=0', '-D', 's=str', '-D', 't=1',

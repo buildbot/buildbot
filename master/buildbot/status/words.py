@@ -242,13 +242,13 @@ class Contact(base.StatusReceiver):
 
     @defer.inlineCallbacks
     def getOnlineBuilders(self):
-        all_buildslaves = yield self.master.data.get(('buildslaves',))
+        all_buildworkers = yield self.master.data.get(('buildworkers',))
         online_builderids = set()
-        for buildslave in all_buildslaves:
-            connected = buildslave['connected_to']
+        for buildworker in all_buildworkers:
+            connected = buildworker['connected_to']
             if not connected:
                 continue
-            builders = buildslave['configured_on']
+            builders = buildworker['configured_on']
             builderids = [builder['builderid'] for builder in builders]
             online_builderids.update(builderids)
         defer.returnValue(list(online_builderids))

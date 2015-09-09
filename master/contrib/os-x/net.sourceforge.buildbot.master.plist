@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
          <key>Label</key>
-         <string>net.sourceforge.buildbot.slave</string>
+         <string>net.sourceforge.buildbot.worker</string>
 
          <!-- Change this to the user you want to run buildbot as -->
          <key>UserName</key>

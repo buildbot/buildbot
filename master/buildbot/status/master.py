@@ -57,8 +57,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.master.botmaster
 
     @property
-    def buildslaves(self):
-        return self.master.buildslaves
+    def buildworkers(self):
+        return self.master.buildworkers
 
     @property
     def basedir(self):
@@ -189,11 +189,11 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 urllib.quote(step.getName(), safe=''))
         # IBuildSetStatus
         # IBuildRequestStatus
-        # ISlaveStatus
-        if interfaces.ISlaveStatus.providedBy(thing):
-            slave = thing
-            return prefix + "#buildslaves/%s" % (
-                urllib.quote(slave.getName(), safe=''),
+        # IWorkerStatus
+        if interfaces.IWorkerStatus.providedBy(thing):
+            worker = thing
+            return prefix + "#buildworkers/%s" % (
+                urllib.quote(worker.getName(), safe=''),
             )
 
         # IStatusEvent
@@ -242,11 +242,11 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         """
         return self.botmaster.builders[name].builder_status
 
-    def getSlaveNames(self):
-        return list(iteritems(self.buildslaves.slaves))
+    def getWorkerNames(self):
+        return list(iteritems(self.buildworkers.workers))
 
-    def getSlave(self, slavename):
-        return self.buildslaves.slaves[slavename].slave_status
+    def getWorker(self, workername):
+        return self.buildworkers.workers[workername].worker_status
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
@@ -393,25 +393,25 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if hasattr(t, 'builderRemoved'):
                 t.builderRemoved(name)
 
-    def slaveConnected(self, name):
+    def workerConnected(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveConnected'):
-                t.slaveConnected(name)
+            if hasattr(t, 'workerConnected'):
+                t.workerConnected(name)
 
-    def slaveDisconnected(self, name):
+    def workerDisconnected(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveDisconnected'):
-                t.slaveDisconnected(name)
+            if hasattr(t, 'workerDisconnected'):
+                t.workerDisconnected(name)
 
-    def slavePaused(self, name):
+    def workerPaused(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slavePaused'):
-                t.slavePaused(name)
+            if hasattr(t, 'workerPaused'):
+                t.workerPaused(name)
 
-    def slaveUnpaused(self, name):
+    def workerUnpaused(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveUnpaused'):
-                t.slaveUnpaused(name)
+            if hasattr(t, 'workerUnpaused'):
+                t.workerUnpaused(name)
 
     def changeAdded(self, change):
         for t in self.watchers:

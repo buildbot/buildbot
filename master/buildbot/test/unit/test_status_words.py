@@ -322,14 +322,14 @@ class TestContactChannel(unittest.TestCase):
         # Make first builder configured, but not connected
         # Make second builder configured and connected
         self.master.db.insertTestData([
-            fakedb.Buildslave(id=1, name=u'linux', info={}),  # connected one
-            fakedb.Buildslave(id=2, name=u'linux', info={}),  # disconnected one
+            fakedb.Buildworker(id=1, name=u'linux', info={}),  # connected one
+            fakedb.Buildworker(id=2, name=u'linux', info={}),  # disconnected one
             fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
             fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
-            fakedb.ConfiguredBuildslave(id=14013,
-                                        buildslaveid=2, buildermasterid=4012),
-            fakedb.ConfiguredBuildslave(id=14013,
-                                        buildslaveid=1, buildermasterid=4013),
+            fakedb.ConfiguredBuildworker(id=14013,
+                                        buildworkerid=2, buildermasterid=4012),
+            fakedb.ConfiguredBuildworker(id=14013,
+                                        buildworkerid=1, buildermasterid=4013),
         ])
 
     @defer.inlineCallbacks
@@ -347,7 +347,7 @@ class TestContactChannel(unittest.TestCase):
 
         # Also set the connectedness:
         self.master.db.insertTestData([
-            fakedb.ConnectedBuildslave(id=113, masterid=13, buildslaveid=1)
+            fakedb.ConnectedBuildworker(id=113, masterid=13, buildworkerid=1)
         ])
 
         yield self.do_test_command('list', args='builders')
@@ -426,16 +426,16 @@ class TestContactChannel(unittest.TestCase):
     def setupSomeBuilds(self):
         self.master.db.insertTestData([
             # Three builds on builder#0, One build on builder#1
-            fakedb.Build(id=13, masterid=88, buildslaveid=13,
+            fakedb.Build(id=13, masterid=88, buildworkerid=13,
                          builderid=self.BUILDER_IDS[0],
                          buildrequestid=82, number=3),
-            fakedb.Build(id=14, masterid=88, buildslaveid=13,
+            fakedb.Build(id=14, masterid=88, buildworkerid=13,
                          builderid=self.BUILDER_IDS[0],
                          buildrequestid=83, number=4),
-            fakedb.Build(id=15, masterid=88, buildslaveid=13,
+            fakedb.Build(id=15, masterid=88, buildworkerid=13,
                          builderid=self.BUILDER_IDS[1],
                          buildrequestid=84, number=5),
-            fakedb.Build(id=16, masterid=88, buildslaveid=13,
+            fakedb.Build(id=16, masterid=88, buildworkerid=13,
                          builderid=self.BUILDER_IDS[0],
                          buildrequestid=85, number=6),
         ])
@@ -470,7 +470,7 @@ class TestContactChannel(unittest.TestCase):
                                         number=build['number'],
                                         builderid=build['builderid'],
                                         buildrequestid=build['buildrequestid'],
-                                        buildslaveid=build['buildslaveid'],
+                                        buildworkerid=build['buildworkerid'],
                                         masterid=build['masterid'],
                                         started_at=datetime2epoch(build['started_at']),
                                         complete=True,

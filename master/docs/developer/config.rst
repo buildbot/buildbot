@@ -106,7 +106,7 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: protocols
 
-        The per-protocol port specification for slave connections.
+        The per-protocol port specification for worker connections.
         Based on :bb:cfg:`protocols`.
 
     .. py:attribute:: multiMaster
@@ -155,10 +155,10 @@ described in :ref:`developer-Reconfiguration`.
         :bb:cfg:`builders`.  Builders specified as dictionaries in the
         configuration file are converted to instances.
 
-    .. py:attribute:: slaves
+    .. py:attribute:: workers
 
-        The list of :py:class:`BuildSlave` instances from
-        :bb:cfg:`slaves`.
+        The list of :py:class:`BuildWorker` instances from
+        :bb:cfg:`workers`.
 
     .. py:attribute:: change_sources
 
@@ -216,26 +216,26 @@ Builder Configuration
 
         The builder's factory.
 
-    .. py:attribute:: slavenames
+    .. py:attribute:: workernames
 
-        The builder's slave names (a list, regardless of whether the names were
-        specified with ``slavename`` or ``slavenames``).
+        The builder's worker names (a list, regardless of whether the names were
+        specified with ``workername`` or ``workernames``).
 
     .. py:attribute:: builddir
 
         The builder's builddir.
 
-    .. py:attribute:: slavebuilddir
+    .. py:attribute:: workerbuilddir
 
-        The builder's slave-side builddir.
+        The builder's worker-side builddir.
 
     .. py:attribute:: category
 
         The builder's category.
 
-    .. py:attribute:: nextSlave
+    .. py:attribute:: nextWorker
 
-        The builder's nextSlave callable.
+        The builder's nextWorker callable.
 
     .. py:attribute:: nextBuild
 
@@ -271,7 +271,7 @@ Error Handling
 If any errors are encountered while loading the configuration :py:func:`buildbot.config.error`
 should be called. This can occur both in the configuration-loading code,
 and in the constructors of any objects that are instantiated in the
-configuration - change sources, slaves, schedulers, build steps, and so on.
+configuration - change sources, workers, schedulers, build steps, and so on.
 
 .. py:function:: error(error)
 
@@ -482,23 +482,23 @@ One workaround for this is to change the name of the scheduler before each
 reconfig - this will cause the old scheduler to be stopped, and the new
 scheduler (with the new name and class) to be started.
 
-Slaves
-......
+Workers
+.......
 
-Similar to schedulers, slaves are specified by name, so new and old
-configurations are first compared by name, and any slaves to be added or
-removed are noted.  Slaves for which the fully-qualified class name has changed
-are also added and removed.  All slaves have their
+Similar to schedulers, workers are specified by name, so new and old
+configurations are first compared by name, and any workers to be added or
+removed are noted.  Workers for which the fully-qualified class name has changed
+are also added and removed.  All workers have their
 :py:meth:`~ReconfigurableServiceMixin.reconfigService` method called.
 
-This method takes care of the basic slave attributes, including changing the PB
+This method takes care of the basic worker attributes, including changing the PB
 registration if necessary.  Any subclasses that add configuration parameters
 should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and
 update those parameters.  As with Schedulers, because the
-:py:class:`~buildbot.buildslave.AbstractBuildSlave` instance is given directly
+:py:class:`~buildbot.buildworker.AbstractBuildWorker` instance is given directly
 in the configuration, on reconfig instances must extract the configuration from
 a new instance.  The
-:py:meth:`~buildbot.buildslave.AbstractBuildSlave.findNewSlaveInstance` method
+:py:meth:`~buildbot.buildworker.AbstractBuildWorker.findNewWorkerInstance` method
 can be used to find the new instance.
 
 User Managers

@@ -320,27 +320,27 @@ class InheritBuildParameter(ChoiceStringParameter):
         changes.extend(b.changes)
 
 
-class BuildslaveChoiceParameter(ChoiceStringParameter):
+class BuildworkerChoiceParameter(ChoiceStringParameter):
 
-    """A parameter that lets the buildslave name be explicitly chosen.
+    """A parameter that lets the buildworker name be explicitly chosen.
 
-    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave',
+    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenWorker',
     which should be added as the 'canStartBuild' parameter to the Builder.
 
     The "anySentinel" parameter represents the sentinel value to specify that
-    there is no buildslave preference.
+    there is no buildworker preference.
     """
     anySentinel = '-any-'
-    label = 'Build slave'
+    label = 'Build worker'
     required = False
     strict = False
 
-    def __init__(self, name='slavename', **kwargs):
+    def __init__(self, name='workername', **kwargs):
         ChoiceStringParameter.__init__(self, name, **kwargs)
 
     def updateFromKwargs(self, kwargs, **unused):
-        slavename = self.getFromKwargs(kwargs)
-        if slavename == self.anySentinel:
+        workername = self.getFromKwargs(kwargs)
+        if workername == self.anySentinel:
             # no preference, so dont set a parameter at all
             return
         ChoiceStringParameter.updateFromKwargs(self, kwargs=kwargs, **unused)
@@ -348,13 +348,13 @@ class BuildslaveChoiceParameter(ChoiceStringParameter):
     def getChoices(self, master, scheduler, buildername):
         if buildername is None:
             # this is the "Force All Builds" page
-            slavenames = master.status.getSlaveNames()
+            workernames = master.status.getWorkerNames()
         else:
             builderStatus = master.status.getBuilder(buildername)
-            slavenames = [slave.getName() for slave in builderStatus.getSlaves()]
-        slavenames.sort()
-        slavenames.insert(0, self.anySentinel)
-        return slavenames
+            workernames = [worker.getName() for worker in builderStatus.getWorkers()]
+        workernames.sort()
+        workernames.insert(0, self.anySentinel)
+        return workernames
 
 
 class NestedParameter(BaseParameter):

@@ -11,7 +11,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :returns: sorted strings
 
     This function sorts strings "naturally", with embedded numbers sorted numerically.
-    This ordering is good for objects which might have a numeric suffix, e.g., ``winslave1``, ``winslave2``
+    This ordering is good for objects which might have a numeric suffix, e.g., ``winworker1``, ``winworker2``
 
 .. py:function:: formatInterval(interval)
 
@@ -383,7 +383,7 @@ buildbot.util.debounce
 .. py:module:: buildbot.util.debounce
 
 It's often necessary to perform some action in response to a particular type of event.
-For example, steps need to update their status after updates arrive from the slave.
+For example, steps need to update their status after updates arrive from the worker.
 However, when many events arrive in quick succession, it's more efficient to only perform the action once, after the last event has occurred.
 
 The ``debounce.method(wait)`` decorator is the tool for the job.
@@ -951,7 +951,7 @@ For example, a particular daily scheduler could be configured on multiple master
         f.addStep(MyShellCommand(command='echo hei'))
         c['builders'] = [
             BuilderConfig(name="testy",
-                          slavenames=["local1"],
+                          workernames=["local1"],
                           factory=f)]
 
         c['services'] = [

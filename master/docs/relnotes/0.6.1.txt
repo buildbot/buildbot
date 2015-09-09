@@ -3,7 +3,7 @@ Buildbot 0.6.1 was released 23 Nov 2004
 ** win32 improvements/bugfixes
 
 Several changes have gone in to improve portability to non-unix systems. It
-should be possible to run a build slave under windows without major issues
+should be possible to run a build worker under windows without major issues
 (although step-by-step documentation is still greatly desired: check the
 mailing list for suggestions from current win32 users).
 
@@ -55,22 +55,22 @@ into directories or vice versa, or when repository items are moved without
 the knowledge of the VC system. The usual symptom is that a 'cvs update'
 fails where a fresh checkout succeeds.
 
-To avoid having to manually intervene, the build slaves' VC commands have
+To avoid having to manually intervene, the build workers' VC commands have
 been refactored to respond to update failures by deleting the tree and
 attempting a full checkout. This may cause some unnecessary effort when,
 e.g., the CVS server falls off the net, but in the normal case it will only
 come into play when one of these can't-cope situations arises.
 
-*** forget about an existing build when the slave detaches
+*** forget about an existing build when the worker detaches
 
-If the slave was lost during a build, the master did not clear the
+If the worker was lost during a build, the master did not clear the
 .currentBuild reference, making that builder unavailable for later builds.
-This has been fixed, so that losing a slave should be handled better. This
+This has been fixed, so that losing a worker should be handled better. This
 area still needs some work, I think it's still possible to get both the
-slave and the master wedged by breaking the connection at just the right
+worker and the master wedged by breaking the connection at just the right
 time. Eventually I want to be able to resume interrupted builds (especially
 when the interruption is the result of a network failure and not because the
-slave or the master actually died).
+worker or the master actually died).
 
 *** large logfiles now consume less memory
 

@@ -20,7 +20,7 @@ In addition to what's listed below, the 0.8.6p1 release adds the following.
   architecture planned for Buildbot-0.9.x.  As of 0.8.6p1, builders are sorted
   naturally: lexically, but with numeric segments sorted numerically.
 
-* Slave properties in the configuration are now handled correctly.
+* Worker properties in the configuration are now handled correctly.
 
 * The web interface buttons to cancel individual builds now appear when
   configured.
@@ -28,7 +28,7 @@ In addition to what's listed below, the 0.8.6p1 release adds the following.
 * The ForceScheduler's properties are correctly updated on reconfig -
   :bug:`2248`.
 
-* If a slave is lost while waiting for locks, it is properly cleaned up -
+* If a worker is lost while waiting for locks, it is properly cleaned up -
   :bug:`2247`.
 
 * Crashes when adding new steps to a factory in a reconfig are fixed -
@@ -184,7 +184,7 @@ Features
   all the triggered builds. This URL is displayed in the waterfall and build
   details. See :bug:`2170`.
 
-* The :src:`master/contrib/fakemaster.py`` script allows you to run arbitrary commands on a slave by emulating a master.
+* The :src:`master/contrib/fakemaster.py`` script allows you to run arbitrary commands on a worker by emulating a master.
   See the file itself for documentation.
 
 * MailNotifier allows multiple notification modes in the same instance.  See
@@ -193,8 +193,8 @@ Features
 * SVNPoller now allows passing extra arguments via argument ``extra_args``.
   See :bug:`1766`
   
-Slave
------
+Worker
+------
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
