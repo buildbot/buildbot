@@ -68,8 +68,11 @@ Newer versions are also available here:
 
     0.9.0b2
     0.9.0b1
+    0.8.12
     0.8.10
     0.8.9
     0.8.8
     0.8.7
     0.8.6
+
+Note that Buildbot-0.8.11 was never released.
