@@ -39,6 +39,11 @@ Slave
 Features
 ~~~~~~~~
 
+* The :class:`DockerLatentBuildSlave` image attribute is now renderable (can take properties in account).
+
+* The :class:`DockerLatentBuildSlave` sets environment variables describing how to connect to the master.
+  Example dockerfiles can be found in ``master/contrib/docker``.
+
 Fixes
 ~~~~~
 

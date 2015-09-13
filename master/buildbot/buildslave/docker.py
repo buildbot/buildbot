@@ -16,6 +16,8 @@
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
 
+import socket
+
 from io import BytesIO
 
 from twisted.internet import defer
@@ -58,6 +60,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
+                 masterFQDN=None,
                  **kwargs):
 
         if not client:
@@ -93,13 +96,26 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         self.image = image
         self.command = command or []
         self.dockerfile = dockerfile
-
+        if masterFQDN is None:
+            masterFQDN = socket.getfqdn()
+        self.masterFQDN = masterFQDN
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
             self.client_args['version'] = version
         if tls is not None:
             self.client_args['tls'] = tls
+
+    def createEnvironment(self):
+        port = ""
+        if self.registration is not None:
+            port = str(self.registration.getPBPort())
+        return {
+            "BUILDMASTER": self.masterFQDN,
+            "BUILDMASTER_PORT": port,
+            "SLAVENAME": self.name,
+            "SLAVEPASS": self.password
+        }
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -146,6 +162,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             self.command,
             name='%s_%s' % (self.slavename, id(self)),
             volumes=self.volumes,
+            environment=self.createEnvironment()
         )
 
         if instance.get('Id') is None:
