@@ -147,12 +147,20 @@ class Trigger(BuildStep):
 
         # overrule revision in sourcestamps with got revision
         if self.updateSourceStamp:
-            got = self.build.build_status.getAllGotRevisions()
+            got = self.getAllGotRevisions()
             for codebase in ss_for_trigger:
                 if codebase in got:
                     ss_for_trigger[codebase]['revision'] = got[codebase]
 
         return list(itervalues(ss_for_trigger))
+
+    def getAllGotRevisions(self):
+        all_got_revisions = self.getProperty('got_revision', {})
+        # For backwards compatibility all_got_revisions is a string if codebases
+        # are not used. Convert to the default internal type (dict)
+        if not isinstance(all_got_revisions, dict):
+            all_got_revisions = {'': all_got_revisions}
+        return all_got_revisions
 
     @defer.inlineCallbacks
     def worstStatus(self, overall_results, rclist):

@@ -25,11 +25,11 @@ from zope.interface import implements
 from buildbot import interfaces
 from buildbot.process import metrics
 from buildbot.process import properties
-from buildbot.process.results import Results
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
+from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
@@ -90,6 +90,7 @@ class Build(properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.results = SUCCESS   # overall results, may downgrade after each step
+        self.properties = properties.Properties()
 
     def setBuilder(self, builder):
         """
@@ -178,8 +179,7 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        master = self.builder.master
-        props.updateFromProperties(master.config.properties)
+        props.updateFromProperties(self.master.config.properties)
 
         # from the SourceStamps, which have properties via Change
         for change in self.allChanges():
@@ -586,5 +586,5 @@ class Build(properties.PropertiesMixin):
     # stopBuild is defined earlier
 
 components.registerAdapter(
-    lambda build: interfaces.IProperties(build.build_status),
+    lambda build: interfaces.IProperties(build.properties),
     Build, interfaces.IProperties)
