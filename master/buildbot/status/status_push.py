@@ -36,11 +36,26 @@ from buildbot.status.persistent_queue import DiskQueue
 from buildbot.status.persistent_queue import IndexedQueue
 from buildbot.status.persistent_queue import MemoryQueue
 from buildbot.status.persistent_queue import PersistentQueue
-from buildbot.status.web.status_json import FilterOut
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import client
+
+
+def FilterOut(data):
+    """Returns a copy with None, False, "", [], () and {} removed.
+    Warning: converts tuple to list."""
+    if isinstance(data, (list, tuple)):
+        # Recurse in every items and filter them out.
+        items = map(FilterOut, data)
+        if not filter(lambda x: not x in ('', False, None, [], {}, ()), items):
+            return None
+        return items
+    elif isinstance(data, dict):
+        return dict(filter(lambda x: not x[1] in ('', False, None, [], {}, ()),
+                           [(k, FilterOut(v)) for (k, v) in data.iteritems()]))
+    else:
+        return data
 
 
 class StatusPush(StatusReceiverMultiService):
