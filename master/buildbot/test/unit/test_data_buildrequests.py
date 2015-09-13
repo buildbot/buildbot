@@ -516,7 +516,7 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(brid_dict.keys(), [77])
         buildrequest = yield self.master.data.get(('buildrequests', brid_dict[77]))
         # submitted_at is the time of the test, so better not depend on it
-        self.assertIsNotNone(buildrequest['submitted_at'])
+        self.assertTrue(buildrequest['submitted_at'] is not None)
         buildrequest['submitted_at'] = None
         self.assertEqual(buildrequest, {'buildrequestid': 1001, 'complete': False, 'waited_for': False,
                                         'claimed_at': None, 'results': -1, 'claimed': False,
@@ -528,7 +528,7 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         # assert same sourcestamp
         self.assertEqual(buildset['sourcestamps'], oldbuildset['sourcestamps'])
         buildset['sourcestamps'] = None
-        self.assertIsNotNone(buildset['submitted_at'])
+        self.assertTrue(buildset['submitted_at'] is not None)
         buildset['submitted_at'] = None
         self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': None,
                                     'sourcestamps': None, 'parent_buildid': None, 'results': -1, 'parent_relationship': None, 'reason': u'rebuild', 'external_idstring': u'extid', 'complete': False})
