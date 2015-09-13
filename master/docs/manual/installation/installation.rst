@@ -3,14 +3,13 @@
 Installing the code
 -------------------
 
-The Distribution Package
-~~~~~~~~~~~~~~~~~~~~~~~~
+The Buildbot Packages
+~~~~~~~~~~~~~~~~~~~~~
 
-..
-    XXX FIXME
+Buildbot comes in several parts: ``buildbot`` (the buildmaster), ``buildbot-slave`` (the buildslave), ``buildbot-www``, and several web plugins such as ``buildbot-waterfall-view``.
 
-Buildbot comes in two parts: ``buildbot`` (the master) and ``buildbot-slave`` (the slave).
-The two can be installed individually or together.
+The buildslave and buildmaster can be installed individually or together.
+The base web (``buildbot.www``) and web plugins are required to run a master with a web interface (the common configuration).
 
 Installation From PyPI
 ~~~~~~~~~~~~~~~~~~~~~~
