@@ -103,7 +103,7 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
     def control(self, action, args, kwargs):
         # we convert the action into a mixedCase method name
-        action_method = getattr(self, "action" + action[0].upper() + action[1:])
+        action_method = getattr(self, "action" + action.capitalize())
         if action_method is None:
             raise ValueError("action: {} is not supported".format(action))
         return action_method(args, kwargs)
