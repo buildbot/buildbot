@@ -101,14 +101,15 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         if tls is not None:
             self.client_args['tls'] = tls
 
+    @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        return threads.deferToThread(self._thd_start_instance)
+        image = yield build.render(self.image)
+        res = yield threads.deferToThread(self._thd_start_instance, image)
+        defer.returnValue(res)
 
-    def _image_exists(self, client, name=None):
-        if name is None:
-            name = self.image
+    def _image_exists(self, client, name):
         # Make sure the image exists
         for image in client.images():
             for tag in image['RepoTags']:
@@ -118,13 +119,12 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     return True
         return False
 
-    def _thd_start_instance(self):
+    def _thd_start_instance(self, image):
         docker_client = client.Client(**self.client_args)
 
         found = False
-        if self.image is not None:
-            found = self._image_exists(docker_client)
-            image = self.image
+        if image is not None:
+            found = self._image_exists(docker_client, image)
         else:
             image = '%s_%s_image' % (self.slavename, id(self))
         if (not found) and (self.dockerfile is not None):
@@ -166,7 +166,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                 if self.conn:
                     break
             del logs
-        return [instance['Id'], self.image]
+        return [instance['Id'], image]
 
     def stop_instance(self, fast=False):
         if self.instance is None:
