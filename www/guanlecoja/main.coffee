@@ -120,14 +120,17 @@ module.exports =  (gulp) ->
     unless config.templates_apart
         script_sources = script_sources.concat(config.files.templates)
 
+    jadeConcat = lazypipe()
+    .pipe(concat, "templates.js")
+    .pipe(wrap, "window.#{config.templates_global}={}; <%= contents %>")
+
     if config.templates_as_js
         jadeCompile = lazypipe()
         .pipe jade, client:true
         .pipe(rename, extname: "") # remove two extensions ".tpl.js"
         .pipe(rename, extname: "")
         .pipe(wrap, "window.#{config.templates_global}['<%= file.relative %>'] = <%= contents %>;")
-        .pipe(concat, "templates.js")
-        .pipe(wrap, "window.#{config.templates_global}={}; <%= contents %>")
+        .pipe(rename, extname: ".jjs")
     else
         jadeCompile = lazypipe()
         .pipe jade
@@ -161,6 +164,7 @@ module.exports =  (gulp) ->
             .pipe(catch_errors(gif("*.jade", jadeCompile())))
             .pipe remember('scripts')
             .pipe(gif("*.html", templateCache({module:config.name})))
+            .pipe(catch_errors(gif("*.jjs", jadeConcat())))
             .pipe concat("scripts.js")
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, annotate())

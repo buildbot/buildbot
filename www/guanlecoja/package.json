@@ -67,11 +67,11 @@
     "serve-static": "~1.10.0",
     "lodash": "^3.10.0",
     "mime": "^1.2.11",
+    "body-parser": "~1.13.3",
     "run-sequence": "~1.1.2"
   },
   "dependencies": {
 
-    "body-parser": "~1.13.3",
     "coffee-script": "~1.10.0",
 
     "gulp-ng-classify": "~4.0.0",
@@ -88,7 +88,7 @@
   "engines": {
     "node": "~0.8 || ~0.10 || ~0.12"
   },
-  "version": "0.4.3",
+  "version": "0.4.6",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}
