@@ -12,6 +12,8 @@ Release Notes for Buildbot |version|
 
 The following are the release notes for Buildbot |version|
 
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
 Master
 ------
 

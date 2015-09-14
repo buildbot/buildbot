@@ -108,14 +108,10 @@ Beyond this general information, read all of the sections below that apply to ve
 Version-specific Notes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Upgrading from Buildbot-0.8.x to Buildbot-0.9
-'''''''''''''''''''''''''''''''''''''''''''''
+Upgrading from Buildbot-0.8.x to Buildbot-0.9.x
+'''''''''''''''''''''''''''''''''''''''''''''''
 
-* ``html.WebStatus`` becomes something like: (see <cfg-www>)
-
-.. code-block:: python
-
-    c['www'] = dict(port=8020, plugins=dict(waterfall_view={}, console_view={}))`` 
+See :ref:`Upgrading to Nine` for a guide to upgrading from -1.8.x to 0.9.x
 
 Upgrading a Buildmaster to Buildbot-0.7.6
 '''''''''''''''''''''''''''''''''''''''''
@@ -176,12 +172,3 @@ A typical invocation (with Mac-Roman encoding) might look like:
     backing up changes.pck to changes.pck.old
 
 If your Changes pickle uses multiple encodings, you're on your own, but the script in :file:`contrib/` may provide a good starting point for the fix.
-
-.. _Upgrading-a-Buildmaster-to-Later-Version:
-
-Upgrading a Buildmaster to Later Versions
-'''''''''''''''''''''''''''''''''''''''''
-
-Up to Buildbot version |version|, no further steps beyond those described above are required.
-
-

@@ -1454,12 +1454,13 @@ builders
     Builders are represented by master dictionaries with the following keys:
 
     * ``id`` -- the ID of this builder
-    * ``name`` -- the name of the builder
+    * ``name``  -- the builder name, a 20-character :ref:`identifier <type-identifier>`
     * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
 
     .. py:method:: findBuilderId(name)
 
-        :param unicode name: name of this builder
+        :param name: name of this builder
+        :type name: 20-character :ref:`identifier <type-identifier>`
         :returns: builder id via Deferred
 
         Return the builder ID for the builder with this builder name.

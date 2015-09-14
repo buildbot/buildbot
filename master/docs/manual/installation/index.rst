@@ -7,6 +7,7 @@ Installation
    components
    requirements
    installation
+   nine-upgrade
    buildmaster
    buildslave
    misc
