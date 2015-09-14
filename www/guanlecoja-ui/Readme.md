@@ -142,11 +142,13 @@ The stored list of notifications.
 
 ChangeLog:
 
-1.4.1: bump ui-router version to 0.2.13
-1.4.0: add topbar-contextual-actions directive and associated service
-1.3.1: Fix auto scrollbar on sidebar menu
-1.3.0: Switch to angularJS 1.3.1
-1.2.3: Initial Release
+* 1.4.2: fix the sidebar when screen is > 800px
+* 1.4.1: bump ui-router version to 0.2.13
+* 1.4.0: add topbar-contextual-actions directive and associated service
+* 1.3.1: Fix auto scrollbar on sidebar menu
+* 1.3.0: Switch to angularJS 1.3.1
+* 1.2.3: Initial Release
+
 Credits
 =======
 Original Design by Elliot Hesp:
