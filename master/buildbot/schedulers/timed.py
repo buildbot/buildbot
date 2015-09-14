@@ -143,7 +143,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         # important changes have occurred since the last invocation
         if self.onlyIfChanged and not any(itervalues(classifications)):
             log.msg(("%s scheduler <%s>: skipping build " +
-                     "- No important changes on configured branch") %
+                     "- No important changes") %
                     (self.__class__.__name__, self.name))
             return
 
