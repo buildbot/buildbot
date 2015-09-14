@@ -165,6 +165,18 @@ class PyLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectProperty('pylint-error', 1)
         return self.runStep()
 
+    def test_header_output(self):
+        self.setupStep(python.PyLint(command=['pylint']))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['pylint'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                header='W: 11: Bad indentation. Found 6 spaces, expected 4\n')
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string='pylint')
+        return self.runStep()
+
     def test_failure(self):
         self.setupStep(python.PyLint(command=['pylint']))
         self.expectCommands(
@@ -358,6 +370,19 @@ class PyFlakes(steps.BuildStepMixin, unittest.TestCase):
                         usePTY='slave-config')
             + 0)
         self.expectOutcome(result=SUCCESS, state_string='pyflakes')
+        return self.runStep()
+
+    def test_content_in_header(self):
+        self.setupStep(python.PyFlakes())
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command=['make', 'pyflakes'],
+                        usePTY='slave-config')
+            + ExpectShell.log(
+                'stdio',
+                # don't match pyflakes-like output in the header
+                header="foo.py:1: 'bar' imported but unused\n")
+            + 0)
+        self.expectOutcome(result=0, state_string='pyflakes')
         return self.runStep()
 
     def test_unused(self):

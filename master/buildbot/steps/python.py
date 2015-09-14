@@ -103,6 +103,8 @@ class PyFlakes(ShellCommand):
         first = True
         while True:
             stream, line = yield
+            if stream == 'h':
+                continue
             # the first few lines might contain echoed commands from a 'make
             # pyflakes' step, so don't count these as warnings. Stop ignoring
             # the initial lines as soon as we see one with a colon.
@@ -223,6 +225,8 @@ class PyLint(ShellCommand):
         line_re = None  # decide after first match
         while True:
             stream, line = yield
+            if stream == 'h':
+                continue
             if not line_re:
                 # need to test both and then decide on one
                 if self._parseable_line_re.match(line):
