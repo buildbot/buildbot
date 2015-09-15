@@ -79,7 +79,7 @@ class BuilderStatus(styles.Versioned):
         self.description = description
         self.master = master
 
-        self.slavenames = []
+        self.workernames = []
         self.events = []
         # these three hold Events, and are used to retrieve the current
         # state of the boxes.
@@ -118,15 +118,15 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = LRUCache(self.cacheMiss)
         self.currentBuilds = []
         self.watchers = []
-        self.slavenames = []
+        self.workernames = []
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
         # self.master must be filled in by our parent
 
     def upgradeToVersion1(self):
-        if hasattr(self, 'slavename'):
-            self.slavenames = [self.slavename]
-            del self.slavename
+        if hasattr(self, 'workername'):
+            self.workernames = [self.workername]
+            del self.workername
         if hasattr(self, 'nextBuildNumber'):
             del self.nextBuildNumber  # determineNextBuildNumber chooses this
         self.wasUpgraded = True
@@ -299,8 +299,8 @@ class BuilderStatus(styles.Versioned):
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 
-    def getSlaves(self):
-        return [self.status.getSlave(name) for name in self.slavenames]
+    def getWorkers(self):
+        return [self.status.getWorker(name) for name in self.workernames]
 
     def getPendingBuildRequestStatuses(self):
         # just assert 0 here. According to dustin the whole class will go away soon.
@@ -485,7 +485,7 @@ class BuilderStatus(styles.Versioned):
     def subscribe(self, receiver):
         # will get builderChangedState, buildStarted, buildFinished,
         # requestSubmitted, requestCancelled. Note that a request which is
-        # resubmitted (due to a slave disconnect) will cause requestSubmitted
+        # resubmitted (due to a worker disconnect) will cause requestSubmitted
         # to be invoked multiple times.
         self.watchers.append(receiver)
         self.publishState(receiver)
@@ -498,8 +498,8 @@ class BuilderStatus(styles.Versioned):
 
     # Builder interface (methods called by the Builder which feeds us)
 
-    def setSlavenames(self, names):
-        self.slavenames = names
+    def setWorkernames(self, names):
+        self.workernames = names
 
     def addEvent(self, text=None):
         # this adds a duration event. When it is done, the user should call
@@ -614,7 +614,7 @@ class BuilderStatus(styles.Versioned):
             # TODO(maruel): Fix me. We don't want to leak the full path.
             'basedir': os.path.basename(self.basedir),
             'tags': self.getTags(),
-            'slaves': self.slavenames,
+            'workers': self.workernames,
             'schedulers': [s.name for s in self.status.master.allSchedulers()
                            if self.name in s.builderNames],
             # TODO(maruel): Add cache settings? Do we care?

@@ -20,7 +20,7 @@ Each step can affect the build process in the following ways:
   :attr:`haltOnFailure` is useful for setup steps upon which the rest of the build depends: if the CVS checkout or :command:`./configure` process fails, there is no point in trying to compile or test the resulting tree.
 
 * If the step's :attr:`alwaysRun` attribute is ``True``, then it will always be run, regardless of if previous steps have failed.
-  This is useful for cleanup steps that should always be run to return the build directory or build slave into a good state.
+  This is useful for cleanup steps that should always be run to return the build directory or build worker into a good state.
 
 * If the :attr:`flunkOnFailure` or :attr:`flunkOnWarnings` flag is set, then a result of ``FAILURE`` or ``WARNINGS`` will mark the build as a whole as ``FAILED``.
   However, the remaining steps will still be executed.
@@ -38,5 +38,5 @@ For example, without a source tree there is no point in continuing the build, so
 Look in :file:`buildbot/steps/*.py` to see how the other :class:`Step`\s are marked.
 
 Each :class:`Step` is created with an additional ``workdir`` argument that indicates where its actions should take place.
-This is specified as a subdirectory of the slave builder's base directory, with a default value of :file:`build`.
+This is specified as a subdirectory of the worker builder's base directory, with a default value of :file:`build`.
 This is only implemented as a step argument (as opposed to simply being a part of the base directory) because the CVS/SVN steps need to perform their checkouts from the parent directory.

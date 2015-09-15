@@ -59,8 +59,8 @@ Thanks to James Knight for the patch. Closes SF#1434997.
 *** filetransfer steps
 
 buildbot.steps.transfer.FileUpload is a buildstep that will move files from
-the slave to the master. Likewise, FileDownload will move files from the
-master down to the buildslave. Many thanks to Albert Hofkamp for contributing
+the worker to the master. Likewise, FileDownload will move files from the
+master down to the buildworker. Many thanks to Albert Hofkamp for contributing
 these classes. Closes SF#1504631.
 
 *** pyflakes step

@@ -44,11 +44,11 @@ with these keys:
 
 - buildbot_server: (required to send to a buildbot master) the URL of the
   buildbot master to which you will connect (as of this writing, the same
-  server and port to which slaves connect).
+  server and port to which workers connect).
 
 - buildbot_port: (optional, defaults to 9989) the port of the buildbot master
   to which you will connect (as of this writing, the same server and port to
-  which slaves connect)
+  which workers connect)
 
 - buildbot_auth: (optional, defaults to change:changepw) the credentials
   expected by the change source configuration in the master. Takes the

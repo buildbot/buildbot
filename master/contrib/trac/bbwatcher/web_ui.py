@@ -88,7 +88,7 @@ class TracBuildBotWatcher(Component):
             b.name = str(builder)
             b.current = 'CURRENT-TEXT'
             b.recent = []
-            b.slaves = []
+            b.workers = []
             data = {'builder': b}
             try:
                 master = BuildBotSystem(self.buildbot_url)

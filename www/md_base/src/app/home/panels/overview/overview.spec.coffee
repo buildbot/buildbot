@@ -18,7 +18,7 @@ describe 'overview', ->
 
     it 'should display tiles normally', ->
         $httpBackend.expectDataGET('masters')
-        $httpBackend.expectDataGET('buildslaves')
+        $httpBackend.expectDataGET('buildworkers')
         $httpBackend.expectDataGET('builders')
         $httpBackend.expectDataGET('schedulers')
         elem = $compile('<overview></overview>')($rootScope)
@@ -30,10 +30,10 @@ describe 'overview', ->
         extra = mastertile.children().eq(2).text().trim()
         expect(extra).toBe('0 active.')
 
-        slavetile = elem.children().eq(1)
-        count = slavetile.children().eq(1).text().trim()
+        workertile = elem.children().eq(1)
+        count = workertile.children().eq(1).text().trim()
         expect(count).toBe('1')
-        extra = slavetile.children().eq(2).text().trim()
+        extra = workertile.children().eq(2).text().trim()
         expect(extra).toBe('1 connection.')
 
         builderstile = elem.children().eq(2)

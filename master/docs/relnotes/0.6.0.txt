@@ -77,7 +77,7 @@ There are now build steps which retrieve a source tree from Darcs and Arch
 repositories. See steps.xhtml for details.
 
 Preliminary P4 support has been added, thanks to code from Dave Peticolas.
-You must manually set up each build slave with an appropriate P4CLIENT: all
+You must manually set up each build worker with an appropriate P4CLIENT: all
 buildbot does is run 'p4 sync' at the appropriate times.
 
 
@@ -136,9 +136,9 @@ Thanks to the contributions of Kirill Lapshin, we can now produce .deb
 installer packages. These are still experimental, but they include init.d
 startup/shutdown scripts, which the the new /usr/bin/buildbot to invoke
 twistd. Create your buildmasters in /var/lib/buildbot/master/FOO, and your
-slaves in /var/lib/buildbot/slave/BAR, then put FOO and BAR in the
+workers in /var/lib/buildbot/worker/BAR, then put FOO and BAR in the
 appropriate places in /etc/default/buildbot . After that, the buildmasters
-and slaves will be started at every boot.
+and workers will be started at every boot.
 
 Pre-built .debs are not yet distributed. Use 'debuild -uc -us' from the
 source directory to create them.

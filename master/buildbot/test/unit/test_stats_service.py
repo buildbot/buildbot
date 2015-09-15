@@ -187,7 +187,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
 
     def setupBuild(self):
         self.master.db.insertTestData([
-            fakedb.Build(id=1, masterid=1, buildslaveid=1,
+            fakedb.Build(id=1, masterid=1, buildworkerid=1,
                          builderid=self.BUILDER_IDS[0],
                          buildrequestid=1, number=1),
         ])
@@ -203,7 +203,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             number=build['number'],
             builderid=build['builderid'],
             buildrequestid=build['buildrequestid'],
-            buildslaveid=build['buildslaveid'],
+            buildworkerid=build['buildworkerid'],
             masterid=build['masterid'],
             started_at=build['started_at'],
             complete=True,

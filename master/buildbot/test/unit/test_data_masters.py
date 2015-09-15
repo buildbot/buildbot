@@ -278,12 +278,12 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
             # set up a running build with some steps
             fakedb.Builder(id=77, name='b1'),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Buildworker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
             fakedb.BuildRequestClaim(brid=82, masterid=14,
                                      claimed_at=SOMETIME),
-            fakedb.Build(id=13, builderid=77, masterid=14, buildslaveid=13,
+            fakedb.Build(id=13, builderid=77, masterid=14, buildworkerid=13,
                          buildrequestid=82, number=3, results=None),
             fakedb.Step(id=200, buildid=13),
             fakedb.Log(id=2000, stepid=200, num_lines=2),

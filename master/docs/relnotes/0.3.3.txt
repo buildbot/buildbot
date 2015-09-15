@@ -10,16 +10,16 @@ Buildbot 0.3.3 was released 21 May 2003
 
 Some NAT boxes drop port mappings if the TCP connection looks idle for too
 long (maybe 30 minutes?). Add application-level keepalives (dummy commands
-sent from slave to master every 10 minutes) to appease the NAT box and keep
-our connection alive. Enable this with --keepalive in the slave mktap
+sent from worker to master every 10 minutes) to appease the NAT box and keep
+our connection alive. Enable this with --keepalive in the worker mktap
 command line. Check the README for more details.
 
 ** UI changes
 
-*** allow slaves to trigger any build that they host
+*** allow workers to trigger any build that they host
 
 Added an internal function to ask the buildmaster to start one of their
-builds. Must be triggered with a debugger or manhole on the slave side for
+builds. Must be triggered with a debugger or manhole on the worker side for
 now, will add a better UI later.
 
 *** allow web page viewers to trigger any build
@@ -33,11 +33,11 @@ machine run builds continuously).
 
 ** generic buildprocess changes
 
-*** don't queue multiple builds for offline slaves
+*** don't queue multiple builds for offline workers
 
-If a slave is not online when a build is ready to run, that build is queued
-so the slave will run it when it next connects. However, the buildmaster
-used to queue every such build, so the poor slave machine would be subject
+If a worker is not online when a build is ready to run, that build is queued
+so the worker will run it when it next connects. However, the buildmaster
+used to queue every such build, so the poor worker machine would be subject
 to tens or hundreds of builds in a row when they finally did come online.
 The buildmaster has been changed to merge these multiple builds into a
 single one.
@@ -49,10 +49,10 @@ in the next relese.
 
 *** split args in ShellCommand ourselves instead of using /bin/sh
 
-This should remove the need for /bin/sh on the slave side, improving the
-chances that the buildslave can run on win32.
+This should remove the need for /bin/sh on the worker side, improving the
+chances that the buildworker can run on win32.
 
-*** add configureEnv argument to Configure step, pass env dict to slave
+*** add configureEnv argument to Configure step, pass env dict to worker
 
 Allows build processes to do things like 'CFLAGS=-O0 ./configure' without
 using /bin/sh to set the environment variable

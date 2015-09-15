@@ -2,11 +2,11 @@ class Builders extends Controller
     constructor: ($scope, buildbotService, resultsService, bbSettingsService, $stateParams, $location) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
-        $scope.connected2class = (slave) ->
-            if slave.connected_to.length > 0
-                return "slave_CONNECTED"
+        $scope.connected2class = (worker) ->
+            if worker.connected_to.length > 0
+                return "worker_CONNECTED"
             else
-                return "slave_DISCONNECTED"
+                return "worker_DISCONNECTED"
         $scope.hasActiveMaster = (builder) ->
             active = false
             if not builder.masters?
@@ -62,7 +62,7 @@ class Builders extends Controller
         buildbotService.all('builders').bind $scope,
             onchild: (builder) ->
                 builder.all('masters').bind $scope, dest: builder
-                builder.all('buildslaves').bind $scope,
+                builder.all('buildworkers').bind $scope,
                     dest: builder
                 builder.some('builds', {limit:20, order:"-number"}).bind $scope,
                     dest: builder

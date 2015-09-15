@@ -22,7 +22,7 @@ otherwise your developers will be suffering from the same limitations). The
 Lock object is created in the config file and then referenced by a Step
 specification tuple or by the 'locks' key of the Builder specification
 dictionary. Locks come in two flavors: MasterLocks are buildmaster-wide,
-while SlaveLocks are specific to a single buildslave.
+while WorkerLocks are specific to a single buildworker.
 
 When you want to have one Build run or not run depending upon whether some
 other set of Builds have passed or failed, you use a special kind of
@@ -70,13 +70,13 @@ The ChangeSource must also provide branch information: the 'buildbot
 sendchange' command now takes a --branch argument to help hook script writers
 accomplish this.
 
-*** Multiple slaves per Builder
+*** Multiple workers per Builder
 
-You can now attach multiple buildslaves to each Builder. This can provide
+You can now attach multiple buildworkers to each Builder. This can provide
 redundancy or primitive load-balancing among many machines equally capable of
 running the build. To use this, define a key in the Builder specification
-dictionary named 'slavenames' with a list of buildslave names (instead of the
-usual 'slavename' that contains just a single slavename).
+dictionary named 'workernames' with a list of buildworker names (instead of the
+usual 'workername' that contains just a single workername).
 
 *** minor new features
 

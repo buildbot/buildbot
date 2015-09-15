@@ -23,8 +23,8 @@ The sources for properties are:
     This is most commonly used with the :bb:cmdline:`sendchange` command.
 forced builds
     The "Force Build" form allows users to specify properties
-:bb:cfg:`buildslaves <slaves>`
-    A buildslave can pass properties on to the builds it performs.
+:bb:cfg:`buildworkers <workers>`
+    A buildworker can pass properties on to the builds it performs.
 :ref:`builds <Common-Build-Properties>`
     A build automatically sets a number of properties on itself.
 :bb:cfg:`builders <builders>`
@@ -72,10 +72,10 @@ The following build properties are set when the build is started, and are availa
     Each build gets a number, scoped to the :class:`Builder` (so the first build performed on any given :class:`Builder` will have a build number of 0).
     This integer property contains the build's number.
 
-.. index:: single: Properties; slavename
+.. index:: single: Properties; workername
 
-``slavename``
-    This is a string which identifies which buildslave the build is running on.
+``workername``
+    This is a string which identifies which buildworker the build is running on.
 
 .. index:: single: Properties; scheduler
 
@@ -83,7 +83,7 @@ The following build properties are set when the build is started, and are availa
     If the build was started from a scheduler, then this property will contain the name of that scheduler.
 
 ``workdir``
-    The absolute path of the base working directory on the slave, of the current builder.
+    The absolute path of the base working directory on the worker, of the current builder.
 
 .. index:: single: Properties; workdir
 

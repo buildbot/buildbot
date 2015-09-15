@@ -61,7 +61,7 @@ class Options(usage.Options):
     optParameters = [
         ['repository', 'r', None,
          "The repository that was changed."],
-        ['slave-repo', 'c', None, "In case the repository differs for the slaves."],
+        ['worker-repo', 'c', None, "In case the repository differs for the workers."],
         ['revision', 'v', None,
          "The revision that we want to examine (default: latest)"],
         ['bbserver', 's', 'localhost',
@@ -158,7 +158,7 @@ class ChangeSender:
 
         # first we extract information about the files that were changed
         repo = opts['repository']
-        slave_repo = opts['slave-repo'] or repo
+        worker_repo = opts['worker-repo'] or repo
         print "Repo:", repo
         rev_arg = ''
         if opts['revision']:
@@ -209,7 +209,7 @@ class ChangeSender:
         encoding = opts['encoding']
         for branch in files_per_branch.keys():
             d = {'who': unicode(who, encoding=encoding),
-                 'repository': unicode(slave_repo, encoding=encoding),
+                 'repository': unicode(worker_repo, encoding=encoding),
                  'comments': unicode(message, encoding=encoding),
                  'revision': revision,
                  'project': unicode(opts['project'] or "", encoding=encoding),

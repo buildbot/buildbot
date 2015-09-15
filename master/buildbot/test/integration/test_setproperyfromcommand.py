@@ -61,7 +61,7 @@ def masterConfig():
     f.addStep(steps.SetPropertyFromCommand(property="test", command=["echo", "foo"]))
     c['builders'] = [
         util.BuilderConfig(name="testy",
-                           slavenames=["local1"],
+                           workernames=["local1"],
                            factory=f)]
 
     return c

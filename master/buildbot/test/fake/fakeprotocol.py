@@ -13,21 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.buildslave.protocols import base
+from buildbot.buildworker.protocols import base
 from twisted.internet import defer
 
 
 class FakeConnection(base.Connection):
 
-    def __init__(self, master, buildslave):
-        base.Connection.__init__(self, master, buildslave)
+    def __init__(self, master, buildworker):
+        base.Connection.__init__(self, master, buildworker)
         self._connected = True
         self.remoteCalls = []
         self.builders = {}  # { name : isBusy }
 
         # users of the fake can add to this as desired
         self.info = {
-            'slave_commands': [],
+            'worker_commands': [],
             'version': '0.8.2',
             'basedir': '/sl',
             'system': 'nt',
@@ -37,9 +37,9 @@ class FakeConnection(base.Connection):
         self.remoteCalls.append(('remotePrint', message))
         return defer.succeed(None)
 
-    def remoteGetSlaveInfo(self):
-        self.remoteCalls.append(('remoteGetSlaveInfo',))
-        return defer.succeed(self.slaveInfo)
+    def remoteGetWorkerInfo(self):
+        self.remoteCalls.append(('remoteGetWorkerInfo',))
+        return defer.succeed(self.workerInfo)
 
     def remoteSetBuilderList(self, builders):
         self.remoteCalls.append(('remoteSetBuilderList', builders[:]))

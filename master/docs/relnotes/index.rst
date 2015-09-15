@@ -31,8 +31,8 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Slave
------
+Worker
+------
 
 Features
 ~~~~~~~~
@@ -41,8 +41,8 @@ Features
   This allows to run a multi-master configuration.
   See :ref:`MQ-Specification`.
 
-* The Buildbot slave now includes the number of CPUs in the information it supplies to the master on connection.
-  This value is autodetected, but can be overridden with the ``--numcpus`` argument to ``buildslave create-slave``.
+* The Buildbot worker now includes the number of CPUs in the information it supplies to the master on connection.
+  This value is autodetected, but can be overridden with the ``--numcpus`` argument to ``buildworker create-worker``.
 
 Fixes
 ~~~~~

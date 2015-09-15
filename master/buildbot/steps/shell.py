@@ -25,7 +25,7 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import Results
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
-from buildbot.steps.slave import CompositeStepMixin
+from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list
@@ -43,7 +43,7 @@ del _hush_pyflakes
 
 class ShellCommand(buildstep.LoggingBuildStep):
 
-    """I run a single shell command on the buildslave. I return FAILURE if
+    """I run a single shell command on the buildworker. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method, or customize
     decodeRC argument
@@ -84,7 +84,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         'flunkOnFailure',
         'haltOnFailure',
         'remote_kwargs',
-        'slaveEnvironment'
+        'workerEnvironment'
     ]
 
     command = None  # set this to a command, or set in kwargs
@@ -98,7 +98,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def __init__(self, workdir=None,
                  command=None,
-                 usePTY="slave-config",
+                 usePTY="worker-config",
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -137,7 +137,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
-        self.slaveEnvironment = self.build.slaveEnvironment
+        self.workerEnvironment = self.build.workerEnvironment
 
     def setCommand(self, command):
         self.command = command
@@ -205,18 +205,18 @@ class ShellCommand(buildstep.LoggingBuildStep):
             return None
 
     def setupEnvironment(self, cmd):
-        # merge in anything from slaveEnvironment (which comes from the builder
+        # merge in anything from workerEnvironment (which comes from the builder
         # config) Environment variables passed in by a BuildStep override those
         # passed in at the Builder level, so if we have any from the builder,
         # apply those and then update with the args from the buildstep
         # (cmd.args)
-        slaveEnv = self.slaveEnvironment
-        if slaveEnv:
+        workerEnv = self.workerEnvironment
+        if workerEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            fullSlaveEnv = slaveEnv.copy()
-            fullSlaveEnv.update(cmd.args['env'])
-            cmd.args['env'] = fullSlaveEnv
+            fullWorkerEnv = workerEnv.copy()
+            fullWorkerEnv.update(cmd.args['env'])
+            cmd.args['env'] = fullWorkerEnv
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -228,14 +228,14 @@ class ShellCommand(buildstep.LoggingBuildStep):
         kwargs['command'] = flatten(self.command, (list, tuple))
 
         # check for the usePTY flag
-        if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
-            if self.slaveVersionIsOlderThan("svn", "2.7"):
-                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+        if 'usePTY' in kwargs and kwargs['usePTY'] != 'worker-config':
+            if self.workerVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: worker does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
-        if "interruptSignal" in kwargs and self.slaveVersionIsOlderThan("shell", "2.15"):
-            warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
+        if "interruptSignal" in kwargs and self.workerVersionIsOlderThan("shell", "2.15"):
+            warnings.append("NOTE: worker does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
 
         return kwargs
@@ -523,7 +523,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     def start(self):
         if self.suppressionFile is None:
             return ShellCommand.start(self)
-        d = self.getFileContentFromSlave(self.suppressionFile, abandonOnFailure=True)
+        d = self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
 

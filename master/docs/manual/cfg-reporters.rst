@@ -156,7 +156,7 @@ Another example of a function delivering a customized html email containing the 
         text = list()
         text.append(u'<h4>Build status: %s</h4>' % result.upper())
         text.append(u'<table cellspacing="10"><tr>')
-        text.append(u"<td>Buildslave for this Build:</td><td><b>%s</b></td></tr>" % build.getSlavename())
+        text.append(u"<td>Buildworker for this Build:</td><td><b>%s</b></td></tr>" % build.getWorkername())
         if master_status.getURLForThing(build):
             text.append(u'<tr><td>Complete logs for all build steps:</td><td><a href="%s">%s</a></td></tr>'
                         % (master_status.getURLForThing(build),
@@ -416,8 +416,8 @@ Build text
 Mapping of property names to (values, source)
     ``build['properties']``
 
-Slave name
-    ``build['properties']['slavename']``
+Worker name
+    ``build['properties']['workername']``
 
 Build reason (from a forced build)
     ``build['properties']['reason']``
@@ -800,7 +800,7 @@ GitHubStatus (not migrated)
                              endDescription='Build done.')
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
-        slavenames=['slave1'],
+        workernames=['worker1'],
         factory=BuilderFactory(),
         properties={
             "github_repo_owner": "buildbot",

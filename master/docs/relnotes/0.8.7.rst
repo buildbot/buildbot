@@ -15,7 +15,7 @@ Buildbot 0.8.7p1 was released on November 21, 2012.
 
 In addition to what's listed below, the 0.8.7p1 release adds the following.
 
-* The ``SetPropertiesFromEnv`` step now correctly gets environment variables from the slave, rather than those set on the master.
+* The ``SetPropertiesFromEnv`` step now correctly gets environment variables from the worker, rather than those set on the master.
   Also, it logs the changes made to properties.
 
 * The master-side ``Git`` source step now doesn't try to clone a branch called ``HEAD``.
@@ -237,8 +237,8 @@ Changes for Developers
 * The helper methods ``getState`` and ``setState`` from ``BaseScheduler`` have
   been factored into ``buildbot.util.state.StateMixin`` for use elsewhere.
 
-Slave
------
+Worker
+------
 
 Features
 ~~~~~~~~

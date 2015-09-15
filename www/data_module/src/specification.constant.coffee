@@ -14,7 +14,7 @@ class Specification extends Constant
                     'buildid'
                     'builderid'
                     'buildrequestid'
-                    'buildslaveid'
+                    'buildworkerid'
                     'complete'
                     'complete_at'
                     'masterid'
@@ -56,9 +56,9 @@ class Specification extends Constant
                     'buildrequests'
                     'masters'
                     'masters/n:masterid'
-                    'buildslaves'
-                    'buildslaves/i:name'
-                    'buildslaves/n:buildslaveid'
+                    'buildworkers'
+                    'buildworkers/i:name'
+                    'buildworkers/n:buildworkerid'
                     'builds'
                     'builds/n:number'
                     'builds/n:number/steps'
@@ -116,14 +116,14 @@ class Specification extends Constant
                 ]
                 static:
                     complete: true
-            buildslaves:
-                id: 'buildslaveid'
+            buildworkers:
+                id: 'buildworkerid'
                 fields: [
-                    'buildslaveid'
+                    'buildworkerid'
                     'configured_on'
                     'connected_to'
                     'name'
-                    'slaveinfo'
+                    'workerinfo'
                 ]
                 root: true
                 paths: []
@@ -183,12 +183,12 @@ class Specification extends Constant
                 paths: [
                     'builders'
                     'builders/n:builderid'
-                    'builders/n:builderid/buildslaves'
-                    'builders/n:builderid/buildslaves/n:buildslaveid'
-                    'builders/n:builderid/buildslaves/i:name'
-                    'buildslaves'
-                    'buildslaves/i:name'
-                    'buildslaves/n:buildslaveid'
+                    'builders/n:builderid/buildworkers'
+                    'builders/n:builderid/buildworkers/n:buildworkerid'
+                    'builders/n:builderid/buildworkers/i:name'
+                    'buildworkers'
+                    'buildworkers/i:name'
+                    'buildworkers/n:buildworkerid'
                     'changesources'
                     'changesources/n:changesourceid'
                     'schedulers'

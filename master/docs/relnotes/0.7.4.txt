@@ -6,9 +6,9 @@ The PBChangeSource's prefix= argument has changed, you probably need to add a
 slash now. This is mostly used by sites which use Subversion and
 svn_buildbot.py.
 
-The subcommands that are used to create a buildmaster or a buildslave have
-changed. They used to be called 'buildbot master' and 'buildbot slave'. Now
-they are called 'buildbot create-master' and 'buildbot create-slave'. Zipf's
+The subcommands that are used to create a buildmaster or a buildworker have
+changed. They used to be called 'buildbot master' and 'buildbot worker'. Now
+they are called 'buildbot create-master' and 'buildbot create-worker'. Zipf's
 Law suggests that these are more appropriate names for these
 infrequently-used commands.
 
@@ -41,15 +41,15 @@ BuildSteps can watch multiple log files in realtime, not just stdout/stderr.
 This works in a similar fashion to 'tail -f': the file is polled once per
 second, and any new data is sent to the buildmaster.
 
-This requires a buildslave running 0.7.4 or later, and a warning message is
-produced if used against an old buildslave (which will otherwise produce no
+This requires a buildworker running 0.7.4 or later, and a warning message is
+produced if used against an old buildworker (which will otherwise produce no
 data). Use "logfiles={'name': 'filename'}" to take advantage of this feature
 from master.cfg, and see the "ShellCommand" section of the user's manual for
 full documentation.
 
 The 'Trial' buildstep has been updated to use this, to display
 _trial_temp/test.log in realtime. It also knows to fall back to the previous
-"cat" command if the buildslave is too old.
+"cat" command if the buildworker is too old.
 
 *** BuildStep URLs
 

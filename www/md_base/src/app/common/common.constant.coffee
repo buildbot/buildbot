@@ -24,7 +24,7 @@ class Plurals extends Constant('common')
             builder: "builders"
             buildset: "buildsets"
             buildrequest: "buildrequests"
-            buildslave: "buildslaves"
+            buildworker: "buildworkers"
             master: "masters"
             change: "changes"
             step: "steps"

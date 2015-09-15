@@ -1,10 +1,10 @@
 Buildbot 0.8.1 was released 16 June 2010
 
-** Slave Split into separate component
+** Worker Split into separate component
 
-Installing 'buildbot' will no longer allow you to run a slave - for that,
-you'll now need the 'buildslave' component, which is available by easy_install.
-This is merely a packaging change - the buildslave and buildbot components are
+Installing 'buildbot' will no longer allow you to run a worker - for that,
+you'll now need the 'buildworker' component, which is available by easy_install.
+This is merely a packaging change - the buildworker and buildbot components are
 completely inter-compatible, just as they always have been.
 
 ** Features
@@ -51,17 +51,17 @@ In a little-used feature, 'buildbot start' would run 'make start' if a
 Makefile.buildbot existed in the master directory.  This functionality will be
 removed in Buildbot-0.8.2, and the create-master command will no longer create
 a Makefile.sample.  Of course, Buildbot still supports build processes on the
-slave using make!
+worker using make!
 
-* Slave Changes
+* Worker Changes
 
-** First release of buildslave as a separate package
+** First release of buildworker as a separate package
 
 ** Fixes
 
 *** Command-line options changed
 
-Added new `-n|--no-logrotate` flag to create-slave command which disables
+Added new `-n|--no-logrotate` flag to create-worker command which disables
 internal logging and log rotation mechanism in buildbot.tac (ticket #973)
 
 *** Delete srcdir before retrying git clone (ticket #884)

@@ -40,15 +40,15 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                               sa.Column('number', sa.Integer, nullable=False),
                               sa.Column('builderid', sa.Integer),
                               # note that there is 1:N relationship here.
-                              # In case of slave loss, build has results RETRY
+                              # In case of worker loss, build has results RETRY
                               # and buildrequest is unclaimed
                               sa.Column('buildrequestid', sa.Integer,
                                         nullable=False),
-                              # slave which performed this build
-                              # TODO: ForeignKey to buildslaves table, named buildslaveid
-                              # TODO: keep nullable to support slave-free
+                              # worker which performed this build
+                              # TODO: ForeignKey to buildworkers table, named buildworkerid
+                              # TODO: keep nullable to support worker-free
                               # builds
-                              sa.Column('buildslaveid', sa.Integer),
+                              sa.Column('buildworkerid', sa.Integer),
                               # master which controlled this build
                               sa.Column('masterid', sa.Integer,
                                         nullable=False),

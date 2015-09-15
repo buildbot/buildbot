@@ -4,7 +4,7 @@ Full details are available at:
 
 Buildbot URL: {{ buildbot_url }}
 
-Buildslave for this Build: {{ slavename }}
+Buildworker for this Build: {{ workername }}
 
 Build Reason: {{ build['properties'].get('reason', ["<unknown>"])[0] }}
 Blamelist: {{ ", ".join(blamelist) }}

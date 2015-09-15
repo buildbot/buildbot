@@ -4,7 +4,7 @@ Buildbot 0.6.3 was released 25 Apr 2005
 
 The 'buildbot' executable has acquired three new subcommands. 'buildbot
 debugclient' brings up the small remote-control panel that connects to a
-buildmaster (via the slave port and the c['debugPassword']). This tool,
+buildmaster (via the worker port and the c['debugPassword']). This tool,
 formerly in contrib/debugclient.py, lets you reload the config file, force
 builds, and simulate inbound commit messages. It requires gtk2, glade, and
 the python bindings for both to be installed.
@@ -49,7 +49,7 @@ of categories, and they will ignore any activity in builders outside this
 list. This makes it easy to create some Builders which are "experimental" or
 otherwise not yet ready for the world to see, or indicate that certain
 builders should not harass developers when their tests fail, perhaps because
-the build slaves for them are not yet fully functional.
+the build workers for them are not yet fully functional.
 
 ** Deprecated features
 
@@ -57,7 +57,7 @@ the build slaves for them are not yet fully functional.
 
 For a long time, the preferred way to define builders in the config file has
 been with a dictionary. The less-flexible old style of a 4-item tuple (name,
-slavename, builddir, factory) is now officially deprecated (i.e., it will
+workername, builddir, factory) is now officially deprecated (i.e., it will
 emit a warning if you use it), and will be removed in the next release.
 Dictionaries are more flexible: additional keys like periodicBuildTime are
 simply unavailable to tuple-defined builders.
@@ -90,13 +90,13 @@ web page's TextLog class was fixed, which caused a major memory leak in a
 long-running buildmaster with large logfiles that are viewed frequently.
 Modifying the config file in a way which only changed a builder's base
 directory now works correctly. The 'buildbot' command tries to create
-slightly more useful master/slave directories, adding a Makefile entry to
+slightly more useful master/worker directories, adding a Makefile entry to
 re-create the .tap file, and removing global-read permissions from the files
-that may contain buildslave passwords.
+that may contain buildworker passwords.
 
 ** twisted-2.0.0 compatibility
 
-Both buildmaster and buildslave should run properly under Twisted-2.0 . There
+Both buildmaster and buildworker should run properly under Twisted-2.0 . There
 are still some warnings about deprecated functions, some of which could be
 fixed, but there are others that would require removing compatibility with
 Twisted-1.3, and I don't expect to do that until 2.0 has been out and stable
@@ -111,7 +111,7 @@ functionality.
 
 Thankt to Nick Trout, more compatibility fixes have been incorporated,
 improving the chances that the unit tests will pass on windows systems. There
-are still some problems, and a step-by-step "running buildslaves on windows"
+are still some problems, and a step-by-step "running buildworkers on windows"
 document would be greatly appreciated.
 
 ** API docs

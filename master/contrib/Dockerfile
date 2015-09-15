@@ -70,7 +70,7 @@ run /bin/echo -e "\
 run apt-get update
 run DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip python-dev \
     supervisor git sudo ssh
-run pip install buildbot buildbot_slave
+run pip install buildbot buildbot_worker
 
 # Set ssh superuser (username: admin   password: admin)
 run mkdir /data /var/run/sshd
@@ -83,7 +83,7 @@ run cd /data/buildbot; sudo -u admin sh -c "buildbot create-master master"
 run cp -a /data/buildbot/master/master.cfg.sample \
     /data/buildbot/master/master.cfg
 run cd /data/buildbot; sudo -u admin sh -c \
-    "buildslave create-slave slave localhost:9989 example-slave pass"
+    "buildworker create-worker worker localhost:9989 example-worker pass"
 
 # Set supervisord buildbot and sshd processes
 run /bin/echo -e "[program:sshd]\ncommand=/usr/sbin/sshd -D\n" > \
@@ -95,7 +95,7 @@ directory=/data/buildbot/master\n\
 user=admin\n\n\
 [program:buildworker]\n\
 command=twistd --nodaemon --no_save -y buildbot.tac\n\
-directory=/data/buildbot/slave\n\
+directory=/data/buildbot/worker\n\
 user=admin\n" > \
     /etc/supervisor/conf.d/buildbot.conf
 

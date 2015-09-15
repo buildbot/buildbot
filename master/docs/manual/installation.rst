@@ -6,11 +6,11 @@ Installation
 Buildbot Components
 -------------------
 
-Buildbot is shipped in two components: the *buildmaster* (called ``buildbot`` for legacy reasons) and the *buildslave*.
-The buildslave component has far fewer requirements, and is more broadly compatible than the buildmaster.
-You will need to carefully pick the environment in which to run your buildmaster, but the buildslave should be able to run just about anywhere.
+Buildbot is shipped in two components: the *buildmaster* (called ``buildbot`` for legacy reasons) and the *buildworker*.
+The buildworker component has far fewer requirements, and is more broadly compatible than the buildmaster.
+You will need to carefully pick the environment in which to run your buildmaster, but the buildworker should be able to run just about anywhere.
 
-It is possible to install the buildmaster and buildslave on the same system, although for anything but the smallest installation this arrangement will not be very efficient.
+It is possible to install the buildmaster and buildworker on the same system, although for anything but the smallest installation this arrangement will not be very efficient.
 
 .. _Requirements:
 
@@ -22,19 +22,19 @@ Requirements
 Common Requirements
 ~~~~~~~~~~~~~~~~~~~
 
-At a bare minimum, you'll need the following for both the buildmaster and a buildslave:
+At a bare minimum, you'll need the following for both the buildmaster and a buildworker:
 
 Python: http://www.python.org
 
-  Both Buildbot master and Buildbot slave require Python-2.6, although Python-2.7 is recommended.
+  Both Buildbot master and Buildbot worker require Python-2.6, although Python-2.7 is recommended.
 
   Note that this should be a "normal" build of Python.
   Builds of Python with debugging enabled or other unusual build parameters are likely to cause incorrect behavior.
 
 Twisted: http://twistedmatrix.com
 
-  Buildbot requires Twisted-11.0.0 or later on the master, and Twisted-8.1.0 on the slave.
-  In upcoming versions of Buildbot, a newer Twisted will also be required on the slave.
+  Buildbot requires Twisted-11.0.0 or later on the master, and Twisted-8.1.0 on the worker.
+  In upcoming versions of Buildbot, a newer Twisted will also be required on the worker.
   As always, the most recent version is recommended.
 
   In some cases, Twisted is delivered as a collection of subpackages.
@@ -42,14 +42,14 @@ Twisted: http://twistedmatrix.com
   You might also want `TwistedConch`_ (for the encrypted Manhole debug port).
   Note that Twisted requires ZopeInterface to be installed as well.
 
-Of course, your project's build process will impose additional requirements on the buildslaves.
+Of course, your project's build process will impose additional requirements on the buildworkers.
 These hosts must have all the tools necessary to compile and test your project's source code.
 
 Windows Support
 '''''''''''''''
 
-Buildbot - both master and slave - runs well natively on Windows.
-The slave runs well on Cygwin, but because of problems with SQLite on Cygwin, the master does not.
+Buildbot - both master and worker - runs well natively on Windows.
+The worker runs well on Cygwin, but because of problems with SQLite on Cygwin, the master does not.
 
 Buildbot's windows testing is limited to the most recent Twisted and Python versions.
 For best results, use the most recent available versions of these libraries on Windows.
@@ -100,7 +100,7 @@ Installing the code
 The Distribution Package
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot comes in two parts: ``buildbot`` (the master) and ``buildbot-slave`` (the slave).
+Buildbot comes in two parts: ``buildbot`` (the master) and ``buildbot-worker`` (the worker).
 The two can be installed individually or together.
 
 Installation From PyPI
@@ -113,11 +113,11 @@ For the master:
 
     pip install buildbot
 
-and for the slave:
+and for the worker:
 
 .. code-block:: bash
 
-    pip install buildbot-slave
+    pip install buildbot-worker
 
 When using ``pip`` to install instead of distribution specific package manangers, e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants to use.
 It may however be easier to install via distribution specific package mangers but note that they may provide an earlier version than what is available via ``pip``.
@@ -125,7 +125,7 @@ It may however be easier to install via distribution specific package mangers bu
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot and Buildslave are installed using the standard Python `distutils <http://docs.python.org/library/distutils.html>`_ process.
+Buildbot and Buildworker are installed using the standard Python `distutils <http://docs.python.org/library/distutils.html>`_ process.
 For either component, after unpacking the tarball, the process is:
 
 .. code-block:: bash
@@ -146,7 +146,7 @@ To test this, shift to a different directory (like :file:`/tmp`), and run:
 
     buildbot --version
     # or
-    buildslave --version
+    buildworker --version
 
 If it shows you the versions of Buildbot and Twisted, the install went ok.
 If it says "no such command" or it gets an ``ImportError`` when it tries to load the libraries, then something went wrong.
@@ -184,7 +184,7 @@ Then, run the tests:
 
     PYTHONPATH=. trial buildbot.test
     # or
-    PYTHONPATH=. trial buildslave.test
+    PYTHONPATH=. trial buildworker.test
 
 Nothing should fail, although a few might be skipped.
 
@@ -243,8 +243,8 @@ You can also type ``buildbot create-master --help`` for an up-to-the-moment summ
 
 .. option:: --no-logrotate
 
-    This disables internal buildslave log management mechanism.
-    With this option buildslave does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
+    This disables internal buildworker log management mechanism.
+    With this option buildworker does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
 
 .. option:: --relocatable
 
@@ -290,7 +290,7 @@ The ``upgrade-master`` command is idempotent.
 It is safe to run it multiple times.
 After each upgrade of the buildbot code, you should use ``upgrade-master`` on all your buildmasters.
 
-In general, Buildbot slaves and masters can be upgraded independently, although some new features will not be available, depending on the master and slave versions.
+In general, Buildbot workers and masters can be upgraded independently, although some new features will not be available, depending on the master and worker versions.
 
 Beyond this general information, read all of the sections below that apply to versions through which you are upgrading.
 
@@ -375,136 +375,136 @@ Upgrading a Buildmaster to Later Versions
 
 Up to Buildbot version |version|, no further steps beyond those described above are required.
 
-.. _Creating-a-buildslave:
+.. _Creating-a-buildworker:
 
-Creating a buildslave
----------------------
+Creating a buildworker
+----------------------
 
-Typically, you will be adding a buildslave to an existing buildmaster, to provide additional architecture coverage.
+Typically, you will be adding a buildworker to an existing buildmaster, to provide additional architecture coverage.
 The buildbot administrator will give you several pieces of information necessary to connect to the buildmaster.
 You should also be somewhat familiar with the project being tested, so you can troubleshoot build problems locally.
 
 The buildbot exists to make sure that the project's stated ``how to build it`` process actually works.
-To this end, the buildslave should run in an environment just like that of your regular developers.
+To this end, the buildworker should run in an environment just like that of your regular developers.
 Typically the project build process is documented somewhere (:file:`README`, :file:`INSTALL`, etc), in a document that should mention all library dependencies and contain a basic set of build instructions.
-This document will be useful as you configure the host and account in which the buildslave runs.
+This document will be useful as you configure the host and account in which the buildworker runs.
 
-Here's a good checklist for setting up a buildslave:
+Here's a good checklist for setting up a buildworker:
 
 1. Set up the account
 
-  It is recommended (although not mandatory) to set up a separate user account for the buildslave.
-  This account is frequently named ``buildbot`` or ``buildslave``.
-  This serves to isolate your personal working environment from that of the slave's, and helps to minimize the security threat posed by letting possibly-unknown contributors run arbitrary code on your system.
+  It is recommended (although not mandatory) to set up a separate user account for the buildworker.
+  This account is frequently named ``buildbot`` or ``buildworker``.
+  This serves to isolate your personal working environment from that of the worker's, and helps to minimize the security threat posed by letting possibly-unknown contributors run arbitrary code on your system.
   The account should have a minimum of fancy init scripts.
 
 2. Install the buildbot code
 
   Follow the instructions given earlier (:ref:`Installing-the-code`).
-  If you use a separate buildslave account, and you didn't install the buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
+  If you use a separate buildworker account, and you didn't install the buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
 
 3. Set up the host
 
   Make sure the host can actually reach the buildmaster.
   Usually the buildmaster is running a status webserver on the same machine, so simply point your web browser at it and see if you can get there.
   Install whatever additional packages or libraries the project's INSTALL document advises.
-  (or not: if your buildslave is supposed to make sure that building without optional libraries still works, then don't install those libraries.)
+  (or not: if your buildworker is supposed to make sure that building without optional libraries still works, then don't install those libraries.)
 
   Again, these libraries don't necessarily have to be installed to a site-wide shared location, but they must be available to your build process.
   Accomplishing this is usually very specific to the build process, so installing them to :file:`/usr` or :file:`/usr/local` is usually the best approach.
 
 4. Test the build process
 
-  Follow the instructions in the :file:`INSTALL` document, in the buildslave's account.
+  Follow the instructions in the :file:`INSTALL` document, in the buildworker's account.
   Perform a full CVS (or whatever) checkout, configure, make, run tests, etc.
   Confirm that the build works without manual fussing.
   If it doesn't work when you do it by hand, it will be unlikely to work when the buildbot attempts to do it in an automated fashion.
 
 5. Choose a base directory
 
-  This should be somewhere in the buildslave's account, typically named after the project which is being tested.
-  The buildslave will not touch any file outside of this directory.
-  Something like :file:`~/Buildbot` or :file:`~/Buildslaves/fooproject` is appropriate.
+  This should be somewhere in the buildworker's account, typically named after the project which is being tested.
+  The buildworker will not touch any file outside of this directory.
+  Something like :file:`~/Buildbot` or :file:`~/Buildworkers/fooproject` is appropriate.
 
 6. Get the buildmaster host/port, botname, and password
 
-  When the buildbot admin configures the buildmaster to accept and use your buildslave, they will provide you with the following pieces of information:
+  When the buildbot admin configures the buildmaster to accept and use your buildworker, they will provide you with the following pieces of information:
 
-  * your buildslave's name
-  * the password assigned to your buildslave
+  * your buildworker's name
+  * the password assigned to your buildworker
   * the hostname and port number of the buildmaster, i.e. buildbot.example.org:8007
 
-7. Create the buildslave
+7. Create the buildworker
 
-  Now run the 'buildslave' command as follows:
+  Now run the 'buildworker' command as follows:
 
-      :samp:`buildslave create-slave {BASEDIR} {MASTERHOST}:{PORT} {SLAVENAME} {PASSWORD}`
+      :samp:`buildworker create-worker {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}`
 
   This will create the base directory and a collection of files inside, including the :file:`buildbot.tac` file that contains all the information you passed to the :command:`buildbot` command.
 
 8. Fill in the hostinfo files
 
-  When it first connects, the buildslave will send a few files up to the buildmaster which describe the host that it is running on.
+  When it first connects, the buildworker will send a few files up to the buildmaster which describe the host that it is running on.
   These files are presented on the web status display so that developers have more information to reproduce any test failures that are witnessed by the buildbot.
   There are sample files in the :file:`info` subdirectory of the buildbot's base directory.
   You should edit these to correctly describe you and your host.
 
   :file:`{BASEDIR}/info/admin` should contain your name and email address.
-  This is the ``buildslave admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
+  This is the ``buildworker admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
 
-  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the buildbot code which is running the buildslave.
+  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the buildbot code which is running the buildworker.
 
   The optional :file:`{BASEDIR}/info/access_uri` can specify a URI which will connect a user to the machine.
   Many systems accept ``ssh://hostname`` URIs for this purpose.
 
-  If you run many buildslaves, you may want to create a single :file:`~buildslave/info` file and share it among all the buildslaves with symlinks.
+  If you run many buildworkers, you may want to create a single :file:`~buildworker/info` file and share it among all the buildworkers with symlinks.
 
-.. _Buildslave-Options:
+.. _Buildworker-Options:
 
-Buildslave Options
-~~~~~~~~~~~~~~~~~~
+Buildworker Options
+~~~~~~~~~~~~~~~~~~~
 
-There are a handful of options you might want to use when creating the buildslave with the :samp:`buildslave create-slave <options> DIR <params>` command.
-You can type ``buildslave create-slave --help`` for a summary.
-To use these, just include them on the ``buildslave create-slave`` command line, like this
+There are a handful of options you might want to use when creating the buildworker with the :samp:`buildworker create-worker <options> DIR <params>` command.
+You can type ``buildworker create-worker --help`` for a summary.
+To use these, just include them on the ``buildworker create-worker`` command line, like this
 
 .. code-block:: bash
 
-    buildslave create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 {myslavename} {mypasswd}
+    buildworker create-worker --umask=022 ~/buildworker buildmaster.example.org:42012 {myworkername} {mypasswd}
 
-.. program:: buildslave create-slave
+.. program:: buildworker create-worker
 
 .. option:: --no-logrotate
 
-    This disables internal buildslave log management mechanism.
-    With this option buildslave does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
+    This disables internal buildworker log management mechanism.
+    With this option buildworker does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
 
 .. option:: --usepty
 
-    This is a boolean flag that tells the buildslave whether to launch child processes in a PTY or with regular pipes (the default) when the master does not specify.
+    This is a boolean flag that tells the buildworker whether to launch child processes in a PTY or with regular pipes (the default) when the master does not specify.
     This option is deprecated, as this particular parameter is better specified on the master.
 
 .. option:: --umask
 
-    This is a string (generally an octal representation of an integer) which will cause the buildslave process' ``umask`` value to be set shortly after initialization.
-    The ``twistd`` daemonization utility forces the umask to 077 at startup (which means that all files created by the buildslave or its child processes will be unreadable by any user other than the buildslave account).
-    If you want build products to be readable by other accounts, you can add ``--umask=022`` to tell the buildslave to fix the umask after twistd clobbers it.
+    This is a string (generally an octal representation of an integer) which will cause the buildworker process' ``umask`` value to be set shortly after initialization.
+    The ``twistd`` daemonization utility forces the umask to 077 at startup (which means that all files created by the buildworker or its child processes will be unreadable by any user other than the buildworker account).
+    If you want build products to be readable by other accounts, you can add ``--umask=022`` to tell the buildworker to fix the umask after twistd clobbers it.
     If you want build products to be *writable* by other accounts too, use ``--umask=000``, but this is likely to be a security problem.
 
 .. option:: --keepalive
 
-    This is a number that indicates how frequently ``keepalive`` messages should be sent from the buildslave to the buildmaster, expressed in seconds.
+    This is a number that indicates how frequently ``keepalive`` messages should be sent from the buildworker to the buildmaster, expressed in seconds.
     The default (600) causes a message to be sent to the buildmaster at least once every 10 minutes.
     To set this to a lower value, use e.g. ``--keepalive=120``.
 
-    If the buildslave is behind a NAT box or stateful firewall, these messages may help to keep the connection alive: some NAT boxes tend to forget about a connection if it has not been used in a while.
-    When this happens, the buildmaster will think that the buildslave has disappeared, and builds will time out.
-    Meanwhile the buildslave will not realize than anything is wrong.
+    If the buildworker is behind a NAT box or stateful firewall, these messages may help to keep the connection alive: some NAT boxes tend to forget about a connection if it has not been used in a while.
+    When this happens, the buildmaster will think that the buildworker has disappeared, and builds will time out.
+    Meanwhile the buildworker will not realize than anything is wrong.
 
 .. option:: --maxdelay
 
-    This is a number that indicates the maximum amount of time the buildslave will wait between connection attempts, expressed in seconds.
-    The default (300) causes the buildslave to wait at most 5 minutes before trying to connect to the buildmaster again.
+    This is a number that indicates the maximum amount of time the buildworker will wait between connection attempts, expressed in seconds.
+    The default (300) causes the buildworker to wait at most 5 minutes before trying to connect to the buildmaster again.
 
 .. option:: --log-size
 
@@ -518,96 +518,96 @@ To use these, just include them on the ``buildslave create-slave`` command line,
 
 .. option:: --allow-shutdown
 
-    Can also be passed directly to the BuildSlave constructor in :file:`buildbot.tac`.
-    If set, it allows the buildslave to initiate a graceful shutdown, meaning that it will ask the master to shut down the slave when the current build, if any, is complete.
+    Can also be passed directly to the BuildWorker constructor in :file:`buildbot.tac`.
+    If set, it allows the buildworker to initiate a graceful shutdown, meaning that it will ask the master to shut down the worker when the current build, if any, is complete.
 
-    Setting allow_shutdown to ``file`` will cause the buildslave to watch :file:`shutdown.stamp` in basedir for updates to its mtime.
-    When the mtime changes, the slave will request a graceful shutdown from the master.
-    The file does not need to exist prior to starting the slave.
+    Setting allow_shutdown to ``file`` will cause the buildworker to watch :file:`shutdown.stamp` in basedir for updates to its mtime.
+    When the mtime changes, the worker will request a graceful shutdown from the master.
+    The file does not need to exist prior to starting the worker.
 
     Setting allow_shutdown to ``signal`` will set up a SIGHUP handler to start a graceful shutdown.
-    When the signal is received, the slave will request a graceful shutdown from the master.
+    When the signal is received, the worker will request a graceful shutdown from the master.
 
     The default value is ``None``, in which case this feature will be disabled.
 
-    Both master and slave must be at least version 0.8.3 for this feature to work.
+    Both master and worker must be at least version 0.8.3 for this feature to work.
 
-.. _Other-Buildslave-Configuration:
+.. _Other-Buildworker-Configuration:
 
-Other Buildslave Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Other Buildworker Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``unicode_encoding``
     This represents the encoding that buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
 
     The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale settings.
 
-    If you need a different encoding, this can be changed in your build slave's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the BuildSlave constructor.
+    If you need a different encoding, this can be changed in your build worker's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the BuildWorker constructor.
 
 .. code-block:: python
 
-    s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+    s = BuildWorker(buildmaster_host, port, workername, passwd, basedir,
                    keepalive, usepty, umask=umask, maxdelay=maxdelay,
                    unicode_encoding='utf-8', allow_shutdown='signal')
 
-.. _Upgrading-an-Existing-Buildslave:
+.. _Upgrading-an-Existing-Buildworker:
 
-Upgrading an Existing Buildslave
---------------------------------
+Upgrading an Existing Buildworker
+---------------------------------
 
-If you have just installed a new version of Buildbot-slave, you may need to take some steps to upgrade it.
+If you have just installed a new version of Buildbot-worker, you may need to take some steps to upgrade it.
 If you are upgrading to version 0.8.2 or later, you can run
 
 .. code-block:: bash
 
-    buildslave upgrade-slave /path/to/buildslave/dir
+    buildworker upgrade-worker /path/to/buildworker/dir
 
-.. _Buildslave-Version-specific-Notes:
+.. _Buildworker-Version-specific-Notes:
 
 Version-specific Notes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Upgrading a Buildslave to Buildbot-slave-0.8.1
-''''''''''''''''''''''''''''''''''''''''''''''
+Upgrading a Buildworker to Buildbot-worker-0.8.1
+''''''''''''''''''''''''''''''''''''''''''''''''
 
-Before Buildbot version 0.8.1, the Buildbot master and slave were part of the same distribution.
-As of version 0.8.1, the buildslave is a separate distribution.
+Before Buildbot version 0.8.1, the Buildbot master and worker were part of the same distribution.
+As of version 0.8.1, the buildworker is a separate distribution.
 
-As of this release, you will need to install ``buildbot-slave`` to run a slave.
+As of this release, you will need to install ``buildbot-worker`` to run a worker.
 
-Any automatic startup scripts that had run ``buildbot start`` for previous versions should be changed to run ``buildslave start`` instead.
+Any automatic startup scripts that had run ``buildbot start`` for previous versions should be changed to run ``buildworker start`` instead.
 
-If you are running a version later than 0.8.1, then you can skip the remainder of this section: the ```upgrade-slave`` command will take care of this.
+If you are running a version later than 0.8.1, then you can skip the remainder of this section: the ```upgrade-worker`` command will take care of this.
 If you are upgrading directly to 0.8.1, read on.
 
-The existing :file:`buildbot.tac` for any buildslaves running older versions will need to be edited or replaced.
-If the loss of cached buildslave state (e.g., for Source steps in copy mode) is not problematic, the easiest solution is to simply delete the slave directory and re-run ``buildslave create-slave``.
+The existing :file:`buildbot.tac` for any buildworkers running older versions will need to be edited or replaced.
+If the loss of cached buildworker state (e.g., for Source steps in copy mode) is not problematic, the easiest solution is to simply delete the worker directory and re-run ``buildworker create-worker``.
 
-If deleting the slave directory is problematic, the change to :file:`buildbot.tac` is simple.
+If deleting the worker directory is problematic, the change to :file:`buildbot.tac` is simple.
 On line 3, replace::
 
-    from buildbot.slave.bot import BuildSlave
+    from buildbot.worker.bot import BuildWorker
 
 with::
 
-    from buildslave.bot import BuildSlave
+    from buildworker.bot import BuildWorker
 
-After this change, the buildslave should start as usual.
+After this change, the buildworker should start as usual.
 
 .. _Launching-the-daemons:
 
 Launching the daemons
 ---------------------
 
-Both the buildmaster and the buildslave run as daemon programs.
-To launch them, pass the working directory to the :command:`buildbot` and :command:`buildslave` commands, as appropriate:
+Both the buildmaster and the buildworker run as daemon programs.
+To launch them, pass the working directory to the :command:`buildbot` and :command:`buildworker` commands, as appropriate:
 
 .. code-block:: bash
 
     # start a master
     buildbot start [ BASEDIR ]
-    # start a slave
-    buildslave start [ SLAVE_BASEDIR ]
+    # start a worker
+    buildworker start [ WORKER_BASEDIR ]
 
 The *BASEDIR* is option and can be omitted if the current directory contains the buildbot configuration (the :file:`buildbot.tac` file).
 
@@ -619,8 +619,8 @@ This command will start the daemon and then return, so normally it will not prod
 To verify that the programs are indeed running, look for a pair of files named :file:`twistd.log` and :file:`twistd.pid` that should be created in the working directory.
 :file:`twistd.pid` contains the process ID of the newly-spawned daemon.
 
-When the buildslave connects to the buildmaster, new directories will start appearing in its base directory.
-The buildmaster tells the slave to create a directory for each Builder which will be using that slave.
+When the buildworker connects to the buildmaster, new directories will start appearing in its base directory.
+The buildmaster tells the worker to create a directory for each Builder which will be using that worker.
 All build operations are performed within these directories: CVS checkouts, compiles, and tests.
 
 Once you get everything running, you will want to arrange for the buildbot daemons to be started at boot time.
@@ -630,36 +630,36 @@ One way is to use :command:`cron`, by putting them in a ``@reboot`` crontab entr
 
     @reboot buildbot start [ BASEDIR ]
 
-When you run :command:`crontab` to set this up, remember to do it as the buildmaster or buildslave account!
+When you run :command:`crontab` to set this up, remember to do it as the buildmaster or buildworker account!
 If you add this to your crontab when running as your regular account (or worse yet, root), then the daemon will run as the wrong user, quite possibly as one with more authority than you intended to provide.
 
 It is important to remember that the environment provided to cron jobs and init scripts can be quite different that your normal runtime.
 There may be fewer environment variables specified, and the :envvar:`PATH` may be shorter than usual.
-It is a good idea to test out this method of launching the buildslave by using a cron job with a time in the near future, with the same command, and then check :file:`twistd.log` to make sure the slave actually started correctly.
+It is a good idea to test out this method of launching the buildworker by using a cron job with a time in the near future, with the same command, and then check :file:`twistd.log` to make sure the worker actually started correctly.
 Common problems here are for :file:`/usr/local` or :file:`~/bin` to not be on your :envvar:`PATH`, or for :envvar:`PYTHONPATH` to not be set correctly.
 Sometimes :envvar:`HOME` is messed up too.
 
 Some distributions may include conveniences to make starting buildbot at boot time easy.
 For instance, with the default buildbot package in Debian-based distributions, you may only need to modify :file:`/etc/default/buildbot` (see also :file:`/etc/init.d/buildbot`, which reads the configuration in :file:`/etc/default/buildbot`).
 
-Buildbot also comes with its own init scripts that provide support for controlling multi-slave and multi-master setups (mostly because they are based on the init script from the Debian package).
-With a little modification these scripts can be used both on Debian and RHEL-based distributions and may thus prove helpful to package maintainers who are working on buildbot (or those that haven't yet split buildbot into master and slave packages).
+Buildbot also comes with its own init scripts that provide support for controlling multi-worker and multi-master setups (mostly because they are based on the init script from the Debian package).
+With a little modification these scripts can be used both on Debian and RHEL-based distributions and may thus prove helpful to package maintainers who are working on buildbot (or those that haven't yet split buildbot into master and worker packages).
 
 .. code-block:: bash
 
-    # install as /etc/default/buildslave
-    #         or /etc/sysconfig/buildslave
-    master/contrib/init-scripts/buildslave.default
+    # install as /etc/default/buildworker
+    #         or /etc/sysconfig/buildworker
+    master/contrib/init-scripts/buildworker.default
 
     # install as /etc/default/buildmaster
     #         or /etc/sysconfig/buildmaster
     master/contrib/init-scripts/buildmaster.default
 
-    # install as /etc/init.d/buildslave
-    slave/contrib/init-scripts/buildslave.init.sh
+    # install as /etc/init.d/buildworker
+    worker/contrib/init-scripts/buildworker.init.sh
 
     # install as /etc/init.d/buildmaster
-    slave/contrib/init-scripts/buildmaster.init.sh
+    worker/contrib/init-scripts/buildmaster.init.sh
 
     # ... and tell sysvinit about them
     chkconfig buildmaster reset
@@ -682,18 +682,18 @@ Most buildmaster activities will cause lines to be added to the log.
 Shutdown
 --------
 
-To stop a buildmaster or buildslave manually, use:
+To stop a buildmaster or buildworker manually, use:
 
 .. code-block:: bash
 
     buildbot stop [ BASEDIR ]
     # or
-    buildslave stop [ SLAVE_BASEDIR ]
+    buildworker stop [ WORKER_BASEDIR ]
 
 This simply looks for the :file:`twistd.pid` file and kills whatever process is identified within.
 
 At system shutdown, all processes are sent a ``SIGKILL``.
-The buildmaster and buildslave will respond to this by shutting down normally.
+The buildmaster and buildworker will respond to this by shutting down normally.
 
 The buildmaster will respond to a ``SIGHUP`` by re-reading its config file.
 Of course, this only works on Unix-like systems with signal support, and won't work on Windows.
@@ -703,18 +703,18 @@ The following shortcut is available:
 
     buildbot reconfig [ BASEDIR ]
 
-When you update the Buildbot code to a new release, you will need to restart the buildmaster and/or buildslave before it can take advantage of the new code.
+When you update the Buildbot code to a new release, you will need to restart the buildmaster and/or buildworker before it can take advantage of the new code.
 You can do a :samp:`buildbot stop {BASEDIR}` and :samp:`buildbot start {BASEDIR}` in quick succession, or you can use the ``restart`` shortcut, which does both steps for you:
 
 .. code-block:: bash
 
     buildbot restart [ BASEDIR ]
 
-Buildslaves can similarly be restarted with:
+Buildworkers can similarly be restarted with:
 
 .. code-block:: bash
 
-    buildslave restart [ BASEDIR ]
+    buildworker restart [ BASEDIR ]
 
 There are certain configuration changes that are not handled cleanly by ``buildbot reconfig``.
 If this occurs, ``buildbot restart`` is a more robust tool to fully switch over to the new configuration.
@@ -722,9 +722,9 @@ If this occurs, ``buildbot restart`` is a more robust tool to fully switch over 
 ``buildbot restart`` may also be used to start a stopped Buildbot instance.
 This behaviour is useful when writing scripts that stop, start and restart Buildbot.
 
-A buildslave may also be gracefully shutdown from the web UI.
-This is useful to shutdown a buildslave without interrupting any current builds.
-The buildmaster will wait until the buildslave is finished all its current builds, and will then tell the buildslave to shutdown.
+A buildworker may also be gracefully shutdown from the web UI.
+This is useful to shutdown a buildworker without interrupting any current builds.
+The buildmaster will wait until the buildworker is finished all its current builds, and will then tell the buildworker to shutdown.
 
 
 .. [#f1]

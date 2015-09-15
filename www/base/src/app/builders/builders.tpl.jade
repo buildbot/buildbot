@@ -15,7 +15,7 @@
                   | {{ tags_filter.length }} tags
             span(ng-show="tags_filter.length > 0")
                 span.label.label-danger(ng-click="tags_filter = []") x
-          th(style="width:20%px;") Slaves
+          th(style="width:20%px;") Workers
         tr(ng-repeat='builder in builders | filter: isBuilderFiltered')
           td(style="width:200px")
             a(ui-sref='builder({builder: builder.builderid})')
@@ -31,11 +31,11 @@
                   | {{ tag }}
                 | &nbsp;
           td(style="width:20%;")
-            span(data-ng-repeat="slave in builder.buildslaves")
-                a(ui-sref='slave({slave: slave.slaveid})')
-                    span.badge-status(title="{{slave.name}}" ng-class="connected2class(slave, 'pulse')")
-                        .badge-inactive {{slave.id}}
-                        .badge-active {{slave.name}}
+            span(data-ng-repeat="worker in builder.buildworkers")
+                a(ui-sref='worker({worker: worker.workerid})')
+                    span.badge-status(title="{{worker.name}}" ng-class="connected2class(worker, 'pulse')")
+                        .badge-inactive {{worker.id}}
+                        .badge-active {{worker.name}}
   .row
       .form-group
           label.checkbox-inline

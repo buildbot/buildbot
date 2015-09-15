@@ -38,7 +38,7 @@ Fixes
 
 * Fix a crash in the git hook.
 
-* Add checks to enforce slavenames are identifiers.
+* Add checks to enforce workernames are identifiers.
 
 
 Deprecations, Removals, and Non-Compatible Changes
@@ -47,18 +47,18 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* The :py:class:`~buildbot.config.BuilderConfig` ``nextSlave`` keyword argument takes a callable.
+* The :py:class:`~buildbot.config.BuilderConfig` ``nextWorker`` keyword argument takes a callable.
   This callable now receives :py:class:`~buildbot.process.buildrequest.BuildRequest` instance in its signature as 3rd parameter.
   **For retro-compatibility, all callable taking only 2 parameters will still work**.
 
-* Data api provides a way to query the build list per slave.
+* Data api provides a way to query the build list per worker.
 
 * Data api provides a way to query some build properties in a build list.
 
-Slave
------
+Worker
+------
 
-* buildbot-slave now requires Python 2.6
+* buildbot-worker now requires Python 2.6
 
 Features
 ~~~~~~~~

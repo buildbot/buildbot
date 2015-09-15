@@ -20,7 +20,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import BuildWorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
@@ -73,7 +73,7 @@ class Darcs(Source):
         @d.addCallback
         def checkInstall(darcsInstalled):
             if not darcsInstalled:
-                raise BuildSlaveTooOldError("Darcs is not installed on slave")
+                raise BuildWorkerTooOldError("Darcs is not installed on worker")
             return 0
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
@@ -251,7 +251,7 @@ class Darcs(Source):
     def _downloadFile(self, buf, filename):
         filereader = remotetransfer.StringFileReader(buf)
         args = {
-            'slavedest': filename,
+            'workerdest': filename,
             'maxsize': None,
             'reader': filereader,
             'blocksize': 16 * 1024,

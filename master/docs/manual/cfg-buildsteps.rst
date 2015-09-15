@@ -17,7 +17,7 @@ Each :class:`BuildFactory` can be created with a list of steps, or the factory c
 The basic behavior for a :class:`BuildStep` is to:
 
 * run for a while, then stop
-* possibly invoke some RemoteCommands on the attached build slave
+* possibly invoke some RemoteCommands on the attached build worker
 * possibly produce a set of log files
 * finish with a status described by one of four values defined in :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
 * provide a list of short strings to describe the step
@@ -141,7 +141,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 .. index:: Buildstep Parameter; locks
 
 ``locks``
-    a list of ``Locks`` (instances of :class:`buildbot.locks.SlaveLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
+    a list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
     Alternatively this could be a renderable that returns this list during build execution.
     This lets you defer picking the locks to acquire until the build step is about to start running.
     The ``Locks`` will be released when the step is complete.
@@ -164,7 +164,7 @@ Source Checkout
 
 .. caution::
 
-    Support for the old slave-side source checkout steps was removed in Buildbot-0.9.0.
+    Support for the old worker-side source checkout steps was removed in Buildbot-0.9.0.
 
     The old source steps used to be imported like this::
 
@@ -224,7 +224,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means that when a full VC checkout fails, it should be retried up to ``repeats`` times, waiting ``delay`` seconds between attempts.
     If you don't provide this, it defaults to ``None``, which means VC operations should not be retried.
-    This is provided to make life easier for buildslaves which are stuck behind poor network connections.
+    This is provided to make life easier for buildworkers which are stuck behind poor network connections.
 
 ``repository``
     The name of this parameter might vary depending on the Source step you are running.
@@ -232,7 +232,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 
     A common idiom is to pass ``Property('repository', 'url://default/repo/path')`` as repository.
     This grabs the repository from the source stamp of the build.
-    This can be a security issue, if you allow force builds from the web, or have the :class:`WebStatus` change hooks enabled; as the buildslave will download code from an arbitrary repository.
+    This can be a security issue, if you allow force builds from the web, or have the :class:`WebStatus` change hooks enabled; as the buildworker will download code from an arbitrary repository.
 
 ``codebase``
     This specifies which codebase the source step should use to select the right source stamp.
@@ -241,11 +241,11 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
     If there is no codebaseGenerator defined in the master then codebase doesn't need to be set, the default value will then match all changes.
 
 ``timeout``
-    Specifies the timeout for slave-side operations, in seconds.
+    Specifies the timeout for worker-side operations, in seconds.
     If your repositories are particularly large, then you may need to increase this  value from its default of 1200 (20 minutes).
 
 ``logEnviron``
-    If this option is true (the default), then the step's logfile will describe the environment variables on the slave.
+    If this option is true (the default), then the step's logfile will describe the environment variables on the worker.
     In situations where the environment is not relevant and is long, it may be easier to set ``logEnviron=False``.
 
 ``env``
@@ -489,7 +489,7 @@ Alternatively, the ``repourl`` argument can be used to create the :bb:step:`SVN`
 
 ``depth``
    (optional): Specify depth argument to achieve sparse checkout.
-   Only available if slave has Subversion 1.5 or higher.
+   Only available if worker has Subversion 1.5 or higher.
 
    If set to ``empty`` updates will not pull in any files or subdirectories not already present.
    If set to ``files``, updates will pull in any files not already present, but not directories.
@@ -661,7 +661,7 @@ The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ cl
 
     from buildbot.plugins import steps, util
     factory.addStep(steps.P4(p4port=p4port,
-                             p4client=util.WithProperties('%(P4USER)s-%(slavename)s-%(buildername)s'),
+                             p4client=util.WithProperties('%(P4USER)s-%(workername)s-%(buildername)s'),
                              p4user=p4user,
                              p4base='//depot',
                              p4viewspec=p4viewspec,
@@ -738,8 +738,8 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 ``p4client``
     (optional): The name of the client to use.
     In ``mode='full'`` and ``mode='incremental'``, it's particularly important that a unique name is used for each checkout directory to avoid incorrect synchronization.
-    For this reason, Python percent substitution will be performed on this value to replace %(slave)s with the slave name and %(builder)s with the builder name.
-    The default is `buildbot_%(slave)s_%(build)s`.
+    For this reason, Python percent substitution will be performed on this value to replace %(worker)s with the worker name and %(builder)s with the builder name.
+    The default is `buildbot_%(worker)s_%(build)s`.
 
 ``p4line_end``
     (optional): The type of line ending handling P4 should use.
@@ -783,7 +783,7 @@ The Repo step takes the following arguments:
     (optional, defaults to ``None``): the repo tarball used for fast bootstrap.
     If not present the tarball will be created automatically after first sync.
     It is a copy of the ``.repo`` directory which contains all the Git objects.
-    This feature helps to minimize network usage on very big projects with lots of slaves.
+    This feature helps to minimize network usage on very big projects with lots of workers.
 
 ``jobs``
     (optional, defaults to ``None``): Number of projects to fetch simultaneously while syncing.
@@ -942,7 +942,7 @@ Monotone step takes the following arguments:
 
   (optional): defaults to ``'incremental'``.
   Specifies whether to clean the build tree or not.
-  In any case, the slave first pulls from the given remote repository
+  In any case, the worker first pulls from the given remote repository
   to synchronize (or possibly initialize) its local database. The mode
   and method only affect how the build tree is checked-out or updated
   from the local database.
@@ -987,7 +987,7 @@ Monotone step takes the following arguments:
 ShellCommand
 ------------
 
-Most interesting steps involve executing a process of some sort on the buildslave.
+Most interesting steps involve executing a process of some sort on the buildworker.
 The :bb:step:`ShellCommand` class handles this activity.
 
 Several subclasses of :bb:step:`ShellCommand` are provided as starting points for common build steps.
@@ -998,7 +998,7 @@ Using ShellCommands
 .. py:class:: buildbot.steps.shell.ShellCommand
 
 This is a useful base class for just about everything you might want to do during a build (except for the initial source checkout).
-It runs a single command in a child shell on the buildslave.
+It runs a single command in a child shell on the buildworker.
 All stdout/stderr is recorded into a :class:`LogFile`.
 The step usually finishes with a status of ``FAILURE`` if the command's exit code is non-zero, otherwise it has a status of ``SUCCESS``.
 
@@ -1013,13 +1013,13 @@ The :bb:step:`ShellCommand` arguments are:
 ``command``
     a list of strings (preferred) or single string (discouraged) which specifies the command to be run.
     A list of strings is preferred because it can be used directly as an argv array.
-    Using a single string (with embedded spaces) requires the buildslave to pass the string to :command:`/bin/sh` for interpretation, which raises all sorts of difficult questions about how to escape or interpret shell metacharacters.
+    Using a single string (with embedded spaces) requires the buildworker to pass the string to :command:`/bin/sh` for interpretation, which raises all sorts of difficult questions about how to escape or interpret shell metacharacters.
 
     If ``command`` contains nested lists (for example, from a properties substitution), then that list will be flattened before it is executed.
 
 ``workdir``
-    All ShellCommands are run by default in the ``workdir``, which defaults to the :file:`build` subdirectory of the slave builder's base directory.
-    The absolute path of the workdir will thus be the slave's basedir (set as an option to ``buildslave create-slave``, :ref:`Creating-a-buildslave`) plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`) plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
+    All ShellCommands are run by default in the ``workdir``, which defaults to the :file:`build` subdirectory of the worker builder's base directory.
+    The absolute path of the workdir will thus be the worker's basedir (set as an option to ``buildworker create-worker``, :ref:`Creating-a-buildworker`) plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`) plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
 
     For example::
 
@@ -1035,7 +1035,7 @@ The :bb:step:`ShellCommand` arguments are:
         f.addStep(steps.ShellCommand(command=["make", "test"],
                                      env={'LANG': 'fr_FR'}))
 
-    These variable settings will override any existing ones in the buildslave's environment or the environment specified in the :class:`Builder`.
+    These variable settings will override any existing ones in the buildworker's environment or the environment specified in the :class:`Builder`.
     The exception is :envvar:`PYTHONPATH`, which is merged with (actually prepended to) any existing :envvar:`PYTHONPATH` setting.
     The following example will prepend :file:`/home/buildbot/lib/python` to any existing :envvar:`PYTHONPATH`::
 
@@ -1047,7 +1047,7 @@ The :bb:step:`ShellCommand` arguments are:
     To avoid the need of concatenating path together in the master config file, if the value is a list, it will be joined together using the right platform dependant separator.
 
     Those variables support expansion so that if you just want to prepend :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
-    Variables that don't exist on the slave will be replaced by ``""``.
+    Variables that don't exist on the worker will be replaced by ``""``.
 
     ::
 
@@ -1069,7 +1069,7 @@ The :bb:step:`ShellCommand` arguments are:
 
 ``usePTY``
     Should this command be run in a ``pty``?
-    The default is to observe the configuration of the client (:ref:`Buildslave-Options`), but specifying ``True`` or ``False`` here will override the default.
+    The default is to observe the configuration of the client (:ref:`Buildworker-Options`), but specifying ``True`` or ``False`` here will override the default.
     This option is not available on Windows.
 
     In general, you do not want to use a pseudo-terminal.
@@ -1102,7 +1102,7 @@ The :bb:step:`ShellCommand` arguments are:
                            command=["make", "test"],
                            logfiles={"triallog": "_trial_temp/test.log"}))
 
-    The above example will add a log named 'triallog' on the master, based on :file:`_trial_temp/test.log` on the slave.
+    The above example will add a log named 'triallog' on the master, based on :file:`_trial_temp/test.log` on the worker.
 
     ::
 
@@ -1128,14 +1128,14 @@ The :bb:step:`ShellCommand` arguments are:
     This is disabled by default.
 
 ``logEnviron``
-    If this option is ``True`` (the default), then the step's logfile will describe the environment variables on the slave.
+    If this option is ``True`` (the default), then the step's logfile will describe the environment variables on the worker.
     In situations where the environment is not relevant and is long, it may be easier to set ``logEnviron=False``.
 
 ``interruptSignal``
     If the command should be interrupted (either by buildmaster or timeout etc.), what signal should be sent to the process, specified by name.
     By default this is "KILL" (9).
     Specify "TERM" (15) to give the process a chance to cleanup.
-    This functionality requires a 0.8.6 slave or newer.
+    This functionality requires a 0.8.6 worker or newer.
 
 ``sigtermTime``
 
@@ -1270,7 +1270,7 @@ Your regular expression must match the from the beginning of the line.
 This means that to look for the word "warning" in the middle of a line, you will need to prepend ``'.*'`` to your regular expression.
 
 The ``suppressionFile=`` argument can be specified as the (relative) path of a file inside the workdir defining warnings to be suppressed from the warning counting and log file.
-The file will be uploaded to the master from the slave before compiling, and any warning matched by a line in the suppression file will be ignored.
+The file will be uploaded to the master from the worker before compiling, and any warning matched by a line in the suppression file will be ignored.
 This is useful to accept certain warnings (e.g. in some special module of the source tree or in cases where the compiler is being particularly stupid), yet still be able to easily detect and fix the introduction of new warnings.
 
 The file must contain one line per pattern of warnings to ignore.
@@ -1614,7 +1614,7 @@ The :bb:step:`MTR` step's arguments are:
 ``parallel``
     Value of :option:`--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
     Defaults to 4.
-    This is used to determine the number of server error log files to download from the slave.
+    This is used to determine the number of server error log files to download from the worker.
     Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using :option:`--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
 
 ``dbpool``
@@ -1662,12 +1662,12 @@ The 'tests' and 'test failed' progress metrics will now accumulate test data fro
 If ``failureOnNoTests`` is ``True``, this step will fail if no test is run.
 By default ``failureOnNoTests`` is False.
 
-.. _Slave-Filesystem-Steps:
+.. _Worker-Filesystem-Steps:
 
-Slave Filesystem Steps
-----------------------
+Worker Filesystem Steps
+-----------------------
 
-Here are some buildsteps for manipulating the slave's filesystem.
+Here are some buildsteps for manipulating the worker's filesystem.
 
 .. bb:step:: FileExists
 
@@ -1682,21 +1682,21 @@ The filename can be specified with a property.
     from buildbot.plugins import steps
     f.addStep(steps.FileExists(file='test_data'))
 
-This step requires slave version 0.8.4 or later.
+This step requires worker version 0.8.4 or later.
 
 .. bb:step:: CopyDirectory
 
 CopyDirectory
 +++++++++++++++
 
-This command copies a directory on the slave.
+This command copies a directory on the worker.
 
 ::
 
     from buildbot.plugins import steps
     f.addStep(steps.CopyDirectory(src="build/data", dest="tmp/data"))
 
-This step requires slave version 0.8.5 or later.
+This step requires worker version 0.8.5 or later.
 
 The CopyDirectory step takes the following arguments:
 
@@ -1714,28 +1714,28 @@ The CopyDirectory step takes the following arguments:
 RemoveDirectory
 +++++++++++++++
 
-This command recursively deletes a directory on the slave.
+This command recursively deletes a directory on the worker.
 
 ::
 
     from buildbot.plugins import steps
     f.addStep(steps.RemoveDirectory(dir="build/build"))
 
-This step requires slave version 0.8.4 or later.
+This step requires worker version 0.8.4 or later.
 
 .. bb:step:: MakeDirectory
 
 MakeDirectory
 +++++++++++++++
 
-This command creates a directory on the slave.
+This command creates a directory on the worker.
 
 ::
 
     from buildbot.plugins import steps
     f.addStep(steps.MakeDirectory(dir="build/build"))
 
-This step requires slave version 0.8.5 or later.
+This step requires worker version 0.8.5 or later.
 
 .. _Python-BuildSteps:
 
@@ -1913,7 +1913,7 @@ Note that running :command:`trial` in this way will create multiple log files (n
 This step takes the following arguments:
 
 ``jobs``
-   (optional) Number of slave-resident workers to use when running the tests.
+   (optional) Number of worker-resident workers to use when running the tests.
    Defaults to 1 worker.
    Only works with Twisted>=12.3.0.
 
@@ -1944,15 +1944,15 @@ Transferring Files
 .. py:class:: buildbot.steps.transfer.FileUpload
 .. py:class:: buildbot.steps.transfer.FileDownload
 
-Most of the work involved in a build will take place on the buildslave.
+Most of the work involved in a build will take place on the buildworker.
 But occasionally it is useful to do some work on the buildmaster side.
-The most basic way to involve the buildmaster is simply to move a file from the slave to the master, or vice versa.
+The most basic way to involve the buildmaster is simply to move a file from the worker to the master, or vice versa.
 There are a pair of steps named :bb:step:`FileUpload` and :bb:step:`FileDownload` to provide this functionality.
 :bb:step:`FileUpload` moves a file *up to* the master, while :bb:step:`FileDownload` moves a file *down from* the master.
 
 As an example, let's assume that there is a step which produces an HTML file within the source tree that contains some sort of generated project documentation.
 We want to move this file to the buildmaster, into a :file:`~/public_html` directory, so it can be visible to developers.
-This file will wind up in the slave-side working directory under the name :file:`docs/reference.html`.
+This file will wind up in the worker-side working directory under the name :file:`docs/reference.html`.
 We want to put it into the master-side :file:`~/public_html/ref.html`, and add a link to the HTML status to the uploaded file.
 
 ::
@@ -1960,29 +1960,29 @@ We want to put it into the master-side :file:`~/public_html/ref.html`, and add a
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.FileUpload(slavesrc="docs/reference.html",
+    f.addStep(steps.FileUpload(workersrc="docs/reference.html",
                                masterdest="/home/bb/public_html/ref.html",
                                url="http://somesite/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`, so things like ``~`` will be expanded properly.
 Non-absolute paths will be interpreted relative to the buildmaster's base directory.
-Likewise, the ``slavesrc=`` argument will be expanded and interpreted relative to the builder's working directory.
+Likewise, the ``workersrc=`` argument will be expanded and interpreted relative to the builder's working directory.
 
 .. note::
 
-   The copied file will have the same permissions on the master as on the slave, look at the ``mode=`` parameter to set it differently.
+   The copied file will have the same permissions on the master as on the worker, look at the ``mode=`` parameter to set it differently.
 
-To move a file from the master to the slave, use the :bb:step:`FileDownload` command.
-For example, let's assume that some step requires a configuration file that, for whatever reason, could not be recorded in the source code repository or generated on the buildslave side::
+To move a file from the master to the worker, use the :bb:step:`FileDownload` command.
+For example, let's assume that some step requires a configuration file that, for whatever reason, could not be recorded in the source code repository or generated on the buildworker side::
 
     from buildbot.plugins import steps
 
     f.addStep(steps.FileDownload(mastersrc="~/todays_build_config.txt",
-                                 slavedest="build_config.txt"))
+                                 workerdest="build_config.txt"))
     f.addStep(steps.ShellCommand(command=["make", "config"]))
 
-Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``slavedest=`` argument is relative to the builder's working directory.
-If the buildslave is running in :file:`~buildslave`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildslave/tests-i386/build`, and a ``slavedest=`` of :file:`foo/bar.html` will get put in :file:`~buildslave/tests-i386/build/foo/bar.html`.
+Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``workerdest=`` argument is relative to the builder's working directory.
+If the buildworker is running in :file:`~buildworker`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildworker/tests-i386/build`, and a ``workerdest=`` of :file:`foo/bar.html` will get put in :file:`~buildworker/tests-i386/build/foo/bar.html`.
 Both of these commands will create any missing intervening directories.
 
 Other Parameters
@@ -1995,7 +1995,7 @@ The ``blocksize=`` argument controls how the file is sent over the network: larg
 The ``mode=`` argument allows you to control the access permissions of the target file, traditionally expressed as an octal integer.
 The most common value is probably ``0755``, which sets the `x` executable bit on the file (useful for shell scripts and the like).
 The default value for ``mode=`` is None, which means the permission bits will default to whatever the umask of the writing process is.
-The default umask tends to be fairly restrictive, but at least on the buildslave you can make it less restrictive with a --umask command-line option at creation time (:ref:`Buildslave-Options`).
+The default umask tends to be fairly restrictive, but at least on the buildworker you can make it less restrictive with a --umask command-line option at creation time (:ref:`Buildworker-Options`).
 
 The ``keepstamp=`` argument is a boolean that, when ``True``, forces the modified and accessed time of the destination file to match the times of the source file.
 When ``False`` (the default), the modified and accessed times of the destination file are set to the current time on the buildmaster.
@@ -2011,17 +2011,17 @@ Transfering Directories
 
 .. py:class:: buildbot.steps.transfer.DirectoryUpload
 
-To transfer complete directories from the buildslave to the master, there is a :class:`BuildStep` named :bb:step:`DirectoryUpload`.
+To transfer complete directories from the buildworker to the master, there is a :class:`BuildStep` named :bb:step:`DirectoryUpload`.
 It works like :bb:step:`FileUpload`, just for directories.
 However it does not support the ``maxsize``, ``blocksize`` and ``mode`` arguments.
 As an example, let's assume an generated project documentation, which consists of many files (like the output of :command:`doxygen` or :command:`epydoc`).
 We want to move the entire documentation to the buildmaster, into a :file:`~/public_html/docs` directory, and add a link to the uploaded documentation on the HTML status page.
-On the slave-side the directory can be found under :file:`docs`::
+On the worker-side the directory can be found under :file:`docs`::
 
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.DirectoryUpload(slavesrc="docs",
+    f.addStep(steps.DirectoryUpload(workersrc="docs",
                                     masterdest="~/public_html/docs",
                                     url="~buildbot/docs"))
 
@@ -2033,7 +2033,7 @@ The optional ``compress`` argument can be given as ``'gz'`` or ``'bz2'`` to comp
 
 .. note::
 
-   The permissions on the copied files will be the same on the master as originally on the slave, see :option:`buildslave create-slave --umask` to change the default one.
+   The permissions on the copied files will be the same on the master as originally on the worker, see :option:`buildworker create-worker --umask` to change the default one.
 
 .. bb:step:: MultipleFileUpload
 
@@ -2043,14 +2043,14 @@ Transferring Multiple Files At Once
 .. py:class:: buildbot.steps.transfer.MultipleFileUpload
 
 In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files (and directories) in a single :class:`BuildStep`.
-The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``slavesrc`` parameter it takes a (plural) ``slavesrcs`` parameter.
+The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``workersrc`` parameter it takes a (plural) ``workersrcs`` parameter.
 This parameter should either be a list, or something that can be rendered as a list.::
 
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "test"]))
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.MultipleFileUpload(slavesrcs=["docs", "test-results.html"],
+    f.addStep(steps.MultipleFileUpload(workersrcs=["docs", "test-results.html"],
                                        masterdest="~/public_html",
                                        url="~buildbot"))
 
@@ -2097,14 +2097,14 @@ Transfering Strings
 .. py:class:: buildbot.steps.transfer.JSONStringDownload
 .. py:class:: buildbot.steps.transfer.JSONPropertiesDownload
 
-Sometimes it is useful to transfer a calculated value from the master to the slave.
+Sometimes it is useful to transfer a calculated value from the master to the worker.
 Instead of having to create a temporary file and then use FileDownload, you can use one of the string download steps.
 
 ::
 
     from buildbot.plugins import steps, util
     f.addStep(steps.StringDownload(util.Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
-            slavedest="buildid.txt"))
+            workerdest="buildid.txt"))
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument, ``s``, representing the string to download instead of a ``mastersrc`` argument.
 
@@ -2112,16 +2112,16 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
     from buildbot.plugins import steps
     buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
-    f.addStep(steps.JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
+    f.addStep(steps.JSONStringDownload(buildinfo, workerdest="buildinfo.json"))
 
-:bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON serializable, and transfers that as a JSON-encoded string to the slave.
+:bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON serializable, and transfers that as a JSON-encoded string to the worker.
 
 .. index:: Properties; JSONPropertiesDownload
 
 ::
 
     from buildbot.plugins import steps
-    f.addStep(steps.JSONPropertiesDownload(slavedest="build-properties.json"))
+    f.addStep(steps.JSONPropertiesDownload(workerdest="build-properties.json"))
 
 :bb:step:`JSONPropertiesDownload` transfers a json-encoded string that represents a dictionary where properties maps to a dictionary of build property ``name`` to property ``value``; and ``sourcestamp`` represents the build's sourcestamp.
 
@@ -2135,8 +2135,8 @@ Running Commands on the Master
 Occasionally, it is useful to execute some task on the master, for example to create a directory, deploy a build result, or trigger some other centralized processing.
 This is possible, in a limited fashion, with the :bb:step:`MasterShellCommand` step.
 
-This step operates similarly to a regular :bb:step:`ShellCommand`, but executes on the master, instead of the slave.
-To be clear, the enclosing :class:`Build` object must still have a slave object, just as for any other step -- only, in this step, the slave does not do anything.
+This step operates similarly to a regular :bb:step:`ShellCommand`, but executes on the master, instead of the worker.
+To be clear, the enclosing :class:`Build` object must still have a worker object, just as for any other step -- only, in this step, the worker does not do anything.
 
 In this example, the step renames a tarball based on the day of the week.
 
@@ -2144,7 +2144,7 @@ In this example, the step renames a tarball based on the day of the week.
 
     from buildbot.plugins import steps
 
-    f.addStep(steps.FileUpload(slavesrc="widgetsoft.tar.gz",
+    f.addStep(steps.FileUpload(workersrc="widgetsoft.tar.gz",
                          masterdest="/var/buildoutputs/widgetsoft-new.tar.gz"))
     f.addStep(steps.MasterShellCommand(
         command="mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz",
@@ -2192,7 +2192,7 @@ It can be useful for debugging properties during a build.
 Setting Properties
 ------------------
 
-These steps set properties on the master based on information from the slave.
+These steps set properties on the master based on information from the worker.
 
 .. bb:step:: SetProperty
 
@@ -2208,7 +2208,7 @@ It is usually called with the ``value`` argument being specifed as a :ref:`Inter
 
     from buildbot.plugins import steps, util
     f.addStep(steps.SetProperty(property="SomeProperty",
-        value=util.Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+        value=util.Interpolate("sch=%(prop:scheduler)s, worker=%(prop:workername)s")))
 
 .. bb:step:: SetPropertyFromCommand
 
@@ -2260,12 +2260,12 @@ Avoid using the ``extract_fn`` form of this step with commands that produce a gr
 
 .. bb:step:: SetPropertiesFromEnv
 
-.. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
+.. py:class:: buildbot.steps.worker.SetPropertiesFromEnv
 
 SetPropertiesFromEnv
 ++++++++++++++++++++
 
-Buildbot slaves (later than version 0.8.3) provide their environment variables to the master on connect.
+Buildbot workers (later than version 0.8.3) provide their environment variables to the master on connect.
 These can be copied into Buildbot properties with the :bb:step:`SetPropertiesFromEnv` step.
 Pass a variable or list of variables in the ``variables`` parameter, then simply use the values as properties in a later step.
 
@@ -2282,8 +2282,8 @@ If, for example, you use ``variables=['Tmp']``, the result will be a property na
                                       "-cp",
                                       util.Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")]))
 
-Note that this step requires that the Buildslave be at least version 0.8.3.
-For previous versions, no environment variables are available (the slave environment will appear to be empty).
+Note that this step requires that the Buildworker be at least version 0.8.3.
+For previous versions, no environment variables are available (the worker environment will appear to be empty).
 
 .. index:: Properties; triggering schedulers
 
@@ -2644,6 +2644,6 @@ Example::
                          data = {
                             'builder': util.Property('buildername'),
                             'buildnumber': util.Property('buildnumber'),
-                            'slavename': util.Property('slavename'),
+                            'workername': util.Property('workername'),
                             'revision': util.Property('got_revision')
                          }))

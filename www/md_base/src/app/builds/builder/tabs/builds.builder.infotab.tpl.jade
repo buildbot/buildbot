@@ -18,7 +18,7 @@ md-content.tab-content.builder-info
       span(ng-if="!builder.moreInfo.masters") No master.
       a(ng-repeat="master in builder.moreInfo.masters", ui-sref="builds.masters") {{ master.name }}
   div(layout-gt-md="row")
-    div.label(flex="50") build slaves
+    div.label(flex="50") build workers
     div.detail
-      span(ng-if="!builder.moreInfo.slaves") No slave.
-      a(ng-repeat="slave in builder.moreInfo.slaves", ui-sref="builds.slaves") {{ slave.name }}
+      span(ng-if="!builder.moreInfo.workers") No worker.
+      a(ng-repeat="worker in builder.moreInfo.workers", ui-sref="builds.workers") {{ worker.name }}

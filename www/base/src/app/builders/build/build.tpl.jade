@@ -28,8 +28,8 @@
                   td.text-left {{ name }}
                   td.text-center {{ value[0] }}
                   td.text-right {{ value[1] }}
-          tab(heading="{{buildslave.name}}")
-              rawdata(data="buildslave")
+          tab(heading="{{buildworker.name}}")
+              rawdata(data="buildworker")
           tab(heading="Responsible Users")
             ul.list-group
                 li.list-group-item(ng-repeat="(author, email) in responsibles")

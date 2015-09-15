@@ -622,8 +622,8 @@ DataService
 
 DataService is the future replacement of BuildbotService for accessing the Buildbot data API.
 It has a modern interface for accessing data. It uses IndexedDB for storing cached data as a single data store,
-and LocalStorage for broadcasting events between browser tabs. DataService works in a master/slave architecture.
-The master browser tab is responsible for keeping the requested data up to date in the IndexedDB and notify slaves when a data is ready to be used or it is updated.
+and LocalStorage for broadcasting events between browser tabs. DataService works in a master/worker architecture.
+The master browser tab is responsible for keeping the requested data up to date in the IndexedDB and notify workers when a data is ready to be used or it is updated.
 It handles both the Rest API calls and the WebSocket subscriptions globally.
 
 It uses the following libraries:
@@ -649,7 +649,7 @@ Methods:
 ``.getXs([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
 
   * it's highly advised to use these instead of the lower level ``.get('string')`` function
-  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Buildslaves``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
+  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Buildworkers``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
   * call ``.getArray()`` on the returned promise to get the Collection before it's filled with the initial data
 
   .. code-block:: coffeescript
@@ -918,7 +918,7 @@ This will compile the base webapp in development mode, and automatically rebuild
 
 Testing with real data
 ~~~~~~~~~~~~~~~~~~~~~~
-Front-end only hackers might want to just skip the master and slave setup, and just focus on the UI.
+Front-end only hackers might want to just skip the master and worker setup, and just focus on the UI.
 It can also be very useful to just try the UI with real data from your production.
 For those use-cases, ``gulp dev proxy`` can be used.
 

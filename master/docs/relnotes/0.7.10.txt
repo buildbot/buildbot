@@ -18,13 +18,13 @@ to the builder specification.
 Using a pty has some benefits in terms of supporting "Stop Build", but causes
 numerous problems with simpler jobs which can be killed by a SIGHUP when their
 standard input is closed.  With this change, PTYs are not used by default,
-although you can enable them either on slaves (with the --usepty option to
-create-slave) or on the master.
+although you can enable them either on workers (with the --usepty option to
+create-worker) or on the master.
 
-*** More information about buildslaves via the web plugin (#110)
+*** More information about buildworkers via the web plugin (#110)
 
-A new page, rooted at /buildslave/$SLAVENAME, gives extensive information about
-the buildslave.
+A new page, rooted at /buildworker/$WORKERNAME, gives extensive information about
+the buildworker.
 
 *** More flexible merging of requests (#415)
 
@@ -41,10 +41,10 @@ has failed and has haltOnFailure=True.
 Logs for each buildstep, which can take a lot of space on a busy buildmaster,
 are automatically compressed after the step has finished.
 
-*** Support for "latent" buildslaves
+*** Support for "latent" buildworkers
 
-The buildslaves that are started on-demand are called "latent" buildslaves.
-Buildbot ships with an abstract base class for building latent buildslaves, and
+The buildworkers that are started on-demand are called "latent" buildworkers.
+Buildbot ships with an abstract base class for building latent buildworkers, and
 a concrete implementation for AWS EC2. 
 
 *** Customized MailNotifier messages (#175)
@@ -69,17 +69,17 @@ waterfall and grid.
 This allows a moderate amount of support for multiple projects built in a
 single buildmaster.
 
-*** Gracefully shut down a buildslave after its build is complete
+*** Gracefully shut down a buildworker after its build is complete
 
-The /buildslaves/$SLAVENAME pages have a "Gracefully Shutdown" button which
-will cause the corresponding slave to shut itself down when it finishes its
-current build.  This is a good way to do work on a slave without causing a
+The /buildworkers/$WORKERNAME pages have a "Gracefully Shutdown" button which
+will cause the corresponding worker to shut itself down when it finishes its
+current build.  This is a good way to do work on a worker without causing a
 spurious build failure.
 
 *** SVN source steps can send usernames and passwords (#41)
 
 Adding username="foo" and/or password="bar" to an SVN step will cause
---username and --password arguments to be passed to 'svn' on the slave side.
+--username and --password arguments to be passed to 'svn' on the worker side.
 Passwords are suitably obfuscated in logfiles.
 
 ** New Steps
@@ -113,7 +113,7 @@ A PyLint step is available to complement the existing PyFlakes step.
 
 *** Sort files in changes (#402)
 
-*** Sort buildslaves lexically (#416)
+*** Sort buildworkers lexically (#416)
 
 *** Send properties to all builds initiated by AnyBranchScheduler
 
@@ -135,7 +135,7 @@ A PyLint step is available to complement the existing PyFlakes step.
 
 *** Isolate Python exceptions in status plugins (#388)
 
-*** Notify about slaves missing at master startup (#302)
+*** Notify about workers missing at master startup (#302)
 
 *** Fix tracebacks in web display after a reconfig (#176)
 

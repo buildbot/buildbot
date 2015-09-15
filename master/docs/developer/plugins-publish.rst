@@ -28,7 +28,7 @@ Making the plugin package
 
 Buildbot supports several kinds of pluggable components:
 
-* ``buildslave``
+* ``buildworker``
 * ``changes``
 * ``schedulers``
 * ``steps``

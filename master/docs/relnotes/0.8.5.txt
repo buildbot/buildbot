@@ -12,13 +12,13 @@ interactions, and Try submissions.
 ** New and improved Source steps (GSoC project)
 
 Source steps have been rewritten to have a simpler, more consistent
-configuration, and to run on the master instead of the slave, allowing much
+configuration, and to run on the master instead of the worker, allowing much
 more control over their behavior.
 
 ** EC2 instances are now terminated instead of stopped.
 
 This is really only relevant for EBS-backed instances, as Buildbot will now
-free the instance and associated EBS storage when shutting down the slave.
+free the instance and associated EBS storage when shutting down the worker.
 
 ** SQLite databases use write-ahead logging
 
@@ -80,13 +80,13 @@ with the patch and displayed in the web status.
 This command no longer copies the configuration to a temporary directory.  This
 change allows more complex configurations to be tested with checkconfig.
 
-* Slave Changes
+* Worker Changes
 
 ** Retry on UnauthorizedLogin
 
-In previous versions, if a slave received UnauthorizedLogin from the master, it
+In previous versions, if a worker received UnauthorizedLogin from the master, it
 would stop retrying and exit.  This has proven to be less helpful than simply
-retrying, so as of this version the slave will continue to retry.
+retrying, so as of this version the worker will continue to retry.
 
 ** Deprecations, Removals, and Non-Compatible Changes
 

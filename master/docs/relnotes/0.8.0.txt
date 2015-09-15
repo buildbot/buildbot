@@ -40,8 +40,8 @@ If you pass to a shell command an environment variable like this:
 
 ShellCommand(..., env={"FOO": "${BAR}"})
 
-then, on the slave side the variable FOO will have the same value as
-the alread existing BAR variable on the slave. This is mostly used to
+then, on the worker side the variable FOO will have the same value as
+the alread existing BAR variable on the worker. This is mostly used to
 expand variable like this: "PATH": "/my/directory:${PATH}" where PATH
 will have "/my/directory" prepended to it.
 
@@ -85,6 +85,6 @@ Note that this does not remove the waterfall -- just an old version of it which
 did not include the rest of the WebStatus pages.
 
 *** BuildmasterConfig no longer accepts 'bots' and 'sources' as keys
-(deprecated in 0.7.6). Use 'slaves' and 'change_source' instead.
+(deprecated in 0.7.6). Use 'workers' and 'change_source' instead.
 
 

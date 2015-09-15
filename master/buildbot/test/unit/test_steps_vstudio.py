@@ -206,7 +206,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
     def test_simple(self):
         self.setupStep(VCx())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'])
             + 0
         )
@@ -218,7 +218,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(VCx(installdir=r'C:\I'))
         self.step.exp_installdir = r'C:\I'
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'])
             + 0
         )
@@ -234,7 +234,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
     def test_evaluateCommand_failure(self):
         self.setupStep(VCx())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'])
             + 1
         )
@@ -245,7 +245,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
     def test_evaluateCommand_errors(self):
         self.setupStep(VCx())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'])
             + ExpectShell.log('stdio',
                               stdout='error ABC123: foo\r\n')
@@ -258,7 +258,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
     def test_evaluateCommand_warnings(self):
         self.setupStep(VCx())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'])
             + ExpectShell.log('stdio',
                               stdout='foo: warning ABC123: foo\r\n')
@@ -274,7 +274,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'],
                         env=dict(
                             INCLUDE=r'c:\INC1;c:\INC2;',
@@ -292,7 +292,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
             LIB=[r'c:\LIB1', r'C:\LIB2'],
             PATH=[r'c:\P1', r'C:\P2']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'],
                         env=dict(
                             INCLUDE=r'c:\INC1;c:\INC2;',
@@ -313,7 +313,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
         self.properties.setProperty('b', 'bb', 'Test')
         self.properties.setProperty('c', 'cc', 'Test')
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['command', 'here'])
             + 0
         )
@@ -369,7 +369,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['msdev', 'pf', '/MAKE',
                                  'pj - cfg', '/REBUILD'],
                         env=self.getExpectedEnv(
@@ -384,7 +384,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['msdev', 'pf', '/MAKE',
                                  'pj - cfg', '/CLEAN'],
                         env=self.getExpectedEnv(
@@ -399,7 +399,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC6(projectfile='pf', config='cfg',
                                    mode='build'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['msdev', 'pf', '/MAKE',
                                  'ALL - cfg', '/BUILD'],
                         env=self.getExpectedEnv(
@@ -415,7 +415,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
                                    project='pj', PATH=['p'], INCLUDE=['i'],
                                    LIB=['l']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['msdev', 'pf', '/MAKE',
                                  'pj - cfg', '/REBUILD',
                                  '/USEENV'],  # note extra param
@@ -472,7 +472,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild', 'cfg',
                                  '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -487,7 +487,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Clean', 'cfg',
                                  '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -502,7 +502,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC7(projectfile='pf', config='cfg',
                                    mode='build'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Build', 'cfg'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003'))
@@ -517,7 +517,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
                                    project='pj', PATH=['p'], INCLUDE=['i'],
                                    LIB=['l']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild', 'cfg',
                                  '/UseEnv', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -583,7 +583,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', arch='arch'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -598,7 +598,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', arch='x64'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -614,7 +614,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                    project='pj', mode='clean'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Clean',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -630,7 +630,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                                    arch=Property('a')))
         self.properties.setProperty('a', 'x64', 'Test')
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild', 'cfg'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio 8',
@@ -660,7 +660,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['vcexpress', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -676,7 +676,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj', mode='clean'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['vcexpress', 'pf', '/Clean',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -692,7 +692,7 @@ class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,
         self.setupStep(vstudio.VCExpress9(projectfile='pf', config='cfg',
                                           project='pj', mode='build', INCLUDE=['i']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['vcexpress', 'pf', '/Build',
                                  'cfg', '/UseEnv', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -717,7 +717,7 @@ class TestVC9(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC9(projectfile='pf', config='cfg',
                                    project='pj'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -741,7 +741,7 @@ class TestVC10(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC10(projectfile='pf', config='cfg',
                                     project='pj'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -765,7 +765,7 @@ class TestVC11(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.VC11(projectfile='pf', config='cfg',
                                     project='pj'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['devenv.com', 'pf', '/Rebuild',
                                  'cfg', '/Project', 'pj'],
                         env=self.getExpectedEnv(
@@ -789,7 +789,7 @@ class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform='Win32', project='pj'))
 
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['%VCENV_BAT%', 'x86', '&&',
                                  'msbuild', 'pf', '/p:Configuration=cfg', '/p:Platform=Win32',
                                  '/t:pj'],
@@ -804,7 +804,7 @@ class TestMsBuild(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(vstudio.MsBuild(projectfile='pf', config='cfg', platform='x64'))
 
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['%VCENV_BAT%', 'x86', '&&',
                                  'msbuild', 'pf', '/p:Configuration=cfg', '/p:Platform=x64',
                                  '/t:Rebuild'],

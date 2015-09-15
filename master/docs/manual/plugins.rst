@@ -18,8 +18,8 @@ The following snippet
 allows to use a component of kind ``kind``.
 Available ``kind``\s are:
 
-``buildslave``
-    build slaves, described in :doc:`cfg-buildslaves`
+``buildworker``
+    build workers, described in :doc:`cfg-buildworkers`
 
 ``changes``
     change source, described in :doc:`cfg-changesources`

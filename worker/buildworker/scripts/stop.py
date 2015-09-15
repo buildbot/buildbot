@@ -1,0 +1,89 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+import os
+import time
+
+from twisted.python import log
+
+from buildworker.scripts import base
+
+
+class WorkerNotRunning(Exception):
+
+    """
+    raised when trying to stop worker process that is not running
+    """
+
+
+def stopWorker(basedir, quiet, signame="TERM"):
+    """
+    Stop worker process by sending it a signal.
+
+    Using the specified basedir path, read worker process's pid file and
+    try to terminate that process with specified signal.
+
+    @param basedir: buildworker's basedir path
+    @param   quite: if False, don't print any messages to stdout
+    @param signame: signal to send to the worker process
+
+    @raise WorkerNotRunning: if worker pid file is not found
+    """
+    import signal
+
+    os.chdir(basedir)
+    try:
+        f = open("twistd.pid", "rt")
+    except IOError:
+        raise WorkerNotRunning()
+
+    pid = int(f.read().strip())
+    signum = getattr(signal, "SIG" + signame)
+    timer = 0
+    try:
+        os.kill(pid, signum)
+    except OSError as e:
+        if e.errno != 3:
+            raise
+
+    time.sleep(0.1)
+    while timer < 10:
+        # poll once per second until twistd.pid goes away, up to 10 seconds
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            if not quiet:
+                log.msg("buildworker process %d is dead" % pid)
+            return
+        timer += 1
+        time.sleep(1)
+    if not quiet:
+        log.msg("never saw process go away")
+
+
+def stop(config, signame="TERM"):
+    quiet = config['quiet']
+    basedir = config['basedir']
+
+    if not base.isBuildworkerDir(basedir):
+        return 1
+
+    try:
+        stopWorker(basedir, quiet, signame)
+    except WorkerNotRunning:
+        if not quiet:
+            log.msg("buildworker not running")
+
+    return 0

@@ -41,8 +41,8 @@ def waitFor(fn):
         yield util.asyncSleep(.01)
 
 
-class FakeRemoteSlave(pb.Referenceable):
-    # the bare minimum to connect to a master and convince it that the slave is
+class FakeRemoteWorker(pb.Referenceable):
+    # the bare minimum to connect to a master and convince it that the worker is
     # ready
 
     def __init__(self, port):
@@ -61,12 +61,12 @@ class FakeRemoteSlave(pb.Referenceable):
         self.mind.broker.transport.loseConnection()
         self.mind = None
 
-    # BuildSlave methods
+    # BuildWorker methods
 
     def remote_print(self, message):
         log.msg("from master: %s" % (message,))
 
-    def remote_getSlaveInfo(self):
+    def remote_getWorkerInfo(self):
         return {}
 
     def remote_getCommands(self):
@@ -101,7 +101,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         self.master = None
         self.sch = None
-        self.slave = None
+        self.worker = None
 
         def spawnProcess(pp, executable, args, environ):
             tmpfile = os.path.join(self.jobdir, 'tmp', 'testy')
@@ -142,9 +142,9 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        if self.slave:
-            log.msg("stopping slave")
-            yield self.slave.stop()
+        if self.worker:
+            log.msg("stopping worker")
+            yield self.worker.stop()
         if self.master:
             log.msg("stopping master")
             yield self.master.stopService()
@@ -162,7 +162,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         return self.jobdir
 
     @defer.inlineCallbacks
-    def startMaster(self, sch, startSlave=False):
+    def startMaster(self, sch, startWorker=False):
         BuildmasterConfig['schedulers'] = [sch]
         self.sch = sch
 
@@ -203,10 +203,10 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                 return True
             yield waitFor(getSchedulerPort)
 
-        # now start the fake slave
-        if startSlave:
-            self.slave = FakeRemoteSlave(self.serverPort)
-            yield self.slave.start()
+        # now start the fake worker
+        if startWorker:
+            self.worker = FakeRemoteWorker(self.serverPort)
+            yield self.worker.start()
 
     def runClient(self, config):
         self.clt = tryclient.Try(config)
@@ -216,7 +216,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
     def test_userpass_no_wait(self):
         yield self.startMaster(
             trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]),
-            startSlave=False)
+            startWorker=False)
         yield self.runClient({
             'connect': 'pb',
             'master': '127.0.0.1:%s' % self.serverPort,
@@ -237,7 +237,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
     def test_userpass_wait(self):
         yield self.startMaster(
             trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]),
-            startSlave=True)
+            startWorker=True)
         yield self.runClient({
             'connect': 'pb',
             'master': '127.0.0.1:%s' % self.serverPort,
@@ -262,7 +262,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
     def test_userpass_list_builders(self):
         yield self.startMaster(
             trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]),
-            startSlave=False)
+            startWorker=False)
         yield self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
@@ -283,7 +283,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         jobdir = self.setupJobdir()
         yield self.startMaster(
             trysched.Try_Jobdir('try', ['a'], jobdir),
-            startSlave=False)
+            startWorker=False)
         yield self.runClient({
             'connect': 'ssh',
             'master': '127.0.0.1',
@@ -305,7 +305,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         jobdir = self.setupJobdir()
         yield self.startMaster(
             trysched.Try_Jobdir('try', ['a'], jobdir),
-            startSlave=False)
+            startWorker=False)
         yield self.runClient({
             'connect': 'ssh',
             'wait': True,
@@ -328,7 +328,7 @@ BuildmasterConfig = {}
 
 def masterConfig():
     c = {}
-    from buildbot.buildslave import BuildSlave
+    from buildbot.buildworker import BuildWorker
     from buildbot.config import BuilderConfig
     from buildbot.process.buildstep import BuildStep
     from buildbot.process.factory import BuildFactory
@@ -339,15 +339,15 @@ def masterConfig():
         def start(self):
             self.finished(results.SUCCESS)
 
-    c['slaves'] = [BuildSlave("local1", "localpw")]
-    c['slavePortnum'] = 0
+    c['workers'] = [BuildWorker("local1", "localpw")]
+    c['workerPortnum'] = 0
     c['change_source'] = []
     c['schedulers'] = []  # filled in above
     f1 = BuildFactory()
     f1.addStep(MyBuildStep(name='one'))
     f1.addStep(MyBuildStep(name='two'))
     c['builders'] = [
-        BuilderConfig(name="a", slavenames=["local1"], factory=f1),
+        BuilderConfig(name="a", workernames=["local1"], factory=f1),
     ]
     c['status'] = []
     c['title'] = "test"

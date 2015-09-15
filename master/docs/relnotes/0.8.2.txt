@@ -10,7 +10,7 @@ required, it will not be difficult.
 
 The Buildmaster now requires Jinja-2.1 or higher.
 
-Both master and slave now require Twisted-8.0.0.  Although Twisted-2.5.0 may
+Both master and worker now require Twisted-8.0.0.  Although Twisted-2.5.0 may
 still work, it is not tested and not supported.
 
 ** Command-line options changed
@@ -42,9 +42,9 @@ This sets the number of changes that buildbot will keep in memory at once.
 Users of distributed version control systems should consider setting this to a
 high value (e.g. 10,000)
 
-** New libvirt-based Latent Buildslave Support
+** New libvirt-based Latent Buildworker Support
 
-This extends the support already included for EC2 buildslaves to include any
+This extends the support already included for EC2 buildworkers to include any
 virtualization platform supported by libvirt.
 
 ** Canceling Pending Builds for a Change
@@ -80,16 +80,16 @@ decision.
 
 *** The Twisted-only steps BuildDebs and ProcessDocs have been removed.
 
-* Slave Changes
+* Worker Changes
 
 ** Log Rotation
 
-The default 'create-slave' output now rotates ten twistd.log files, each of
+The default 'create-worker' output now rotates ten twistd.log files, each of
 about 10MiB.  This is a change from older versions, which would rotate an
 unbounded number of 1MiB files.
 
 ** twistd.hostname
 
-On startup, the buildslave writes its hostname to twistd.hostname.  This is
+On startup, the buildworker writes its hostname to twistd.hostname.  This is
 intended to contextualize twistd.pid, which does not specify the host on which
-the buildslave is running.
+the buildworker is running.

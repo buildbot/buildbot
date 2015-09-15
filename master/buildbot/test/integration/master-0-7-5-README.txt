@@ -2,7 +2,7 @@
 
 This tarball exists to allow testing upgrades of old versions.  It was created
 by running the master against the included master.cfg using a normal
-buildbot.tac.  The slave was connected, and a few changes sent, including one
+buildbot.tac.  The worker was connected, and a few changes sent, including one
 with some funny characters in it:
 
 $ snowman=`python -c 'print u"\N{SNOWMAN}".encode("utf-8")'`

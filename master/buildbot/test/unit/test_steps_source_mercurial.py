@@ -36,8 +36,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownSourceStep()
 
-    def patch_slaveVersionIsOlderThan(self, result):
-        self.patch(mercurial.Mercurial, 'slaveVersionIsOlderThan', lambda x, y, z: result)
+    def patch_workerVersionIsOlderThan(self, result):
+        self.patch(mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
         self.assertRaises(config.ConfigErrors, lambda:
@@ -239,12 +239,12 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        workerdest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -302,12 +302,12 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        workerdest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -761,7 +761,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='incremental', branchType='inrepo'))
-        self.patch_slaveVersionIsOlderThan(True)
+        self.patch_workerVersionIsOlderThan(True)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['hg', '--verbose', '--version'])
@@ -1051,7 +1051,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'))

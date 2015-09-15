@@ -40,7 +40,7 @@ class DataConnector(service.AsyncService):
         'buildbot.data.builders',
         'buildbot.data.builds',
         'buildbot.data.buildrequests',
-        'buildbot.data.buildslaves',
+        'buildbot.data.buildworkers',
         'buildbot.data.steps',
         'buildbot.data.logs',
         'buildbot.data.logchunks',

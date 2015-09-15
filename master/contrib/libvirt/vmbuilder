@@ -3,7 +3,7 @@
 """
 This script can be used to generate an Ubuntu VM that is suitable for use by the libvirt backend of buildbot.
 
-It creates a buildbot slave and then changes the buildbot.tac to get its username from the hostname. The hostname is set by
+It creates a buildbot worker and then changes the buildbot.tac to get its username from the hostname. The hostname is set by
 changing the DHCP script.
 
 See network.xml for how to map a MAC address to an IP address and a hostname. You can load that configuration on to your master by running::
@@ -30,7 +30,7 @@ chroot $1 adduser --system --home /var/local/buildbot --shell /bin/bash --ingrou
 mkdir -p $1/var/local/buildbot
 chroot $1 chown minion: /var/local/buildbot
 
-chroot $1 sudo -u minion /usr/bin/buildbot create-slave /var/local/buildbot %(master_host)s:%(master_port)s %(slave)s %(slave_password)s
+chroot $1 sudo -u minion /usr/bin/buildbot create-worker /var/local/buildbot %(master_host)s:%(master_port)s %(worker)s %(worker_password)s
 
 cat > $1/etc/default/buildbot << HERE
 BB_NUMBER[0]=0
@@ -43,14 +43,14 @@ HERE
 
 cat > $1/var/local/buildbot/buildbot.tac << HERE
 from twisted.application import service
-from buildbot.slave.bot import BuildSlave
+from buildbot.worker.bot import BuildWorker
 import socket
 
 basedir = r'/var/local/buildbot'
 buildmaster_host = '%(master_host)s'
 port = %(master_port)s
-slavename = socket.gethostname()
-passwd = "%(slave_password)s"
+workername = socket.gethostname()
+passwd = "%(worker_password)s"
 keepalive = 600
 usepty = 0
 umask = None
@@ -58,8 +58,8 @@ maxdelay = 300
 rotateLength = 1000000
 maxRotatedFiles = None
 
-application = service.Application('buildslave')
-s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+application = service.Application('buildworker')
+s = BuildWorker(buildmaster_host, port, workername, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
 HERE
@@ -110,8 +110,8 @@ class VMBuilder:
         print >>f, self.postboot % {
             'master_host': '192.168.201.1',
             'master_port': '8081',
-            'slave': 'slave',
-            'slave_password': 'password',
+            'worker': 'worker',
+            'worker_password': 'password',
         }
         f.close()
         os.chmod(f.name, 0755)

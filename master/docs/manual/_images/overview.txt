@@ -14,10 +14,10 @@
 | CVS      |         v |     m| |e
 | SVN      |    +---------+  a| |s
 | Darcs    |    |  Build  |  n| |u
-| .. etc   |    |  Slave  |  d| |l
+| .. etc   |    |  Worker  |  d| |l
 |          |    +---------+  s| |t
 |          |                  v |s
 +----------+                +---------+
                             |  Build  |
-                            |  Slave  |
+                            |  Worker  |
                             +---------+

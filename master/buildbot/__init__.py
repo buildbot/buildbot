@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 #
-# Keep in sync with slave/buildslave/__init__.py
+# Keep in sync with worker/buildworker/__init__.py
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #

@@ -66,8 +66,8 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Buildset(id=28),
             fakedb.BuildRequest(id=5, buildsetid=28),
             fakedb.Master(id=3),
-            fakedb.Buildslave(id=42, name="Friday"),
-            fakedb.Build(id=786, buildrequestid=5, masterid=3, buildslaveid=42),
+            fakedb.Buildworker(id=42, name="Friday"),
+            fakedb.Build(id=786, buildrequestid=5, masterid=3, buildworkerid=42),
             fakedb.BuildProperty(buildid=786, name="year", value=1651, source="Wikipedia"),
             fakedb.BuildProperty(buildid=786, name="island_name", value="despair", source="Book"),
         ])

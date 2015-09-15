@@ -51,9 +51,9 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
 
 sample_0_7_6 = """\
 c = BuildmasterConfig = {}
-from buildbot.buildslave import BuildSlave
-c['slaves'] = [BuildSlave("bot1name", "bot1passwd")]
-c['slavePortnum'] = 9989
+from buildbot.buildworker import BuildWorker
+c['workers'] = [BuildWorker("bot1name", "bot1passwd")]
+c['workerPortnum'] = 9989
 from buildbot.changes.pb import PBChangeSource
 c['change_source'] = PBChangeSource()
 from buildbot.scheduler import Scheduler
@@ -73,7 +73,7 @@ f1.addStep(Compile(command=["python", "./setup.py", "build"]))
 # original lacked testChanges=True; this failed at the time
 f1.addStep(Trial(testChanges=True, testpath="."))
 b1 = {'name': "buildbot-full",
-      'slavename': "bot1name",
+      'workername': "bot1name",
       'builddir': "full",
       'factory': f1,
       }
@@ -89,9 +89,9 @@ c['buildbotURL'] = "http://localhost:8010/"
 
 sample_0_7_12 = """\
 c = BuildmasterConfig = {}
-from buildbot.buildslave import BuildSlave
-c['slaves'] = [BuildSlave("bot1name", "bot1passwd")]
-c['slavePortnum'] = 9989
+from buildbot.buildworker import BuildWorker
+c['workers'] = [BuildWorker("bot1name", "bot1passwd")]
+c['workerPortnum'] = 9989
 from buildbot.changes.pb import PBChangeSource
 c['change_source'] = PBChangeSource()
 from buildbot.scheduler import Scheduler
@@ -111,7 +111,7 @@ f1.addStep(CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, login="", method="copy"))
 f1.addStep(Compile(command=["python", "./setup.py", "build"]))
 f1.addStep(Trial(testChanges=True, testpath="."))
 b1 = {'name': "buildbot-full",
-      'slavename': "bot1name",
+      'workername': "bot1name",
       'builddir': "full",
       'factory': f1,
       }

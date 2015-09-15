@@ -804,7 +804,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         ''' % root_dir)
         self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4base='//depot', p4branch='trunk',
                           p4user='user', p4client='p4_client1', p4passwd='pass'),

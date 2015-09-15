@@ -38,7 +38,7 @@ Requirements
 ~~~~~~~~~~~~
 
 The buildbot-master package requires Python 2.6 or higher -- Python 2.5 is no longer supported.
-The buildbot-slave package requires Python 2.5 or higher -- Python 2.4 is no longer supported.
+The buildbot-worker package requires Python 2.5 or higher -- Python 2.4 is no longer supported.
 
 No additional software or systems, aside from some minor Python packages, are required.
 
@@ -101,11 +101,11 @@ Individual features and improvements to the Data API are not described on this p
 
 * Both the P4 source step and P4 change source support ticket-based authentication.
 
-* OpenStack latent slaves now support block devices as a bootable volume.
+* OpenStack latent workers now support block devices as a bootable volume.
 
 * Add new :bb:step:`Cppcheck` step.
 
-* Add a new :doc:`Docker latent BuildSlave </manual/cfg-buildslaves-docker>`.
+* Add a new :doc:`Docker latent BuildWorker </manual/cfg-buildworkers-docker>`.
 
 * Add a new configuration for creating custom services in out-of-tree CI systems or plugins. See :py:class:`buildbot.util.service.BuildbotService`
 
@@ -242,9 +242,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * `BonsaiPoller` is removed.
 
-* ``buildbot.ec2buildslave`` is removed use ``buildbot.buildslave.ec2`` instead.
+* ``buildbot.ec2buildworker`` is removed use ``buildbot.buildworker.ec2`` instead.
 
-* ``buildbot.libvirtbuildslave`` is removed use ``buildbot.buildslave.libvirt`` instead.
+* ``buildbot.libvirtbuildworker`` is removed use ``buildbot.buildworker.libvirt`` instead.
 
 ..
     TODO: "executive summary" of changes: new-style steps, status classes missing, etc.
@@ -308,8 +308,8 @@ Steps
 Changes and Removals
 ....................
 
-* Buildslave names must now be 50-character :ref:`identifier <type-identifier>`.
-  Note that this disallows some common characters in bulidslave names, including spaces, ``/``, and ``.``.
+* Buildworker names must now be 50-character :ref:`identifier <type-identifier>`.
+  Note that this disallows some common characters in bulidworker names, including spaces, ``/``, and ``.``.
 
 * Builders now have "tags" instead of a category.
   Builders can have multiple tags, allowing more flexible builder displays.
@@ -344,7 +344,7 @@ Changes and Removals
 
 * The undocumented and un-tested ``TinderboxMailNotifier``, designed to send emails suitable for the abandoned and insecure Tinderbox tool, has been removed.
 
-* Buildslave info is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
+* Buildworker info is no longer available via :ref:`Interpolate` and the ``SetWorkerInfo`` buildstep has been removed.
 
 * The undocumented ``path`` parameter of the :bb:step:`MasterShellCommand` buildstep has been renamed ``workdir`` for better consistency with the other steps.
 
@@ -376,8 +376,8 @@ Changes and Removals
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* Botmaster no longer service parent for buildslaves. Service parent functionality has been transferred to BuildslaveManager.
-  It should be noted Botmaster no longer has a ``slaves`` field as it was moved to BuildslaveManager.
+* Botmaster no longer service parent for buildworkers. Service parent functionality has been transferred to BuildworkerManager.
+  It should be noted Botmaster no longer has a ``workers`` field as it was moved to BuildworkerManager.
 
 * The sourcestamp DB connector now returns a ``patchid`` field.
 
@@ -436,8 +436,8 @@ Changes for Developers
 * The ``progress`` attributes of both :py:class:`buildbot.process.buildstep.BuildStep`` and :py:class:`buildbot.process.build.Build` have been removed.
   Subclasses should only be accessing the progress-tracking mechanics via the :py:meth:`buildbot.process.buildstep.BuildStep.setProgress` method.
 
-Slave
------
+Worker
+------
 
 Features
 ~~~~~~~~
@@ -448,7 +448,7 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* buildmaster and buildslave no longer supports old-style source steps.
+* buildmaster and buildworker no longer supports old-style source steps.
 
 * On Windows, if a :bb:step:`ShellCommand` step in which ``command`` was specified as a list is executed, and a
   list element is a string consisting of a single pipe character, it no longer creates a pipeline.

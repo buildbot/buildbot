@@ -136,14 +136,14 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff',
+                                        workerdest='.buildbot-diff',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched',
+                                        workerdest='.buildbot-patched',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
@@ -208,14 +208,14 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff',
+                                        workerdest='.buildbot-diff',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched',
+                                        workerdest='.buildbot-patched',
                                         workdir='wkdir',
                                         mode=None))
             + 0,
@@ -912,7 +912,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectProperty('got_revision', self.REVID, 'Monotone')
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))

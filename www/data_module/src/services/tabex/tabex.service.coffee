@@ -7,7 +7,7 @@ class Tabex extends Service
 
             ROLES =
                 MASTER: 'bb.role.master'
-                SLAVE: 'bb.role.slave'
+                WORKER: 'bb.role.worker'
             _ROLES: ROLES
 
             EVENTS =
@@ -44,7 +44,7 @@ class Tabex extends Service
                     @initialRoleDeferred.resolve()
                     socketService.open()
                 else
-                    @role = ROLES.SLAVE
+                    @role = ROLES.WORKER
                     @initialRoleDeferred.resolve()
                     socketService.close()
 

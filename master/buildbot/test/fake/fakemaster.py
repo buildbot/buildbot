@@ -20,7 +20,7 @@ import weakref
 from buildbot import config
 from buildbot import interfaces
 from buildbot.status import build
-from buildbot.test.fake import bslavemanager
+from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
@@ -73,10 +73,10 @@ class FakeStatus(service.BuildbotService):
     def getBuilderNames(self):
         return []
 
-    def getSlaveNames(self):
+    def getWorkerNames(self):
         return []
 
-    def slaveConnected(self, name):
+    def workerConnected(self, name):
         pass
 
     def build_started(self, brid, buildername, build_status):
@@ -129,7 +129,7 @@ class FakeBuilderStatus(object):
     def matchesAnyTag(self, tags):
         return set(self._tags) & set(tags)
 
-    def setSlavenames(self, names):
+    def setWorkernames(self, names):
         pass
 
     def setCacheSize(self, size):
@@ -178,8 +178,8 @@ class FakeMaster(service.MasterService):
         self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
-        self.buildslaves = bslavemanager.FakeBuildslaveManager()
-        self.buildslaves.setServiceParent(self)
+        self.buildworkers = bworkermanager.FakeBuildworkerManager()
+        self.buildworkers.setServiceParent(self)
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()
         self.next_objectid = 0

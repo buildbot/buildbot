@@ -3,19 +3,19 @@ RemoteCommands
 
 .. py:currentmodule:: buildbot.process.remotecommand
 
-Most of the action in build steps consists of performing operations on the slave.
+Most of the action in build steps consists of performing operations on the worker.
 This is accomplished via :class:`RemoteCommand` and its subclasses.
-Each represents a single operation on the slave.
+Each represents a single operation on the worker.
 
 Most data is returned to a command via updates.
-These updates are described in detail in :ref:`master-slave-updates`.
+These updates are described in detail in :ref:`master-worker-updates`.
 
 RemoteCommand
 ~~~~~~~~~~~~~
 
 .. py:class:: RemoteCommand(remote_command, args, collectStdout=False, ignore_updates=False, decodeRC=dict(0), stdioLogName='stdio')
 
-    :param remote_command: command to run on the slave
+    :param remote_command: command to run on the worker
     :type remote_command: string
     :param args: arguments to pass to the command
     :type args: dictionary
@@ -25,15 +25,15 @@ RemoteCommand
     :param stdioLogName: name of the log to which to write the command's stdio
 
     This class handles running commands, consisting of a command name and a dictionary of arguments.
-    If true, ``ignore_updates`` will suppress any updates sent from the slave.
+    If true, ``ignore_updates`` will suppress any updates sent from the worker.
 
     This class handles updates for ``stdout``, ``stderr``, and ``header`` by appending them to s stdio logfile named by the ``stdioLogName`` parameter.
     Steps that run multiple commands and want to separate those commands' stdio streams can use this parameter.
 
     It handles updates for ``rc`` by recording the value in its ``rc`` attribute.
 
-    Most slave-side commands, even those which do not spawn a new process on the slave, generate logs and an ``rc``, requiring this class or one of its subclasses.
-    See :ref:`master-slave-updates` for the updates that each command may send.
+    Most worker-side commands, even those which do not spawn a new process on the worker, generate logs and an ``rc``, requiring this class or one of its subclasses.
+    See :ref:`master-worker-updates` for the updates that each command may send.
 
     .. py:attribute:: active
 
@@ -42,7 +42,7 @@ RemoteCommand
     .. py:method:: run(step, remote)
 
         :param step: the buildstep invoking this command
-        :param remote: a reference to the remote :class:`SlaveBuilder` instance
+        :param remote: a reference to the remote :class:`WorkerBuilder` instance
         :returns: Deferred
 
         Run the command.
@@ -56,7 +56,7 @@ RemoteCommand
         :returns: Deferred
 
         This method attempts to stop the running command early.
-        The Deferred it returns will fire when the interrupt request is received by the slave; this may be a long time before the command itself completes, at which time the Deferred returned from :meth:`run` will fire.
+        The Deferred it returns will fire when the interrupt request is received by the worker; this may be a long time before the command itself completes, at which time the Deferred returned from :meth:`run` will fire.
 
     .. py:method:: results()
 
@@ -70,22 +70,22 @@ RemoteCommand
 
         This method returns True if the results() function returns FAILURE
 
-    The following methods are invoked from the slave.
+    The following methods are invoked from the worker.
     They should not be called directly.
 
     .. py:method:: remote_update(updates)
 
-        :param updates: new information from the slave
+        :param updates: new information from the worker
 
-        Handles updates from the slave on the running command.
-        See :ref:`master-slave-updates` for the content of the updates.
+        Handles updates from the worker on the running command.
+        See :ref:`master-worker-updates` for the content of the updates.
         This class splits the updates out, and handles the ``ignore_updates`` option, then calls :meth:`remoteUpdate` to process the update.
 
     .. py:method:: remote_complete(failure=None)
 
         :param failure: the failure that caused the step to complete, or None for success
 
-        Called by the slave to indicate that the command is complete.
+        Called by the worker to indicate that the command is complete.
         Normal completion (even with a nonzero ``rc``) will finish with no failure; if ``failure`` is set, then the step should finish with status :attr:`~buildbot.status.results.EXCEPTION`.
 
     These methods are hooks for subclasses to add functionality.
@@ -126,16 +126,16 @@ RemoteCommand
 
         :param log: the :class:`~buildbot.status.logfile.LogFile` instance to add to.
         :param closeWhenFinished: if true, call :meth:`~buildbot.status.logfile.LogFile.finish` when the command is finished.
-        :param logfileName: the name of the logfile, as given to the slave.
+        :param logfileName: the name of the logfile, as given to the worker.
                             This is ``stdio`` for standard streams.
 
         Route log-related updates to the given logfile.
         Note that ``stdio`` is not included by default, and must be added explicitly.
-        The ``logfileName`` must match the name given by the slave in any ``log`` updates.
+        The ``logfileName`` must match the name given by the worker in any ``log`` updates.
 
     .. py:method:: useLogDelayed(logfileName, activateCallback, closeWhenFinished=False)
 
-        :param logfileName: the name of the logfile, as given to the slave.
+        :param logfileName: the name of the logfile, as given to the worker.
                             This is ``stdio`` for standard streams.
         :param activateCallback: callback for when the log is added; see below
         :param closeWhenFinished: if true, call :meth:`~buildbot.status.logfile.LogFile.finish` when the command is finished.
@@ -176,7 +176,7 @@ RemoteCommand
 
         Add data to a logfile other than ``stdio``.
 
-.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
+.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="worker-config", logEnviron=True, collectStdio=False)
 
     :param workdir: directory in which command should be executed, relative to the builder's basedir.
     :param command: shell command to run
@@ -187,13 +187,13 @@ RemoteCommand
     :param maxTime: Maximum overall time from the start before the command is killed.
     :param sigtermTime: Try to kill the command with SIGTERM and wait for sigtermTime seconds before firing SIGKILL.
                         If None, SIGTERM will not be fired.
-    :param env: A dictionary of environment variables to augment or replace the existing environment on the slave.
-    :param logfiles: Additional logfiles to request from the slave.
-    :param usePTY: True to use a PTY, false to not use a PTY; the default value uses the default configured on the slave.
-    :param logEnviron: If false, do not log the environment on the slave.
+    :param env: A dictionary of environment variables to augment or replace the existing environment on the worker.
+    :param logfiles: Additional logfiles to request from the worker.
+    :param usePTY: True to use a PTY, false to not use a PTY; the default value uses the default configured on the worker.
+    :param logEnviron: If false, do not log the environment on the worker.
     :param collectStdout: If True, collect the command's stdout.
 
-    Most of the constructor arguments are sent directly to the slave; see :ref:`shell-command-args` for the details of the formats.
+    Most of the constructor arguments are sent directly to the worker; see :ref:`shell-command-args` for the details of the formats.
     The ``collectStdout`` parameter is as described for the parent class.
 
     If shell command contains passwords they can be hidden from log files by passing them as tuple in command argument.

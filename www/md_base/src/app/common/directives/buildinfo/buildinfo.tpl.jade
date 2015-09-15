@@ -16,9 +16,9 @@ div.inner(layout-gt-md="row")
       div(ng-if="buildinfo.properties.revision")
         md-icon(md-svg-icon="changes")
         span {{ buildinfo.properties.revision }}
-      div(ng-if="buildinfo.properties.slave")
+      div(ng-if="buildinfo.properties.worker")
         md-icon(md-svg-icon="hammer")
-        a(ui-sref="builds.slaves") {{ buildinfo.properties.slave }}
+        a(ui-sref="builds.workers") {{ buildinfo.properties.worker }}
       div(ng-if="buildinfo.properties.scheduler")
         md-icon(md-svg-icon="clock")
         a(ui-sref="builds.schedulers") {{ buildinfo.properties.scheduler }}

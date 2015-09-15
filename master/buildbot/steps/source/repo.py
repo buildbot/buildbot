@@ -52,7 +52,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
          can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
          or several instances of "proj number/patch" (simpler version)
          This feature allows integrator to build with several pending interdependant changes.
-         returns list of repo downloads sent to the buildslave
+         returns list of repo downloads sent to the buildworker
          """
         if s is None:
             return []
@@ -397,7 +397,7 @@ class Repo(Source):
     def maybeUpdateTarball(self):
         if not self.tarball or self.updateTarballAge is None:
             return
-        # tarball path is absolute, so we cannot use slave's stat command
+        # tarball path is absolute, so we cannot use worker's stat command
         # stat -c%Y gives mtime in second since epoch
         res = yield self._Cmd(["stat", "-c%Y", self.tarball], collectStdout=True, abandonOnFailure=False)
         if not res:

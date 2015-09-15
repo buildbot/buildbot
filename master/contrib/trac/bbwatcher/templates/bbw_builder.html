@@ -17,7 +17,7 @@
       <h2 py:if="builder.current">Running Build</h2>
       <div>
         <ul style="list-style: none">
-          <li>Slave: ${builder.current.slavename}</li>
+          <li>Worker: ${builder.current.workername}</li>
           <li>Revision: ${wiki_to_oneliner(context, '[wiki:TryBuildUsage Forced Build]')}</li>
           <li>Status: <strong>${builder.current.results and 'failed' or 'successful'}</strong></li>
         </ul>
@@ -28,13 +28,13 @@
             (${format_date(build.end)}) rev=[${build.branch or 'trunk'}@${build.revision and href.changeset(build.revision) or '??'}] <a href="${href.buildbot('builder/%s/build/%s'%(build.builder_name, build.number))}">#${build.number}</a><blockquote>${build.reason}</blockquote>
         </div>
       </div>
-      <div py:if="builder.slaves">
-        <h2>Buildslaves</h2>
+      <div py:if="builder.workers">
+        <h2>Buildworkers</h2>
         <ol>
-          <li py:for="slave in builder.slaves">
-            <div>Status: ${slave.connected and 'Connected' or 'Disconnected'}</div>
-            <div>Admin: ${author_info(slave.admin)}</div>
-            <div>Host: <pre>${slave.description}</pre></div>
+          <li py:for="worker in builder.workers">
+            <div>Status: ${worker.connected and 'Connected' or 'Disconnected'}</div>
+            <div>Admin: ${author_info(worker.admin)}</div>
+            <div>Host: <pre>${worker.description}</pre></div>
           </li>
         </ol>
       </div>

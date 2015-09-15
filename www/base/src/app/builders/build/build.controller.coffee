@@ -62,7 +62,7 @@ class Build extends Controller
                         responsibles[change.author] = change.author_email
                     $scope.responsibles = responsibles
             , true
-            buildbotService.one("buildslaves", build.buildslaveid).bind($scope)
+            buildbotService.one("buildworkers", build.buildworkerid).bind($scope)
             buildbotService.one("builds", build.id).all("properties").bind($scope)
             buildbotService.one("buildrequests", build.buildrequestid)
             .bind($scope).then (buildrequest) ->

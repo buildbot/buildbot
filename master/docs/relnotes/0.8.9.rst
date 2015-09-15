@@ -15,7 +15,7 @@ Master
 Features
 ~~~~~~~~
 
-* The following optional parameters have been added to :py:class:`EC2LatentBuildSlave`
+* The following optional parameters have been added to :py:class:`EC2LatentBuildWorker`
    * Boolean parameter ``spot_instance``, default False, creates a spot instance.
    * Float parameter ``max_spot_price`` defines the maximum bid for a spot instance.
    * List parameter ``volumes``, takes a list of (volume_id, mount_point) tuples.
@@ -24,7 +24,7 @@ Features
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
    * Dict parameter ``tags`` specifies AWS tags as key/value pairs to be applied to new instances.
   
-  With ``spot_instance=True``, an ``EC2LatentBuildSlave`` will attempt to create a spot instance with the provided spot
+  With ``spot_instance=True``, an ``EC2LatentBuildWorker`` will attempt to create a spot instance with the provided spot
   price, placement, and so on.
 
 * The web hooks now include support for Bitbucket, GitLab and Gitorious.
@@ -103,10 +103,10 @@ Features
 
 * A new :bb:step:`MultipleFileUpload` step was added to allow uploading several files (or directories) in a single step.
 
-* Information about the buildslaves (admin, host, etc) is now persisted in the database and available even if
-  the slave is not connected.
+* Information about the buildworkers (admin, host, etc) is now persisted in the database and available even if
+  the worker is not connected.
 
-* Buildslave info can now be retrieved via :ref:`Interpolate` and a new ``SetSlaveInfo`` buildstep.
+* Buildworker info can now be retrieved via :ref:`Interpolate` and a new ``SetWorkerInfo`` buildstep.
 
 * The ``GNUAutotools`` factory now has a reconf option to run autoreconf before ``./configure``.
 
@@ -161,7 +161,7 @@ Features
 
 * HTML log files are no longer stored in status pickles (:pull:`1077`)
 
-* Builds are now retried after a slave is lost (:pull:`1049`).
+* Builds are now retried after a worker is lost (:pull:`1049`).
 
 * The buildbot status client can now access a build properties via the ``getProperties`` call.
 
@@ -170,7 +170,7 @@ Features
 * Added new config option ``protocols`` which allows to configure multiple protocols on single master.
 
 * RemoteShellCommands can be killed by SIGTERM with the sigtermTime parameter before resorting to SIGKILL (:bug:`751`).
-  If the slave's version is less than 0.8.9, the slave will kill the process with SIGKILL regardless of whether sigtermTime
+  If the worker's version is less than 0.8.9, the worker will kill the process with SIGKILL regardless of whether sigtermTime
   is supplied.
 
 * Introduce an alternative way to deploy Buildbot and try the pyflakes tutorial
@@ -208,7 +208,7 @@ Fixes
 
 * The web status no longer relies on the current working directory, which is not set correctly by some initscripts, to find the ``templates/`` directory (:bug:`2586`).
 
-* The Perforce source step uses the correct path separator when the master is on Windows and the build slave is on a POSIX OS (:pull:`1114`).
+* The Perforce source step uses the correct path separator when the master is on Windows and the build worker is on a POSIX OS (:pull:`1114`).
 
 * The source steps now correctly interpolate properties in ``env``.
 
@@ -234,7 +234,7 @@ Fixes
 
 * Build step now correctly fails when the git clone step fails (:pull:`1057`).
 
-* Fixed a race condition in slave shutdown (:pull:`1019`).
+* Fixed a race condition in worker shutdown (:pull:`1019`).
 
 * Now correctly unsubscribes StatusPush from status updates when reconfiguring (:pull:`997`).
 
@@ -260,9 +260,9 @@ Fixes
 
 * Fixes some edge cases in timezone handling for python < ``2.7.4`` (:bug:`2522`).
 
-* The ``EC2LatentBuildSlave`` will now only consider available AMI's.
+* The ``EC2LatentBuildWorker`` will now only consider available AMI's.
 
-* Fixes a case where the first build runs on an old slave instead of a new one after reconfig (:bug:`2507`).
+* Fixes a case where the first build runs on an old worker instead of a new one after reconfig (:bug:`2507`).
 
 * The e-mail address validation for the MailNotifier status receiver has been improved.
 
@@ -274,7 +274,7 @@ Fixes
 
 * Now excludes changes from sourcestamps when they aren't in the DB (:bug:`2554`).
 
-* Fixes a compatibility issue with HPCloud in the OpenStack latent slave.
+* Fixes a compatibility issue with HPCloud in the OpenStack latent worker.
 
 * Allow ``_`` as a valid character in JSONP callback names.
 
@@ -286,8 +286,8 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* The slave-side source steps are deprecated in this version of Buildbot, and master-side support will be removed in a future version.
-  Please convert any use of slave-side steps (imported directly from ``buildbot.steps.source``, rather than from a specific module like ``buildbot.steps.source.svn``) to use master-side steps.
+* The worker-side source steps are deprecated in this version of Buildbot, and master-side support will be removed in a future version.
+  Please convert any use of worker-side steps (imported directly from ``buildbot.steps.source``, rather than from a specific module like ``buildbot.steps.source.svn``) to use master-side steps.
 
 * Both old-style and new-style steps are supported in this version of Buildbot.
   Upgrade your steps to new-style now, as support for old-style steps will be dropped after Buildbot-0.9.0.
@@ -296,7 +296,7 @@ Deprecations, Removals, and Non-Compatible Changes
   * The ``LoggingBuildStep`` class has been deprecated, and support will be removed along with support for old-style steps after the Buildbot-0.9.0 release.
     Instead, subclass :class:`~buildbot.process.buildstep.BuildStep` and mix in :class:`~buildbot.process.buildstep.ShellMixin` to get similar behavior.
 
-* ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
+* ``workerPortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
 * The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
 
@@ -322,21 +322,21 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* The :py:class:`CompositeStepMixin` now provides a ``runGlob`` method to check for files on the slave that match a given shell-style pattern.
+* The :py:class:`CompositeStepMixin` now provides a ``runGlob`` method to check for files on the worker that match a given shell-style pattern.
 
 * The :py:class:`BuilderStatus` now allows you to pass a ``filter_fn`` arguent to ``generateBuilds``.
 
-Slave
------
+Worker
+------
 
 Features
 ~~~~~~~~
 
-* Added zsh and bash tab-completions support for 'buildslave' command.
+* Added zsh and bash tab-completions support for 'buildworker' command.
 * RemoteShellCommands accept the new sigtermTime parameter from master. This allows processes to be killed by SIGTERM
   before resorting to SIGKILL (:bug:`751`)
 * Commands will now throw a ``ValueError`` if mandatory args are not present.
-* Added a new remote command :py:class:`GlobPath` that can be used to call Python's ``glob.glob`` on the slave.
+* Added a new remote command :py:class:`GlobPath` that can be used to call Python's ``glob.glob`` on the worker.
 
 Fixes
 ~~~~~

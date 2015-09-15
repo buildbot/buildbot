@@ -20,7 +20,7 @@ from buildbot.status.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
 
-# This integration test creates a master and slave environment
+# This integration test creates a master and worker environment
 # and make sure the transfer steps are working
 
 # When new protocols are added, make sure you update this test to exercice your proto implementation
@@ -50,7 +50,7 @@ class TransferStepsMasterPb(RunMasterBase):
              'dir/file2.txt': 'filecontent2',
              'dir/file3.txt': 'filecontent2'})
 
-        # cleanup our mess (slave is cleaned up by parent class)
+        # cleanup our mess (worker is cleaned up by parent class)
         shutil.rmtree("dir")
         os.unlink("master.txt")
 
@@ -73,14 +73,14 @@ def masterConfig():
 
     f = BuildFactory()
     # do a bunch of transfer to exercise the protocol
-    f.addStep(steps.StringDownload("filecontent", slavedest="dir/file1.txt"))
-    f.addStep(steps.StringDownload("filecontent2", slavedest="dir/file2.txt"))
-    f.addStep(steps.FileUpload(slavesrc="dir/file2.txt", masterdest="master.txt"))
-    f.addStep(steps.FileDownload(mastersrc="master.txt", slavedest="dir/file3.txt"))
-    f.addStep(steps.DirectoryUpload(slavesrc="dir", masterdest="dir"))
+    f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
+    f.addStep(steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
+    f.addStep(steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
+    f.addStep(steps.FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
+    f.addStep(steps.DirectoryUpload(workersrc="dir", masterdest="dir"))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f)
     ]
     return c

@@ -39,13 +39,13 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
@@ -59,11 +59,11 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--update',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz', ])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
@@ -77,7 +77,7 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
@@ -96,14 +96,14 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-amd64-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/stable-amd64-buildbot.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/',
                                  '--architecture', 'amd64'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder',
                                  '--architecture', 'amd64', '--', '--buildresult', '.',
@@ -117,13 +117,13 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/woody-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/woody-local-buildbot.tgz',
                                  '--distribution', 'woody',
                                  '--mirror', 'http://cdn.debian.net/debian/'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/woody-local-buildbot.tgz'])
@@ -136,13 +136,13 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/buildbot/stable-local.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/buildbot/stable-local.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/buildbot/stable-local.tgz'])
@@ -155,13 +155,13 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://apt:9999/debian'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
@@ -174,14 +174,14 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/',
                                  '--extrapackages', 'buildbot'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
@@ -195,14 +195,14 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/',
                                  '--debootstrapopts', '--keyring=/builbot/buildbot.gpg'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
@@ -215,14 +215,14 @@ class TestDebPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/',
                                  '--components', 'main universe'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/stable-local-buildbot.tgz'])
@@ -244,13 +244,13 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/cowbuilder', '--create',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/',
                                  '--distribution', 'stable',
                                  '--mirror', 'http://cdn.debian.net/debian/'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
@@ -264,11 +264,11 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + Expect.update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/', ])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
@@ -282,7 +282,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow/'})
             + Expect.update('stat', [stat.S_IFDIR, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow/'])
@@ -296,7 +296,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, 0, 0])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/cowbuilder', '--update',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
             + 1)
@@ -309,7 +309,7 @@ class TestDebCowbuilder(steps.BuildStepMixin, unittest.TestCase):
             Expect('stat', {'file': '/var/cache/pbuilder/stable-local-buildbot.cow'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99, 1, 0, 0, 99, 0, int(time.time()), 0])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/stable-local-buildbot.cow'])
@@ -335,14 +335,14 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/oneiric-local-buildbot.tgz'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/pbuilder', '--create',
                                  '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz',
                                  '--distribution', 'oneiric',
                                  '--mirror', 'http://archive.ubuntu.com/ubuntu/',
                                  '--components', 'main universe'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/pbuilder', '--', '--buildresult', '.',
                                  '--basetgz', '/var/cache/pbuilder/oneiric-local-buildbot.tgz'])
@@ -368,14 +368,14 @@ class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('stat', {'file': '/var/cache/pbuilder/oneiric-local-buildbot.cow/'})
             + 1,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['sudo', '/usr/sbin/cowbuilder', '--create',
                                  '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/',
                                  '--distribution', 'oneiric',
                                  '--mirror', 'http://archive.ubuntu.com/ubuntu/',
                                  '--components', 'main universe'])
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir', usePTY='worker-config',
                         command=['pdebuild', '--buildresult', '.',
                                  '--pbuilder', '/usr/sbin/cowbuilder', '--', '--buildresult', '.',
                                  '--basepath', '/var/cache/pbuilder/oneiric-local-buildbot.cow/'])

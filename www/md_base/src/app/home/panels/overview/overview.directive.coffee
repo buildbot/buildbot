@@ -13,7 +13,7 @@ class _Overview extends Controller
         count: 0
         active: 0
 
-    slaves:
+    workers:
         count: 0
         connections: 0
 
@@ -36,12 +36,12 @@ class _Overview extends Controller
             for master in masters
                 @masters.active++ if master.active
 
-        opened.getBuildslaves().then (slaves) =>
-            @slaves =
+        opened.getBuildworkers().then (workers) =>
+            @workers =
                 connections: 0
-                count: slaves.length
-            for slave in slaves
-                @slaves.connections += slave.connected_to.length
+                count: workers.length
+            for worker in workers
+                @workers.connections += worker.connected_to.length
 
         opened.getBuilders().then (builders) =>
             @builders.count = builders.length

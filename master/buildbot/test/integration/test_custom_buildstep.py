@@ -19,12 +19,12 @@ import mock
 from StringIO import StringIO
 
 from buildbot import config
-from buildbot.buildslave.base import BuildSlave
+from buildbot.buildworker.base import BuildWorker
 from buildbot.process import builder
 from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
-from buildbot.process import slavebuilder
+from buildbot.process import workerbuilder
 from buildbot.status import results
 from buildbot.steps import shell
 from buildbot.test.fake import fakedb
@@ -118,7 +118,7 @@ class OldBuildEPYDoc(shell.ShellCommand):
     command = ['epydoc']
 
     def runCommand(self, cmd):
-        # we don't have a real buildslave in this test harness, so fake it
+        # we don't have a real buildworker in this test harness, so fake it
         l = cmd.logs['stdio']
         l.addStdout('some\noutput\n')
         return defer.succeed(None)
@@ -134,7 +134,7 @@ class OldPerlModuleTest(shell.Test):
     command = ['perl']
 
     def runCommand(self, cmd):
-        # we don't have a real buildslave in this test harness, so fake it
+        # we don't have a real buildworker in this test harness, so fake it
         l = cmd.logs['stdio']
         l.addStdout('a\nb\nc\n')
         return defer.succeed(None)
@@ -168,24 +168,24 @@ class RunSteps(unittest.TestCase):
         self.factory = factory.BuildFactory()  # will have steps added later
         new_config = config.MasterConfig()
         new_config.builders.append(
-            config.BuilderConfig(name='test', slavename='testsl',
+            config.BuilderConfig(name='test', workername='testsl',
                                  factory=self.factory))
         yield self.builder.reconfigServiceWithBuildbotConfig(new_config)
 
-        self.slave = BuildSlave('bsl', 'pass')
-        self.slave.sendBuilderList = lambda: defer.succeed(None)
-        self.slave.parent = mock.Mock()
-        self.slave.master.botmaster = mock.Mock()
-        self.slave.botmaster.maybeStartBuildsForSlave = lambda sl: None
-        self.slave.botmaster.getBuildersForSlave = lambda sl: []
-        self.slave.parent = self.master
-        self.slave.startService()
-        self.conn = fakeprotocol.FakeConnection(self.master, self.slave)
-        yield self.slave.attached(self.conn)
+        self.worker = BuildWorker('bsl', 'pass')
+        self.worker.sendBuilderList = lambda: defer.succeed(None)
+        self.worker.parent = mock.Mock()
+        self.worker.master.botmaster = mock.Mock()
+        self.worker.botmaster.maybeStartBuildsForWorker = lambda sl: None
+        self.worker.botmaster.getBuildersForWorker = lambda sl: []
+        self.worker.parent = self.master
+        self.worker.startService()
+        self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
+        yield self.worker.attached(self.conn)
 
-        sb = self.slavebuilder = slavebuilder.SlaveBuilder()
+        sb = self.workerbuilder = workerbuilder.WorkerBuilder()
         sb.setBuilder(self.builder)
-        yield sb.attached(self.slave, {})
+        yield sb.attached(self.worker, {})
 
         # add the buildset/request
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(
@@ -214,7 +214,7 @@ class RunSteps(unittest.TestCase):
 
         # start the builder
         self.failUnless((yield self.builder.maybeStartBuild(
-            self.slavebuilder, [self.buildrequest])))
+            self.workerbuilder, [self.buildrequest])))
 
         # and wait for completion
         yield bfd

@@ -42,8 +42,8 @@ managed at sourceforge, and downloads are still available there.
 
 c['sources'] (plural) has been replaced by c['change_source'] (singular).
 
-c['bots'] has been replaced by c['buildslaves'], and it expects a list of
-BuildSlave instances instead of tuples. See below for more details.
+c['bots'] has been replaced by c['buildworkers'], and it expects a list of
+BuildWorker instances instead of tuples. See below for more details.
 
 The 'freshcvsmail' change source has been deprecated, and will be removed in
 the next release.
@@ -70,7 +70,7 @@ builder. Adding "?builder=XYZ&builder=ABC" will show results for either
 builder. "?branch=trunk" will limit the results to builds that involved code
 from the trunk.
 
-The /waterfall page has arguments to hide those annoying "buildslave
+The /waterfall page has arguments to hide those annoying "buildworker
 connected" messages, to start and and at arbitrary times, and to auto-refresh
 at a chosen interval (with a hardcoded minimum of 15 seconds). It also has a
 "help" page with forms that will help you add all of these nifty filtering
@@ -123,30 +123,30 @@ Using class/kwargs pairs is deprecated, and will be removed in a future
 release.
 
 
-*** BuildSlave instances, max_builds=, notify_on_missing=
+*** BuildWorker instances, max_builds=, notify_on_missing=
 
-Buildslave specification has changed a lot in this release. The old config:
+Buildworker specification has changed a lot in this release. The old config:
 
  c['bots'] = [ ("bot1name", "bot1passwd"),
                ("bot2name", "bot2passwd") ]
 
 is now:
 
- from buildbot.buildslave import BuildSlave
- c['slaves'] = [ BuildSlave("bot1name", "bot1passwd"),
-                 BuildSlave("bot2name", "bot2passwd") ]
+ from buildbot.buildworker import BuildWorker
+ c['workers'] = [ BuildWorker("bot1name", "bot1passwd"),
+                 BuildWorker("bot2name", "bot2passwd") ]
 
 This new form gives us the ability to add new controls. The first is
 "max_builds=", which imposes a concurrency limit that is like the usual
-SlaveLock, but gives the buildmaster the opportunity to find a different
-slave to run the build. (the buildslave is chosen before the SlaveLock is
-claimed, so pure SlaveLocks don't let you take full advantage of build
+WorkerLock, but gives the buildmaster the opportunity to find a different
+worker to run the build. (the buildworker is chosen before the WorkerLock is
+claimed, so pure WorkerLocks don't let you take full advantage of build
 farms).
 
 The other addition is "notify_on_missing=", which accepts an email address
-(or list of addresses), and sends a message when the buildslave has been
+(or list of addresses), and sends a message when the buildworker has been
 disconnected for more than an hour (configurable with missing_timeout=). This
-may be useful when you expect that the buildslave hosts should be available
+may be useful when you expect that the buildworker hosts should be available
 most of the time, and want to investigate the reasons that it went offline.
 
 
@@ -155,13 +155,13 @@ most of the time, and want to investigate the reasons that it went offline.
 The IRC bot has been refactored to make it easier to add instant-messaging
 status delivery in the future. The IM plugins are not yet written, though.
 
-When multiple buildslaves are available for a given build, one of them will
+When multiple buildworkers are available for a given build, one of them will
 be picked at random. In previous releases, the first one on the list was
 always picked. This helps to add a certain measure of load-balancing. More
 improvements will be made in the future.
 
-When the buildslave does a VC checkout step that requires clobbering the
-build directory (i.e. in all modes except for 'update'), the buildslave will
+When the buildworker does a VC checkout step that requires clobbering the
+build directory (i.e. in all modes except for 'update'), the buildworker will
 first set the permissions on all build files to allow their deletion, before
 it attempts to delete them. This should fix some problems in which a build
 process left non-user-writable files lying around (frequently a result of

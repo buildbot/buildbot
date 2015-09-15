@@ -5,11 +5,11 @@ Buildbot-0.3.5 was released 19 Sep 2003
 Buildbot has moved to "newcred", a new authorization framework provided by
 Twisted, which is a good bit cleaner and easier to work with than the
 "oldcred" scheme in older versions. This causes both buildmaster and
-buildslaves to depend upon Twisted 1.0.7 or later. The interface to
+buildworkers to depend upon Twisted 1.0.7 or later. The interface to
 'makeApp' has changed somewhat (the multiple kinds of remote connections all
 use the same TCP port now).
 
-Old buildslaves will get "_PortalWrapper instance has no attribute
+Old buildworkers will get "_PortalWrapper instance has no attribute
 'remote_username'" errors when they try to connect. They must be upgraded.
 
 The FreshCVSSource uses PB to connect to the CVSToys server. This has been
@@ -47,17 +47,17 @@ checkin trigger to feed changes to a running buildmaster.
 
 *** .tap file generation
 
-We no longer set the .tap filename, because the buildmaster/buildslave
+We no longer set the .tap filename, because the buildmaster/buildworker
 service might be added to an existing .tap file and we shouldn't presume to
 own the whole thing. You may want to manually rename the "buildbot.tap" file
-to something more meaningful (like "buildslave-bot1.tap").
+to something more meaningful (like "buildworker-bot1.tap").
 
 *** IRC reconnect
 
 If the IRC server goes away (it was restarted, or the network connection was
 lost), the buildmaster will now schedule a reconnect attempt.
 
-*** w32 buildslave fixes
+*** w32 buildworker fixes
 
 An "rm -rf" was turned into shutil.rmtree on non-posix systems.
 

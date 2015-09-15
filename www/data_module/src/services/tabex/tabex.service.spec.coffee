@@ -87,13 +87,13 @@ describe 'Tabex service', ->
             $rootScope.$apply -> clientMock.callMasterHandler()
             expect(roleIsResolved).toHaveBeenCalled()
 
-        it 'should assign the role on master event (slave)', ->
+        it 'should assign the role on master event (worker)', ->
             expect(tabexService.role).toBeUndefined()
             clientMock.callMasterHandler()
             expect(tabexService.role).toBeDefined()
-            expect(tabexService.role).toBe(tabexService._ROLES.SLAVE)
+            expect(tabexService.role).toBe(tabexService._ROLES.WORKER)
 
-        it 'should assign the role on master event (slave)', ->
+        it 'should assign the role on master event (worker)', ->
             expect(tabexService.role).toBeUndefined()
             clientMock.callMasterHandler(true)
             expect(tabexService.role).toBeDefined()
