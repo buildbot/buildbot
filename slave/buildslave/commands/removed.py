@@ -28,7 +28,7 @@ class RemovedSourceCommand(base.SourceBaseCommand):
 
 
 class Svn(RemovedSourceCommand):
-    name = "git"
+    name = "Svn"
 
 
 class Bk(RemovedSourceCommand):
