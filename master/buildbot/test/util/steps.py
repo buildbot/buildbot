@@ -75,7 +75,8 @@ def _describe_cmd_difference(exp, command):
         print('Keys in expectation missing from command: {0}'.format(missing_in_cmd))
     if diff:
         formatted_diff = ['"{0}": expected {1}, vs actual {2}'.format(*d) for d in diff]
-        print('Key differences between expectation and command: {0}'.format('\n'.join(formatted_diff)))
+        print('Key differences between expectation and command: {0}'.format(
+            '\n'.join(formatted_diff)))
 
 
 class BuildStepMixin(object):
@@ -305,14 +306,13 @@ class BuildStepMixin(object):
                     print(loog.stdout)
                     print(loog.stderr)
 
-            self.assertEqual(result, self.exp_result, "expected result")
+            self.assertEqual(result, self.exp_result)
             if self.exp_state_string:
                 stepStateString = self.master.data.updates.stepStateString
                 stepids = list(stepStateString)
                 assert stepids, "no step state strings were set"
                 self.assertEqual(stepStateString[stepids[0]],
-                                 self.exp_state_string,
-                                 "expected step state strings")
+                                 self.exp_state_string)
             for pn, (pv, ps) in iteritems(self.exp_properties):
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
