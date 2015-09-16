@@ -304,8 +304,6 @@ class EC2LatentWorker(AbstractLatentWorker):
         instance_id, image_id, start_time = self._wait_for_instance(
             reservation)
         if None not in [instance_id, image_id, start_time]:
-            if len(self.tags) > 0:
-                self.conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state)
@@ -427,6 +425,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 (self.__class__.__name__, self.workername, self.instance.id))
         duration = 0
         interval = self._poll_resolution
+        tagged = False
         while self.instance.state == PENDING:
             time.sleep(interval)
             duration += interval
@@ -436,6 +435,9 @@ class EC2LatentWorker(AbstractLatentWorker):
                          self.instance.id))
             try:
                 self.instance.update()
+                if not tagged:
+                    self._tag_resource(self.instance.id)
+                    tagged = True
             except boto.exception.EC2ResponseError as e:
                 # AWS is eventaully consistent
                 if 'InvalidInstanceID.NotFound' not in e.body:
@@ -474,6 +476,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             try:
                 requests = self.conn.get_all_spot_instance_requests(
                     request_ids=[reservation.id])
+                self._tag_resource(reservation.id)
             except boto.exception.EC2ResponseError as e:
                 # AWS is eventaully consistent
                 if 'InvalidSpotInstanceRequestID.NotFound' not in e.body:
@@ -511,3 +514,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                      request.id, request_status))
             raise LatentWorkerFailedToSubstantiate(
                 request.id, request.status)
+
+    def _tag_resource(self, resource_id):
+        if len(self.tags) > 0:
+            self.conn.create_tags(resource_id, self.tags)
