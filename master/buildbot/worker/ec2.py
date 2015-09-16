@@ -27,6 +27,8 @@ from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 try:
     import boto
+    import boto.ec2
+    import boto.exception
 except ImportError:
     boto = None
 
