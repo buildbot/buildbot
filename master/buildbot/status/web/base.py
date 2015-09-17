@@ -624,7 +624,7 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
     # See http://buildbot.net/trac/ticket/658
     assert not hasattr(sys, "frozen"), 'Frozen config not supported with jinja (yet)'
 
-    all_loaders = [jinja2.FileSystemLoader(os.path.join(os.getcwd(), 'templates'))]
+    all_loaders = [jinja2.FileSystemLoader(os.path.join(basedir, 'templates'))]
     if jinja_loaders:
         all_loaders.extend(jinja_loaders)
     all_loaders.append(jinja2.PackageLoader('buildbot.status.web', 'templates'))
