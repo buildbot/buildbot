@@ -90,6 +90,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = gerritchangesource.GerritChangeSource(
             host, user, *args, **kwargs)
         self.attachChangeSource(s)
+        s.configureService()
         return s
 
     # tests

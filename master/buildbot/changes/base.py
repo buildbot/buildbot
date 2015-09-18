@@ -25,9 +25,6 @@ from buildbot.util.poll import method as poll_method
 class ChangeSource(service.ClusteredBuildbotService):
     implements(IChangeSource)
 
-    def __init__(self, name):
-        super(ChangeSource, self).__init__(name=name)
-
     def describe(self):
         pass
 
@@ -56,7 +53,7 @@ class ChangeSource(service.ClusteredBuildbotService):
 class PollingChangeSource(ChangeSource):
 
     def __init__(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
-        ChangeSource.__init__(self, name)
+        ChangeSource.__init__(self, name=name)
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
 

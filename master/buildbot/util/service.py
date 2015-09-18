@@ -145,11 +145,14 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         return self.reconfigService(*sibling._config_args,
                                     **sibling._config_kwargs)
 
+    def configureService(self):
+        # reconfigServiceWithSibling with self, means first configuration
+        return self.reconfigServiceWithSibling(self)
+
     @defer.inlineCallbacks
     def startService(self):
         if not self.configured:
-            # reconfigServiceWithSibling with self, means first configuration
-            yield self.reconfigServiceWithSibling(self)
+            yield self.configureService()
         yield AsyncMultiService.startService(self)
 
     def checkConfig(self, *args, **kwargs):

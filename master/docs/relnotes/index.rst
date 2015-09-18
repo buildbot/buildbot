@@ -25,6 +25,8 @@ Fixes
 
 * The :bb:step:`PyFlakes` and :bb:step:`PyLint` steps no longer parse output in Buildbot log headers (:bug:`3337`).
 
+* :bb:chsrc:`GerritChangeSource` is now less verbose by default, and has a ``debug`` option to enable the logs.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
