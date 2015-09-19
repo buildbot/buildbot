@@ -34,6 +34,8 @@ Fixes
 
 * :bb:chsrc:`P4Source` no longer relies on the perforce server time to poll for new changes.
 
+* The commit message for a change from :bb:chsrc:`P4Source` now matches what the user typed in.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

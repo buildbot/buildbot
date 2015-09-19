@@ -40,46 +40,50 @@ third_p4changes = \
     """Change 5 on 2006/04/13 by mpatel@testclient 'first rev'
 """
 
-change_4_log = \
-    """Change 4 by mpatel@testclient on 2006/04/13 21:55:39
-
-\tshort desc truncated because this is a long description.
-"""
-
-change_3_log = \
-    u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
-
-\tshort desc truncated because this is a long description.
-    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
-"""
-
-change_2_log = \
+p4_describe_2 = \
     """Change 2 by slamb@testclient on 2006/04/13 21:46:23
 
 \tcreation
+
+Affected files ...
+
+... //depot/myproject/trunk/whatbranch#1 add
+... //depot/otherproject/trunk/something#1 add
 """
 
-p4change = {
-    3: change_3_log +
-    """Affected files ...
+p4_describe_3 = \
+    u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
+
+\tshort desc truncated because this is a long description.
+\tASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
+
+Affected files ...
 
 ... //depot/myproject/branch_b/branch_b_file#1 add
 ... //depot/myproject/branch_b/whatbranch#1 branch
 ... //depot/myproject/branch_c/whatbranch#1 branch
-""",
-    2: change_2_log +
-    """Affected files ...
+"""
 
-... //depot/myproject/trunk/whatbranch#1 add
-... //depot/otherproject/trunk/something#1 add
-""",
-    5: change_4_log +
-    """Affected files ...
+p4_describe_4 = \
+    """Change 4 by mpatel@testclient on 2006/04/13 21:55:39
+
+\tThis is a multiline comment with tabs and spaces
+\t
+\tA list:
+\t  Item 1
+\t\tItem 2
+
+Affected files ...
 
 ... //depot/myproject/branch_b/branch_b_file#1 add
 ... //depot/myproject/branch_b#75 edit
 ... //depot/myproject/branch_c/branch_c_file#1 add
-""",
+"""
+
+p4change = {
+    3: p4_describe_3,
+    2: p4_describe_2,
+    5: p4_describe_4,
 }
 
 
@@ -170,7 +174,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'trunk',
                 'category': None,
                 'codebase': None,
-                'comments': u'Change 2 by slamb@testclient on 2006/04/13 21:46:23\n\n\tcreation\n',
+                'comments': u'creation',
                 'files': [u'whatbranch'],
                 'project': '',
                 'properties': {},
@@ -184,7 +188,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_b',
                 'category': None,
                 'codebase': None,
-                'comments': u'Change 3 by bob@testclient on 2006/04/13 21:51:39\n\n\tshort desc truncated because this is a long description.\n    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.\n',
+                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
                 'files': [u'branch_b_file', u'whatbranch'],
                 'project': '',
                 'properties': {},
@@ -198,7 +202,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_c',
                 'category': None,
                 'codebase': None,
-                'comments': u'Change 3 by bob@testclient on 2006/04/13 21:51:39\n\n\tshort desc truncated because this is a long description.\n    ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.\n',
+                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
                 'files': [u'whatbranch'],
                 'project': '',
                 'properties': {},
@@ -319,7 +323,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_c',
                 'category': None,
                 'codebase': None,
-                'comments': u'Change 4 by mpatel@testclient on 2006/04/13 21:55:39\n\n\tshort desc truncated because this is a long description.\n',
+                'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
                 'files': [u'branch_c_file'],
                 'project': '',
                 'properties': {},
@@ -333,7 +337,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_b',
                 'category': None,
                 'codebase': None,
-                'comments': u'Change 4 by mpatel@testclient on 2006/04/13 21:55:39\n\n\tshort desc truncated because this is a long description.\n',
+                'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
                 'files': [u'branch_b_file'],
                 'project': '',
                 'properties': {},
