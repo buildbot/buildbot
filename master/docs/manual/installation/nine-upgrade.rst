@@ -63,13 +63,41 @@ with:
 
 See :bb:cfg:`www` for more information.
 
+Status Classes
+--------------
+
+Where in 0.8.x most of the data about a build was available synchronously, it must now be fetched dynamically using the :ref:`Data_API`.
+All classes under the Python package ``buildbot.status`` should be considered deprecated.
+Many have already been removed, and the remainder have limited functionality.
+Any custom code which refers to these classes must be rewritten to use the Data API.
+Avoid the temptatation to reach into the Buildbot source code to find other useful-looking methods!
+
+Common uses of the status API are:
+
+ * ``getBuild`` in a custom renderable
+ * ``MailNotifier`` message formatters
+ * ``doIf`` funtions on steps
+
+Import paths for several classes under the ``buildbot.status`` package but which remain useful have changed.
+Most of these are now available as plugins (see above), but for the remainder, consult the source code.
+
+BuildRequest Merging
+--------------------
+
+Buildbot 0.9.x has replaced the old concept of request merging (``mergeRequests``) with a more flexible request-collapsing mechanism.
+See :bb:cfg:`collapseRequests` for more information.
+
 Status Reporters
 ----------------
 
 In fact, the whole ``c['status']`` configuration parameter is gone.
+
 Many of the status listeners used in the status hierarchy in 0.8.x have been replaced with "reporters" that are availabale as buildbot plugins.
 However, note that not all status listeners have yet been ported.
 See the release notes for details.
+
+Including the ``"status"`` key in the configuration object will cause a configuration error.
+All reporters should be included in ``c['services']`` as described in :ref:`Reporters`.
 
 The available reporters as of 0.9.0 are
 
@@ -89,7 +117,7 @@ See the reporter index for the full, current list.
 
 A few notes on changes to the configuration of these reporters:
 
-* :bb:reporter:`MailNotifier` argument ``messageFormatter`` should now be a `~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
+* :bb:reporter:`MailNotifier` argument ``messageFormatter`` should now be a :py:class:`~buildbot.status.message.MessageFormatter`, due to the removal of the status classes (see above), such formatters must be re-implemented using the Data API.
 
 * :bb:reporter:`MailNotifier` argument ``previousBuildGetter`` is not supported anymore
 
@@ -106,6 +134,8 @@ Buildbot-0.8.9 introduced "new-style steps", with an asynchronous ``run`` method
 In the remaining 0.8.x releases, use of new-style and old-style steps were supported side-by-side.
 In 0.9.x, old-style steps are emulated using a collection of hacks to allow asynchronous calls to be called from synchronous code.
 This emulation is imperfect, and you are strongly encouraged to rewrite any custom steps as new-style steps.
+
+Note that new-style steps now "push" their status when it changes, so the ``describe`` method no longer exists.
 
 Identifiers
 -----------
@@ -133,4 +163,4 @@ More Information
 For minor changes not mentioned here, consult the release notes for the versions over which you are upgrading.
 
 Buildbot-0.9.0 represents several years' work, and as such we may have missed potential migration issues.
-To find the latest "gotchas" and share with other users, see http://trac.buildbot.net/wiki/XXX XXX
+To find the latest "gotchas" and share with other users, see http://trac.buildbot.net/wiki/NineMigrationGuide.
