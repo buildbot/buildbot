@@ -70,12 +70,15 @@ def _describe_cmd_difference(exp, command):
 
     missing_in_exp, missing_in_cmd, diff = _dict_diff(exp.args, command.args)
     if missing_in_exp:
-        print('Keys in cmd missing from expectation: {0}'.format(missing_in_exp))
+        log.msg(
+            'Keys in cmd missing from expectation: {0}'.format(missing_in_exp))
     if missing_in_cmd:
-        print('Keys in expectation missing from command: {0}'.format(missing_in_cmd))
+        log.msg(
+            'Keys in expectation missing from command: {0}'.format(missing_in_cmd))
     if diff:
-        formatted_diff = ['"{0}": expected {1}, vs actual {2}'.format(*d) for d in diff]
-        print('Key differences between expectation and command: {0}'.format(
+        formatted_diff = [
+            '"{0}": expected {1!r}, got {2!r}'.format(*d) for d in diff]
+        log.msg('Key differences between expectation and command: {0}'.format(
             '\n'.join(formatted_diff)))
 
 
@@ -297,22 +300,33 @@ class BuildStepMixin(object):
         def check(result):
             # finish up the debounced updateSummary before checking
             self.debounceClock.advance(1)
-            self.assertEqual(self.expected_remote_commands, [],
-                             "assert all expected commands were run")
+            if self.expected_remote_commands:
+                log.msg("un-executed remote commands:")
+                for rc in self.expected_remote_commands:
+                    log.msg(`rc`)
+                raise AssertionError("un-executed remote commands; see logs")
 
-            # in case of unexpected result, display logs in stdout for debugging failing tests
+            # in case of unexpected result, display logs in stdout for
+            # debugging failing tests
             if result != self.exp_result:
-                for loog in itervalues(self.step.logs):
-                    print(loog.stdout)
-                    print(loog.stderr)
+                log.msg("unexpected result from step; dumping logs")
+                for l in itervalues(self.step.logs):
+                    if l.stdout:
+                        log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
+                    if l.stderr:
+                        log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+                raise AssertionError("unexpected result; see logs")
 
-            self.assertEqual(result, self.exp_result)
             if self.exp_state_string:
                 stepStateString = self.master.data.updates.stepStateString
                 stepids = list(stepStateString)
                 assert stepids, "no step state strings were set"
-                self.assertEqual(stepStateString[stepids[0]],
-                                 self.exp_state_string)
+                self.assertEqual(
+                        self.exp_state_string,
+                        stepStateString[stepids[0]],
+                        "expected state_string {0!r}, got {1!r}".format(
+                            self.exp_state_string,
+                            stepStateString[stepids[0]]))
             for pn, (pv, ps) in iteritems(self.exp_properties):
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
@@ -320,13 +334,17 @@ class BuildStepMixin(object):
                                  pv, "property '%s'" % pn)
                 if ps is not None:
                     self.assertEqual(
-                        self.properties.getPropertySource(pn), ps, "property '%s' source" % pn)
+                        self.properties.getPropertySource(pn), ps,
+                        "property {0!r} source has source {1!r}".format(
+                            pn, self.properties.getPropertySource(pn)))
             for pn in self.exp_missing_properties:
                 self.assertFalse(self.properties.hasProperty(pn),
                                  "unexpected property '%s'" % pn)
-            for l, contents in iteritems(self.exp_logfiles):
-                self.assertEqual(
-                    self.step.logs[l].stdout, contents, "log '%s' contents" % l)
+            for l, exp in iteritems(self.exp_logfiles):
+                got = self.step.logs[l].stdout
+                if got != exp:
+                    log.msg("Unexpected log output:\n" + got)
+                raise AssertionError("Unexpected log output; see logs")
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
@@ -357,11 +375,11 @@ class BuildStepMixin(object):
                 del got[1][arg]
 
             # first check any ExpectedRemoteReference instances
-            try:
-                self.assertEqual((exp.remote_command, exp.args), got)
-            except AssertionError:
+            exp_tup = (exp.remote_command, exp.args)
+            if exp_tup != got:
                 _describe_cmd_difference(exp, command)
-                raise
+                raise AssertionError(
+                        "Command contents different from expected; see logs")
 
         if exp.shouldRunBehaviors():
             # let the Expect object show any behaviors that are required
