@@ -171,14 +171,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.root = root
 
-        def either(a, b):  # a if a else b for py2.4
-            if a:
-                return a
-            else:
-                return b
-
-        rotateLength = either(new_config.www.get('logRotateLength'), self.master.log_rotation.rotateLength)
-        maxRotatedFiles = either(new_config.www.get('maxRotatedFiles'), self.master.log_rotation.maxRotatedFiles)
+        rotateLength = new_config.www.get('logRotateLength') or self.master.log_rotation.rotateLength
+        maxRotatedFiles = new_config.www.get('maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
 
         class RotateLogSite(server.Site):
 
