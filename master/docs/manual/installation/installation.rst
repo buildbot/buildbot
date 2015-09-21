@@ -1,0 +1,103 @@
+.. _Installing-the-code:
+
+Installing the code
+-------------------
+
+The Buildbot Packages
+~~~~~~~~~~~~~~~~~~~~~
+
+Buildbot comes in several parts: ``buildbot`` (the buildmaster), ``buildbot-slave`` (the buildslave), ``buildbot-www``, and several web plugins such as ``buildbot-waterfall-view``.
+
+The buildslave and buildmaster can be installed individually or together.
+The base web (``buildbot.www``) and web plugins are required to run a master with a web interface (the common configuration).
+
+Installation From PyPI
+~~~~~~~~~~~~~~~~~~~~~~
+
+The preferred way to install Buildbot is using ``pip``.
+For the master:
+
+.. code-block:: bash
+
+    pip install buildbot
+
+and for the slave:
+
+.. code-block:: bash
+
+    pip install buildbot-slave
+
+When using ``pip`` to install instead of distribution specific package manangers, e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants to use.
+It may however be easier to install via distribution specific package mangers but note that they may provide an earlier version than what is available via ``pip``.
+
+Installation From Tarballs
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Buildbot and Buildslave are installed using the standard Python `distutils <http://docs.python.org/library/distutils.html>`_ process.
+For either component, after unpacking the tarball, the process is:
+
+.. code-block:: bash
+
+    python setup.py build
+    python setup.py install
+
+where the install step may need to be done as root.
+This will put the bulk of the code in somewhere like :file:`/usr/lib/pythonx.y/site-packages/buildbot`.
+It will also install the :command:`buildbot` command-line tool in :file:`/usr/bin/buildbot`.
+
+If the environment variable ``$NO_INSTALL_REQS`` is set to ``1``, then :file:`setup.py` will not try to install Buildbot's requirements.
+This is usually only useful when building a Buildbot package.
+
+To test this, shift to a different directory (like :file:`/tmp`), and run:
+
+.. code-block:: bash
+
+    buildbot --version
+    # or
+    buildslave --version
+
+If it shows you the versions of Buildbot and Twisted, the install went ok.
+If it says "no such command" or it gets an ``ImportError`` when it tries to load the libraries, then something went wrong.
+``pydoc buildbot`` is another useful diagnostic tool.
+
+Windows users will find these files in other places.
+You will need to make sure that Python can find the libraries, and will probably find it convenient to have :command:`buildbot` on your :envvar:`PATH`.
+
+.. _Installation-in-a-Virtualenv:
+
+Installation in a Virtualenv
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you cannot or do not wish to install the buildbot into a site-wide location like :file:`/usr` or :file:`/usr/local`, you can also install it into the account's home directory or any other location using a tool like `virtualenv <http://pypi.python.org/pypi/virtualenv>`_.
+
+.. _Running-Buildbots-Tests-optional:
+
+Running Buildbot's Tests (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you wish, you can run the buildbot unit test suite.
+First, ensure you have the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from PyPi.
+This module is not required for ordinary Buildbot operation - only to run the tests.
+Note that this is not the same as the Fedora ``mock`` package!
+
+You can check with
+
+.. code-block:: bash
+
+    python -mmock
+
+Then, run the tests:
+
+.. code-block:: bash
+
+    PYTHONPATH=. trial buildbot.test
+    # or
+    PYTHONPATH=. trial buildslave.test
+
+Nothing should fail, although a few might be skipped.
+
+If any of the tests fail for reasons other than a missing ``mock``, you should stop and investigate the cause before continuing the installation process, as it will probably be easier to track down the bug early.
+In most cases, the problem is incorrectly installed Python modules or a badly configured :envvar:`PYTHONPATH`.
+This may be a good time to contact the Buildbot developers for help.
+
+

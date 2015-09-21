@@ -8,7 +8,7 @@ Web Server
    As of Buildbot 0.9.0, the built-in web server replaces the old ``WebStatus`` plugin.
 
 Buildbot contains a built-in web server.
-This server is configured with the :bb:cfg:`www` configuration key, which specifies a dictionary with the following keys:
+This server is configured with the ``www`` configuration key, which specifies a dictionary with the following keys:
 
 ``port``
     The TCP port on which to serve requests.
@@ -110,6 +110,9 @@ This server is configured with the :bb:cfg:`www` configuration key, which specif
 
         * quotes in attributes are not quoted. https://github.com/syrusakbary/pyjade/issues/132
           This means you should use double quotes for attributes e.g: ``tr(ng-repeat="br in buildrequests | orderBy:'-submitted_at'")``
+
+``change_hook_dialects``
+    See :ref:`Change-Hooks`.
 
 .. note::
 

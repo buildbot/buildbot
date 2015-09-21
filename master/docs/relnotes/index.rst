@@ -6,8 +6,13 @@ Release Notes for Buildbot |version|
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot 0.9.0b2
-Buildbot 0.9.0b2 was released on the ...
+..
+    NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b{1,2}
+    into one single set of notes.  Also, link prominently to the migration guide.
+
+The following are the release notes for Buildbot |version|
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
 Master
 ------

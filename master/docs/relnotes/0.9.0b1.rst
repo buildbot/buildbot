@@ -130,9 +130,7 @@ See respective documentation for details.
 
 * :class:`~buildbot.status.mail.MailNotifier` renamed to :class:`~buildbot.reporters.mail.MailNotifier`
 
-* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a `~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
-
-* :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
+* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a :class:`~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
 
 * :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
 
@@ -242,12 +240,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * `BonsaiPoller` is removed.
 
-* ``buildbot.ec2buildslave`` is removed use ``buildbot.buildslave.ec2`` instead.
+* ``buildbot.ec2buildslave`` is removed; use ``buildbot.buildslave.ec2`` instead.
 
-* ``buildbot.libvirtbuildslave`` is removed use ``buildbot.buildslave.libvirt`` instead.
-
-..
-    TODO: "executive summary" of changes: new-style steps, status classes missing, etc.
+* ``buildbot.libvirtbuildslave`` is removed; use ``buildbot.buildslave.libvirt`` instead.
 
 ..
     TODO: 0.9.0 release notes should include a warning similar to that in 0.8.9 about new-style steps
@@ -268,13 +263,6 @@ WebStatus
 The old, clunky WebStatus has been removed.
 You will like the new interface!
 RIP WebStatus, you were a good friend.
-
-If you have code like this in your configuration (and you probably do!)
-
-.. code-block:: python
-
-    from buildbot.status import html
-    c['status'].append(html.WebStatus(http_port=8010, allowForce=True)
 
 remove it and replace it with :bb:cfg:`www configuration <www>`.
 
@@ -475,8 +463,11 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.8.12
     0.8.10
     0.8.9
     0.8.8
     0.8.7
     0.8.6
+
+Note that Buildbot-0.8.11 was never released.
