@@ -344,7 +344,7 @@ class BuildStepMixin(object):
                 got = self.step.logs[l].stdout
                 if got != exp:
                     log.msg("Unexpected log output:\n" + got)
-                raise AssertionError("Unexpected log output; see logs")
+                    raise AssertionError("Unexpected log output; see logs")
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
