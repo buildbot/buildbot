@@ -165,7 +165,8 @@ class GerritChangeSource(base.ChangeSource):
         if func is None and event_with_change:
             return self.addChangeFromEvent(properties, event)
         elif func is None:
-            log.msg("unsupported event %s" % (event["type"],))
+            if self.debug:
+                log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
         else:
             return func(properties, event)
