@@ -108,7 +108,7 @@ class PBChangeSource(base.ChangeSource):
             else:
                 name = "PBChangeSource:%s" % (port,)
 
-        base.ChangeSource.__init__(self, name)
+        base.ChangeSource.__init__(self, name=name)
 
         self.user = user
         self.passwd = passwd
