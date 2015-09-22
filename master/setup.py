@@ -388,7 +388,7 @@ except ImportError:
 else:
     # dependencies
     setup_args['install_requires'] = [
-        'twisted >= 11.0.0',
+        'twisted >= 12.1.0',
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'future'
