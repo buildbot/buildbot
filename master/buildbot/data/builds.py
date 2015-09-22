@@ -13,9 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.data import base
 from buildbot.data import types
-from twisted.internet import defer
+from buildbot.data.resultspec import ResultSpec
 
 
 class Db2DataMixin(object):
@@ -100,12 +102,31 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
                                                  ('builds', str(buildid), None))
 
     def control(self, action, args, kwargs):
-        if action != "stop":
+        # we convert the action into a mixedCase method name
+        action_method = getattr(self, "action" + action.capitalize())
+        if action_method is None:
             raise ValueError("action: {} is not supported".format(action))
+        return action_method(args, kwargs)
+
+    @defer.inlineCallbacks
+    def actionStop(self, args, kwargs):
+        buildid = kwargs.get('buildid')
+        if buildid is None:
+            bldr = kwargs['builderid']
+            num = kwargs['number']
+            dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
+            buildid = dbdict['id']
         self.master.mq.produce(("control", "builds",
-                                str(kwargs['buildid']), 'stop'),
-                               dict(reason=kwargs.get('reason', 'no reason')))
-        return defer.succeed(None)
+                                str(buildid), 'stop'),
+                               dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
+
+    @defer.inlineCallbacks
+    def actionRebuild(self, args, kwargs):
+        # we use the self.get and not self.data.get to be able to support all the pathPatterns of this endpoint
+        build = yield self.get(ResultSpec(), kwargs)
+        buildrequest = yield self.master.data.get(('buildrequests', build['buildrequestid']))
+        res = yield self.master.data.updates.rebuildBuildrequest(buildrequest)
+        defer.returnValue(res)
 
 
 class BuildsEndpoint(Db2DataMixin, base.Endpoint):
