@@ -32,6 +32,8 @@ Fixes
 
 * :bb:chsrc:`GerritChangeSource` is now less verbose by default, and has a ``debug`` option to enable the logs.
 
+* :bb:chsrc:`P4Source` no longer relies on the perforce server time to poll for new changes.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
