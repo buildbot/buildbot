@@ -885,39 +885,71 @@ For example, a particular daily scheduler could be configured on multiple master
 
     This class is the combinations of all `Service` classes implemented in buildbot.
     It is Async, MultiService, and Reconfigurable, and designed to be eventually the base class for all buildbot services.
-    This class makes it easy to manage configured service singletons.
+    This class makes it easy to manage (re)configured services.
+
+    The design separate the check of the config and the actual configuration/start.
+    A service sibling is a configured object that has the same name of a previously started service.
+    The sibling configuration will be used to configure the running service.
+
+    Service lifecycle is as follow:
+
+    * Buildbot master start
+
+    * Buildbot is evaluating the configuration file.
+      BuildbotServices are created, and checkConfig() are called by the generic constructor.
+
+    * If everything is fine, all services are started.
+      BuildbotServices startService() is called, and call reconfigService() for the first time.
+
+    * User reconfigures buildbot.
+
+    * Buildbot is evaluating the configuration file.
+      BuildbotServices siblings are created, and checkConfig() are called by the generic constructor.
+
+    * BuildbotServiceManager is figuring out added services, removed services, unchanged services
+
+    * BuildbotServiceManager calls stopService() for services that disappeared from the configuration.
+
+    * BuildbotServiceManager calls startService() like in buildbot start phase for services that appeared from the configuration.
+
+    * BuildbotServiceManager calls reconfigService() for the second time for services that have their configuration changed.
+
 
     .. py:method:: __init__(self, *args, **kwargs)
 
         Constructor of the service.
         The constructor initialize the service, and store the config arguments in private attributes.
-        This should not be overriden by subclasses, as they should rather override checkConfig.
 
-    .. py:method:: reconfigService(self, new_config)
-
-        Internal method that finds configuration sibling in the master config object.
-        At the time of master start, the object in the configuration is the one used as the service.
-        But reconfig happens while services might be in use, so we cannot just stop the service and replace with  the service instance configured in `master.cfg`.
-        We want to reuse the service started at master startup and just reconfigure it.
-        This method handles necessary steps to detect if the config has changed, and eventually call self.reconfigServiceWithConstructorArgs()
+        This should *not* be overriden by subclasses, as they should rather override checkConfig.
 
     .. py:method:: checkConfig(self, *args, **kwargs)
 
         Please override this method to check the parameters of your config.
         Please use :py:func:`buildbot.config.error` for error reporting.
+        You can replace them ``*args, **kwargs`` by actual contructor like arguments with default args, and it have to match self.reconfigService
         This method is synchronous, and executed in the context of the master.cfg.
         Please don't block, or use deferreds in this method.
+        Remember that the object that runs checkConfig is not always the object that is actually started.
+        The checked configuration can be passed to another sibling service.
+        Any actual resource creation shall be handled in reconfigService() or startService()
 
-    .. py:method:: reconfigServiceWithConstructorArgs(*args, **kwargs)
+    .. py:method:: reconfigService(self, *args, **kwargs)
 
         This method is called at buildbot startup, and buildbot reconfig.
         `*args` and `**kwargs` are the configuration arguments passed to the constructor in master.cfg.
+        You can replace ``them *args, **kwargs`` by actual contructor like arguments with default args, and it have to match self.checkConfig
 
         Returns a deferred that should fire when the service is ready.
         Builds are not started until all services are configured.
 
         BuildbotServices must be aware that during reconfiguration, their methods can still be called by running builds.
         So they should atomically switch old configuration and new configuration, so that the service is always available.
+
+    .. py:method:: reconfigServiceWithSibling(self, sibling)
+
+        Internal method that finds the configuration bits in a sibling, an object with same class that is supposed to replace it from a new configuration.
+        We want to reuse the service started at master startup and just reconfigure it.
+        This method handles necessary steps to detect if the config has changed, and eventually call self.reconfigService()
 
 
     Advanced users can derive this class to make their own services that run inside buildbot, and follow the application lifecycle of buildbot master.
@@ -938,7 +970,15 @@ For example, a particular daily scheduler could be configured on multiple master
 
         class MyService(BuildbotService):
             name = "myService"
-            def reconfigServiceWithConstructorArgs(self, arg1):
+
+            def checkConfig(self, arg1):
+                if not isinstance(arg1, int):
+                    config.error("arg1 must be an integer while it is %r" % (arg1,))
+                    return
+                if arg1 < 0:
+                    config.error("arg1 must be positive while it is %d" % (arg1,))
+
+            def reconfigService(self, arg1):
                 self.arg1 = arg1
                 return defer.succeed(None)
 
@@ -955,5 +995,5 @@ For example, a particular daily scheduler could be configured on multiple master
                           factory=f)]
 
         c['services'] = [
-            MyService(arg1="foo")
+            MyService(arg1=1)
         ]
