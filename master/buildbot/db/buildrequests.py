@@ -598,7 +598,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def unclaimBuildRequests(self, brids, _master_objectid=None):
+    def unclaimBuildRequests(self, brids, results=None, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             claims_tbl = self.db.model.buildrequest_claims
@@ -619,8 +619,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                             & (claims_tbl.c.objectid == _master_objectid))
                     conn.execute(q)
 
-                    q = req_tbl.update(req_tbl.c.id.in_(batch))
-                    conn.execute(q, mergebrid=None)
+                    q = req_tbl.update(req_tbl.c.id.in_(batch)).values(mergebrid=None)
+
+                    if results is not None:
+                        q = q.values(results=results)
+
+                    conn.execute(q)
                 except:
                     transaction.rollback()
                     raise

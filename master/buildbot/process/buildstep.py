@@ -118,6 +118,10 @@ class RemoteCommand(pb.Referenceable):
         return d
 
     def _finished(self, failure=None):
+        if not self.active:
+            defer.succeed(None)
+            return
+
         self.active = False
         # call .remoteComplete. If it raises an exception, or returns the
         # Failure that we gave it, our self.deferred will be errbacked. If

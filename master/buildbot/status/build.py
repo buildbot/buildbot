@@ -24,7 +24,7 @@ from twisted.internet import reactor, defer
 from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
-from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED, RESUME, CANCELED
+from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED, RESUME, CANCELED, RETRY
 import time
 
 # Avoid doing an import since it creates circular reference
@@ -347,6 +347,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                           'resumeSlavepool': self.resumeSlavepool}
 
             self.resume.append(build_data)
+            self.setText(["Build Will Be Resumed"])
             self.finished = None
             self.started = None
 
@@ -489,6 +490,16 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             self.setText(["Build Canceled"])
             self.buildFinished()
             self.saveYourself()
+
+    def retryResume(self):
+        failure = "Failed to resume build %s # %d while loading steps, will retry" % (self.builder.name, self.number)
+        log.msg(failure)
+        self.setResults(RETRY)
+        self.finished = util.now()
+        self.setText(["Failed to Resume, Will Retry"])
+        self.buildFinished()
+        self.saveYourself()
+        raise RuntimeError(failure)
 
     def saveYourself(self):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)

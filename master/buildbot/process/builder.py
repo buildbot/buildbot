@@ -23,7 +23,7 @@ from twisted.internet import defer
 
 from buildbot import interfaces, config
 from buildbot.status.progress import Expectations
-from buildbot.status.builder import RETRY, RESUME
+from buildbot.status.results import RETRY, RESUME, BEGINNING
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.process.properties import Properties
 from buildbot.process import buildrequest, slavebuilder
@@ -111,8 +111,16 @@ class Builder(config.ReconfigurableServiceMixin,
         return defer.succeed(None)
 
     def stopService(self):
-        d = defer.maybeDeferred(lambda :
+
+        d = defer.maybeDeferred(lambda:
                 service.MultiService.stopService(self))
+
+        if self.building:
+            for b in self.building:
+                # TODO: finished the build with a retry result
+                d.addCallback(self._resubmit_buildreqs, b)
+                d.addErrback(log.err)
+
         return d
 
     def __repr__(self):
@@ -527,7 +535,8 @@ class Builder(config.ReconfigurableServiceMixin,
         results = build.build_status.getResults()
         self.building.remove(build)
         if results == RETRY:
-            self._resubmit_buildreqs(build).addErrback(log.err)
+            if self.running:
+                self._resubmit_buildreqs(build=build).addErrback(log.err)
         else:
             db = self.master.db
             if results == RESUME:
@@ -558,10 +567,11 @@ class Builder(config.ReconfigurableServiceMixin,
             if results and results == RESUME:
                 self.master.buildRequestAdded(br.bsid, br.id, self.name)
 
-
-    def _resubmit_buildreqs(self, build):
+    @defer.inlineCallbacks
+    def _resubmit_buildreqs(self, out=None, build=None):
         brids = [br.id for br in build.requests]
-        return self.master.db.buildrequests.unclaimBuildRequests(brids)
+        yield self.master.db.buildrequests.unclaimBuildRequests(brids, results=BEGINNING)
+        defer.returnValue(out)
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next

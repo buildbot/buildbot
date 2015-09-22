@@ -324,6 +324,9 @@ class Build(properties.PropertiesMixin):
             # BuildStepStatus and bind it to the Step.
             if self.build_status.results == RESUME:
                 step_status = self.build_status.getStepByName(name)
+                if step_status is None:
+                    # previous build not saved properly
+                    self.build_status.retryResume()
             else:
                 step_status = self.build_status.addStepWithName(name, type(step))
 

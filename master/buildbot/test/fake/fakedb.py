@@ -977,10 +977,15 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
-    def unclaimBuildRequests(self, brids, _master_objectid=None):
+    def unclaimBuildRequests(self, brids, results=None, _master_objectid=None):
         for brid in brids:
-            if brid in self.claims:
-                del self.claims[brid]
+            try:
+                self.claims.pop(brid)
+            except KeyError:
+                print "trying to unclaim brid %d, but it's not claimed" % brid
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+
         return defer.succeed(None)
 
     def updateBuildRequests(self, brids, results):
@@ -1078,18 +1083,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             rv.append(dict(brid=bs.id, buildername=bs.buildername, reason=bs.reason))
 
         return rv
-
-    def unclaimBuildRequests(self, brids):
-        for brid in brids:
-            try:
-                self.claims.pop(brid)
-            except KeyError:
-                print "trying to unclaim brid %d, but it's not claimed" % brid
-                return defer.fail(
-                        failure.Failure(buildrequests.AlreadyClaimedError))                
-            
-        return defer.succeed(None)
-
 
     # Code copied from buildrequests.BuildRequestConnectorComponent
     def _brdictFromRow(self, row):
