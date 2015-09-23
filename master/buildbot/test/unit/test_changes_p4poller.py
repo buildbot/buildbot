@@ -134,7 +134,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      **kwargs))
         self.expectCommands(
             gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes),
-            gpo.Expect('p4', 'changes', '//depot/myproject/...@2,now').stdout(second_p4changes),
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@2,#head').stdout(second_p4changes),
         )
         encoded_p4change = p4change.copy()
         encoded_p4change[3] = encoded_p4change[3].encode(encoding)
@@ -236,7 +236,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
         self.expectCommands(
-            gpo.Expect('p4', 'changes', '//depot/myproject/...@3,now').stdout(second_p4changes),
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@3,#head').stdout(second_p4changes),
         )
         self.add_p4_describe_result(2, p4change[2])
         self.add_p4_describe_result(3, 'Perforce client error:\n...')
@@ -302,7 +302,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      p4base='//depot/myproject/',
                      split_file=get_simple_split))
         self.expectCommands(
-            gpo.Expect('p4', 'changes', '//depot/myproject/...@51,now').stdout(third_p4changes),
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@51,#head').stdout(third_p4changes),
         )
         self.add_p4_describe_result(5, p4change[5])
 
@@ -356,7 +356,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      split_file=get_simple_split,
                      server_tz="Europe/Berlin"))
         self.expectCommands(
-            gpo.Expect('p4', 'changes', '//depot/myproject/...@51,now').stdout(third_p4changes),
+            gpo.Expect('p4', 'changes', '//depot/myproject/...@51,#head').stdout(third_p4changes),
         )
         self.add_p4_describe_result(5, p4change[5])
 

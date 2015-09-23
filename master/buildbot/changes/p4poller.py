@@ -214,7 +214,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             args.extend(['-P', self._getPasswd()])
         args.extend(['changes'])
         if self.last_change is not None:
-            args.extend(['%s...@%d,now' % (self.p4base, self.last_change + 1)])
+            args.extend(['%s...@%d,#head' % (self.p4base, self.last_change + 1)])
         else:
             args.extend(['-m', '1', '%s...' % (self.p4base,)])
 
