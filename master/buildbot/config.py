@@ -20,14 +20,15 @@ import re
 import sys
 import warnings
 
-from buildbot import interfaces
-from buildbot import locks
-from buildbot.revlinks import default_revlink_matcher
-from buildbot.util import safeTranslate
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
+
+from buildbot import interfaces
+from buildbot import locks
+from buildbot.revlinks import default_revlink_matcher
+from buildbot.util import safeTranslate
 
 
 class ConfigErrors(Exception):

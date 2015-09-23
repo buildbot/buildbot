@@ -12,15 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from buildbot import util
-from buildbot.changes import base
-from buildbot.util import json
-from buildbot.changes.filter import ChangeFilter
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
+
+from buildbot.changes.filter import ChangeFilter
+from buildbot.changes import base
+from buildbot import config
+from buildbot import util
+from buildbot.util import json
 
 
 class GerritChangeFilter(ChangeFilter):
@@ -287,3 +288,18 @@ class GerritChangeSource(base.ChangeSource):
         msg = ("GerritChangeSource watching the remote "
                "Gerrit repository %s@%s %s")
         return msg % (self.username, self.gerritserver, status)
+
+
+class FilteringGerritChangeSource(GerritChangeSource):
+    def __init__(self, *args, **kwargs):
+        assert len(args) == 2, 'Only gerritserver and username can be specified'
+
+        self._filter = kwargs.pop('filter', None)
+
+        if self._filter is None:
+            config.error('Filter must be specified')
+
+        super(FilteringGerritChangeSource).__init__(*args, **kwargs)
+
+    def _default_filter(self, change):
+        pass
