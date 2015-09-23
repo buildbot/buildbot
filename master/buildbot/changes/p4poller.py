@@ -273,11 +273,18 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                 # Convert from the server's timezone to the local timezone.
                 when = when.replace(tzinfo=self.server_tz)
             when = util.datetime2epoch(when)
-            comments = ''
-            while not lines[0].startswith('Affected files'):
-                comments += lines.pop(0) + '\n'
-            lines.pop(0)  # affected files
 
+            comment_lines = []
+            lines.pop(0)  # describe header
+            lines.pop(0)  # blank line
+            while not lines[0].startswith('Affected files'):
+                if lines[0].startswith('\t'):  # comment is indented by one tab
+                    comment_lines.append(lines.pop(0)[1:])
+                else:
+                    lines.pop(0)  # discard non comment line
+            comments = '\n'.join(comment_lines)
+
+            lines.pop(0)  # affected files
             branch_files = {}  # dict for branch mapped to file(s)
             while lines:
                 line = lines.pop(0).strip()
