@@ -571,7 +571,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         sb.prepare = lambda x, y: True
         sb.ping = lambda: True
         sb.buildStarted = lambda: True
-        sb.buildFinished = lambda: False
+        sb.buildFinished = lambda _: False
         sb.remote = Mock()
         self.bldr.slaves.append(sb)
 

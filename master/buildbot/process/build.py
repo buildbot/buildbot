@@ -238,13 +238,14 @@ class Build(properties.PropertiesMixin):
             return res
         d.addBoth(_uncount_build)
 
-        def _release_slave(res):
-            self.slavebuilder.buildFinished()
-            return res
-        d.addCallback(_release_slave)
-        d.addCallback(lambda res:
-                      slavebuilder.slave.updateStatusBuildFinished(result=res, build=build_status)
-                      if (slavebuilder and slavebuilder.slave) else res)
+        @defer.inlineCallbacks
+        def _release_slave(res, slave, build_status):
+            slavebuilder.buildFinished(slave)
+            if slave and build_status:
+                yield slave.updateStatusBuildFinished(result=res, build=build_status)
+            defer.returnValue(res)
+        d.addCallback(_release_slave, slavebuilder.slave, build_status)
+
 
         try:
             self.setupBuild(expectations) # create .steps

@@ -420,7 +420,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
         if slavebuilder.buildStarted():
-            cleanups.append(lambda : slavebuilder.buildFinished())
+            cleanups.append(lambda: slavebuilder.buildFinished())
         else:
             log.msg("slave %s can't build %s after all; re-queueing the "
                     "request" % (build, slavebuilder))
