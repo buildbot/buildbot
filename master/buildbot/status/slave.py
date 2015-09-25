@@ -97,13 +97,17 @@ class SlaveStatus:
     def buildStarted(self, build):
         self.runningBuilds.append(build)
 
+    def removeRunningBuild(self, build_status):
+        if build_status in self.runningBuilds:
+            self.runningBuilds.remove(build_status)
+
     @defer.inlineCallbacks
     def buildFinished(self, build):
         shouldUpdateHealth = build.results not in (RESUME, CANCELED, NOT_REBUILT) and \
                              (self.health != SUCCESS or build.results != SUCCESS)
         if shouldUpdateHealth:
             yield self.updateHealth()
-        self.runningBuilds.remove(build)
+        self.removeRunningBuild(build)
 
     def getGraceful(self):
         """Return the graceful shutdown flag"""

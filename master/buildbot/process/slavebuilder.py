@@ -79,11 +79,14 @@ class AbstractSlaveBuilder(pb.Referenceable):
             self.state = BUILDING
         return canStart
 
-    def buildFinished(self, slave=None):
+    def setSlaveIdle(self, slave=None):
         self.state = IDLE
         slave = self.slave if slave is None else slave
         if slave:
             slave.buildFinished(self)
+
+    def buildFinished(self, slave=None):
+        self.setSlaveIdle(slave)
 
     def attached(self, slave, remote, commands):
         """

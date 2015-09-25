@@ -19,7 +19,8 @@ class ResumeBuild(LoggingBuildStep):
         # reset the build locks
         self.build.locks = []
         #  release slave lock
-        self.build.slavebuilder.state = IDLE
+        self.build.slavebuilder.slave.slave_status.removeRunningBuild(self.build.build_status)
+        self.build.slavebuilder.setSlaveIdle()
         self.build.builder.builder_status.setBigState("idle")
 
     @defer.inlineCallbacks
