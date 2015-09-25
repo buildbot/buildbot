@@ -483,13 +483,12 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             s.checkLogfiles()
 
     def cancelYourself(self):
-        if not self.isFinished():
-            self.results = CANCELED
-            self.started = util.now() if self.started is None else self.started
-            self.finished = util.now() if self.finished is None else self.finished
-            self.setText(["Build Canceled"])
-            self.buildFinished()
-            self.saveYourself()
+        self.results = CANCELED
+        self.started = util.now() if self.started is None else self.started
+        self.finished = util.now() if self.finished is None else self.finished
+        self.setText(["Build Canceled"])
+        self.buildFinished()
+        self.saveYourself()
 
     def retryResume(self):
         failure = "Failed to resume build %s # %d while loading steps, will retry" % (self.builder.name, self.number)
