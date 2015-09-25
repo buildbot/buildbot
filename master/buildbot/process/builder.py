@@ -115,12 +115,6 @@ class Builder(config.ReconfigurableServiceMixin,
         d = defer.maybeDeferred(lambda:
                 service.MultiService.stopService(self))
 
-        if self.building:
-            for b in self.building:
-                # TODO: finished the build with a retry result
-                d.addCallback(self._resubmit_buildreqs, b)
-                d.addErrback(log.err)
-
         return d
 
     def __repr__(self):
@@ -535,8 +529,7 @@ class Builder(config.ReconfigurableServiceMixin,
         results = build.build_status.getResults()
         self.building.remove(build)
         if results == RETRY:
-            if self.running:
-                self._resubmit_buildreqs(build=build).addErrback(log.err)
+            self._resubmit_buildreqs(build=build).addErrback(log.err)
         else:
             db = self.master.db
             if results == RESUME:
@@ -567,11 +560,9 @@ class Builder(config.ReconfigurableServiceMixin,
             if results and results == RESUME:
                 self.master.buildRequestAdded(br.bsid, br.id, self.name)
 
-    @defer.inlineCallbacks
-    def _resubmit_buildreqs(self, out=None, build=None):
+    def _resubmit_buildreqs(self, build=None):
         brids = [br.id for br in build.requests]
-        yield self.master.db.buildrequests.unclaimBuildRequests(brids, results=BEGINNING)
-        defer.returnValue(out)
+        return self.master.db.buildrequests.unclaimBuildRequests(brids, results=BEGINNING)
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next

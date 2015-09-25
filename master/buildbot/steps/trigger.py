@@ -204,7 +204,9 @@ class Trigger(ResumeBuild):
             self.step_status.setText(["Dependency failed to build."])
             self.step_status.setText2(["(dependency failed to build)"])
             result = self.checkDisconection(result, results)
-
+            if result == RETRY:
+                if not self.build.builder.running:
+                    self.build.builder._resubmit_buildreqs(self.build).addErrback(log.err)
         else:
             result = results if results in (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED) else SUCCESS
 
