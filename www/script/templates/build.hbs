@@ -76,13 +76,14 @@
          {{ b.currentStep.name }}
         </span>
         {{{progressBar}}}
-        {{/if}}
+        {{else}}
 
         {{#if b.results }}
          <span class="{{buildCSSClass b.results }} result overall-result-js overall-result">
           {{#each b.text}}{{this}} {{/each}}
         </span>
         {{/if }}
+        {{/if}}
 
     {{else}}
       <h2 id="isFinished" data-isfinished="true" class="head-2">
