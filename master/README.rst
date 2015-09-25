@@ -22,12 +22,12 @@ Buildbot is an open-source continuous integration framework for automating softw
 Documentation
 -------------
 
-See http://buildbot.net/buildbot/docs/current for documentation of the current version of Buildbot.
+See http://docs.buildbot.net/current/ for documentation of the current version of Buildbot.
 
 Requirements
 ------------
 
-See http://buildbot.net/buildbot/docs/latest/manual/installation.html
+See http://docs.buildbot.net/current/manual/installation.html
 
 Briefly: python, Twisted, Jinja2, simplejson, and SQLite.
 Simplejson and SQLite are included with recent versions of Python.
