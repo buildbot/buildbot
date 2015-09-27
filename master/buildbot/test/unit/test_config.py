@@ -814,7 +814,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_status_not_status_rec(self):
         self.cfg.load_status(self.filename, dict(status=['fo']))
-        self.assertConfigError(self.errors, "must be a list of")
+        self.assertConfigError(self.errors, "not a status receiver")
 
     def test_load_user_managers_defaults(self):
         self.cfg.load_user_managers(self.filename, {})

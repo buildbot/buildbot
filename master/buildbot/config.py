@@ -586,9 +586,10 @@ class MasterConfig(util.ComparableMixin):
             error(msg)
             return
 
+        msg = lambda s: "c['status'] contains an object that is not a status receiver (type %r)" % type(s)
         for s in status:
             if not interfaces.IStatusReceiver.providedBy(s):
-                error(msg)
+                error(msg(s))
                 return
 
         self.status = status
