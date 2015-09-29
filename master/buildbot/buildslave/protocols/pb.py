@@ -13,13 +13,15 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import absolute_import
+
 from future.utils import itervalues
 
-from buildbot.buildslave.protocols import base
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
+
+from buildbot.buildslave.protocols import base
 
 
 class Listener(base.Listener):
