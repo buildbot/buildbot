@@ -574,8 +574,7 @@ class PastBuildsJsonResource(JsonResource):
             return
 
         if self.slave_status is not None:
-            slavename = self.slave_status.getName() if self.slave_status else None
-
+            slavename = self.slave_status.getName()
             builds = yield self.status.generateFinishedBuildsAsync(num_builds=self.number, results=results,
                                                                    slavename=slavename)
 
