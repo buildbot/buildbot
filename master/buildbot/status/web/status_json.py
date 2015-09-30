@@ -144,6 +144,9 @@ def FilterOut(data):
     else:
         return data
 
+def getSlaveName(slave_status):
+    return slave_status.getName() if slave_status else None
+
 
 class JsonResource(resource.Resource):
     """Base class for json data."""
@@ -571,7 +574,7 @@ class PastBuildsJsonResource(JsonResource):
             return
 
         if self.slave_status is not None:
-            slavename = self.slave_status.getName()
+            slavename = self.slave_status.getName() if self.slave_status else None
 
             builds = yield self.status.generateFinishedBuildsAsync(num_builds=self.number, results=results,
                                                                    slavename=slavename)
@@ -950,7 +953,7 @@ class SlaveBuildsJsonResource(JsonResource):
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
         self.slave_status = slave_status
-        self.name = self.slave_status.getName()
+        self.name = getSlaveName(self.slave_status)
 
     def getChild(self, path, request):
         # Dynamic childs.
@@ -966,7 +969,7 @@ class SlaveBuildsJsonResource(JsonResource):
         return JsonResource.getChild(self, path, request)
 
     def asDict(self, request):
-        slavename = self.slave_status.getName()
+        slavename = getSlaveName(self.slave_status)
         my_builders = []
         for bname in self.status.getBuilderNames():
             b = self.status.getBuilder(bname)
@@ -983,7 +986,6 @@ class SlaveBuildsJsonResource(JsonResource):
         return current_builds
 
 
-
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
 """
@@ -992,7 +994,7 @@ class SlaveJsonResource(JsonResource):
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
         self.slave_status = slave_status
-        self.name = self.slave_status.getName()
+        self.name = getSlaveName(self.slave_status)
         self.builders = None
         self.putChild('builds', SlaveBuildsJsonResource(status, slave_status))
 
@@ -1009,9 +1011,10 @@ class SlaveJsonResource(JsonResource):
         return self.builders
 
     def asDict(self, request):
-        results = self.slave_status.asDict()
+        results = self.slave_status.asDict() if self.slave_status else None
         #Add builder information
-        results['builders'] = self.getBuilders()
+        if results:
+            results['builders'] = self.getBuilders()
         return results
 
 

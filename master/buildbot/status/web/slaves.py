@@ -131,14 +131,14 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
 
         # connects over the last hour
         slave = s.getSlave(self.slavename)
-        connect_count = slave.getConnectCount()
 
-        if slave.isPaused():
-            pause_url = request.childLink("unpause")
-        else:
-            pause_url = request.childLink("pause")
-
-        ctx.update(dict(slave=slave,
+        if slave:
+            connect_count = slave.getConnectCount()
+            if slave.isPaused():
+                pause_url = request.childLink("unpause")
+            else:
+                pause_url = request.childLink("pause")
+            ctx.update(dict(slave=slave,
                         slavename=slave.getFriendlyName(),
                         shutdown_url=request.childLink("shutdown"),
                         pause_url = pause_url,
@@ -150,6 +150,10 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                    slave_version=slave.getVersion(),
                    show_builder_column=True,
                    connect_count=connect_count)
+        else:
+            ctx.update(dict(slavename=self.slavename,
+                            shutdown_url=request.childLink("shutdown")))
+
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         defer.returnValue(data)
