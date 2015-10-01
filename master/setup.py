@@ -391,14 +391,8 @@ else:
         'twisted >= 12.1.0',
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
-        'future'
-    ]
-
-    setup_args['install_requires'] += [
-        # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
+        'future',
         'sqlalchemy >= 0.6, <= 0.7.10',
-        # buildbot depends on sqlalchemy internals, and this is the tested
-        # version.
         'sqlalchemy-migrate==0.7.2',
         'python-dateutil>=1.5',
         'autobahn >= 0.10.2',
