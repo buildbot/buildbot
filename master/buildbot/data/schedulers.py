@@ -18,7 +18,7 @@ from buildbot.data import base
 from buildbot.data import masters
 from buildbot.data import types
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
-from twisted.internet import defer
+from buildbot.util import always_true
 
 
 class Db2DataMixin(object):
@@ -102,7 +102,7 @@ class Scheduler(base.ResourceType):
             schedulerid, masterid)
 
         # set is successful: deferred result is True
-        d.addCallback(lambda _: True)
+        d.addCallback(always_true)
 
         @d.addErrback
         def trapAlreadyClaimedError(why):

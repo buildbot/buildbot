@@ -18,7 +18,7 @@ from buildbot.data import base
 from buildbot.data import masters
 from buildbot.data import types
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
-from twisted.internet import defer
+from buildbot.util import always_true
 
 
 class Db2DataMixin(object):

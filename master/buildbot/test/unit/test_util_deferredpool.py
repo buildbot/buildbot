@@ -16,6 +16,7 @@
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.util import always_true
 from buildbot.util.deferredpool import DeferredPool
 
 
@@ -85,7 +86,7 @@ class TestPool(unittest.TestCase):
         """
         pool = DeferredPool()
         d = defer.Deferred()
-        d.addErrback(lambda _: True)
+        d.addErrback(always_true)
         pool.add(d)
         pool.add(defer.Deferred())
         self.assertEqual(pool.status(), (2, 0))

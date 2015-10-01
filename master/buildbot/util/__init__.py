@@ -101,6 +101,7 @@ def formatInterval(eta):
 
 class ComparableMixin(object):
     implements(IConfigured)
+
     compare_attrs = []
 
     class _None:
@@ -371,9 +372,14 @@ def command_to_string(command):
     return rv
 
 
+def always_true(_):
+    return True
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'UTC',
     'diffSets', 'makeList', 'in_reactor', 'string2boolean',
-    'check_functional_environment', 'human_readable_delta']
+    'check_functional_environment', 'human_readable_delta',
+    'always_true']

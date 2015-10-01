@@ -25,6 +25,7 @@ from buildbot.db import buildrequests
 from buildbot.process import buildrequestdistributor
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.util import always_true
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
 
@@ -127,7 +128,7 @@ class TestBRDBase(unittest.TestCase):
             reactor.callLater(0, d.callback, True)
             return d
         bldr.maybeStartBuild = maybeStartBuild
-        bldr.canStartWithSlavebuilder = lambda _: True
+        bldr.canStartWithSlavebuilder = always_true
         bldr.getCollapseRequestsFn = lambda: False
 
         bldr.slaves = []

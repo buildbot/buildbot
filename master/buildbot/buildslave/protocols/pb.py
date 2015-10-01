@@ -22,6 +22,7 @@ from twisted.python import log
 from twisted.spread import pb
 
 from buildbot.buildslave.protocols import base
+from buildbot.util import always_true
 
 
 class Listener(base.Listener):
@@ -217,7 +218,7 @@ class Connection(base.Connection, pb.Avatar):
         # failures.
         def new_way():
             d = self.mind.callRemote('shutdown')
-            d.addCallback(lambda _: True)  # successful shutdown request
+            d.addCallback(always_true)      # successful shutdown request
 
             @d.addErrback
             def check_nsm(f):
