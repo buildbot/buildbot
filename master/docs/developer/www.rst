@@ -634,7 +634,7 @@ It uses the following libraries:
 The DataService is available as a standalone AngularJS module.
 Installation via bower:
 
-  .. code-block:: shell
+  .. code-block:: sh
 
       bower install buildbot-data --save
 
