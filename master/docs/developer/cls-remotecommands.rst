@@ -86,7 +86,7 @@ RemoteCommand
         :param failure: the failure that caused the step to complete, or None for success
 
         Called by the slave to indicate that the command is complete.
-        Normal completion (even with a nonzero ``rc``) will finish with no failure; if ``failure`` is set, then the step should finish with status :attr:`~buildbot.status.results.EXCEPTION`.
+        Normal completion (even with a nonzero ``rc``) will finish with no failure; if ``failure`` is set, then the step should finish with status :attr:`~buildbot.process.results.EXCEPTION`.
 
     These methods are hooks for subclasses to add functionality.
 

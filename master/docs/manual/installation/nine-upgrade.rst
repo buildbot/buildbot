@@ -127,6 +127,8 @@ A few notes on changes to the configuration of these reporters:
 
 * :bb:reporter:`GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
+* :py:class:`~buildbot.status.builder.Results` and the constants :py:class:`~buildbot.status.results.SUCCESS` should be imported from the :py:class:`~buildbot.process.results` module instead.
+
 Steps
 -----
 

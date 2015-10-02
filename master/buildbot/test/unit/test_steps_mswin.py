@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import Results
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import Results
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.steps import mswin
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps

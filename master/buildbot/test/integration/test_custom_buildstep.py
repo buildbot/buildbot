@@ -25,7 +25,7 @@ from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
 from buildbot.process import slavebuilder
-from buildbot.status import results
+from buildbot.process import results
 from buildbot.steps import shell
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster

@@ -17,8 +17,8 @@ import StringIO
 import mock
 
 from buildbot import interfaces
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps

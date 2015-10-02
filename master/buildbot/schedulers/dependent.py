@@ -17,8 +17,8 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.schedulers import base
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from twisted.internet import defer
 
 

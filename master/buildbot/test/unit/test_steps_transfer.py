@@ -27,10 +27,10 @@ from mock import Mock
 from buildbot import config
 from buildbot.process import remotetransfer
 from buildbot.process.properties import Properties
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SKIPPED
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SKIPPED
+from buildbot.process.results import SUCCESS
 from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef

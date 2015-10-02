@@ -19,10 +19,10 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process import properties
 from buildbot.status import master
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
 from buildbot.test.util import steps

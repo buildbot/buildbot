@@ -3,11 +3,11 @@
 Build Result Codes
 ==================
 
-.. py:module:: buildbot.status.results
+.. py:module:: buildbot.process.results
 
 Buildbot represents the status of a step, build, or buildset using a set of
 numeric constants.  From Python, these constants are available in the module
-``buildbot.status.results``, but the values also appear in the database and in
+``buildbot.process.results``, but the values also appear in the database and in
 external tools, so the values are fixed.
 
 .. py:data:: SUCCESS

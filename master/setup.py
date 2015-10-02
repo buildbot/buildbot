@@ -325,7 +325,7 @@ setup_args = {
                 'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
                 'StringParameter', 'TextParameter', 'UserNameParameter']),
-            ('buildbot.status.results', [
+            ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),
             ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
