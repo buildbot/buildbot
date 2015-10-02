@@ -340,7 +340,7 @@ class StatusPush(StatusReceiverMultiService):
         d.addErrback(log.err, 'while pushing status message')
 
     def buildFinished(self, builderName, build, results):
-        d = self.push('buildFinished', build=build)
+        d = self.push('buildFinished', build=build, results=results)
         d.addErrback(log.err, 'while pushing status message')
 
     def builderRemoved(self, builderName):
