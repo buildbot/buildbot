@@ -152,11 +152,13 @@ class BuildChooserBase(object):
         if breq.id in self.breqCache:
             del self.breqCache[breq.id]
 
-    def _getUnclaimedBuildRequests(self):
+    def _getUnclaimedBuildRequests(self, pendingBrdicts=None):
+        if pendingBrdicts is None:
+            pendingBrdicts = self.unclaimedBrdicts
         # Retrieve the list of BuildRequest objects for all unclaimed builds
         return defer.gatherResults([
             self._getBuildRequestForBrdict(brdict)
-              for brdict in self.unclaimedBrdicts ])
+              for brdict in pendingBrdicts])
             
 class BasicBuildChooser(BuildChooserBase):
     # BasicBuildChooser generates build pairs via the configuration points:
@@ -254,16 +256,19 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(nextBuild)
         
     @defer.inlineCallbacks
-    def mergeRequests(self, breq):
+    def mergeRequests(self, breq, pendingBrdicts=None):
         mergedRequests = [breq]
 
+        if pendingBrdicts is None:
+            pendingBrdicts = self.unclaimedBrdicts
+
         # short circuit if there is no merging to do
-        if not self.mergeRequestsFn or not self.unclaimedBrdicts:
+        if not self.mergeRequestsFn or not pendingBrdicts:
             defer.returnValue(mergedRequests)
             return
 
         # we'll need BuildRequest objects, so get those first
-        unclaimedBreqs = yield self._getUnclaimedBuildRequests()
+        unclaimedBreqs = yield self._getUnclaimedBuildRequests(pendingBrdicts)
 
         # gather the mergeable requests
         for req in unclaimedBreqs:
@@ -476,8 +481,14 @@ class KatanaBuildChooser(BasicBuildChooser):
         buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
 
         breqs = yield self.getMergedBuildRequests(breq)
-        for b in breqs:
-            self._removeBuildRequest(b, self.resumeBrdicts)
+        newBreqs = yield self.mergeRequests(breq, pendingBrdicts=self.resumeBrdicts)
+        if len(newBreqs) > 1:
+            brids = [br.id for br in newBreqs]
+            log.msg("merge pending buildrequest to resume %s with %s " % (breq.id, brids))
+            yield self.master.db.buildrequests.mergePendingBuildRequests(brids, artifactbrid=breq.id, claim=False)
+            breqs.extend(newBreqs[1:])
+            for b in breqs:
+                self._removeBuildRequest(b, self.resumeBrdicts)
 
         defer.returnValue((slave, buildnumber, breqs))
 

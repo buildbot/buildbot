@@ -424,13 +424,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def mergePendingBuildRequests(self, brids, _reactor=reactor, _master_objectid=None):
+    def mergePendingBuildRequests(self, brids, artifactbrid=None, claim=True, _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
                 buildrequests_tbl = self.db.model.buildrequests
                 claimed_at = self.getClaimedAtValue(_reactor)
-                self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
+                if claim:
+                    self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 # we'll need to batch the brids into groups of 100, so that the
                 # parameter lists supported by the DBAPI aren't
                 iterator = iter(brids[1:])
@@ -439,6 +440,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     stmt = buildrequests_tbl.update()\
                         .where(buildrequests_tbl.c.id.in_(batch))\
                         .values(mergebrid=brids[0])
+
+                    if artifactbrid is not None:
+                        stmt = stmt.values(artifactbrid=artifactbrid)
+
                     conn.execute(stmt)
                     batch = list(itertools.islice(iterator, 100))
 
