@@ -25,7 +25,7 @@ Features
 
 * :bb:reporter:`GerritStatusPush` now accepts a ``builders`` parameter.
 
-* Build results (success/failure/etc) are passed to the StatusPush handler.
+* :bb:reporter:`StatusPush` callback now receives build results (success/failure/etc) with the ``buildFinished`` event.
 
 Fixes
 ~~~~~
