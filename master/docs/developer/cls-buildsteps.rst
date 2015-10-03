@@ -102,7 +102,7 @@ BuildStep
 
     .. py:attribute:: results
 
-        This is the result (a code from :py:mod:`buildbot.status.results`) of the step.
+        This is the result (a code from :py:mod:`buildbot.process.results`) of the step.
         This attribute only exists after the step is finished, and should only be used in :py:meth:`getResultSummary`.
 
     A few important pieces of information are not available when a step is constructed, and are added later.
@@ -175,7 +175,7 @@ BuildStep
 
         Execute the step.
         When this method returns (or when the Deferred it returns fires), the step is complete.
-        The method's return value must be an integer, giving the result of the step -- a constant from :mod:`buildbot.status.results`.
+        The method's return value must be an integer, giving the result of the step -- a constant from :mod:`buildbot.process.results`.
         If the method raises an exception or its Deferred fires with failure, then the step will be completed with an EXCEPTION result.
         Any other output from the step (logfiles, status strings, URLs, etc.) is the responsibility of the ``run`` method.
 
@@ -184,23 +184,23 @@ BuildStep
 
     .. py:method:: start()
 
-        :returns: ``None`` or :data:`~buildbot.status.results.SKIPPED`,
+        :returns: ``None`` or :data:`~buildbot.process.results.SKIPPED`,
             optionally via a Deferred.
 
         Begin the step.
         BuildSteps written before Buildbot-0.9.0 often override this method instead of :py:meth:`run`, but this approach is deprecated.
 
-        When the step is done, it should call :py:meth:`finished`, with a result -- a constant from :mod:`buildbot.status.results`.
+        When the step is done, it should call :py:meth:`finished`, with a result -- a constant from :mod:`buildbot.process.results`.
         The result will be handed off to the :py:class:`~buildbot.process.build.Build`.
 
         If the step encounters an exception, it should call :meth:`failed` with a Failure object.
 
-        If the step decides it does not need to be run, :meth:`start` can return the constant :data:`~buildbot.status.results.SKIPPED`.
+        If the step decides it does not need to be run, :meth:`start` can return the constant :data:`~buildbot.process.results.SKIPPED`.
         In this case, it is not necessary to call :meth:`finished` directly.
 
     .. py:method:: finished(results)
 
-        :param results: a constant from :mod:`~buildbot.status.results`
+        :param results: a constant from :mod:`~buildbot.process.results`
 
         A call to this method indicates that the step is finished and the build should analyze the results and perhaps proceed to the next step.
         The step should not perform any additional processing after calling this method.
@@ -480,7 +480,7 @@ LoggingBuildStep
     * supports lazy logfiles
     * handles the mechanics of starting, interrupting, and finishing remote commands
     * detects lost slaves and finishes with a status of
-      :data:`~buildbot.status.results.RETRY`
+      :data:`~buildbot.process.results.RETRY`
 
     .. py:attribute:: logfiles
 
@@ -502,7 +502,7 @@ LoggingBuildStep
         :param logfiles: optional dictionary see :bb:step:`ShellCommand`
         :param lazylogfiles: optional boolean see :bb:step:`ShellCommand`
 
-        :returns: step result from :mod:`buildbot.status.results`
+        :returns: step result from :mod:`buildbot.process.results`
 
         .. note::
 
@@ -537,7 +537,7 @@ LoggingBuildStep
     .. py:method:: evaluateCommand(command)
 
         :param command: the just-completed remote command
-        :returns: step result from :mod:`buildbot.status.results`
+        :returns: step result from :mod:`buildbot.process.results`
 
         This hook should decide what result the step should have.
 

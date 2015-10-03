@@ -332,7 +332,7 @@ def masterConfig():
     from buildbot.config import BuilderConfig
     from buildbot.process.buildstep import BuildStep
     from buildbot.process.factory import BuildFactory
-    from buildbot.status import results
+    from buildbot.process import results
 
     class MyBuildStep(BuildStep):
 

@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 from buildbot.process.properties import Property
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.steps import vstudio
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps

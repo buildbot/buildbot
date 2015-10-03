@@ -18,7 +18,7 @@ from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 
 from buildbot.db.buildrequests import NotClaimedError
-from buildbot.status import results
+from buildbot.process import results
 
 from twisted.internet import defer
 from twisted.internet import reactor

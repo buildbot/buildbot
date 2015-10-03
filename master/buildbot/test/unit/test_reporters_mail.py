@@ -22,11 +22,11 @@ from buildbot.config import ConfigErrors
 from buildbot.process import properties
 from buildbot.reporters import utils
 from buildbot.reporters.mail import MailNotifier
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin

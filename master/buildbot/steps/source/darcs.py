@@ -24,7 +24,7 @@ from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
 
 

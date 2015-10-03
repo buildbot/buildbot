@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.status.status_stash import StashStatusPush, INPROGRESS, SUCCESSFUL, FAILED
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util import logging

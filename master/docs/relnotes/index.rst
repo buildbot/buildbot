@@ -39,6 +39,8 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* The :py:mod:`buildbot.status.results` module no longer exists and has been renamed to :py:mod:`buildbot.process.results`.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

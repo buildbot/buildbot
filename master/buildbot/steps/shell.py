@@ -21,10 +21,10 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
 from buildbot.process import remotecommand
-from buildbot.status.results import FAILURE
-from buildbot.status.results import Results
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import Results
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.steps.slave import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten

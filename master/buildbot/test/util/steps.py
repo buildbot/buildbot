@@ -253,7 +253,7 @@ class BuildStepMixin(object):
 
     def expectOutcome(self, result, state_string=None):
         """
-        Expect the given result (from L{buildbot.status.results}) and status
+        Expect the given result (from L{buildbot.process.results}) and status
         text (a list).
         """
         self.exp_result = result

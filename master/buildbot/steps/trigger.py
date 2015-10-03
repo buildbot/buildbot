@@ -23,8 +23,8 @@ from buildbot.process.buildstep import EXCEPTION
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
-from buildbot.status.results import statusToString
-from buildbot.status.results import worst_status
+from buildbot.process.results import statusToString
+from buildbot.process.results import worst_status
 from twisted.internet import defer
 from twisted.python import log
 

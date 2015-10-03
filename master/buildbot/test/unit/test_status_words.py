@@ -18,7 +18,7 @@ import mock
 import re
 
 from buildbot.status import words
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import datetime2epoch
