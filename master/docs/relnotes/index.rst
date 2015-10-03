@@ -25,6 +25,8 @@ Features
 
 * :bb:reporter:`GerritStatusPush` now accepts a ``builders`` parameter.
 
+* Build results (success/failure/etc) are passed to the StatusPush handler.
+
 Fixes
 ~~~~~
 
