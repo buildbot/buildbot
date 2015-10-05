@@ -484,11 +484,12 @@ class KatanaBuildChooser(BasicBuildChooser):
         newBreqs = yield self.mergeRequests(breq, pendingBrdicts=self.resumeBrdicts)
         if len(newBreqs) > 1:
             brids = [br.id for br in newBreqs]
-            log.msg("merge pending buildrequest to resume %s with %s " % (breq.id, brids))
+            log.msg("merge pending buildrequest to resume %s with %s " % (breq.id, brids[1:]))
             yield self.master.db.buildrequests.mergePendingBuildRequests(brids, artifactbrid=breq.id, claim=False)
             breqs.extend(newBreqs[1:])
-            for b in breqs:
-                self._removeBuildRequest(b, self.resumeBrdicts)
+
+        for b in breqs:
+            self._removeBuildRequest(b, self.resumeBrdicts)
 
         defer.returnValue((slave, buildnumber, breqs))
 
