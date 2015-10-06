@@ -41,9 +41,8 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
 
   ####### PROJECT IDENTITY
 
-  # the 'title' string will appear at the top of this buildbot
-  # installation's home page (linked to the
-  # 'titleURL') and is embedded in the title of the waterfall HTML page.
+  # the 'title' string will appear at the top of this buildbot installation's
+  # home pages (linked to the 'titleURL').
 
   c['title'] = "Pyflakes"
   c['titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"

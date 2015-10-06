@@ -245,9 +245,8 @@ class SimpleConfig(dict):
         }
 
         # PROJECT IDENTITY
-        # the 'title' string will appear at the top of this buildbot
-        # installation's html.WebStatus home page (linked to the
-        # 'titleURL') and is embedded in the title of the waterfall HTML page.
+        # the 'title' string will appear at the top of this buildbot installation's
+        # home pages (linked to the 'titleURL').
 
         # FIXME: get name and homepage from masterjson
         self['title'] = name
