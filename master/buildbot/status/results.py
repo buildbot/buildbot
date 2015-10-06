@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE, RESUME = range(10)
+SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE, RESUME, MERGED = range(11)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled", "not_rebuilt",
-           "dependency_failure", "resume"]
+           "dependency_failure", "resume", "merged"]
 
 BEGINNING = -1
 

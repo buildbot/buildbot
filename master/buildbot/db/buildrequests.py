@@ -437,12 +437,17 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 iterator = iter(brids[1:])
                 batch = list(itertools.islice(iterator, 100))
                 while len(batch) > 0:
+
                     stmt = buildrequests_tbl.update()\
-                        .where(buildrequests_tbl.c.id.in_(batch))\
+                        .where(sa.or_(buildrequests_tbl.c.id.in_(batch), buildrequests_tbl.c.mergebrid.in_(batch)))\
                         .values(mergebrid=brids[0])
 
                     if artifactbrid is not None:
-                        stmt = stmt.values(artifactbrid=artifactbrid)
+                        stmt_br = sa.select([buildrequests_tbl.c.artifactbrid])\
+                            .where(buildrequests_tbl.c.id==brids[0])
+                        res = conn.execute(stmt_br)
+                        row = res.fetchone()
+                        stmt = stmt.values(artifactbrid=row.artifactbrid if row and row.artifactbrid else artifactbrid)
 
                     conn.execute(stmt)
                     batch = list(itertools.islice(iterator, 100))

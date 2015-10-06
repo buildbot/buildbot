@@ -316,6 +316,20 @@ class Builder(config.ReconfigurableServiceMixin,
             return defer.maybeDeferred(self.config.canStartBuild, self, slavebuilder, breq)
         return defer.succeed(True)
 
+    @defer.inlineCallbacks
+    def maybeUpdateMergedBuilds(self, breqs, buildnumber):
+        url = yield self.master.status.getURLForBuildRequest(breqs[0].id,
+                                                                 builder_name=self.name,
+                                                                 build_number=buildnumber,
+                                                                 builder_friendly_name=self.config.friendly_name)
+        updated_builds = []
+        for breq in breqs[1:]:
+            buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
+            if buildnumber is not None and buildnumber not in updated_builds:
+                build_status = yield self.builder_status.deferToThread(buildnumber)
+                if build_status is not None:
+                    yield build_status.buildMerged(url)
+                    updated_builds.append(buildnumber)
 
     @defer.inlineCallbacks
     def maybeResumeBuild(self, slavebuilder, buildnumber, breqs):
@@ -330,6 +344,10 @@ class Builder(config.ReconfigurableServiceMixin,
             defer.returnValue(False)
 
         build_started = yield self._startBuildFor(slavebuilder, breqs, build_status)
+
+        if build_started and len(breqs) > 1:
+            yield self.maybeUpdateMergedBuilds(breqs, buildnumber)
+
         defer.returnValue(build_started)
 
     @defer.inlineCallbacks

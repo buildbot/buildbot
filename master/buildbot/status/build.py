@@ -20,11 +20,11 @@ from cPickle import dump
 from zope.interface import implements
 from twisted.python import log, runtime, components
 from twisted.persisted import styles
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, threads
 from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
-from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED, RESUME, CANCELED, RETRY
+from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED, RESUME, CANCELED, RETRY, MERGED
 import time
 
 # Avoid doing an import since it creates circular reference
@@ -499,6 +499,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.buildFinished()
         self.saveYourself()
         raise RuntimeError(failure)
+
+    @defer.inlineCallbacks
+    def buildMerged(self, url):
+        self.setResults(MERGED)
+        self.finished = util.now()
+        self.setText(["Build has been merged with: %s" % url['text']])
+        yield threads.deferToThread(self.saveYourself)
 
     def saveYourself(self):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)
