@@ -1235,7 +1235,7 @@ class TestProperty(unittest.TestCase):
         return d
 
 
-class TestRenderalbeAdapters(unittest.TestCase):
+class TestRenderableAdapters(unittest.TestCase):
 
     """
     Tests for list, tuple and dict renderers.
