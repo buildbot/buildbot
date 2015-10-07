@@ -743,3 +743,27 @@ class _DictRenderer(object):
         return d
 
 registerAdapter(_DictRenderer, dict, IRenderable)
+
+
+class Transform(object):
+
+    """
+    A renderable that combines other renderables' results using an arbitrary function.
+    """
+
+    implements(IRenderable)
+
+    def __init__(self, function, *args, **kwargs):
+        if not callable(function) and not IRenderable.providedBy(function):
+            config.error("function given to Transform neither callable nor renderable")
+
+        self._function = function
+        self._args = args
+        self._kwargs = kwargs
+
+    @defer.inlineCallbacks
+    def getRenderingFor(self, iprops):
+        rfunction = yield iprops.render(self._function)
+        rargs = yield iprops.render(self._args)
+        rkwargs = yield iprops.render(self._kwargs)
+        defer.returnValue(rfunction(*rargs, **rkwargs))
