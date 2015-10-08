@@ -72,7 +72,7 @@ class BuildChooserBase(object):
     
 
     # Must be implemented by subclass
-    def popNextBuild(self):
+    def popNextBuild(self, buildrequest=None):
         # Pick the next (slave, breq) pair; note this is pre-merge, so
         # it's just one breq
         raise NotImplementedError("Subclasses must implement this!")
@@ -227,13 +227,13 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(slave)
         
     @defer.inlineCallbacks
-    def popNextBuild(self):
+    def popNextBuild(self, buildrequest=None):
         nextBuild = (None, None)
         
         while 1:
             
             #  1. pick a build
-            breq = yield self._getNextUnclaimedBuildRequest()
+            breq = yield self._getNextUnclaimedBuildRequest() if buildrequest is None else buildrequest
             if not breq:
                 break
 
@@ -594,37 +594,36 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBuild)
 
     @defer.inlineCallbacks
-    def popNextBuild(self):
-        nextBuild = (None, None)
+    def _getBuildRequest(self):
+        breq = None
+        while breq is None:
+            # 1. pick a build request
+            breq = yield self._getNextUnclaimedBuildRequest()
 
-        # 1. pick a build
-        breq = yield self._getNextUnclaimedBuildRequest()
+            if not breq:
+                break
 
-        if not breq:
-            defer.returnValue(nextBuild)
-            return
+            # 2. try merge this build with a compatible running build
+            if (breq and self.bldr.building):
+                breqs = yield self.mergeRequests(breq)
+                brids = [br.id for br in breqs]
+                try:
+                    if (yield self.mergeBuildingRequests(brids, breqs)):
+                        for b in breqs:
+                            self._removeBuildRequest(b)
+                        breq = None
+                        continue
+                except:
+                    # update unclaimed list
+                    self.unclaimedBrdicts = None
+                    self._fetchUnclaimedBrdicts()
+                    breq = None
+                    continue
 
-        # 2. try merge this build with a compatible running build
-        if (breq and self.bldr.building):
-            breqs = yield self.mergeRequests(breq)
-            brids = [br.id for br in breqs]
-            try:
-                if (yield self.mergeBuildingRequests(brids, breqs)):
-                    for b in breqs:
-                        self._removeBuildRequest(b)
-                    defer.returnValue(nextBuild)
-                    return
-            except:
-                # update unclaimed list
-                self.unclaimedBrdicts = None
-                self._fetchUnclaimedBrdicts()
-                defer.returnValue(nextBuild)
-                return
-
-        # 3. try merge with compatible finished build in the same chain
-        brdict = self._getBrdictForBuildRequest(breq)
-        if (breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None):
-                # check if can be merged with finished build
+            # 3. try merge with compatible finished build in the same chain
+            brdict = self._getBrdictForBuildRequest(breq)
+            if (breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None):
+                #check if can be merged with finished build
                 finished_br = yield self.master.db.buildrequests\
                     .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
                 if finished_br:
@@ -644,21 +643,38 @@ class KatanaBuildChooser(BasicBuildChooser):
                         yield self.bldr._maybeBuildsetsComplete(merged_breqs, requestRemoved=True)
                         for b in breqs:
                             self._removeBuildRequest(b)
+                        breq = None
+                        continue
 
                     except:
                         # update unclaimed list
                         self.unclaimedBrdicts = None
                         self._fetchUnclaimedBrdicts()
-                    defer.returnValue(nextBuild)
-                    return
+                        breq = None
+                        continue
 
-        # run the build on a specific slave
-        if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
-            nextBuild = yield self.buildHasSelectedSlave(breq, self.slavepool)
+        defer.returnValue(breq)
+
+    @defer.inlineCallbacks
+    def popNextBuild(self, buildrequest=None):
+        nextBuild = (None, None)
+
+        # 1. pick a buildrequest
+        breq = yield self._getBuildRequest()
+
+        if not breq:
             defer.returnValue(nextBuild)
             return
 
-        nextBuild = yield BasicBuildChooser.popNextBuild(self)
+        # run the build on a specific slave
+        if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
+            slavebuilder, breq = yield self.buildHasSelectedSlave(breq, self.slavepool)
+            if slavebuilder is not None and breq is not None:
+                defer.returnValue((slavebuilder, breq))
+                return
+
+        # default to basic build chooser
+        nextBuild = yield BasicBuildChooser.popNextBuild(self, buildrequest=breq)
         defer.returnValue(nextBuild)
 
 
@@ -873,7 +889,7 @@ class BuildRequestDistributor(service.Service):
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
-        defer.returnValue(buildStarted)
+        defer.returnValue(True)
 
     @defer.inlineCallbacks
     def _maybeStartNewBuildsOnBuilder(self, bc, bldr):
