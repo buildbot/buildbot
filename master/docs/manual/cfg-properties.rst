@@ -359,7 +359,7 @@ Custom Renderables
 If the options described above are not sufficient, more complex substitutions can be achieved by writing custom renderables.
 
 The :class:`~buildbot.interfaces.IRenderable` interface is simple - objects must provide a `getRenderingFor` method.
-The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string or a deferred firing with a string.
+The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return the rendered value or a deferred firing with one.
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
