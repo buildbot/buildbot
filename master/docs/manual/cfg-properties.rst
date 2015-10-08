@@ -112,8 +112,11 @@ Using Properties in Steps
 -------------------------
 
 For the most part, properties are used to alter the behavior of build steps during a build.
-This is done by annotating the step definition in ``master.cfg`` with placeholders.
-When the step is started, these placeholders will be replaced using the current values of the build properties.
+This is done by using :index:`renderables <renderable>` (objects implementing the :class:`~buildbot.interfaces.IRenderable` interface) as step parameters.
+When the step is started, each such object is rendered using the current values of the build properties, and the resultant rendering is substituted as the actual value of the step parameter.
+
+Buildbot offers several renderable object types covering common cases.
+It's also possible to :ref:`create custom renderables <Custom-Renderables>`.
 
 .. note::
 
@@ -127,8 +130,8 @@ When the step is started, these placeholders will be replaced using the current 
     This does not work because the value of the property is not available when the ``if`` statement is executed.
     However, Python will not detect this as an error - you will just never see the step added to the factory.
 
-You can use build properties in most step parameters.
-Please file bugs for any parameters which do not accept properties.
+You can use renderables in most step parameters.
+Please file bugs for any parameters which do not accept renderables.
 
 .. index:: single: Properties; Property
 
@@ -137,7 +140,7 @@ Please file bugs for any parameters which do not accept properties.
 Property
 ++++++++
 
-The simplest form of annotation is to wrap the property name with :class:`Property`::
+The simplest renderable is :class:`Property`, which renders to the value of the property named by its argument::
 
     from buildbot.plugins import steps, util
 
@@ -156,7 +159,7 @@ The ``defaultWhenFalse`` argument can be set to ``False`` to force buildbot to u
                                  util.Property('warnings', default='none',
                                                defaultWhenFalse=False)]))
 
-The default value can reference other properties, e.g.,
+The default value can be a renderable itself, e.g.,
 
 ::
 
@@ -200,6 +203,7 @@ The following selectors are supported.
 
 ``kw``
     The key refers to a keyword argument passed to ``Interpolate``.
+    Those keyword arguments may be ordinary values or renderables.
 
 The following ways of interpreting the value are available.
 
@@ -235,7 +239,7 @@ Example::
                                           'dist']))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
-Here, ``%s`` is used as a placeholder, and the substitutions (which may themselves be placeholders), are given as subsequent arguments::
+Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables), are given as subsequent arguments::
 
   TODO
 
@@ -252,7 +256,7 @@ Renderer
 ++++++++
 
 While Interpolate can handle many simple cases, and even some common conditionals, more complex cases are best handled with Python code.
-The ``renderer`` decorator creates a renderable object that will be replaced with the result of the function, called when the step it's passed to begins.
+The ``renderer`` decorator creates a renderable object whose rendering is obtained by calling the decorated function when the step it's passed to begins.
 The function receives an :class:`~buildbot.interfaces.IProperties` object, which it can use to examine the values of any and all properties.
 For example::
 
@@ -297,7 +301,7 @@ WithProperties
 
 .. warning::
 
-    This placeholder is deprecated.
+    This class is deprecated.
     It is an older version of :ref:`Interpolate`.
     It exists for compatibility with older configs.
 
@@ -347,14 +351,15 @@ Although these are similar to shell substitutions, no other substitutions are cu
 Note: like Python, you can use either positional interpolation *or* dictionary-style interpolation, not both.
 Thus you cannot use a string like ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
+.. _Custom-Renderables:
+
 Custom Renderables
 ++++++++++++++++++
 
 If the options described above are not sufficient, more complex substitutions can be achieved by writing custom renderables.
 
-Renderables are objects providing the :class:`~buildbot.interfaces.IRenderable` interface.
-That interface is simple - objects must provide a `getRenderingFor` method.
-The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string or a deferred firing with a string.
+The :class:`~buildbot.interfaces.IRenderable` interface is simple - objects must provide a `getRenderingFor` method.
+The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return the rendered value or a deferred firing with one.
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
