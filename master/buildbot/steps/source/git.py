@@ -64,12 +64,16 @@ git_describe_flags = [
 
 class GitMirrorRepo(object):
 """
-    [{
+Example:
+    git_mirror = GitMirrorRepo("my-repo", workdir, {
         'repourl': 'http://whereever/project.git',
         'origin':  'origin',    # required
         'alwaysUpdate': False,  # default True
         'fetchTags': True,      # default False
-    }]
+    })
+    
+    #...
+    steps.append(Git(mirrorRepo=git_mirror, ...))
 """
 
     def __init__(self, name, workdir=None, repo_config=None, lock=None):
