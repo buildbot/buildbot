@@ -276,7 +276,7 @@ class TestPropertyMap(unittest.TestCase):
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
 
     """
-    Test that Interpolate reports erros in the interpolation string
+    Test that Interpolate reports errors in the interpolation string
     at configure time.
     """
 
