@@ -931,7 +931,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             return defer.succeed(None)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-                         bsid=None, results=None, mergebrid=None):
+                         bsid=None, results=None, mergebrids=None):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -955,6 +955,12 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             if bsid is not None:
                 if br.buildsetid != bsid:
                     continue
+            if mergebrids is not None:
+                if mergebrids == "exclude":
+                    if br.mergebrid is not None:
+                        continue
+                elif mergebrids and br.mergebrid not in mergebrids:
+                        continue
             rv.append(self._brdictFromRow(br))
         return defer.succeed(rv)
 
@@ -1062,7 +1068,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
 
-    def mergeBuildingRequest(self, requests, brids, number):
+    def mergeBuildingRequest(self, requests, brids, number, claim=True):
         return self.claimBuildRequests(brids)
 
     def reclaimBuildRequests(self, brids):

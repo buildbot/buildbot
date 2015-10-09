@@ -74,7 +74,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
                          bsid=None, _master_objectid=None, brids=None,
-                         branch=None, repository=None, results=None, mergebrid=None):
+                         branch=None, repository=None, results=None, mergebrids=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -124,11 +124,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if results is not None:
                 q = q.where(reqs_tbl.c.results == results)
 
-            if mergebrid == "exclude":
-                q = q.where(reqs_tbl.c.mergebrid == None)
-
-            elif mergebrid is not None:
-                q = q.where(reqs_tbl.c.mergebrid == mergebrid)
+            if mergebrids is not None:
+                if mergebrids == "exclude":
+                    q = q.where(reqs_tbl.c.mergebrid == None)
+                else:
+                    q = q.where(reqs_tbl.c.mergebrid.in_(mergebrids))
 
             if branch is not None:
               q = q.where(sstamps_tbls.c.branch == branch)
@@ -288,12 +288,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def mergeBuildingRequest(self, requests, brids, number, _reactor=reactor, _master_objectid=None):
+    def mergeBuildingRequest(self, requests, brids, number, claim=True, _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                claimed_at = self.getClaimedAtValue(_reactor)
-                self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
+                if claim:
+                    claimed_at = self.getClaimedAtValue(_reactor)
+                    self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 self.addBuilds(conn, brids, number)
                 self.executeMergeBuildingRequests(conn, requests)
             except:
@@ -405,13 +406,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         res.close()
 
     @with_master_objectid
-    def mergeFinishedBuildRequest(self, brdict, merged_brids,
+    def mergeFinishedBuildRequest(self, brdict, merged_brids, claim=True,
                                       _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                claimed_at = self.getClaimedAtValue(_reactor)
-                self.insertBuildRequestClaimsTable(conn, _master_objectid, merged_brids, claimed_at)
+                if claim:
+                    claimed_at = self.getClaimedAtValue(_reactor)
+                    self.insertBuildRequestClaimsTable(conn, _master_objectid, merged_brids, claimed_at)
                 # build request will have same properties so we skip checking it
                 self.executeMergeFinishedBuildRequest(conn, brdict, merged_brids)
                 # insert builds

@@ -317,18 +317,19 @@ class Builder(config.ReconfigurableServiceMixin,
         return defer.succeed(True)
 
     @defer.inlineCallbacks
-    def maybeUpdateMergedBuilds(self, breqs, buildnumber):
-        url = yield self.master.status.getURLForBuildRequest(breqs[0].id,
+    def maybeUpdateMergedBuilds(self, brid, buildnumber, brids):
+        buildnumbers = yield self.master.db.builds.getBuildNumbersForRequests(brids=brids)
+        buildnumbers = [num for num in buildnumbers if num != buildnumber]
+
+        if buildnumbers:
+            url = yield self.master.status.getURLForBuildRequest(brid,
                                                                  builder_name=self.name,
                                                                  build_number=buildnumber,
                                                                  builder_friendly_name=self.config.friendly_name)
-        brids = [breq.id for breq in breqs[1:]]
-        buildnumbers = yield self.master.db.builds.getBuildNumbersForRequests(brids=brids)
-        buildnumbers = [num for num in buildnumbers if num != buildnumber]
-        for number in buildnumbers:
-            build_status = yield self.builder_status.deferToThread(number)
-            if build_status is not None:
-                yield build_status.buildMerged(url)
+            for number in buildnumbers:
+                build_status = yield self.builder_status.deferToThread(number)
+                if build_status is not None:
+                    yield build_status.buildMerged(url)
 
     @defer.inlineCallbacks
     def maybeResumeBuild(self, slavebuilder, buildnumber, breqs):
@@ -345,7 +346,10 @@ class Builder(config.ReconfigurableServiceMixin,
         build_started = yield self._startBuildFor(slavebuilder, breqs, build_status)
 
         if build_started and len(breqs) > 1:
-            yield self.maybeUpdateMergedBuilds(breqs, buildnumber)
+            yield self.maybeUpdateMergedBuilds(brid=breqs[0].id,
+                                               buildnumber=buildnumber,
+                                               brids=[br.id for br in breqs[1:]])
+
 
         defer.returnValue(build_started)
 
