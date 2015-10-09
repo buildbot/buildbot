@@ -85,6 +85,7 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
 
         bldr.maybeStartBuild = maybeStartBuild
         bldr.canStartWithSlavebuilder = lambda _: True
+        bldr.maybeUpdateMergedBuilds = lambda brid, buildnumber, brids: True
 
         bldr.slaves = []
         self.factory = factory.BuildFactory()

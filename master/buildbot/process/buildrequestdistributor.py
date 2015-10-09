@@ -568,7 +568,7 @@ class KatanaBuildChooser(BasicBuildChooser):
     def popNextBuildToResume(self):
         nextBuild = (None, None)
         # 1. pick a build
-        breq = yield self._getNextBuildToResume()
+        breq = yield self._getBuildRequest(claim=False)
 
         if not breq:
             defer.returnValue(nextBuild)
@@ -578,22 +578,13 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         # run the build on a specific slave
         if breq.slavepool != "startSlavenames" and self.buildRequestHasSelectedSlave(breq):
-            nextBuild = yield self.buildHasSelectedSlave(breq, slavepool)
-            defer.returnValue(nextBuild)
-            return
+            slavebuilder, breq = yield self.buildHasSelectedSlave(breq, slavepool)
+            if slavebuilder is not None and breq is not None:
+                defer.returnValue((slavebuilder, breq))
+                return
 
-        #  2. pick a slave
-        slave = yield self._popNextSlave(slavepool)
-
-        if not slave:
-            defer.returnValue(nextBuild)
-            return
-
-        # 3. make sure slave is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq, slavepool)
-        if slave:
-            nextBuild = (slave, breq)
-
+        # default to basic build chooser
+        nextBuild = yield self.selectNextBuild(buildrequest=breq, slavepool=slavepool, newBuild=False)
         defer.returnValue(nextBuild)
 
     @defer.inlineCallbacks
@@ -609,10 +600,7 @@ class KatanaBuildChooser(BasicBuildChooser):
     def _getBuildRequest(self, claim=True):
         breq = None
 
-        if claim:
-            getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest
-        else:
-            getNextBuildRequestFunc = self._getNextBuildToResume
+        getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest if claim else self._getNextBuildToResume
 
         def getPendingBrdict():
             if claim:
@@ -650,8 +638,8 @@ class KatanaBuildChooser(BasicBuildChooser):
                     continue
 
             # 3. try merge with compatible finished build in the same chain
-            brdict = self._getBrdictForBuildRequest(breq)
-            if (breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None):
+            brdict = self._getBrdictForBuildRequest(breq, getPendingBrdict())
+            if breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
                 #check if can be merged with finished build
                 finished_br = yield self.master.db.buildrequests\
                     .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
@@ -693,26 +681,33 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
-    def selectNextBuild(self, buildrequest=None):
+    def selectNextBuild(self, buildrequest, slavepool, newBuild):
         nextBuild = (None, None)
+
+        getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest if newBuild else self._getNextBuildToResume
+
+        def getPendingBrdict():
+            if newBuild:
+                return self.unclaimedBrdicts
+            return self.resumeBrdicts
 
         while 1:
 
             #  1. pick a build
-            breq = yield self._getNextUnclaimedBuildRequest() if buildrequest is None else buildrequest
+            breq = yield getNextBuildRequestFunc() if buildrequest is None else buildrequest
             if not breq:
                 break
 
             #  2. pick a slave
-            slave = yield self._popNextSlave()
+            slave = yield self._popNextSlave(slavepool)
             if not slave:
                 break
 
             # either satisfy this build or we leave it for another day
-            self._removeBuildRequest(breq)
+            self._removeBuildRequest(breq, getPendingBrdict())
 
             #  3. make sure slave+ is usable for the breq
-            slave = yield self._pickUpSlave(slave, breq)
+            slave = yield self._pickUpSlave(slave, breq, slavepool)
 
             #  4. done? otherwise we will try another build
             if slave:
@@ -740,7 +735,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                 return
 
         # default to basic build chooser
-        nextBuild = yield self.selectNextBuild(buildrequest=breq)
+        nextBuild = yield self.selectNextBuild(buildrequest=breq, slavepool=self.slavepool, newBuild=True)
         defer.returnValue(nextBuild)
 
 

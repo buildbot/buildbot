@@ -955,6 +955,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             if bsid is not None:
                 if br.buildsetid != bsid:
                     continue
+            if results is not None:
+                if br.results != results:
+                    continue
             if mergebrids is not None:
                 if mergebrids == "exclude":
                     if br.mergebrid is not None:
@@ -1069,7 +1072,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
 
     def mergeBuildingRequest(self, requests, brids, number, claim=True):
-        return self.claimBuildRequests(brids)
+        if claim:
+            return self.claimBuildRequests(brids)
 
     def reclaimBuildRequests(self, brids):
         for brid in brids:
