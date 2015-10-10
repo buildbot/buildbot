@@ -418,26 +418,25 @@ class KatanaBuildChooser(BasicBuildChooser):
 
     @defer.inlineCallbacks
     def buildHasSelectedSlave(self, breq, slavepool):
-        nextBuild = (None, None)
         if self.buildRequestHasSelectedSlave(breq):
             slavebuilder = self.getSelectedSlaveFromBuildRequest(breq)
 
             if not slavebuilder or slavebuilder.isAvailable() is False or slavebuilder not in slavepool:
-                defer.returnValue(nextBuild)
+                defer.returnValue(None)
                 return
 
             slavepool.remove(slavebuilder)
 
             canStart = yield self.bldr.canStartWithSlavebuilder(slavebuilder)
             if canStart:
-                defer.returnValue((slavebuilder, breq))
+                defer.returnValue(slavebuilder)
                 return
 
             # save as a last resort, just in case we need them later
             if self.rejectedSlaves is not None:
                 self.rejectedSlaves.append(slavebuilder)
 
-        defer.returnValue(nextBuild)
+        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
@@ -580,8 +579,8 @@ class KatanaBuildChooser(BasicBuildChooser):
 
             # run the build on a specific slave
             if breq.slavepool != "startSlavenames" and self.buildRequestHasSelectedSlave(breq):
-                slavebuilder, breq = yield self.buildHasSelectedSlave(breq, slavepool)
-                if slavebuilder is not None and breq is not None:
+                slavebuilder = yield self.buildHasSelectedSlave(breq, slavepool)
+                if slavebuilder is not None:
                     nextBuild = (slavebuilder, breq)
                     break
                 # slave maybe not available anymore try another build
@@ -750,8 +749,8 @@ class KatanaBuildChooser(BasicBuildChooser):
 
             # check if should run the build on a specific slave
             if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
-                slavebuilder, breq = yield self.buildHasSelectedSlave(breq, self.slavepool)
-                if slavebuilder is not None and breq is not None:
+                slavebuilder = yield self.buildHasSelectedSlave(breq, self.slavepool)
+                if slavebuilder is not None:
                     nextBuild = (slavebuilder, breq)
                     break
                 # slave maybe not available anymore try another build
