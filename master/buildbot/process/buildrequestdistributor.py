@@ -700,42 +700,6 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
-    def selectNextBuild(self, buildrequest, slavepool, newBuild):
-        nextBuild = (None, None)
-
-        getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest if newBuild else self._getNextBuildToResume
-
-        def getPendingBrdict():
-            if newBuild:
-                return self.unclaimedBrdicts
-            return self.resumeBrdicts
-
-        while 1:
-
-            #  1. pick a build
-            breq = yield getNextBuildRequestFunc() if buildrequest is None else buildrequest
-            if not breq:
-                break
-
-            #  2. pick a slave
-            slave = yield self._popNextSlave(slavepool)
-            if not slave:
-                break
-
-            # either satisfy this build or we leave it for another day
-            self._removeBuildRequest(breq, getPendingBrdict())
-
-            #  3. make sure slave+ is usable for the breq
-            slave = yield self._pickUpSlave(slave, breq, slavepool)
-
-            #  4. done? otherwise we will try another build
-            if slave:
-                nextBuild = (slave, breq)
-                break
-
-        defer.returnValue(nextBuild)
-
-    @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
         selectNextBuild = True
