@@ -580,6 +580,8 @@ class Build(properties.PropertiesMixin):
             # XXX: also test a 'timing consistent' flag?
             log.msg(" setting expectations for next time")
             self.builder.setExpectations(self.progress)
+        # TODO: check why callbacks are not triggered when stopping master and retrying builds
+        # this maybe cause by the upstream merged
         eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None

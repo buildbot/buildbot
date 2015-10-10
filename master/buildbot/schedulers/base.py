@@ -392,6 +392,10 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
     @defer.inlineCallbacks
     def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
                                             properties, triggeredbybrid=None, builderNames=None):
+
+        # TODO: skip adding this if a retry and request are already in the db
+        # in this case we should fetch them and return that list
+
         if sourcestamps is None:
             sourcestamps = {}
 
