@@ -314,8 +314,8 @@ setup_args = {
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
             ('buildbot.process.logobserver', ['LogLineObserver']),
             ('buildbot.process.properties', [
-                'FlattenList', 'Interpolate', 'Property', 'WithProperties',
-                'renderer']),
+                'FlattenList', 'Interpolate', 'Property', 'Transform',
+                'WithProperties', 'renderer']),
             ('buildbot.process.properties', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
