@@ -21,6 +21,7 @@ class Build extends Controller
                     redirect_to_build: true
 
             failure = (why) ->
+                $scope.is_rebuilding = false
                 $scope.error = "Cannot rebuild: " + why.data.error.message
                 refreshContextMenu()
 
@@ -33,6 +34,7 @@ class Build extends Controller
                 refreshContextMenu()
 
             failure = (why) ->
+                $scope.is_stopping = false
                 $scope.error = "Cannot Stop: " + why.data.error.message
                 refreshContextMenu()
 
