@@ -277,6 +277,31 @@ For example::
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
+.. index:: single: Properties; Transform
+
+.. _Transform:
+
+Transform
++++++++++
+
+``Transform`` is an alternative to ``renderer``.
+While ``renderer`` is useful for creating new renderables, ``Transform`` is easier to use when you want to transform or combine the renderings of preexisting ones.
+
+``Transform`` takes a function and any number of positional and keyword arguments.
+The function must either be a callable object or a renderable producing one.
+When rendered, a ``Transform`` first replaces all of its arguments that are renderables with their renderings, then calls the function, passing it the positional and keyword arguments, and returns the result as its own rendering.
+
+For example, suppose ``my_path`` is a path on the buildslave, and you want to get it relative to the build directory.
+You can do it like this::
+
+    import os.path
+    from buildbot.plugins import util
+
+    my_path_rel = util.Transform(os.path.relpath, my_path, start=util.Property('builddir'))
+
+This works whether ``my_path`` is an ordinary string or a renderable.
+``my_path_rel`` will be a renderable in either case, however.
+
 .. index:: single: Properties; WithProperties
 
 .. _WithProperties:
