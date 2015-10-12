@@ -14,8 +14,6 @@ class Build extends Controller
             $scope.is_rebuilding = true
 
             success = (res) ->
-                console.log res
-                $scope.is_rebuilding = false
                 refreshContextMenu()
                 brid = _.values(res.result[1])[0]
                 $state.go "buildrequest",
@@ -23,7 +21,6 @@ class Build extends Controller
                     redirect_to_build: true
 
             failure = (why) ->
-                $scope.is_rebuilding = false
                 $scope.error = "Cannot rebuild: " + why.data.error.message
                 refreshContextMenu()
 
@@ -33,11 +30,9 @@ class Build extends Controller
             $scope.is_stopping = true
 
             success = (res) ->
-                $scope.is_stopping = false
                 refreshContextMenu()
 
             failure = (why) ->
-                $scope.is_stopping = false
                 $scope.error = "Cannot Stop: " + why.data.error.message
                 refreshContextMenu()
 
@@ -57,7 +52,7 @@ class Build extends Controller
                     actions.push
                         caption: "Rebuild"
                         extra_class: "btn-default"
-                        action: doRebuild
+                        action: doRebuild                      
             else
                 if $scope.is_stopping
                     actions.push
