@@ -52,7 +52,7 @@ class Build extends Controller
                     actions.push
                         caption: "Rebuild"
                         extra_class: "btn-default"
-                        action: doRebuild                      
+                        action: doRebuild
             else
                 if $scope.is_stopping
                     actions.push
