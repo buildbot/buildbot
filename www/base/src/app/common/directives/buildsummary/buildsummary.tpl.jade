@@ -34,7 +34,7 @@
             | &nbsp;({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
       ul
         li(ng-if='!(isBuildRequestURL(url.url) || isBuildURL(url.url))', ng-repeat="url in step.urls")
-          a(ng-href="{{url.url}}") {{url.name}}
+          a(target="_blank", ng-href="{{url.url}}") {{url.name}}
       ul.list-unstyled
         li(ng-if='isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
           buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='getBuildRequestIDFromURL(url.url)')

@@ -7,6 +7,6 @@
           a(ui-sref="log({builder:builder.builderid, build:build.number, step: step.number, log:log.slug})") {{log.name}}
       ul.unstyled
         li(ng-repeat="url in step.urls")
-          a(ng-href="{{url.url}}") {{url.name}}
+          a(target="_blank", ng-href="{{url.url}}") {{url.name}}
     .col-sm-6
       rawdata(data="step")
