@@ -27,6 +27,8 @@ Features
 
 * :bb:reporter:`StatusPush` callback now receives build results (success/failure/etc) with the ``buildFinished`` event.
 
+* There's a new renderable type, :ref:`Transform`.
+
 Fixes
 ~~~~~
 
