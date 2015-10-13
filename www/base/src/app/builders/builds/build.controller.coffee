@@ -12,9 +12,9 @@ class Build extends Controller
 
         doRebuild = ->
             $scope.is_rebuilding = true
-
+            refreshContextMenu()
             success = (res) ->
-                refreshContextMenu()
+
                 brid = _.values(res.result[1])[0]
                 $state.go "buildrequest",
                     buildrequest: brid
@@ -29,9 +29,9 @@ class Build extends Controller
 
         doStop = ->
             $scope.is_stopping = true
+            refreshContextMenu()
 
-            success = (res) ->
-                refreshContextMenu()
+            success = (res) -> null
 
             failure = (why) ->
                 $scope.is_stopping = false
