@@ -51,7 +51,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         # convert to sourcestamp IDs first, as necessary
         def toSsid(sourcestamp):
-            if isinstance(sourcestamp, int) or isinstance(sourcestamp, long):
+            if isinstance(sourcestamp, (int, long)):
                 return defer.succeed(sourcestamp)
             else:
                 ssConnector = self.master.db.sourcestamps
