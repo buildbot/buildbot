@@ -123,8 +123,13 @@ class BaseBasicScheduler(base.BaseScheduler):
             # unimportant changes
             if not important:
                 return defer.succeed(None)
+
+            properties = {}
+            if hasattr(change, 'properties'):
+                properties = change.properties
             # otherwise, we'll build it right away
             return self.addBuildsetForChanges(reason=self.reason,
+                                              properties=properties,
                                               changeids=[change.number])
 
         timer_name = self.getTimerNameForChange(change)
