@@ -125,9 +125,13 @@ class BaseBasicScheduler(base.BaseScheduler):
             if not important:
                 return defer.succeed(None)
 
+            properties = change.properties
+            if(type(properties) == dict):
+                properties = Properties.fromDict(properties)
+
             # otherwise, we'll build it right away
             return self.addBuildsetForChanges(reason=self.reason,
-                                              properties=change.properties,
+                                              properties=properties,
                                               changeids=[change.number])
 
         timer_name = self.getTimerNameForChange(change)
