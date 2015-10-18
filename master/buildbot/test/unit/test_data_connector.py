@@ -43,11 +43,6 @@ class Tests(interfaces.InterfaceTests):
         def getEndpoint(self, path):
             pass
 
-    def test_signature_startConsuming(self):
-        @self.assertArgSpecMatches(self.data.startConsuming)
-        def startConsuming(self, callback, options, path):
-            pass
-
     def test_signature_control(self):
         @self.assertArgSpecMatches(self.data.control)
         def control(self, action, args, path):
@@ -212,20 +207,9 @@ class DataConnector(unittest.TestCase):
             ep.get.assert_called_once_with(mock.ANY, {})
         return d
 
-    @defer.inlineCallbacks
-    def test_startConsuming(self):
-        ep = self.patchFooPattern()
-        ep.startConsuming = mock.Mock(name='MyEndpoint.startConsuming')
-        ep.startConsuming.return_value = defer.succeed('qref')
-
-        # since startConsuming is a mock, there's no need for real mq stuff
-        qref = yield self.data.startConsuming('cb', {}, ('foo', '10', 'bar'))
-        self.assertEqual(qref, 'qref')
-        ep.startConsuming.assert_called_with('cb', {}, dict(fooid=10))
-
     def test_control(self):
         ep = self.patchFooPattern()
-        ep.control = mock.Mock(name='MyEndpoint.startConsuming')
+        ep.control = mock.Mock(name='MyEndpoint.control')
         ep.control.return_value = defer.succeed('controlled')
 
         d = self.data.control('foo!', {'arg': 2}, ('foo', '10', 'bar'))

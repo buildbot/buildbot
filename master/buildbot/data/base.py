@@ -85,9 +85,6 @@ class Endpoint(object):
     def control(self, action, args, kwargs):
         raise exceptions.InvalidControlException
 
-    def startConsuming(self, callback, options, kwargs):
-        raise NotImplementedError
-
     def __repr__(self):
         return "endpoint for " + self.pathPatterns
 

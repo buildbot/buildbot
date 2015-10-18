@@ -90,17 +90,6 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
                     data['properties'] = filtered_properties
         defer.returnValue(data)
 
-    def startConsuming(self, callback, options, kwargs):
-        builderid = kwargs.get('builderid')
-        number = kwargs.get('number')
-        buildid = kwargs.get('buildid')
-        if builderid is not None:
-            return self.master.mq.startConsuming(callback,
-                                                 ('builders', str(builderid), 'builds', str(number), None))
-        else:
-            return self.master.mq.startConsuming(callback,
-                                                 ('builds', str(buildid), None))
-
     def control(self, action, args, kwargs):
         # we convert the action into a mixedCase method name
         action_method = getattr(self, "action" + action.capitalize())
@@ -163,14 +152,6 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
                     data['properties'] = filtered_properties
             buildscol.append(data)
         defer.returnValue(buildscol)
-
-    def startConsuming(self, callback, options, kwargs):
-        builderid = kwargs.get('builderid')
-        if builderid is not None:
-            path = ('builders', str(builderid), 'builds', None, None)
-        else:
-            path = ('builds', None, None)
-        return self.master.mq.startConsuming(callback, path)
 
 
 class Build(base.ResourceType):

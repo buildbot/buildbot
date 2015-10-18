@@ -79,10 +79,6 @@ class MastersEndpoint(base.Endpoint):
                 masterlist = []
         defer.returnValue([_db2data(m) for m in masterlist])
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('masters', None, None))
-
 
 class Master(base.ResourceType):
 

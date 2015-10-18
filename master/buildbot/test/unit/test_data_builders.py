@@ -130,10 +130,6 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                              [])
         return d
 
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {},
-                                       expected_filter=('builders', None, None))
-
 
 class Builder(interfaces.InterfaceTests, unittest.TestCase):
 

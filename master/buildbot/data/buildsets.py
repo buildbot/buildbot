@@ -71,10 +71,6 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
         res = yield self.db2data(res)
         defer.returnValue(res)
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('buildsets', str(kwargs['bsid']), 'complete'))
-
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
@@ -98,10 +94,6 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
                 return [r[1] for r in res]
             return d
         return d
-
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('buildsets', None, 'new'))
 
 
 class Buildset(base.ResourceType):

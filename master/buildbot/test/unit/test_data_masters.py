@@ -142,11 +142,6 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(masters, [])
         return d
 
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {},
-                                       expected_filter=('masters',
-                                                        None, None))
-
 
 class Master(interfaces.InterfaceTests, unittest.TestCase):
 

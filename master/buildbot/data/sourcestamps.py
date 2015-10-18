@@ -69,10 +69,6 @@ class SourceStampsEndpoint(base.Endpoint):
         defer.returnValue([_db2data(ssdict) for ssdict in
                            (yield self.master.db.sourcestamps.getSourceStamps())])
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('sourcestamps', None, None))
-
 
 class SourceStamp(base.ResourceType):
 

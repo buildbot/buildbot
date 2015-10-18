@@ -66,7 +66,7 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
     This class implements the root of the data API.
     Within the buildmaster process, the data connector is available at `self.master.data`.
-    The first three sections are implemented with the :py:meth:`get`, :py:meth:`startConsuming`, and :py:meth:`control` methods, respectively, while the updates section is implemented using the :py:attr:`updates` attribute.
+    The first three sections are implemented with the :py:meth:`get` and :py:meth:`control` methods, respectively, while the updates section is implemented using the :py:attr:`updates` attribute.
     The ``path`` arguments to these methods should always be tuples.
     Integer arguments can be presented as either integers or strings that can be parsed by ``int``; all other arguments must be strings.
 
@@ -99,19 +99,6 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         Get the endpoint responsible for the given path, along with any arguments extracted from the path.
         This can be used by callers that need access to information from the endpoint beyond that returned from ``get``.
-
-    .. py:method:: startConsuming(callback, options, path)
-
-        :param callback: a function to call for each message
-        :param options: dictionary containing model-specific options
-        :param tuple path: A tuple of path elements representing the API path.
-            Numbers can be passed as strings or integers.
-        :returns: consumer via Deferred
-        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
-
-        This method implements the subscriptions section.
-        The callback interface and consumer the same as those of :py:meth:`~buildbot.mq.connector.MQConnector.startConsuming`.
-        The ``path`` argument is automatically translated into an appropriate topic.
 
     .. py:method:: produceEvent(rtype, msg, event)
 
@@ -292,7 +279,7 @@ Adding Endpoints
 Each resource path is implemented as an :py:class:`~Endpoint` instance.
 In most cases, each instance is of a different class, but this is not required.
 
-The data connector's :py:meth:`~buildbot.data.connector.DataConnector.get`, :py:meth:`~buildbot.data.connector.DataConnector.startConsuming`, and :py:meth:`~buildbot.data.connector.DataConnector.control` methods all take a ``path`` argument that is used to look up the corresponding endpoint.
+The data connector's :py:meth:`~buildbot.data.connector.DataConnector.get` and :py:meth:`~buildbot.data.connector.DataConnector.control` methods both take a ``path`` argument that is used to look up the corresponding endpoint.
 The path matching is performed by :py:mod:`buildbot.util.pathmatch`, and supports automatically extracting variable fields from the path.
 See that module's description for details.
 
@@ -356,13 +343,6 @@ See that module's description for details.
         See below.
 
         Any result spec configuration that remains on return will be applied automatically.
-
-    .. py:method:: startConsuming(callback, options, kwargs)
-
-        :param callback: a function to call for each message
-        :param options: dictionary containing model-specific options
-        :param kwargs: fields extracted from the path
-        :returns: consumer via Deferred
 
     .. py:method:: control(action, args, kwargs)
 

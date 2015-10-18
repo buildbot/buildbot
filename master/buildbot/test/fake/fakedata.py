@@ -431,7 +431,7 @@ class FakeDataConnector(service.AsyncMultiService):
         self.updates = FakeUpdates(testcase)
         self.updates.setServiceParent(self)
 
-        # get, startConsuming, and control are delegated to a real connector,
+        # get and control are delegated to a real connector,
         # after some additional assertions
         self.realConnector = connector.DataConnector()
         self.realConnector.setServiceParent(self)
@@ -454,11 +454,6 @@ class FakeDataConnector(service.AsyncMultiService):
             raise TypeError('path must be a tuple')
         return self.realConnector.get(path, filters=filters, fields=fields,
                                       order=order, limit=limit, offset=offset)
-
-    def startConsuming(self, callback, options, path):
-        if not isinstance(path, tuple):
-            raise TypeError('path must be a tuple')
-        return self.realConnector.startConsuming(callback, options, path)
 
     def control(self, action, args, path):
         if not isinstance(path, tuple):

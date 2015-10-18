@@ -45,6 +45,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The :py:mod:`buildbot.status.results` module no longer exists and has been renamed to :py:mod:`buildbot.process.results`.
 
+* The data API's ``startConsuming`` method has been removed.
+  Instead of calling this method with a data API path, call ``self.master.mq.startConsuming`` with an appropriate message routing pattern.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
