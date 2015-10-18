@@ -59,11 +59,6 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             defer.returnValue((yield self.db2data(buildrequest)))
         defer.returnValue(None)
 
-    def startConsuming(self, callback, options, kwargs):
-        buildrequestid = kwargs.get('buildrequestid')
-        return self.master.mq.startConsuming(callback,
-                                             ('buildrequests', buildrequestid, None))
-
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
         if action != "cancel":
@@ -129,10 +124,6 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             bsid=bsid)
         defer.returnValue(
             [(yield self.db2data(br)) for br in buildrequests])
-
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('buildrequests', None, None, None, None))
 
 
 class BuildRequest(base.ResourceType):

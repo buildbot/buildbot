@@ -73,10 +73,6 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
             consumeErrors=True, fireOnOneErrback=True)
         defer.returnValue([r for (s, r) in schdicts])
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('schedulers', None, None))
-
 
 class Scheduler(base.ResourceType):
 

@@ -128,11 +128,10 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         # register for changes with the data API
         assert not self._change_consumer
-        self._change_consumer = yield self.master.data.startConsuming(
+        self._change_consumer = yield self.master.mq.startConsuming(
             lambda k, m: self._changeCallback(k, m, fileIsImportant,
                                               change_filter, onlyImportant),
-            {},
-            ('changes',))
+            ('changes', None, 'new'))
 
     @defer.inlineCallbacks
     def _changeCallback(self, key, msg, fileIsImportant, change_filter,

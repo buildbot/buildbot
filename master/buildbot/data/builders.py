@@ -64,10 +64,6 @@ class BuildersEndpoint(base.Endpoint):
                  tags=bd['tags'])
             for bd in bdicts])
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('builders', None, None))
-
 
 class Builder(base.ResourceType):
 

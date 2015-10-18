@@ -47,7 +47,7 @@ class FakeMQConnector(service.AsyncMultiService):
 # routing key
 #        if self.verifyMessages:
 #            validation.verifyMessage(self.testcase, routingKey, data)
-        if [k for k in routingKey if not isinstance(k, str)]:
+        if any(not isinstance(k, str) for k in routingKey):
             raise AssertionError("%s is not all strings" % (routingKey,))
         self.productions.append((routingKey, data))
         # note - no consumers are called: IT'S A FAKE
@@ -64,7 +64,7 @@ class FakeMQConnector(service.AsyncMultiService):
             raise AssertionError("no consumer found")
 
     def startConsuming(self, callback, filter, persistent_name=None):
-        if [k for k in filter if not isinstance(k, str) and k is not None]:
+        if any(not isinstance(k, str) and k is not None for k in filter):
             raise AssertionError("%s is not a filter" % (filter,))
         qref = FakeQueueRef()
         qref.qrefs = self.qrefs

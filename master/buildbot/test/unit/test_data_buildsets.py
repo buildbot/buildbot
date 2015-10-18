@@ -80,11 +80,6 @@ class BuildsetEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(buildset, None)
         return d
 
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {'bsid': 13},
-                                       expected_filter=('buildsets', '13',
-                                                        'complete'))
-
 
 class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -138,10 +133,6 @@ class BuildsetsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.validateData(buildsets[0])
             self.assertEqual(buildsets[0]['bsid'], 14)
         return d
-
-    def test_startConsuming(self):
-        self.callStartConsuming({}, {},
-                                expected_filter=('buildsets', None, 'new'))
 
 
 class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):

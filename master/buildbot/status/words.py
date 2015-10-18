@@ -468,9 +468,10 @@ class Contact(base.StatusReceiver):
                 return self.watchedBuildFinished(msg)
 
         for build in builds:
-            startConsuming = self.master.data.startConsuming
-            handle = yield startConsuming(watchForCompleteEvent, {},
-                                          ('builds', str(build['buildid'])))
+            startConsuming = self.master.mq.startConsuming
+            handle = yield startConsuming(
+                    watchForCompleteEvent,
+                    ('builds', str(build['buildid']), None))
             self.build_subscriptions.append((build['buildid'], handle))
 
             if self.useRevisions:

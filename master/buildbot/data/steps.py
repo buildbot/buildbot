@@ -85,18 +85,6 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
         defer.returnValue([(yield self.db2data(dbdict)) for dbdict in steps])
 
-    def startConsuming(self, callback, options, kwargs):
-        if 'stepid' in kwargs:
-            return self.master.mq.startConsuming(
-                callback,
-                ('steps', str(kwargs['stepid']), None))
-        elif 'buildid' in kwargs:
-            return self.master.mq.startConsuming(
-                callback,
-                ('builds', str(kwargs['buildid']), 'steps', None, None))
-        else:
-            raise NotImplementedError("cannot consume from this path")
-
 
 class Step(base.ResourceType):
 

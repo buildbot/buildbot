@@ -83,10 +83,6 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
         changes = [(yield self._fixChange(ch)) for ch in changes]
         defer.returnValue(changes)
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('changes', None, 'new'))
-
 
 class Change(base.ResourceType):
 

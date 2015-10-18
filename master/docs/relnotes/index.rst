@@ -29,6 +29,9 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* The data API's ``startConsuming`` method has been removed.
+  Instead of calling this method with a data API path, call ``self.master.mq.startConsuming`` with an appropriate message routing pattern.
+
 Slave
 -----
 
