@@ -32,13 +32,13 @@ from buildbot import util
 from buildbot import version
 from buildbot.data import resultspec
 from buildbot.process.properties import Properties
-from buildbot.status import base
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.status import base
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 
@@ -470,8 +470,8 @@ class Contact(base.StatusReceiver):
         for build in builds:
             startConsuming = self.master.mq.startConsuming
             handle = yield startConsuming(
-                    watchForCompleteEvent,
-                    ('builds', str(build['buildid']), None))
+                watchForCompleteEvent,
+                ('builds', str(build['buildid']), None))
             self.build_subscriptions.append((build['buildid'], handle))
 
             if self.useRevisions:

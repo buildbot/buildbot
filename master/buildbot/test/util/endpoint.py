@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from buildbot.data import base
 from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
