@@ -379,6 +379,12 @@ if 'a' in version or 'b' in version:
         if LooseVersion(pip_dist.version) < LooseVersion('1.4'):
             raise RuntimeError(VERSION_MSG)
 
+if sys.version_info[:2] == (2, 6):
+    # Twisted-15.4.0 doesn't support Python 2.6 anymore
+    twisted_req = "Twisted >= 12.1.0, < 15.4.0"
+else:
+    twisted_req = "Twisted >= 12.1.0"
+
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
@@ -388,7 +394,7 @@ except ImportError:
 else:
     # dependencies
     setup_args['install_requires'] = [
-        'twisted >= 12.1.0',
+        twisted_req,
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'future',
