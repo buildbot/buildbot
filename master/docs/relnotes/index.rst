@@ -19,31 +19,12 @@ Master
 
 Features
 ~~~~~~~~
-* The irc command ``hello`` now returns 'Hello' in a random language if invoked more than once.
-
-* :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
-
-* :bb:reporter:`GerritStatusPush` now accepts a ``builders`` parameter.
-
-* :bb:reporter:`StatusPush` callback now receives build results (success/failure/etc) with the ``buildFinished`` event.
-
-* There's a new renderable type, :ref:`Transform`.
 
 Fixes
 ~~~~~
 
-* The :bb:step:`PyFlakes` and :bb:step:`PyLint` steps no longer parse output in Buildbot log headers (:bug:`3337`).
-
-* :bb:chsrc:`GerritChangeSource` is now less verbose by default, and has a ``debug`` option to enable the logs.
-
-* :bb:chsrc:`P4Source` no longer relies on the perforce server time to poll for new changes.
-
-* The commit message for a change from :bb:chsrc:`P4Source` now matches what the user typed in.
-
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* The :py:mod:`buildbot.status.results` module no longer exists and has been renamed to :py:mod:`buildbot.process.results`.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -53,13 +34,6 @@ Slave
 
 Features
 ~~~~~~~~
-
-* Buildbot now supports wamp as a mq backend.
-  This allows to run a multi-master configuration.
-  See :ref:`MQ-Specification`.
-
-* The Buildbot slave now includes the number of CPUs in the information it supplies to the master on connection.
-  This value is autodetected, but can be overridden with the ``--numcpus`` argument to ``buildslave create-slave``.
 
 Fixes
 ~~~~~
@@ -74,7 +48,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0b2..v0.9.0b3
+   git log v0.9.0b3..master
 
 Older Versions
 --------------
@@ -85,6 +59,7 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.9.0b3
     0.9.0b2
     0.9.0b1
     0.8.12
