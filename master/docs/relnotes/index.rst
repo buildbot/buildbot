@@ -74,7 +74,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.10..master
+   git log v0.9.0b2..v0.9.0b3
 
 Older Versions
 --------------
