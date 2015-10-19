@@ -590,9 +590,6 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # figure out the overall results of the buildset
         cumulative_results = SUCCESS
-        log.msg("Finishing buildset %d" %bsid)
-        log.msg(brdicts)
-        log.msg("---")
         for brdict in brdicts:
             if brdict['results'] not in (SUCCESS, WARNINGS, NOT_REBUILT):
                 cumulative_results = FAILURE

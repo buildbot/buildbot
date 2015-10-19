@@ -129,6 +129,4 @@ class Triggerable(base.BaseScheduler):
         self._updateWaiters()
 
         # fire the callback to indicate that the triggered build is complete
-        log.msg("Triggerable scheduler is finishing buildset")
-        log.msg((result, brids))
         d.callback((result, brids))
