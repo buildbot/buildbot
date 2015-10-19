@@ -36,7 +36,7 @@ gulp.task('vendors', function(){
 	.pipe(replace(/require\(".\/streams"\)\(iconv\);/, ''))
 	.pipe(replace(/require\(".\/extend-node"\)\(iconv\);/, ''))
     .pipe(rename('vendors.js'))
-    .pipe(uglify())
+//    .pipe(uglify())
 	.pipe(gulp.dest('.'));
 });
 

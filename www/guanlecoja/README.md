@@ -177,6 +177,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.4.1: Do not uglyfy vendor.js. It is too difficult to debug in case of error
 * 0.4.0: upgrade dependencies, and reintroduce browserify optimization
 * 0.3.7: revert Prebuild most of the dependencies. Was not stable enough
 * 0.3.6: Prebuild most of the dependencies. node_modules dir is now  100MB smaller
