@@ -1,5 +1,5 @@
 class Socket extends Service
-    constructor: ($log, $q, $location, $window) ->
+    constructor: ($log, $q, $location, $window, webSocketBackendService) ->
         return new class SocketService
             # waiting queue
             queue: []
@@ -77,9 +77,11 @@ class Socket extends Service
             # this function will be mocked in the tests
             getWebSocket: ->
                 url = @getUrl()
+                # if testing, use fake implementation
+                if jasmine?
+                    return webSocketBackendService.getWebSocket()
                 # use ReconnectingWebSocket if available
                 # TODO write own implementation?
                 if $window.ReconnectingWebSocket?
-                    new $window.ReconnectingWebSocket(url)
-                else
-                    new $window.WebSocket(url)
+                    return new $window.ReconnectingWebSocket(url)
+                return new $window.WebSocket(url)

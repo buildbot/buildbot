@@ -34,7 +34,7 @@
             span(data-ng-repeat="slave in builder.buildslaves")
                 a(ui-sref='slave({slave: slave.slaveid})')
                     span.badge-status(title="{{slave.name}}" ng-class="connected2class(slave, 'pulse')")
-                        .badge-inactive {{slave.id}}
+                        .badge-inactive {{slave.buildslaveid}}
                         .badge-active {{slave.name}}
   .row
       .form-group

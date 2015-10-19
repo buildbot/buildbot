@@ -67,7 +67,7 @@ class Collection extends Factory
 
             add: (element) ->
                 Wrapper = @getWrapper()
-                instance = new Wrapper(element, @getEndpoint())
+                instance = new Wrapper(element, @getEndpoint(), @getQuery().subscribe)
                 @push(instance)
 
             clear: ->
@@ -76,11 +76,3 @@ class Collection extends Factory
             delete: (element) ->
                 index = @indexOf(element)
                 if index > -1 then @splice(index, 1)
-
-            # # TODO untested
-            # loadMore: (limit) ->
-            #     if q.limit?
-            #         q = angular.copy(@getQuery() or {})
-            #         q.offset = @length
-            #         q.limit = limit
-            #         # TODO @subscribe
