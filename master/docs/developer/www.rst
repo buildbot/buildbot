@@ -620,9 +620,10 @@ Several methods are added to each "restangularized" objects, aside from get(), p
 DataService
 .............
 
-DataService is the future replacement of BuildbotService for accessing the Buildbot data API.
-It has a modern interface for accessing data. It uses IndexedDB for storing cached data as a single data store,
-and LocalStorage for broadcasting events between browser tabs. DataService works in a master/slave architecture.
+DataService is the replacement of BuildbotService for accessing the Buildbot data API.
+It has a modern interface for accessing data.
+It uses IndexedDB for storing cached data as a single data store, and LocalStorage for broadcasting events between browser tabs.
+DataService works in a master/slave architecture.
 The master browser tab is responsible for keeping the requested data up to date in the IndexedDB and notify slaves when a data is ready to be used or it is updated.
 It handles both the Rest API calls and the WebSocket subscriptions globally.
 

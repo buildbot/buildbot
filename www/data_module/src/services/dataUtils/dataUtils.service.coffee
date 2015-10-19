@@ -66,3 +66,9 @@ class DataUtils extends Service
                 # else parse string to integer
                 number = parseInt str, 10
                 if !isNaN(number) then number else str
+
+            emailInString: (string) ->
+                if not angular.isString(string)
+                    throw new TypeError("Parameter 'string' must be a string, not #{typeof string}")
+                emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/
+                emailRegex.exec(string).pop() or ''

@@ -46,11 +46,13 @@ describe 'Wrapper', ->
             i.get('b')
             expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b')
 
-            i.get('b', {param: 1})
-            expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', {param: 1})
+            j = new Wrapper(data, 'a', true)
 
-            i.get('b', 11)
-            expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', 11)
+            j.get('b', {param: 1})
+            expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', {param: 1, subscribe: true})
+
+            j.get('b', 11, {subscribe: false})
+            expect(dataService.get).toHaveBeenCalledWith('a', 12, 'b', 11, {subscribe: false})
 
     describe 'getId()', ->
 

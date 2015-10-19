@@ -1,5 +1,5 @@
 class Home extends Controller
-    constructor: ($scope, recentStorage, buildbotService, config, $location) ->
+    constructor: ($scope, recentStorage, dataService, config, $location) ->
         $scope.baseurl = $location.absUrl().split("#")[0]
         $scope.config = config
         $scope.recent = {}
@@ -12,5 +12,5 @@ class Home extends Controller
                     $scope.recent.recent_builders = e.recent_builders
                     $scope.recent.recent_builds = e.recent_builds
 
-
-        buildbotService.some('builds', order: '-started_at', complete: false).bind($scope, dest_key:'builds_running')
+        opened = dataService.open($scope)
+        $scope.builds_running = opened.getBuilds(order: '-started_at', complete: false).getArray()
