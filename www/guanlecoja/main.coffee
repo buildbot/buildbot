@@ -312,8 +312,14 @@ module.exports =  (gulp) ->
                 classified = script_sources.map (p) ->
                     path.join("coverage", p)
                 karmaconf.files.splice.apply(karmaconf.files, [scripts_index, 1].concat(classified))
-         new karma.Server(karmaconf, done).start()
-         return null
+        mydone = ->
+            done()
+            # need process.exit to avoid need for a double ctrl-c
+            # karma watch is overriding ctrl-c, then the gulp watch does not see it
+            process.exit()
+        server = new karma.Server(karmaconf, mydone)
+        server.start()
+        return null
 
     gulp.task "notests", false, ->
         null
