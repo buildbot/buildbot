@@ -51,7 +51,7 @@ config =
                 version: "master"
                 files: ["reconnecting-websocket.js"]
             'buildbot-data':
-                version: '~1.0.13'
+                version: '~1.0.14'
                 files: 'dist/scripts.js'
             # TODO these are dependencies of buildbot-data, could be included
             tabex:

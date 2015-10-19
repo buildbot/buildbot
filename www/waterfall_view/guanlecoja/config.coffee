@@ -26,7 +26,7 @@ module.exports =
                 version: "3.4.11"
                 files: "d3.js"
             'buildbot-data':
-                version: '~1.0.13'
+                version: '~1.0.14'
                 files: 'dist/scripts.js'
             # TODO these are dependencies of buildbot-data, could be included
             tabex:

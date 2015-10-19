@@ -174,3 +174,27 @@ describe 'Socket service', ->
 
             url = socketService.getUrl()
             expect(url).toBe('ws://buildbot.test/ws')
+
+        it 'should return the WebSocket url based on the host and port and protocol', ->
+            host = 'buildbot.test'
+            port = 443
+            protocol = 'https'
+            spyOn($location, 'host').and.returnValue(host)
+            spyOn($location, 'port').and.returnValue(port)
+            spyOn($location, 'protocol').and.returnValue(protocol)
+
+            url = socketService.getUrl()
+            expect(url).toBe('wss://buildbot.test/ws')
+
+        it 'should return the WebSocket url based on the host and port and protocol and basedir', ->
+            host = 'buildbot.test'
+            port = 443
+            protocol = 'https'
+            path = 'travis/'
+            spyOn($location, 'host').and.returnValue(host)
+            spyOn($location, 'port').and.returnValue(port)
+            spyOn($location, 'protocol').and.returnValue(protocol)
+            spyOn($location, 'path').and.returnValue(path)
+
+            url = socketService.getUrl()
+            expect(url).toBe('wss://buildbot.test/travis/ws')
