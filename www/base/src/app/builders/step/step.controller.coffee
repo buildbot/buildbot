@@ -1,20 +1,27 @@
 class Step extends Controller
-    constructor: ($log, $scope, $location, buildbotService, $stateParams, glBreadcrumbService) ->
-        buildbotService.bindHierarchy($scope, $stateParams, ["builders", "builds", 'steps'])
-        .then ([builder, build, step]) ->
-            glBreadcrumbService.setBreadcrumb [
-                    caption: "Builders"
-                    sref: "builders"
-                ,
-                    caption: builder.name
-                    sref: "builder({builder:#{builder.id}})"
-                ,
-                    caption: build.number
-                    sref: "build({builder:#{builder.id}, build:#{build.number}})"
-                ,
-                    caption: step.name
-                    sref: "step({builder:#{builder.id}, build:#{build.number}, step:#{step.number}})"
-            ]
-            logs = buildbotService.one("steps", step.stepid).all("logs")
-            logs.bind $scope,
-                dest: step,
+    constructor: ($log, $scope, $location, dataService, dataUtilsService, $stateParams, glBreadcrumbService, publicFieldsFilter) ->
+        opened = dataService.open($scope)
+        builderid = dataUtilsService.numberOrString($stateParams.builder)
+        buildnumber = dataUtilsService.numberOrString($stateParams.build)
+        stepnumber = dataUtilsService.numberOrString($stateParams.step)
+        opened.getBuilders(builderid).then (builders) ->
+            $scope.builder = builder = builders[0]
+            builder.getBuilds(buildnumber).then (builds) ->
+                $scope.build = build = builds[0]
+                build.getSteps(stepnumber).then (steps) ->
+                    step = steps[0]
+                    glBreadcrumbService.setBreadcrumb [
+                        caption: "Builders"
+                        sref: "builders"
+                    ,
+                        caption: builder.name
+                        sref: "builder({builder:#{builder.id}})"
+                    ,
+                        caption: build.number
+                        sref: "build({builder:#{builder.id}, build:#{build.number}})"
+                    ,
+                        caption: step.name
+                        sref: "step({builder:#{builder.id}, build:#{build.number}, step:#{step.number}})"
+                    ]
+                    step.loadLogs()
+                    $scope.step = publicFieldsFilter(step)

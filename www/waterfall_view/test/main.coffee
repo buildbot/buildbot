@@ -1,4 +1,2 @@
-# Mocked module dependencies
-angular.module('common', [])
-
+# Mocked module dependency
 angular.module('ngAnimate', [])

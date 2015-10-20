@@ -1,4 +1,4 @@
-class Data extends Service
+class DataProcessor extends Service
     constructor: ->
         {}
     # Returns groups and adds builds to builders

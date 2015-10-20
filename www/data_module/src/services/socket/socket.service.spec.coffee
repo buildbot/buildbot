@@ -1,48 +1,16 @@
 describe 'Socket service', ->
 
-    class WebSocketBackend
-        sendQueue: []
-        receiveQueue: []
+    beforeEach module 'bbData'
 
-        self = null
-        constructor: ->
-            self = @
-            @webSocket = new MockWebSocket()
-
-        send: (message) ->
-            data = {data: message}
-            @sendQueue.push(data)
-
-        flush: ->
-            while message = @sendQueue.shift()
-                @webSocket.onmessage(message)
-
-        getWebSocket: ->
-            return @webSocket
-
-        # mocked WebSocket
-        class MockWebSocket
-            OPEN: 1
-            send: (message) ->
-                self.receiveQueue.push(message)
-            close: -> @onclose?()
-
-    webSocketBackend = new WebSocketBackend()
-    beforeEach ->
-        module 'bbData'
-        module ($provide) ->
-            $provide.constant('webSocketService', webSocketBackend)
-
-    $rootScope = $location = socketService = socket = undefined
+    $rootScope = $location = socketService = socket = webSocketBackend = undefined
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
         $location = $injector.get('$location')
         socketService = $injector.get('socketService')
-
-        socket = webSocketBackend.webSocket
+        webSocketBackend = $injector.get('webSocketBackendService')
+        socket = webSocketBackend.getWebSocket()
         spyOn(socket, 'send').and.callThrough()
-
-        spyOn(socketService, 'getWebSocket').and.returnValue(socket)
+        spyOn(socketService, 'getWebSocket').and.callThrough()
 
     beforeEach(inject(injected))
 
@@ -206,3 +174,27 @@ describe 'Socket service', ->
 
             url = socketService.getUrl()
             expect(url).toBe('ws://buildbot.test/ws')
+
+        it 'should return the WebSocket url based on the host and port and protocol', ->
+            host = 'buildbot.test'
+            port = 443
+            protocol = 'https'
+            spyOn($location, 'host').and.returnValue(host)
+            spyOn($location, 'port').and.returnValue(port)
+            spyOn($location, 'protocol').and.returnValue(protocol)
+
+            url = socketService.getUrl()
+            expect(url).toBe('wss://buildbot.test/ws')
+
+        it 'should return the WebSocket url based on the host and port and protocol and basedir', ->
+            host = 'buildbot.test'
+            port = 443
+            protocol = 'https'
+            path = 'travis/'
+            spyOn($location, 'host').and.returnValue(host)
+            spyOn($location, 'port').and.returnValue(port)
+            spyOn($location, 'protocol').and.returnValue(protocol)
+            spyOn($location, 'path').and.returnValue(path)
+
+            url = socketService.getUrl()
+            expect(url).toBe('wss://buildbot.test/travis/ws')

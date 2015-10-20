@@ -1,3 +1,3 @@
 class schedulers extends Controller
-    constructor: ($log, $scope, $location, buildbotService) ->
-        buildbotService.all('schedulers').bind($scope)
+    constructor: ($log, $scope, $location, dataService) ->
+        $scope.schedulers = dataService.getSchedulers().getArray()
