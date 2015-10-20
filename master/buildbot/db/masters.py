@@ -52,11 +52,12 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 return False  # can't change a row that doesn't exist..
             was_active = bool(rows[0].active)
 
-            # if we're marking inactive, then delete any links to this master
-            sch_mst_tbl = self.db.model.scheduler_masters
-            q = sch_mst_tbl.delete(
-                whereclause=(sch_mst_tbl.c.masterid == masterid))
-            conn.execute(q)
+            if not active:
+                # if we're marking inactive, then delete any links to this master
+                sch_mst_tbl = self.db.model.scheduler_masters
+                q = sch_mst_tbl.delete(
+                    whereclause=(sch_mst_tbl.c.masterid == masterid))
+                conn.execute(q)
 
             # set the state (unconditionally, just to be safe)
             q = tbl.update(whereclause=whereclause)
