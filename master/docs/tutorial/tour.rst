@@ -349,6 +349,7 @@ Buildbot includes a way for developers to submit patches for testing without com
 To set this up, add the following lines to master.cfg::
 
   from buildbot.scheduler import Try_Userpass
+  c['schedulers'] = []
   c['schedulers'].append(Try_Userpass(
                                       name='try',
                                       builderNames=['runtests'],
