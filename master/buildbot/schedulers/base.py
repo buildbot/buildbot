@@ -410,7 +410,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
                                                           triggeredbybrid)
 
                 if brids and brids.keys() == builderNames:
-                    defer.returnValue(bsid, brids)
+                    defer.returnValue((bsid, brids))
                     return
 
         if sourcestamps is None:
