@@ -387,6 +387,8 @@ class Git(Source):
             if rc == RC_SUCCESS:
                 fetch_required = False
 
+        abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
+
         if fetch_required:
             command = ['fetch', '-t', self.repourl, self.branch]
             # If the 'progress' option is set, tell git fetch to output
@@ -396,14 +398,13 @@ class Git(Source):
             if self.prog:
                 command.append('--progress')
 
-            yield self._dovccmd(command)
+            yield self._dovccmd(command, abandonOnFailure)
 
         if self.revision:
             rev = self.revision
         else:
             rev = 'FETCH_HEAD'
         command = ['reset', '--hard', rev, '--']
-        abandonOnFailure = not self.retryFetch and not self.clobberOnFailure
         res = yield self._dovccmd(command, abandonOnFailure)
 
         # Rename the branch if needed.
