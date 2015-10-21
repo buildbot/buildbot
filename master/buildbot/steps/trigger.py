@@ -84,6 +84,7 @@ class Trigger(ResumeBuild):
         # properties object
         trigger_properties = Properties()
         trigger_properties.update(self.set_properties, "Trigger")
+        trigger_properties.setProperty("stepname", self.name, "Trigger")
         return trigger_properties
 
     # Get all scheduler instances that were configured
@@ -92,6 +93,7 @@ class Trigger(ResumeBuild):
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
         invalid_schedulers = []
+        duplicated_schedulers = []
         triggered_schedulers = []
         # don't fire any schedulers if we discover an unknown one
         for scheduler in self.schedulerNames:
@@ -99,13 +101,16 @@ class Trigger(ResumeBuild):
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if ITriggerableScheduler.providedBy(sch):
-                    triggered_schedulers.append(sch)
+                    if sch not in triggered_schedulers:
+                        triggered_schedulers.append(sch)
+                    else:
+                        duplicated_schedulers.append(sch.name)
                 else:
                     invalid_schedulers.append(scheduler)
             else:
                 invalid_schedulers.append(scheduler)
 
-        return (triggered_schedulers, invalid_schedulers)
+        return (triggered_schedulers, invalid_schedulers, duplicated_schedulers)
 
     def prepareSourcestampListForTrigger(self):
         if self.sourceStamps:
@@ -147,9 +152,12 @@ class Trigger(ResumeBuild):
     @defer.inlineCallbacks
     def start(self):
         # Get all triggerable schedulers and check if there are invalid schedules
-        (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
-        if invalid_schedulers:
-            self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
+        (triggered_schedulers, invalid_schedulers, duplicated_schedulers) = self.getSchedulers()
+        if invalid_schedulers or duplicated_schedulers:
+            if invalid_schedulers:
+                self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
+            if duplicated_schedulers:
+                self.step_status.setText2(['duplicated scheduler:'] + duplicated_schedulers)
             self.finished(FAILURE)
             return
 

@@ -493,6 +493,45 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def getBuildRequestsTriggeredByScheduler(self, schedulername, stepname, triggeredbybrid):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            buildset_properties_tbl = self.db.model.buildset_properties
+
+            clauses = []
+            property_filter = [{'property_name': 'scheduler',
+                                'property_value': '["'+schedulername+'", "Scheduler"]'},
+                               {'property_name': 'stepname',
+                                'property_value': '["'+stepname+'", "Trigger"]'}]
+
+            for prop in property_filter:
+                stmt = sa.select([buildrequests_tbl.c.id],
+                                 from_obj=buildrequests_tbl
+                                 .join(buildset_properties_tbl,
+                                       (buildset_properties_tbl.c.buildsetid == buildrequests_tbl.c.buildsetid)))\
+                    .where(buildrequests_tbl.c.triggeredbybrid == triggeredbybrid)\
+                    .where(buildset_properties_tbl.c.property_name == prop['property_name'])\
+                    .where(buildset_properties_tbl.c.property_value == prop['property_value'])
+                clauses.append(buildrequests_tbl.c.id.in_(stmt))
+
+            stmt_br = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.buildsetid, buildrequests_tbl.c.buildername])\
+                .where(sa.and_(*clauses))
+
+            res = conn.execute(stmt_br)
+            brids = {}
+            bsid = None
+            rows = res.fetchall()
+            for row in rows:
+                if bsid is None:
+                    bsid = row.buildsetid
+
+                brids[row.buildername] = row.id
+
+            res.close()
+            return (bsid, brids)
+
+        return self.db.pool.do(thd)
+
     @with_master_objectid
     def getBuildRequestBuildChain(self, startbrid, _master_objectid=None):
         def thd(conn):

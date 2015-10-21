@@ -396,6 +396,23 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
         # TODO: skip adding this if a retry and request are already in the db
         # in this case we should fetch them and return that list
 
+        if triggeredbybrid is not None:
+
+            if builderNames is None:
+                builderNames = self.builderNames
+
+            stepname = properties.getProperty('stepname', None)
+
+            if stepname:
+                (bsid, brids) = yield self.master.db.buildrequests\
+                    .getBuildRequestsTriggeredByScheduler(self.name,
+                                                          stepname,
+                                                          triggeredbybrid)
+
+                if brids and brids.keys() == builderNames:
+                    defer.returnValue(bsid, brids)
+                    return
+
         if sourcestamps is None:
             sourcestamps = {}
 
