@@ -1,0 +1,53 @@
+Release Notes for Buildbot 0.9.0b4
+==================================
+
+The following are the release notes for Buildbot 0.9.0b4
+This version was released on October 20, 2015.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+Master
+------
+
+This version is very similar to 0.9.0b3, re-released due to issues with PyPI uploads.
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* The data API's ``startConsuming`` method has been removed.
+  Instead of calling this method with a data API path, call ``self.master.mq.startConsuming`` with an appropriate message routing pattern.
+
+Slave
+-----
+
+No changes since 0.9.0b3.
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0b3..master
+
+Older Versions
+--------------
+
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
+Newer versions are also available here:
+
+.. toctree::
+    :maxdepth: 1
+
+    0.9.0b3
+    0.9.0b2
+    0.9.0b1
+    0.8.12
+    0.8.10
+    0.8.9
+    0.8.8
+    0.8.7
+    0.8.6
+
+Note that Buildbot-0.8.11 was never released.

@@ -29,9 +29,6 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* The data API's ``startConsuming`` method has been removed.
-  Instead of calling this method with a data API path, call ``self.master.mq.startConsuming`` with an appropriate message routing pattern.
-
 Slave
 -----
 
@@ -51,7 +48,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0b3..master
+   git log v0.9.0b4..master
 
 Older Versions
 --------------
@@ -62,6 +59,7 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.9.0b4
     0.9.0b3
     0.9.0b2
     0.9.0b1
