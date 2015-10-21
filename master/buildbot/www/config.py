@@ -126,6 +126,10 @@ class IndexResource(resource.Resource):
         config['titleURL'] = self.master.config.titleURL
         config['multiMaster'] = self.master.config.multiMaster
 
+        # delete things that may contain secrets
+        if 'change_hook_dialects' in config:
+            del config['change_hook_dialects']
+
         def toJson(obj):
             obj = IConfigured(obj).getConfigDict()
             if isinstance(obj, dict):
