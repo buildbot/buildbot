@@ -26,6 +26,8 @@ Features
 Fixes
 ~~~~~
 
+* Cloning :bb:step:`Git` repository with submodules now works with Git < 1.7.6 instead of failing due to the use of the unsupported ``--force`` option.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
