@@ -515,7 +515,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 clauses.append(buildrequests_tbl.c.id.in_(stmt))
 
             stmt_br = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.buildsetid, buildrequests_tbl.c.buildername])\
-                .where(sa.and_(*clauses))
+                .where(sa.and_(*clauses))\
+                .where(buildrequests_tbl.c.triggeredbybrid == triggeredbybrid)
 
             res = conn.execute(stmt_br)
             brids = {}
