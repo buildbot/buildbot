@@ -261,10 +261,7 @@ class Specification extends Constant
                     'type'
                 ]
                 root: false
-                paths: [
-                    'contents'
-                    'raw'
-                ]
+                paths: []
                 static:
                     complete: true
             contents:

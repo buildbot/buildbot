@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.4.6"
+ANGULAR_TAG = "~1.3.1"
 gulp = require("gulp")
 path = require("path")
 shell = require("gulp-shell")
@@ -30,11 +30,14 @@ config =
         # JavaScript libraries (order matters)
         deps:
             "guanlecoja-ui":
-                version: '~1.5.0'
+                version: '~1.4.1'
                 files: ['vendors.js', 'scripts.js']
             moment:
                 version: "~2.6.0"
                 files: 'moment.js'
+            restangular:
+                version: "~1.4.0"
+                files: 'dist/restangular.js'
             d3:  # d3 is loaded on demand via d3Service
                 version: "~3.4.11"
                 files: []
@@ -50,17 +53,6 @@ config =
             "reconnectingWebsocket":
                 version: "master"
                 files: ["reconnecting-websocket.js"]
-            'buildbot-data':
-                version: '~1.0.14'
-                files: 'dist/scripts.js'
-            # TODO these are dependencies of buildbot-data, could be included
-            tabex:
-                version: '*'
-                files: 'dist/tabex.js'
-            dexie:
-                version: '*'
-                files: 'dist/latest/Dexie.js'
-
         testdeps:
             "angular-mocks":
                 version: ANGULAR_TAG
@@ -93,7 +85,7 @@ gulp.task 'proxy', ['processindex'], ->
         console.log "[Proxy] #{req.method} #{req.url}"
 
     server = http.createServer (req, res) ->
-        if req.url.match /^\/(api|sse|avatar)/
+        if req.url.match /^\/(api|sse)/
             proxy.web req, res, {target: 'http://' + argv.host}
         else
             filepath = config.dir.build + req.url.split('?')[0]

@@ -24,7 +24,7 @@
                   th.text-center Value
                   th.text-right Source
               tbody
-                tr(ng-repeat="(name, value) in properties[0] | publicFields")
+                tr(ng-repeat="(name, value) in properties[0]._raw_data")
                   td.text-left {{ name }}
                   td.text-center {{ value[0] }}
                   td.text-right {{ value[1] }}

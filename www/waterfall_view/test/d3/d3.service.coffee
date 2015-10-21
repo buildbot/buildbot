@@ -1,4 +1,4 @@
-class D3 extends Service('bbData')
+class D3 extends Service('common')
     constructor: ($q) ->
         d = $q.defer()
 

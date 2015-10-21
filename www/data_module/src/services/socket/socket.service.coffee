@@ -1,5 +1,5 @@
 class Socket extends Service
-    constructor: ($log, $q, $location, $window, webSocketBackendService) ->
+    constructor: ($log, $q, $location, $window) ->
         return new class SocketService
             # waiting queue
             queue: []
@@ -71,20 +71,15 @@ class Socket extends Service
 
             getUrl: ->
                 host = $location.host()
-                protocol = if $location.protocol() is 'https' then 'wss' else 'ws'
-                defaultport = if $location.protocol() is 'https' then 443 else 80
-                path = $location.path()
-                port = if $location.port() is defaultport then '' else ':' + $location.port()
-                return "#{protocol}://#{host}#{port}/#{path}ws"
+                port = if $location.port() is 80 then '' else ':' + $location.port()
+                return "ws://#{host}#{port}/ws"
 
             # this function will be mocked in the tests
             getWebSocket: ->
                 url = @getUrl()
-                # if testing, use fake implementation
-                if jasmine?
-                    return webSocketBackendService.getWebSocket()
                 # use ReconnectingWebSocket if available
                 # TODO write own implementation?
                 if $window.ReconnectingWebSocket?
-                    return new $window.ReconnectingWebSocket(url)
-                return new $window.WebSocket(url)
+                    new $window.ReconnectingWebSocket(url)
+                else
+                    new $window.WebSocket(url)

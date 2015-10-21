@@ -1,28 +1,41 @@
 beforeEach module 'app'
 
 describe 'buildsticker controller', ->
-    dataService = scope = $compile = results = null
+    buildbotService = mqService = $httpBackend = $rootScope = $compile = results = null
 
     injected = ($injector) ->
         $compile = $injector.get('$compile')
+        $httpBackend = $injector.get('$httpBackend')
+        $location = $injector.get('$location')
+        decorateHttpBackend($httpBackend)
         $rootScope = $injector.get('$rootScope')
-        scope = $rootScope.$new()
+        mqService = $injector.get('mqService')
         $controller = $injector.get('$controller')
         $q = $injector.get('$q')
         results = $injector.get('RESULTS')
-        dataService = $injector.get('dataService')
+
+        # stub out the actual backend of mqservice
+        spyOn(mqService,"setBaseUrl").and.returnValue(null)
+        spyOn(mqService,"startConsuming").and.returnValue($q.when( -> ))
+        spyOn(mqService,"stopConsuming").and.returnValue(null)
+        buildbotService = $injector.get('buildbotService')
 
     beforeEach(inject(injected))
 
+    afterEach ->
+        $httpBackend.verifyNoOutstandingExpectation()
+        $httpBackend.verifyNoOutstandingRequest()
+
     it 'directive should generate correct html', ->
-        build = buildid: 3, builderid: 2, number: 1
-        dataService.when('builds/3', [build])
-        dataService.when('builders/2', [{builderid: 2}])
-        dataService.open(scope).getBuilds(build.buildid).then (builds) ->
-            scope.build = builds[0]
-        scope.$apply()
-        element = $compile("<buildsticker build='build'></buildsticker>")(scope)
-        scope.$apply()
+        $httpBackend.expectDataGET('builds/1')
+        buildbotService.one('builds', 1).bind($rootScope)
+        $httpBackend.flush()
+        $httpBackend.expectDataGET('builders/1')
+        element = $compile("<buildsticker build='build'></buildsticker>")($rootScope)
+        $httpBackend.flush()
+        $rootScope.$digest()
+
+        build = $rootScope.build
 
         sticker = element.children().eq(0)
 
@@ -39,11 +52,10 @@ describe 'buildsticker controller', ->
         expect(buildLink.attr('href')).toBe('#/builders/2/builds/1')
 
         # pending state
-        scope.build.complete = false
-        scope.build.started_at = Date.now()
-        scope.build.results = -1
-        scope.build.state_string = 'pending'
-        scope.$apply()
+        build.complete = false
+        build.results = -1
+        build.state_string = 'pending'
+        $rootScope.$digest()
         expect(resultSpan.hasClass('results_PENDING')).toBe(true)
         expect(resultSpan.text()).toBe('...')
         expect(durationSpan.hasClass('ng-hide')).toBe(true)
@@ -51,24 +63,24 @@ describe 'buildsticker controller', ->
         expect(stateSpan.text()).toBe('pending')
 
         # success state
-        scope.build.complete = true
-        scope.build.complete_at = scope.build.started_at + 1
-        scope.build.results = results.SUCCESS
-        scope.build.state_string = 'finished'
-        scope.$apply()
+        build.complete = true
+        build.complete_at = 2
+        build.results = results.SUCCESS
+        build.state_string = 'finished'
+        $rootScope.$digest()
         expect(resultSpan.hasClass('results_SUCCESS')).toBe(true)
         expect(resultSpan.text()).toBe('SUCCESS')
         expect(durationSpan.hasClass('ng-hide')).toBe(false)
         expect(startedSpan.hasClass('ng-hide')).toBe(true)
         expect(durationSpan.text()).toBe('1 s')
         expect(stateSpan.text()).toBe('finished')
-
+        
         # failed state
-        scope.build.complete = true
-        scope.build.complete_at = scope.build.started_at + 1
-        scope.build.results = results.FAILURE
-        scope.build.state_string = 'failed'
-        scope.$apply()
+        build.complete = true
+        build.complete_at = 2
+        build.results = results.FAILURE
+        build.state_string = 'failed'
+        $rootScope.$digest()
         expect(resultSpan.hasClass('results_FAILURE')).toBe(true)
         expect(resultSpan.text()).toBe('FAILURE')
         expect(durationSpan.hasClass('ng-hide')).toBe(false)

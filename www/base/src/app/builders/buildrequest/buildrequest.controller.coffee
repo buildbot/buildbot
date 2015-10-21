@@ -1,5 +1,7 @@
 class Buildrequest extends Controller
-    constructor: ($scope, dataService, $stateParams, findBuilds, glBreadcrumbService, glTopbarContextualActionsService, publicFieldsFilter) ->
+    constructor: ($scope, buildbotService, $stateParams, findBuilds, glBreadcrumbService,
+                  glTopbarContextualActionsService, $state) ->
+
         $scope.is_cancelling = false
         $scope.$watch "buildrequest.claimed", (n, o) ->
             if n  # if it is unclaimed, then claimed, we need to try again
@@ -20,7 +22,7 @@ class Buildrequest extends Controller
                 $scope.error = "Cannot cancel: " + why.data.error.message
                 refreshContextMenu()
 
-            $scope.buildrequest.control('cancel').then(success, failure)
+            buildbotService.one("buildrequests", $scope.buildrequest.buildrequestid).control("cancel").then(success, failure)
 
         refreshContextMenu = ->
             actions = []
@@ -41,12 +43,9 @@ class Buildrequest extends Controller
             glTopbarContextualActionsService.setContextualActions(actions)
         $scope.$watch('buildrequest.complete', refreshContextMenu)
 
-        opened = dataService.open($scope)
-        opened.getBuildrequests($stateParams.buildrequest).then (buildrequests) ->
-            buildrequest = buildrequests[0]
-            $scope.buildrequest = publicFieldsFilter(buildrequest)
-            opened.getBuilders(buildrequest.builderid).then (builders) ->
-                $scope.builder = builder = builders[0]
+        buildbotService.bindHierarchy($scope, $stateParams, ['buildrequests'])
+        .then ([buildrequest]) ->
+            buildbotService.one("builders", buildrequest.builderid).bind($scope).then (builder) ->
                 breadcrumb = [
                         caption: "buildrequests"
                         sref: "buildrequests"
@@ -59,6 +58,4 @@ class Buildrequest extends Controller
                 ]
 
                 glBreadcrumbService.setBreadcrumb(breadcrumb)
-
-            opened.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
-                $scope.buildset = publicFieldsFilter(buildsets[0])
+            buildbotService.one("buildsets", buildrequest.buildsetid).bind($scope)

@@ -1,9 +1,10 @@
 class FindBuilds extends Factory
-    constructor: ($log, scopeTimeout, dataService, $state, RESULTS) ->
+    constructor: ($log, scopeTimeout, buildbotService, $state, RESULTS) ->
         find_build = ($scope, buildrequestid, redirect_to_build) ->
             # get the builds that are addressing this buildrequestid
-            opened = dataService.open($scope)
-            opened.getBuilds(buildrequestid:buildrequestid).then (builds) ->
+            buildbotService.some 'builds',
+                buildrequestid:buildrequestid
+            .getSome().then (builds) ->
                 $scope.builds = builds
                 found_one_build = false
                 for build in builds

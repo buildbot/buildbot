@@ -3,6 +3,10 @@ invert_constant = (constant_name, inverted_constant_name) ->
         return _.invert(original)
     ]
 
+class Baseurlapi extends Constant('common')
+    constructor: ->
+        return 'api/v2/'
+
 class Baseurlws extends Constant('common')
     constructor: ->
         href = location.href.toString()

@@ -82,11 +82,7 @@ class IndexedDB extends Service
                             when 'le' then cmp = v[field] <= value
                             when 'gt' then cmp = v[field] >  value
                             when 'ge' then cmp = v[field] >= value
-                            else cmp = v[field] == value or
-                                (angular.isArray(v[field]) and value in v[field]) or
-                                # private fields added by the data service
-                                v["_#{field}"] == value or
-                                (angular.isArray(v["_#{field}"]) and value in v["_#{field}"])
+                            else cmp = v[field] == value or (angular.isArray(v[field]) and value in v[field])
                         if !cmp then return false
                     return true
 
@@ -184,9 +180,7 @@ class IndexedDB extends Service
                         resolve [tableName, query, id]
                     else
                         if parentFieldName isnt parentId
-                            splitted = url.split('/')
-                            nextUrl = splitted[...(if splitted.length % 2 == 0 then -2 else -1)].join('/')
-                            @get(nextUrl).then (array) ->
+                            @get(url.split('/')[...-2].join('/')).then (array) ->
                                 query[parentId] = array[0][parentId]
                                 if fieldName? then query[fieldName] = fieldValue
                                 resolve [tableName, query, null]

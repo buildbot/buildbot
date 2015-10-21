@@ -18,7 +18,13 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     script(src="{{app}}/scripts.js")
     link(rel='stylesheet', href='{{app}}/styles.css')
     script
-      | angular.module('app').requires.push('{{app}}')
-    | {% endfor %}
+        | angular.module('app').requires.push('{{app}}')
+    | {%- endfor -%}
     script
-      | angular.module("app").constant("config", {{configjson|safe}})
+        | angular.module("app").constant("config", {{configjson|safe}})
+    script
+        | angular.module("app").run(function($templateCache){
+        | {% for name, html in custom_templates.items() -%}
+        |     $templateCache.put("{{name}}", {{html|safe}})
+        | {%- endfor -%}
+        | })

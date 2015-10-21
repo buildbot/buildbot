@@ -3,69 +3,66 @@ class Buildsummary extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {}
-            bindToController: {buildid: '=', condensed: '=', prefix: "@"}
+            scope: {buildid: '=', condensed: '=', prefix: "@"}
             templateUrl: 'views/buildsummary.html'
             compile: RecursionHelper.compile
             controller: '_buildsummaryController'
-            controllerAs: 'buildsummary'
         }
 
 class _buildsummary extends Controller('common')
-    constructor: ($scope, dataService, resultsService, $urlMatcherFactory, $location, $interval, RESULTS) ->
-        self = @
-        # make resultsService utilities available in the template
-        _.mixin($scope, resultsService)
-
+    constructor: ($scope, buildbotService, resultsService, $urlMatcherFactory, $location) ->
         baseurl = $location.absUrl().split("#")[0]
         buildrequestURLMatcher = $urlMatcherFactory.compile(
             "#{baseurl}#buildrequests/{buildrequestid:[0-9]+}")
         buildURLMatcher = $urlMatcherFactory.compile(
             "#{baseurl}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
 
-        $interval =>
-            @now = moment().unix()
-        , 1000
-
         NONE = 0
         ONLY_NOT_SUCCESS = 1
         EVERYTHING = 2
         details = EVERYTHING
-        if @condensed
+        if $scope.condensed
             details = NONE
-        @toggleDetails = ->
-            details = (details + 1) % 3
 
-        @isStepDisplayed = (step) ->
+        $scope.$watch (-> moment().unix()), ->
+            $scope.now = moment().unix()
+
+        # make resultsService utilities available in the template
+        _.mixin($scope, resultsService)
+
+        $scope.toggleDetails = ->
+            details = (details + 1 ) % 3
+
+        $scope.isStepDisplayed = (step) ->
             if details == EVERYTHING
-                !step.hidden
+                return !step.hidden
             else if details == ONLY_NOT_SUCCESS
-                not step.results? or step.results != RESULTS.SUCCESS
+                return not step.results? or step.results != 0
             else if details == NONE
-                false
+                return false
 
-        @getBuildRequestIDFromURL = (url) ->
+        $scope.getBuildRequestIDFromURL = (url) ->
             return parseInt(buildrequestURLMatcher.exec(url).buildrequestid, 10)
 
-        @isBuildRequestURL = (url) ->
+        $scope.isBuildRequestURL = (url) ->
             return buildrequestURLMatcher.exec(url) != null
 
-        @isBuildURL = (url) ->
+        $scope.isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
-        opened = dataService.open($scope)
-        $scope.$watch (=> @buildid), (buildid) ->
-            if not buildid? then return
-            opened.getBuilds(buildid).then (builds) ->
-                self.build = build = builds[0]
-                opened.getBuilders(build.builderid).then (builders) ->
-                    self.builder = builder = builders[0]
 
-                build.getSteps().then (steps) ->
-                    self.steps = steps
-                    steps.forEach (step) ->
+        $scope.$watch 'buildid', (buildid) ->
+            $scope.buldid = buildid
+
+            buildbotService.one('builds', $scope.buildid)
+            .bind($scope).then (build) ->
+                buildbotService.one('builders', build.builderid).bind($scope)
+                build.all('steps').bind $scope,
+                    onchild: (step) ->
                         $scope.$watch (-> step.complete), ->
                             step.fulldisplay = step.complete == 0 || step.results > 0
                             if step.complete
                                 step.duration = step.complete_at - step.started_at
-                        step.loadLogs()
+                        logs = buildbotService.one("steps", step.stepid).all("logs")
+                        logs.bind $scope,
+                            dest: step

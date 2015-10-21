@@ -1,8 +1,8 @@
 class About extends Controller
-    constructor: ($scope, config, restService) ->
+    constructor: ($scope, config, buildbotService) ->
 
         $scope.config = config
 
         #$scope.bower_configs = bower_configs
-        restService.get('application.spec').then (specs) ->
+        buildbotService.all('application.spec').getList().then (specs) ->
             $scope.specs = specs

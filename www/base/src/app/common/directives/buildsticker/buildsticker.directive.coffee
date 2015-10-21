@@ -9,14 +9,12 @@ class Buildsticker extends Directive('common')
         }
 
 class _buildsticker extends Controller('common')
-    constructor: ($scope, dataService, resultsService, $urlMatcherFactory, $location) ->
+    constructor: ($scope, buildbotService, resultsService, $urlMatcherFactory, $location) ->
         $scope.$watch (-> moment().unix()), ->
             $scope.now = moment().unix()
 
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
 
-        opened = dataService.open($scope)
         $scope.$watch 'build', (build) ->
-            opened.getBuilders(build.builderid).then (builders) ->
-                $scope.builder = builders[0]
+            buildbotService.one('builders', build.builderid).bind($scope)

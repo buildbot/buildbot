@@ -14,22 +14,13 @@ describe 'Scale service', ->
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
         scaleService = $injector.get('scaleService')
+        buildbotServiceMock = $injector.get('buildbotService')
 
         scale = new scaleService(window.d3)
 
-        builders = [
-            builderid: 1
-            name: 'builder1'
-        ,
-            builderid: 2
-            name: 'builder2'
-        ,
-            builderid: 3
-            name: 'builder3'
-        ,
-            builderid: 4
-            name: 'builder4'
-        ]
+        # Use mocked buildbotService to get the sample data
+        buildbotServiceMock.all('builders').getList().then (b) ->
+            builders = b
         $rootScope.$digest()
 
 

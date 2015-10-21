@@ -1,13 +1,10 @@
 class Builder extends Controller
-    constructor: ($rootScope, $scope, dataService, $stateParams, resultsService, recentStorage,
+    constructor: ($rootScope, $scope, buildbotService, $stateParams, resultsService, recentStorage,
         glBreadcrumbService, $state, glTopbarContextualActionsService) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
-        opened = dataService.open($scope)
-        builderid = $stateParams.builder
-        opened.getBuilders(builderid).then (builders) ->
-            builder = builders[0]
-            $scope.builder = builder
+        builder = buildbotService.one('builders', $stateParams.builder)
+        builder.bind($scope).then (builder) ->
             breadcrumb = [
                     caption: "Builders"
                     sref: "builders"
@@ -16,27 +13,26 @@ class Builder extends Controller
                     sref: "builder({builder:#{builder.id}})"
             ]
             recentStorage.addBuilder
-                link: "#/builders/#{builder.builderid}"
-                caption: builder.name
+                link: "#/builders/#{$scope.builder.builderid}"
+                caption: $scope.builder.name
 
             # reinstall breadcrumb when coming back from forcesched
             $scope.$on '$stateChangeSuccess', ->
                 glBreadcrumbService.setBreadcrumb(breadcrumb)
             glBreadcrumbService.setBreadcrumb(breadcrumb)
 
-            builder.getForceschedulers().then (forceschedulers) ->
-                $scope.forceschedulers = forceschedulers
-                actions = []
-                _.forEach forceschedulers, (sch) ->
-                    actions.push
-                        caption: sch.button_name
-                        extra_class: "btn-primary"
-                        action: -> $state.go("builder.forcebuilder", scheduler:sch.name)
+        builder.all('forceschedulers').bind($scope).then (forceschedulers) ->
+            actions = []
+            _.forEach forceschedulers, (sch) ->
+                actions.push
+                    caption: sch.button_name
+                    extra_class: "btn-primary"
+                    action: -> $state.go("builder.forcebuilder", scheduler:sch.name)
 
-                # reinstall contextual actions when coming back from forcesched
+            # reinstall contextual actions when coming back from forcesched
+            glTopbarContextualActionsService.setContextualActions(actions)
+            $scope.$on '$stateChangeSuccess', ->
                 glTopbarContextualActionsService.setContextualActions(actions)
-                $scope.$on '$stateChangeSuccess', ->
-                    glTopbarContextualActionsService.setContextualActions(actions)
 
-            $scope.builds = builder.getBuilds(limit:20, order:'-number').getArray()
-            $scope.buildrequests = builder.getBuildrequests(claimed:0).getArray()
+        builder.some('builds', {limit:20, order:"-number"}).bind($scope)
+        builder.some('buildrequests', {claimed:0}).bind($scope)

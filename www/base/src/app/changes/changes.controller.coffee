@@ -1,4 +1,3 @@
 class Changes extends Controller
-    constructor: ($log, $scope, dataService) ->
-        opened = dataService.open($scope)
-        $scope.changes = opened.getChanges(limit:50, order:'-when_timestamp').getArray()
+    constructor: ($log, $scope, buildbotService) ->        
+        buildbotService.some('changes', limit:50, order:"-when_timestamp").bind($scope)

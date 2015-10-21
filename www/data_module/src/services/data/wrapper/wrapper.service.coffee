@@ -1,15 +1,15 @@
 class Wrapper extends Factory
     constructor: ($log, dataService, dataUtilsService, tabexService, SPECIFICATION) ->
         return class WrapperInstance
-            constructor: (object, endpoint, @_subscribe) ->
+            constructor: (object, endpoint) ->
                 if not angular.isString(endpoint)
                     throw new TypeError("Parameter 'endpoint' must be a string, not #{typeof endpoint}")
-                @_endpoint = endpoint
+                @getEndpoint = -> endpoint
 
                 # add object fields to the instance
                 @update(object)
 
-                # generate getXXX, and loadXXX functions
+                # generate loadXXX functions
                 endpoints = Object.keys(SPECIFICATION)
                 @constructor.generateFunctions(endpoints)
 
@@ -17,16 +17,14 @@ class Wrapper extends Factory
                 angular.merge(@, o)
 
             get: (args...) ->
-                [root, id, path...] = @_endpoint.split('/')
+                [root, id, path...] = @getEndpoint().split('/')
                 [options..., last] = args
                 if angular.isObject(last)
                     pathString = path.concat('*', options).join('/')
-                    if @_subscribe? then args[args.length - 1].subscribe ?= @_subscribe
                 else
                     pathString = path.concat('*', args).join('/')
-                    if @_subscribe? then args.push(subscribe: @_subscribe)
                 if path.length == 0
-                    return dataService.get(@_endpoint, @getId(), args...)
+                    return dataService.get(@getEndpoint(), @getId(), args...)
 
                 specification = SPECIFICATION[root]
                 match = specification.paths.filter (p) ->
@@ -36,30 +34,30 @@ class Wrapper extends Factory
                 .pop()
                 if not match?
                     parameter = @getId()
+                    $log.debug specification.paths, pathString
                 else
                     # second last element
-                    for e in match.split('/')[...-1] by -1
+                    for e in match.split('/') by -1
                         if e.indexOf(':') > -1
                             [fieldType, fieldName] = e.split(':')
                             parameter = @[fieldName]
                             break
 
-                dataService.get(@_endpoint, parameter, args...)
+                dataService.get(@getEndpoint(), parameter, args...)
 
             control: (method, params) ->
-                dataService.control("#{@_endpoint}/#{@getIdentifier() or @getId()}", method, params)
+                dataService.control(@getEndpoint(), method, params)
 
             # generate endpoint functions for the class
             @generateFunctions: (endpoints) ->
                 endpoints.forEach (e) =>
-                    if e == e.toUpperCase() then return
                     # capitalize endpoint names
                     E = dataUtilsService.capitalize(e)
                     # adds getXXX functions to the prototype
-                    @::["get#{E}"] ?= (args...) ->
+                    @::["get#{E}"] = (args...) ->
                         return @get(e, args...)
                     # adds loadXXX functions to the prototype
-                    @::["load#{E}"] ?= (args...) ->
+                    @::["load#{E}"] = (args...) ->
                         p = @get(e, args...)
                         @[e] = p.getArray()
                         return p
@@ -71,10 +69,10 @@ class Wrapper extends Factory
                 @[@classIdentifier()]
 
             classId: ->
-                SPECIFICATION[dataUtilsService.type(@_endpoint)].id
+                SPECIFICATION[dataUtilsService.type(@getEndpoint())].id
 
             classIdentifier: ->
-                SPECIFICATION[dataUtilsService.type(@_endpoint)].identifier
+                SPECIFICATION[dataUtilsService.type(@getEndpoint())].identifier
 
             unsubscribe: ->
                 e?.unsubscribe?() for _, e of this

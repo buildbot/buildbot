@@ -3,15 +3,13 @@ class WaterfallView extends App
     constructor: -> return [
         'ui.router'
         'ngAnimate'
+        'common'
         'guanlecoja.ui'
-        'bbData'
     ]
 
 class Waterfall extends Controller
     self = null
-    constructor: (@$scope, $q, $timeout, @$window, @$log,
-                  @$modal, @dataService, d3Service, @dataProcessorService,
-                  scaleService, @bbSettingsService) ->
+    constructor: (@$scope, $q, @$window, @$log, @$modal, @buildbotService, d3Service, @dataService, scaleService, @bbSettingsService) ->
         self = @
 
         # Show the loading spinner
@@ -49,10 +47,8 @@ class Waterfall extends Controller
             buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
-        builders = @dataService.getBuilders()
-        $scope.builders = builders.getArray()
-        builds = @dataService.getBuilds({limit: @c.limit, order: '-complete_at'})
-        $scope.builds = builds.getArray()
+        builders = @buildbotService.all('builders').bind(@$scope)
+        builds = @buildbotService.some('builds', {limit: @c.limit, order: '-complete_at'}).bind(@$scope)
 
         $q.all([d3Service.get(), builders, builds]).then ([@d3, @builders, @builds]) =>
 
@@ -60,9 +56,9 @@ class Waterfall extends Controller
             @scale = new scaleService(@d3)
 
             # Create groups and add builds to builders
-            @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
+            @groups = @dataService.getGroups(@builders, @builds, @c.threshold)
             # Add builder status to builders
-            @dataProcessorService.addStatus(@builders)
+            @dataService.addStatus(@builders)
 
             # Select containers
             @waterfall = @d3.select('.waterfall')
@@ -86,22 +82,27 @@ class Waterfall extends Controller
             angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
-            loadingMore = false
             @$scope.$watch('builds', ((builds) =>
                 if builds? and @builds.length isnt builds.length
                     @builds = builds
-                    @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
-                    @dataProcessorService.addStatus(@builders)
+                    @groups = @dataService.getGroups(@builders, @builds, @c.threshold)
+                    @dataService.addStatus(@builders)
                     @render()
-                    loadingMore = false
                 ), true)
 
             # Lazy load builds on scroll
             containerParent = @container.node().parentNode
             onScroll = =>
-                if not loadingMore and @getHeight() - containerParent.scrollTop < 1000
-                    loadingMore = true
-                    @loadMore()
+                if  @getHeight() - containerParent.scrollTop < 1000
+                    # Unbind scroll listener to prevent multiple execution before new data are received
+                    angular.element(containerParent).unbind('scroll')
+                    @loadMore().then (builds) =>
+                        if builds? and @builds.length isnt builds.length
+                            # $scope.$watch renders the new data
+                            # Rebind scroll listener
+                            angular.element(containerParent).bind 'scroll', onScroll
+                        # All builds are rendered, unbind event listener
+                        else angular.element(containerParent).unbind('scroll')
 
             # Bind scroll event listener
             angular.element(containerParent).bind 'scroll', onScroll
@@ -135,10 +136,7 @@ class Waterfall extends Controller
     # Load more builds
     ###
     loadMore: ->
-        promise = @dataService.getBuilds({limit: @builds.length + @c.limit, order: '-complete_at'})
-        promise.then (builds) =>
-            @$scope.builds = builds
-        return promise
+        @buildbotService.some('builds', {limit: @builds.length + @c.limit, order: '-complete_at'}).bind(@$scope)
         # $scope.$watch renders the new data
 
     ###
@@ -442,7 +440,8 @@ class Waterfall extends Controller
             .attr('points', points())
 
         # Load steps
-        build.loadSteps().then (buildsteps) ->
+        build.all('steps').bind(self.$scope).then (buildsteps) ->
+
             # Resize the tooltip
             height = buildsteps.length * 15 + 7
             tooltip.transition().duration(100)
@@ -511,3 +510,6 @@ class Waterfall extends Controller
         @drawBuilds()
         @drawXAxis()
         @drawYAxis()
+
+        y = @scale.getY(@groups, @c.gap, @getInnerHeight())
+        containerParent.scrollTop = y(time)

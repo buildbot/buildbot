@@ -1,6 +1,7 @@
 name = 'common'
 dependencies = [
     'ui.router'
+    'restangular'
     'RecursionHelper'
 ]
 
