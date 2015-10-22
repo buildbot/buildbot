@@ -159,6 +159,18 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
                     defer.returnValue(Match(self.master))
         defer.returnValue(None)
 
+
+class RebuildBuildEndpointMatcher(EndpointMatcherBase):
+
+    def __init__(self, builder=None, **kwargs):
+        self.builder = builder
+        EndpointMatcherBase.__init__(self, **kwargs)
+
+    @defer.inlineCallbacks
+    def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
+        build = yield epobject.get({}, epdict)
+        defer.returnValue(Match(self.master, build=build))
+
 #####
 # not yet implemented
 
