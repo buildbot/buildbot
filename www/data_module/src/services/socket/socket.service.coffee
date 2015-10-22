@@ -73,9 +73,8 @@ class Socket extends Service
                 host = $location.host()
                 protocol = if $location.protocol() is 'https' then 'wss' else 'ws'
                 defaultport = if $location.protocol() is 'https' then 443 else 80
-                path = $location.path()
                 port = if $location.port() is defaultport then '' else ':' + $location.port()
-                return "#{protocol}://#{host}#{port}/#{path}ws"
+                return "#{protocol}://#{host}#{port}/ws"
 
             # this function will be mocked in the tests
             getWebSocket: ->

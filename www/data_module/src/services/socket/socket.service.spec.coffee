@@ -190,11 +190,9 @@ describe 'Socket service', ->
             host = 'buildbot.test'
             port = 443
             protocol = 'https'
-            path = 'travis/'
             spyOn($location, 'host').and.returnValue(host)
             spyOn($location, 'port').and.returnValue(port)
             spyOn($location, 'protocol').and.returnValue(protocol)
-            spyOn($location, 'path').and.returnValue(path)
 
             url = socketService.getUrl()
-            expect(url).toBe('wss://buildbot.test/travis/ws')
+            expect(url).toBe('wss://buildbot.test/ws')

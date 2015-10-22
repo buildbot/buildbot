@@ -16,6 +16,14 @@ class Wrapper extends Factory
             update: (o) ->
                 angular.merge(@, o)
 
+            _findMatch: (root, path) ->
+                specification = SPECIFICATION[root]
+                specification.paths.filter (p) ->
+                    replaced = p
+                        .replace ///\w+\:\w+///g, '(\\*|\\w+|\\d+)'
+                    ///^#{replaced}$///.test(path)
+                .pop()
+
             get: (args...) ->
                 [root, id, path...] = @_endpoint.split('/')
                 [options..., last] = args
@@ -28,12 +36,7 @@ class Wrapper extends Factory
                 if path.length == 0
                     return dataService.get(@_endpoint, @getId(), args...)
 
-                specification = SPECIFICATION[root]
-                match = specification.paths.filter (p) ->
-                    replaced = p
-                        .replace ///\w+\:\w+///g, '(\\*|\\w+|\\d+)'
-                    ///^#{replaced}$///.test(pathString)
-                .pop()
+                match = @_findMatch(root, pathString)
                 if not match?
                     parameter = @getId()
                 else
@@ -47,7 +50,20 @@ class Wrapper extends Factory
                 dataService.get(@_endpoint, parameter, args...)
 
             control: (method, params) ->
-                dataService.control("#{@_endpoint}/#{@getIdentifier() or @getId()}", method, params)
+                [root, id, path...] = @_endpoint.split('/')
+                pathString = path.concat('*').join('/')
+                match = @_findMatch(root, pathString)
+                if not match?
+                    parameter = @getId() or @getIdentifier()
+                else
+                    # second last element
+                    for e in match.split('/') by -1
+                        if e.indexOf(':') > -1
+                            [fieldType, fieldName] = e.split(':')
+                            parameter = @[fieldName]
+                            break
+
+                dataService.control("#{@_endpoint}/#{parameter}", method, params)
 
             # generate endpoint functions for the class
             @generateFunctions: (endpoints) ->

@@ -71,7 +71,7 @@ class Build extends Controller
         opened = dataService.open($scope)
         opened.getBuilders(builderid).then (builders) ->
             $scope.builder = builder = builders[0]
-            builder.getBuilds(number: buildnumber).then (builds) ->
+            builder.getBuilds(buildnumber).then (builds) ->
                 $scope.build = build = builds[0]
                 if not build.number? and buildnumber > 1
                     $state.go('build', builder:builderid, build:buildnumber - 1)
@@ -118,5 +118,5 @@ class Build extends Controller
                     opened.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
                         $scope.buildset = buildsets[0]
 
-            builder.getBuilds(number: buildnumber + 1).then (builds) ->
+            builder.getBuilds(buildnumber + 1).then (builds) ->
                 $scope.nextbuild = builds[0]
