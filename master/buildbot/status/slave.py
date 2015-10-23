@@ -187,5 +187,7 @@ class SlaveStatus:
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
         result['eid'] = self.eid
+        result['graceful_shutdown'] = self.graceful_shutdown
+        result['paused'] = self.isPaused()
         return result
 
