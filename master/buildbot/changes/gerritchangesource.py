@@ -14,14 +14,18 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-from buildbot import util
-from buildbot.changes import base
-from buildbot.changes.filter import ChangeFilter
-from buildbot.util import json
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
+
+from buildbot.changes.filter import ChangeFilter
+from buildbot.changes import base
+from buildbot.changes.changes import Change
+from buildbot import config
+from buildbot import util
+from buildbot.util import always_true
+from buildbot.util import json
 
 
 class GerritChangeFilter(ChangeFilter):
@@ -83,7 +87,8 @@ class GerritChangeSource(base.ChangeSource):
                     gerritport=29418,
                     identity_file=None,
                     handled_events=("patchset-created", "ref-updated"),
-                    debug=False):
+                    debug=False,
+                    filter=None):
         if self.name is None:
             self.name = u"GerritChangeSource:%s@%s:%d" % (username, gerritserver, gerritport)
 
@@ -94,7 +99,8 @@ class GerritChangeSource(base.ChangeSource):
                         identity_file=None,
                         name=None,
                         handled_events=("patchset-created", "ref-updated"),
-                        debug=False):
+                        debug=False,
+                        filter=None):
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username
@@ -103,6 +109,7 @@ class GerritChangeSource(base.ChangeSource):
         self.process = None
         self.wantProcess = False
         self.debug = debug
+        self._filter = filter or always_true
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     class LocalPP(ProcessProtocol):
@@ -172,9 +179,13 @@ class GerritChangeSource(base.ChangeSource):
             return func(properties, event)
 
     def addChange(self, chdict):
-        d = self.master.data.updates.addChange(**chdict)
-        # eat failures..
-        d.addErrback(log.err, 'error adding change from GerritChangeSource')
+        if self._filter(Change.make_change(None, None, chdict)):
+            d = self.master.data.updates.addChange(**chdict)
+            # eat failures..
+            d.addErrback(log.err, 'error storing change from GerritChangeSource')
+        else:
+            d = defer.succeed(None)
+
         return d
 
     def getGroupingPolicyFromEvent(self, event):

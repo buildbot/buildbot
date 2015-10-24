@@ -17,15 +17,17 @@ from future.utils import iteritems
 import mock
 import re
 
-from buildbot.status import words
-from buildbot.process.results import SUCCESS
-from buildbot.test.fake import fakedb
-from buildbot.test.fake import fakemaster
-from buildbot.util import datetime2epoch
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
+
+from buildbot.status import words
+from buildbot.process.results import SUCCESS
+from buildbot.test.fake import fakedb
+from buildbot.test.fake import fakemaster
+from buildbot.util import always_true
+from buildbot.util import datetime2epoch
 
 
 class TestContactChannel(unittest.TestCase):
@@ -656,7 +658,7 @@ class TestContactChannel(unittest.TestCase):
         build = yield self.master.db.builds.getBuild(13)
 
         self.bot.tags = None
-        self.contact.notify_for = lambda _: True
+        self.contact.notify_for = always_true
         self.contact.useRevisions = False
 
         self.contact.buildStarted(build)
