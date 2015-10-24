@@ -69,12 +69,16 @@ class Socket extends Service
                 @id = if @id < 1000 then @id + 1 else 0
                 return @id
 
+            getRootPath: ->
+                return location.pathname
+
             getUrl: ->
                 host = $location.host()
                 protocol = if $location.protocol() is 'https' then 'wss' else 'ws'
                 defaultport = if $location.protocol() is 'https' then 443 else 80
+                path = @getRootPath()
                 port = if $location.port() is defaultport then '' else ':' + $location.port()
-                return "#{protocol}://#{host}#{port}/ws"
+                return "#{protocol}://#{host}#{port}#{path}ws"
 
             # this function will be mocked in the tests
             getWebSocket: ->

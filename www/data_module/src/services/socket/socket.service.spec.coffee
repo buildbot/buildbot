@@ -162,6 +162,7 @@ describe 'Socket service', ->
             port = 8080
             spyOn($location, 'host').and.returnValue(host)
             spyOn($location, 'port').and.returnValue(port)
+            spyOn(socketService, 'getRootPath').and.returnValue('/')
 
             url = socketService.getUrl()
             expect(url).toBe('ws://localhost:8080/ws')
@@ -171,6 +172,7 @@ describe 'Socket service', ->
             port = 80
             spyOn($location, 'host').and.returnValue(host)
             spyOn($location, 'port').and.returnValue(port)
+            spyOn(socketService, 'getRootPath').and.returnValue('/')
 
             url = socketService.getUrl()
             expect(url).toBe('ws://buildbot.test/ws')
@@ -182,6 +184,7 @@ describe 'Socket service', ->
             spyOn($location, 'host').and.returnValue(host)
             spyOn($location, 'port').and.returnValue(port)
             spyOn($location, 'protocol').and.returnValue(protocol)
+            spyOn(socketService, 'getRootPath').and.returnValue('/')
 
             url = socketService.getUrl()
             expect(url).toBe('wss://buildbot.test/ws')
@@ -190,9 +193,11 @@ describe 'Socket service', ->
             host = 'buildbot.test'
             port = 443
             protocol = 'https'
+            path = '/travis/'
             spyOn($location, 'host').and.returnValue(host)
             spyOn($location, 'port').and.returnValue(port)
             spyOn($location, 'protocol').and.returnValue(protocol)
+            spyOn(socketService, 'getRootPath').and.returnValue(path)
 
             url = socketService.getUrl()
-            expect(url).toBe('wss://buildbot.test/ws')
+            expect(url).toBe('wss://buildbot.test/travis/ws')
