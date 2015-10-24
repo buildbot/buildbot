@@ -35,8 +35,8 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     """
 
-    compare_attrs = ['treeStableTimer', 'change_filter', 'fileIsImportant',
-                     'onlyImportant', 'reason']
+    compare_attrs = ('treeStableTimer', 'change_filter', 'fileIsImportant',
+                     'onlyImportant', 'reason')
 
     _reactor = reactor  # for tests
 

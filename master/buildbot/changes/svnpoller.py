@@ -76,10 +76,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     master.
     """
 
-    compare_attrs = ["svnurl", "split_file",
+    compare_attrs = ("svnurl", "split_file",
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
-                     "svnbin", "category", "cachepath", "pollAtLaunch"]
+                     "svnbin", "category", "cachepath", "pollAtLaunch")
 
     parent = None  # filled in when we're added
     last_change = None

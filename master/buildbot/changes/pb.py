@@ -102,7 +102,8 @@ class ChangePerspective(NewCredPerspective):
 
 
 class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
-    compare_attrs = ["user", "passwd", "port", "prefix", "port"]
+
+    compare_attrs = ("user", "passwd", "port", "prefix", "port")
 
     def __init__(self, user="change", passwd="changepw", port=None,
                  prefix=None):

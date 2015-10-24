@@ -28,9 +28,9 @@ from buildbot.util import json
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):
 
-    compare_attrs = ["owner", "slug", "branch",
+    compare_attrs = ("owner", "slug", "branch",
                      "pollInterval", "useTimestamps",
-                     "category", "project", "pollAtLaunch"]
+                     "category", "project", "pollAtLaunch")
 
     db_class_name = 'BitbucketPullrequestPoller'
 

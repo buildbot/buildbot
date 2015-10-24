@@ -66,7 +66,7 @@ class _BuildStepFactory(util.ComparableMixin):
     We use an instance of this class, rather than a closure mostly to make it
     easier to test that the right factories are getting created.
     """
-    compare_attrs = ['factory', 'args', 'kwargs']
+    compare_attrs = ('factory', 'args', 'kwargs')
     implements(interfaces.IBuildStepFactory)
 
     def __init__(self, factory, *args, **kwargs):

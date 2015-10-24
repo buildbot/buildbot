@@ -40,7 +40,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""
     implements(IChangeSource)
 
-    compare_attrs = ["basedir", "pollinterval", "prefix"]
+    compare_attrs = ("basedir", "pollinterval", "prefix")
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
         MaildirService.__init__(self, maildir)
