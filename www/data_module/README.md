@@ -25,3 +25,17 @@ $ gulp
 $ npm install
 $ karma start
 ```
+
+## How to test within buildbot/www/base ?
+
+```
+$ cp dist/* ../base/libs/buildbot-data/dist/
+```
+Then rebuild buildbot base
+
+## How to publish the results (for buildbot maintainers) ?
+```
+$ vi guanlecoja/config.coffee   # bump the version manually
+$ gulp publish
+```
+This will commit and publish a new tag in the bower repository, with the content of your working directory
