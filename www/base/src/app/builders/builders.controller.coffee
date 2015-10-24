@@ -59,9 +59,32 @@ class Builders extends Controller
 
         $scope.builders = []
         opened = dataService.open($scope)
+        byNumber = (a, b) -> return a.number - b.number
         opened.getBuilders().then (builders) ->
             $scope.builders = builders
+            buildersById = {}
+            builders.forEach (builder) ->
+                builder.buildslaves = []
+                builder.builds = []
+                buildersById[builder.builderid] = builder
+
+            # as there is usually lots of builders, its better to get the overall list of slaves
+            # and then associate by builder
+
+            #@todo: how could we update this when new slaves are seen?
+            opened.getBuildslaves().then (slaves) ->
+                slaves.forEach (slave) ->
+                    slave.configured_on?.forEach (conf) ->
+                        buildersById[conf.builderid].buildslaves.push(slave)
+
+
+            #@todo: how could we update this when new builds are seen?
+            opened.getBuilds(limit: 200, order: '-started_at').then (builds) ->
+                builds.forEach (build) ->
+                    buildersById[build.builderid].builds.push(build)
+                    buildersById[build.builderid].builds.sort(byNumber)
+
+            # @todo, we cannot do same optims for masters due to lack of data api
+            # to map builders and masters
             builders.forEach (builder) ->
                 builder.loadMasters()
-                builder.loadBuildslaves()
-                builder.loadBuilds(limit:20, order:'-number')
