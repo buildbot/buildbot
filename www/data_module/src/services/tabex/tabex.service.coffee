@@ -105,7 +105,9 @@ class Tabex extends Service
                 indexedDBService.db[type].put(message).then =>
                     # emit the event
                     for path of @trackedPaths
-                        if ///^#{path.replace(/\*/g, '(\\w+|\\d+)')}$///.test(key)
+                        if ///^#{path.replace(/\*/g, '(\\w+|\\d+)')}$///.test(key) or
+                        # workaround
+                        (type is 'logs' and /logs/g.test(key))
                             for query in @trackedPaths[path]
                                 @emit path, query, event
 

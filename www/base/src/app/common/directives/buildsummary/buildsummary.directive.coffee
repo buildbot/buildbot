@@ -53,12 +53,12 @@ class _buildsummary extends Controller('common')
         @isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
-        opened = dataService.open($scope)
+        data = dataService.open($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
-            opened.getBuilds(buildid).then (builds) ->
+            data.getBuilds(buildid).then (builds) ->
                 self.build = build = builds[0]
-                opened.getBuilders(build.builderid).then (builders) ->
+                data.getBuilders(build.builderid).then (builders) ->
                     self.builder = builder = builders[0]
 
                 build.getSteps().then (steps) ->

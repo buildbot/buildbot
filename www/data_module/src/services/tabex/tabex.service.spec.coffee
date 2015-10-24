@@ -193,6 +193,26 @@ describe 'Tabex service', ->
             $rootScope.$apply -> tabexService.messageHandler('bsd/2/new', {})
             expect(tabexService.emit).toHaveBeenCalledWith('bsd/*/*', {}, tabexService.EVENTS.NEW)
 
+        it 'should emit update events for logs if the path contains `log`', ->
+            indexedDBService.db =
+                logs: put: -> $q.resolve()
+
+            spyOn(tabexService, 'activatePaths').and.returnValue($q.resolve())
+            spyOn(tabexService, 'startConsumingAll').and.returnValue($q.resolve())
+            spyOn(tabexService, 'loadAll').and.callFake ->
+            tabexService.debounceTimeout = 0
+            $rootScope.$apply -> clientMock.callMasterHandler(true)
+
+            socketPath = 'builders/3/builds/317/steps/1/logs/stdio/*'
+            tabexService.on socketPath, {subscribe: true}, ->
+
+            $timeout.flush()
+
+            spyOn(tabexService, 'emit')
+            expect(tabexService.emit).not.toHaveBeenCalled()
+            $rootScope.$apply -> tabexService.messageHandler('logs/1/update', {})
+            expect(tabexService.emit).toHaveBeenCalledWith(socketPath, {}, tabexService.EVENTS.UPDATE)
+
     describe 'closeHandler()', ->
 
         it 'should send the startConsuming messages', ->

@@ -10,21 +10,21 @@ class Buildslaves extends Controller
                 return "(" + $scope.mastersById[buildermaster.masterid].name.split(":")[0] + ")"
             return ""
 
-        opened = dataService.open($scope)
+        data = dataService.open($scope)
 
         $scope.buildersById = {}
-        opened.getBuilders().then (builders) ->
+        data.getBuilders().then (builders) ->
             $scope.builders = builders
             builders.forEach (builder) ->
                 $scope.buildersById[builder.builderid] = builder
 
         $scope.mastersById = {}
-        opened.getMasters().then (masters) ->
+        data.getMasters().then (masters) ->
             $scope.masters = masters
             masters.forEach (master) ->
                 $scope.mastersById[master.masterid] = master
 
-        $scope.buildslaves = opened.getBuildslaves().getArray()
+        $scope.buildslaves = data.getBuildslaves().getArray()
 
         $scope.settings = bbSettingsService.getSettingsGroup("Slaves")
         $scope.$watch('settings', ->

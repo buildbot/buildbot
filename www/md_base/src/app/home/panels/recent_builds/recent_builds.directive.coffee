@@ -14,10 +14,10 @@ class _RecentBuilds extends Controller
     constructor: ($scope, dataService, bbSettingsService) ->
         homeSetting = bbSettingsService.getSettingsGroup 'home'
 
-        opened = dataService.open()
-        opened.closeOnDestroy($scope)
+        data = dataService.open()
+        data.closeOnDestroy($scope)
 
-        @builds = opened.getBuilds(
+        @builds = data.getBuilds(
             complete: true
             order:'-complete_at'
             limit: homeSetting.n_recent_builds.value
