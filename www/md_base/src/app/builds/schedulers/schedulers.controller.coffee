@@ -1,5 +1,5 @@
 class Schedulers extends Controller
     constructor: ($scope, dataService) ->
-        opened = dataService.open()
-        opened.closeOnDestroy($scope)
-        @list = opened.getSchedulers().getArray()
+        data = dataService.open()
+        data.closeOnDestroy($scope)
+        @list = data.getSchedulers().getArray()

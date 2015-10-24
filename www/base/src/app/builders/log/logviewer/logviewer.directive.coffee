@@ -4,7 +4,7 @@ class Logviewer extends Directive
         $window = angular.element($window)
 
         directive = ->
-            opened = null
+            data = null
             self =
             num_lines: 0
             auto_scroll: true
@@ -61,7 +61,7 @@ class Logviewer extends Directive
             controller: ($scope) ->
                 $scope.lines = self.lines
                 self.scope = $scope
-                opened = dataService.open($scope)
+                data = dataService.open($scope)
                 self.updateLog()
 
             link: (scope, elm, attr) ->

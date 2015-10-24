@@ -58,9 +58,9 @@ class Builders extends Controller
                 $scope.tags_filter.splice(i, 1)
 
         $scope.builders = []
-        opened = dataService.open($scope)
+        data = dataService.open($scope)
         byNumber = (a, b) -> return a.number - b.number
-        opened.getBuilders().then (builders) ->
+        data.getBuilders().then (builders) ->
             $scope.builders = builders
             buildersById = {}
             builders.forEach (builder) ->
@@ -72,14 +72,14 @@ class Builders extends Controller
             # and then associate by builder
 
             #@todo: how could we update this when new slaves are seen?
-            opened.getBuildslaves().then (slaves) ->
+            data.getBuildslaves().then (slaves) ->
                 slaves.forEach (slave) ->
                     slave.configured_on?.forEach (conf) ->
                         buildersById[conf.builderid].buildslaves.push(slave)
 
 
             #@todo: how could we update this when new builds are seen?
-            opened.getBuilds(limit: 200, order: '-started_at').then (builds) ->
+            data.getBuilds(limit: 200, order: '-started_at').then (builds) ->
                 builds.forEach (build) ->
                     buildersById[build.builderid].builds.push(build)
                     buildersById[build.builderid].builds.sort(byNumber)

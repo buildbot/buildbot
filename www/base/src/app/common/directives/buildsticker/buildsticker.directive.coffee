@@ -16,7 +16,7 @@ class _buildsticker extends Controller('common')
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
 
-        opened = dataService.open($scope)
+        data = dataService.open($scope)
         $scope.$watch 'build', (build) ->
-            opened.getBuilders(build.builderid).then (builders) ->
+            data.getBuilders(build.builderid).then (builders) ->
                 $scope.builder = builders[0]

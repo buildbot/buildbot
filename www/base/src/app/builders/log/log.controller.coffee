@@ -1,11 +1,11 @@
 class Log extends Controller
     constructor: ($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService) ->
-        opened = dataService.open($scope)
+        data = dataService.open($scope)
         builderid = dataUtilsService.numberOrString($stateParams.builder)
         buildnumber = dataUtilsService.numberOrString($stateParams.build)
         stepnumber = dataUtilsService.numberOrString($stateParams.step)
         slug = $stateParams.log
-        opened.getBuilders(builderid).then (builders) ->
+        data.getBuilders(builderid).then (builders) ->
             $scope.builder = builder = builders[0]
             builder.getBuilds(buildnumber).then (builds) ->
                 $scope.build = build = builds[0]

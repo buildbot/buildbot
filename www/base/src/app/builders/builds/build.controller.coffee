@@ -68,8 +68,8 @@ class Build extends Controller
             glTopbarContextualActionsService.setContextualActions(actions)
         $scope.$watch('build.complete', refreshContextMenu)
 
-        opened = dataService.open($scope)
-        opened.getBuilders(builderid).then (builders) ->
+        data = dataService.open($scope)
+        data.getBuilders(builderid).then (builders) ->
             $scope.builder = builder = builders[0]
             builder.getBuilds(buildnumber).then (builds) ->
                 $scope.build = build = builds[0]
@@ -97,7 +97,7 @@ class Build extends Controller
                     link: "#/builders/#{$scope.builder.builderid}/builds/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
-                opened.getBuilds(build.buildid).then (builds) ->
+                data.getBuilds(build.buildid).then (builds) ->
                     build = builds[0]
                     $scope.properties = build.getProperties().getArray()
                     $scope.changes = build.getChanges().getArray()
@@ -110,12 +110,12 @@ class Build extends Controller
                             $scope.responsibles = responsibles
                     , true
 
-                opened.getBuildslaves(build.buildslaveid).then (buildslaves) ->
+                data.getBuildslaves(build.buildslaveid).then (buildslaves) ->
                     $scope.buildslave = publicFieldsFilter(buildslaves[0])
 
-                opened.getBuildrequests(build.buildrequestid).then (buildrequests) ->
+                data.getBuildrequests(build.buildrequestid).then (buildrequests) ->
                     $scope.buildrequest = buildrequest = buildrequests[0]
-                    opened.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
+                    data.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
                         $scope.buildset = buildsets[0]
 
             builder.getBuilds(buildnumber + 1).then (builds) ->

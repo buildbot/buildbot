@@ -4,12 +4,12 @@ class BuildTab extends Controller
     number: ''
 
     constructor: ($scope, $state, dataService) ->
-        opened = dataService.open()
-        opened.closeOnDestroy($scope)
+        data = dataService.open()
+        data.closeOnDestroy($scope)
 
         @builderid = parseInt($state.params.builderid)
         @number = parseInt($state.params.number)
-        opened.getBuilds(builderid:@builderid, number:@number).then (data) =>
+        data.getBuilds(builderid:@builderid, number:@number).then (data) =>
             if data.length < 1
                 alert 'No such build found'
             else
