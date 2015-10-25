@@ -432,29 +432,26 @@ class Git(Source):
 
         if self.prog:
             command.append('--progress')
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
-        # If it's a shallow clone abort build step
-        res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
+
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self._doClobber()
+
+            res = yield self._dovccmd(command)
+
+            needRetry = res != RC_SUCCESS
+            defer.returnValue((needRetry, res))
+
+        res = yield self.doWithRetry(action, 'checkout')
+
+        # If it's a shallow clone abort build step.
+        if shallowClone and res != RC_SUCCESS:
+            raise buildstep.BuildStepFailed()
 
         if switchToBranch:
             res = yield self._fetch(None)
-
-        done = self.stopped or res == RC_SUCCESS  # or shallow clone??
-        if self.retry and not done:
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-
-                df = defer.Deferred()
-                df.addCallback(lambda _: self._doClobber())
-                df.addCallback(lambda _: self._clone(shallowClone))
-                reactor.callLater(delay, df.callback, None)
-                res = yield df
 
         defer.returnValue(res)
 

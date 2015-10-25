@@ -324,31 +324,21 @@ class Mercurial(Source):
         return d
 
     def _clone(self):
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
-        d = self._dovccmd(['clone', '--noupdate', self.repourl, '.'],
-                          abandonOnFailure=abandonOnFailure)
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self._clobber()
 
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
-                df.addCallback(lambda _: self._clobber())
-                df.addCallback(lambda _: self._clone())
-                reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+            abandonOnFailure = (tryCount >= totalTries)
+            res = yield self._dovccmd(['clone', '--noupdate', 
+                                       self.repourl, '.'],
+                                      abandonOnFailure=abandonOnFailure)
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+            needRetry = res != 0
+            defer.returnValue((needRetry, res))
+
+        return self.doWithRetry(action, 'checkout')
 
     def checkHg(self):
         d = self._dovccmd(['--version'])

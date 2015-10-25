@@ -180,29 +180,21 @@ class CVS(Source):
         if self.revision:
             command += ['-D', self.revision]
         command += [self.cvsmodule]
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
-        d = self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)
 
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
-                df.addCallback(lambda _: self.clobber())
-                reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self.runRmdir(self.workdir)
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+            # If it's a shallow clone abort build step.
+            abandonOnFailure = (tryCount >= totalTries)
+            res = yield self._dovccmd(command, '', abandonOnFailure=abandonOnFailure)
+
+            needRetry = res != 0
+            defer.returnValue((needRetry, res))
+
+        return self.doWithRetry(action, 'checkout')
 
     def doUpdate(self):
         command = ['-z3', 'update', '-dP']

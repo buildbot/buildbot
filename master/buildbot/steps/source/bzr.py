@@ -166,29 +166,19 @@ class Bzr(Source):
         if self.revision:
             command.extend(['-r', self.revision])
 
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
-        d = self._dovccmd(command, abandonOnFailure=abandonOnFailure)
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self.runRmdir(self.workdir)
 
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
-                df.addCallback(lambda _: self.clobber())
-                reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+            abandonOnFailure = (tryCount >= totalTries)
+            res = yield self._dovccmd(command, abandonOnFailure=abandonOnFailure)
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+            needRetry = res != 0
+            defer.returnValue((needRetry, res))
+
+        return self.doWithRetry(action, 'checkout')
 
     def finish(self, res):
         d = defer.succeed(res)
