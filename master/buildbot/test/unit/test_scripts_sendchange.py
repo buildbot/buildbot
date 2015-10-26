@@ -23,7 +23,7 @@ from twisted.trial import unittest
 
 class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):
 
-    class FakeSender:
+    class FakeSender(object):
 
         def __init__(self, testcase, master, auth, encoding=None):
             self.master = master

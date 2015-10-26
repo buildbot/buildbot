@@ -46,7 +46,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     fileIsImportant = None
     reason = ''
 
-    class NotSet:
+    class NotSet(object):
         pass
 
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,

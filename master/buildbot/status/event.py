@@ -18,7 +18,7 @@ from buildbot import util
 from zope.interface import implements
 
 
-class Event:
+class Event(object):
     implements(interfaces.IStatusEvent)
 
     started = None

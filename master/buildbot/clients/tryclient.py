@@ -50,7 +50,7 @@ def output(*msg):
     log.msg(' '.join(map(str, msg)))
 
 
-class SourceStampExtractor:
+class SourceStampExtractor(object):
 
     def __init__(self, treetop, branch, repository):
         self.treetop = treetop

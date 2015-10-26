@@ -86,7 +86,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         return ObjDict(id=select())
 
-    class Thunk:
+    class Thunk(object):
         pass
 
     def getState(self, objectid, name, default=Thunk):

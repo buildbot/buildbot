@@ -25,7 +25,7 @@ from twisted.protocols.basic import LineOnlyReceiver
 from twisted.python.failure import Failure
 
 
-class FakeTransport:
+class FakeTransport(object):
     disconnecting = False
 
 

@@ -156,7 +156,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.assertLegacySummary(step, None)
 
     def test_getLegacySummary_unrendered_custom_old_style_class_renderable(self):
-        class C:
+        class C(object):
             pass
         step = shell.ShellCommand(command=C())
         step.rendered = True

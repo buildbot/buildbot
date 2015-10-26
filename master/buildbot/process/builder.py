@@ -526,7 +526,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return buildrequest.BuildRequest.canBeCollapsed(self.master, brdict1, brdict2)
 
 
-class BuilderControl:
+class BuilderControl(object):
     implements(interfaces.IBuilderControl)
 
     def __init__(self, builder, control):

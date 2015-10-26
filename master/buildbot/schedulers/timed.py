@@ -42,7 +42,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
                      'branch', 'fileIsImportant', 'change_filter', 'onlyImportant')
     reason = ''
 
-    class NoBranch:
+    class NoBranch(object):
         pass
 
     def __init__(self, name, builderNames, reason='',

@@ -26,7 +26,7 @@ from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.util import in_reactor
 
 
-class Reconfigurator:
+class Reconfigurator(object):
 
     rc = 0
 

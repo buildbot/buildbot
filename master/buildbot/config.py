@@ -322,8 +322,7 @@ class MasterConfig(util.ComparableMixin):
             self.properties.update(properties, filename)
 
         collapseRequests = config_dict.get('collapseRequests')
-        if (collapseRequests not in (None, True, False)
-                and not callable(collapseRequests)):
+        if (collapseRequests not in (None, True, False) and not callable(collapseRequests)):
             error("collapseRequests must be a callable, True, or False")
         else:
             self.collapseRequests = collapseRequests

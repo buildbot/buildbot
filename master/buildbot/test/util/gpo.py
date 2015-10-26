@@ -55,7 +55,7 @@ class Expect(object):
         return "<gpo.Expect(bin=%s, args=%s)>" % (self._bin, self._args)
 
 
-class GetProcessOutputMixin:
+class GetProcessOutputMixin(object):
 
     def setUpGetProcessOutput(self):
         self._gpo_patched = False

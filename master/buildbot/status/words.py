@@ -118,7 +118,7 @@ class ForceOptions(usage.Options):
             self['reason'] = " ".join(args)
 
 
-class BuildRequest:
+class BuildRequest(object):
     hasStarted = False
     timer = None
 

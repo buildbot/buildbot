@@ -148,7 +148,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         else:
             del self.master.data.updates.schedulerMasters[self.sched.objectid]
 
-    class FakeChange:
+    class FakeChange(object):
         who = ''
         files = []
         comments = ''

@@ -302,7 +302,10 @@ class BuildStep(results.ResultComputingConfigMixin,
     rendered = False  # true if attributes are rendered
     _workdir = None
     _waitingForLocks = False
-    _run_finished_hook = lambda self: None  # for tests
+
+    def _run_finished_hook(self):
+        # for tests
+        return None
 
     def __init__(self, **kwargs):
         for p in self.__class__.parms:

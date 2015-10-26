@@ -20,7 +20,7 @@ from twisted.python import log
 from zope.interface import implements
 
 
-class BuildRequestStatus:
+class BuildRequestStatus(object):
     implements(interfaces.IBuildRequestStatus)
 
     def __init__(self, buildername, brid, status, brdict=None):

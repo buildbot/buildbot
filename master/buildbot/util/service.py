@@ -101,6 +101,13 @@ class AsyncMultiService(AsyncService, service.MultiService):
         else:
             return defer.succeed(None)
 
+    # We recurse over the parent services until we find a MasterService
+    @property
+    def master(self):
+        if self.parent is None:
+            return None
+        return self.parent.master
+
 
 class MasterService(AsyncMultiService):
     # master service is the service that stops the master property recursion
@@ -108,6 +115,10 @@ class MasterService(AsyncMultiService):
     @property
     def master(self):
         return self
+
+    @master.setter
+    def master(self, _):
+        pass
 
 
 class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,
