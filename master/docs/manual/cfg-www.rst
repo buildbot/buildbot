@@ -203,8 +203,7 @@ The available classes are described here:
     Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
 
     The user's email-address (for e.g. authorization) is set to the "primary" address set by the user in GitHub.
-    When using group-based authorization, the user's groups are equal to the names of the GitHub organizations the user
-    is a member of.
+    When using group-based authorization, the user's groups are equal to the names of the GitHub organizations the user is a member of.
 
     Example::
 
@@ -579,11 +578,13 @@ More complex config with separation per branch:
     )
     c['www']['authz'] = authz
 
-Using GitHub authentication and allowing access to all endpoints for users in the "BuildBot" organisation:
+Using GitHub authentication and allowing access to all endpoints for users in the "Buildbot" organisation, using the
+avatars from GitHub:
 
 .. code-block:: python
 
     from buildbot.plugins import *
+    avatars = util.AvatarGitHub()
     authz = util.Authz(
       allowRules=[
         util.AnyEndpointMatcher(role="BuildBot", defaultDeny=True)
@@ -595,3 +596,4 @@ Using GitHub authentication and allowing access to all endpoints for users in th
     auth=util.GitHubAuth('CLIENT_ID', 'CLIENT_SECRET')
     c['www']['auth'] = auth
     c['www']['authz'] = authz
+    c['www']['avatar_methods'] = avatars

@@ -42,6 +42,19 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
                                     'def654fccc4a4d8?s=32&d=retro'))
 
     @defer.inlineCallbacks
+    def test_github(self):
+        master = self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGitHub()])
+        rsrc = avatar.AvatarResource(master)
+        rsrc.reconfigResource(master.config)
+
+        res = yield self.render_resource(rsrc, '/?email=schacon@gmail.com')
+        self.assertEquals(res, {'redirected': 'https://avatars.githubusercontent.com/u/70?v=3&s=32'})
+
+        # Test if we get the same response from the cache
+        res = yield self.render_resource(rsrc, '/?email=schacon@gmail.com')
+        self.assertEquals(res, {'redirected': 'https://avatars.githubusercontent.com/u/70?v=3&s=32'})
+
+    @defer.inlineCallbacks
     def test_custom(self):
         class CustomAvatar(avatar.AvatarBase):
 
