@@ -203,7 +203,8 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
     def buildslaveDisconnected(self, buildslaveid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_buildslaves
-            q = tbl.delete(whereclause=(tbl.c.buildslaveid == buildslaveid)
-                           & (tbl.c.masterid == masterid))
+            q = tbl.delete(whereclause=(
+                tbl.c.buildslaveid == buildslaveid) &
+                (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)
