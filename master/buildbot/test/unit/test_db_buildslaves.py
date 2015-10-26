@@ -480,6 +480,32 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
+    def test_buildslaveReConfigured(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        # should remove builder 21, and add 22
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[20, 22])
+
+        bs = yield self.db.buildslaves.getBuildslave(30)
+        self.assertEqual(sorted(bs['configured_on']), sorted([
+            {'builderid': 20, 'masterid': 11},
+            {'builderid': 20, 'masterid': 10},
+            {'builderid': 22, 'masterid': 10}]))
+
+    @defer.inlineCallbacks
+    def test_buildslaveUnconfigured(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        # should remove all builders from master 10
+        yield self.db.buildslaves.buildslaveConfigured(
+            buildslaveid=30, masterid=10, builderids=[])
+
+        bs = yield self.db.buildslaves.getBuildslave(30)
+        self.assertEqual(sorted(bs['configured_on']), sorted([
+            {'builderid': 20, 'masterid': 11}]))
+
+    @defer.inlineCallbacks
     def test_nothingConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
