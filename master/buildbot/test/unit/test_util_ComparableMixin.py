@@ -34,7 +34,7 @@ class ComparableMixin(unittest.TestCase):
         compare_attrs = ["b", "e"]
 
         def __init__(self, b, e):
-            self.b, self.e = d, e
+            self.b, self.e = b, e
 
     def setUp(self):
         self.f123 = self.Foo(1, 2, 3)
