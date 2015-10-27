@@ -140,6 +140,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             lastBuilds = {}
             maxSearch = num_builds if num_builds < 200 else 200
+            resumeBuilds = [9, -1]
 
             q = sa.select(columns=[buildrequests_tbl.c.buildername, builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
@@ -161,6 +162,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             q = q.where(buildrequests_tbl.c.mergebrid == None)\
                 .where(builds_tbl.c.slavename == slavename)\
+                .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
                 .distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
                 .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
