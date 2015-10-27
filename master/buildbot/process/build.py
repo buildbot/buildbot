@@ -25,11 +25,11 @@ from zope.interface import implements
 from buildbot import interfaces
 from buildbot.process import metrics
 from buildbot.process import properties
-from buildbot.process.results import Results
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
+from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
@@ -284,7 +284,8 @@ class Build(properties.PropertiesMixin):
             self.results = EXCEPTION
             self.deferred = None
             return
-
+        # flush properties in the beginning of the build
+        yield self._flushProperties(None)
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'starting')
         self.build_status.buildStarted(self)
@@ -427,12 +428,7 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def _flushProperties(self, results):
         # `results` is just passed on to the next callback
-        props = interfaces.IProperties(self)
-
-        properties = props.getProperties().asList()
-        for name, value, source in properties:
-            yield self.master.data.updates.setBuildProperty(
-                self.buildid, name, value, source)
+        yield self.master.data.updates.setBuildProperties(self.buildid, self)
 
         defer.returnValue(results)
 

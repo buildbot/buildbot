@@ -33,3 +33,11 @@ All update methods are available as attributes of ``master.data.updates``.
         Set a build property.
         If no property with that name exists in that build, a new property will be created.
 
+    .. py:method:: setBuildProperties(buildid, props)
+
+        :param integer buildid: build ID
+        :param IProperties props: Name of the property to set
+
+        Synchronise build properties with the db.
+        This sends only one event in the end of the synch, and only if properties changed.
+        The event contains only the updated properties, for network efficiency reasons.

@@ -15,6 +15,7 @@
 
 from buildbot.data import base
 from buildbot.data import types
+from twisted.internet import defer
 
 
 class BuildsetPropertiesEndpoint(base.Endpoint):
@@ -48,7 +49,34 @@ class Properties(base.ResourceType):
 
     entityType = types.SourcedProperties()
 
+    def generateUpdateEvent(self, buildid, newprops):
+        # This event cannot use the produceEvent mecanism, as the properties resource type is a bit specific
+        # (this is a dictionary collection)
+        # We only send the new properties, and count on the client to merge the resulting properties dict
+        # We are good, as there is no way to delete a property.
+        routingKey = ('builds', str(buildid), "properties", "update")
+        newprops = self.sanitizeMessage(newprops)
+        return self.master.mq.produce(routingKey, newprops)
+
     @base.updateMethod
+    @defer.inlineCallbacks
+    def setBuildProperties(self, buildid, properties):
+        to_update = {}
+        oldproperties = yield self.master.data.get(('builds', str(buildid), "properties"))
+        for k, v in properties.asDict().iteritems():
+            if k in oldproperties and oldproperties[k] == v:
+                continue
+            to_update[k] = v
+        if to_update:
+            for k, v in to_update.iteritems():
+                yield self.master.db.builds.setBuildProperty(
+                    buildid, k, v[0], v[1])
+            yield self.generateUpdateEvent(buildid, to_update)
+
+    @base.updateMethod
+    @defer.inlineCallbacks
     def setBuildProperty(self, buildid, name, value, source):
-        return self.master.db.builds.setBuildProperty(
+        res = yield self.master.db.builds.setBuildProperty(
             buildid, name, value, source)
+        yield self.generateUpdateEvent(buildid, dict(name=(value, source)))
+        defer.returnValue(res)

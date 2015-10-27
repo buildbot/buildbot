@@ -50,7 +50,7 @@ class FakeUpdates(service.AsyncService):
         self.claimedBuildRequests = set([])
         self.stepStateString = {}  # { stepid : string }
         self.stepUrls = {}  # { stepid : [(name,url)] }
-
+        self.properties = []
     # extra assertions
 
     def assertProperties(self, sourced, properties):
@@ -320,6 +320,12 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'source', source,
                               validation.StringValidator())
         return defer.succeed(None)
+
+    @defer.inlineCallbacks
+    def setBuildProperties(self, buildid, properties):
+        for k, v, s in properties.getProperties().asList():
+            self.properties.append((buildid, k, v, s))
+            yield self.setBuildProperty(buildid, k, v, s)
 
     def addStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid,

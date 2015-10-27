@@ -26,15 +26,37 @@ from buildbot.test.fake import fakemaster
 from twisted.python import components
 
 
-class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
-    properties = properties.Properties()
+class FakeBuildStatus(properties.PropertiesMixin, object):
 
-    # work around http://code.google.com/p/mock/issues/detail?id=105
-    def _get_child_mock(self, **kw):
-        return mock.Mock(**kw)
+    def __init__(self):
+        self.properties = properties.Properties()
 
     def getInterestedUsers(self):
         return []
+
+    def setSlavename(self, _):
+        pass
+
+    def setSourceStamps(self, _):
+        pass
+
+    def setReason(self, _):
+        pass
+
+    def setBlamelist(self, _):
+        pass
+
+    def buildStarted(self, _):
+        return True
+
+    setText = mock.Mock()
+    setText2 = mock.Mock()
+    setResults = mock.Mock()
+
+    def buildFinished(self):
+        pass
+
+    getBuilder = mock.Mock()
 
 components.registerAdapter(
     lambda build_status: build_status.properties,
