@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.data import base
 from buildbot.data import types
-from twisted.internet import defer
 
 
 class BuildsetPropertiesEndpoint(base.Endpoint):
@@ -67,6 +68,7 @@ class Properties(base.ResourceType):
             if k in oldproperties and oldproperties[k] == v:
                 continue
             to_update[k] = v
+
         if to_update:
             for k, v in to_update.iteritems():
                 yield self.master.db.builds.setBuildProperty(
