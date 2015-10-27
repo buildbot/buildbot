@@ -55,40 +55,45 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def buildslaveConfigured(self, buildslaveid, masterid, builderids):
-        # nothing to add
-        if not builderids:
-            return defer.succeed(None)
 
         def thd(conn):
 
-            # get the buildermasterids that are configured
             cfg_tbl = self.db.model.configured_buildslaves
             bm_tbl = self.db.model.builder_masters
-            q = sa.select([bm_tbl.c.id], from_obj=[bm_tbl])
-            q = q.where(bm_tbl.c.masterid == masterid)
-            q = q.where(bm_tbl.c.builderid.in_(builderids))
-            buildermasterids = [row['id'] for row in conn.execute(q)]
 
-            # and insert them
-            q = cfg_tbl.insert()
-            try:
+            # get the buildermasterids that are configured
+            if builderids:
+                q = sa.select([bm_tbl.c.id], from_obj=[bm_tbl])
+                q = q.where(bm_tbl.c.masterid == masterid)
+                q = q.where(bm_tbl.c.builderid.in_(builderids))
+                buildermasterids = set([row['id'] for row in conn.execute(q)])
+            else:
+                buildermasterids = set([])
+
+            j = cfg_tbl
+            j = j.outerjoin(bm_tbl)
+            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j])
+            q = q.where(bm_tbl.c.masterid == masterid)
+            q = q.where(cfg_tbl.c.buildslaveid == buildslaveid)
+            oldbuildermasterids = set([row['buildermasterid'] for row in conn.execute(q)])
+
+            todeletebuildermasterids = oldbuildermasterids - buildermasterids
+            toinsertbuildermasterids = buildermasterids - oldbuildermasterids
+            transaction = conn.begin()
+            if todeletebuildermasterids:
+                # delete the buildermasterids that were configured previously, but not configured now
+                q = cfg_tbl.delete()
+                q = q.where(cfg_tbl.c.buildermasterid.in_(list(todeletebuildermasterids)))
+                conn.execute(q)
+
+            # and insert the new ones
+            if toinsertbuildermasterids:
+                q = cfg_tbl.insert()
                 conn.execute(q,
                              [{'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid}
-                              for buildermasterid in buildermasterids])
-            except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                # if some rows are already present, insert one by one.
-                pass
-            else:
-                return
+                              for buildermasterid in toinsertbuildermasterids])
 
-            for buildermasterid in buildermasterids:
-                # insert them one by one
-                q = cfg_tbl.insert()
-                try:
-                    conn.execute(q, {'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid})
-                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                    # if the row is already present, silently fail..
-                    pass
+            transaction.commit()
 
         return self.db.pool.do(thd)
 
@@ -198,7 +203,8 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
     def buildslaveDisconnected(self, buildslaveid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_buildslaves
-            q = tbl.delete(whereclause=(tbl.c.buildslaveid == buildslaveid)
-                           & (tbl.c.masterid == masterid))
+            q = tbl.delete(whereclause=(
+                tbl.c.buildslaveid == buildslaveid) &
+                (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)
