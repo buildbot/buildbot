@@ -38,7 +38,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.status import base
+from buildbot.util import service
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 
@@ -149,7 +149,7 @@ class BuildRequest:
         d.addCallback(self.parent.watchedBuildFinished)
 
 
-class Contact(base.StatusReceiver):
+class Contact(service.AsyncService):
 
     """I hold the state for a single user's interaction with the buildbot.
 

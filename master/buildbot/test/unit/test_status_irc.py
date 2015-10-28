@@ -15,11 +15,13 @@
 
 import mock
 
-from buildbot.status import irc
-from buildbot.status import words
-from buildbot.test.util import config
 from twisted.application import internet
+from twisted.internet import defer
 from twisted.trial import unittest
+
+from buildbot.reporters import irc
+from buildbot.reporters import words
+from buildbot.test.util import config
 
 
 class FakeContact(object):
@@ -204,6 +206,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
 
         def TCPClient(host, port, factory):
             client = mock.Mock(name='tcp-client')
+            print "host"
             client.host = host
             client.port = port
             client.factory = factory
@@ -214,17 +217,21 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         self.patch(internet, 'TCPClient', TCPClient)
         return irc.IRC(**kwargs)
 
+    @defer.inlineCallbacks
     def test_constr(self):
         ircStatus = self.makeIRC(host='foo', port=123)
+        yield ircStatus.startService()
+
         self.client.setServiceParent.assert_called_with(ircStatus)
         self.assertEqual(self.client.host, 'foo')
         self.assertEqual(self.client.port, 123)
         self.assertIsInstance(self.client.factory, irc.IrcStatusFactory)
 
+    @defer.inlineCallbacks
     def test_constr_args(self):
         # test that the args to IRC(..) make it all the way down to
         # the IrcStatusBot class
-        self.makeIRC(
+        s = self.makeIRC(
             host='host',
             nick='nick',
             channels=['channels'],
@@ -240,6 +247,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             lostDelay=10,
             failedDelay=20,
             useColors=False)
+        yield s.startService()
 
         # patch it up
         factory = self.factory
