@@ -71,12 +71,21 @@ class StashStatusPush(StatusReceiverMultiService,
                       BuildSetSummaryNotifierMixin):
     implements(IStatusReceiver)
 
-    def __init__(self, base_url, user, password):
+    def __init__(self, base_url, user, password,
+                 key_format='%(builderName)s',
+                 name_format=None):
         """
         :param base_url: The base url of the stash host, up to the path.
         For example, https://stash.example.com/
         :param user: The stash user to log in as using http basic auth.
         :param password: The password to use with the stash user.
+        :param key_format: A python format string used to create
+            the build status key sent to Stash.
+            Currently supports builderName, branch and buildNumber.
+            Defaults to '%(builderName)s' for backwards compatability.
+        :param name_format: An optional python format string used to create
+            the build status name sent to stash. Supports same keywords as
+            key_format. Defaults to None, which disables sending it.
         :return:
         """
         StatusReceiverMultiService.__init__(self)
@@ -84,17 +93,42 @@ class StashStatusPush(StatusReceiverMultiService,
             base_url += '/'
         self.base_url = '%srest/build-status/1.0/commits/' % (base_url, )
         self.auth = b64encode('%s:%s' % (user, password))
+        self.key_format = key_format
+        self.name_format = name_format
         self._sha = Interpolate('%(src::revision)s')
+        self._branch = Interpolate('%(src::branch)s')
+        self._buildnumber = Interpolate('%(prop:buildnumber)s')
         self.master_status = None
 
     @defer.inlineCallbacks
-    def send(self, builderName, build, status):
-        (sha, ) = yield defer.gatherResults([build.render(self._sha), ])
-        build_url = build.builder.status.getURLForThing(build)
-        body = dumps({'state': status, 'key': builderName, 'url': build_url})
-        stash_uri = self.base_url + sha
+    def _send(self, request_kwargs, body, error_message):
+        request_kwargs['bodyProducer'] = StringProducer(body)
         agent = Agent(reactor)
-        d = agent.request(
+        d = agent.request(**request_kwargs)
+        d.addCallback(logIfNot2XX)
+        d.addErrback(log.err, error_message)
+        yield d
+
+    @defer.inlineCallbacks
+    def send(self, builderName, build, status):
+        sha, branch, buildNumber = yield defer.gatherResults([
+            build.render(self._sha),
+            build.render(self._branch),
+            build.render(self._buildnumber),
+        ])
+        build_url = build.builder.status.getURLForThing(build)
+        format_dict = {
+            'builderName': builderName,
+            'branch': branch,
+            'buildNumber': buildNumber,
+        }
+        key = self.key_format % format_dict
+        body_dict = {'state': status, 'key': key, 'url': build_url}
+        if self.name_format is not None:
+            body_dict['name'] = self.name_format % format_dict
+        body = dumps(body_dict)
+        stash_uri = self.base_url + sha
+        request_kwargs = dict(
             method='POST',
             uri=bytes(stash_uri),
             headers=Headers({
@@ -102,14 +136,12 @@ class StashStatusPush(StatusReceiverMultiService,
                 'Authorization': ['Basic %s' % (self.auth, ), ],
                 'Accept': ['*/*', ],
                 'Accept-Language': ['en-US, en;q=0.8', ],
-            }),
-            bodyProducer=StringProducer(body)
+            })
         )
-        d.addCallback(logIfNot2XX)
-        d.addErrback(log.err,
-                     'StashStatusPush failed while POSTing status message '
-                     'for commit %s built by builder %s to %s with body %s'
-                     '' % (sha, builderName, stash_uri, body))
+        error_message = 'StashStatusPush failed while POSTing status message ' \
+                        'for commit %s built by builder %s to %s with body %r' \
+                        '' % (sha, builderName, stash_uri, body)
+        yield self._send(request_kwargs, body, error_message)
 
     def setServiceParent(self, parent):
         """
