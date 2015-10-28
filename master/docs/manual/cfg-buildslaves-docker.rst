@@ -128,16 +128,16 @@ You can find in buildbot source code in ``master/contrib/docker`` two example co
 
 The master setups several environment variables before starting the buildslaves:
 
-```BUILDMASTER``
+``BUILDMASTER``
     The address of the master the slave shall connect to
 
-```BUILDMASTER_PORT``
+``BUILDMASTER_PORT``
     The port of the master's slave 'pb' protocol.
 
 ``SLAVENAME``
     The name the slave should use to connect to master
 
-```SLAVEPASS``
+``SLAVEPASS``
     The password the slave should use to connect to master
 
 Master Setup
@@ -180,7 +180,8 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
 ``image``
     (optional if ``dockerfile`` is given)
     This is the name of the image that will be started by the build master. It should start a buildslave.
-
+    This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
+    
 ``command``
     (optional)
     This will override the command setup during image creation.

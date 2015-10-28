@@ -107,15 +107,14 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             self.client_args['tls'] = tls
 
     def createEnvironment(self):
-        port = ""
-        if self.registration is not None:
-            port = str(self.registration.getPBPort())
-        return {
+        result = {
             "BUILDMASTER": self.masterFQDN,
-            "BUILDMASTER_PORT": port,
             "SLAVENAME": self.name,
             "SLAVEPASS": self.password
         }
+        if self.registration is not None:
+            result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
+        return result
 
     @defer.inlineCallbacks
     def start_instance(self, build):

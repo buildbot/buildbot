@@ -17,7 +17,7 @@ RUN         apt-get update && \
 # Install required python packages, and twisted
 RUN         pip install service_identity pycrypto && \
             pip install twisted==14.0.0 && \
-            pip install --pre buildbot-slave==0.9.0b2
+            pip install buildbot-slave
 
 WORKDIR /buildbot/
 ADD buildbot.tac /buildbot/buildbot.tac

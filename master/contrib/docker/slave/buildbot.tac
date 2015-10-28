@@ -13,7 +13,6 @@ from twisted.python.log import ILogObserver, FileLogObserver
 
 application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 # and slave on the same process!
-print os.environ
 buildmaster_host = os.environ.get("BUILDMASTER", 'localhost')
 port = int(os.environ.get("BUILDMASTER_PORT", 19989))
 slavename = os.environ.get("SLAVENAME", 'docker')
