@@ -518,18 +518,16 @@ class KatanaBuildChooser(BasicBuildChooser):
         # check only the first br others will be compatible to merge
         for b in self.bldr.building:
             if self.bldr._defaultMergeRequestFn(b.requests[0], breqs[0]):
-                building = b.requests
-                b.requests = b.requests + breqs
                 try:
                     yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
                                                                             brids,
                                                                             b.build_status.number,
                                                                             claim=claim)
                 except:
-                    b.requests = building
                     raise
 
                 log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
+                b.requests += breqs
                 self.notifyRequestsRemoved(breqs)
                 defer.returnValue(b)
                 return

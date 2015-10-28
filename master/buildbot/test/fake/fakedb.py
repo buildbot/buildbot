@@ -1075,6 +1075,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         if claim:
             return self.claimBuildRequests(brids)
 
+    def maybeUpdateMergedBrids(self, brids):
+        return defer.succeed(None)
+
     def reclaimBuildRequests(self, brids):
         for brid in brids:
             if brid not in self.claims:

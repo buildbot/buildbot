@@ -305,6 +305,44 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    def maybeUpdateMergedBrids(self, brids):
+        def thd(conn):
+            transaction = conn.begin()
+            try:
+                if len(brids) > 1:
+                    buildrequests_tbl = self.db.model.buildrequests
+
+                    q = sa.select([buildrequests_tbl.c.artifactbrid])\
+                    .where(buildrequests_tbl.c.id == brids[0])
+                    res = conn.execute(q)
+                    row = res.fetchone()
+
+                    artifactbrid = row.artifactbrid if row and (row.artifactbrid is not None) else brids[0]
+
+                    stmt_brids = sa.select([buildrequests_tbl.c.id])\
+                        .where(buildrequests_tbl.c.mergebrid == brids[0])\
+                        .where(or_((buildrequests_tbl.c.artifactbrid != artifactbrid),
+                                   (buildrequests_tbl.c.artifactbrid == None)))
+
+                    res = conn.execute(stmt_brids)
+                    rows = res.fetchall()
+                    mergedrequests = [row.id for row in rows]
+                    res.close()
+
+                    if len(mergedrequests) > 0:
+                        stmt2 = buildrequests_tbl.update()\
+                            .where(buildrequests_tbl.c.id.in_(mergedrequests))\
+                            .values(artifactbrid=artifactbrid)
+                        conn.execute(stmt2)
+
+            except:
+                transaction.rollback()
+                raise
+
+            transaction.commit()
+
+        return self.db.pool.do(thd)
+
     def executeMergeBuildingRequests(self, conn, requests):
             buildrequests_tbl = self.db.model.buildrequests
             mergedrequests = [br.id for br in requests[1:]]

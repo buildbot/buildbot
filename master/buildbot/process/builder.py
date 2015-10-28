@@ -550,6 +550,7 @@ class Builder(config.ReconfigurableServiceMixin,
         # todo: get build number
         d.addCallback(lambda _ : self.master.db.builds.finishedMergedBuilds(brids, build.build_status.number))
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
+        d.addCallback(lambda _: self.master.db.buildrequests.maybeUpdateMergedBrids(brids))
 
         results = build.build_status.getResults()
         self.building.remove(build)
