@@ -29,11 +29,20 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* properties object is now directly present in build, and not in build_status.
+  This should not change much unless you try to access your properties via step.build.build_status.
+  Remember that with PropertiesMixin, you can access properties via getProperties on the steps, and on the builds objects.
+
 Slave
 -----
 
 Features
 ~~~~~~~~
+
+* The :class:`DockerLatentBuildSlave` image attribute is now renderable (can take properties in account).
+
+* The :class:`DockerLatentBuildSlave` sets environment variables describing how to connect to the master.
+  Example dockerfiles can be found in ``master/contrib/docker``.
 
 Fixes
 ~~~~~
