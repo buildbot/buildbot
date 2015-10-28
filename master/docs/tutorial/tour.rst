@@ -166,14 +166,12 @@ First, start an IRC client of your choice, connect to irc.freenode.org and join 
 In this example we will use #buildbot-test, so go join that channel.
 (*Note: please do not join the main buildbot channel!*)
 
-Edit the config and look for the *STATUS TARGETS* section.
-Enter these lines below the WebStatus line in :file:`master.cfg`::
+Edit :file:'master.cfg' and look for the *STATUS TARGETS* section.
+At the end of that section add the lines::
 
-  c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
-
-  from buildbot.status import words
-  c['status'].append(words.IRC(host="irc.freenode.org", nick="bbtest",
-                               channels=["#buildbot-test"]))
+  from buildbot.status import irc
+  c['status'].append(irc.IRC(host="irc.freenode.org", nick="bbtest",
+                             channels=["#buildbot-test"]))
 
 Reconfigure the build master then do:
 
@@ -239,9 +237,9 @@ You can also use the bot to force a build:
 
 But to allow this, you'll need to have ``allowForce`` in the IRC configuration::
 
-  c['status'].append(words.IRC(host="irc.freenode.org", nick="bbtest",
-                               allowForce=True,
-                               channels=["#buildbot-test"]))
+  c['status'].append(irc.IRC(host="irc.freenode.org", nick="bbtest",
+                             allowForce=True,
+                             channels=["#buildbot-test"]))
 
 This time, the bot is giving you more output, as it's specifically responding to your direct request to force a build, and explicitly tells you when the build finishes:
 
