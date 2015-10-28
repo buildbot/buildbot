@@ -440,6 +440,12 @@ It can also be asked to announce builds as they occur, or be told to shut up.
 The IRC Bot in buildbot nine, is mostly a rewrite, and not all functionality has been ported yet.
 Patches are very welcome for restoring the full functionality.
 
+.. note:: Security Note
+
+Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
+
+
+
 ::
 
     from buildbot.plugins import status
