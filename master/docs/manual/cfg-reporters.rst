@@ -430,16 +430,15 @@ List of responsible users
 
 .. index:: IRC
 
-IRC Bot (not migrated)
+IRC Bot
 ~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-   Not yet migrated to the new Data API based reporter API.
 
 
 The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
+
+The IRC Bot in buildbot nine, is mostly a rewrite, and not all functionality has been ported yet.
+Patches are very welcome for restoring the full functionality.
 
 ::
 
@@ -488,6 +487,7 @@ The following parameters are accepted by this class:
 ``tags``
     (optional)
     When set, this bot will only communicate about builders containing those tags.
+    (tags functionality is not yet ported)
 
 ``password``
     (optional)
@@ -497,15 +497,18 @@ The following parameters are accepted by this class:
 ``notify_events``
     (optional)
     A dictionary of events to be notified on the IRC channels.
+    At the moment, irc bot can listen to build 'start' and 'finish' events.
     This parameter can be changed during run-time by sending the ``notify`` command to the bot.
 
 ``showBlameList``
     (optional, disabled by default)
     Whether or not to display the blame list for failed builds.
+    (blame list functionality is not ported yet)
 
 ``useRevisions``
     (optional, disabled by default)
     Whether or not to display the revision leading to the build the messages are about.
+    (useRevisions functionality is not ported yet)
 
 ``useSSL``
     (optional, disabled by default)
@@ -616,7 +619,7 @@ If the ``allowForce=True`` option was used, some additional commands will be ava
 
 .. index:: Properties; from forced build
 
-:samp:`force build [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
+:samp:`force build [--codebase={CODEBASE}] [--branch={BRANCH}] [--revision={REVISION}] [--props=PROP1=VAL1,PROP2=VAL2...] {BUILDER} {REASON}`
     Tell the given :class:`Builder` to start a build of the latest code.
     The user requesting the build and *REASON* are recorded in the :class:`Build` status.
     The Buildbot will announce the build's status when it finishes.The user can specify a branch and/or revision with the optional parameters :samp:`--branch={BRANCH}` and :samp:`--revision={REVISION}`.

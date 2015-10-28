@@ -134,22 +134,21 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 class IrcStatusFactory(ThrottledClientFactory):
     protocol = IrcStatusBot
 
-    status = None
-    control = None
     shuttingDown = False
     p = None
 
     def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
                  useRevisions=False, showBlameList=False,
+                 parent=None,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
-        self.status = None
         self.nickname = nickname
         self.password = password
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
         self.tags = tags
+        self.parent = parent
         self.notify_events = notify_events
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
@@ -167,14 +166,17 @@ class IrcStatusFactory(ThrottledClientFactory):
             self.p.quit("buildmaster reconfigured: bot disconnecting")
 
     def buildProtocol(self, address):
+        if self.p:
+            self.p.disownServiceParent()
+
         p = self.protocol(self.nickname, self.password,
-                          self.channels, self.pm_to_nicks, self.status,
+                          self.channels, self.pm_to_nicks,
                           self.tags, self.notify_events,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
                           showBlameList=self.showBlameList)
+        p.setServiceParent(self.parent)
         p.factory = self
-        p.control = self.control
         self.p = p
         return p
 
@@ -249,6 +251,7 @@ class IRC(service.BuildbotService):
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.tags, self.notify_events,
+                                  parent=self,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,
                                   lostDelay=lostDelay,

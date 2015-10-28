@@ -97,8 +97,10 @@ class UsageError(ValueError):
 class ForceOptions(usage.Options):
     optParameters = [
         ["builder", None, None, "which Builder to start"],
-        ["branch", None, None, "which branch to build"],
-        ["revision", None, None, "which revision to build"],
+        ["codebase", None, "default", "which codebase to build"],
+        ["branch", None, "master", "which branch to build"],
+        ["revision", None, "HEAD", "which revision to build"],
+        ["project", None, "default", "which project to build"],
         ["reason", None, None, "the reason for starting the build"],
         ["props", None, None,
          "A set of properties made available in the build environment, "
@@ -165,9 +167,15 @@ class Contact(service.AsyncService):
         :param channel: Channel this contact is on (None is used for privmsgs)
         """
         assert user or channel, "At least one of user or channel must be set"
+
+        if user and channel:
+            self.name = "Contact(channel=%s, name=%s)" % (channel, user)
+        elif channel:
+            self.name = "Contact(channel=%s)" % (channel,)
+        elif user:
+            self.name = "Contact(name=%s)" % (user,)
+        service.AsyncService.__init__(self)
         self.bot = bot
-        # hack for self.master, but this module needs a much bigger rework
-        self.setServiceParent(bot.master)
         self.notify_events = {}
         self.subscribed = []
         self.build_subscriptions = []
@@ -175,8 +183,6 @@ class Contact(service.AsyncService):
         self.useRevisions = bot.useRevisions
         self.useColors = bot.useColors
         self.reported_builds = []  # tuples (when, buildername, buildnum)
-        if channel and not user:
-            self.add_notification_events(bot.notify_events)
 
         self.user = user
         self.channel = channel
@@ -192,6 +198,14 @@ class Contact(service.AsyncService):
         "What you say !!": ["You have no chance to survive make your time.",
                             "HA HA HA HA ...."],
     }
+
+    def startService(self):
+        if self.channel and not self.user:
+            self.add_notification_events(self.bot.notify_events)
+        return service.AsyncService.startService(self)
+
+    def stopService(self):
+        self.remove_all_notification_events()
 
     def doSilly(self, message):
         response = self.silly[message]
@@ -224,17 +238,6 @@ class Contact(service.AsyncService):
                 which = 'number %s' % builderid
             raise UsageError("no such builder '%s'" % which)
         defer.returnValue(bdict)
-
-    def getControl(self, which):
-        # TODO in nine: there's going to be a better way to do all this.
-        #   For now, this continues to work.
-        if not self.bot.control:
-            raise UsageError("builder control is not enabled")
-        try:
-            bc = self.bot.control.getBuilder(buildername=which)
-        except KeyError:
-            raise UsageError("no such builder '%s'" % which)
-        return bc
 
     def getAllBuilders(self):
         d = self.master.data.get(('builders',))
@@ -626,9 +629,10 @@ class Contact(service.AsyncService):
         if buildurl:
             self.send("Build details are at %s" % buildurl)
 
+    @defer.inlineCallbacks
     def command_FORCE(self, args):
         # FIXME: NEED TO THINK ABOUT!
-        errReply = "try 'force build [--branch=BRANCH] [--revision=REVISION] [--props=PROP1=VAL1,PROP2=VAL2...]  <WHICH> <REASON>'"
+        errReply = "try '%s'" % (self.command_FORCE.usage)
         args = self.splitArgs(args)
         if not args:
             raise UsageError(errReply)
@@ -639,8 +643,11 @@ class Contact(service.AsyncService):
         opts.parseOptions(args)
 
         builderName = opts['builder']
+        builder = yield self.getBuilder(buildername=builderName)
         branch = opts['branch']
         revision = opts['revision']
+        codebase = opts['codebase']
+        project = opts['project']
         reason = opts['reason']
         props = opts['props']
 
@@ -683,23 +690,18 @@ class Contact(service.AsyncService):
                 properties.setProperty(pname, pvalue, "Force Build chat")
 
         reason = u"forced: by %s: %s" % (self.describeUser(), reason)
-        d = self.master.data.updates.addBuildset(builderNames=[builderName],
-                                                 scheduler=u"status.words",  # For now, we just use this as the id.
-                                                 sourcestamps=[{'branch': branch, 'revision': revision}],
-                                                 reason=reason,
-                                                 properties=properties.asDict(),
-                                                 waited_for=False)
+        try:
+            yield self.master.data.updates.addBuildset(builderids=[builder['builderid']],
+                                                       scheduler=u"status.words",  # For now, we just use this as the id.
+                                                       sourcestamps=[{'codebase': codebase, 'branch': branch,
+                                                                      'revision': revision, 'project': project, 'repository': "null"}],
+                                                       reason=reason,
+                                                       properties=properties.asDict(),
+                                                       waited_for=False)
+        except AssertionError as e:
+            self.send("I can't: " + str(e))
 
-        @d.addCallback
-        def subscribe(xxx_todo_changeme):
-            (bsid, brids) = xxx_todo_changeme
-            assert 0, "rewrite to not use the status hierarchy"  # TODO
-            # ireq = BuildRequest(self, self.useRevisions)
-            # buildreq.subscribe(ireq.started)
-
-        d.addErrback(log.err, "while forcing a build")
-
-    command_FORCE.usage = "force build [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
+    command_FORCE.usage = "force build [--codebase=CODEBASE] [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
 
     @defer.inlineCallbacks
     def command_STOP(self, args):
@@ -708,8 +710,6 @@ class Contact(service.AsyncService):
             raise UsageError("try 'stop build WHICH <REASON>'")
         which = args[1]
         reason = args[2]
-
-        buildercontrol = self.getControl(which)
 
         r = "stopped: by %s: %s" % (self.describeUser(), reason)
 
@@ -724,11 +724,7 @@ class Contact(service.AsyncService):
         for bdict in builds:
             num = bdict['number']
 
-            # obtain the BuildControl object
-            buildcontrol = buildercontrol.getBuild(num)
-
-            # make it stop
-            buildcontrol.stopBuild(r)
+            yield self.master.data.control('stop', {'reason': r}, ('builders', builder['builderid'], 'builds', num))
 
             if self.useRevisions:
                 revisions = yield self.getRevisionsForBuild(bdict)
@@ -884,7 +880,6 @@ class Contact(service.AsyncService):
     command_COMMANDS.usage = "commands - List available commands"
 
     def command_DESTROY(self, args):
-        # FIXME: self.bot
         if self.bot.nickname not in args:
             self.act("readies phasers")
 
@@ -1011,19 +1006,17 @@ class Contact(service.AsyncService):
         self.act(response)
 
 
-class StatusBot(object):
+class StatusBot(service.AsyncMultiService):
 
     """ Abstract status bot """
 
     contactClass = Contact
 
-    def __init__(self, status, tags, notify_events,
+    def __init__(self, tags, notify_events,
                  useRevisions=False, showBlameList=False, useColors=True,
                  categories=None  # deprecated
                  ):
-
-        self.status = status
-        self.master = status.master
+        service.AsyncMultiService.__init__(self)
         self.tags = tags or categories
         self.notify_events = notify_events
         self.useColors = useColors
@@ -1050,6 +1043,7 @@ class StatusBot(object):
         except KeyError:
             new_contact = self.contactClass(self, user=user, channel=channel)
             self.contacts[(channel, user)] = new_contact
+            new_contact.setServiceParent(self)
             return new_contact
 
     def log(self, msg):
