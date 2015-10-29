@@ -30,12 +30,6 @@ class ComparableMixin(unittest.TestCase):
     class Bar(Foo, util.ComparableMixin):
         compare_attrs = ("b", "c")
 
-    class Baz(Foo, util.ComparableMixin):
-        compare_attrs = ["b", "e"]
-
-        def __init__(self, b, e):
-            self.b, self.e = b, e
-
     def setUp(self):
         self.f123 = self.Foo(1, 2, 3)
         self.f124 = self.Foo(1, 2, 4)
@@ -80,6 +74,3 @@ class ComparableMixin(unittest.TestCase):
 
     def test_ne_differentClasses(self):
         assert self.f123 != self.b123
-
-    def test_invalid_compare_attrs(self):
-        self.assertRaise(
