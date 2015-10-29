@@ -20,10 +20,9 @@ from twisted.python import log
 from twisted.words.protocols import irc
 
 from buildbot import config
-from buildbot import interfaces
-from buildbot.status import base
-from buildbot.status.words import StatusBot
-from buildbot.status.words import ThrottledClientFactory
+from buildbot.reporters.words import StatusBot
+from buildbot.reporters.words import ThrottledClientFactory
+from buildbot.util import service
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
 try:
@@ -135,22 +134,21 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 class IrcStatusFactory(ThrottledClientFactory):
     protocol = IrcStatusBot
 
-    status = None
-    control = None
     shuttingDown = False
     p = None
 
     def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
                  useRevisions=False, showBlameList=False,
+                 parent=None,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
-        self.status = None
         self.nickname = nickname
         self.password = password
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
         self.tags = tags
+        self.parent = parent
         self.notify_events = notify_events
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
@@ -168,14 +166,17 @@ class IrcStatusFactory(ThrottledClientFactory):
             self.p.quit("buildmaster reconfigured: bot disconnecting")
 
     def buildProtocol(self, address):
+        if self.p:
+            self.p.disownServiceParent()
+
         p = self.protocol(self.nickname, self.password,
-                          self.channels, self.pm_to_nicks, self.status,
+                          self.channels, self.pm_to_nicks,
                           self.tags, self.notify_events,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
                           showBlameList=self.showBlameList)
+        p.setServiceParent(self.parent)
         p.factory = self
-        p.control = self.control
         self.p = p
         return p
 
@@ -195,22 +196,21 @@ class IrcStatusFactory(ThrottledClientFactory):
         ThrottledClientFactory.clientConnectionFailed(self, connector, reason)
 
 
-class IRC(base.StatusReceiverMultiService):
+class IRC(service.BuildbotService):
+    name = "IRC"
     in_test_harness = False
-
+    f = None
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
                      "useRevisions", "tags", "useColors",
                      "lostDelay", "failedDelay", "allowShutdown"]
 
-    def __init__(self, host, nick, channels, pm_to_nicks=None, port=6667,
-                 allowForce=False, tags=None, password=None, notify_events=None,
-                 showBlameList=True, useRevisions=False,
-                 useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                 allowShutdown=False, **kwargs
-                 ):
-        base.StatusReceiverMultiService.__init__(self)
-
+    def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
+                    allowForce=False, tags=None, password=None, notify_events=None,
+                    showBlameList=True, useRevisions=False,
+                    useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
+                    allowShutdown=False, **kwargs
+                    ):
         deprecated_params = list(kwargs)
         if deprecated_params:
             config.error("%s are deprecated" % (",".join(deprecated_params)))
@@ -219,6 +219,13 @@ class IRC(base.StatusReceiverMultiService):
             config.error("allowForce must be boolean, not %r" % (allowForce,))
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
+
+    def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
+                        allowForce=False, tags=None, password=None, notify_events=None,
+                        showBlameList=True, useRevisions=False,
+                        useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
+                        allowShutdown=False, **kwargs
+                        ):
 
         # need to stash these so we can detect changes later
         self.host = host
@@ -237,9 +244,14 @@ class IRC(base.StatusReceiverMultiService):
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
 
+        # This function is only called in case of reconfig with changes
+        # We don't try to be smart here. Just restart the bot if config has changed.
+        if self.f is not None:
+            self.f.shutdown()
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.tags, self.notify_events,
+                                  parent=self,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,
                                   lostDelay=lostDelay,
@@ -257,14 +269,3 @@ class IRC(base.StatusReceiverMultiService):
             c = internet.TCPClient(self.host, self.port, self.f)
 
         c.setServiceParent(self)
-
-    def setServiceParent(self, parent):
-        self.f.status = parent
-        if self.allowForce:
-            self.f.control = interfaces.IControl(self.master)
-        return base.StatusReceiverMultiService.setServiceParent(self, parent)
-
-    def stopService(self):
-        # make sure the factory will stop reconnecting
-        self.f.shutdown()
-        return base.StatusReceiverMultiService.stopService(self)
