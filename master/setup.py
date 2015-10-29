@@ -273,6 +273,7 @@ setup_args = {
             ('buildbot.steps.source.bzr', ['Bzr']),
             ('buildbot.steps.source.cvs', ['CVS']),
             ('buildbot.steps.source.darcs', ['Darcs']),
+            ('buildbot.steps.source.gerrit', ['Gerrit']),
             ('buildbot.steps.source.git', ['Git']),
             ('buildbot.steps.source.mercurial', ['Mercurial']),
             ('buildbot.steps.source.mtn', ['Monotone']),
