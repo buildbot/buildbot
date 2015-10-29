@@ -16,6 +16,7 @@
 import mock
 
 from buildbot.data import properties
+from buildbot.process.properties import Properties as processProperties
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -112,3 +113,39 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_callthrough('setBuildProperty', self.rtype.setBuildProperty,
                                         buildid=1234, name='property', value=[42, 45], source='testsuite',
                                         exp_args=(1234, 'property', [42, 45], 'testsuite'), exp_kwargs={})
+
+    @defer.inlineCallbacks
+    def test_setBuildProperties(self):
+        self.master.db.insertTestData([
+            fakedb.Buildset(id=28),
+            fakedb.BuildRequest(id=5, buildsetid=28),
+            fakedb.Master(id=3),
+            fakedb.Buildslave(id=42, name="Friday"),
+            fakedb.Build(id=1234, buildrequestid=5, masterid=3, buildslaveid=42),
+        ])
+
+        self.master.db.builds.setBuildProperty = mock.Mock(wraps=self.master.db.builds.setBuildProperty)
+        props = processProperties.fromDict(dict(a=(1, 't'), b=(['abc', 9], 't')))
+        yield self.rtype.setBuildProperties(1234, props)
+        self.master.db.builds.setBuildProperty.assert_has_calls([
+            mock.call(1234, u'a', 1, u't'),
+            mock.call(1234, u'b', ['abc', 9], u't')])
+        self.master.mq.assertProductions([
+            (('builds', '1234', 'properties', 'update'), {u'a': (1, u't'), u'b': (['abc', 9], u't')}),
+            ])
+        # sync without changes: no db write
+        self.master.db.builds.setBuildProperty.reset_mock()
+        self.master.mq.clearProductions()
+        yield self.rtype.setBuildProperties(1234, props)
+        self.master.db.builds.setBuildProperty.assert_not_called()
+        self.master.mq.assertProductions([])
+
+        # sync with one changes: one db write
+        props.setProperty('b', 2, 'step')
+        self.master.db.builds.setBuildProperty.reset_mock()
+        yield self.rtype.setBuildProperties(1234, props)
+
+        self.master.db.builds.setBuildProperty.assert_called_with(1234, u'b', 2, u'step')
+        self.master.mq.assertProductions([
+            (('builds', '1234', 'properties', 'update'), {u'b': (2, u'step')})
+        ])

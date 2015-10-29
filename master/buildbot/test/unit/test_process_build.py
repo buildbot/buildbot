@@ -40,9 +40,9 @@ from mock import call
 
 
 class FakeChange:
-    properties = Properties()
 
     def __init__(self, number=None):
+        self.properties = Properties()
         self.number = number
         self.who = "me"
 
@@ -634,24 +634,14 @@ class TestBuild(unittest.TestCase):
     def testflushProperties(self):
         b = self.build
 
-        class FakeProperties(Mock):
-            implements(interfaces.IProperties)
-        b.properties = FakeProperties()
-
-        class Properties(Mock):
-
-            def asList(self):
-                return [(u'p', 5, u'fake'),
-                        (u'p2', ['abc', 9], u'mock')]
-        b.master.data.updates.setBuildProperty = Mock()
-        b.properties.getProperties.return_value = Properties()
-        b.buildid = 42
+        b.build_status = FakeBuildStatus()
+        b.setProperty("foo", "bar", "test")
+        b.buildid = 43
         result = 'SUCCESS'
         res = yield b._flushProperties(result)
         self.assertEquals(res, result)
-        b.master.data.updates.setBuildProperty.assert_has_calls([
-            call(42, u'p', 5, u'fake'),
-            call(42, u'p2', ['abc', 9], u'mock')])
+        self.assertEqual(self.master.data.updates.properties,
+                         [(43, u'foo', 'bar', u'test')])
 
     def create_mock_steps(self, names):
         steps = []
@@ -970,6 +960,7 @@ class TestBuildProperties(unittest.TestCase):
         self.build.setBuilder(self.builder)
         self.properties = self.build.properties = FakeProperties()
         self.build_status = FakeBuildStatus()
+        self.build._flushProperties = Mock()
         self.build.startBuild(self.build_status, None, self.slavebuilder)
 
     def test_getProperty(self):
