@@ -18,10 +18,11 @@ from buildbot.status.results import SUCCESS
 from buildbot.status.status_stash import StashStatusPush, INPROGRESS, SUCCESSFUL, FAILED
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util import logging
-from mock import Mock
+from mock import patch
 from twisted.trial import unittest
 
 
+@patch.object(StashStatusPush, 'send')
 class TestStashStatusPush(unittest.TestCase, logging.LoggingMixin):
 
     def setUp(self):
@@ -34,26 +35,23 @@ class TestStashStatusPush(unittest.TestCase, logging.LoggingMixin):
     def tearDown(self):
         pass
 
-    def test_buildStarted_sends_inprogress(self):
+    def test_buildStarted_sends_inprogress(self, mock_send):
         """
         buildStarted should send INPROGRESS
         """
-        self.status.send = Mock()
         self.status.buildStarted('fakeBuilderName', self.build)
-        self.status.send.assert_called_with('fakeBuilderName', self.build, INPROGRESS)
+        mock_send.assert_called_with('fakeBuilderName', self.build, INPROGRESS)
 
-    def test_buildFinished_sends_successful_on_success(self):
+    def test_buildFinished_sends_successful_on_success(self, mock_send):
         """
         buildFinished should send SUCCESSFUL if called with SUCCESS
         """
-        self.status.send = Mock()
         self.status.buildFinished('fakeBuilderName', self.build, SUCCESS)
-        self.status.send.assert_called_with('fakeBuilderName', self.build, SUCCESSFUL)
+        mock_send.assert_called_with('fakeBuilderName', self.build, SUCCESSFUL)
 
-    def test_buildFinished_sends_failed_on_failure(self):
+    def test_buildFinished_sends_failed_on_failure(self, mock_send):
         """
         buildFinished should send FAILED if called with anything other than SUCCESS
         """
-        self.status.send = Mock()
         self.status.buildFinished('fakeBuilderName', self.build, FAILURE)
-        self.status.send.assert_called_with('fakeBuilderName', self.build, FAILED)
+        mock_send.assert_called_with('fakeBuilderName', self.build, FAILED)
