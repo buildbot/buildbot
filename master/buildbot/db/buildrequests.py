@@ -259,7 +259,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def reusePreviousBuild(self, requests, artifactbrid):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
-            buildsets_tbl = self.db .model.buildsets
 
             brids = [br.id for br in requests]
             stmt = buildrequests_tbl.update()\
