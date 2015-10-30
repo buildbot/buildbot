@@ -18,10 +18,12 @@ from twisted.application import internet
 from twisted.internet import task
 from twisted.python import log
 from twisted.words.protocols import irc
+from twisted.internet import defer
 
 from buildbot import config
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import ThrottledClientFactory
+from buildbot.reporters.authz.irc import IrcAuthz
 from buildbot.util import service
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
@@ -50,6 +52,8 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
         self.pm_to_nicks = pm_to_nicks
         self.password = password
         self.hasQuit = 0
+        self.channelNames = {}
+        self.authz=kwargs['authz']
         self._keepAliveCall = task.LoopingCall(lambda: self.ping(self.nickname))
 
     def connectionMade(self):
@@ -79,17 +83,44 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             channel = channel.lower()
         return StatusBot.getContact(self, user, channel)
 
+    def names(self, channel):
+        self.sendLine("NAMES %s" % channel)
+        return defer.Deferred()
+
+    def irc_RPL_NAMREPLY(self, prefix, params):
+        channel = params[2].lower()
+        nicklist = params[3].split(' ')
+        self.authz.addUserstoChannel(nicklist, channel)
+
+    def irc_RPL_ENDOFNAMES(self, prefix, params):
+        channel = params[1].lower()
+        self.authz.finalizeAddUsersToChannel(channel)
+
+    def userJoined(self, user, channel):
+        self.names(channel)
+
+    def userLeft(self, user, channel):
+        self.names(channel)
+
+    def userKicked(self, kickee, channel, kicker, message):
+        self.names(channel)
+
     # the following irc.IRCClient methods are called when we have input
     def privmsg(self, user, channel, message):
         user = user.split('!', 1)[0]  # rest is ~user@hostname
-        # channel is '#twisted' or 'buildbot' (for private messages)
         if channel == self.nickname:
             # private message
+            if not self.authz.assertAllowPM():
+                self.log('User %s is not allowed to talk to me' % user)
+                return defer.succeed(None)
             contact = self.getContact(user=user)
             d = contact.handleMessage(message)
             return d
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
-        # is '#twisted' or the like.
+        # is '#twisted' or the like
+        if not self.authz.assertUserAllowed(user, channel):
+            self.log('User %s in channel %s is not allowed to talk to me' % (user, channel))
+            return defer.succeed(None)
         contact = self.getContact(user=user, channel=channel)
         if message.startswith("%s:" % self.nickname) or message.startswith("%s," % self.nickname):
             message = message[len("%s:" % self.nickname):]
@@ -139,7 +170,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
     def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
                  useRevisions=False, showBlameList=False,
-                 parent=None,
+                 parent=None, authz=None,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
         ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
                                         failedDelay=failedDelay)
@@ -154,6 +185,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.showBlameList = showBlameList
         self.useColors = useColors
         self.allowShutdown = allowShutdown
+        self.authz = authz
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -172,6 +204,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.pm_to_nicks,
                           self.tags, self.notify_events,
+                          authz=self.authz,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
                           showBlameList=self.showBlameList)
@@ -207,7 +240,7 @@ class IRC(service.BuildbotService):
 
     def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
                     allowForce=False, tags=None, password=None, notify_events=None,
-                    showBlameList=True, useRevisions=False,
+                    showBlameList=True, useRevisions=False, authz=None,
                     useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
                     allowShutdown=False, **kwargs
                     ):
@@ -219,10 +252,13 @@ class IRC(service.BuildbotService):
             config.error("allowForce must be boolean, not %r" % (allowForce,))
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
+        if 'authz' in kwargs.keys():
+            if not isinstance(IrcAuthz, kwargs['authz']):
+                config.error("authz is not an IrcAuthz object")
 
     def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
                         allowForce=False, tags=None, password=None, notify_events=None,
-                        showBlameList=True, useRevisions=False,
+                        showBlameList=True, useRevisions=False, authz=None,
                         useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
                         allowShutdown=False, **kwargs
                         ):
@@ -243,6 +279,8 @@ class IRC(service.BuildbotService):
             notify_events = {}
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
+        if not authz:
+            self.authz = IrcAuthz(allowOnlyOps=False)
 
         # This function is only called in case of reconfig with changes
         # We don't try to be smart here. Just restart the bot if config has changed.
@@ -251,7 +289,7 @@ class IRC(service.BuildbotService):
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.tags, self.notify_events,
-                                  parent=self,
+                                  parent=self, authz=self.authz,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,
                                   lostDelay=lostDelay,
