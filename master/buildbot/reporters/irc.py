@@ -112,6 +112,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             # private message
             if not self.authz.assertAllowPM():
                 self.log('User %s is not allowed to talk to me' % user)
+                self.sendLine("I'm sorry %s, I'm afraid I can't let you do that.")
                 return defer.succeed(None)
             contact = self.getContact(user=user)
             d = contact.handleMessage(message)
@@ -252,7 +253,7 @@ class IRC(service.BuildbotService):
             config.error("allowForce must be boolean, not %r" % (allowForce,))
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" % (allowShutdown,))
-        if 'authz' in kwargs.keys():
+        if authz is not None:
             if not isinstance(IrcAuthz, kwargs['authz']):
                 config.error("authz is not an IrcAuthz object")
 
@@ -279,7 +280,7 @@ class IRC(service.BuildbotService):
             notify_events = {}
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
-        if not authz:
+        if authz is not None:
             self.authz = IrcAuthz(allowOnlyOps=False)
 
         # This function is only called in case of reconfig with changes

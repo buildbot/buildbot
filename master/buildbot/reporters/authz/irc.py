@@ -5,20 +5,19 @@ class IrcAuthz(Authz):
 
     def __init__(self, allowOnlyOps=True):
         self.channelUsers = {}
+        self.tmpChannelUsers = {}
         self.allowOnlyOps = allowOnlyOps
 
     def addUserstoChannel(self, nicklist, channel):
-        if '%s-tmp' % channel not in self.channelUsers:
-            self.channelUsers['%s-tmp' % channel] = []
-        n = self.channelUsers['%s-tmp' % channel]
+        self.tmpChannelUsers.setdefault(channel, default=[])
+        n = self.tmpChannelUsers[channel]
         n += nicklist
 
     def finalizeAddUsersToChannel(self, channel):
-        if '%s-tmp' % channel not in self.channelUsers:
-            return
+        self.tmpChannelUsers.setdefault(channel, default=[])
 
-        self.channelUsers[channel] = self.channelUsers['%s-tmp' % channel]
-        del self.channelUsers['%s-tmp' % channel]
+        self.channelUsers[channel] = self.tmpChannelUsers[channel]
+        del self.tmpChannelUsers[channel]
 
     def assertAllowPM(self):
         if self.allowOnlyOps:
