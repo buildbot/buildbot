@@ -19,7 +19,6 @@ class Socket extends Service
                 @socket.onmessage = (message) =>
                     try
                         data = angular.fromJson(message.data)
-                        $log.debug('WS message', data)
 
                         # response message
                         if data._id?
@@ -49,7 +48,6 @@ class Socket extends Service
                 data = angular.toJson(data)
                 # ReconnectingWebSocket does not put status constants on instance
                 if @socket.readyState is (@socket.OPEN or 1)
-                    $log.debug 'WS send', angular.fromJson(data)
                     @socket.send(data)
                 else
                     # if the WebSocket is not open yet, add the data to the queue
@@ -61,7 +59,6 @@ class Socket extends Service
             flush: ->
                 # send all the data waiting in the queue
                 while data = @queue.shift()
-                    $log.debug 'WS send', angular.fromJson(data)
                     @socket.send(data)
 
             nextId: ->
