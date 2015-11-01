@@ -36,7 +36,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     """
 
     compare_attrs = ['treeStableTimer', 'change_filter', 'fileIsImportant',
-                     'onlyImportant', 'reason']
+                     'onlyImportant', 'reason', 'coolDownTimer']
 
     _reactor = reactor  # for tests
 
@@ -46,7 +46,8 @@ class BaseBasicScheduler(base.BaseScheduler):
     class NotSet:
         pass
 
-    def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
+    def __init__(self, name, shouldntBeSet=NotSet, 
+                 treeStableTimer=None, coolDownTimer=None,
                  builderNames=None, branch=NotABranch, branches=NotABranch,
                  fileIsImportant=None, properties={}, categories=None,
                  reason="The %(classname)s scheduler named '%(name)s' triggered this build",
@@ -62,6 +63,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         base.BaseScheduler.__init__(self, name, builderNames, properties, **kwargs)
 
         self.treeStableTimer = treeStableTimer
+        self.coolDownTimer = coolDownTimer
         if fileIsImportant is not None:
             self.fileIsImportant = fileIsImportant
         self.onlyImportant = onlyImportant
@@ -71,8 +73,9 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # the IDelayedCall used to wake up when this scheduler's
         # treeStableTimer expires.
-        self._stable_timers = defaultdict(lambda: None)
-        self._stable_timers_lock = defer.DeferredLock()
+        self._stable_timers = {}
+        self._cooldown_timers = {}
+        self._timers_lock = defer.DeferredLock()
 
         self.reason = reason % {'name': name, 'classname': self.__class__.__name__}
 
@@ -93,10 +96,9 @@ class BaseBasicScheduler(base.BaseScheduler):
                                                  change_filter=self.change_filter,
                                                  onlyImportant=self.onlyImportant))
 
-        # if treeStableTimer is False, then we don't care about classified
-        # changes, so get rid of any hanging around from previous
-        # configurations
-        if not self.treeStableTimer:
+        # We only care about classified changes if we have a timer to consider.
+        # If not, get rid of any hanging around from previous configurations
+        if not self.treeStableTimer and not self.coolDownTimer:
             d.addCallback(lambda _:
                           self.master.db.schedulers.flushChangeClassifications(
                               self.objectid))
@@ -118,48 +120,60 @@ class BaseBasicScheduler(base.BaseScheduler):
         # the base stopService will unsubscribe from new changes
         d = base.BaseScheduler.stopService(self)
 
-        @util.deferredLocked(self._stable_timers_lock)
+        @util.deferredLocked(self._timers_lock)
         def cancel_timers(_):
             for timer in self._stable_timers.values():
-                if timer:
-                    timer.cancel()
+                timer.cancel()
+            for timer in self._cooldown_timers.values():
+                timer['timer'].cancel()
             self._stable_timers.clear()
+            self._cooldown_timers.clear()
         d.addCallback(cancel_timers)
         return d
 
-    @util.deferredLocked('_stable_timers_lock')
+    @util.deferredLocked('_timers_lock')
+    @defer.inlineCallbacks
     def gotChange(self, change, important):
-        if not self.treeStableTimer:
-            # if there's no treeStableTimer, we can completely ignore
+        if not self.treeStableTimer and not self.coolDownTimer:
+            # If there's no timers, we can completely ignore
             # unimportant changes
             if not important:
-                return defer.succeed(None)
+                defer.returnValue(None)
             # otherwise, we'll build it right away
-            return self.addBuildsetForChanges(reason=self.reason,
-                                              changeids=[change.number])
+            yield self.addBuildsetForChanges(reason=self.reason,
+                                             changeids=[change.number])
+            defer.returnValue(None)
 
         timer_name = self.getTimerNameForChange(change)
 
-        # if we have a treeStableTimer, then record the change's importance
-        # and:
+        # Mark the cooldown timer as blocking something.
+        if self.coolDownTimer and timer_name in self._cooldown_timers:
+            self._cooldown_timers[timer_name]['pending'] = True
+
+        # Persist the change. Since stable/cooldown timers are active,
+        # we may need to revisit it later.
+        yield self.master.db.schedulers.classifyChanges(
+                 self.objectid, {change.number: important})
+
+        # Tree-stable timer:
         # - for an important change, start the timer
         # - for an unimportant change, reset the timer if it is running
-        d = self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
+        if self.treeStableTimer:
+            old_stable_timer = self._stable_timers.get(timer_name)
+            if not important and not old_stable_timer:
+                defer.returnValue(None)
 
-        def fix_timer(_):
-            if not important and not self._stable_timers[timer_name]:
-                return
-            if self._stable_timers[timer_name]:
-                self._stable_timers[timer_name].cancel()
+            if old_stable_timer:
+                old_stable_timer.cancel()
 
             def fire_timer():
-                d = self.stableTimerFired(timer_name)
+                d = self._timerFired(timer_name, self._stable_timers)
                 d.addErrback(log.err, "while firing stable timer")
+
             self._stable_timers[timer_name] = self._reactor.callLater(
                 self.treeStableTimer, fire_timer)
-        d.addCallback(fix_timer)
-        return d
+        else:
+            yield self.handleExpiredTimers(timer_name)
 
     @defer.inlineCallbacks
     def scanExistingClassifiedChanges(self):
@@ -191,15 +205,25 @@ class BaseBasicScheduler(base.BaseScheduler):
         name"""
         raise NotImplementedError  # see subclasses
 
-    @util.deferredLocked('_stable_timers_lock')
+    @util.deferredLocked('_timers_lock')
     @defer.inlineCallbacks
-    def stableTimerFired(self, timer_name):
-        # if the service has already been stopped then just bail out
-        if not self._stable_timers[timer_name]:
+    def _timerFired(self, timer_name, timers_dict):
+        # The service may haev been stopped, so just bail out
+        if timer_name not in timers_dict:
             return
 
-        # delete this now-fired timer
-        del self._stable_timers[timer_name]
+        # Delete this now-fired timer.
+        del timers_dict[timer_name]
+
+        yield self.handleExpiredTimers(timer_name)
+
+    @defer.inlineCallbacks
+    def handleExpiredTimers(self, timer_name):
+        # If either timer is still pending, we have to wait.
+        if timer_name in self._stable_timers:
+            return
+        if timer_name in self._cooldown_timers:
+            return
 
         classifications = \
             yield self.getChangeClassificationsForTimer(self.objectid,
@@ -208,6 +232,15 @@ class BaseBasicScheduler(base.BaseScheduler):
         # just in case: databases do weird things sometimes!
         if not classifications:  # pragma: no cover
             return
+
+        # Start cool-down timer to hold off future changes.
+        if self.coolDownTimer:
+            def fire_timer():
+                d = self._timerFired(timer_name, self._cooldown_timers)
+                d.addErrback(log.err, "while firing cooldown timer")
+
+            d = self._reactor.callLater(self.coolDownTimer, fire_timer)
+            self._cooldown_timers[timer_name] = dict(timer=d, pending=False)
 
         changeids = sorted(classifications.keys())
         yield self.addBuildsetForChanges(reason=self.reason,
@@ -220,7 +253,28 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getPendingBuildTimes(self):
         # This isn't locked, since the caller expects an immediate value,
         # and in any case, this is only an estimate.
-        return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
+
+        timer_names = set(self._stable_timers.keys() + self._cooldown_timers.keys())
+        ret = []
+        for timer_name in timer_names:
+            times = []
+
+            stable_timer = self._stable_timers.get(timer_name)
+            if stable_timer and stable_timer.active():
+                times.append(stable_timer.getTime())
+
+            cooldown_timer = self._cooldown_timers.get(timer_name)
+            if cooldown_timer and cooldown_timer['timer'].active():
+                # This timer only counts if it's blocking changes.
+                # We use a cheap bool flag for that test.
+                if cooldown_timer['pending']:
+                    times.append(cooldown_timer['timer'].getTime())
+
+            # Each classification fires after all timers are done. 
+            if times:
+                ret.append(max(times))
+
+        return ret
 
 
 class SingleBranchScheduler(BaseBasicScheduler):

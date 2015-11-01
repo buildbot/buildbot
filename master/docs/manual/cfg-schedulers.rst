@@ -96,6 +96,22 @@ There are several common arguments for schedulers, although not all are availabl
 ``reason``
     A string that will be used as the reason for the triggered build.
 
+``treeStableTimer``
+    The scheduler will wait for this many seconds before starting the build.
+    If new changes are made during this interval, the timer will be restarted, so really the build will be started after a change and then after this many seconds of inactivity.
+
+``coolDownTimer``
+    After starting a build, the scheduler will wait this many seconds before it is permitted to
+    start another build.
+
+    If both ``treeStableTimer`` and ``coolDownTimer`` are set, then builds will be started after
+    the tree-stable timer is satisfied, but never closer together than the cooldown timer requires.
+    The cooldown timer starts when the build is actually triggered so any two builds will always be
+    at least ``coolDownTimer`` seconds apart.
+
+    Note: a ``buildbot reconfig`` can reset the cooldown timer and cause an immediate build to start
+    if changes are pending. This could cause extra builds that are closer together than intended.
+
 The remaining subsections represent a catalog of the available Scheduler types.
 All these Schedulers are defined in modules under :mod:`buildbot.schedulers`, and the docstrings there are the best source of documentation on the arguments taken by each one.
 
