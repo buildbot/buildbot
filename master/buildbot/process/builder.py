@@ -418,7 +418,7 @@ class Builder(config.ReconfigurableServiceMixin,
             ping_success = False
 
         if not ping_success:
-            log.msg("slave ping failed; re-queueing the request")
+            log.msg("build %s slave %s ping failed; re-queueing the request" % (build, slavebuilder))
             run_cleanups()
             defer.returnValue(False)
             return
