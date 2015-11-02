@@ -148,7 +148,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
                 self.ping_watchers.insert(0, d2)
                 # I think it will make the tests run smoother if the status
                 # is updated before the ping completes
-            Ping().ping(self.remote).addCallback(self._pong)
+            Ping().ping(self.remote, self.slave.slavename).addCallback(self._pong)
 
         def reset_state(res):
             if self.state == PINGING:
@@ -181,14 +181,21 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
 class Ping:
     running = False
+    slavename = None
 
-    def ping(self, remote):
+    def includeSlavename(self, msg):
+        if self.slavename:
+            msg += " %s" % self.slavename
+        return msg
+
+    def ping(self, remote, slavename):
         assert not self.running
         if not remote:
             # clearly the ping must fail
             return defer.succeed(False)
         self.running = True
-        log.msg("sending ping")
+        self.slavename = slavename
+        log.msg(self.includeSlavename("sending ping"))
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the slave.. using 'print'
         # for this purpose is kind of silly.
@@ -198,11 +205,11 @@ class Ping:
         return self.d
 
     def _pong(self, res):
-        log.msg("ping finished: success")
+        log.msg(self.includeSlavename("ping") + " finished: success")
         self.d.callback(True)
 
     def _ping_failed(self, res, remote):
-        log.msg("ping finished: failure")
+        log.msg(self.includeSlavename("ping") + " finished: failure")
         # the slave has some sort of internal error, disconnect them. If we
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
