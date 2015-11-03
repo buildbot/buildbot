@@ -50,9 +50,9 @@ class Waterfall extends Controller
 
         # Load data (builds and builders)
         builders = @dataService.getBuilders()
-        $scope.builders = builders.getArray()
+        @$scope.builders = builders.getArray()
         builds = @dataService.getBuilds({limit: @c.limit, order: '-complete_at'})
-        $scope.builds = builds.getArray()
+        @$scope.builds = builds.getArray()
 
         $q.all([d3Service.get(), builders, builds]).then ([@d3, @builders, @builds]) =>
 
