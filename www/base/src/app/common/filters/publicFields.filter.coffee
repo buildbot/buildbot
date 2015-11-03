@@ -1,7 +1,10 @@
 class PublicFields extends Filter('common')
     constructor: ->
         return (object) ->
-            copy = angular.copy(object)
-            for k of object
-                if k.indexOf('_') == 0 then delete copy[k]
-            return object
+            if not object?
+                return object
+            object._publicfields ?= {}
+            for k, v of object
+                if k.indexOf('_') != 0 and object.hasOwnProperty(k)
+                    object._publicfields[k] = v
+            return object._publicfields

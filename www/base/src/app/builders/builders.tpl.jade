@@ -21,7 +21,7 @@
             a(ui-sref='builder({builder: builder.builderid})')
               | {{ builder.name }}
           td
-            span(ng-repeat="build in builder.builds")
+            span(ng-repeat="build in builder.builds | orderBy : '-number' |limitTo: '15' ")
                 a(ui-sref='build({builder: builder.builderid, build: build.number})')
                     span.badge-status(ng-class="results2class(build, 'pulse')")
                       | {{ build.number }}

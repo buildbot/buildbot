@@ -1,7 +1,8 @@
 class Build extends Controller
     constructor: ($rootScope, $scope, $location, $stateParams, $state,
                   dataService, dataUtilsService, recentStorage, publicFieldsFilter,
-                  glBreadcrumbService, glTopbarContextualActionsService) ->
+                  glBreadcrumbService, glTopbarContextualActionsService, resultsService) ->
+        _.mixin($scope, resultsService)
 
         builderid = _.parseInt($stateParams.builder)
         buildnumber = _.parseInt($stateParams.build)
@@ -71,10 +72,23 @@ class Build extends Controller
         data = dataService.open($scope)
         data.getBuilders(builderid).then (builders) ->
             $scope.builder = builder = builders[0]
-            builder.getBuilds(buildnumber).then (builds) ->
-                $scope.build = build = builds[0]
-                if not build.number? and buildnumber > 1
-                    $state.go('build', builder:builderid, build:buildnumber - 1)
+            builder.getBuilds(number__lt: buildnumber + 2, limit: 3, order: '-number').then (builds) ->
+                $scope.prevbuild = null
+                $scope.nextbuild = null
+                build = null
+                for b in builds
+                    if b.number == buildnumber - 1
+                        $scope.prevbuild = b
+                    if b.number == buildnumber
+                        $scope.build = build = b
+                    if b.number == buildnumber + 1
+                        $scope.nextbuild = b
+                        $scope.last_build = false
+
+                if not build
+                    $state.go('build', builder: builderid, build: builds[0].number)
+                    return
+
                 breadcrumb = [
                         caption: "Builders"
                         sref: "builders"
@@ -97,18 +111,19 @@ class Build extends Controller
                     link: "#/builders/#{$scope.builder.builderid}/builds/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
-                data.getBuilds(build.buildid).then (builds) ->
-                    build = builds[0]
-                    $scope.properties = build.getProperties().getArray()
-                    $scope.changes = build.getChanges().getArray()
-                    $scope.$watch 'changes', (changes) ->
-                        if changes?
-                            responsibles = {}
-                            for change in changes
-                                change.author_email = dataUtilsService.emailInString(change.author)
-                                responsibles[change.author] = change.author_email
-                            $scope.responsibles = responsibles
-                    , true
+                # HACK: we should definitively fix this in the data_module
+                # http://trac.buildbot.net/ticket/3380
+                build._endpoint = "builds"
+                $scope.properties = build.getProperties().getArray()
+                $scope.changes = build.getChanges().getArray()
+                $scope.$watch 'changes', (changes) ->
+                    if changes?
+                        responsibles = {}
+                        for change in changes
+                            change.author_email = dataUtilsService.emailInString(change.author)
+                            responsibles[change.author] = change.author_email
+                        $scope.responsibles = responsibles
+                , true
 
                 data.getBuildslaves(build.buildslaveid).then (buildslaves) ->
                     $scope.buildslave = publicFieldsFilter(buildslaves[0])
@@ -117,6 +132,3 @@ class Build extends Controller
                     $scope.buildrequest = buildrequest = buildrequests[0]
                     data.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
                         $scope.buildset = buildsets[0]
-
-            builder.getBuilds(buildnumber + 1).then (builds) ->
-                $scope.nextbuild = builds[0]
