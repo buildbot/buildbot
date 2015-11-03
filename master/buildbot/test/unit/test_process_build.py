@@ -789,6 +789,7 @@ class TestBuildProperties(unittest.TestCase):
         self.build = Build([r])
         self.build.setStepFactories([])
         self.builder = Mock()
+        self.builder.botmaster.master.config.globalFactory = {}
         self.build.setBuilder(self.builder)
         self.build_status = FakeBuildStatus()
         self.build.startBuild(self.build_status, None, Mock())

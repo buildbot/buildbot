@@ -278,14 +278,18 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 return s
         return None
 
-    def addStepWithName(self, name, step_type):
+    def addStepWithName(self, name, step_type, index=None):
         """The Build is setting up, and has added a new BuildStep to its
         list. Create a BuildStepStatus object to which it can send status
         updates."""
 
         s = BuildStepStatus(self, self.master, len(self.steps), step_type)
         s.setName(name)
-        self.steps.append(s)
+        if index is None:
+            self.steps.append(s)
+        else:
+            self.steps.insert(index, s)
+
         return s
 
     def addTestResult(self, result):

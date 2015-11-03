@@ -1,6 +1,5 @@
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.steps.shell import ShellCommand
-from buildbot.process.slavebuilder import IDLE
 from buildbot.status.results import SUCCESS, RESUME, SKIPPED
 from twisted.internet import defer
 

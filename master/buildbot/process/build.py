@@ -300,26 +300,67 @@ class Build(properties.PropertiesMixin):
     def _startBuild_2(self, res):
         self.startNextStep()
 
+    def setupStep(self, factory, stepnames):
+        step = factory.buildStep()
+        step.setBuild(self)
+        step.setBuildSlave(self.slavebuilder.slave)
+        if callable(self.workdir):
+            step.setDefaultWorkdir(self.workdir(self.sources))
+        else:
+            step.setDefaultWorkdir(self.workdir)
+        name = step.name
+        if stepnames.has_key(name):
+            count = stepnames[name]
+            count += 1
+            stepnames[name] = count
+            name = step.name + "_%d" % count
+        else:
+            stepnames[name] = 0
+        step.name = name
+        return name, step
+
+    def setupStepStatus(self, factory, stepnames, index=None):
+        name, step = self.setupStep(factory, stepnames)
+        step_status = self.build_status.getStepByName(name)
+        stepNotAddedOrStepAlreadyExecuted = step_status is None or step_status.finished is not None
+        if stepNotAddedOrStepAlreadyExecuted:
+            step_status = self.build_status.addStepWithName(name, type(step), index)
+        step.setStepStatus(step_status)
+        sp = None
+        if self.useProgress:
+            sp = step.setupProgress()
+        return sp, step
+
+    def maybeAddGlobalFactoryInitialSteps(self, laststep, stepnames, stepProgresses):
+        if 'initialSteps' not in self.builder.botmaster.master.config.globalFactory:
+            return
+        intialSteps = self.builder.botmaster.master.config.globalFactory['initialSteps']
+        if intialSteps and intialSteps.steps:
+            status_index = self.build_status.steps.index(laststep) + 1 if laststep else 0
+            for factory in intialSteps.steps:
+                index = intialSteps.steps.index(factory)
+                sp, step = self.setupStepStatus(factory, stepnames, index=status_index+index)
+                self.steps.insert(index, step)
+                if sp:
+                    stepProgresses.insert(index, sp)
+
+    def maybeAddGlobalFactoryLastSteps(self, stepnames, stepProgresses):
+        if 'lastSteps' not in self.builder.botmaster.master.config.globalFactory:
+            return
+        lastSteps = self.builder.botmaster.master.config.globalFactory['lastSteps']
+        if lastSteps and lastSteps.steps:
+            for factory in lastSteps.steps:
+                sp, step = self.setupStepStatus(factory, stepnames)
+                self.steps.append(step)
+                if sp:
+                    stepProgresses.append(sp)
+
     def createSteps(self, sps):
         stepnames = {}
+        laststep = None
 
         for factory in self.stepFactories:
-            step = factory.buildStep()
-            step.setBuild(self)
-            step.setBuildSlave(self.slavebuilder.slave)
-            if callable (self.workdir):
-                step.setDefaultWorkdir (self.workdir (self.sources))
-            else:
-                step.setDefaultWorkdir (self.workdir)
-            name = step.name
-            if stepnames.has_key(name):
-                count = stepnames[name]
-                count += 1
-                stepnames[name] = count
-                name = step.name + "_%d" % count
-            else:
-                stepnames[name] = 0
-            step.name = name
+            name, step = self.setupStep(factory, stepnames)
 
             # tell the BuildStatus about the step. This will create a
             # BuildStepStatus and bind it to the Step.
@@ -332,6 +373,7 @@ class Build(properties.PropertiesMixin):
                 step_status = self.build_status.addStepWithName(name, type(step))
 
             if step_status.finished:
+                laststep = step_status
                 continue
 
             step.setStepStatus(step_status)
@@ -345,6 +387,9 @@ class Build(properties.PropertiesMixin):
                 sp = step.setupProgress()
             if sp:
                 sps.append(sp)
+
+        self.maybeAddGlobalFactoryInitialSteps(laststep, stepnames=stepnames, stepProgresses=sps)
+        self.maybeAddGlobalFactoryLastSteps(stepnames=stepnames, stepProgresses=sps)
 
     def setupBuild(self, expectations):
         # create the actual BuildSteps. If there are any name collisions, we

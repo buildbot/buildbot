@@ -112,6 +112,7 @@ class MasterConfig(object):
         self.user_managers = []
         self.revlink = default_revlink_matcher
         self.projects = {}
+        self.globalFactory = dict(initialSteps=[], lastSteps=[])
 
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
@@ -122,7 +123,7 @@ class MasterConfig(object):
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
-        "autobahn_push", "lastBuildCacheDays", "requireLogin"
+        "autobahn_push", "lastBuildCacheDays", "requireLogin", "globalFactory"
     ])
 
     @classmethod
@@ -208,6 +209,7 @@ class MasterConfig(object):
             config.load_caches(filename, config_dict)
             config.load_projects(filename, config_dict)
             config.load_schedulers(filename, config_dict)
+            config.load_globalFactory(filename, config_dict)
             config.load_builders(filename, config_dict)
             config.load_slaves(filename, config_dict)
             config.load_change_sources(filename, config_dict)
@@ -454,6 +456,14 @@ class MasterConfig(object):
 
 
         self.schedulers = dict((s.name, s) for s in schedulers)
+
+
+    def load_globalFactory(self, filename, config_dict):
+        if 'globalFactory' in config_dict:
+            globalFactory = config_dict['globalFactory']
+            if set(globalFactory.keys()) - set(['initialSteps', 'lastSteps']):
+                error("unrecognized keys in c['globalFactory']")
+            self.globalFactory.update(globalFactory)
 
 
     def load_builders(self, filename, config_dict):
