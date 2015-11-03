@@ -73,7 +73,7 @@ class Specification extends Constant
                     'builds/n:number/steps/n:number/logs/i:slug/contents'
                     'builds/n:number/steps/n:number/logs/i:slug/raw'
                 ]
-                static: true
+                static: false
             buildrequests:
                 id: 'buildrequestid'
                 fields: [
@@ -127,7 +127,7 @@ class Specification extends Constant
                 ]
                 root: true
                 paths: []
-                static: true
+                static: false
             changes:
                 id: 'changeid'
                 fields: [
@@ -170,7 +170,7 @@ class Specification extends Constant
                 ]
                 root: true
                 paths: []
-                static: true
+                static: false
             masters:
                 id: 'masterid'
                 fields: [
@@ -194,7 +194,7 @@ class Specification extends Constant
                     'schedulers'
                     'schedulers/n:schedulerid'
                 ]
-                static: true
+                static: false
             schedulers:
                 id: 'schedulerid'
                 fields: [
@@ -204,7 +204,7 @@ class Specification extends Constant
                 ]
                 root: true
                 paths: []
-                static: true
+                static: false
             sourcestamps:
                 id: 'ssid'
                 fields: [
