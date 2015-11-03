@@ -20,6 +20,8 @@ Master
 Features
 ~~~~~~~~
 
+* Builders ui page has improved tag filtering capabilities
+
 Fixes
 ~~~~~
 

@@ -31,28 +31,64 @@ class Builders extends Controller
 
         $scope.tags_filter = $location.search()["tags"]
         $scope.tags_filter ?= []
-        $log.debug "params", $location.search()
+        if not angular.isArray($scope.tags_filter)
+            $scope.tags_filter = [$scope.tags_filter]
 
         $scope.$watch  "tags_filter", (tags, old) ->
             if old?
-                $log.debug "go", tags
                 $location.search("tags", tags)
         , true
+
         $scope.isBuilderFiltered = (builder, index) ->
+
+            # filter out inactive builders
             if not $scope.settings.show_old_builders.value and not $scope.hasActiveMaster(builder)
                 return false
-            if $scope.tags_filter.length == 0
+
+            pluses = _.filter($scope.tags_filter, (tag) -> tag.indexOf("+") == 0)
+            minuses = _.filter($scope.tags_filter, (tag) -> tag.indexOf("-") == 0)
+
+            # First enforce that we have no tag marked '-'
+            for tag in minuses
+                if builder.tags.indexOf(tag.slice(1)) >= 0
+                    return false
+
+            # if only minuses or no filter
+            if $scope.tags_filter.length == minuses.length
                 return true
-            for tag in builder.tags
-                if $scope.tags_filter.indexOf(tag) >= 0
+
+            # Then enforce that we have all the tags marked '+'
+            for tag in pluses
+                if builder.tags.indexOf(tag.slice(1)) < 0
+                    return false
+
+            # Then enforce that we have at least one of the tag (marked '+' or not)
+            for tag in $scope.tags_filter
+                if tag.indexOf("+") == 0
+                    tag = tag.slice(1)
+                if builder.tags.indexOf(tag) >= 0
                     return true
             return false
+
         $scope.isTagFiltered = (tag) ->
-            return $scope.tags_filter.length == 0 or $scope.tags_filter.indexOf(tag) >= 0
+            return $scope.tags_filter.length == 0 or $scope.tags_filter.indexOf(tag) >= 0 or
+                $scope.tags_filter.indexOf('+' + tag) >= 0 or $scope.tags_filter.indexOf('-' + tag) >= 0
 
         $scope.toggleTag = (tag) ->
+            if tag.indexOf('+') == 0
+                tag = tag.slice(1)
+            if tag.indexOf('-') == 0
+                tag = tag.slice(1)
             i = $scope.tags_filter.indexOf(tag)
-            if i < 0
+            iplus = $scope.tags_filter.indexOf("+" + tag)
+            iminus = $scope.tags_filter.indexOf("-" + tag)
+            if i < 0 and iplus < 0 and iminus < 0
+                $scope.tags_filter.push("+" + tag)
+            else if iplus >= 0
+                $scope.tags_filter.splice(iplus, 1)
+                $scope.tags_filter.push('-' + tag)
+            else if iminus >= 0
+                $scope.tags_filter.splice(iminus, 1)
                 $scope.tags_filter.push(tag)
             else
                 $scope.tags_filter.splice(i, 1)
