@@ -1,8 +1,13 @@
 class IndexedDB extends Service
-    constructor: ($log, $injector, $q, $window, dataUtilsService, DBSTORES, SPECIFICATION) ->
+    constructor: ($log, $injector, $q, $window, $timeout, dataUtilsService, DBSTORES, SPECIFICATION) ->
         return new class IndexedDBService
             constructor: ->
                 @db = new $window.Dexie('BBCache')
+                version = $window.localStorage.getItem('BBCacheVERSION')
+                # just recreate in case of old version in the browser
+                if version != SPECIFICATION.VERSION
+                    @db.delete()
+                    @db = new $window.Dexie('BBCache')
                 stores = {}
                 angular.extend stores, @processSpecification(SPECIFICATION), DBSTORES
                 @db.version(1).stores(stores)
@@ -11,6 +16,13 @@ class IndexedDB extends Service
                 @db.on 'error', (e) -> $log.error(e)
                 # open the database
                 @open()
+                $window.localStorage.setItem('BBCacheVERSION', SPECIFICATION.VERSION)
+
+                @spentInDb = 0
+
+            logSpentInDb: ->
+                $log.debug "spent in indexedDB: ", @spentInDb
+                @spentInDb = 0
 
             open: ->
                 $q (resolve) =>
@@ -32,44 +44,87 @@ class IndexedDB extends Service
                         if not SPECIFICATION[tableName]?
                             resolve([])
                             return
-
                         table = @db[tableName]
-                        @db.transaction 'r', table, =>
 
-                            # convert promise to $q implementation
-                            if id?
-                                table.get(id).then (e) => resolve dataUtilsService.parse(e)
-                                return
+                        t1 = window.performance.now()
+                        if @logSpentInDbTimeout?
+                            $timeout.cancel @logSpentInDbTimeout
+                        @logSpentInDbTimeout = $timeout (=>@logSpentInDb()), 2000
+                        # convert promise to $q implementation
+                        if id?
+                            table.get(id).then (e) =>
+                                t2 = window.performance.now()
+                                @spentInDb += t2 - t1
+                                resolve dataUtilsService.parse(e)
+                            return
 
-                            table.toArray().then (array) =>
-                                array = array.map (e) => dataUtilsService.parse(e)
+                        @native_filter(table, query).then ([array, query]) =>
+                            t2 = window.performance.now()
+                            @spentInDb += t2 - t1
+                            array = array.map (e) => dataUtilsService.parse(e)
 
-                                # 1. filtering
-                                filters = []
-                                for fieldAndOperator, value of query
-                                    if ['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0
-                                        filters[fieldAndOperator] = value
-                                array = @filter(array, filters, tableName)
+                            # 1. filtering
+                            filters = []
+                            for fieldAndOperator, value of query
+                                if ['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0
+                                    filters[fieldAndOperator] = value
+                            array = @filter(array, filters, tableName)
 
-                                # 2. sorting
-                                order = query?.order
-                                array = @sort(array, order)
+                            # 2. sorting
+                            order = query?.order
+                            array = @sort(array, order)
 
-                                # 3. pagination
-                                offset = query?.offset
-                                limit = query?.limit
-                                array = @paginate(array, offset, limit)
+                            # 3. pagination
+                            offset = query?.offset
+                            limit = query?.limit
+                            array = @paginate(array, offset, limit)
 
-                                # TODO 4. properties
-                                property = query?.property
-                                array = @properties(array, property)
+                            # TODO 4. properties
+                            property = query?.property
+                            array = @properties(array, property)
 
-                                # 5. fields
-                                fields = query?.field
-                                array = @fields(array, fields)
+                            # 5. fields
+                            fields = query?.field
+                            array = @fields(array, fields)
 
-                                resolve(array)
+                            resolve(array)
+            dataoperator2dexie: {
+                'eq': 'equals'
+                'ne': 'notEqual'
+                'lt': 'bellow'
+                'le': 'bellowOrEqual'
+                'gt': 'above'
+                'ge': 'aboveOrEqual'
+            }
+            table_has_index: (table, field) ->
+                for index in table.schema.indexes
+                    if index.keyPath == field
+                        return true
+                return false
 
+            native_filter: (table, query) ->
+                $q (resolve, reject) =>
+                    query_remain = angular.extend({}, query)
+                    collection = table
+                    for fieldAndOperator, value of query
+                        if ['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) >= 0
+                            continue
+
+                        [field, operator] = fieldAndOperator.split('__')
+                        if not operator?
+                            operator = 'eq'
+                        dexie_operator = @dataoperator2dexie[operator]
+                        if not dexie_operator
+                            continue
+                        if ['on', 'true', 'yes'].indexOf(value) > -1 then value = true
+                        else if ['off', 'false', 'no'].indexOf(value) > -1 then value = false
+
+                        if @table_has_index(table, field)
+                            collection = collection.where(field)[dexie_operator](value)
+                            delete query_remain[fieldAndOperator]
+                            break  # can only do one native filter
+                    collection.toArray().then (array) ->
+                        resolve [array, query_remain]
             filter: (array, filters, tableName) ->
                 array.filter (v) ->
                     for fieldAndOperator, value of filters
@@ -200,9 +255,20 @@ class IndexedDB extends Service
                 stores = {}
                 for name, s of specification
                     if angular.isArray(s.fields)
-                        a = s.fields[..]
-                        i = a.indexOf(s.id)
-                        if i > -1 then a[i] = "&#{a[i]}"
-                        else a.unshift('++id')
-                        stores[name] = a.join(',')
+                        dbfields = []
+                        hasid = false
+                        for field in s.fields[..]
+                            # create primary key for id field
+                            if s.id == field
+                                dbfields.push "&#{field}"
+                                hasid = true
+                            # create index multiple key for fields ending with id
+                            else if _.endsWith(field, "id")
+                                dbfields.push "*#{field}"
+                            else
+                                dbfields.push field
+                        if not hasid
+                            dbfields.unshift('++id')
+                        stores[name] = dbfields.join(',')
+                console.log stores
                 return stores

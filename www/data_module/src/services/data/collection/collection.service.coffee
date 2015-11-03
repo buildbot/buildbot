@@ -36,7 +36,8 @@ class Collection extends Factory
                         when tabexService.EVENTS.UPDATE then @updateHandler(data)
                         when tabexService.EVENTS.NEW then @newHandler(data)
                         else $log.error('Unhandled tabex event', event)
-
+                , (e) ->
+                    console.log e
             readyHandler: (data) ->
                 @from(data)
                 @getReadyDeferred()?.resolve(@)

@@ -296,6 +296,7 @@ describe 'IndexedDB service', ->
                     id: 'id1'
                     fields: [
                         'id1'
+                        'builderid'
                         'field1'
                         'field2'
                     ]
@@ -307,5 +308,5 @@ describe 'IndexedDB service', ->
                     ]
 
             result = indexedDBService.processSpecification(specification)
-            expect(result.test1).toBe('&id1,field1,field2')
+            expect(result.test1).toBe('&id1,*builderid,field1,field2')
             expect(result.test2).toBe('++id,fieldA,fieldB')

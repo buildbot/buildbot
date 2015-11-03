@@ -65,6 +65,9 @@ config =
             'angular-mocks':
                 version: ANGULAR_TAG
                 files: 'angular-mocks.js'
+            'lodash':
+                version: '~3.10.0'
+                files: 'lodash.js'
     # as angular is a test deps, the tests need to be loaded first!
     karma:
         files: [ "tests.js", "scripts.js"]

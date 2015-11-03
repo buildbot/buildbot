@@ -4,6 +4,7 @@
 class Specification extends Constant
     constructor: ->
         return {
+            VERSION: '2'
             FIELDTYPES:
                 IDENTIFIER: 'i'
                 NUMBER: 'n'
