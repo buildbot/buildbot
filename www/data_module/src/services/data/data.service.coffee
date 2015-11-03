@@ -1,11 +1,15 @@
 class Data extends Provider
     cache: true
+    unsubscribe_debounce_timeout: 60 * 1000  # 1 min
     config = null
     constructor: ->
-        config = cache: @cache
+        config =
+            cache: @cache
+            unsubscribe_debounce_timeout: @unsubscribe_debounce_timeout
 
     ### @ngInject ###
-    $get: ($log, $injector, $q, $window, Collection, restService, dataUtilsService, tabexService, indexedDBService, SPECIFICATION) ->
+    $get: ($log, $injector, $q, $window, $timeout,
+        Collection, restService, dataUtilsService, tabexService, indexedDBService, SPECIFICATION,) ->
         return new class DataService
             self = null
             constructor: ->
@@ -104,9 +108,12 @@ class Data extends Provider
 
                         if scope? then @closeOnDestroy(scope)
 
-                    # calls unsubscribe on each root classes
+                    # calls unsubscribe on each root classes, but after a timeout
+                    # so that we can keep data sync for data shared with next views, or if user goes back
                     close: ->
-                        collections.forEach (c) -> c.unsubscribe?()
+                        $timeout ->
+                            collections.forEach (c) -> c.unsubscribe?()
+                        , @unsubscribe_debounce_timeout
 
                     # closes the group when the scope is destroyed
                     closeOnDestroy: (scope) ->

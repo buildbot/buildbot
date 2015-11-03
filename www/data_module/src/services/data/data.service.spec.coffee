@@ -9,11 +9,12 @@ describe 'Data service', ->
         $provide.constant '$state', new class State
             reload: jasmine.createSpy('reload')
 
-    dataService = $q = $rootScope = $state = restService = indexedDBService = Collection = undefined
+    dataService = $q = $rootScope = $state = restService = indexedDBService = Collection = $timeout = undefined
     injected = ($injector) ->
         $q = $injector.get('$q')
         $rootScope = $injector.get('$rootScope')
         $state = $injector.get('$state')
+        $timeout = $injector.get('$timeout')
         indexedDBService = $injector.get('indexedDBService')
         restService = $injector.get('restService')
         dataService = $injector.invoke(_dataServiceProvider.$get)
@@ -165,5 +166,6 @@ describe 'Data service', ->
             expect(el1.unsubscribe).not.toHaveBeenCalled()
             expect(el2.unsubscribe).not.toHaveBeenCalled()
             dataAccessor.close()
+            $timeout.flush()
             expect(el1.unsubscribe).toHaveBeenCalled()
             expect(el2.unsubscribe).toHaveBeenCalled()
