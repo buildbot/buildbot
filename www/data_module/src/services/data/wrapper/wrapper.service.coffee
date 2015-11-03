@@ -38,7 +38,8 @@ class Wrapper extends Factory
 
                 match = @_findMatch(root, pathString)
                 if not match?
-                    parameter = @getId()
+                    [endpoint] = pathString.split('/')[-3..-3]
+                    return dataService.get(endpoint, @getId(), args...)
                 else
                     # second last element
                     for e in match.split('/')[...-1] by -1

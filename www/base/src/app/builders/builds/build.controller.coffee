@@ -72,7 +72,7 @@ class Build extends Controller
         data = dataService.open($scope)
         data.getBuilders(builderid).then (builders) ->
             $scope.builder = builder = builders[0]
-            builder.getBuilds(number__lt: buildnumber + 2, limit: 3, order: '-number').then (builds) ->
+            builder.loadBuilds(number__lt: buildnumber + 2, limit: 3, order: '-number').then (builds) ->
                 $scope.prevbuild = null
                 $scope.nextbuild = null
                 build = null
@@ -111,9 +111,6 @@ class Build extends Controller
                     link: "#/builders/#{$scope.builder.builderid}/builds/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
-                # HACK: we should definitively fix this in the data_module
-                # http://trac.buildbot.net/ticket/3380
-                build._endpoint = "builds"
                 $scope.properties = build.getProperties().getArray()
                 $scope.changes = build.getChanges().getArray()
                 $scope.$watch 'changes', (changes) ->
