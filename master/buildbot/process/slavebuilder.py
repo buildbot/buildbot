@@ -199,9 +199,15 @@ class Ping:
         self.d = defer.Deferred()
         # TODO: add a distinct 'ping' command on the slave.. using 'print'
         # for this purpose is kind of silly.
-        remote.callRemote("print", "ping").addCallbacks(self._pong,
-                                                        self._ping_failed,
-                                                        errbackArgs=(remote,))
+        try:
+            remote.callRemote("print", "ping").addCallbacks(self._pong,
+                                                            self._ping_failed,
+                                                            errbackArgs=(remote,))
+        except Exception, ex:
+            log.err("Exception raise '%s' while pinging slave %s" % (ex, self.slavename))
+            remote.broker.transport.loseConnection()
+            self.d.callback(False)
+
         return self.d
 
     def _pong(self, res):
