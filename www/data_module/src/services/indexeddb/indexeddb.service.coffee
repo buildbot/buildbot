@@ -18,11 +18,14 @@ class IndexedDB extends Service
                 @open()
                 $window.localStorage.setItem('BBCacheVERSION', SPECIFICATION.VERSION)
 
-                @spentInDb = 0
+                @spentInDb = []
 
             logSpentInDb: ->
-                $log.debug "spent in indexedDB: ", @spentInDb
-                @spentInDb = 0
+                tot = 0
+                for i in @spentInDb
+                    tot += i
+                $log.debug "spent in indexedDB: ", tot, "num queries:", @spentInDb.length
+                @spentInDb = []
 
             open: ->
                 $q (resolve) =>
@@ -54,13 +57,13 @@ class IndexedDB extends Service
                         if id?
                             table.get(id).then (e) =>
                                 t2 = window.performance.now()
-                                @spentInDb += t2 - t1
+                                @spentInDb .push t2 - t1
                                 resolve dataUtilsService.parse(e)
                             return
 
                         @native_filter(table, query).then ([array, query]) =>
                             t2 = window.performance.now()
-                            @spentInDb += t2 - t1
+                            @spentInDb .push t2 - t1
                             array = array.map (e) => dataUtilsService.parse(e)
 
                             # 1. filtering
@@ -120,9 +123,10 @@ class IndexedDB extends Service
                         else if ['off', 'false', 'no'].indexOf(value) > -1 then value = false
 
                         if @table_has_index(table, field)
-                            collection = collection.where(field)[dexie_operator](value)
-                            delete query_remain[fieldAndOperator]
-                            break  # can only do one native filter
+                            if collection.where(field)[dexie_operator]?
+                                collection = collection.where(field)[dexie_operator](value)
+                                delete query_remain[fieldAndOperator]
+                                break  # can only do one native filter
                     collection.toArray().then (array) ->
                         resolve [array, query_remain]
             filter: (array, filters, tableName) ->
@@ -270,5 +274,4 @@ class IndexedDB extends Service
                         if not hasid
                             dbfields.unshift('++id')
                         stores[name] = dbfields.join(',')
-                console.log stores
                 return stores
