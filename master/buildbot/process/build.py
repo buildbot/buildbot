@@ -324,6 +324,7 @@ class Build(properties.PropertiesMixin):
         step_status = self.build_status.getStepByName(name)
         stepNotAddedOrStepAlreadyExecuted = step_status is None or step_status.finished is not None
         if stepNotAddedOrStepAlreadyExecuted:
+            name = name + "_%s" % self.slavename if step_status else name
             step_status = self.build_status.addStepWithName(name, type(step), index)
         step.setStepStatus(step_status)
         sp = None
