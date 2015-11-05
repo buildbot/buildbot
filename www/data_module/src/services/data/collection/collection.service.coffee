@@ -40,7 +40,7 @@ class Collection extends Factory
                     console.log e
             readyHandler: (data) ->
                 @from(data)
-                @getReadyDeferred()?.resolve(@)
+                @getReadyDeferred()?.resolve(this)
 
             # add new elements and remove old ones
             newHandler: (data) ->

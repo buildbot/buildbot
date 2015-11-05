@@ -1,5 +1,5 @@
 class Tabex extends Service
-    constructor: ($log, $window, $q, $timeout, socketService, restService, dataUtilsService, indexedDBService, SPECIFICATION) ->
+    constructor: ($log, $window, $q, config, $timeout, socketService, restService, dataUtilsService, indexedDBService, SPECIFICATION) ->
         return new class TabexService
             CHANNELS =
                 MASTER: '!sys.master'
@@ -16,7 +16,9 @@ class Tabex extends Service
                 NEW: 'bb.event.new'
             EVENTS: EVENTS
 
-            client: $window.tabex.client()
+            # HACK: we disable tabex without removing the code
+            # tabex is too slow on chrome, so we need to disable until we sort out slowness
+            client: $window.tabex.client(namespace:Math.random().toString())
 
             constructor: ->
                 # the message handler will be called on update messages
@@ -102,7 +104,7 @@ class Tabex extends Service
                 if event is 'new' then event = EVENTS.NEW
                 else event = EVENTS.UPDATE
                 # update the object in the db
-                indexedDBService.db[type].put(message).then =>
+                indexedDBService.put(type, message).then =>
                     # emit the event
                     for path of @trackedPaths
                         if ///^#{path.replace(/\*/g, '(\\w+|\\d+)')}$///.test(key) or
@@ -130,6 +132,8 @@ class Tabex extends Service
                     t = dataUtilsService.type(path)
                     specification = @getSpecification(t)
                     # test if cached and active
+                    if not config.enableIndexedDB
+                        dbPaths = []
                     for dbPath in dbPaths
                         dbPath.query = angular.fromJson(dbPath.query)
                         inCache =
@@ -153,29 +157,26 @@ class Tabex extends Service
                         db.transaction 'rw', db[type], ->
                             if not angular.isArray(data) then data = [data]
                             data.forEach (i) ->
-                                put = (element) ->
-                                    for k, v of element
-                                        if angular.isObject(element[k])
-                                            element[k] = angular.toJson(v)
-                                    db[type].put(element)
 
                                 idName = SPECIFICATION[type]?.id
                                 id = i[idName]
                                 if id?
-                                    db[type].get(id).then (e) ->
+                                    indexedDBService.getObject(type, id).then (e) ->
+                                        if not e?
+                                            e = {}
                                         e = dataUtilsService.parse(e)
                                         for k, v of i then e[k] = v
                                         if parentIdName?
                                             e[parentIdName] ?= []
                                             if parentId not in e[parentIdName]
                                                 e[parentIdName].push(parentId)
-                                        put(e)
+                                        indexedDBService.put(type, e)
                                     .catch ->
                                         if parentIdName? then i[parentIdName] = [parentId]
-                                        put(i)
+                                        indexedDBService.put(type, i)
                                 else
                                     if parentIdName? then i[parentIdName] = [parentId]
-                                    put(i)
+                                    indexedDBService.put(type, i)
 
                         .then ->
                             db.transaction 'rw', db.paths, ->

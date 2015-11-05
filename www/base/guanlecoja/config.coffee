@@ -52,7 +52,7 @@ config =
                 files: ["reconnecting-websocket.js"]
             'buildbot-data':
                 version: '~1.0.14'
-                files: 'dist/scripts.js'
+                files: 'dist/buildbot-data.js'
 
         testdeps:
             "angular-mocks":

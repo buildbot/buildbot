@@ -1,7 +1,8 @@
 class IndexedDB extends Service
-    constructor: ($log, $injector, $q, $window, $timeout, dataUtilsService, DBSTORES, SPECIFICATION) ->
+    constructor: ($log, $injector, $q, $window, config, $timeout, dataUtilsService, DBSTORES, SPECIFICATION) ->
         return new class IndexedDBService
             constructor: ->
+                # config.enableIndexedDB = true
                 @db = new $window.Dexie('BBCache')
                 version = $window.localStorage.getItem('BBCacheVERSION')
                 # just recreate in case of old version in the browser
@@ -11,7 +12,6 @@ class IndexedDB extends Service
                 stores = {}
                 angular.extend stores, @processSpecification(SPECIFICATION), DBSTORES
                 @db.version(1).stores(stores)
-
                 # global db error handler
                 @db.on 'error', (e) -> $log.error(e)
                 # open the database
@@ -19,6 +19,7 @@ class IndexedDB extends Service
                 $window.localStorage.setItem('BBCacheVERSION', SPECIFICATION.VERSION)
 
                 @spentInDb = []
+                @cache = {}
 
             logSpentInDb: ->
                 tot = 0
@@ -39,6 +40,33 @@ class IndexedDB extends Service
                     .catch (e) -> $log.error 'indexedDBService: clear', e
                     .finally => @open().then -> resolve()
 
+            getTable: (tableName) ->
+                table = @db[tableName]
+                @cache[table.name] ?= {}
+                table.cache  = @cache[table.name]
+                return table
+
+            put: (table, value) ->
+                table = @getTable(table)
+                if config.enableIndexedDB
+                    element = { }
+                    for k, v of value
+                        if not angular.isObject(v)
+                            element[k] = angular.toJson(v)
+                    return table.put(element)
+                else
+                    table.cache[value[table.schema.primKey.keyPath]] = value
+                    return $q.when()
+
+            getObject: (table, id) ->
+                table = @getTable(table)
+                if config.enableIndexedDB
+                    return table.get(id)
+                if not table.cache.hasOwnProperty(id)
+                    table.cache[id] = {}
+
+                return $q.when(table.cache[id])
+
             get: (url, query = {}) ->
                 $q (resolve, reject) =>
                     @processUrl(url).then ([tableName, q, id]) =>
@@ -47,25 +75,22 @@ class IndexedDB extends Service
                         if not SPECIFICATION[tableName]?
                             resolve([])
                             return
-                        table = @db[tableName]
+                        table = @getTable(tableName)
 
                         t1 = window.performance.now()
                         if @logSpentInDbTimeout?
                             $timeout.cancel @logSpentInDbTimeout
-                        @logSpentInDbTimeout = $timeout (=>@logSpentInDb()), 2000
+                        @logSpentInDbTimeout = $timeout ( => @logSpentInDb()), 2000
+
                         # convert promise to $q implementation
                         if id?
-                            table.get(id).then (e) =>
-                                t2 = window.performance.now()
-                                @spentInDb .push t2 - t1
-                                resolve dataUtilsService.parse(e)
+                            @getObject(tableName, id).then (e) ->
+                                resolve(dataUtilsService.parse(e))
                             return
 
                         @native_filter(table, query).then ([array, query]) =>
                             t2 = window.performance.now()
                             @spentInDb .push t2 - t1
-                            array = array.map (e) => dataUtilsService.parse(e)
-
                             # 1. filtering
                             filters = []
                             for fieldAndOperator, value of query
@@ -106,6 +131,9 @@ class IndexedDB extends Service
                 return false
 
             native_filter: (table, query) ->
+                if not config.enableIndexedDB
+                    return $.when([_.values(table.cache), query])
+
                 $q (resolve, reject) =>
                     query_remain = angular.extend({}, query)
                     collection = table
@@ -128,7 +156,9 @@ class IndexedDB extends Service
                                 delete query_remain[fieldAndOperator]
                                 break  # can only do one native filter
                     collection.toArray().then (array) ->
+                        array = array.map (e) -> dataUtilsService.parse(e)
                         resolve [array, query_remain]
+
             filter: (array, filters, tableName) ->
                 array.filter (v) ->
                     for fieldAndOperator, value of filters
