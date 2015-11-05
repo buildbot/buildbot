@@ -1,5 +1,5 @@
 class Tabex extends Service
-    constructor: ($log, $window, $q, DATACONFIG, $timeout, socketService, restService, dataUtilsService, indexedDBService, SPECIFICATION) ->
+    constructor: ($log, $window, $q, DATACONFIG, $timeout, socketService, restService, dataUtilsService, indexedDBService, fakeTabexService, SPECIFICATION) ->
         return new class TabexService
             CHANNELS =
                 MASTER: '!sys.master'
@@ -18,7 +18,8 @@ class Tabex extends Service
 
             # HACK: we disable tabex without removing the code
             # tabex is too slow on chrome, so we need to disable until we sort out slowness
-            client: $window.tabex.client(namespace:Math.random().toString())
+#            client: $window.tabex.client(namespace:Math.random().toString())
+            client: fakeTabexService
 
             constructor: ->
                 # the message handler will be called on update messages
