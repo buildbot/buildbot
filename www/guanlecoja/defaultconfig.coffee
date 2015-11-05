@@ -16,6 +16,11 @@ module.exports =
         build: 'static'
         # The coverage folder is where the files necessary for coverage, and the coverage report are stored
         coverage: 'coverage'
+    output_scripts: "scripts.js"
+    output_vendors: "vendors.js"
+    output_tests: "tests.js"
+    output_templates: "templates.js"
+    output_styles: "styles.css"
     ### ###########################################################################################
     #   This is a collection of file patterns
     ### ###########################################################################################

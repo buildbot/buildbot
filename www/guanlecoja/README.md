@@ -90,6 +90,11 @@ create a "guanlecoja/config.coffee" with the configuration variables:
 * `dir`: directories configuration
 * `dir.build`: directories where the build happen. There is no intermediate directory, and this points to the final destination of built files.
 * `dir.coverage`: directory where coverage results are output
+* `output_scripts`: filename for the output concatenated scripts
+* `output_vendors`: filename for the output concatenated vendors
+* `output_templates`: filename for the output concatenated templates
+* `output_tests`: filename for the output concatenated tests
+* `output_styles`: filename for the output concatenated css
 
 * `files`: file glob specifications. This is a list of globs where to find files of each types. Normally defaults are good enough
 
@@ -177,6 +182,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.5.0: make output configurable
 * 0.4.2: update gulp-bower-deps to retry after cleaning up the lib directory
 * 0.4.1: Do not uglyfy vendor.js. Some vendors actually fail to run properly when uglified
 * 0.4.0: upgrade dependencies, and reintroduce browserify optimization

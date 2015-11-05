@@ -121,7 +121,7 @@ module.exports =  (gulp) ->
         script_sources = script_sources.concat(config.files.templates)
 
     jadeConcat = lazypipe()
-    .pipe(concat, "templates.js")
+    .pipe(concat, config.output_templates)
     .pipe(wrap, "window.#{config.templates_global}={}; <%= contents %>")
 
     if config.templates_as_js
@@ -165,7 +165,7 @@ module.exports =  (gulp) ->
             .pipe remember('scripts')
             .pipe(gif("*.html", templateCache({module:config.name})))
             .pipe(catch_errors(gif("*.jjs", jadeConcat())))
-            .pipe concat("scripts.js")
+            .pipe concat(config.output_scripts)
             # now everything is in js, do angular annotation, and minification
             .pipe gif(prod, annotate())
             .pipe gif(prod, uglify())
@@ -201,7 +201,7 @@ module.exports =  (gulp) ->
                 p.basename = p.basename.replace(".tpl","")
                 null
             .pipe(gif("*.html", templateCache({module:config.name})))
-            .pipe concat("templates.js")
+            .pipe concat(config.output_templates)
             .pipe gulp.dest config.dir.build
 
     # the tests files produce another file
@@ -214,7 +214,7 @@ module.exports =  (gulp) ->
             .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify))))
             .pipe(catch_errors(gif("*.coffee", coffee())))
             .pipe remember('tests')
-            .pipe concat("tests.js")
+            .pipe concat(config.output_tests)
             .pipe gif(dev, sourcemaps.write("."))
             .pipe gulp.dest config.dir.build
 
@@ -238,7 +238,7 @@ module.exports =  (gulp) ->
             .pipe cached('styles')
             .pipe catch_errors(less())
             .pipe remember('styles')
-            .pipe concat("styles.css")
+            .pipe concat(config.output_styles)
             .pipe gif(prod, cssmin())
             .pipe gulp.dest config.dir.build
             .pipe gif(dev, lr())
@@ -288,22 +288,22 @@ module.exports =  (gulp) ->
         _.merge(karmaconf, config.karma)
 
         if config.vendors_apart
-            karmaconf.files = ["vendors.js"].concat(config.karma.files)
+            karmaconf.files = [config.output_vendors].concat(config.karma.files)
 
         if config.templates_apart
-            karmaconf.files = karmaconf.files.concat(["templates.js"])
+            karmaconf.files = karmaconf.files.concat([config.output_templates])
         if coverage
             karmaconf.reporters.push("coverage")
             karmaconf.preprocessors = {
-                '**/scripts.js': ['sourcemap', 'coverage']
-                '**/tests.js': ['sourcemap']
+                "**/#{config.output_scripts}": ['sourcemap', 'coverage']
+                "**/#{config.output_tests}": ['sourcemap']
                 '**/*.coffee': ['coverage']
             }
             for r in karmaconf.coverageReporter.reporters
                 if r.dir == "coverage"
                     r.dir = config.dir.coverage
             karmaconf.basePath = "."
-            scripts_index = karmaconf.files.indexOf("scripts.js")
+            scripts_index = karmaconf.files.indexOf(config.output_scripts)
             karmaconf.files = karmaconf.files.map (p) -> path.join(config.dir.build, p)
 
             if config.coffee_coverage
