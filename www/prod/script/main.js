@@ -20325,6 +20325,124 @@ define('timeElements',['require','jquery','moment','project/moment-extend'],func
 }));
 
 /*!
+ * jQuery Cookie Plugin v1.4.1
+ * https://github.com/carhartl/jquery-cookie
+ *
+ * Copyright 2013 Klaus Hartl
+ * Released under the MIT license
+ */
+(function (factory) {
+	if (typeof define === 'function' && define.amd) {
+		// AMD
+		define('jquery-cookie',['jquery'], factory);
+	} else if (typeof exports === 'object') {
+		// CommonJS
+		factory(require('jquery'));
+	} else {
+		// Browser globals
+		factory(jQuery);
+	}
+}(function ($) {
+
+	var pluses = /\+/g;
+
+	function encode(s) {
+		return config.raw ? s : encodeURIComponent(s);
+	}
+
+	function decode(s) {
+		return config.raw ? s : decodeURIComponent(s);
+	}
+
+	function stringifyCookieValue(value) {
+		return encode(config.json ? JSON.stringify(value) : String(value));
+	}
+
+	function parseCookieValue(s) {
+		if (s.indexOf('"') === 0) {
+			// This is a quoted cookie as according to RFC2068, unescape...
+			s = s.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+		}
+
+		try {
+			// Replace server-side written pluses with spaces.
+			// If we can't decode the cookie, ignore it, it's unusable.
+			// If we can't parse the cookie, ignore it, it's unusable.
+			s = decodeURIComponent(s.replace(pluses, ' '));
+			return config.json ? JSON.parse(s) : s;
+		} catch(e) {}
+	}
+
+	function read(s, converter) {
+		var value = config.raw ? s : parseCookieValue(s);
+		return $.isFunction(converter) ? converter(value) : value;
+	}
+
+	var config = $.cookie = function (key, value, options) {
+
+		// Write
+
+		if (value !== undefined && !$.isFunction(value)) {
+			options = $.extend({}, config.defaults, options);
+
+			if (typeof options.expires === 'number') {
+				var days = options.expires, t = options.expires = new Date();
+				t.setTime(+t + days * 864e+5);
+			}
+
+			return (document.cookie = [
+				encode(key), '=', stringifyCookieValue(value),
+				options.expires ? '; expires=' + options.expires.toUTCString() : '', // use expires attribute, max-age is not supported by IE
+				options.path    ? '; path=' + options.path : '',
+				options.domain  ? '; domain=' + options.domain : '',
+				options.secure  ? '; secure' : ''
+			].join(''));
+		}
+
+		// Read
+
+		var result = key ? undefined : {};
+
+		// To prevent the for loop in the first place assign an empty array
+		// in case there are no cookies at all. Also prevents odd result when
+		// calling $.cookie().
+		var cookies = document.cookie ? document.cookie.split('; ') : [];
+
+		for (var i = 0, l = cookies.length; i < l; i++) {
+			var parts = cookies[i].split('=');
+			var name = decode(parts.shift());
+			var cookie = parts.join('=');
+
+			if (key && key === name) {
+				// If second argument (value) is a function it's a converter...
+				result = read(cookie, value);
+				break;
+			}
+
+			// Prevent storing a cookie that we couldn't decode.
+			if (!key && (cookie = read(cookie)) !== undefined) {
+				result[name] = cookie;
+			}
+		}
+
+		return result;
+	};
+
+	config.defaults = {};
+
+	$.removeCookie = function (key, options) {
+		if ($.cookie(key) === undefined) {
+			return false;
+		}
+
+		// Must not alter options, thus extending a fresh object...
+		$.cookie(key, '', $.extend({}, options, { expires: -1 }));
+		return !$.cookie(key);
+	};
+
+}));
+
+/*!
 
  handlebars v1.3.0
 
@@ -24760,16 +24878,18 @@ return this["KT"];
 
 });
 /*global define*/
-define('helpers',['require','jquery','screensize','timeElements','libs/query-string','libs/uri/URI','project/moment-extend','precompiled.handlebars'],function (require) {
+define('helpers',['require','jquery','screensize','timeElements','moment','libs/query-string','libs/uri/URI','project/moment-extend','jquery-cookie','precompiled.handlebars'],function (require) {
 
     "use strict";
     var $ = require('jquery'),
         screenSize = require('screensize'),
         timeElements = require('timeElements'),
+        moment = require('moment'),
         queryString = require("libs/query-string"),
         URI = require('libs/uri/URI');
 
     require('project/moment-extend');
+    require('jquery-cookie');
 
     var helpers,
         css_class_enum = {},
@@ -25297,7 +25417,7 @@ define('helpers',['require','jquery','screensize','timeElements','libs/query-str
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
                 if (callNow) func.apply(context, args);
-            }
+            };
         },
         initSettings: function () {
             var script = $('#user-settings-json');
@@ -25367,8 +25487,53 @@ define('helpers',['require','jquery','screensize','timeElements','libs/query-str
         cssClassesEnum: css_class_enum,
         settings: function getSettings() {
             return settings;
+        },
+        
+        history: function (element) {
+          if(!element){
+            return;
+          }
+          var historyElement = element;
+          var historyList = $.cookie('exthistorylist');            
+          var ext_history_list = historyList? JSON.parse($.cookie('exthistorylist')) : [];        
+          
+          if (location.pathname === '/') {
+            if (ext_history_list.length) {    
+              $(historyElement)[0].innerHTML = "<h3>History:</h3><ul id='ext-history-list'></ul>";
+              var hist = $("#ext-history-list")[0];
+              for (var i = 0; i < ext_history_list.length; i++) {
+                var el = ext_history_list[i];
+                var html = "<div class='row'><div class='col-md-3'><span>" + unescape(el.proj) 
+                          + "</span></div><div class='col-md-5'><a class='btn btn-default btn-xs' href='" + el.url + "'><span>branch: </span>" + unescape(el.branch) + "</a></div><div class='col-md-4'><span>"+ moment(el.time).fromNow()+"</span></div></div>";
+                $("<li/>", {html: html}).appendTo(hist);                
+              }
+            }
+          }
+          else {              
+            var matches = location.href.match(new RegExp(/^.*\/projects\/([^\/]*)\/builders\?unity_branch=(.*)$/));
+            if (matches && matches.length == 3) {
+              var proj = matches[1];
+              var branch = matches[2];
+              var url = location.href;
+              var time = new Date();
+              if (ext_history_list.length > 20) {
+                ext_history_list.pop();
+              }
+              
+              for (var j = 0; j < ext_history_list.length; j++) {
+                if (ext_history_list[j].url == url) {
+                  ext_history_list.splice(j, 1);
+                  j--;
+                }
+              }
+              
+              ext_history_list.splice(0, 0, {proj: proj, branch: branch, url: url, time: time});
+              var cookie = JSON.stringify(ext_history_list);
+              $.cookie('exthistorylist', cookie, {expires: 10000000000, path: "/"});
+            }
+          }              
         }
-    };
+      };
 
     return helpers;
 });
@@ -49819,17 +49984,22 @@ define('rtGenericTable',['require','jquery','project/datatables-extend','timeEle
                             if (times.length === 3) {
                                 return times[2] - times[0];
                             }
-                            return times[1] - times[0];
+                            if (times[1] > 0) {
+                                return times[1] - times[0];
+                            }
+                            return "N/A";
                         }
-
-                        var d = moment.duration((times[1] - times[0]) * 1000);
-                        if (times.length === 3) {
-                            d = moment.duration((times[2] - times[0]) * 1000);
+                        if (times[1] > 0) {
+                            var d = moment.duration((times[1] - times[0]) * 1000);
+                            if (times.length === 3) {
+                                d = moment.duration((times[2] - times[0]) * 1000);
+                            }
+                            if (d.hours() > 0) {
+                                return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
+                            }
+                            return "{0}m {1}s".format(d.minutes(), d.seconds());
                         }
-                        if (d.hours() > 0) {
-                            return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
-                        }
-                        return "{0}m {1}s".format(d.minutes(), d.seconds());
+                        return "N/A";
                     }
 
                     if (type === 'sort') {
@@ -51313,6 +51483,7 @@ require.config({
     paths: {
         "jquery-internal": "libs/jquery",
         "jquery-ui": "libs/jquery-ui",
+        "jquery-cookie" : "plugins/jquery.cookie",
         "handlebars-internal": "libs/handlebars",
         "ui.dropdown": "project/ui/dropdown",
         "ui.popup": "project/ui/popup",
@@ -51437,7 +51608,8 @@ define('main',['require','jquery','helpers','project/datatables-extend','ui.popu
         if ($("#home_page").length > 0) {
             helpers.randomImage($("#image").find("img"));
         }
-
+        
+      
         // setup toastr
         toastr.options = {
             closeButton: true,
@@ -51450,12 +51622,13 @@ define('main',['require','jquery','helpers','project/datatables-extend','ui.popu
         popup.init();
         // get scripts for the projects dropdown
         dropdown.init();
-
+      
         // get all common scripts
         helpers.init();
+        helpers.history($(".welcome-txt"));
         dataTables.init();
         extendMoment.init();
-        timeElements.init();
+        timeElements.init();        
     });
 });
 

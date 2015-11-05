@@ -3,6 +3,7 @@ require.config({
     paths: {
         "jquery-internal": "libs/jquery",
         "jquery-ui": "libs/jquery-ui",
+        "jquery-cookie" : "plugins/jquery.cookie",
         "handlebars-internal": "libs/handlebars",
         "ui.dropdown": "project/ui/dropdown",
         "ui.popup": "project/ui/popup",
@@ -143,6 +144,7 @@ define(function (require) {
 
         // get all common scripts
         helpers.init();
+        helpers.history($(".welcome-txt"));
         dataTables.init();
         extendMoment.init();
         timeElements.init();

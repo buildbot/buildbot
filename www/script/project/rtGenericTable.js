@@ -311,17 +311,22 @@ define(function (require) {
                             if (times.length === 3) {
                                 return times[2] - times[0];
                             }
-                            return times[1] - times[0];
+                            if (times[1] > 0) {
+                                return times[1] - times[0];
+                            }
+                            return "N/A";
                         }
-
-                        var d = moment.duration((times[1] - times[0]) * 1000);
-                        if (times.length === 3) {
-                            d = moment.duration((times[2] - times[0]) * 1000);
+                        if (times[1] > 0) {
+                            var d = moment.duration((times[1] - times[0]) * 1000);
+                            if (times.length === 3) {
+                                d = moment.duration((times[2] - times[0]) * 1000);
+                            }
+                            if (d.hours() > 0) {
+                                return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
+                            }
+                            return "{0}m {1}s".format(d.minutes(), d.seconds());
                         }
-                        if (d.hours() > 0) {
-                            return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
-                        }
-                        return "{0}m {1}s".format(d.minutes(), d.seconds());
+                        return "N/A";
                     }
 
                     if (type === 'sort') {

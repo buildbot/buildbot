@@ -2396,7 +2396,7 @@ line{font-family:\0000374}}
 10%,30%,50%,70%,90%{transform:translateX(-10px)}
 20%,40%,60%,80%{transform:translateX(10px)}}
 @font-face{font-family:katana_icons;src:url(/fonts/katana_icons/katana_icons.eot?cachebusting=6&1446464853) format('embedded-opentype'),url(/fonts/katana_icons/katana_icons.ttf?cachebusting=6&1446464853) format('truetype')}
-@font-face{font-family:pacifico;src:url(/fonts/pacifico/pacifico-webfont.eot?cachebusting=2&1446464853) format('embedded-opentype'),url(/fonts/pacifico/pacifico-webfont.ttf?cachebusting=2&1446639277) format('truetype')}
+@font-face{font-family:pacifico;src:url(/fonts/pacifico/pacifico-webfont.eot?cachebusting=2&1446646222) format('embedded-opentype'),url(/fonts/pacifico/pacifico-webfont.ttf?cachebusting=2&1446639277) format('truetype')}
 @font-face{font-family:leckerlione;src:url(/fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6&1446464853) format('embedded-opentype'),url(/fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6&1446464853) format('truetype')}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
 line{font-family:\0000316}}
@@ -2477,27 +2477,33 @@ line{font-family:\00003165}}
 line{font-family:\00003168}}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
 line{font-family:\00003173}}
-div.welcome-txt{font-size:14px}
+div.welcome-txt{font-size:14px;color:#777}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003175}}
+line{font-family:\00003176}}
 div.welcome-txt ul{margin:18px 0 0 21px;padding:0}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003178}}
-div.welcome-txt ul li{list-style:outside;margin:0 0 18px;padding:0 0 0 6px}
+line{font-family:\00003179}}
+div.welcome-txt ul li{list-style:none;margin:0 0 8px;padding:0 0 0 6px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003186}}
+line{font-family:\00003180}}
+div.welcome-txt ul li span:first{font-weight:700}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
+line{font-family:\00003184}}
+div.welcome-txt ul li div:last{text-align:right}
+@media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
+line{font-family:\00003195}}
 .step-head{position:relative;display:block;margin-bottom:3px;font-size:14px;font-weight:700}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003194}}
+line{font-family:\00003203}}
 .logs-txt{font-weight:700}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003198}}
+line{font-family:\00003207}}
 .small-txt{color:#838383}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003202}}
+line{font-family:\00003211}}
 .pr-small-head{margin:0 0 2px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003206}}
+line{font-family:\00003215}}
 .spin-cont{display:block;margin-top:0}
 @keyframes animatedSpinner{0%{background-position:0 0}
 100%{background-position:-130px 0}}
@@ -2510,58 +2516,58 @@ line{font-family:\00003206}}
 @-o-keyframes animatedSpinner{0%{background-position:0 0}
 100%{background-position:-130px 0}}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003232}}
+line{font-family:\00003241}}
 .spin-icon{opacity:.7;content:"";background-image:url(/images/sprites.png?1446464853);background-position:0 0;height:13px;width:13px;display:inline-block;animation:animatedSpinner 1s steps(10,end) infinite;-moz-animation:animatedSpinner 1s steps(10,end) infinite;-webkit-animation:animatedSpinner 1s steps(10,end) infinite;-ms-animation:animatedSpinner 1s steps(10,end) infinite;-o-animation:animatedSpinner 1s steps(10,end) infinite}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003240}}
+line{font-family:\00003249}}
 .spin-icon.pull-bottom{margin-bottom:-2px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003252}}
+line{font-family:\00003261}}
 .building .spin-icon{margin-left:5px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003256}}
+line{font-family:\00003265}}
 .bubble{background-color:#80000D;-moz-border-radius:9px;-webkit-border-radius:9px;border-radius:9px;-webkit-box-shadow:1px 1px 1px #FFF;box-shadow:1px 1px 1px #FFF;color:#FFF;padding:2px 6px;margin-left:5px;font-size:11px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003266}}
+line{font-family:\00003275}}
 .more-info{font-weight:700}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003274}}
+line{font-family:\00003283}}
 .mod-1.more-info:after{margin-left:3px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003278}}
+line{font-family:\00003287}}
 .more-info:after{font-family:katana_icons;content:"";display:inline-block;padding:0;font-weight:400;font-size:16px;position:relative}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003297}}
+line{font-family:\00003306}}
 .more-info.before:before{content:"▼"}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003301}}
+line{font-family:\00003310}}
 .more-info.before:after{content:""}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003305}}
+line{font-family:\00003314}}
 .dropdown-info:after{content:"▼"}
 @media (min-width:992px){@media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003310}}
+line{font-family:\00003319}}
 h1.logo a{font-size:29px;padding:22px 0 0}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003313}}
+line{font-family:\00003322}}
 h1.logo a span{font-size:27px}}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003319}}
+line{font-family:\00003328}}
 span.log-error{color:#FF1212}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003322}}
+line{font-family:\00003331}}
 span.log-warning{color:#AD823A}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003334}}
+line{font-family:\00003343}}
 .health-icon{display:inline-block;font-size:16px;font-weight:400;padding:0;text-shadow:0 1px 0 #FFF}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003327}}
+line{font-family:\00003336}}
 .good-health-icon:after{font-family:katana_icons;content:"";color:#32912e}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003327}}
+line{font-family:\00003336}}
 .warning-health-icon:after{font-family:katana_icons;content:"";color:#918d2e}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/framework\/_typography\.scss}
-line{font-family:\00003327}}
+line{font-family:\00003336}}
 .bad-health-icon:after{font-family:katana_icons;content:"";color:#912E2E}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/page-elements\/_navigation\.scss}
 line{font-family:\000039}}
@@ -3871,7 +3877,7 @@ line{font-family:\00003307}}
 .alert{color:#c30000;background-color:#f2dcdc;padding:5px 5px 5px 25px;margin-bottom:20px;border-top:1px solid #ccc;border-bottom:1px solid #ccc;border-color:#c30000;font-size:20px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/page-elements\/_main\.scss}
 line{font-family:\00003318}}
-.footer{background:#FFF;border-top:2px solid #E3E3E3;color:#9c9fb3;font-size:11px;padding:20px 0;text-align:center;margin-top:35px}
+.footer{background:#FFF;border-top:2px solid #E3E3E3;color:#777;font-size:11px;padding:20px 0;text-align:center;margin-top:35px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/page-elements\/_main\.scss}
 line{font-family:\00003326}}
 .footer h3,.footer h4{margin:10px;font-size:inherit}
@@ -3892,7 +3898,7 @@ line{font-family:\00003347}}
 .auth-user a:hover{color:#9c9fb9}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/page-elements\/_main\.scss}
 line{font-family:\00003354}}
-#image{width:275px}
+#image{width:375px}
 @media -sass-debug-info{filename{font-family:file\:\/\/\/home\/kateryna\/projects\/katana\/www\/sass\/modules\/page-elements\/_main\.scss}
 line{font-family:\00003356}}
 #image img{width:100%}
