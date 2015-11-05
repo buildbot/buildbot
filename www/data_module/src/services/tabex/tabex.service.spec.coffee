@@ -25,8 +25,11 @@ describe 'Tabex service', ->
             if angular.isArray(@channels[c]) and self
                 for l in @channels[c]
                     if angular.isFunction(l) then l(m)
+    class DbMock
+        put: -> $q.resolve()
+        schema: {primKey: 'x'}
 
-    tabexService = socketService = indexedDBService = restService = undefined
+    tabexService = socketService = indexedDBService = restService = DATACONFIG = undefined
     $window = $q = $rootScope = $timeout = undefined
     clientMock = new ClientMock()
     injected = ($injector) ->
@@ -34,7 +37,8 @@ describe 'Tabex service', ->
         $q = $injector.get('$q')
         $rootScope = $injector.get('$rootScope')
         $timeout = $injector.get('$timeout')
-
+        DATACONFIG = $injector.get('DATACONFIG')
+        DATACONFIG.enableIndexedDB = true
         spyOn($window.tabex, 'client').and.returnValue(clientMock)
 
         tabexService = $injector.get('tabexService')
@@ -159,7 +163,7 @@ describe 'Tabex service', ->
     describe 'messageHandler(key, message)', ->
 
         it 'should update the object in the indexedDB', ->
-            indexedDBService.db = 'bsd': put: ->
+            indexedDBService.db = 'bsd': new DbMock()
             spyOn(indexedDBService.db['bsd'], 'put').and.returnValue($q.resolve())
             expect(indexedDBService.db['bsd'].put).not.toHaveBeenCalled()
             message = bsd: 1
@@ -168,8 +172,8 @@ describe 'Tabex service', ->
 
         it 'should emit update events for matching paths', ->
             indexedDBService.db =
-                asd: put: -> $q.resolve()
-                bsd: put: -> $q.resolve()
+                asd: new DbMock()
+                bsd: new DbMock()
 
             spyOn(tabexService, 'activatePaths').and.returnValue($q.resolve())
             spyOn(tabexService, 'startConsumingAll').and.returnValue($q.resolve())
@@ -195,7 +199,7 @@ describe 'Tabex service', ->
 
         it 'should emit update events for logs if the path contains `log`', ->
             indexedDBService.db =
-                logs: put: -> $q.resolve()
+                logs: new DbMock()
 
             spyOn(tabexService, 'activatePaths').and.returnValue($q.resolve())
             spyOn(tabexService, 'startConsumingAll').and.returnValue($q.resolve())

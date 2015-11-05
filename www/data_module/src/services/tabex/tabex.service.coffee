@@ -1,5 +1,5 @@
 class Tabex extends Service
-    constructor: ($log, $window, $q, config, $timeout, socketService, restService, dataUtilsService, indexedDBService, SPECIFICATION) ->
+    constructor: ($log, $window, $q, DATACONFIG, $timeout, socketService, restService, dataUtilsService, indexedDBService, SPECIFICATION) ->
         return new class TabexService
             CHANNELS =
                 MASTER: '!sys.master'
@@ -132,7 +132,7 @@ class Tabex extends Service
                     t = dataUtilsService.type(path)
                     specification = @getSpecification(t)
                     # test if cached and active
-                    if not config.enableIndexedDB
+                    if not DATACONFIG.enableIndexedDB
                         dbPaths = []
                     for dbPath in dbPaths
                         dbPath.query = angular.fromJson(dbPath.query)

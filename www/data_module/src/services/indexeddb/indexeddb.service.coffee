@@ -1,8 +1,7 @@
 class IndexedDB extends Service
-    constructor: ($log, $injector, $q, $window, config, $timeout, dataUtilsService, DBSTORES, SPECIFICATION) ->
+    constructor: ($log, $injector, $q, $window, DATACONFIG, $timeout, dataUtilsService, DBSTORES, SPECIFICATION) ->
         return new class IndexedDBService
             constructor: ->
-                # config.enableIndexedDB = true
                 @db = new $window.Dexie('BBCache')
                 version = $window.localStorage.getItem('BBCacheVERSION')
                 # just recreate in case of old version in the browser
@@ -48,11 +47,13 @@ class IndexedDB extends Service
 
             put: (table, value) ->
                 table = @getTable(table)
-                if config.enableIndexedDB
+                if DATACONFIG.enableIndexedDB
                     element = { }
                     for k, v of value
-                        if not angular.isObject(v)
+                        if angular.isObject(v)
                             element[k] = angular.toJson(v)
+                        else
+                            element[k] = v
                     return table.put(element)
                 else
                     table.cache[value[table.schema.primKey.keyPath]] = value
@@ -60,7 +61,7 @@ class IndexedDB extends Service
 
             getObject: (table, id) ->
                 table = @getTable(table)
-                if config.enableIndexedDB
+                if DATACONFIG.enableIndexedDB
                     return table.get(id)
                 if not table.cache.hasOwnProperty(id)
                     table.cache[id] = {}
@@ -131,7 +132,7 @@ class IndexedDB extends Service
                 return false
 
             native_filter: (table, query) ->
-                if not config.enableIndexedDB
+                if not DATACONFIG.enableIndexedDB
                     return $.when([_.values(table.cache), query])
 
                 $q (resolve, reject) =>

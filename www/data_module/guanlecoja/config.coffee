@@ -14,7 +14,7 @@ gulp.task "publish", ['default'], ->
     bower_json =
         name: "buildbot-data"
         version: "1.0.15"
-        main: ["scripts.js"]
+        main: ["buildbot-data.js"]
         moduleType: [],
         license: "MIT",
         ignore: []
@@ -71,7 +71,7 @@ config =
                 files: 'lodash.js'
     # as angular is a test deps, the tests need to be loaded first!
     karma:
-        files: [ "tests.js", "scripts.js"]
+        files: [ "tests.js", "buildbot-data.js"]
 
     ngclassify: (config) ->
         return {
