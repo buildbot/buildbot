@@ -23,6 +23,8 @@ Features
 Fixes
 ~~~~~
 
+* Git: Respect the clobberOnFailure and retryFetch Git build step parameters when git fetch fails.
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
