@@ -619,14 +619,14 @@ define(function (require) {
           var ext_history_list = historyList? JSON.parse($.cookie('exthistorylist')) : [];        
           
           if (location.pathname === '/') {
-            if (ext_history_list.length) {    
-              $(historyElement)[0].innerHTML = "<h3>History:</h3><ul id='ext-history-list'></ul>";
+            if (ext_history_list.length) {
+              $(historyElement)[0].innerHTML = "<h3 class='builders-list-header'>Recent builders:</h3><ul id='ext-history-list' class='builders-list'></ul>";
               var hist = $("#ext-history-list")[0];
               for (var i = 0; i < ext_history_list.length; i++) {
                 var el = ext_history_list[i];
-                var html = "<div class='row'><div class='col-md-3'><span>" + unescape(el.proj) 
-                          + "</span></div><div class='col-md-5'><a class='btn btn-default btn-xs' href='" + el.url + "'><span>branch: </span>" + unescape(el.branch) + "</a></div><div class='col-md-4'><span>"+ moment(el.time).fromNow()+"</span></div></div>";
-                $("<li/>", {html: html}).appendTo(hist);                
+                var html = "<div class='row'><div class='col-md-3'><strong>" + unescape(el.proj)
+                          + "</strong></div><div class='col-md-5'><a class='btn btn-default btn-xs' href='" + el.url + "'><img class='btn-icon' src='images/branch.png' alt='branch'/><strong> branch: </strong>" + unescape(el.branch) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";
+                $("<li />", {html: html}).appendTo(hist);
               }
             }
           }

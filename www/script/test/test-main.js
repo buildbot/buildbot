@@ -30,6 +30,7 @@
             'handlebars-internal': "libs/handlebars",
             'jquery': 'libs/jquery',
             'jquery-ui': 'libs/jquery-ui',
+            'jquery-cookie' : 'plugins/jquery.cookie',
             'ui.dropdown': 'project/ui/dropdown',
             'ui.popup': 'project/ui/popup',
             'ui.preloader': 'project/ui/preloader',

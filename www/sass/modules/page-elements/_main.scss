@@ -361,6 +361,12 @@ body.log.interface {
 			img {
 				width: auto;
 			}
+		}		
+		@media (max-width: $screen-xs-min) {
+			width:325px;
+			img {
+				width: 100%;
+			}
 		}
 
 	}
