@@ -624,17 +624,22 @@ define(function (require) {
               var hist = $("#ext-history-list")[0];
               for (var i = 0; i < ext_history_list.length; i++) {
                 var el = ext_history_list[i];
-                var html = "<div class='row'><div class='col-md-3'><strong>" + unescape(el.proj)
-                          + "</strong></div><div class='col-md-5'><a class='btn btn-default btn-xs' href='" + el.url + "'><img class='btn-icon' src='images/branch.png' alt='branch'/><strong> branch: </strong>" + unescape(el.branch) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";
-                $("<li />", {html: html}).appendTo(hist);
+                var codebasesHtml = $("<div class='row branch-list'/>");
+                $.each(el.codebases, function(i, val) {
+                    $("<div class='col-md-3'><img src='images/branch.png' alt='branch'/> <span><strong>"+i.slice(0, "_branch".length) +": </strong>"+val+"</span></div>").appendTo(codebasesHtml);
+                });
+                
+                var html = "<div class='row'><div class='col-md-8'><a class='builder-link' href='" + el.url + "'>" + unescape(el.proj) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";
+                var listItem = $("<li />", {html: html});
+                codebasesHtml.appendTo(listItem);
+                listItem.appendTo(hist);
               }
             }
           }
           else {              
-            var matches = location.href.match(new RegExp(/^.*\/projects\/([^\/]*)\/builders\?unity_branch=(.*)$/));
+            var matches = location.href.match(new RegExp(/^.*\/projects\/([^\/]*)\/builders\?(.*)$/));
             if (matches && matches.length == 3) {
               var proj = matches[1];
-              var branch = matches[2];
               var url = location.href;
               var time = new Date();
               if (ext_history_list.length > 20) {
@@ -648,7 +653,7 @@ define(function (require) {
                 }
               }
               
-              ext_history_list.splice(0, 0, {proj: proj, branch: branch, url: url, time: time});
+              ext_history_list.splice(0, 0, {proj: proj, codebases:this.codebasesFromURL({}), url: url, time: time});
               var cookie = JSON.stringify(ext_history_list);
               $.cookie('exthistorylist', cookie, {expires: 10000000000, path: "/"});
             }

@@ -196,9 +196,17 @@ div.welcome-txt {
   margin-left: 25px;
 }
 
-.builders-list {
-  font-size: 12px;
-  color: $text-color;
+.builder-link{
+  color: $brand-katana;
+  font-weight: bold;
+  &:hover{
+     text-shadow: 0 0 5px #e7e1e1; 
+  }
+}
+
+.branch-list{
+	font-size: 10px;
+	margin: 10px 10px;	
 }
 
 .builders-list .last-run{ 
