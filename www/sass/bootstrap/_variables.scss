@@ -17,12 +17,12 @@ $gray:                   lighten(#000, 33.5%) !default; // #555
 $gray-light:             lighten(#000, 60%) !default;   // #999
 $gray-lighter:           lighten(#000, 93.5%) !default; // #eee
 $grey1:				    #ccc;
-$brand-primary:         #224a6b !default;
+$brand-primary:         #393b50 !default;
 $brand-success:         #5cb85c !default;
 $brand-info:            #5bc0de !default;
 $brand-warning:         #f0ad4e !default;
 $brand-danger:          #d9534f !default;
-$brand-katana:          #2e6592 !default;
+$brand-katana:          #393b4a !default;
 
 
 //== Scaffolding
@@ -35,9 +35,9 @@ $body-bg:               #EBEEF1 !default;
 $text-color:            $gray-dark !default;
 
 //** Global textual link color.
-$link-color:            lighten($brand-primary, 10%) !default;
+$link-color:            lighten($brand-katana, 10%) !default;
 //** Link hover color set via `darken()` function.
-$link-hover-color:      lighten($link-color, 40%) !default;
+$link-hover-color:      lighten($link-color, 20%) !default;
 
 $white-bg:#fff; 
 

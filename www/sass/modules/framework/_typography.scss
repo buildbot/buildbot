@@ -172,16 +172,60 @@ h1.logo a {
 
 div.welcome-txt {
 	font-size: 14px;
+  color: lighten($text-color, 20%);
 	ul {
 		margin: 18px 0 0 21px;
 	    padding: 0;
 	    li {
-	    	list-style: outside;
-			margin: 0 0 18px;
+        span:first{
+          font-weight:bold;
+        }
+        
+        div:last{
+          text-align: right;
+        }
+      
+	    	list-style: none;
+			  margin: 0 0 8px;
 		    padding: 0 0px 0 6px ;
 		}
 	}
 }
+
+.builders-list-header{
+  margin-left: 25px;
+}
+
+.builder-link{
+  color: $brand-katana;
+  font-weight: bold;
+  &:hover{
+     text-shadow: 0 0 5px #e7e1e1; 
+  }
+}
+
+.branch-list{
+	font-size: 10px;
+	margin: 10px 10px;	
+}
+
+.builders-list .last-run{ 
+  float: right;
+  font-size: 11px;
+  font-weight: 100;
+  color: lighten($text-color, 10%);
+}
+@media (max-width: $screen-md-min) {
+  .builders-list .last-run{  
+    display: none;
+  }  
+}
+
+.btn-icon{
+  width: 15px;
+  margin-left: 0 3px;
+}
+
 
 .step-head {
 	position: relative;

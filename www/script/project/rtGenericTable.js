@@ -197,6 +197,8 @@ define(function (require) {
                         isRunning = false;
                     if (type.connected === undefined || type.connected === false) {
                         statusTxt = 'Offline';
+                    } else if(type.connected === true && type.paused === true){
+                        statusTxt = 'Paused';
                     } else if (type.connected === true && (type.runningBuilds === undefined || type.runningBuilds.length === 0)) {
                         statusTxt = 'Idle';
                     } else if (type.connected === true && type.runningBuilds.length > 0) {
@@ -208,6 +210,8 @@ define(function (require) {
                 "fnCreatedCell": function (nTd, sData, oData) {
                     if (oData.connected === undefined) {
                         $(nTd).addClass('offline');
+                    } else if (oData.connected === true && oData.paused === true){
+                      $(nTd).addClass('paused');
                     } else if (oData.connected === true && oData.runningBuilds === undefined) {
                         $(nTd).addClass('idle');
                     } else if (oData.connected === true && oData.runningBuilds.length > 0) {

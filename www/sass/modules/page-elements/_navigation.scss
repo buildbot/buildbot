@@ -33,9 +33,10 @@
 }
  
 .green {
-background-color: #237B74;
-border: 1px solid #3F8E87;
-@include box-shadow(0 0 4px #3F8E87 inset);
+background-color: #c4cAc9;
+border: 1px solid #e9f1f0;
+@include box-shadow(0 0 4px #b9bfbf inset);
+color: #29504d;
 }
 .red {
 background-color: #A76255;
@@ -51,7 +52,7 @@ border: 1px solid #9F9B41;
 
 .top-menu-container {
 	//-moz-linear-gradient(center top , #275F8C 0%, #22435E 100%) lighter!
-	@include bgimage (linear-gradient(top, #215076 0%, #22435E 100%));
+	@include bgimage (linear-gradient(top, $brand-katana 0%, $brand-primary 100%));
 	@include pie-clearfix;
 }
 
@@ -59,7 +60,7 @@ border: 1px solid #9F9B41;
 	float:right;
 	height:17px;
 	@include border-radius (3px);
-	border:1px solid #477cb4;
+	border:1px solid lighten($brand-katana, 40%);
 	display:none;
 	margin: -2px 0 -2px 5px;
     position: relative;
@@ -73,7 +74,7 @@ border: 1px solid #9F9B41;
 	margin: 10px 0;
 	cursor: pointer;
 	li {
-		background-color:#2B6194;
+		background-color: lighten($brand-katana, 40%);
 		@include border-radius(3px);
 		margin-top: 3px;
 		width: 20px;
@@ -189,9 +190,9 @@ ul.top-menu > .project-dropdown {
 
 .sub-menu-container {
     //background-color: #90B6D5;
-    @include bgimage (linear-gradient(top , #3F81B5 0%, #37709D 100%));
+    @include bgimage (linear-gradient(top , mix( #62646D, lighten($brand-primary, 30%)) 0%, mix( #62646D, lighten($brand-katana, 30%)) 100%));
     border-bottom: 1px solid #FFFFFF;
-    border-top:1px solid #4798D9;
+    border-top:1px solid lighten($brand-primary, 20%) ;
     margin-bottom: 22px;
 	
 	

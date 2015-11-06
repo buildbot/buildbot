@@ -318,7 +318,7 @@ body.log.interface {
 .footer {
 	background: none repeat scroll 0 0 #FFFFFF;
     border-top: 2px solid #E3E3E3;
-    color: #B7B7B7;
+    color: lighten($text-color, 20%);
     font-size: 11px;
     padding: 20px 0;
     text-align: center;
@@ -342,17 +342,17 @@ body.log.interface {
     	font-weight: bold;
 	}
 	a {
-		color: #3f81b5;
+		color: lighten($brand-primary, 30%);
 		@include transition (color 0.5s ease);
 		&:hover {
-			color:#fff;
+			color: lighten($brand-primary, 40%);
 		}
 	}
 }
 
 
     #image {
-		width:275px;
+		width:375px;		
 		img {
 			width: 100%;
 		}
@@ -360,6 +360,12 @@ body.log.interface {
 			width:auto;
 			img {
 				width: auto;
+			}
+		}		
+		@media (max-width: $screen-xs-min) {
+			width:325px;
+			img {
+				width: 100%;
 			}
 		}
 
