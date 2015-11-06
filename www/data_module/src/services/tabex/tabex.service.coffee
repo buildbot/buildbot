@@ -18,9 +18,7 @@ class Tabex extends Service
 
             # HACK: we disable tabex without removing the code
             # tabex is too slow on chrome, so we need to disable until we sort out slowness
-#            client: $window.tabex.client(namespace:Math.random().toString())
-            client: fakeTabexService
-
+            client: fakeTabexService.client(DATACONFIG.enableTabex)
             constructor: ->
                 # the message handler will be called on update messages
                 socketService.onMessage = @messageHandler

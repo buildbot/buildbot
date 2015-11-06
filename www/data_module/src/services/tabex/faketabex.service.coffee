@@ -1,5 +1,5 @@
 class fakeTabex extends Service
-    constructor: ($log, $q, $rootScope, $timeout) ->
+    constructor: ($log, $q, $rootScope, $timeout, $window) ->
         return new class FakeTabexService
             channels: {}
             CHANNELS =
@@ -16,9 +16,15 @@ class fakeTabex extends Service
             off: (c, l) ->
                 if angular.isArray(@channels[c])
                     idx = @channels[c].indexOf(l)
-                    if idx > -1 then @channels[c].split(idx, 1)
+                    if idx > -1 then @channels[c].pop(idx)
 
             emit: (c, m, self = false) ->
                 if angular.isArray(@channels[c]) and self
                     for l in @channels[c]
-                        if angular.isFunction(l) then l(m)
+                        if angular.isFunction(l) then $q.resolve(m).then(l)
+                null
+            client: (enableReal) ->
+                if enableReal
+                    $window.tabex.client()
+                else
+                    this

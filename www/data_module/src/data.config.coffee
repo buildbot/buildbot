@@ -8,4 +8,7 @@ class HttpConfig extends Config
 
 class Dataconfig extends Constant
     constructor: ->
-        return enableIndexedDB: false
+        return {
+            enableIndexedDB: false
+            enableTabex: false
+        }

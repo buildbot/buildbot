@@ -39,6 +39,7 @@ describe 'Tabex service', ->
         $timeout = $injector.get('$timeout')
         DATACONFIG = $injector.get('DATACONFIG')
         DATACONFIG.enableIndexedDB = true
+        DATACONFIG.enableTabex = true
         spyOn($window.tabex, 'client').and.returnValue(clientMock)
 
         tabexService = $injector.get('tabexService')
