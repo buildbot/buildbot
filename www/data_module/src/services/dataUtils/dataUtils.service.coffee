@@ -74,4 +74,7 @@ class DataUtils extends Service
                 if not angular.isString(string)
                     throw new TypeError("Parameter 'string' must be a string, not #{typeof string}")
                 emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/
-                emailRegex.exec(string).pop() or ''
+                try
+                    emailRegex.exec(string).pop() or ''
+                catch
+                    ''
