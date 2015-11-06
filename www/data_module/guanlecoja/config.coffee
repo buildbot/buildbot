@@ -52,13 +52,6 @@ config =
     #   Bower dependancies configuration
     ### ###########################################################################################
     bower:
-        deps:
-            tabex:
-                version: '~1.0.3'
-                files: 'dist/tabex.js'
-            dexie:
-                version: '~1.1.0'
-                files: 'dist/latest/Dexie.js'
         testdeps:
             angular:
                 version: ANGULAR_TAG

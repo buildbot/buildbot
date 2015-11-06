@@ -1,5 +1,5 @@
 class DataUtils extends Service
-    constructor: (SPECIFICATION) ->
+    constructor: ->
         return new class dataUtilsService
             # capitalize first word
             capitalize: (string) ->
@@ -16,6 +16,12 @@ class DataUtils extends Service
             # singularize the type name
             singularType: (arg) ->
                 @type(arg).replace(/s$/, '')
+
+            className: (arg) ->
+                @capitalize(@singularType(arg))
+
+            classId: (arg) ->
+                @singularType(arg) + "id"
 
             socketPath: (arg) ->
                 a = @copyOrSplit(arg)
@@ -47,11 +53,8 @@ class DataUtils extends Service
                     arrayOrString.split('/')
                 else
                     throw new TypeError("Parameter 'arrayOrString' must be a array or a string, not #{typeof arrayOrString}")
-
-            unWrap: (data, path) ->
-                type = @type(path)
-                type = SPECIFICATION[type]?.restField or type
-                data[type]
+            unWrap: (object, path) ->
+                object[@type(path)]
 
             parse: (object) ->
                 for k, v of object

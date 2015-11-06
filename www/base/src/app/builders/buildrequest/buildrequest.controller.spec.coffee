@@ -30,7 +30,7 @@ describe 'buildrequest controller', ->
         dataService.when('buildsets/1', [{buildsetid: 1}])
         controller = createController()
         $rootScope.$apply()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1, jasmine.any(Object))
+        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1)
         $scope.buildrequest.claimed = true
         dataService.when('builds', {buildrequestid: 1}, [{buildid: 1}, {buildid: 2}])
         $rootScope.$apply()
