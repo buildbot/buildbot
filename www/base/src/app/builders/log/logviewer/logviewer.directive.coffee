@@ -20,8 +20,8 @@ class Logviewer extends Directive
                         log = self.scope.log
                         self.scope.raw_url = "/api/v2/logs/#{log.logid}/raw"
                         if log.type == 'h'
-                            log.getContents().then (content) ->
-                                self.scope.content = $sce.trustAs($sce.HTML, content[0].content)
+                            restService.get("logs/#{log.logid}/contents").then (content) ->
+                                self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content)
 
             lines:
                 get: (index, count) ->
@@ -33,7 +33,7 @@ class Logviewer extends Directive
                     requestId = "#{index}_#{count}"
                     if not self.requests[requestId]?
                         self.requests[requestId] = $q (resolve) ->
-                            restService.get("#{log._endpoint}/#{log.name}/contents", offset:index, limit:count).then (content) ->
+                            restService.get("logs/#{log.logid}/contents", offset:index, limit:count).then (content) ->
                                 content = content.logchunks
                             # log.getContents(offset:index, limit:count).then (content) ->
                                 ret = []
