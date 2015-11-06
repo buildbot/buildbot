@@ -16,6 +16,8 @@
 import itertools
 import sqlalchemy as sa
 from sqlalchemy import or_
+from sqlalchemy import func
+from datetime import datetime, timedelta
 from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
@@ -141,6 +143,24 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             return [ self._brdictFromRow(row, _master_objectid)
                      for row in res.fetchall() ]
         return self.db.pool.do(thd)
+
+    def getTotalBuildsInTheLastDay(self):
+        def thd(conn):
+            reqs_tbl = self.db.model.buildrequests
+            yesterday = datetime.now().date() - timedelta(1)
+            lastday = datetime2epoch(datetime(yesterday.year, yesterday.month, yesterday.day))
+            query = sa.select([func.count(reqs_tbl.c.id).label("totalbuilds")])\
+                .where(reqs_tbl.c.submitted_at >= lastday)\
+                .where(reqs_tbl.c.complete == 1)\
+                .where(reqs_tbl.c.mergebrid == None)\
+                .where(reqs_tbl.c.artifactbrid == None)
+
+            res = conn.execute(query)
+            row = res.fetchone()
+            return row.totalbuilds
+
+        return self.db.pool.do(thd)
+
 
     @with_master_objectid
     def getBuildRequestInQueue(self, brids=None, buildername=None,

@@ -1089,11 +1089,13 @@ class GlobalJsonResource(JsonResource):
             current_builds |= set(b.getCurrentBuilds())
 
         queue = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=False)
+        total_builds_lastday = yield self.status.getNumberOfBuildsInLastDay()
         result = {"slaves_count": len(connected_slaves),
                   "slaves_busy": len(slave_busy),
                   "running_builds": len(current_builds),
                   "build_load": len(queue) + len(current_builds),
-                  "utc": time.time() * 1000}
+                  "utc": time.time() * 1000,
+                  "total_builds_lastday": total_builds_lastday}
 
         defer.returnValue(result)
 

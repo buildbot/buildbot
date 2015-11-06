@@ -29,6 +29,7 @@ from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
 from buildbot.status.results import RETRY
+from datetime import datetime, timedelta
 
 class Status(config.ReconfigurableServiceMixin, service.MultiService):
     implements(interfaces.IStatus)
@@ -50,6 +51,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._build_request_sub = None
         self._change_sub = None
         self.rev_url_func = None
+        self.total_builds_lastday = {}
 
     # service management
 
@@ -332,6 +334,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                          for bn in self.getBuilderNames()
                          if want_builder(bn)]
         return builder_names
+
+    @defer.inlineCallbacks
+    def getNumberOfBuildsInLastDay(self):
+        lastday = datetime.now().date() - timedelta(1)
+        if lastday not in self.total_builds_lastday:
+            total_builds_lastday = yield self.master.db.buildrequests.getTotalBuildsInTheLastDay()
+            self.total_builds_lastday = {lastday: total_builds_lastday}
+        defer.returnValue(self.total_builds_lastday[lastday])
 
     @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, num_builds=15, results=None, slavename=None):
