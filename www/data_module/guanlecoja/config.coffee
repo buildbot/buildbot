@@ -13,7 +13,7 @@ gulp.task "publish", ['default'], ->
     exec "git clone git@github.com:buildbot/buildbot-data-js.git"
     bower_json =
         name: "buildbot-data"
-        version: "1.0.15"
+        version: "1.1.0"
         main: ["buildbot-data.js"]
         moduleType: [],
         license: "MIT",
