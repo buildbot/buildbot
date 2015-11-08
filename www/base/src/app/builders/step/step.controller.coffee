@@ -15,13 +15,13 @@ class Step extends Controller
                         sref: "builders"
                     ,
                         caption: builder.name
-                        sref: "builder({builder:#{builder.id}})"
+                        sref: "builder({builder:#{builder.builderid}})"
                     ,
                         caption: build.number
-                        sref: "build({builder:#{builder.id}, build:#{build.number}})"
+                        sref: "build({builder:#{builder.builderid}, build:#{build.number}})"
                     ,
                         caption: step.name
-                        sref: "step({builder:#{builder.id}, build:#{build.number}, step:#{step.number}})"
+                        sref: "step({builder:#{builder.builderid}, build:#{build.number}, step:#{step.number}})"
                     ]
                     step.loadLogs()
                     $scope.step = publicFieldsFilter(step)

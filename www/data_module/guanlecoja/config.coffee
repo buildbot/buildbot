@@ -14,7 +14,7 @@ gulp.task "publish", ['default'], ->
     bower_json =
         name: "buildbot-data"
         version: "1.0.15"
-        main: ["scripts.js"]
+        main: ["buildbot-data.js"]
         moduleType: [],
         license: "MIT",
         ignore: []
@@ -47,17 +47,11 @@ config =
         build: 'dist'
 
     sourcemaps: true
+    output_scripts: "buildbot-data.js"
     ### ###########################################################################################
     #   Bower dependancies configuration
     ### ###########################################################################################
     bower:
-        deps:
-            tabex:
-                version: '~1.0.3'
-                files: 'dist/tabex.js'
-            dexie:
-                version: '~1.1.0'
-                files: 'dist/latest/Dexie.js'
         testdeps:
             angular:
                 version: ANGULAR_TAG
@@ -65,9 +59,12 @@ config =
             'angular-mocks':
                 version: ANGULAR_TAG
                 files: 'angular-mocks.js'
+            'lodash':
+                version: '~3.10.0'
+                files: 'lodash.js'
     # as angular is a test deps, the tests need to be loaded first!
     karma:
-        files: [ "tests.js", "scripts.js"]
+        files: [ "tests.js", "buildbot-data.js"]
 
     ngclassify: (config) ->
         return {

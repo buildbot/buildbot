@@ -54,8 +54,8 @@ class Buildrequest extends Controller
                         caption: builder.name
                         sref: "builder({builder:#{buildrequest.builderid}})"
                     ,
-                        caption: buildrequest.id
-                        sref: "buildrequest({buildrequest:#{buildrequest.id}})"
+                        caption: buildrequest.buildrequestid
+                        sref: "buildrequest({buildrequest:#{buildrequest.buildrequestid}})"
                 ]
 
                 glBreadcrumbService.setBreadcrumb(breadcrumb)

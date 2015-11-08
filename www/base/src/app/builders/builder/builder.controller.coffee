@@ -13,7 +13,7 @@ class Builder extends Controller
                     sref: "builders"
                 ,
                     caption: builder.name
-                    sref: "builder({builder:#{builder.id}})"
+                    sref: "builder({builder:#{builder.builderid}})"
             ]
             recentStorage.addBuilder
                 link: "#/builders/#{builder.builderid}"

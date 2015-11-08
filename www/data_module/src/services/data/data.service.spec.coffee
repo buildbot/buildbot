@@ -1,169 +1,123 @@
 describe 'Data service', ->
-    _dataServiceProvider = null
-    beforeEach module 'bbData', (dataServiceProvider, $provide) ->
-        _dataServiceProvider = dataServiceProvider
-        $provide.constant 'SPECIFICATION',
-            asd: id: 'asdid'
-            bsd: paths: []
+    beforeEach module 'bbData'
 
-        $provide.constant '$state', new class State
-            reload: jasmine.createSpy('reload')
-
-    dataService = $q = $rootScope = $state = restService = indexedDBService = Collection = undefined
+    dataService = restService = socketService = ENDPOINTS = $rootScope = $q = $httpBackend = null
     injected = ($injector) ->
-        $q = $injector.get('$q')
-        $rootScope = $injector.get('$rootScope')
-        $state = $injector.get('$state')
-        indexedDBService = $injector.get('indexedDBService')
+        dataService = $injector.get('dataService')
         restService = $injector.get('restService')
-        dataService = $injector.invoke(_dataServiceProvider.$get)
+        socketService = $injector.get('socketService')
+        ENDPOINTS = $injector.get('ENDPOINTS')
+        $rootScope = $injector.get('$rootScope')
+        $q = $injector.get('$q')
+        $httpBackend = $injector.get('$httpBackend')
 
     beforeEach(inject(injected))
 
     it 'should be defined', ->
         expect(dataService).toBeDefined()
 
-    it '`s cache should be true', ->
-        expect(dataService.cache).toBeTruthy()
+    it 'should have getXxx functions for endpoints', ->
+        for e in ENDPOINTS
+            E = e[0].toUpperCase() + e[1..-1].toLowerCase()
+            expect(dataService["get#{E}"]).toBeDefined()
+            expect(angular.isFunction(dataService["get#{E}"])).toBeTruthy()
 
-    it 'should generate functions for every endpoint in the specification', ->
-        expect(dataService.getAsd).toBeDefined()
-        expect(angular.isFunction(dataService.getAsd)).toBeTruthy()
+    describe 'get()', ->
+        it 'should return a promise', ->
+            p = dataService.getBuilds()
+            expect(angular.isFunction(p.then)).toBeTruthy()
+            expect(angular.isFunction(p.getArray)).toBeTruthy()
 
-        expect(dataService.getBsd).not.toBeDefined()
-        expect(angular.isFunction(dataService.getBsd)).toBeFalsy()
+        it 'should call get for the rest api endpoint', ->
+            d = $q.defer()
+            spyOn(restService, 'get').and.returnValue(d.promise)
+            expect(restService.get).not.toHaveBeenCalled()
+            $rootScope.$apply ->
+                dataService.get('asd', subscribe: false)
+            # the query should not contain the subscribe field
+            expect(restService.get).toHaveBeenCalledWith('asd', {})
 
-        spyOn(dataService, 'get')
-        dataService.getAsd(1)
-        expect(dataService.get).toHaveBeenCalledWith('asd', 1)
+        it 'should send startConsuming with the socket path', ->
+            d = $q.defer()
+            spyOn(socketService, 'send').and.returnValue(d.promise)
+            expect(socketService.send).not.toHaveBeenCalled()
+            $rootScope.$apply ->
+                dataService.get('asd')
+            expect(socketService.send).toHaveBeenCalledWith
+                cmd: 'startConsuming'
+                path: 'asd/*/*'
+            $rootScope.$apply ->
+                dataService.get('asd', 1)
+            expect(socketService.send).toHaveBeenCalledWith
+                cmd: 'startConsuming'
+                path: 'asd/1/*'
 
-    describe 'clearCache()', ->
+        it 'should not call startConsuming when {subscribe: false} is passed in', ->
+            d = $q.defer()
+            spyOn(restService, 'get').and.returnValue(d.promise)
+            spyOn(dataService, 'startConsuming')
+            expect(dataService.startConsuming).not.toHaveBeenCalled()
+            $rootScope.$apply ->
+                dataService.getBuilds(subscribe: false)
+            expect(dataService.startConsuming).not.toHaveBeenCalled()
 
-        it 'should clear the database, then reload the page', ->
-            spyOn(indexedDBService, 'clear').and.returnValue($q.resolve())
-            expect(indexedDBService.clear).not.toHaveBeenCalled()
-            dataService.clearCache()
-            expect(indexedDBService.clear).toHaveBeenCalled()
+        it 'should add the new instance on /new WebSocket message', ->
+            spyOn(restService, 'get').and.returnValue($q.resolve(builds: []))
+            builds = null
+            $rootScope.$apply ->
+                builds = dataService.getBuilds(subscribe: false).getArray()
+            socketService.eventStream.push
+                k: 'builds/111/new'
+                m: asd: 111
+            expect(builds.pop().asd).toBe(111)
 
-            expect($state.reload).not.toHaveBeenCalled()
-            $rootScope.$apply()
-            expect($state.reload).toHaveBeenCalled()
+    describe 'control(method, params)', ->
 
-    describe 'get(args)', ->
-
-        it 'should create a new Collection and return a promise', ->
-            original = dataService.createCollection
-            c = null
-            spyOn(dataService, 'createCollection').and.callFake (args...) ->
-                c = original(args...)
-                spyOn(c, 'subscribe').and.returnValue($q.resolve(c))
-                return c
-            cb = jasmine.createSpy('callback')
-            expect(dataService.createCollection).not.toHaveBeenCalled()
-            dataService.get('asd').then(cb)
-            expect(dataService.createCollection).toHaveBeenCalledWith('asd', subscribe: false)
-
-            expect(cb).not.toHaveBeenCalled()
-            $rootScope.$apply()
-            expect(cb).toHaveBeenCalledWith(c)
-
-    describe 'processArguments(args)', ->
-
-        it 'should return the restPath and the query (empty query)', ->
-            [restPath, query] = dataService.processArguments(['asd', '1'])
-            expect(restPath).toBe('asd/1')
-            expect(query).toEqual({})
-
-        it 'should return the restPath and the query (not empty query)', ->
-            [restPath, query] = dataService.processArguments(['asd', '1', parameter: 1])
-            expect(restPath).toBe('asd/1')
-            expect(query).toEqual(parameter: 1)
-
-    describe 'control(url, method, params)', ->
-
-        it 'should make a POST call', ->
-            spyOn(restService, 'post').and.returnValue($q.resolve())
-            cb = jasmine.createSpy('cb')
+        it 'should send a jsonrpc message using POST', ->
+            spyOn(restService, 'post')
             expect(restService.post).not.toHaveBeenCalled()
-
-            url = 'forceschedulers/force'
             method = 'force'
-            params = parameter: 1
-
-            dataService.control(url, method, params).then(cb)
-
-            expect(restService.post).toHaveBeenCalledWith url,
-                id: jasmine.any(Number)
+            params = a: 1
+            dataService.control(method, params)
+            expect(restService.post).toHaveBeenCalledWith
+                id: 1
                 jsonrpc: '2.0'
                 method: method
                 params: params
 
-            expect(cb).not.toHaveBeenCalled()
-            $rootScope.$apply()
-            expect(cb).toHaveBeenCalled()
+    describe 'open()', ->
 
-        it 'should change the id on each call', ->
-            spyOn(restService, 'post')
+        opened = null
+        beforeEach ->
+            opened = dataService.open()
 
-            url = 'forceschedulers/force'
-            method = 'force'
+        it 'should return a new accessor', ->
+            expect(opened).toEqual(jasmine.any(Object))
 
-            dataService.control(url, method)
-            dataService.control(url, method)
+        it 'should have getXxx functions for endpoints', ->
+            for e in ENDPOINTS
+                E = e[0].toUpperCase() + e[1..-1].toLowerCase()
+                expect(opened["get#{E}"]).toBeDefined()
+                expect(angular.isFunction(opened["get#{E}"])).toBeTruthy()
 
-            id1 = restService.post.calls.argsFor(0)[1].id
-            id2 = restService.post.calls.argsFor(1)[1].id
+        it 'should call unsubscribe on each root class on close', ->
+            p = $q.resolve(builds: [{}, {}, {}])
+            spyOn(restService, 'get').and.returnValue(p)
+            builds = null
+            $rootScope.$apply ->
+                builds = opened.getBuilds(subscribe: false).getArray()
+            expect(builds.length).toBe(3)
+            spyOn(b, 'unsubscribe') for b in builds
+            expect(b.unsubscribe).not.toHaveBeenCalled() for b in builds
+            opened.close()
+            expect(b.unsubscribe).toHaveBeenCalled() for b in builds
 
-            expect(id1).not.toEqual(id2)
-
-    describe 'open(scope)', ->
-
-        it 'should return a class with close, closeOnDestroy and getXXX functions', ->
+        it 'should call close when the $scope is destroyed', ->
+            spyOn(opened, 'close')
             scope = $rootScope.$new()
-            dataAccessor = dataService.open(scope)
-            expect(angular.isFunction(dataAccessor.close)).toBeTruthy()
-            expect(angular.isFunction(dataAccessor.closeOnDestroy)).toBeTruthy()
-
-        it 'should generate functions for every endpoint in the specification', ->
-            dataAccessor = dataService.open()
-            expect(dataAccessor.getAsd).toBeDefined()
-            expect(angular.isFunction(dataAccessor.getAsd)).toBeTruthy()
-
-            expect(dataAccessor.getBsd).not.toBeDefined()
-            expect(angular.isFunction(dataAccessor.getBsd)).toBeFalsy()
-
-            spyOn(dataService, 'get').and.callThrough()
-            dataAccessor.getAsd(1)
-            dataAccessor.getAsd(2, param: 3)
-            dataAccessor.getAsd(4, subscribe: false)
-            expect(dataService.get).toHaveBeenCalledWith('asd', 1, subscribe: true)
-            expect(dataService.get).toHaveBeenCalledWith('asd', 2, param: 3, subscribe: true)
-            expect(dataService.get).toHaveBeenCalledWith('asd', 4, subscribe: false)
-
-        it 'should unsubscribe on destroy event', ->
-            scope = $rootScope.$new()
-            spyOn(scope, '$on').and.callThrough()
-
-            dataAccessor = dataService.open(scope)
-            expect(scope.$on).toHaveBeenCalledWith('$destroy', jasmine.any(Function))
-
-            spyOn(dataAccessor, 'close').and.callThrough()
-            expect(dataAccessor.close).not.toHaveBeenCalled()
+            opened.closeOnDestroy(scope)
+            expect(opened.close).not.toHaveBeenCalled()
             scope.$destroy()
-            expect(dataAccessor.close).toHaveBeenCalled()
+            expect(opened.close).toHaveBeenCalled()
 
-        it 'should call unsubscribe on each element', ->
-            dataAccessor = dataService.open()
-            el1 = unsubscribe: jasmine.createSpy('unsubscribe1')
-            el2 = unsubscribe: jasmine.createSpy('unsubscribe2')
-            el3 = {}
-
-            dataAccessor.collections.push(el1)
-            dataAccessor.collections.push(el2)
-            dataAccessor.collections.push(el3)
-
-            expect(el1.unsubscribe).not.toHaveBeenCalled()
-            expect(el2.unsubscribe).not.toHaveBeenCalled()
-            dataAccessor.close()
-            expect(el1.unsubscribe).toHaveBeenCalled()
-            expect(el2.unsubscribe).toHaveBeenCalled()
+        # TODO ...

@@ -1,43 +1,47 @@
 class Socket extends Service
-    constructor: ($log, $q, $location, $window, webSocketBackendService) ->
+    constructor: ($log, $q, $rootScope, $location, Stream, webSocketService) ->
         return new class SocketService
-            # waiting queue
-            queue: []
-            # deferred object for resolving response promises
-            # map of id: promise
-            deferred: {}
-            # the onMessage(key, message) function will be called to handle an update message
-            onMessage: null
-            # the onClose() function will be called to handle the close event
-            onClose: null
+            # subscribe to event stream to get WebSocket messages
+            eventStream: null
+
+            constructor: ->
+                # waiting queue
+                @queue = []
+                # deferred object for resolving response promises
+                # map of id: promise
+                @deferred = {}
+                # open socket
+                @open()
 
             open: ->
-                @socket ?= @getWebSocket()
+                @socket ?= webSocketService.getWebSocket(@getUrl())
+
                 # flush queue on open
                 @socket.onopen = => @flush()
+
+                @setupEventStream()
+
+            setupEventStream: ->
+                @eventStream ?= new Stream()
 
                 @socket.onmessage = (message) =>
                     try
                         data = angular.fromJson(message.data)
 
                         # response message
-                        if data._id?
-                            [message, error, id, code] = [data.msg, data.error, data._id, data.code]
-                            if code is 200 then @deferred[id]?.resolve(message)
-                            else @deferred[id]?.reject(error)
-                        # update message
+                        if data.code?
+                            id = data._id
+                            if data.code is 200 then @deferred[id]?.resolve(true)
+                            else @deferred[id]?.reject(data)
+                        # status update message
                         else
-                            [key, message] = [data.k, data.m]
-                            @onMessage?(key, message)
-
+                            $rootScope.$applyAsync =>
+                                @eventStream.push(data)
                     catch e
-                        $log.error(e)
-
-                @socket.onclose = =>
-                    @onClose?()
+                        @deferred[id]?.reject(e)
 
             close: ->
-                @socket?.close()
+                @socket.close()
 
             send: (data) ->
                 # add _id to each message
@@ -58,7 +62,7 @@ class Socket extends Service
 
             flush: ->
                 # send all the data waiting in the queue
-                while data = @queue.shift()
+                while data = @queue.pop()
                     @socket.send(data)
 
             nextId: ->
@@ -76,15 +80,3 @@ class Socket extends Service
                 path = @getRootPath()
                 port = if $location.port() is defaultport then '' else ':' + $location.port()
                 return "#{protocol}://#{host}#{port}#{path}ws"
-
-            # this function will be mocked in the tests
-            getWebSocket: ->
-                url = @getUrl()
-                # if testing, use fake implementation
-                if jasmine?
-                    return webSocketBackendService.getWebSocket()
-                # use ReconnectingWebSocket if available
-                # TODO write own implementation?
-                if $window.ReconnectingWebSocket?
-                    return new $window.ReconnectingWebSocket(url)
-                return new $window.WebSocket(url)
