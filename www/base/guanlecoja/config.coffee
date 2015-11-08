@@ -51,7 +51,7 @@ config =
                 version: "master"
                 files: ["reconnecting-websocket.js"]
             'buildbot-data':
-                version: '~1.0.14'
+                version: '~1.1.0'
                 files: 'dist/buildbot-data.js'
 
         testdeps:
