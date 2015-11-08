@@ -44,12 +44,6 @@ config =
             "bootstrap":
                 version: "~3.1.1"
                 files: []
-            # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
-            # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
-            # reimplement reconnecting ourselves
-            "reconnectingWebsocket":
-                version: "master"
-                files: ["reconnecting-websocket.js"]
             'buildbot-data':
                 version: '~1.1.0'
                 files: 'dist/buildbot-data.js'
