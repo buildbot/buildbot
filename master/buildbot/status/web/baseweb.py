@@ -538,10 +538,12 @@ class WebStatus(service.MultiService):
             root.putChild(name, child_resource)
 
         status = self.getStatus()
-        if "rss" in self.provide_feeds:
-            root.putChild("rss", Rss20StatusResource(status))
-        if "atom" in self.provide_feeds:
-            root.putChild("atom", Atom10StatusResource(status))
+        # Disable rss and atom
+        # they are not running async and it is hanging the UI and buildbot process
+        #if "rss" in self.provide_feeds:
+        #    root.putChild("rss", Rss20StatusResource(status))
+        #if "atom" in self.provide_feeds:
+        #    root.putChild("atom", Atom10StatusResource(status))
         if "json" in self.provide_feeds:
             root.putChild("json", JsonStatusResource(status))
 
