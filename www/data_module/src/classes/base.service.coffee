@@ -18,8 +18,7 @@ class Base extends Factory
                 # reset endpoint to base
                 if @_id?
                     @_endpoint = dataUtilsService.type(@_endpoint)
-                # subscribe for WebSocket events
-                @subscribe()
+
 
             update: (o) ->
                 angular.merge(@, o)
@@ -29,25 +28,6 @@ class Base extends Factory
 
             control: (method, params) ->
                 dataService.control(@_endpoint, @_id, method, params)
-
-            subscribe: ->
-                listener = (data) =>
-                    key = data.k
-                    message = data.m
-                    # filter for relevant message
-                    streamRegex = ///^#{@_endpoint}\/#{@_id}\/\w+$///g
-                    # update when the key matches the instance
-                    if streamRegex.test(key) then @update(message)
-                @_unsubscribeEventListener = socketService.eventStream.subscribe(listener)
-                # _listenerId is required by the stopConsuming logic in dataService
-                @_listenerId = listener.id
-
-            unsubscribe: ->
-                # unsubscribe childs
-                for k, v of this
-                    if angular.isArray(v)
-                        v.forEach (e) -> e.unsubscribe() if e instanceof BaseInstance
-                @_unsubscribeEventListener()
 
             # generate endpoint functions for the class
             @generateFunctions: (endpoints) ->

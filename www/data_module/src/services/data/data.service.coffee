@@ -56,16 +56,6 @@ class Data extends Provider
 
                             type = dataUtilsService.type(restPath)
                             response = response[type]
-                            try
-                                # try to get the wrapper class
-                                className = dataUtilsService.className(restPath)
-                                # the classes have the dataService as a dependency
-                                # $injector.get doesn't throw circular dependency exception
-                                WrapperClass = $injector.get(className)
-                            catch e
-                                # use the Base class otherwise
-                                console.log "unknown wrapper for", className
-                                WrapperClass = $injector.get('Base')
                             # the response should always be an array
                             if angular.isArray(response)
                                 # strip the id or name from the path if it's there
