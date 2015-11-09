@@ -3,11 +3,10 @@ class Buildsticker extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {build: '='}
+            scope: {build: '=', builder:'='}
             templateUrl: 'views/buildsticker.html'
             controller: '_buildstickerController'
         }
-
 class _buildsticker extends Controller('common')
     constructor: ($scope, dataService, resultsService, $urlMatcherFactory, $location) ->
         $scope.$watch (-> moment().unix()), ->
@@ -18,5 +17,6 @@ class _buildsticker extends Controller('common')
 
         data = dataService.open($scope)
         $scope.$watch 'build', (build) ->
-            data.getBuilders(build.builderid).then (builders) ->
-                $scope.builder = builders[0]
+            if not $scope.builder?
+                data.getBuilders(build.builderid).then (builders) ->
+                    $scope.builder = builders[0]
