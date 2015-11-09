@@ -138,7 +138,7 @@ a.grey-btn,
         font-family: "katana_icons";
         content: "";
         font-size: 15px;
-        color:#2B6194;
+        color:$link-color;
     }
     &:hover:before{
         color:#ccc;
@@ -150,7 +150,7 @@ a.grey-btn,
     @include box-shadow(1px 1px 0 #FFFFFF);
     border-bottom:1px solid #ccc;
     &:after {
-        color: #2B6194;
+        color: $link-color;
         font-family: katana_icons;
         content: "";
         font-size: 17px;
@@ -193,7 +193,7 @@ a.grey-btn,
     top: 4px;
     cursor: pointer;    
     &:hover:after {
-        color:#1f5184;
+        color:$link-hover-color;
     }    
 }
 

@@ -187,7 +187,7 @@ background: #BBBBBB;
 	}
 	h1.logo a {
 			opacity: 1;
-		   	color: #445873;
+		   	color: $brand-primary;
 		    display: block;
 		    float: none;
 		    font-size: 1.7em;
@@ -196,7 +196,7 @@ background: #BBBBBB;
 		    margin-right: 14px;
 		span {
 			font-size: 0.8em;
-			color:#445873;
+			color:$brand-katana;
 		}
 		&:hover {
 			opacity: 0.5;
@@ -396,7 +396,7 @@ body.log.interface {
 }
 
 .sticky-bar {
-  @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
+  @include bgimage (linear-gradient(top, lighten($brand-katana, 10%) 0%, lighten($brand-primary, 10%) 100%));
   position: fixed;
   width: 100%;
   padding: 10px 0 ;

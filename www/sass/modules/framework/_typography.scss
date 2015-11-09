@@ -197,16 +197,20 @@ div.welcome-txt {
 }
 
 .builder-link{
-  color: $brand-katana;
+  color: $link-color;
   font-weight: bold;
   &:hover{
-     text-shadow: 0 0 5px #e7e1e1; 
+     color:$link-hover-color 
   }
 }
 
 .branch-list{
 	font-size: 10px;
 	margin: 10px 10px;	
+}
+
+.branch-list-item{
+  float: left;
 }
 
 .builders-list .last-run{ 
@@ -221,9 +225,11 @@ div.welcome-txt {
   }  
 }
 
-.btn-icon{
+.branch-icon{
   width: 15px;
-  margin-left: 0 3px;
+  height: 15px;
+  background: generated-image-url("branch.png", $cache-buster: true) no-repeat;
+  float: left;
 }
 
 

@@ -37,7 +37,7 @@ $text-color:            $gray-dark !default;
 //** Global textual link color.
 $link-color:            lighten($brand-katana, 10%) !default;
 //** Link hover color set via `darken()` function.
-$link-hover-color:      lighten($link-color, 20%) !default;
+$link-hover-color:      lighten($brand-katana, 20%) !default;
 
 $white-bg:#fff; 
 

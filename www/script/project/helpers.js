@@ -620,13 +620,13 @@ define(function (require) {
           
           if (location.pathname === '/') {
             if (ext_history_list.length) {
-              $(historyElement)[0].innerHTML = "<h3 class='builders-list-header'>Recent builders:</h3><ul id='ext-history-list' class='builders-list'></ul>";
+              $(historyElement)[0].innerHTML = "<h3 class='builders-list-header'>Recent projects:</h3><ul id='ext-history-list' class='builders-list'></ul>";
               var hist = $("#ext-history-list")[0];
               for (var i = 0; i < ext_history_list.length; i++) {
                 var el = ext_history_list[i];
                 var codebasesHtml = $("<div class='row branch-list'/>");
                 $.each(el.codebases, function(i, val) {
-                    $("<div class='col-md-3'><img src='images/branch.png' alt='branch'/> <span><strong>"+i.slice(0, "_branch".length) +": </strong>"+val+"</span></div>").appendTo(codebasesHtml);
+                    $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>"+i.slice(0, -"_branch".length) +": </strong>"+val+"</span></div>").appendTo(codebasesHtml);
                 });
                 
                 var html = "<div class='row'><div class='col-md-8'><a class='builder-link' href='" + el.url + "'>" + unescape(el.proj) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";

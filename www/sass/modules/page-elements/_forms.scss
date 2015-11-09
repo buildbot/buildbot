@@ -107,9 +107,9 @@ form.command_forcebuild .force-nested > .label {
         margin-top: 6px;
     }
     input[type="submit"] {
-        @include bgimage(linear-gradient(top , #0A3569 0%, #417FB1 100%));
+        @include bgimage(linear-gradient(top , $brand-primary 0%, $brand-katana 100%));
         @include box-shadow(1px 1px 0px #fff);
-        border: 1px solid #295E91;
+        border: 1px solid lighten($brand-primary, 10%);
         @include border-radius( 4px);
         color: #FFFFFF;
         font-size: 10px;        
@@ -120,7 +120,7 @@ form.command_forcebuild .force-nested > .label {
         clear: both;
         letter-spacing: 0.8px;
         &:hover {
-            @include bgimage(linear-gradient(top , #1057AD 0%, #4E98D5 100%));
+            @include bgimage(linear-gradient(top , $link-color 0%, $link-hover-color 100%));
         }
     }
     

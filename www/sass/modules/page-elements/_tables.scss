@@ -35,7 +35,7 @@ ul.building {
 .percent-inner {
     //@include bgimage (linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent));
     //background-size: 40px 40px;
-    background-color: #39719F;
+    background-color: lighten($brand-katana, 10);
     @include box-shadow(1px 0px 4px rgba(0, 0, 0, 0.6) inset);
     float: left;
     height: 100%;
@@ -329,7 +329,7 @@ ul.building {
     padding-left: 5px;
     @media (min-width: $screen-md-min) {
         margin-top: 8px;
-        border-left: 2px solid #2B6194;
+        border-left: 2px solid lighten($brand-katana, 20%);
         padding: 0 0 0 12px;
     }
     .branch-overview & {
