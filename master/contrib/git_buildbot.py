@@ -321,7 +321,7 @@ def process_tag_change(oldrev, newrev, refname, tag):
 
 def process_change(oldrev, newrev, refname):
     # Identify the change as a branch, tag or other, and process it
-    m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
+    m = re.match(r"^refs/(heads|tags)/(.+)$", refname)
     if not m:
         logging.info("Ignoring refname `%s': Not a branch or tag", refname)
         return

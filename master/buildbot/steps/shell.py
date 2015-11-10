@@ -376,7 +376,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None
 
-    commentEmptyLineRe = re.compile(r"^\s*(\#.*)?$")
+    commentEmptyLineRe = re.compile(r"^\s*(#.*)?$")
     suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
 
     def __init__(self,
