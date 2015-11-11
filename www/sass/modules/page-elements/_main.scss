@@ -352,7 +352,7 @@ body.log.interface {
 
 
     #image {
-		width:375px;		
+		width:375px;
 		img {
 			width: 100%;
 		}
@@ -372,13 +372,15 @@ body.log.interface {
 		.image-text:last-of-type {
 			bottom: 0;
 		}
-		
+
 		@media (min-width: $screen-lg-min) {
-			width:auto;
-			img {
-				width: auto;
+			width:500px;
+		
+		 .image-text {
+				font-size: 25px;
+				width:500px;
 			}
-		}		
+		}
 		@media (max-width: $screen-xs-min) {
 			width:325px;
 			.image-text {
