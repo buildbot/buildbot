@@ -353,6 +353,7 @@ body.log.interface {
 
     #image {
 		width:375px;
+		position: relative;
 		img {
 			width: 100%;
 		}
@@ -375,7 +376,7 @@ body.log.interface {
 
 		@media (min-width: $screen-lg-min) {
 			width:500px;
-		
+
 		 .image-text {
 				font-size: 25px;
 				width:500px;

@@ -1300,7 +1300,7 @@ body.log.interface{background:#FFF;padding:20px}
 .auth-user a,.auth-user span{font-weight:700}
 .auth-user a{color:#7f82a3;-webkit-transition:color .5s ease;transition:color .5s ease}
 .auth-user a:hover{color:#9c9fb9}
-#image{width:375px}
+#image{width:375px;position:relative}
 #image img{width:100%}
 #image .image-text{position:absolute;width:375px;text-transform:uppercase;font-family:Impact;font-size:24px;color:#fff;text-align:center;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
 #image .image-text:first-of-type{top:0}
