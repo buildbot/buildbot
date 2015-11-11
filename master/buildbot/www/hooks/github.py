@@ -160,7 +160,7 @@ class GitHubEventHandler(object):
         refname = payload['ref']
 
         # We only care about regular heads, i.e. branches
-        match = re.match(r"^refs\/heads\/(.+)$", refname)
+        match = re.match(r"^refs/heads/(.+)$", refname)
         if not match:
             log.msg("Ignoring refname `%s': Not a branch" % refname)
             return changes

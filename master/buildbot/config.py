@@ -97,9 +97,9 @@ class MasterConfig(util.ComparableMixin):
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
-            revision=re.compile(r'^[ \w\.\-\/]*$'),
-            property_name=re.compile(r'^[\w\.\-\/\~:]*$'),
-            property_value=re.compile(r'^[\w\.\-\/\~:]*$'),
+            revision=re.compile(r'^[ \w\.\-/]*$'),
+            property_name=re.compile(r'^[\w\.\-/~:]*$'),
+            property_value=re.compile(r'^[\w\.\-/~:]*$'),
         )
         self.db = dict(
             db_url=DEFAULT_DB_URL,
