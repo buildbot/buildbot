@@ -91,7 +91,7 @@ define(function (require) {
 
         },
         randomImage: function (el) {
-            var images = ['48273828.jpg'];
+            var images = ['kitty-glasses.jpg'];
             el.attr('src', 'images/' + images[Math.floor(Math.random() * images.length)]);
 
         },
