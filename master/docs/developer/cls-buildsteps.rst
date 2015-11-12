@@ -584,7 +584,7 @@ This class can only be used in new-style steps.
         Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
-    .. py:method:: runGlob(path)
+    .. py:method:: runGlob(glob)
 
         :param path: path to test
         :returns: list of filenames

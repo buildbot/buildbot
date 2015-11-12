@@ -461,7 +461,7 @@ glob
 ....
 
 This command finds all pathnames matching a specified pattern that uses shell-style wildcards.
-It takes a single parameter, ``pathname``, specifying the pattern to pass to Python's
+It takes a single parameter, ``path``, specifying the pattern to pass to Python's
 ``glob.glob`` function.
 
 It produces two status updates:
