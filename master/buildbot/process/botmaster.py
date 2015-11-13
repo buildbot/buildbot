@@ -24,7 +24,7 @@ from buildbot.process.builder import Builder
 from buildbot import interfaces, locks, config, util
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest, BuildRequestControl
-
+from buildbot.process.buildrequestdistributor import BuildRequestDistributor
 
 class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -123,17 +123,20 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
+    def slaveInBuilder(self, slavename, builder):
+        return (slavename in builder.config.slavenames) or \
+               (builder.config.startSlavenames and slavename in builder.config.startSlavenames)
+
     @metrics.countMethod('BotMaster.slaveLost()')
     def slaveLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
         for name, b in self.builders.items():
-            if bot.slavename in b.config.slavenames:
+            if self.slaveInBuilder(bot.slavename, b):
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
-        return [ b for b in self.builders.values()
-                 if slavename in b.config.slavenames ]
+        return [b for b in self.builders.values() if self.slaveInBuilder(slavename, b)]
 
     def getBuildernames(self):
         return self.builderNames
@@ -223,11 +226,10 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.stop()
 
     @defer.inlineCallbacks
-    def removeQueuedBuilds(self, builder_name):
-        builds = yield self.master.db.buildrequests.getBuildRequests(claimed=False, buildername=builder_name)
-        if len(builds):
-            log.msg("removing %d builds from the build queue from the builder %s" % (len(builds), builder_name))
-            for brdict in builds:
+    def removeQueuedBuilds(self, removed_builders):
+        if len(removed_builders):
+            log.msg("removing %d builds from the build queue, the builder(s) was removed" % len(removed_builders))
+            for brdict in removed_builders:
                 br = yield BuildRequest.fromBrdict(self.master, brdict)
                 brc = BuildRequestControl(None, br)
                 yield brc.cancel()
@@ -279,12 +281,11 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # remove unclaimed builds if the builder has been removed from configuration
         if len(self.master.config.projects) > 1:
-            queued_builds = yield self.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True)
+            queued_builds = yield self.master.db.buildrequests.getBuildRequestInQueue(sorted=True)
             # TODO: if we are running in multimaster mode with multiple instance of katana we need
             # to check for the project key as well
-            builders = set(b["buildername"] for b in queued_builds if b["buildername"] not in new_set)
-            for builder in builders:
-                self.removeQueuedBuilds(builder)
+            removed_builders = [b for b in queued_builds if b["buildername"] not in new_set]
+            self.removeQueuedBuilds(removed_builders)
 
         timer.stop()
 
@@ -312,6 +313,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
+    def getLockFromLockAccess(self, access):
+        # Convert a lock-access object into an actual Lock instance.
+        if not isinstance(access, locks.LockAccess):
+            # Buildbot 0.7.7 compability: user did not specify access
+            access = access.defaultAccess()
+        lock = self.getLockByID(access.lockid)
+        return lock
+
     def maybeStartBuildsForBuilder(self, buildername):
         """
         Call this when something suggests that a particular builder may now
@@ -319,8 +328,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param buildername: the name of the builder
         """
-        d = self.brd.maybeStartBuildsOn([buildername])
-        d.addErrback(log.err)
+        self.brd.maybeStartBuildsOn([buildername])
 
     def maybeStartBuildsForSlave(self, slave_name):
         """
@@ -330,196 +338,14 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         @param slave_name: the name of the slave
         """
         builders = self.getBuildersForSlave(slave_name)
-        d = self.brd.maybeStartBuildsOn([ b.name for b in builders ])
-        d.addErrback(log.err)
+        self.brd.maybeStartBuildsOn([ b.name for b in builders ])
 
     def maybeStartBuildsForAllBuilders(self):
         """
-        Call this when something suggests that this would be a good time to start some
-        builds, but nothing more specific.
+        Call this when something suggests that this would be a good time to 
+        start some builds, but nothing more specific.
         """
-        d = self.brd.maybeStartBuildsOn(self.builderNames)
-        d.addErrback(log.err)
-
-class BuildRequestDistributor(service.Service):
-    """
-    Special-purpose class to handle distributing build requests to builders by
-    calling their C{maybeStartBuild} method.
-
-    This takes account of the C{prioritizeBuilders} configuration, and is
-    highly re-entrant; that is, if a new build request arrives while builders
-    are still working on the previous build request, then this class will
-    correctly re-prioritize invocations of builders' C{maybeStartBuild}
-    methods.
-    """
-
-    def __init__(self, botmaster):
-        self.botmaster = botmaster
-        self.master = botmaster.master
-
-        # lock to ensure builders are only sorted once at any time
-        self.pending_builders_lock = defer.DeferredLock()
-
-        # sorted list of names of builders that need their maybeStartBuild
-        # method invoked.
-        self._pending_builders = []
-        self.activity_lock = defer.DeferredLock()
-        self.active = False
-
-    def stopService(self):
-        # let the parent stopService succeed between activity; then the loop
-        # will stop calling itself, since self.running is false
-        d = self.activity_lock.acquire()
-        d.addCallback(lambda _ : service.Service.stopService(self))
-        d.addBoth(lambda _ : self.activity_lock.release())
-        return d
-
-    @defer.inlineCallbacks
-    def maybeStartBuildsOn(self, new_builders):
-        """
-        Try to start any builds that can be started right now.  This function
-        returns immediately, and promises to trigger those builders
-        eventually.
-
-        @param new_builders: names of new builders that should be given the
-        opportunity to check for new requests.
-        """
-        new_builders = set(new_builders)
-        existing_pending = set(self._pending_builders)
-
-        # if we won't add any builders, there's nothing to do
-        if new_builders < existing_pending:
-            return
-
-        # reset the list of pending builders; this is async, so begin
-        # by grabbing a lock
-        yield self.pending_builders_lock.acquire()
-
-        try:
-            # re-fetch existing_pending, in case it has changed while acquiring
-            # the lock
-            existing_pending = set(self._pending_builders)
-
-            # then sort the new, expanded set of builders
-            self._pending_builders = \
-                yield self._sortBuilders(list(existing_pending | new_builders))
-
-            # start the activity loop, if we aren't already working on that.
-            if not self.active:
-                self._activityLoop()
-        except Exception:
-            log.err(Failure(),
-                    "while attempting to start builds on %s" % self.name)
-
-        # release the lock unconditionally
-        self.pending_builders_lock.release()
-
-    @defer.inlineCallbacks
-    def _defaultSorter(self, master, builders):
-        timer = metrics.Timer("BuildRequestDistributor._defaultSorter()")
-        timer.start()
-        # perform an asynchronous schwarzian transform, transforming None
-        # into sys.maxint so that it sorts to the end
-        def xform(bldr):
-            d = defer.maybeDeferred(lambda :
-                    bldr.getOldestRequestTime())
-            d.addCallback(lambda time :
-                (((time is None) and None or time),bldr))
-            return d
-        xformed = yield defer.gatherResults(
-                [ xform(bldr) for bldr in builders ])
-
-        # sort the transformed list synchronously, comparing None to the end of
-        # the list
-        def nonecmp(a,b):
-            if a[0] is None: return 1
-            if b[0] is None: return -1
-            return cmp(a,b)
-        xformed.sort(cmp=nonecmp)
-
-        # and reverse the transform
-        rv = [ xf[1] for xf in xformed ]
-        timer.stop()
-        defer.returnValue(rv)
-
-    @defer.inlineCallbacks
-    def _sortBuilders(self, buildernames):
-        timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
-        timer.start()
-        # note that this takes and returns a list of builder names
-
-        # convert builder names to builders
-        builders_dict = self.botmaster.builders
-        builders = [ builders_dict.get(n)
-                     for n in buildernames
-                     if n in builders_dict ]
-
-        # find a sorting function
-        sorter = self.master.config.prioritizeBuilders
-        if not sorter:
-            sorter = self._defaultSorter
-
-        # run it
-        try:
-            builders = yield defer.maybeDeferred(lambda :
-                    sorter(self.master, builders))
-        except Exception:
-            log.msg("Exception prioritizing builders; order unspecified")
-            log.err(Failure())
-
-        # and return the names
-        rv = [ b.name for b in builders ]
-        timer.stop()
-        defer.returnValue(rv)
-
-    @defer.inlineCallbacks
-    def _activityLoop(self):
-        self.active = True
-
-        timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
-        timer.start()
-
-        while 1:
-            yield self.activity_lock.acquire()
-
-            # lock pending_builders, pop an element from it, and release
-            yield self.pending_builders_lock.acquire()
-
-            # bail out if we shouldn't keep looping
-            if not self.running or not self._pending_builders:
-                self.pending_builders_lock.release()
-                self.activity_lock.release()
-                break
-
-            bldr_name = self._pending_builders.pop(0)
-            self.pending_builders_lock.release()
-
-            try:
-                yield self._callABuilder(bldr_name)
-            except Exception:
-                log.err(Failure(),
-                        "from maybeStartBuild for builder '%s'" % (bldr_name,))
-
-            self.activity_lock.release()
-
-        timer.stop()
-
-        self.active = False
-        self._quiet()
-
-    def _callABuilder(self, bldr_name):
-        # get the actual builder object
-        bldr = self.botmaster.builders.get(bldr_name)
-        if not bldr:
-            return defer.succeed(None)
-
-        d = bldr.maybeStartBuild()
-        d.addErrback(log.err, 'in maybeStartBuild for %r' % (bldr,))
-        return d
-
-    def _quiet(self):
-        # shim for tests
-        pass # pragma: no cover
+        self.brd.maybeStartBuildsOn(self.builderNames)
 
 
 class DuplicateSlaveArbitrator(object):
@@ -683,5 +509,3 @@ class DuplicateSlaveArbitrator(object):
         self.new_slave_d = None
         log.msg("rejecting duplicate slave with exception")
         d.errback(Failure(RuntimeError("rejecting duplicate slave")))
-
-

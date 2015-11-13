@@ -459,6 +459,7 @@ class FakeChangesComponent(FakeDBComponent):
             revlink=change.revlink,
             properties=change.properties,
             repository=change.repository,
+            codebase=change.codebase,
             project=change.project)
         self.changes[changeid] = row
 
@@ -490,16 +491,37 @@ class FakeSchedulersComponent(FakeDBComponent):
             self.classifications[objectid] = {}
         return defer.succeed(None)
 
-    def getChangeClassifications(self, objectid, branch=-1):
+    def getChangeClassifications(self, objectid, branch=-1, repository=-1,
+                                 project=-1, codebase=-1):
         classifications = self.classifications.setdefault(objectid, {})
-        if branch is not -1:
+
+        sentinel = dict(branch=object(), repository=object(),
+                        project=object(), codebase=object())
+
+        if branch != -1:
             # filter out the classifications for the requested branch
-            change_branches = dict(
-                    (id, c['branch'])
-                    for id, c in self.db.changes.changes.iteritems() )
             classifications = dict(
                     (k,v) for (k,v) in classifications.iteritems()
-                    if k in change_branches and change_branches[k] == branch )
+                    if self.db.changes.changes.get(k, sentinel)['branch'] == branch )
+            
+        if repository != -1:
+            # filter out the classifications for the requested branch
+            classifications = dict(
+                    (k,v) for (k,v) in classifications.iteritems()
+                    if self.db.changes.changes.get(k, sentinel)['repository'] == repository )
+            
+        if project != -1:
+            # filter out the classifications for the requested branch
+            classifications = dict(
+                    (k,v) for (k,v) in classifications.iteritems()
+                    if self.db.changes.changes.get(k, sentinel)['project'] == project )
+            
+        if codebase != -1:
+            # filter out the classifications for the requested branch
+            classifications = dict(
+                    (k,v) for (k,v) in classifications.iteritems()
+                    if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase )
+            
         return defer.succeed(classifications)
 
     # fake methods
@@ -766,6 +788,9 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if 'brids' in expected_buildset:
             buildset['brids'] = self.allBuildRequests(bsid)
 
+        if 'builders' in expected_buildset:
+            buildset['builders'] = self.allBuildRequests(bsid).keys()
+
         for ss in dictOfssDict.itervalues():
             if 'id' in ss:
                 del ss['id']
@@ -906,7 +931,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             return defer.succeed(None)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-                         bsid=None):
+                         bsid=None, results=None, mergebrids=None):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -930,8 +955,20 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             if bsid is not None:
                 if br.buildsetid != bsid:
                     continue
+            if results is not None:
+                if br.results != results:
+                    continue
+            if mergebrids is not None:
+                if mergebrids == "exclude":
+                    if br.mergebrid is not None:
+                        continue
+                elif mergebrids and br.mergebrid not in mergebrids:
+                        continue
             rv.append(self._brdictFromRow(br))
         return defer.succeed(rv)
+
+    def getBuildRequestInQueue(self, buildername, sorted=True):
+        return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
 
     def claimBuildRequests(self, brids, claimed_at=None):
         for brid in brids:
@@ -949,10 +986,18 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 objectid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
-    def unclaimBuildRequests(self, brids, _master_objectid=None):
+    def unclaimBuildRequests(self, brids, results=None, _master_objectid=None):
         for brid in brids:
-            if brid in self.claims:
-                del self.claims[brid]
+            try:
+                self.claims.pop(brid)
+            except KeyError:
+                print "trying to unclaim brid %d, but it's not claimed" % brid
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+
+        return defer.succeed(None)
+
+    def updateBuildRequests(self, brids, results):
         return defer.succeed(None)
 
     def completeBuildRequests(self, brids, results):
@@ -1026,8 +1071,12 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
 
-    def mergeBuildingRequest(self, requests, brids, number):
-        return self.claimBuildRequests(brids)
+    def mergeBuildingRequest(self, requests, brids, number, claim=True):
+        if claim:
+            return self.claimBuildRequests(brids)
+
+    def maybeUpdateMergedBrids(self, brids):
+        return defer.succeed(None)
 
     def reclaimBuildRequests(self, brids):
         for brid in brids:
@@ -1042,7 +1091,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getUnclaimedBuildRequest(self, sorted=False):
-
         rv = []
         for bs in self.reqs.values():
             rv.append(dict(brid=bs.id, buildername=bs.buildername, reason=bs.reason))
@@ -1133,6 +1181,9 @@ class FakeBuildsComponent(FakeDBComponent):
                                 finish_time=epoch2datetime(row.finish_time)))
                
         return defer.succeed(ret)
+
+    def getBuildNumberForRequest(self, brid):
+        return defer.succeed([])
 
     def getBuildsAndResultForRequest(self, brid):
         ret = []

@@ -181,7 +181,7 @@ The default value can reference other properties, e.g., ::
 
     command=Property('command', default=Property('default-command'))
 
-.. Index:: single; Properties; Interpolate
+.. index:: single: Properties; Interpolate
 
 .. _Interpolate:
 
@@ -193,7 +193,7 @@ example above, it replaces an argument to ``echo``.  Often, properties need to
 be interpolated into strings, instead.  The tool for that job is
 :ref:`Interpolate`.
 
-The more common pattern is to use python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
+The more common pattern is to use Python dictionary-style string interpolation by using the ``%(prop:<propname>)s`` syntax.
 In this form, the property name goes in the parentheses, as above.
 A common mistake is to omit the trailing "s", leading to a rather obscure error from Python ("ValueError: unsupported format character"). ::
 
@@ -262,11 +262,11 @@ Here, ``%s`` is used as a placeholder, and the substitutions (which may themselv
 
 .. note:
 
-  Like python, you can use either positional interpolation *or*
+  Like Python, you can use either positional interpolation *or*
   dictionary-style interpolation, not both.  Thus you cannot use a string
   like ``Interpolate("foo-%(src::revision)s-%s", "branch")``.
 
-.. index:: single; Properties; Renderer
+.. index:: single: Properties; Renderer
 
 .. _Renderer:
 
@@ -291,9 +291,22 @@ The function receives an :class:`~buildbot.interfaces.IProperties` object, which
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
-.. index:: single; Properties; WithProperties
+.. index:: single: Properties; WithProperties
 
 .. _WithProperties:
+
+FlattenList
++++++++++++
+
+If nested list should be flatten for some renderables, FlattenList could be used.
+For example::
+
+   f.addStep(ShellCommand(command=[ 'make' ], descriptionDone=FlattenList([ 'make ', [ 'done' ]]))
+
+``descriptionDone`` would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
+This is useful when a list-returning property is used in renderables.
+
+.. note:: ShellCommand automatically flattens nested lists in its ``command`` argument, so there is no need to use ``FlattenList`` for it.
 
 WithProperties
 ++++++++++++++
@@ -320,7 +333,7 @@ create a tarball with a name like
 
 .. index:: unsupported format character
 
-The more common pattern is to use python dictionary-style string interpolation
+The more common pattern is to use Python dictionary-style string interpolation
 by using the ``%(propname)s`` syntax. In this form, the property name goes in
 the parentheses, as above.  A common mistake is to omit the trailing "s",
 leading to a rather obscure error from Python ("ValueError: unsupported format
@@ -358,7 +371,7 @@ Although these are similar to shell substitutions, no other
 substitutions are currently supported, and ``replacement`` in the
 above cannot contain more substitutions.
 
-Note: like python, you can use either positional interpolation *or*
+Note: like Python, you can use either positional interpolation *or*
 dictionary-style interpolation, not both. Thus you cannot use a string like
 ``WithProperties("foo-%(revision)s-%s", "branch")``.
 
@@ -369,7 +382,7 @@ If the options described above are not sufficient, more complex substitutions ca
 
 Renderables are objects providing the :class:`~buildbot.interfaces.IRenderable` interface.
 That interface is simple - objects must provide a `getRenderingFor` method.
-The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string.
+The method should take one argument - an :class:`~buildbot.interfaces.IProperties` provider - and should return a string or a deferred firing with a string.
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
@@ -398,4 +411,4 @@ This is equivalent to::
         return time.clock()
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)', now=now)])
 
-Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a renderer can be used directly.
+Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a function decorated with :func:`renderer` can be used directly.

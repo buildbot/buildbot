@@ -19,14 +19,15 @@ import types
 from zope.interface import implements
 from twisted.python import log, components
 from twisted.python.failure import Failure
-from twisted.internet import reactor, defer, error
+from twisted.internet import defer, error
 
-from buildbot import interfaces, locks
+from buildbot import interfaces
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, SKIPPED, worst_status, NOT_REBUILT, DEPENDENCY_FAILURE
+  RETRY, SKIPPED, worst_status, NOT_REBUILT, DEPENDENCY_FAILURE, RESUME
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 from buildbot.process import metrics, properties
+from buildbot.util.eventual import eventually
 
 
 class Build(properties.PropertiesMixin):
@@ -65,7 +66,7 @@ class Build(properties.PropertiesMixin):
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
-        self.releaseLockInstanse = None
+        self.releaseLockInstance = None
         # build a source stamp
         self.sources = requests[0].mergeSourceStampsWith(requests[1:])
         self.reason = requests[0].reason
@@ -86,8 +87,10 @@ class Build(properties.PropertiesMixin):
         """
         self.builder = builder
 
-    def setLocks(self, locks):
-        self.locks = locks
+    def setLocks(self, lockList):
+        # convert all locks into their real forms
+        self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
+                        for access in lockList ]
 
     def setSlaveEnvironment(self, env):
         self.slaveEnvironment = env
@@ -158,8 +161,8 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        buildmaster = self.builder.botmaster.parent
-        props.updateFromProperties(buildmaster.config.properties)
+        master = self.builder.botmaster.master
+        props.updateFromProperties(master.config.properties)
 
         # from the SourceStamps, which have properties via Change
         for change in self.allChanges():
@@ -195,11 +198,11 @@ class Build(properties.PropertiesMixin):
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
         if slavebuilder.slave.slave_basedir:
-            self.setProperty("workdir",
+            self.setProperty("builddir",
                     self.path_module.join(
                         slavebuilder.slave.slave_basedir,
                         self.builder.config.slavebuilddir),
-                    "slave")
+                    "Slave")
 
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
@@ -219,20 +222,11 @@ class Build(properties.PropertiesMixin):
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
-        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
+        slavebuilder.slave.updateStatusBuildStarted(build=build_status)
 
-        # convert all locks into their real forms
-        lock_list = []
-        for access in self.locks:
-            if not isinstance(access, locks.LockAccess):
-                # Buildbot 0.7.7 compability: user did not specify access
-                access = access.defaultAccess()
-            lock = self.builder.botmaster.getLockByID(access.lockid)
-            lock_list.append((lock, access))
-        self.locks = lock_list
         # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder.slave), la)
-                       for l, la in self.locks]
+        self.locks = [(l.getLock(self.slavebuilder.slave), a) 
+                        for l, a in self.locks ]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
 
@@ -244,11 +238,14 @@ class Build(properties.PropertiesMixin):
             return res
         d.addBoth(_uncount_build)
 
-        def _release_slave(res, slave, bs):
-            self.slavebuilder.buildFinished()
-            slave.updateSlaveStatus(buildFinished=bs)
-            return res
-        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
+        @defer.inlineCallbacks
+        def _release_slave(res, slave, build_status):
+            slavebuilder.buildFinished(slave)
+            if slave and build_status:
+                yield slave.updateStatusBuildFinished(result=res, build=build_status)
+            defer.returnValue(res)
+        d.addCallback(_release_slave, slavebuilder.slave, build_status)
+
 
         try:
             self.setupBuild(expectations) # create .steps
@@ -264,7 +261,7 @@ class Build(properties.PropertiesMixin):
             self.builder.builder_status.addPointEvent(["setupBuild",
                                                        "exception"])
             self.finished = True
-            self.results = FAILURE
+            self.results = EXCEPTION
             self.deferred = None
             d.callback(self)
             return d
@@ -272,6 +269,14 @@ class Build(properties.PropertiesMixin):
         self.build_status.buildStarted(self)
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
+
+    @staticmethod
+    def canStartWithSlavebuilder(lockList, slavebuilder):
+        for lock, access in lockList:
+            slave_lock = lock.getLock(slavebuilder.slave)
+            if not slave_lock.isAvailable(None, access):
+                return False
+        return True
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
@@ -295,38 +300,85 @@ class Build(properties.PropertiesMixin):
     def _startBuild_2(self, res):
         self.startNextStep()
 
-    def setupBuild(self, expectations):
-        # create the actual BuildSteps. If there are any name collisions, we
-        # add a count to the loser until it is unique.
-        self.steps = []
-        self.stepStatuses = {}
+    def setupStep(self, factory, stepnames):
+        step = factory.buildStep()
+        step.setBuild(self)
+        step.setBuildSlave(self.slavebuilder.slave)
+        if callable(self.workdir):
+            step.setDefaultWorkdir(self.workdir(self.sources))
+        else:
+            step.setDefaultWorkdir(self.workdir)
+        name = step.name
+        if stepnames.has_key(name):
+            count = stepnames[name]
+            count += 1
+            stepnames[name] = count
+            name = step.name + "_%d" % count
+        else:
+            stepnames[name] = 0
+        step.name = name
+        return name, step
+
+    def setupStepStatus(self, factory, stepnames, index=None):
+        name, step = self.setupStep(factory, stepnames)
+        step_status = self.build_status.getStepByName(name)
+        stepNotAddedOrStepAlreadyExecuted = step_status is None or step_status.finished is not None
+        if stepNotAddedOrStepAlreadyExecuted:
+            name = name + "_%s" % self.slavename if step_status else name
+            step_status = self.build_status.addStepWithName(name, type(step), index)
+        step.setStepStatus(step_status)
+        sp = None
+        if self.useProgress:
+            sp = step.setupProgress()
+        return sp, step
+
+    def maybeAddGlobalFactoryInitialSteps(self, laststep, stepnames, stepProgresses):
+        if 'initialSteps' not in self.builder.botmaster.master.config.globalFactory:
+            return
+        intialSteps = self.builder.botmaster.master.config.globalFactory['initialSteps']
+        if intialSteps and intialSteps.steps:
+            status_index = self.build_status.steps.index(laststep) + 1 if laststep else 0
+            for factory in intialSteps.steps:
+                index = intialSteps.steps.index(factory)
+                sp, step = self.setupStepStatus(factory, stepnames, index=status_index+index)
+                self.steps.insert(index, step)
+                if sp:
+                    stepProgresses.insert(index, sp)
+
+    def maybeAddGlobalFactoryLastSteps(self, stepnames, stepProgresses):
+        if 'lastSteps' not in self.builder.botmaster.master.config.globalFactory:
+            return
+        lastSteps = self.builder.botmaster.master.config.globalFactory['lastSteps']
+        if lastSteps and lastSteps.steps:
+            for factory in lastSteps.steps:
+                sp, step = self.setupStepStatus(factory, stepnames)
+                self.steps.append(step)
+                if sp:
+                    stepProgresses.append(sp)
+
+    def createSteps(self, sps):
         stepnames = {}
-        sps = []
+        laststep = None
 
         for factory in self.stepFactories:
-            step = factory.buildStep()
-            step.setBuild(self)
-            step.setBuildSlave(self.slavebuilder.slave)
-            if callable (self.workdir):
-                step.setDefaultWorkdir (self.workdir (self.sources))
-            else:
-                step.setDefaultWorkdir (self.workdir)
-            name = step.name
-            if stepnames.has_key(name):
-                count = stepnames[name]
-                count += 1
-                stepnames[name] = count
-                name = step.name + "_%d" % count
-            else:
-                stepnames[name] = 0
-            step.name = name
-            self.steps.append(step)
+            name, step = self.setupStep(factory, stepnames)
 
             # tell the BuildStatus about the step. This will create a
             # BuildStepStatus and bind it to the Step.
-            step_status = self.build_status.addStepWithName(name, type(step))
-            step.setStepStatus(step_status)
+            if self.build_status.results == RESUME:
+                step_status = self.build_status.getStepByName(name)
+                if step_status is None:
+                    # previous build not saved properly
+                    self.build_status.retryResume()
+            else:
+                step_status = self.build_status.addStepWithName(name, type(step))
 
+            if step_status.finished:
+                laststep = step_status
+                continue
+
+            step.setStepStatus(step_status)
+            self.steps.append(step)
             sp = None
             if self.useProgress:
                 # XXX: maybe bail if step.progressMetrics is empty? or skip
@@ -337,6 +389,17 @@ class Build(properties.PropertiesMixin):
             if sp:
                 sps.append(sp)
 
+        self.maybeAddGlobalFactoryInitialSteps(laststep, stepnames=stepnames, stepProgresses=sps)
+        self.maybeAddGlobalFactoryLastSteps(stepnames=stepnames, stepProgresses=sps)
+
+    def setupBuild(self, expectations):
+        # create the actual BuildSteps. If there are any name collisions, we
+        # add a count to the loser until it is unique.
+        self.steps = []
+        self.stepStatuses = {}
+        sps = []
+
+        self.createSteps(sps)
         # Create a buildbot.status.progress.BuildProgress object. This is
         # called once at startup to figure out how to build the long-term
         # Expectations object, and again at the start of each build to get a
@@ -373,9 +436,10 @@ class Build(properties.PropertiesMixin):
         self.text = [] # list of text string lists (text2)
 
     @defer.inlineCallbacks
-    def getBuildChain(self, brid):
+    def getBuildChain(self):
         master = self.builder.botmaster.parent
-        buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(self.requests, brid)
+        startbrid = self.requests[0].buildChainID if len(self.requests) > 0 and self.requests[0].buildChainID else None
+        buildchain = yield master.db.buildrequests.getBuildRequestBuildChain(startbrid)
         defer.returnValue(buildchain)
 
     def getNextStep(self):
@@ -386,6 +450,7 @@ class Build(properties.PropertiesMixin):
             return None
         if not self.remote:
             return None
+
         if self.terminate or self.stopped:
             # Run any remaining alwaysRun steps, and skip over the others
             while True:
@@ -396,6 +461,7 @@ class Build(properties.PropertiesMixin):
                     return None
         else:
             return self.steps.pop(0)
+
 
     def startNextStep(self):
         try:
@@ -560,7 +626,9 @@ class Build(properties.PropertiesMixin):
             # XXX: also test a 'timing consistent' flag?
             log.msg(" setting expectations for next time")
             self.builder.setExpectations(self.progress)
-        reactor.callLater(0, self.releaseLocks)
+        # TODO: check why callbacks are not triggered when stopping master and retrying builds
+        # this maybe cause by the upstream merged
+        eventually(self.releaseLocks)
         self.deferred.callback(self)
         self.deferred = None
 
@@ -571,8 +639,8 @@ class Build(properties.PropertiesMixin):
             if lock.isOwner(self, access):
                 lock.release(self, access)
             else:
-                if self.releaseLockInstanse:
-                    lock.release(self.releaseLockInstanse, access)
+                if self.releaseLockInstance:
+                    lock.release(self.releaseLockInstance, access)
                 else:
                     # This should only happen if we've been interrupted
                     assert self.stopped

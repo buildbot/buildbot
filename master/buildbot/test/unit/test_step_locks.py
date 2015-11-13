@@ -7,6 +7,7 @@ from buildbot.steps import artifact
 from zope.interface import implements
 from buildbot import interfaces
 from buildbot.test.fake.fakebuild import  FakeStepFactory, FakeBuildStatus
+from buildbot.test.fake.fakemaster import FakeMaster
 
 class FakeRequest:
     def __init__(self):
@@ -22,17 +23,8 @@ class FakeRequest:
     def mergeReasons(self, others):
         return self.reason
 
-class FakeMaster:
-    def __init__(self):
-        self.locks = {}
-        self.parent = Mock()
 
-    def getLockByID(self, lockid):
-        if not lockid in self.locks:
-            self.locks[lockid] = lockid.lockClass(lockid)
-        return self.locks[lockid]
-
-class TestBuild(unittest.TestCase):
+class TestStepLocks(unittest.TestCase):
 
     def setUp(self):
         r = FakeRequest()
@@ -43,8 +35,14 @@ class TestBuild(unittest.TestCase):
 
         self.build = Build([r])
         self.builder = Mock()
-        self.builder.botmaster = self.master
+        self.builder.botmaster = self.master.botmaster
         self.build.setBuilder(self.builder)
+
+        self.build_status = FakeBuildStatus()
+        self.step_status = Mock()
+        self.step_status.finished = None
+        self.build_status.addStepWithName = lambda x, y: self.step_status
+
 
     def test_acquire_build_Lock_step(self):
         b = self.build
@@ -56,7 +54,7 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(len(b.locks), 0)
         step = artifact.AcquireBuildLocks(locks=[l.access('exclusive')])
         b.setStepFactories([FakeStepFactory(step)])
-        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        b.startBuild(self.build_status, None, slavebuilder)
         b.currentStep.start()
         self.assertEqual(len(b.locks), 1)
         self.assertTrue(b.locks[0][0].owners[0][0], step)
@@ -73,7 +71,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(step), FakeStepFactory(step2)])
         self.assertEqual(len(b.locks), 0)
 
-        b.startBuild(FakeBuildStatus(), None, slavebuilder)
+        b.startBuild(self.build_status, None, slavebuilder)
         b.currentStep.start()
         self.assertTrue(b.locks[0][0].owners[0][0], step)
 

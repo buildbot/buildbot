@@ -56,6 +56,34 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return [ self._bdictFromRow(row) for row in res.fetchall() ]
         return self.db.pool.do(thd)
 
+    def getBuildNumberForRequest(self, brid):
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = sa.select(columns=[sa.func.max(tbl.c.number).label("number")]).where(tbl.c.brid == brid)
+            res = conn.execute(q)
+            row = res.fetchone()
+            if row:
+                return row.number
+            return None
+        return self.db.pool.do(thd)
+
+    def getBuildNumbersForRequests(self, brids):
+        def thd(conn):
+            tbl = self.db.model.builds
+            q = sa.select(columns=[sa.func.max(tbl.c.number).label("number"), tbl.c.brid])\
+                .where(tbl.c.brid.in_(brids))\
+                .group_by(tbl.c.number, tbl.c.brid)
+            res = conn.execute(q)
+            rows = res.fetchall()
+            rv = []
+            if rows:
+                for row in rows:
+                    if row.number not in rv:
+                        rv.append(row.number)
+            res.close()
+            return rv
+        return self.db.pool.do(thd)
+
     def addBuild(self, brid, number, slavename=None, _reactor=reactor):
         def thd(conn):
             start_time = _reactor.seconds()
@@ -112,6 +140,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             lastBuilds = {}
             maxSearch = num_builds if num_builds < 200 else 200
+            resumeBuilds = [9, -1]
 
             q = sa.select(columns=[buildrequests_tbl.c.buildername, builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
@@ -133,6 +162,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             q = q.where(buildrequests_tbl.c.mergebrid == None)\
                 .where(builds_tbl.c.slavename == slavename)\
+                .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
                 .distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
                 .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
 
@@ -162,12 +192,14 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             lastBuilds = []
             maxSearch = num_builds if num_builds < 200 else 200
+            resumeBuilds = [9, -1]
 
             q = sa.select(columns=[builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
                                                           & (builds_tbl.c.finish_time != None))).\
                 where(buildrequests_tbl.c.mergebrid == None)\
+                .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
                 .where(buildrequests_tbl.c.buildername == buildername)
 
             #TODO: support filter by RETRY result

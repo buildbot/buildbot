@@ -35,6 +35,7 @@ class Authz(object):
             'stopChange',
             'cleanShutdown',
             'showUsersPage',
+            'pauseSlave',
     ]
 
     defaultUserSettings = {

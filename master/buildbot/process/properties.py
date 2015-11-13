@@ -18,7 +18,7 @@ import re
 import warnings
 import weakref
 from buildbot import config, util
-from buildbot.util import json
+from buildbot.util import json, flatten
 from buildbot.interfaces import IRenderable, IProperties
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
@@ -29,14 +29,14 @@ class Properties(util.ComparableMixin):
     I represent a set of properties that can be interpolated into various
     strings in buildsteps.
 
-    @ivar properties: dictionary mapping property values to tuples 
+    @ivar properties: dictionary mapping property values to tuples
         (value, source), where source is a string identifing the source
         of the property.
 
     Objects of this class can be read like a dictionary -- in this case,
     only the property value is returned.
 
-    As a special case, a property value of None is returned as an empty 
+    As a special case, a property value of None is returned as an empty
     string when used as a mapping.
     """
 
@@ -272,7 +272,7 @@ class WithProperties(util.ComparableMixin):
     """
 
     implements(IRenderable)
-    compare_attrs = ('fmtstring', 'args')
+    compare_attrs = ('fmtstring', 'args', 'lambda_subs')
 
     def __init__(self, fmtstring, *args, **lambda_subs):
         self.fmtstring = fmtstring
@@ -301,8 +301,10 @@ class WithProperties(util.ComparableMixin):
 
 
 _notHasKey = object() ## Marker object for _Lookup(..., hasKey=...) default
-class _Lookup(util.ComparableMixin):
+class _Lookup(util.ComparableMixin, object):
     implements(IRenderable)
+
+    compare_attrs = ('value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
 
     def __init__(self, value, index, default=None,
             defaultWhenFalse=True, hasKey=_notHasKey,
@@ -313,6 +315,20 @@ class _Lookup(util.ComparableMixin):
         self.defaultWhenFalse = defaultWhenFalse
         self.hasKey = hasKey
         self.elideNoneAs = elideNoneAs
+
+    def __repr__(self):
+        return '_Lookup(%r, %r%s%s%s%s)' % (
+                self.value,
+                self.index,
+                ', default=%r' % (self.default,)
+                    if self.default is not None else '',
+                ', defaultWhenFalse=False'
+                    if not self.defaultWhenFalse else '',
+                ', hasKey=%r' % (self.hasKey,)
+                    if self.hasKey is not _notHasKey else '',
+                ', elideNoneAs=%r'% (self.elideNoneAs,)
+                    if self.elideNoneAs is not None else '')
+
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
@@ -350,8 +366,11 @@ class _PropertyDict(object):
         return build.getProperties()
 _thePropertyDict = _PropertyDict()
 
-class _SourceStampDict(object):
+class _SourceStampDict(util.ComparableMixin, object):
     implements(IRenderable)
+
+    compare_attrs = ('codebase',)
+
     def __init__(self, codebase):
         self.codebase = codebase
     def getRenderingFor(self, build):
@@ -361,36 +380,49 @@ class _SourceStampDict(object):
         else:
             return {}
 
-
-class _Lazy(object):
+class _Lazy(util.ComparableMixin, object):
     implements(IRenderable)
+
+    compare_attrs = ('value',)
     def __init__(self, value):
         self.value = value
     def getRenderingFor(self, build):
         return self.value
- 
 
-class Interpolate(util.ComparableMixin): 
-    """ 
-    This is a marker class, used fairly widely to indicate that we 
-    want to interpolate build properties. 
-    """ 
- 
-    implements(IRenderable) 
-    compare_attrs = ('fmtstring', 'args', 'kwargs') 
+    def __repr__(self):
+        return '_Lazy(%r)' % self.value
+
+
+class Interpolate(util.ComparableMixin, object):
+    """
+    This is a marker class, used fairly widely to indicate that we
+    want to interpolate build properties.
+    """
+
+    implements(IRenderable)
+    compare_attrs = ('fmtstring', 'args', 'kwargs')
 
     identifier_re = re.compile('^[\w-]*$')
- 
-    def __init__(self, fmtstring, *args, **kwargs): 
-        self.fmtstring = fmtstring 
+
+    def __init__(self, fmtstring, *args, **kwargs):
+        self.fmtstring = fmtstring
         self.args = args
-        self.kwargs = kwargs 
+        self.kwargs = kwargs
         if self.args and self.kwargs:
             config.error("Interpolate takes either positional or keyword "
                          "substitutions, not both.")
         if not self.args:
             self.interpolations = {}
             self._parse(fmtstring)
+
+    # TODO: add case below for when there's no args or kwargs..
+    def __repr__(self):
+        if self.args:
+            return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
+        elif self.kwargs:
+            return 'Interpolate(%r, **%r)' % (self.fmtstring, self.kwargs)
+        else:
+            return 'Interpolate(%r)' % (self.fmtstring,)
 
     @staticmethod
     def _parse_prop(arg):
@@ -401,6 +433,8 @@ class Interpolate(util.ComparableMixin):
         if not Interpolate.identifier_re.match(prop):
             config.error("Property name must be alphanumeric for prop Interpolation '%s'" % arg)
             prop = repl = None
+        if prop == "workdir":
+            prop = "builddir"
         return _thePropertyDict, prop, repl
 
     @staticmethod
@@ -414,7 +448,8 @@ class Interpolate(util.ComparableMixin):
                 repl = None
             except ValueError:
                 config.error("Must specify both codebase and attribute for src Interpolation '%s'" % arg)
-                codebase = attr = repl = None
+                return {}, None, None
+
         if not Interpolate.identifier_re.match(codebase):
             config.error("Codebase must be alphanumeric for src Interpolation '%s'" % arg)
             codebase = attr = repl = None
@@ -520,8 +555,8 @@ class Interpolate(util.ComparableMixin):
                 if not self.interpolations.has_key(key):
                     config.error("invalid Interpolate default type '%s'" % repl[0])
 
-    def getRenderingFor(self, props): 
-        props = props.getProperties() 
+    def getRenderingFor(self, props):
+        props = props.getProperties()
         if self.args:
             d = props.render(self.args)
             d.addCallback(lambda args:
@@ -570,10 +605,39 @@ class Property(util.ComparableMixin):
             else:
                 return props.render(self.default)
 
-class _Renderer(object):
+class FlattenList(util.ComparableMixin):
+    """
+    An instance of this class flattens all nested lists in a list
+    """
     implements(IRenderable)
+
+    compare_attrs = ('nestedlist')
+
+    def __init__(self, nestedlist, types=(list, tuple)):
+        """
+        @param nestedlist: a list of values to render
+        @param types: only flatten these types. defaults to (list, tuple)
+        """
+        self.nestedlist = nestedlist
+        self.types = types
+
+    def getRenderingFor(self, props):
+        d = props.render(self.nestedlist)
+        def flat(r):
+            return flatten(r, self.types)
+        d.addCallback(flat)
+        return d
+
+class _Renderer(util.ComparableMixin, object):
+    implements(IRenderable)
+
+    compare_attrs = ('getRenderingFor',)
+
     def __init__(self, fn):
         self.getRenderingFor = fn
+
+    def __repr__(self):
+        return 'renderer(%r)' % (self.getRenderingFor,)
 
 def renderer(fn):
     return _Renderer(fn)

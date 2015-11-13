@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 import copy
 
-import logging
 from zope.interface import implements
 from twisted.python import failure, log
 from twisted.application import service
@@ -43,6 +42,13 @@ class ScheduleOnMultipleSlavesMixin(object):
 
         return False
 
+    def getFirstBuilderName(self, builderNames):
+        if len(builderNames) > 0:
+            if isinstance(builderNames, set):
+                return list(builderNames)[0]
+            return builderNames[0]
+        return None
+
     def addBuildForEachSlave(self, function, **kwargs):
         #Check for properties existing
         properties = None
@@ -59,9 +65,10 @@ class ScheduleOnMultipleSlavesMixin(object):
         #Get all the slaves
         slaves = []
         if kwargs.has_key("builderNames"):
-            builder_name = kwargs["builderNames"][0]
+            builderNames = kwargs["builderNames"]
+            builder_name = self.getFirstBuilderName(builderNames)
         else:
-            builder_name = self.builderNames[0]
+            builder_name = self.getFirstBuilderName(self.builderNames)
         builder = None
         for b in self.master.botmaster.getBuilders():
             if b.name == builder_name:
@@ -231,9 +238,9 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
             if change_filter and not change_filter.filter_change(change):
                 return
             if change.codebase not in self.codebases:
-                log.msg('change contains codebase %s that is not processed by'
-                    ' scheduler %s' % (change.codebase, self.name),
-                    logLevel=logging.DEBUG)
+                log.msg(format='change contains codebase %(codebase)s that is'
+                    'not processed by scheduler %(scheduler)s',
+                    codebase=change.codebase, name=self.name)
                 return
             if fileIsImportant:
                 try:
@@ -249,11 +256,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
 
             # use change_consumption_lock to ensure the service does not stop
             # while this change is being processed
-            d = self._change_consumption_lock.acquire()
-            d.addCallback(lambda _ : self.gotChange(change, important))
-            def release(x):
-                self._change_consumption_lock.release()
-            d.addBoth(release)
+            d = self._change_consumption_lock.run(self.gotChange, change, important)
             d.addErrback(log.err, 'while processing change')
         self._change_subscription = self.master.subscribeToChanges(changeCallback)
 
@@ -264,14 +267,11 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
 
         # acquire the lock change consumption lock to ensure that any change
         # consumption is complete before we are done stopping consumption
-        d = self._change_consumption_lock.acquire()
-        def stop(x):
+        def stop():
             if self._change_subscription:
                 self._change_subscription.unsubscribe()
                 self._change_subscription = None
-            self._change_consumption_lock.release()
-        d.addBoth(stop)
-        return d
+        return self._change_consumption_lock.run(stop)
 
     def gotChange(self, change, important):
         """
@@ -392,6 +392,27 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
     @defer.inlineCallbacks
     def addBuildsetForSourceStampSetDetails(self, reason, sourcestamps,
                                             properties, triggeredbybrid=None, builderNames=None):
+
+        # TODO: skip adding this if a retry and request are already in the db
+        # in this case we should fetch them and return that list
+
+        if triggeredbybrid is not None:
+
+            if builderNames is None:
+                builderNames = self.builderNames
+
+            stepname = properties.getProperty('stepname', None)
+
+            if stepname:
+                (bsid, brids) = yield self.master.db.buildrequests\
+                    .getBuildRequestsTriggeredByScheduler(self.name,
+                                                          stepname,
+                                                          triggeredbybrid)
+
+                if brids and brids.keys() == builderNames:
+                    defer.returnValue((bsid, brids))
+                    return
+
         if sourcestamps is None:
             sourcestamps = {}
 
@@ -413,7 +434,7 @@ class BaseScheduler(service.MultiService, ComparableMixin, StateMixin, ScheduleO
 
             yield self.master.db.sourcestamps.addSourceStamp(
                         codebase=codebase,
-                        repository=ss.get('repository', None),
+                        repository=ss.get('repository', ''),
                         branch=ss.get('branch', None),
                         revision=revision,
                         project=ss.get('project', ''),

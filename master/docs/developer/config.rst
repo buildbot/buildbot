@@ -234,6 +234,14 @@ Builder Configuration
 
         The builder's nextSlave callable.
 
+    .. py:attribute:: nextBuild
+
+        The builder's nextBuild callable.
+
+    .. py:attribute:: canStartBuild
+
+        The builder's canStartBuild callable.
+
     .. py:attribute:: locks
 
         The builder's locks.
@@ -249,6 +257,10 @@ Builder Configuration
     .. py:attribute:: mergeRequests
 
         The builder's mergeRequests callable.
+
+    .. py:attribute:: description
+
+        The builder's description, displayed in the web status.
 
 Error Handling
 ==============

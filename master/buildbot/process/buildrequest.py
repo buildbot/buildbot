@@ -19,7 +19,8 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces, sourcestamp
 from buildbot.process import properties
-from buildbot.status.results import CANCELED
+from buildbot.status.results import CANCELED, RESUME
+from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.db import buildrequests
 
 class BuildRequest(object):
@@ -87,8 +88,17 @@ class BuildRequest(object):
 
         @returns: L{BuildRequest}, via Deferred
         """
+        def updateRequest(br):
+            if 'results' in brdict and brdict['results'] != br.results:
+                br.results = brdict['results']
+            if 'slavepool' in brdict and brdict['slavepool'] != br.slavepool:
+                br.slavepool = brdict['slavepool']
+            return br
+
         cache = master.caches.get_cache("BuildRequests", cls._make_br)
-        return cache.get(brdict['brid'], brdict=brdict, master=master)
+        d = cache.get(brdict['brid'], brdict=brdict, master=master)
+        d.addCallback(updateRequest)
+        return d
 
     @classmethod
     @defer.inlineCallbacks
@@ -108,6 +118,8 @@ class BuildRequest(object):
             return brid
 
         buildrequest.buildChainID = getBuilChainID()
+        buildrequest.slavepool = brdict['slavepool'] if 'slavepool' in brdict else None
+        buildrequest.results = brdict['results'] if 'results' in brdict and brdict['results'] is not None else None
 
         # fetch the buildset to get the reason
         buildset = yield master.db.buildsets.getBuildset(brdict['buildsetid'])
@@ -226,17 +238,21 @@ class BuildRequest(object):
     def cancelBuildRequest(self):
         # first, try to claim the request; if this fails, then it's too late to
         # cancel the build anyway
-        try:
-            yield self.master.db.buildrequests.claimBuildRequests([self.id])
-        except buildrequests.AlreadyClaimedError:
-            log.msg("build request already claimed; cannot cancel")
-            return
 
-        # then complete it with 'FAILURE'; this is the closest we can get to
-        # cancelling a request without running into trouble with dangling
-        # references.
-        yield self.master.db.buildrequests.completeBuildRequests([self.id],
-                                                                CANCELED)
+        if self.results == RESUME:
+            yield self.master.db.buildrequests.cancelResumeBuildRequests(self.id)
+        else:
+            try:
+                yield self.master.db.buildrequests.claimBuildRequests([self.id])
+            except buildrequests.AlreadyClaimedError:
+                log.msg("build request already claimed; cannot cancel")
+                return
+
+            # then complete it with 'FAILURE'; this is the closest we can get to
+            # cancelling a request without running into trouble with dangling
+            # references.
+            yield self.master.db.buildrequests.completeBuildRequests([self.id],
+                                                                    CANCELED)
 
         # and let the master know that the enclosing buildset may be complete
         yield self.master.maybeBuildsetComplete(self.bsid)
@@ -259,6 +275,15 @@ class BuildRequestControl:
     def unsubscribe(self, observer):
         raise NotImplementedError
 
+    @defer.inlineCallbacks
     def cancel(self):
         d = self.original_request.cancelBuildRequest()
+
+        if self.original_request.results== RESUME:
+            brs = BuildRequestStatus(self.original_builder.name, self.brid, self.original_builder.master.status)
+            brsdict = yield brs.asDict_async()
+            if 'lastBuildNumber' in brsdict and brsdict['lastBuildNumber']:
+                d.addCallback(lambda _:
+                              self.original_builder.builder_status.cancelBuildOnResume(brsdict['lastBuildNumber']))
+
         d.addErrback(log.err, 'while cancelling build request')

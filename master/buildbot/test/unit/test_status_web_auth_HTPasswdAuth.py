@@ -23,11 +23,13 @@ import imp
 from twisted.trial import unittest
 
 from buildbot.status.web.auth import HTPasswdAuth
+from buildbot.test.util import compat
 
 class TestHTPasswdAuth(unittest.TestCase):
 
     htpasswd = HTPasswdAuth(__file__)
 
+    @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_des(self):
         try:
             imp.find_module('crypt')
@@ -41,6 +43,7 @@ class TestHTPasswdAuth(unittest.TestCase):
         if self.htpasswd.authenticate('foo', 'bar') == True:
             self.fail("authenticate succeed for 'foo:bar'")
 
+    @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_wopassword(self):
         algorithms = ['des','md5','sha']
         try:
@@ -53,6 +56,7 @@ class TestHTPasswdAuth(unittest.TestCase):
                 self.fail("authenticate succeed for %s w/o password"
                                         % (algo+'buildmaster'))
 
+    @compat.skipUnlessPlatformIs('posix') # crypt module
     def test_authenticate_wrongpassword(self):
         algorithms = ['des','md5','sha']
         try:

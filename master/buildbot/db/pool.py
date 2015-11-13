@@ -88,7 +88,7 @@ class DBThreadPool(threadpool.ThreadPool):
     # SQLite have this bug, although it has only been observed in 3.4.2.  A
     # dynamic check for this bug would be more appropriate.  This is documented
     # in bug #1810.
-    __broken_sqlite = False
+    __broken_sqlite = None
 
     def __init__(self, engine, verbose=False):
         # verbose is used by upgrade scripts, and if it is set we should print
@@ -123,7 +123,9 @@ class DBThreadPool(threadpool.ThreadPool):
                     log_msg("NOTE: this old version of SQLite is not "
                             "supported.")
                     raise RuntimeError("unsupported SQLite version")
-            brkn = self.__broken_sqlite = self.detect_bug1810()
+            if self.__broken_sqlite is None:
+                self.__class__.__broken_sqlite = self.detect_bug1810()
+            brkn = self.__broken_sqlite
             if brkn:
                 log_msg("Applying SQLite workaround from Buildbot bug #1810")
         self._start_evt = reactor.callWhenRunning(self._start)

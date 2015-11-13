@@ -76,6 +76,11 @@ class BuildRequestStatus:
         defer.returnValue(br.bsid)
 
     @defer.inlineCallbacks
+    def getBuildProperties(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.properties)
+
+    @defer.inlineCallbacks
     def getSourceStamp(self):
         br = yield self._getBuildRequest()
         defer.returnValue(br.source)
@@ -158,6 +163,8 @@ class BuildRequestStatus:
         result['brid'] = self.brid
         result['source'] = ss.asDict(self.status)
         result['sources'] = [s.asDict() for s in sources.values()]
+        props = yield self.getBuildProperties()
+        result['properties'] = props.asList()
         result['builderName'] = self.getBuilderName()
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
@@ -173,6 +180,10 @@ class BuildRequestStatus:
             result['builderURL'] += getCodebasesArg(request)
 
         builds = yield self.getBuilds()
-        result['builds'] = [ build.asDict() for build in builds ]
+        all_builds = [build.asDict() for build in builds]
+        sorted_builds = sorted(all_builds, key=lambda build: build['number'], reverse=True)
+        result['builds'] = sorted_builds
+        result['lastBuildNumber'] = sorted_builds[0]['number'] if sorted_builds and len(sorted_builds) > 0 \
+                                                                  and 'number' in sorted_builds[0] else None
 
         defer.returnValue(result)

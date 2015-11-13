@@ -246,7 +246,7 @@ Codebase
 
 This attribute specifies the codebase to which this change was made.
 As described :ref:`above <Source-Stamps>`, multiple repositories may contain the same codebase.
-A change's codebase is usually determined by the bb:cfg:`codebaseGenerator` configuration.
+A change's codebase is usually determined by the :bb:cfg:`codebaseGenerator` configuration.
 By default the codebase is ''; this value is used automatically for single-codebase configurations.
 
 .. _Attr-Revision:
@@ -572,7 +572,7 @@ User Objects
 User Objects allow Buildbot to better manage users throughout its various
 interactions with users (see :ref:`Change-Sources` and :ref:`Status-Targets`).
 The User Objects are stored in the Buildbot database and correlate the various
-attributes that a user might have: irc, git, etc.
+attributes that a user might have: irc, Git, etc.
 
 Changes
 +++++++
@@ -624,7 +624,7 @@ more complete view of users throughout Buildbot.
 
 One such use is being able to find email addresses based on a set of Builds
 to notify users through the ``MailNotifier``. This process is explained
-more clearly in :ref:``Email-Addresses``.
+more clearly in :ref:`Email-Addresses`.
 
 Another way to utilize `User Objects` is through `UsersAuth` for web authentication
 (see :bb:status:`WebStatus`). To use `UsersAuth`, you need to
@@ -810,6 +810,11 @@ Configuring all of this takes a coordinated approach.  A complete multiple repos
         .. note::
 
             Each :ref:`source step<Source-Checkout>` has to have its own ``workdir`` set in order for the checkout to be done for each codebase in its own directory.
+
+        .. note::
+
+            Ensure you specify the codebase within your source step's Interpolate() calls (ex. ``http://.../svn/%(src:codebase:branch)s)``.
+            See :ref:`Interpolate` for details.
 
 .. warning::
 

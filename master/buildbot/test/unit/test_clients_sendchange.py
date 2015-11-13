@@ -14,54 +14,24 @@
 # Copyright Buildbot Team Members
 
 
-import mock
 from twisted.trial import unittest
-from twisted.spread import pb
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from buildbot.clients import sendchange
+from buildbot.test.util import pbclient
 
-class Sender(unittest.TestCase):
+class Sender(unittest.TestCase, pbclient.PBClientMixin):
 
     def setUp(self):
-        # patch out some PB components and make up some mocks
-        self.patch(pb, 'PBClientFactory', self._fake_PBClientFactory)
-        self.patch(reactor, 'connectTCP', self._fake_connectTCP)
-
-        self.factory = mock.Mock(name='PBClientFactory')
-        self.factory.login = self._fake_login
-        self.factory.login_d = defer.Deferred()
-
-        self.remote = mock.Mock(name='PB Remote')
-        self.remote.callRemote = self._fake_callRemote
-        self.remote.broker.transport.loseConnection = self._fake_loseConnection
+        self.setUpPBClient()
 
         # results
-        self.creds = None
-        self.conn_host = self.conn_port = None
-        self.lostConnection = False
         self.added_changes = []
         self.vc_used = None
-
-    def _fake_PBClientFactory(self):
-        return self.factory
-
-    def _fake_login(self, creds):
-        self.creds = creds
-        return self.factory.login_d
-
-    def _fake_connectTCP(self, host, port, factory):
-        self.conn_host = host
-        self.conn_port = port
-        self.assertIdentical(factory, self.factory)
-        self.factory.login_d.callback(self.remote)
 
     def _fake_callRemote(self, method, change):
         self.assertEqual(method, 'addChange')
         self.added_changes.append(change)
         return defer.succeed(None)
-
-    def _fake_loseConnection(self):
-        self.lostConnection = True
 
     def assertProcess(self, host, port, username, password, changes):
         self.assertEqual([host, port, username, password, changes],

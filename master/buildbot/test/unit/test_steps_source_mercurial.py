@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.trial import unittest
+from twisted.python.reflect import namedModule
 from buildbot.steps.source import mercurial
 from buildbot.status.results import SUCCESS, FAILURE, RETRY
 from buildbot.test.util import sourcesteps
@@ -25,11 +26,21 @@ from buildbot.process import buildstep
 
 class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
+    def updateBuildRevision(self, revision):
+        return SUCCESS
+
     def setUp(self):
+        self.patch(mercurial.Mercurial, "updateBuildRevision", self.updateBuildRevision)
         return self.setUpSourceStep()
 
     def tearDown(self):
         return self.tearDownSourceStep()
+
+    def mockForceBuildProperty(self):
+        prop = Mock()
+        prop.hasProperty = lambda p: True
+        prop.getPropertySource = lambda s: "Force Build Form"
+        self.step.build.getProperties = lambda: prop
 
     def patch_slaveVersionIsOlderThan(self, result):
         self.patch(mercurial.Mercurial, 'slaveVersionIsOlderThan', lambda x, y, z: result)
@@ -52,6 +63,97 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.assertRaises(config.ConfigErrors, lambda :
                 mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                     branchType='invalid'))
+
+    def test_mode_identify_branch(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='identify', branchType='inrepo'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', 'http://hg.mozilla.org',
+                                 '--debug', '--rev', 'default'])
+            + ExpectShell.log('stdio', stdout='using http://hg.mozilla.org\n'+
+                                              ' sending capabilities command \n'+' sending lookup command \n'+
+                                              ' preparing listkeys for "namespaces" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' preparing listkeys for "bookmarks" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' cef7825251aa517ddc1861cf07336ba7446c86c8')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_identify_revision(self):
+        self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                           mode='identify', branchType='inrepo'),
+                       dict(revision='cef78252'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+        self.mockForceBuildProperty()
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', 'http://hg.mozilla.org',
+                                 '--debug', '--rev', 'cef78252'])
+            + ExpectShell.log('stdio', stdout='using http://hg.mozilla.org\n'+
+                                              ' sending capabilities command \n'+' sending lookup command \n'+
+                                              ' preparing listkeys for "namespaces" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' preparing listkeys for "bookmarks" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' cef7825251aa517ddc1861cf07336ba7446c86c8')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_identify_revision_skip(self):
+        self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                           mode='identify', branchType='inrepo'),
+                       dict(revision='cef78252'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_identify_unknown_revision(self):
+        self.setupStep(mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                           mode='identify', branchType='inrepo'),
+                       dict(revision='cef78252'))
+
+        self.step.build.build_status.getSourceStamps = lambda: [self.sourcestamp]
+        self.mockForceBuildProperty()
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', 'http://hg.mozilla.org',
+                                 '--debug', '--rev', 'cef78252'])
+            + ExpectShell.log('stdio', stdout='abort: unknown revision cef78252')
+            + 1,
+        )
+        self.expectOutcome(result=FAILURE, status_text=["updating"])
+        return self.runStep()
 
     def test_mode_full_clean(self):
         self.setupStep(
@@ -80,6 +182,58 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
                                  'http://hg.mozilla.org', '.'])
             + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'update',
+                                 '--clean', '--rev', 'default'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'parents',
+                                    '--template', '{node}\\n'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
+    def test_mode_full_clean_win32path(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='clean', branchType='inrepo'))
+        self.build.path_module = namedModule('ntpath')
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('stat', dict(file=r'wkdir\.hg/store/journal',
+                                      logEnviron=True))
+            + 1,
+            Expect('stat', dict(file=r'wkdir\.hg/store/lock',
+                                      logEnviron=True))
+            + 1,
+            Expect('stat', dict(file=r'wkdir\.hg/wlock',
+                                      logEnviron=True))
+            + 1,
+            Expect('stat', dict(file=r'wkdir\.hg/hgrc',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--config',
+                                 'extensions.purge=', 'purge'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'pull',
+                                 'http://hg.mozilla.org', '--rev', 'default'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', '--branch'])
+            + ExpectShell.log('stdio',
+                stdout='default')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'locate', 'set:added()'])
+            + 1,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'update',
                                  '--clean', '--rev', 'default'])
@@ -374,7 +528,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org'])
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                               stdout='abort: could not lock repository /Users/builduser/buildslave/unity/build:'+
@@ -414,7 +568,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org'])
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                               stdout='abort: error: Name or service not known')
@@ -447,7 +601,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org'])
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -534,7 +688,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org'])
+                        command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'defaultz'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -725,7 +879,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                                 'http://hg.mozilla.org', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -762,7 +916,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                                 'http://hg.mozilla.org', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -804,7 +958,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0, # directory exists
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                                 'http://hg.mozilla.org', '--rev', 'default'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -851,7 +1005,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                                 'http://hg.mozilla.org', '--rev', 'abcdef01'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -890,7 +1044,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                                 'http://hg.mozilla.org', '--rev', 'stable'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -937,7 +1091,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull',
-                                 'http://hg.mozilla.org'])
+                                 'http://hg.mozilla.org', '--rev', 'stable'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'identify', '--branch'])
@@ -1102,6 +1256,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.workdir = "build"
         step.stdio_log = Mock()
         step.runCommand = self.runCommand
+        step.rc_log = Mock()
         self.currentCommandRC = -1
         self.clobberRepository = False
         self.patch(buildstep.RemoteCommand, "didFail", self.checkDidFail)
@@ -1110,6 +1265,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.build = Mock()
         step.build.slavebuilder.slave = Mock()
         step.build.slavebuilder.slave.slavename = "test-slave"
+        step.build.path_module = namedModule('ntpath')
 
         step.build.slavebuilder.slave.slave_status = Mock()
         step.disconnectGraceful = False
@@ -1122,9 +1278,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mercurial_clobberIfContainsJournal(self):
         step = self.setupStepRecoveryTests()
 
-        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 0)]
-        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
-        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 1))
+        self.expected_commands = [self.mockStatCommand('build\.hg/store/journal', 0)]
+        self.expected_commands.append(self.mockStatCommand('build\.hg/store/lock', 1))
+        self.expected_commands.append(self.mockStatCommand('build\.hg/wlock', 1))
 
         step.clobber = self.clobber
 
@@ -1136,9 +1292,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mercurial_clobberIfContainsLock(self):
         step = self.setupStepRecoveryTests()
 
-        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 1)]
-        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 0))
-        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 1))
+        self.expected_commands = [self.mockStatCommand('build\.hg/store/journal', 1)]
+        self.expected_commands.append(self.mockStatCommand('build\.hg/store/lock', 0))
+        self.expected_commands.append(self.mockStatCommand('build\.hg/wlock', 1))
 
         step.clobber = self.clobber
 
@@ -1150,9 +1306,9 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mercurial_clobberIfContainsWorkdirLock(self):
         step = self.setupStepRecoveryTests()
 
-        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 1)]
-        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
-        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 0))
+        self.expected_commands = [self.mockStatCommand('build\.hg/store/journal', 1)]
+        self.expected_commands.append(self.mockStatCommand('build\.hg/store/lock', 1))
+        self.expected_commands.append(self.mockStatCommand('build\.hg/wlock', 0))
 
         step.clobber = self.clobber
 
@@ -1179,10 +1335,10 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_mercurialDirNotUpdatableShouldRestartIfCleanFails(self):
         step = self.setupStepRecoveryTests()
 
-        self.expected_commands = [self.mockStatCommand('build/.hg/store/journal', 1)]
-        self.expected_commands.append(self.mockStatCommand('build/.hg/store/lock', 1))
-        self.expected_commands.append(self.mockStatCommand('build/.hg/wlock', 1))
-        self.expected_commands.append(self.mockStatCommand('build/.hg/hgrc', 1))
+        self.expected_commands = [self.mockStatCommand('build\.hg/store/journal', 1)]
+        self.expected_commands.append(self.mockStatCommand('build\.hg/store/lock', 1))
+        self.expected_commands.append(self.mockStatCommand('build\.hg/wlock', 1))
+        self.expected_commands.append(self.mockStatCommand('build\.hg/hgrc', 1))
         self.expected_commands.append(self.mockRmdirCommand('build', 1))
         self.expected_commands.append({'command': ['shutdown', '/r', '/t', '5', '/c',
                                                    'Mercurial command: restart requested'],

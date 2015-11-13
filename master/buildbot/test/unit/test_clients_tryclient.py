@@ -15,10 +15,16 @@
 
 from __future__ import with_statement
 
+import sys
+import mock
+
 from twisted.trial import unittest
+from twisted.internet import defer
 
 from buildbot.clients import tryclient
 from buildbot.util import json
+from buildbot.scripts.runner import TryOptions
+from buildbot.test.util import pbclient
 
 
 class createJobfile(unittest.TestCase):
@@ -133,3 +139,57 @@ class createJobfile(unittest.TestCase):
                 'properties': properties,
             }))
         self.assertEqual(job, jobstr)
+
+
+class TestGetAvailableNames(unittest.TestCase, pbclient.PBClientMixin):
+
+    def setUp(self):
+        self.setUpPBClient()
+
+        # The try client likes to print to stdout, so mute it.
+        stdout = mock.Mock()
+        stdout.write = lambda _: None
+        self.patch(sys, 'stdout', stdout)
+
+    def test_getAvailableNames_properties(self):
+        """
+        Test that properties are sent to the server when
+        getAvailableNames is called.
+        """
+
+        self.properties = {'foo': 'bar'}
+
+        def callRemote(method, *args):
+            self.assertEqual(method, "getAvailableBuilderNames")
+            self.assertEqual(args, (self.properties,))
+            return defer.succeed(['builder'])
+        self.remote.callRemote = callRemote
+
+        config = TryOptions()
+        config['properties'] = self.properties
+        config['connect'] = 'pb'
+        config['master'] = 'localhost:1234'
+        try_client = tryclient.Try(config)
+
+        d = try_client.getAvailableBuilderNames()
+        return d
+
+    def test_getAvailableNames_no_properties(self):
+        """
+        Test that properties are sent to the server when
+        getAvailableNames is called.
+        """
+
+        def callRemote(method, *args):
+            self.assertEqual(method, "getAvailableBuilderNames")
+            self.assertEqual(args, ())
+            return defer.succeed(['builder'])
+        self.remote.callRemote = callRemote
+
+        config = TryOptions()
+        config['connect'] = 'pb'
+        config['master'] = 'localhost:1234'
+        try_client = tryclient.Try(config)
+
+        d = try_client.getAvailableBuilderNames()
+        return d

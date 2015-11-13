@@ -16,7 +16,7 @@
 import re
 
 from zope.interface import implements
-from twisted.internet import reactor, defer, error
+from twisted.internet import defer, error
 from twisted.protocols import basic
 from twisted.spread import pb
 from twisted.python import log, components
@@ -24,11 +24,13 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 from twisted.python.reflect import accumulateClassList
 
-from buildbot import interfaces, locks, util, config
+from buildbot import interfaces, util, config
 from buildbot.status import progress
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION, RETRY, worst_status
 from buildbot.process import metrics, properties
+from buildbot.util.eventual import eventually
+from buildbot.interfaces import BuildSlaveTooOldError
 
 class BuildStepFailed(Exception):
     pass
@@ -116,6 +118,10 @@ class RemoteCommand(pb.Referenceable):
         return d
 
     def _finished(self, failure=None):
+        if not self.active:
+            defer.succeed(None)
+            return
+
         self.active = False
         # call .remoteComplete. If it raises an exception, or returns the
         # Failure that we gave it, our self.deferred will be errbacked. If
@@ -196,7 +202,7 @@ class RemoteCommand(pb.Referenceable):
         # call the real remoteComplete a moment later, but first return an
         # acknowledgement so the slave can retire the completion message.
         if self.active:
-            reactor.callLater(0, self._finished, failure)
+            eventually(self._finished, failure)
         return None
 
     def addStdout(self, data):
@@ -358,8 +364,10 @@ class RemoteShellCommand(RemoteCommand):
                  want_stdout=1, want_stderr=1,
                  timeout=20*60, maxTime=None, logfiles={},
                  usePTY="slave-config", logEnviron=True,
-                 collectStdout=False, collectStderr=False, interruptSignal=None,
-                 initialStdin=None, decodeRC={0:SUCCESS}):
+                 collectStdout=False,collectStderr=False,
+                 interruptSignal=None,
+                 initialStdin=None, decodeRC={0:SUCCESS},
+                 user=None):
 
         self.command = command # stash .command, set it later
         if env is not None:
@@ -380,8 +388,11 @@ class RemoteShellCommand(RemoteCommand):
                 }
         if interruptSignal is not None:
             args['interruptSignal'] = interruptSignal
-        RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout, collectStderr=collectStderr,
-                decodeRC=decodeRC)
+        if user is not None:
+            args['user'] = user
+        RemoteCommand.__init__(self, "shell", args, collectStdout=collectStdout,
+                               collectStderr=collectStderr,
+                               decodeRC=decodeRC)
 
     def _start(self):
         self.args['command'] = self.command
@@ -390,6 +401,10 @@ class RemoteShellCommand(RemoteCommand):
             # fixup themselves
             if self.step.slaveVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
+        if ('user' in self.args and
+                self.step.slaveVersionIsOlderThan("shell", "2.16")):
+            m = "slave does not support the 'user' parameter"
+            raise BuildSlaveTooOldError(m)
         what = "command '%s' in dir '%s'" % (self.args['command'],
                                              self.args['workdir'])
         log.msg(what)
@@ -456,7 +471,7 @@ class BuildStep(object, properties.PropertiesMixin):
 
     name = "generic"
     locks = []
-    releaseLockInstanse = None
+    releaseLockInstance = None
     progressMetrics = () # 'time' is implicit
     useProgress = True # set to False if step is really unpredictable
     build = None
@@ -469,10 +484,12 @@ class BuildStep(object, properties.PropertiesMixin):
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
         if kwargs:
-            why = "%s.__init__ got unexpected keyword argument(s) %s" \
-                  % (self, kwargs.keys())
-            raise TypeError(why)
+            config.error("%s.__init__ got unexpected keyword argument(s) %s" \
+                  % (self.__class__, kwargs.keys()))
         self._pendingLogObservers = []
+
+        if not isinstance(self.name, str):
+            config.error("BuildStep name must be a string: %r" % (self.name,))
 
         self._acquiringLock = None
         self.stopped = False
@@ -516,24 +533,27 @@ class BuildStep(object, properties.PropertiesMixin):
         if self.progress:
             self.progress.setProgress(metric, value)
 
+
     def setStepLocks(self, initialLocks):
-        lock_list = []
-        for access in initialLocks:
-            if not isinstance(access, locks.LockAccess):
-                # Buildbot 0.7.7 compability: user did not specify access
-                access = access.defaultAccess()
-            lock = self.build.builder.botmaster.getLockByID(access.lockid)
-            lock_list.append((lock, access))
-        initialLocks = lock_list
+        # convert all locks into their real form
+        initialLocks = [(self.build.builder.botmaster.getLockByID(access.lockid), access)
+                        for access in initialLocks]
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
         return [(l.getLock(self.build.slavebuilder.slave), la) for l, la in initialLocks]
+
 
     def startStep(self, remote):
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
-        self.locks = self.setStepLocks(self.locks)
+        self.locks = [(self.build.builder.botmaster.getLockByID(access.lockid), access) 
+                        for access in self.locks ]        
+         # then narrow SlaveLocks down to the slave that this build is being
+         # run on
+        self.locks = [(l.getLock(self.build.slavebuilder.slave), la) 
+                        for l, la in self.locks ]
+
         for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
@@ -578,14 +598,17 @@ class BuildStep(object, properties.PropertiesMixin):
             doStep = defer.maybeDeferred(func, self)
         return doStep
 
-    def _startStep_2(self, res):
-        if self.stopped:
-            self.finished(EXCEPTION)
-            return
+    @defer.inlineCallbacks
+    def checkStepExecuted(self):
 
-        if self.progress:
-            self.progress.start()
+        def getResult(doStep):
+            result = all([s == True for s in doStep if s is not None])
+            return result
 
+        result = yield self.gatherDoStepIfResults(callback=getResult, setRender=False)
+        defer.returnValue(result)
+
+    def gatherDoStepIfResults(self, callback, setRender=True):
         dl = []
         if isinstance(self.doStepIf, list):
             for func in self.doStepIf:
@@ -594,20 +617,29 @@ class BuildStep(object, properties.PropertiesMixin):
         else:
             dl = [self.getDoStepIfDefer(self.doStepIf)]
 
-        renderables = []
-        accumulateClassList(self.__class__, 'renderables', renderables)
+        if setRender:
+            renderables = []
+            accumulateClassList(self.__class__, 'renderables', renderables)
+            def setRenderable(res, attr):
+                setattr(self, attr, res)
+            for renderable in renderables:
+                d = self.build.render(getattr(self, renderable))
+                d.addCallback(setRenderable, renderable)
+                dl.append(d)
 
-        def setRenderable(res, attr):
-            setattr(self, attr, res)
-
-        for renderable in renderables:
-            d = self.build.render(getattr(self, renderable))
-            d.addCallback(setRenderable, renderable)
-            dl.append(d)
         dl = defer.gatherResults(dl)
-
-        dl.addCallback(self._startStep_3)
+        dl.addCallback(callback)
         return dl
+
+    def _startStep_2(self, res):
+        if self.stopped:
+            self.finished(EXCEPTION)
+            return
+
+        if self.progress:
+            self.progress.start()
+
+        return self.gatherDoStepIfResults(callback=self._startStep_3)
 
     @defer.inlineCallbacks
     def _startStep_3(self, doStep):
@@ -631,7 +663,7 @@ class BuildStep(object, properties.PropertiesMixin):
             # the step immediately; we skip calling finished() as
             # subclasses may have overridden that an expect it to be called
             # after start() (bug #837)
-            reactor.callLater(0, self._finishFinished, SKIPPED)
+            eventually(self._finishFinished, SKIPPED)
 
     def start(self):
         raise NotImplementedError("your subclass must implement this method")
@@ -649,8 +681,8 @@ class BuildStep(object, properties.PropertiesMixin):
             if lock.isOwner(self, access):
                 lock.release(self, access)
             else:
-                if self.releaseLockInstanse:
-                    lock.release(self.releaseLockInstanse, access)
+                if self.releaseLockInstance:
+                    lock.release(self.releaseLockInstance, access)
                 else:
                     # This should only happen if we've been interrupted
                     assert self.stopped
@@ -707,8 +739,12 @@ class BuildStep(object, properties.PropertiesMixin):
         try:
             if self.progress:
                 self.progress.finish()
-            self.addHTMLLog("err.html", formatFailure(why))
-            self.addCompleteLog("err.text", why.getTraceback())
+            try:
+                self.addCompleteLog("err.text", why.getTraceback())
+                self.addHTMLLog("err.html", formatFailure(why))
+            except Exception:
+                log.err(Failure(), "error while formatting exceptions")
+
             # could use why.getDetailedTraceback() for more information
             self.step_status.setText(["'%s'" % self.name, "exception"])
             self.step_status.setText2(["'%s'" % self.name])
@@ -718,17 +754,16 @@ class BuildStep(object, properties.PropertiesMixin):
 
             hidden = self._maybeEvaluate(self.hideStepIf, EXCEPTION, self)
             self.step_status.setHidden(hidden)
-        except:
-            log.msg("exception during failure processing")
-            log.err()
+        except Exception:
+            log.err(Failure(), "exception during failure processing")
             # the progress stuff may still be whacked (the StepStatus may
             # think that it is still running), but the build overall will now
             # finish
+
         try:
             self.releaseLocks()
-        except:
-            log.msg("exception while releasing locks")
-            log.err()
+        except Exception:
+            log.err(Failure(), "exception while releasing locks")
 
         log.msg("BuildStep.failed now firing callback")
         self.deferred.callback(results)

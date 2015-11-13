@@ -30,6 +30,7 @@ from buildbot.status.web.status_json import BuildJsonResource
 from buildbot.status.web.step import StepsResource
 from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
+from buildbot.status.results import RESUME, EXCEPTION
 
 class ForceBuildActionResource(ActionResource):
 
@@ -58,8 +59,15 @@ class ForceBuildActionResource(ActionResource):
             name =authz.getUsernameFull(req)
             comments = req.args.get("comments", ["<no reason specified>"])[0]
             comments.decode(getRequestCharset(req))
-            reason = ("The web-page 'rebuild' button was pressed by "
-                      "'%s':\n" % (comments))
+            reason = ("The web-page 'rebuild' button was pressed "
+                      "'%s': %s\n" % (name, comments))
+
+            useSourcestamp = req.args.get("useSourcestamp", None)
+            if useSourcestamp and useSourcestamp==['updated']:
+                absolute=False
+            else:
+                absolute=True
+
             msg = ""
             extraProperties = getAndCheckProperties(req)
             if not bc or not b.isFinished() or extraProperties is None:
@@ -69,7 +77,10 @@ class ForceBuildActionResource(ActionResource):
                 if bc:
                     msg += "could not get builder control"
             else:
-                tup = yield bc.rebuildBuild(b, reason, extraProperties)
+                tup = yield bc.rebuildBuild(b, 
+                    reason=reason, 
+                    extraProperties=extraProperties,
+                    absolute=absolute)
                 # rebuildBuild returns None on error (?!)
                 if not tup:
                     msg = "rebuilding a build failed "+ str(tup)
@@ -120,7 +131,7 @@ class StopBuildActionResource(ActionResource):
             if bldc:
                 bldc.stopBuild(reason)
 
-        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
+        defer.returnValue(path_to_build(req, self.build_status))
 
 class StopBuildChainActionResource(ActionResource):
 
@@ -142,31 +153,28 @@ class StopBuildChainActionResource(ActionResource):
         brcontrols = yield builderc.getPendingBuildRequestControls(brids=brids)
         for build_req in brcontrols:
             if build_req:
-                build_req.cancel()
+                yield build_req.cancel()
 
         defer.returnValue(len(brcontrols) > 0)
 
     @defer.inlineCallbacks
-    def stopEntireBuildChain(self, master, build, buildername, reason, brid=None, retry=0):
+    def stopEntireBuildChain(self, master, build, buildername, reason, retry=0):
 
         if build:
-
             if retry > 3:
                 log.msg("Giving up after 3 times retry, stop build chain: buildername: %s, build # %d" %
                             (buildername, build.build_status.number))
                 return
 
-            buildchain = yield build.getBuildChain(brid)
+            buildchain = yield build.getBuildChain()
             if len(buildchain) < 1:
                 return
 
             for br in buildchain:
-                if br['number']:
+                if br['number'] and br['results'] != RESUME:
                     buildc = self.stopCurrentBuild(master, br['buildername'], br['number'], reason)
                     log.msg("Stopping build chain: buildername: %s, build # %d, brid: %d" %
                             (br['buildername'], br['number'], br['brid']))
-                    # stop dependencies subtree
-                    yield self.stopEntireBuildChain(master, buildc, br['buildername'], reason, br['brid'])
                 else:
                     # the build was still on the queue
                     canceledrequests = yield self.cancelCurrentBuild(master, [br['brid']], br['buildername'])
@@ -180,12 +188,12 @@ class StopBuildChainActionResource(ActionResource):
                             (br['buildername'], br['brid']))
 
             # the build chain should be empty by now, will retry any builds that changed state
-            buildchain = yield build.getBuildChain(brid)
+            buildchain = yield build.getBuildChain()
             if len(buildchain) > 0:
                 retry += 1
                 log.msg("Retry #%d stop build chain: buildername: %s, build # %d" %
                             (retry, buildername, build.build_status.number))
-                yield self.stopEntireBuildChain(master, build, buildername, reason, brid, retry)
+                yield self.stopEntireBuildChain(master, build, buildername, reason, retry)
 
 
     @defer.inlineCallbacks
@@ -218,7 +226,7 @@ class StopBuildChainActionResource(ActionResource):
 
                 build.stopBuild(reason)
 
-        defer.returnValue(path_to_builder(req, self.build_status.getBuilder()))
+        defer.returnValue(path_to_build(req, self.build_status))
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
@@ -292,6 +300,9 @@ class StatusResourceBuild(HtmlResource):
         except KeyError:
             pass
 
+        if b.resume:
+            cxt['resume'] = b.resume
+
         cxt['steps'] = []
 
         for s in b.getSteps():
@@ -323,7 +334,7 @@ class StatusResourceBuild(HtmlResource):
             getUrls = s.getURLs().items()
             for k,v in s.getURLs().items():
                 if isinstance(v, dict):
-                    if 'results' in v.keys():
+                    if 'results' in v.keys() and v['results'] in css_classes:
                         url_dict = dict(logname=k, url=v['url'] + codebases_arg, results=css_classes[v['results']])
                     else:
                         url_dict = dict(logname=k, url=v['url'] + codebases_arg)
@@ -372,22 +383,19 @@ class StatusResourceBuild(HtmlResource):
             ps.append(p)
 
 
-        (start, end, raw_end_time) = b.getTimes(include_raw_build_time=True)
+        (start, end) = b.getTimes()
         cxt['start'] = time.ctime(start)
-        if end:
+        cxt['elapsed'] = None
+        if end and start:
             cxt['end'] = time.ctime(end)
             cxt['elapsed'] = util.formatInterval(end - start)
-            cxt['raw_elapsed'] = util.formatInterval(raw_end_time - start)
-        else:
+        elif start:
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
             
-        exactly = True
         has_changes = False
         for ss in sourcestamps:
-            exactly = exactly and (ss.revision is not None)
             has_changes = has_changes or ss.changes
-        cxt['exactly'] = (exactly) or b.getChanges()
         cxt['has_changes'] = has_changes
         cxt['authz'] = self.getAuthz(req)
 
@@ -423,7 +431,7 @@ class StatusResourceBuild(HtmlResource):
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         comments.decode(getRequestCharset(req))
         # html-quote both the username and comments, just to be safe
-        reason = ("The web-page 'stop build' button was pressed by "
+        reason = ("The web-page 'stop build' button was pressed "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
 
         c = interfaces.IControl(self.getBuildmaster(req))

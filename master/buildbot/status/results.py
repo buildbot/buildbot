@@ -13,8 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE = range(9)
-Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled", "not_rebuilt", "dependency_failure"]
+SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE, RESUME, MERGED = range(11)
+Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "canceled", "not_rebuilt",
+           "dependency_failure", "resume", "merged"]
+
+BEGINNING = -1
 
 def worst_status(a, b):
     # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY

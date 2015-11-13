@@ -52,7 +52,7 @@ def getResultsClass(results, prevResults, inProgress):
             return "failure"
         else:
             # The previous build also failed.
-            return "warnings"
+            return "failure-again"
   
     # Any other results? Like EXCEPTION?
     return "exception"

@@ -18,8 +18,10 @@ from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import SKIPPED, FAILURE
 from twisted.internet import defer
+from buildbot.steps.slave import CompositeStepMixin
+from buildbot.status.results import SUCCESS
 
-class Source(LoggingBuildStep):
+class Source(LoggingBuildStep, CompositeStepMixin):
     """This is a base class to generate a source tree in the buildslave.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
@@ -136,7 +138,7 @@ class Source(LoggingBuildStep):
 
     def updateSourceProperty(self, name, value, source=''):
         """
-        Update a property, indexing the proeprty by codebase if codebase is not
+        Update a property, indexing the property by codebase if codebase is not
         ''.  Source steps should generally use this instead of setProperty.
         """
         # pick a decent source name
@@ -156,29 +158,44 @@ class Source(LoggingBuildStep):
              % self.name
             LoggingBuildStep.setProperty(self, name, value, source)
 
+    def updateRequestRevision(self, revision):
+        if len(self.build.requests) > 0 and self.codebase in self.build.requests[0].sources:
+            self.build.requests[0].sources[self.codebase].revision = revision
+
     @defer.inlineCallbacks
-    def updateBuildSourceStamps(self, sourcestamps_updated, changes=[], totalChanges=0):
+    def updateStoredSourcestamps(self, revision, sourcestampsetid):
+            ss = [{'b_codebase': self.codebase, 'b_revision': revision,
+                   'b_sourcestampsetid': sourcestampsetid}]
+            master = self.build.builder.botmaster.parent
+            result = yield master.db.sourcestamps.updateSourceStamps(ss)
+
+    @defer.inlineCallbacks
+    def updateBuildRevision(self, revision):
+        sourcestamps = self.build.build_status.getSourceStamps()
+        for ss in sourcestamps:
+            if ss.codebase == self.codebase:
+                if ss.revision != revision:
+                    ss.revision = revision
+                    self.updateRequestRevision(revision)
+                    yield self.updateStoredSourcestamps(revision=revision,
+                                                        sourcestampsetid=sourcestamps[0].sourcestampsetid)
+                    break
+
+        defer.returnValue(SUCCESS)
+
+    def validateRevision(self):
+        properties = self.build.getProperties()
+        if properties.hasProperty("owner"):
+            owner = properties.getPropertySource("owner")
+            # Check the revision when forcing a build
+            if owner and "Force Build Form" in owner:
+                return True
+
         sourcestamps = self.build.build_status.getSourceStamps()
 
         for ss in sourcestamps:
             if ss.codebase == self.codebase:
-                ss.changes = changes
-                ss.revision = sourcestamps_updated[self.codebase]
-                ss.totalChanges = totalChanges
-                break
-
-        # update buildrequest revision, only if the revision is empty
-        if len(self.build.requests) > 0 and not self.build.requests[0].sources[self.codebase].revision:
-            if self.codebase in self.build.requests[0].sources:
-                self.build.requests[0].sources[self.codebase].revision = sourcestamps_updated[self.codebase]
-
-        self.build.build_status.updateSourceStamps()
-
-        if len(sourcestamps_updated) > 0:
-            ss = [{'b_codebase': self.codebase, 'b_revision': sourcestamps_updated[self.codebase],
-                   'b_sourcestampsetid': sourcestamps[0].sourcestampsetid}]
-            master = self.build.builder.botmaster.parent
-            result = yield master.db.sourcestamps.updateSourceStamps(ss)
+                return not ss.revision
 
     def setStepStatus(self, step_status):
         LoggingBuildStep.setStepStatus(self, step_status)
@@ -250,7 +267,7 @@ class Source(LoggingBuildStep):
             branch = self.branch
             patch = None
 
-        self.stdio_log = self.addLog("stdio")
+        self.stdio_log = self.addLogForRemoteCommands("stdio")
         self.stdio_log.setTimestampsMode(self.timestamp_stdio)
 
         self.startVC(branch, revision, patch)

@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
 import time
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
+from buildbot.test.util import config
 
 class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
     """detailed getNextBuildTime tests"""
@@ -185,3 +187,20 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
             ((2011,  1,  4, 22, 19), (2011,  1,  5,  1,  0)), # 5th
             ((2011,  1,  5, 22, 19), (2011,  1,  7,  1,  0)), # Thurs
         )
+
+class NightlyCroniterImport(config.ConfigErrorsMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.savedModules = sys.modules.copy()
+
+    def tearDown(self):
+        sys.modules.clear()
+        sys.modules.update(self.savedModules)
+
+    def test_error_without_dateutil(self):
+        del sys.modules['buildbot.schedulers.timed']
+        del sys.modules['buildbot.util']
+        sys.modules["dateutil.relativedelta"] = None
+        from buildbot.schedulers.timed import NightlyBase
+        self.assertRaisesConfigError("python-dateutil",
+                lambda: NightlyBase(name='name', builderNames=[]))

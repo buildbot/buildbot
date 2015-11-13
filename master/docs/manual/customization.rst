@@ -11,7 +11,7 @@ This chapter describes some of the more common idioms in advanced Buildbot
 configurations.
 
 At the moment, this chapter is an unordered set of suggestions; if you'd like
-to clean it up, fork the project on github and get started!
+to clean it up, fork the project on GitHub and get started!
 
 Programmatic Configuration Generation
 -------------------------------------
@@ -50,7 +50,7 @@ true if the requests can be merged, and False otherwise. For example::
 
     def mergeRequests(builder, req1, req2):
         "any requests with the same branch can be merged"
-        return req1.branch == req2.branch
+        return req1.source.branch == req2.source.branch
     c['mergeRequests'] = mergeRequests
 
 In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
@@ -275,7 +275,7 @@ there are a number of related sub-projects that all get released in a group.
 
 For example, `Divmod.org <http://Divmod.org>`_ hosts a project named `Nevow` as
 well as one named `Quotient`. In a checked-out Nevow tree there is a directory
-named `formless` that contains a python source file named :file:`webform.py`.
+named `formless` that contains a Python source file named :file:`webform.py`.
 This repository is accessible via webdav (and thus uses an `http:` scheme)
 through the divmod.org hostname. There are many branches in this repository,
 and they use a ``({BRANCHNAME})/({PROJECT})`` naming policy.
@@ -632,7 +632,7 @@ stripped completely. This latter option makes it easy to save the
 results to a file and run :command:`grep` or whatever against the
 output.
 
-Each :class:`BuildStep` contains a mapping (implemented in a python dictionary)
+Each :class:`BuildStep` contains a mapping (implemented in a Python dictionary)
 from :class:`LogFile` name to the actual :class:`LogFile` objects. Status plugins can
 get a list of LogFiles to display, for example, a list of HREF links
 that, when clicked, provide the full contents of the :class:`LogFile`.
@@ -971,8 +971,8 @@ clause like::
     f.addStep(SVN(svnurl="stuff"))
     f.addStep(Framboozle())
 
-Remember that :file:`master.cfg` is secretly just a python program with one
-job: populating the :file:`BuildmasterConfig` dictionary. And python programs
+Remember that :file:`master.cfg` is secretly just a Python program with one
+job: populating the :file:`BuildmasterConfig` dictionary. And Python programs
 are allowed to define as many classes as they like. So you can define
 classes and use them in the same file, just as long as the class is
 defined before some other code tries to use it.
@@ -1019,10 +1019,10 @@ or::
     f.addStep(SVN(svnurl="stuff"))
     f.addStep(framboozle.Framboozle())
 
-(check out the python docs for details about how "import" and "from A
+(check out the Python docs for details about how "import" and "from A
 import B" work).
 
-What we've done here is to tell python that every time it handles an
+What we've done here is to tell Python that every time it handles an
 "import" statement for some named module, it should look in our
 :file:`~/lib/python/` for that module before it looks anywhere else. After our
 directories, it will try in a bunch of standard directories too
@@ -1039,9 +1039,9 @@ to start your buildmaster in a slightly weird way, or you have to
 modify your environment to set the :envvar:`PYTHONPATH` variable.
 
 
-Option 3: Install this code into a standard python library directory
+Option 3: Install this code into a standard Python library directory
 
-Find out what your python's standard include path is by asking it:
+Find out what your Python's standard include path is by asking it:
 
 .. code-block:: none
 

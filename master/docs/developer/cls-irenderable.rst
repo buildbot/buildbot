@@ -1,4 +1,4 @@
-.. index:: single; Properties; IRenderable
+.. index:: single: Properties; IRenderable
 
 IRenderable
 ===========

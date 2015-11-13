@@ -20,6 +20,7 @@ from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
 from buildbot.sourcestamp import SourceStamp
 from buildbot import config
+from mock import Mock
 
 class FakeSlaveBuilder:
     slave = None
@@ -29,10 +30,13 @@ class FakeBuilderStatus:
 
 class FakeBuilder:
     builder_status = FakeBuilderStatus()
+    botmaster = Mock()
+    botmaster.master.config.globalFactory = {}
 
 class FakeBuildStatus:
     def __init__(self):
         self.names = []
+        self.results = None
 
     def addStepWithName(self, name, type):
         self.names.append(name)
@@ -65,6 +69,8 @@ class FakeBuildStatus:
 
 class FakeStepStatus:
     txt = None
+    finished = None
+
     def setText(self, txt):
         self.txt = txt
 

@@ -150,7 +150,9 @@ class PBChangeSource(config.ReconfigurableServiceMixin, base.ChangeSource):
     def _unregister(self):
         self.registered_port = None
         if self.registration:
-            return self.registration.unregister()
+            reg = self.registration
+            self.registration = None
+            return reg.unregister()
         else:
             return defer.succeed(None)
 

@@ -1,11 +1,12 @@
-from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION, SKIPPED
+from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, SKIPPED
 from twisted.internet import defer
 from buildbot.steps.shell import ShellCommand
 import re
 from buildbot.util import epoch2datetime
 from buildbot.util import safeTranslate
 from buildbot.process.slavebuilder import IDLE, BUILDING
-import random
+from buildbot.steps.resumebuild import ResumeBuild, ShellCommandResumeBuild
+
 def FormatDatetime(value):
     return value.strftime("%d_%m_%Y_%H_%M_%S_%z")
 
@@ -34,7 +35,7 @@ def forceRebuild(build):
 
     return force_chain_rebuild or force_rebuild
 
-class FindPreviousSuccessfulBuild(LoggingBuildStep):
+class FindPreviousSuccessfulBuild(ResumeBuild):
     name = "Find Previous Successful Build"
     description="Searching for a previous successful build at the appropriate revision(s)..."
     descriptionDone="Searching complete."
@@ -42,7 +43,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
     def __init__(self, **kwargs):
         self.build_sourcestamps = []
         self.master = None
-        LoggingBuildStep.__init__(self, **kwargs)
+        ResumeBuild.__init__(self, **kwargs)
 
     @defer.inlineCallbacks
     def start(self):
@@ -81,6 +82,7 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
             self.build.result = SUCCESS
             self.build.setProperty("reusedOldBuild", True)
             self.build.allStepsDone()
+            self.resumeBuild = False
         else:
             if len(self.build.requests) > 1:
                 yield self.master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
@@ -90,13 +92,13 @@ class FindPreviousSuccessfulBuild(LoggingBuildStep):
         return
 
 
-class CheckArtifactExists(ShellCommand):
+class CheckArtifactExists(ShellCommandResumeBuild):
     name = "Check if Artifact Exists"
     description="Checking if artifacts exist from a previous build at the appropriate revision(s)..."
     descriptionDone="Searching complete."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None,
-                 artifactServerURL=None, stopBuild=True,**kwargs):
+                 artifactServerURL=None, stopBuild=True, resumeBuild=None, **kwargs):
         self.master = None
         self.build_sourcestamps = []
         if not isinstance(artifact, list):
@@ -110,7 +112,8 @@ class CheckArtifactExists(ShellCommand):
         self.artifactPath = None
         self.artifactURL = None
         self.stopBuild = stopBuild
-        ShellCommand.__init__(self, **kwargs)
+        resume_build_val = stopBuild if resumeBuild is None else resumeBuild
+        ShellCommandResumeBuild.__init__(self, resumeBuild=resume_build_val, **kwargs)
 
     @defer.inlineCallbacks
     def createSummary(self, log):
@@ -139,9 +142,10 @@ class CheckArtifactExists(ShellCommand):
 
             if not artifactsfound:
                 return
-            else:
-                self.build.setProperty("artifactsfound", True, "CheckArtifactExists %s" % self.artifact)
-                self.build.setProperty("reusedOldBuild", True)
+
+            self.build.setProperty("artifactsfound", True, "CheckArtifactExists %s" % self.artifact)
+            self.build.setProperty("reusedOldBuild", True)
+            self.resumeBuild = False
 
             if self.stopBuild:
                 # update buildrequest (artifactbrid) with self.artifactBuildrequest
@@ -199,7 +203,7 @@ class CheckArtifactExists(ShellCommand):
                        "cd %s" % self.artifactPath, search_artifact, "; ls"]
             # ssh to the server to check if it artifact is there
             self.setCommand(command)
-            ShellCommand.start(self)
+            ShellCommandResumeBuild.start(self)
             return
 
         if len(self.build.requests) > 1:
@@ -359,7 +363,6 @@ class DownloadArtifact(ShellCommand):
         self.setCommand(command)
         ShellCommand.start(self)
 
-from buildbot import locks
 
 class AcquireBuildLocks(LoggingBuildStep):
     name = "Acquire Build Slave"
@@ -367,10 +370,7 @@ class AcquireBuildLocks(LoggingBuildStep):
     descriptionDone="Build slave acquired."
 
     def __init__(self, hideStepIf = True, locks=None, **kwargs):
-        self.initialLocks = locks
-        self.locksAvailable = False
         LoggingBuildStep.__init__(self, hideStepIf = hideStepIf, locks=locks, **kwargs)
-
 
     def start(self):
         self.step_status.setText(["Acquiring build slave to complete build."])
@@ -382,45 +382,12 @@ class AcquireBuildLocks(LoggingBuildStep):
         if self.build.builder.builder_status.currentBigState == "idle":
             self.build.builder.builder_status.setBigState("building")
 
-        self.build.releaseLockInstanse = self
+        self.build.releaseLockInstance = self
         self.finished(SUCCESS)
         return
 
     def releaseLocks(self):
         return
-
-    def checkLocksAvailable(self, currentLocks):
-        for lock, access in currentLocks:
-            if not lock.isAvailable(self, access):
-                return False
-        return True
-
-    def setupSlaveBuilder(self, ping_success, slavebuilder):
-        # if not available builder we probably need to wait until we can get another builder
-        if ping_success:
-            self.build.setupSlaveBuilder(slavebuilder)
-
-    def findAvailableSlaveBuilder(self):
-        d = defer.succeed(None)
-        slavebuilder = None
-        if not self.locksAvailable and len(self.build.builder.getAvailableSlaveBuilders()) > 0:
-            # setup a new slave for a builder prepare slavebuilder _startBuildFor process / builder.py
-            slavebuilder = random.choice(self.build.builder.getAvailableSlaveBuilders())
-
-        if slavebuilder is not None:
-            d = slavebuilder.ping()
-            d.addCallback(self.setupSlaveBuilder, slavebuilder)
-        return d
-
-    def startStep(self, remote):
-        currentLocks =  self.setStepLocks(self.initialLocks)
-        # TODO: there seems to be an issue when switching slaves 
-        #self.locksAvailable = self.checkLocksAvailable(currentLocks)
-
-        #d = self.findAvailableSlaveBuilder()
-        #d.addCallback((lambda _: super(LoggingBuildStep, self).startStep(remote)))
-        #return d
-        return super(LoggingBuildStep, self).startStep(remote)
 
 
 class ReleaseBuildLocks(LoggingBuildStep):
@@ -428,14 +395,14 @@ class ReleaseBuildLocks(LoggingBuildStep):
     description="Releasing builder locks..."
     descriptionDone="Build locks released."
 
-    def __init__(self, hideStepIf = True, **kwargs):
-        self.releaseLockInstanse
+    def __init__(self, hideStepIf=True, **kwargs):
+        self.releaseLockInstance = None
         LoggingBuildStep.__init__(self, hideStepIf=hideStepIf, **kwargs)
 
     def start(self):
         self.step_status.setText(["Releasing build locks."])
         self.locks = self.build.locks
-        self.releaseLockInstanse = self.build.releaseLockInstanse
+        self.releaseLockInstance = self.build.releaseLockInstance
         # release slave lock
         self.build.slavebuilder.state = IDLE
         self.build.builder.builder_status.setBigState("idle")

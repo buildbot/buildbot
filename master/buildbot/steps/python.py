@@ -75,6 +75,13 @@ class PyFlakes(ShellCommand):
 
     MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
 
+    def __init__(self, *args, **kwargs):
+        # PyFlakes return 1 for both warnings and errors. We
+        # categorize this initially as WARNINGS so that
+        # evaluateCommand below can inspect the results more closely.
+        kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
+        ShellCommand.__init__(self, *args, **kwargs)
+
     def createSummary(self, log):
         counts = {}
         summaries = {}

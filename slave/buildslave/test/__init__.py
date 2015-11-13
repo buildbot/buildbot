@@ -14,14 +14,13 @@
 # Copyright Buildbot Team Members
 
 import sys
-import os
 
 import twisted
 from twisted.trial import unittest
 from buildslave import monkeypatches
 
 # apply the same patches the slave does when it starts
-monkeypatches.patch_all()
+monkeypatches.patch_all(for_tests=True)
 
 def add_debugging_monkeypatches():
     """
@@ -58,6 +57,5 @@ try:
     import mock
     mock = mock
 except ImportError:
-    print >>sys.stderr, ("\nBuildbot tests require the 'mock' module; "
-                         "try 'pip install mock'")
-    os._exit(1)
+    raise ImportError("Buildbot tests require the 'mock' module; "
+            "try 'pip install mock'")

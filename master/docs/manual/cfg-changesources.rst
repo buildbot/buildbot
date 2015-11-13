@@ -16,9 +16,6 @@ project will typically have only a single :class:`ChangeSource` active. This sec
 provides a description of all available :class:`ChangeSource` types and explains how to
 set up each of them.
 
-In general, each Buildmaster watches a single source tree.  It is possible to
-work around this, but true support for multi-tree builds remains elusive.
-
 .. _Choosing-a-Change-Source:
 
 Choosing a Change Source
@@ -40,7 +37,7 @@ CVS
    sendchange`` run in a loginfo script)
  * :bb:chsrc:`PBChangeSource` (listening for connections from a long-running
    :file:`contrib/viewcvspoll.py` polling process which examines the ViewCVS
-   database directly
+   database directly)
  * :bb:chsrc:`Change Hooks` in WebStatus
 
 SVN
@@ -68,6 +65,8 @@ Mercurial
  * :bb:chsrc:`PBChangeSource` (listening for connections from
    :file:`buildbot/changes/hgbuildbot.py` run as an in-process 'changegroup'
    hook)
+ * BitBucket change hook (specifically designed for BitBucket notifications,
+    but requiring a publicly-accessible WebStatus)
  * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
@@ -85,9 +84,11 @@ Git
    :file:`contrib/github_buildbot.py`, which listens for notifications
    from GitHub)
  * :bb:chsrc:`Change Hooks` in WebStatus
- * github change hook (specifically designed for GitHub notifications,
+ * GitHub change hook (specifically designed for GitHub notifications,
    but requiring a publicly-accessible WebStatus)
- * :bb:chsrc:`GitPoller` (polling a remote git repository)
+ * BitBucket change hook (specifically designed for BitBucket notifications,
+   but requiring a publicly-accessible WebStatus)
+ * :bb:chsrc:`GitPoller` (polling a remote Git repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the
    commit feed for a GoogleCode Git repository)
 
@@ -98,7 +99,7 @@ Repo/Git
 
 Monotone
  * :bb:chsrc:`PBChangeSource` (listening for connections from
-   :file:`monotone-buildbot.lua`, which is available with monotone)
+   :file:`monotone-buildbot.lua`, which is available with Monotone)
 
 All VC systems can be driven by a :bb:chsrc:`PBChangeSource` and the ``buildbot
 sendchange`` tool run from some form of commit script.  If you write an email
@@ -487,7 +488,7 @@ The following hooks are useful for sending changes to a :bb:chsrc:`PBChangeSourc
 Mercurial Hook
 ++++++++++++++
 
-Since Mercurial is written in python, the hook script can invoke
+Since Mercurial is written in Python, the hook script can invoke
 Buildbot's :meth:`sendchange` function directly, rather than having to
 spawn an external process. This function delivers the same sort of
 changes as :command:`buildbot sendchange` and the various hook scripts in
@@ -498,7 +499,7 @@ To set this up, first choose a Mercurial repository that represents
 your central `official` source tree. This will be the same
 repository that your buildslaves will eventually pull from. Install
 Buildbot on the machine that hosts this repository, using the same
-version of python as Mercurial is using (so that the Mercurial hook
+version of Python as Mercurial is using (so that the Mercurial hook
 can import code from buildbot). Then add the following to the
 :file:`.hg/hgrc` file in that repository, replacing the buildmaster
 hostname/portnumber as appropriate for your buildbot:
@@ -618,7 +619,7 @@ Compatibility
 
 As twisted needs to hook some signals, and some web servers 
 strictly forbid that, the parameter ``fork`` in the
-``[hgbuildbot]`` section will instruct mercurial to fork before
+``[hgbuildbot]`` section will instruct Mercurial to fork before
 sending the change request. Then as the created process will be of short
 life, it is considered as safe to disable the signal restriction in
 the Apache setting like that ``WSGIRestrictSignal Off``. Refer to the
@@ -756,7 +757,7 @@ depot for changes. It accepts the following arguments:
     which effectively disables branch support. You should supply a function
     which understands your repository structure.
 
-``pollinterval``
+``pollInterval``
     How often to poll, in seconds. Defaults to 600 (10 minutes).
 
 ``histmax``
@@ -888,7 +889,7 @@ multiple branches.
     Like ``svnuser``, this will cause a :option:`--password` argument to
     be passed to all :command:`svn` commands.
 
-``pollinterval``
+``pollInterval``
     How often to poll, in seconds. Defaults to 600 (checking once every 10
     minutes). Lower this if you want the buildbot to notice changes
     faster, raise it if you want to reduce the network and CPU load on
@@ -896,7 +897,7 @@ multiple branches.
     using a large interval when polling them.
 
 ``histmax``
-    The maximum number of changes to inspect at a time. Every ``pollinterval``
+    The maximum number of changes to inspect at a time. Every ``pollInterval``
     seconds, the :bb:chsrc:`SVNPoller` asks for the last ``histmax`` changes and
     looks through them for any revisions it does not already know about. If
     more than ``histmax`` revisions have been committed since the last poll,
@@ -1021,13 +1022,13 @@ GitPoller
 If you cannot take advantage of post-receive hooks as provided by
 :file:`contrib/git_buildbot.py` for example, then you can use the :bb:chsrc:`GitPoller`.
 
-The :bb:chsrc:`GitPoller` periodically fetches from a remote git repository and processes any changes.
+The :bb:chsrc:`GitPoller` periodically fetches from a remote Git repository and processes any changes.
 It requires its own working directory for operation.
 The default should be adequate, but it can be overridden via the ``workdir`` property.
 
 .. note:: There can only be a single `GitPoller` pointed at any given repository.
 
-The :bb:chsrc:`GitPoller` requires git-1.7 and later.  It accepts the following
+The :bb:chsrc:`GitPoller` requires Git-1.7 and later.  It accepts the following
 arguments:
 
 ``repourl``
@@ -1042,11 +1043,11 @@ arguments:
     accepts a single branch name to fetch.
     Exists for backwards compatibility with old configurations.
 
-``pollinterval``
+``pollInterval``
     interval in seconds between polls, default is 10 minutes
 
 ``gitbin``
-    path to the git binary, defaults to just ``'git'``
+    path to the Git binary, defaults to just ``'git'``
 
 ``category``
     Set the category to be used for the changes produced by the
@@ -1068,19 +1069,19 @@ arguments:
 ``encoding``
     Set encoding will be used to parse author's name and commit
     message. Default encoding is ``'utf-8'``. This will not be
-    applied to file names since git will translate non-ascii file
+    applied to file names since Git will translate non-ascii file
     names to unreadable escape sequences.
 
 ``workdir``
     the directory where the poller should keep its local repository.
     The default is :samp:`gitpoller_work`.
     If this is a relative path, it will be interpreted relative to the master's basedir.
-    Multiple git pollers can share the same directory.
+    Multiple Git pollers can share the same directory.
 
-An configuration for the git poller might look like this::
+A configuration for the Git poller might look like this::
 
     from buildbot.changes.gitpoller import GitPoller
-    c['change_source'] = GitPoller('git@example.com:foobaz/myrepo.git',
+    c['change_source'] = GitPoller(repourl='git@example.com:foobaz/myrepo.git',
                                    branches=['master', 'great_new_feature'])
 
 .. bb:chsrc:: HgPoller
@@ -1134,7 +1135,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 
     If relative, the ``workdir`` will be interpreted from the master directory.
 
-``pollinterval``
+``pollInterval``
     interval in seconds between polls, default is 10 minutes
 
 ``hgbin``
@@ -1164,7 +1165,7 @@ The :bb:chsrc:`HgPoller` accepts the following arguments:
 A configuration for the Mercurial poller might look like this::
 
     from buildbot.changes.hgpoller import HgPoller
-    c['change_source'] = HgPoller('http://hg.example.org/projects/myrepo',
+    c['change_source'] = HgPoller(repourl='http://hg.example.org/projects/myrepo',
                                    branch='great_new_feature',
                                    workdir='hg-myrepo')
 

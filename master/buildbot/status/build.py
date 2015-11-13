@@ -20,11 +20,12 @@ from cPickle import dump
 from zope.interface import implements
 from twisted.python import log, runtime, components
 from twisted.persisted import styles
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, threads
 from buildbot import interfaces, util, sourcestamp
 from buildbot.process import properties
 from buildbot.status.buildstep import BuildStepStatus
-from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED
+from buildbot.status.results import SUCCESS, NOT_REBUILT, SKIPPED, RESUME, CANCELED, RETRY, MERGED
+import time
 
 # Avoid doing an import since it creates circular reference
 TriggerType = "<class 'buildbot.steps.trigger.Trigger'>"
@@ -42,6 +43,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     changes = []
     blamelist = []
     progress = None
+    resume = []
+    resumeSlavepool = None
     started = None
     finished = None
     submitted = None
@@ -78,6 +81,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
+        self.resume = []
+        self.resumeSlavepool = None
         self.properties = properties.Properties()
 
     def __repr__(self):
@@ -153,7 +158,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def getInterestedUsers(self):
         # TODO: the Builder should add others: sheriffs, domain-owners
-        return self.blamelist + self.properties.getProperty('owners', [])
+        return self.properties.getProperty('owners', [])
 
     def getSteps(self):
         """Return a list of IBuildStepStatus objects. For invariant builds
@@ -163,21 +168,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         be complete (asking again later may give you more of them)."""
         return self.steps
 
-    def getTimes(self, include_raw_build_time=False):
-        if not include_raw_build_time:
-            return (self.started, self.finished)
-        else:
-            rawBuildTime = self.finished
-            if rawBuildTime is None:
-                rawBuildTime = 0
-                
-            for s in self.steps:
-                step_type = s.getStepType()
-                if step_type == AcquireBuildLocksType or step_type == TriggerType:
-                    times = s.getTimes()
-                    if times[0] is not None and times[1] is not None:
-                        rawBuildTime -= (times[1] - times[0])
-            return self.started, self.finished, rawBuildTime
+    def getTimes(self):
+        return (self.started, self.finished)
 
     _sentinel = [] # used as a sentinel to indicate unspecified initial_value
     def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
@@ -224,7 +216,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         return self.currentStep
 
     # Once you know the build has finished, the following methods are legal.
-    # Before ths build has finished, they all return None.
+    # Before this build has finished, they all return None.
 
     def getText(self):
         text = []
@@ -280,14 +272,24 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     # methods for the base.Build to invoke
 
-    def addStepWithName(self, name, step_type):
+    def getStepByName(self, name):
+        for s in self.steps:
+            if s.name == name:
+                return s
+        return None
+
+    def addStepWithName(self, name, step_type, index=None):
         """The Build is setting up, and has added a new BuildStep to its
         list. Create a BuildStepStatus object to which it can send status
         updates."""
 
         s = BuildStepStatus(self, self.master, len(self.steps), step_type)
         s.setName(name)
-        self.steps.append(s)
+        if index is None:
+            self.steps.append(s)
+        else:
+            self.steps.insert(index, s)
+
         return s
 
     def addTestResult(self, result):
@@ -335,9 +337,25 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.results = results
 
     def buildFinished(self):
-        self.currentStep = None
         self.finished = util.now()
 
+        if self.results == RESUME:
+            build_data = {'start': self.started,
+                          'finished': self.finished,
+                          'startTime': time.ctime(self.started),
+                          'finishedTime': time.ctime(self.finished),
+                          'slavename': self.slavename,
+                          'lastStepName': self.currentStep.name,
+                          'lastStepNumber': self.currentStep.step_number+1,
+                          'elapsed': util.formatInterval(self.finished - self.started),
+                          'resumeSlavepool': self.resumeSlavepool}
+
+            self.resume.append(build_data)
+            self.setText(["Build Will Be Resumed"])
+            self.finished = None
+            self.started = None
+
+        self.currentStep = None
         for r in self.updates.keys():
             if self.updates[r] is not None:
                 self.updates[r].cancel()
@@ -468,6 +486,31 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         for s in self.steps:
             s.checkLogfiles()
 
+    def cancelYourself(self):
+        self.results = CANCELED
+        self.started = util.now() if self.started is None else self.started
+        self.finished = util.now() if self.finished is None else self.finished
+        self.setText(["Build Canceled"])
+        self.buildFinished()
+        self.saveYourself()
+
+    def retryResume(self):
+        failure = "Failed to resume build %s # %d while loading steps, will retry" % (self.builder.name, self.number)
+        log.msg(failure)
+        self.setResults(RETRY)
+        self.finished = util.now()
+        self.setText(["Failed to Resume, Will Retry"])
+        self.buildFinished()
+        self.saveYourself()
+        raise RuntimeError(failure)
+
+    @defer.inlineCallbacks
+    def buildMerged(self, url):
+        self.setResults(MERGED)
+        self.finished = util.now()
+        self.setText(["Build has been merged with: %s" % url['text']])
+        yield threads.deferToThread(self.saveYourself)
+
     def saveYourself(self):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)
         if os.path.isdir(filename):
@@ -573,6 +616,12 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['url']['path'] += args
         result['builder_url'] = status.getURLForThing(self.builder) + args
 
+        if self.resume:
+            result['resume'] = self.resume
+
+        if self.resumeSlavepool:
+            result['resumeSlavepool'] = self.resumeSlavepool
+
         if include_failure_url:
             result['failure_url'] = self.get_failure_of_interest()
             if result['failure_url'] is not None:
@@ -582,7 +631,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             result['artifacts'] = self.get_artifacts()
 
         # Transient
-        result['times'] = self.getTimes(include_raw_build_time=True)
+        result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
         result['slave'] = self.getSlavename()

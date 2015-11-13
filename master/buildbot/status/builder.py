@@ -33,7 +33,7 @@ from buildbot.status.buildrequest import BuildRequestStatus
 
 # user modules expect these symbols to be present here
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.status.results import EXCEPTION, RETRY, Results, worst_status
+from buildbot.status.results import EXCEPTION, RETRY, RESUME, Results, worst_status
 _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
                    EXCEPTION, RETRY, Results, worst_status ]
 
@@ -69,14 +69,16 @@ class BuilderStatus(styles.Versioned):
     unavailable_build_numbers = set()
     status = None
 
-    def __init__(self, buildername, category, master, friendly_name=None):
+    def __init__(self, buildername, category, master, friendly_name=None, description=None):
         self.name = buildername
         self.category = category
+        self.description = description
         self.master = master
         self.project = None
         self.friendly_name = friendly_name
 
         self.slavenames = []
+        self.startSlavenames = []
         self.events = []
         # these three hold Events, and are used to retrieve the current
         # state of the boxes.
@@ -93,6 +95,7 @@ class BuilderStatus(styles.Versioned):
         self.pendingBuildsCache = None
         self.tags = []
         self.loadingBuilds = {}
+        self.cancelBuilds = {}
 
 
     # persistence
@@ -142,7 +145,9 @@ class BuilderStatus(styles.Versioned):
         self.currentBuilds = []
         self.watchers = []
         self.slavenames = []
+        self.startSlavenames = []
         self.loadingBuilds = {}
+        self.cancelBuilds = {}
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
         # self.master must be filled in by our parent
@@ -226,7 +231,13 @@ class BuilderStatus(styles.Versioned):
 
             log.msg("Loading builder %s's build %d from on-disk pickle" % (self.name, number))
             with open(filename, "rb") as f:
-                build = load(f)
+                try:
+                    build = load(f)
+                except ImportError as err:
+                    log.msg("ImportError loading builder %s's build %d from disk pickle" % (self.name, number))
+                    log.msg(str(err))
+                    return None
+
             build.setProcessObjects(self, self.master)
 
             # (bug #1068) if we need to upgrade, we probably need to rewrite
@@ -335,20 +346,36 @@ class BuilderStatus(styles.Versioned):
     def setTags(self, tags):
         self.tags = tags
 
+    def setDescription(self, description):
+        # used during reconfig
+        self.description = description
+
+    def getDescription(self):
+        return self.description
+
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 
+    def getAllSlaveNames(self):
+        if self.startSlavenames:
+            return self.slavenames + self.startSlavenames
+
+        return self.slavenames
+
     def getSlaves(self):
         return [self.status.getSlave(name) for name in self.slavenames]
+
+    def getAllSlaves(self):
+        return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self):
         db = self.status.master.db
 
-        brdicts = yield db.buildrequests.getBuildRequests(claimed=False,
-                                             buildername=self.name)
+        brdicts = yield db.buildrequests.getBuildRequestInQueue(buildername=self.name, sorted=True)
 
-        result = [BuildRequestStatus(self.name, brdict['brid'],self.status) for brdict in brdicts]
+        result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
+
         defer.returnValue(result)
 
     def foundCodebasesInBuild(self, build, codebases):
@@ -576,6 +603,7 @@ class BuilderStatus(styles.Versioned):
                                finished_before=None,
                                results=None,
                                max_search=2000,
+                               filter_fn=None,
                                useCache=False):
 
         key = self.getLatestBuildKey(codebases)
@@ -616,6 +644,9 @@ class BuilderStatus(styles.Versioned):
             if results is not None:
                 if build.getResults() not in results:
                     continue
+            if filter_fn is not None:
+                if not filter_fn(build):
+                    continue
             got += 1
             yield build
             if num_builds and num_builds == 1 and useCache:
@@ -626,6 +657,29 @@ class BuilderStatus(styles.Versioned):
         if useCache and num_builds == 1:
             self.saveLatestBuild(build=None, key=key)
 
+    def buildCanceled(self, _, buildnumber):
+        self.cancelBuilds[buildnumber]['access'] -= 1
+        if not self.cancelBuilds[buildnumber]['access']:
+            del self.cancelBuilds[buildnumber]
+
+    def cancelBuildFromThread(self, build):
+        if build.number not in self.cancelBuilds:
+            d = threads.deferToThread(build.cancelYourself)
+            d.addCallback(self.buildCanceled, build.number)
+            self.cancelBuilds[build.number] = {'defer': d, 'access': 1}
+            return
+
+        if self.cancelBuilds[build.number]['defer']:
+            self.cancelBuilds[build.number]['access'] += 1
+
+    @defer.inlineCallbacks
+    def cancelBuildOnResume(self, number):
+        build = yield self.deferToThread(number)
+        if build:
+            self.cancelBuildFromThread(build)
+            yield self.cancelBuilds[build.number]['defer']
+
+        defer.returnValue(build)
 
     def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         """This function creates a generator which will provide all of this
@@ -698,6 +752,9 @@ class BuilderStatus(styles.Versioned):
 
     def setSlavenames(self, names):
         self.slavenames = names
+
+    def setStartSlavenames(self, names):
+        self.startSlavenames = names
 
     def addEvent(self, text=[]):
         # this adds a duration event. When it is done, the user should call
@@ -857,6 +914,9 @@ class BuilderStatus(styles.Versioned):
         self.latestBuildCache[k] = cache
 
     def saveLatestBuild(self, build, key=None):
+        if build and build.getResults() == RESUME:
+            return
+
         cache = {"build": None, "date": datetime.datetime.now()}
 
         if build is not None:
@@ -884,8 +944,10 @@ class BuilderStatus(styles.Versioned):
         result['name'] = self.name
         result['url'] = self.status.getURLForThing(self) + codebases_to_args(codebases)
         result['friendly_name'] = self.getFriendlyName()
+        result['description'] = self.getDescription()
         result['project'] = self.project
         result['slaves'] = self.slavenames
+        result['startSlavenames '] = self.startSlavenames
         result['tags'] = self.tags
 
         # TODO(maruel): Add cache settings? Do we care?

@@ -404,6 +404,29 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
                             environ={"BUILD_NUMBER":13}))
 
+    @compat.skipUnlessPlatformIs("posix")
+    def testUserParameter(self):
+        """
+        Test that setting the 'user' parameter causes RunProcess to
+        wrap the command using 'sudo'.
+        """
+
+        user = 'test'
+        cmd = ['whatever']
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b, cmd, self.basedir, user=user)
+
+        # Override the '_spawnProcess' method so that we can verify
+        # that the command is run using 'sudo', as we expect.
+        def _spawnProcess(*args, **kwargs):
+            executable = args[1]
+            args = args[2]
+            self.assertEqual(executable, 'sudo')
+            self.assertEqual(args, ['sudo', '-u', user, '-H'] + cmd)
+        s._spawnProcess = _spawnProcess
+        s.start()
+        return s.finished(None, 0)
+
 
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 

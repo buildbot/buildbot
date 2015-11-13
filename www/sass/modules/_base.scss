@@ -24,6 +24,7 @@ dependency_failure #FCF2F2 $color-white "Dependency failure",
 not_rebuilt #F8FCF2 $color-white "Not rebuilt",
 start #ccc false "Start",
 idle #F5F5F5 false "Idle" #e0e0e0,
+paused #DAE6F3 false "Paused" #e0e0e0,
 running #FCFACB false "Running",
 overtime #FCCBCB false "Overtime",
 offline #E7E7E7 false "Offline" #d1d1d1,
@@ -54,6 +55,11 @@ retry #DDD7DD $color-white "Retry";
 }
 
 .idle,td.idle {
+    @include text-shadow(0 1px 0 #fff);
+}
+
+.paused,td.paused {
+    background-color: #DAE6F3;
     @include text-shadow(0 1px 0 #fff);
 }
 

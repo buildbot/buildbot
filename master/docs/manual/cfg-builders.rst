@@ -84,6 +84,14 @@ Other optional keys may be set on each ``BuilderConfig``:
     builds should be started. This function can optionally return a
     Deferred which should fire with the same results.
 
+``canStartBuild``
+    If provided, this is a function that can veto whether a particular buildslave 
+    should be used for a given build request. The function is passed three 
+    arguments: the :class:`Builder`, a :class:`BuildSlave`, and a :class:`BuildRequest`.
+    The function should return ``True`` if the combination is acceptable, or 
+    ``False`` otherwise. This function can optionally return a Deferred which 
+    should fire with the same results.
+
 ``locks``
     This argument specifies a list of locks that apply to this builder; see
     :ref:`Interlocks`.
@@ -122,6 +130,10 @@ Other optional keys may be set on each ``BuilderConfig``:
     A builder may be given a dictionary of :ref:`Build-Properties`
     specific for this builder in this parameter. Those values can be used
     later on like other properties. :ref:`Interpolate`.
+
+``description``
+    A builder may be given an arbitrary description, which will show up in the
+    web status on the builder's page.
 
 .. index:: Builds; merging
 

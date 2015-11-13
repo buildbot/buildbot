@@ -71,11 +71,19 @@
         Build In Progress
       </h2>
 
-      <span class="current-step current-step-js result">
-        {{ b.currentStep.name }}
-      </span>
+        {{#if b.currentStep}}
+        <span class="current-step current-step-js result">
+         {{ b.currentStep.name }}
+        </span>
+        {{{progressBar}}}
+        {{else}}
 
-      {{{progressBar}}}
+        {{#if b.results }}
+         <span class="{{buildCSSClass b.results }} result overall-result-js overall-result">
+          {{#each b.text}}{{this}} {{/each}}
+        </span>
+        {{/if }}
+        {{/if}}
 
     {{else}}
       <h2 id="isFinished" data-isfinished="true" class="head-2">

@@ -69,7 +69,7 @@ class JobdirService(MaildirService):
 
 class Try_Jobdir(TryBase):
 
-    compare_attrs = TryBase.compare_attrs + ('jobdir',)
+    compare_attrs = ('jobdir',)
 
     def __init__(self, name, builderNames, jobdir,
                  properties={}):
@@ -264,7 +264,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         from buildbot.status.client import makeRemote
         defer.returnValue(makeRemote(bss))
 
-    def perspective_getAvailableBuilderNames(self):
+    def perspective_getAvailableBuilderNames(self, properties={}):
         # Return a list of builder names that are configured
         # for the try service
         # This is mostly intended for integrating try services

@@ -15,9 +15,10 @@
 
 
 from twisted.python import log
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 from buildbot import util
 from buildbot.util import subscription
+from buildbot.util.eventual import eventually
 
 if False: # for debugging
     debuglog = log.msg
@@ -137,7 +138,7 @@ class BaseLock:
             # from the wait queue entry to indicate that it has been woken.
             if d:
                 self.waiting[i] = (w_owner, w_access, None)
-                reactor.callLater(0, d.callback, self)
+                eventually(d.callback, self)
 
         # notify any listeners
         self.release_subs.deliver()
@@ -218,12 +219,15 @@ class LockAccess(util.ComparableMixin):
     """
 
     compare_attrs = ['lockid', 'mode']
-    def __init__(self, lockid, mode):
+    def __init__(self, lockid, mode, _skipChecks=False):
         self.lockid = lockid
         self.mode = mode
 
-        assert isinstance(lockid, (MasterLock, SlaveLock))
-        assert mode in ['counting', 'exclusive']
+        if not _skipChecks:
+            # these checks fail with mock < 0.8.0 when lockid is a Mock
+            # TODO: remove this in Buildbot-0.9.0+
+            assert isinstance(lockid, (MasterLock, SlaveLock))
+            assert mode in ['counting', 'exclusive']
 
 
 class BaseLockId(util.ComparableMixin):

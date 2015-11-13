@@ -107,6 +107,13 @@ class BaseBasicScheduler(CommonStuffMixin,
         d.addCallback(lambda _ : sched.stopService())
         return d
 
+    def test_subclass_fileIsImportant(self):
+        class Subclass(self.Subclass):
+            def fileIsImportant(self, change):
+                return False
+        sched = self.makeScheduler(Subclass, onlyImportant=True)
+        self.failUnlessEqual(Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
+
     def test_startService_treeStableTimer(self):
         cf = mock.Mock()
         sched = self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
@@ -307,7 +314,7 @@ class AnyBranchScheduler(CommonStuffMixin,
                 lambda : basic.SingleBranchScheduler(name="tsched", treeStableTimer=60, branch='x'))
 
     def test_gotChange_treeStableTimer_multiple_branches(self):
-        # check that two changes with different branches have different treeStableTimers
+        """Two changes with different branches get different treeStableTimers"""
         sched = self.makeScheduler(basic.AnyBranchScheduler,
                             treeStableTimer=10, branches=['master', 'devel', 'boring'])
 
@@ -336,11 +343,110 @@ class AnyBranchScheduler(CommonStuffMixin,
         d.addCallback(lambda _ :
                 sched.gotChange(mkch(branch='devel', number=16), True))
         d.addCallback(lambda _ :
-                self.assertEqual(sched.getPendingBuildTimes(), [11,15]))
+                self.assertEqual(sorted(sched.getPendingBuildTimes()), [11,15]))
         d.addCallback(lambda _ :
                 self.clock.pump([1]*10)) # time is now 15
         def check(_):
             self.assertEqual(self.events, [ 'B[13,14]@11', 'B[16]@15' ])
+        d.addCallback(check)
+
+        d.addCallback(lambda _ : sched.stopService())
+
+    def test_gotChange_treeStableTimer_multiple_repositories(self):
+        """Two repositories, even with the same branch name, have different treeStableTimers"""
+        sched = self.makeScheduler(basic.AnyBranchScheduler,
+                            treeStableTimer=10, branches=['master'])
+
+        sched.startService()
+
+        def mkch(**kwargs):
+            ch = self.makeFakeChange(**kwargs)
+            self.db.changes.fakeAddChangeInstance(ch)
+            return ch
+
+        d = defer.succeed(None)
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', repository="repo", number=13), True))
+        d.addCallback(lambda _ :
+                self.clock.advance(1)) # time is now 1
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', repository="repo", number=14), False))
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', repository="other_repo", number=15), False))
+        d.addCallback(lambda _ :
+                self.clock.pump([1]*4)) # time is now 5
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', repository="other_repo", number=17), True))
+        d.addCallback(lambda _ :
+                self.clock.pump([1]*10)) # time is now 15
+        def check(_):
+            self.assertEqual(self.events, [ 'B[13,14]@11', 'B[15,17]@15' ])
+        d.addCallback(check)
+
+        d.addCallback(lambda _ : sched.stopService())
+
+    def test_gotChange_treeStableTimer_multiple_projects(self):
+        """Two projects, even with the same branch name, have different treeStableTimers"""
+        sched = self.makeScheduler(basic.AnyBranchScheduler,
+                            treeStableTimer=10, branches=['master'])
+
+        sched.startService()
+
+        def mkch(**kwargs):
+            ch = self.makeFakeChange(**kwargs)
+            self.db.changes.fakeAddChangeInstance(ch)
+            return ch
+
+        d = defer.succeed(None)
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', project="proj", number=13), True))
+        d.addCallback(lambda _ :
+                self.clock.advance(1)) # time is now 1
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', project="proj", number=14), False))
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', project="other_proj", number=15), False))
+        d.addCallback(lambda _ :
+                self.clock.pump([1]*4)) # time is now 5
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', project="other_proj", number=17), True))
+        d.addCallback(lambda _ :
+                self.clock.pump([1]*10)) # time is now 15
+        def check(_):
+            self.assertEqual(self.events, [ 'B[13,14]@11', 'B[15,17]@15' ])
+        d.addCallback(check)
+
+        d.addCallback(lambda _ : sched.stopService())
+
+    def test_gotChange_treeStableTimer_multiple_codebases(self):
+        """Two codebases, even with the same branch name, have different treeStableTimers"""
+        sched = self.makeScheduler(basic.AnyBranchScheduler,
+                            treeStableTimer=10, branches=['master'])
+
+        sched.startService()
+
+        def mkch(**kwargs):
+            ch = self.makeFakeChange(**kwargs)
+            self.db.changes.fakeAddChangeInstance(ch)
+            return ch
+
+        d = defer.succeed(None)
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', codebase="base", number=13), True))
+        d.addCallback(lambda _ :
+                self.clock.advance(1)) # time is now 1
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', codebase="base", number=14), False))
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', codebase="other_base", number=15), False))
+        d.addCallback(lambda _ :
+                self.clock.pump([1]*4)) # time is now 5
+        d.addCallback(lambda _ :
+                sched.gotChange(mkch(branch='master', codebase="other_base", number=17), True))
+        d.addCallback(lambda _ :
+                self.clock.pump([1]*10)) # time is now 15
+        def check(_):
+            self.assertEqual(self.events, [ 'B[13,14]@11', 'B[15,17]@15' ])
         d.addCallback(check)
 
         d.addCallback(lambda _ : sched.stopService())

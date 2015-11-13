@@ -22,7 +22,7 @@ Defining a Build Factory
 ------------------------
 
 A :class:`BuildFactory` defines the steps that every build will follow.  Think of it as
-a glorified script.  For example, a build factory which consists of a CVS checkout
+a glorified script.  For example, a build factory which consists of an SVN checkout
 followed by a ``make build`` would be configured as follows::
 
     from buildbot.steps import svn, shell
@@ -365,7 +365,7 @@ Arguments:
     pure-python modules.
 
 ``python``
-    which python executable to use. This list will form the start of
+    which Python executable to use. This list will form the start of
     the `argv` array that will launch trial. If you use this,
     you should set ``trial`` to an explicit path (like
     :file:`/usr/bin/trial` or :file:`./bin/trial`). The parameter defaults

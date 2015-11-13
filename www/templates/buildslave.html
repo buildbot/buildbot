@@ -13,11 +13,24 @@
 <div class="initjson">
     <div class="row">
         <div class="rounded-container">
+            {% if not slave %}
+                <div class="col-md-6">
+                <h2 class="head-2">
+                 {{ slavename }}
+                </h2>
+                <p> The slave is not attached to this master.<p>
+                </div>
+            {% endif %}
             <div id="slaveInfo" class="col-md-12"
                  data-shutdown-url="{% if authz.advertiseAction('gracefulShutdown', request) %}{{ shutdown_url }}{% endif %}"
-                 data-graceful="{{  slave.getGraceful() }}">
+                 data-graceful="{% if slave %} {{  slave.getGraceful() }} {% endif %}">
             </div>
-
+            <div class="col-md-12">
+                {% if authz.advertiseAction('pauseSlave', request) and slave %}
+                        <h2 class="head-2">Pause Slave</h2>
+                        {{ forms.pause_slave(pause_url, authz, slave.isPaused()) }}
+                {% endif %}
+            </div>
             <div class="col-md-6">
                 <h2 class="head-2 fl-left"> Current builds </h2>
                 <button id="cancelAllCurrentBuilds" class="removeBuildBtn">Stop Selected Builds</button>
@@ -25,8 +38,6 @@
                 </table>
             </div>
             <div class="col-md-6">
-
-
                 <h2 class="head-2">
                     Recent builds
                 </h2>

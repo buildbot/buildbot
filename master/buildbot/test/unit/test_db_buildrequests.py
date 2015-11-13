@@ -92,7 +92,7 @@ class TestBuildsetsConnectorComponent(
                 self.db.buildrequests.getBuildRequest(44))
         def check(brdict):
             self.assertEqual(brdict,
-                    dict(artifactbrid=None, brid=44, buildsetid=self.BSID, buildername="bbb",
+                    dict(slavepool=None, artifactbrid=None, brid=44, buildsetid=self.BSID, buildername="bbb",
                         priority=7, claimed=True, mergebrid=None, mine=True, complete=True,
                         results=75, startbrid=None, claimed_at=self.CLAIMED_AT,
                         submitted_at=self.SUBMITTED_AT, triggeredbybrid = None,
@@ -296,6 +296,58 @@ class TestBuildsetsConnectorComponent(
             self.assertEqual([ br['brid'] for br in brlist ], [ 44 ])
         d.addCallback(check)
         return d
+
+    def do_test_getBuildRequests_branch_arg(self, **kwargs):
+        expected = kwargs.pop('expected')
+        d = self.insertTestData([
+            fakedb.BuildRequest(id=70, buildsetid=self.BSID+1),
+            fakedb.Buildset(id=self.BSID+1, sourcestampsetid=self.BSID+1),
+            fakedb.SourceStampSet(id=self.BSID+1),
+            fakedb.SourceStamp(sourcestampsetid=self.BSID+1,
+                               branch='branch_A'),
+
+            fakedb.BuildRequest(id=80, buildsetid=self.BSID+2),
+            fakedb.Buildset(id=self.BSID+2, sourcestampsetid=self.BSID+2),
+            fakedb.SourceStampSet(id=self.BSID+2),
+            fakedb.SourceStamp(sourcestampsetid=self.BSID+2,
+                               repository='repository_A'),
+
+            fakedb.BuildRequest(id=90, buildsetid=self.BSID+3),
+            fakedb.Buildset(id=self.BSID+3, sourcestampsetid=self.BSID+3),
+            fakedb.SourceStampSet(id=self.BSID+3),
+            fakedb.SourceStamp(sourcestampsetid=self.BSID+3,
+                               branch='branch_A', repository='repository_A'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.buildrequests.getBuildRequests(**kwargs))
+        def check(brlist):
+            self.assertEqual(sorted([ br['brid'] for br in brlist ]),
+                             sorted(expected))
+        d.addCallback(check)
+        return d
+
+    def test_getBuildRequests_branch(self):
+      return self.do_test_getBuildRequests_branch_arg(branch='branch_A',
+                                                      expected=[70, 90])
+
+    def test_getBuildRequests_branch_empty(self):
+      return self.do_test_getBuildRequests_branch_arg(branch='absent_branch',
+                                                      expected=[])
+
+    def test_getBuildRequests_repository(self):
+      return self.do_test_getBuildRequests_branch_arg(
+          repository='repository_A', expected=[80, 90])
+
+    def test_getBuildRequests_repository_empty(self):
+      return self.do_test_getBuildRequests_branch_arg(
+          repository='absent_repository', expected=[])
+
+    def test_getBuildRequests_repository_and_branch(self):
+      return self.do_test_getBuildRequests_branch_arg(
+          repository='repository_A', branch='branch_A', expected=[90])
+
+    def test_getBuildRequests_no_repository_nor_branch(self):
+      return self.do_test_getBuildRequests_branch_arg(expected=[70, 80, 90])
 
     def do_test_claimBuildRequests(self, rows, now, brids, expected=None,
                                   expfailure=None, claimed_at=None):
@@ -1050,18 +1102,54 @@ class TestBuildsetsConnectorComponent(
         def checkBuildChain(buildChain, exp_chain=[]):
             self.assertEqual(buildChain, exp_chain)
 
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[8]]))
-        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-02', 'number': None, 'brid': 2},
-                                                    {'buildername': u'builder-03', 'number': 2, 'brid': 3},
-                                                    {'buildername': u'builder-09', 'number': None, 'brid': 10}])
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[2]], brid=3))
-        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-05', 'number': 3, 'brid': 6},
-                                                  {'buildername': u'builder-06', 'number': None, 'brid': 7}])
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain(1))
+        d.addCallback(checkBuildChain, exp_chain=[{'buildername': 'builder-02', 'number': None,
+                                                   'results': -1, 'brid': 2},
+                                                  {'buildername': 'builder-03', 'number': 2,
+                                                   'results': -1, 'brid': 3},
+                                                  {'buildername': 'builder-04', 'number': None,
+                                                   'results': -1, 'brid': 5},
+                                                  {'buildername': 'builder-05', 'number': 3,
+                                                   'results': -1, 'brid': 6},
+                                                  {'buildername': 'builder-06', 'number': None,
+                                                   'results': -1, 'brid': 7},
+                                                  {'buildername': 'builder-08', 'number': 5,
+                                                   'results': -1, 'brid': 9},
+                                                  {'buildername': 'builder-09', 'number': None,
+                                                   'results': -1, 'brid': 10},
+                                                  {'buildername': 'builder-10', 'number': None,
+                                                   'results': -1, 'brid': 11}])
 
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[6]], brid=7))
-        d.addCallback(checkBuildChain, exp_chain=[{'buildername': u'builder-08', 'number': 5, 'brid': 9}])
+        return d
 
-        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestBuildChain([breqs[8]], brid=9))
-        d.addCallback(checkBuildChain)
+    def test_getBuildRequestInQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1"),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2"),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=9, complete=1),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1", results=0, complete=1)]
 
+        breqsclaims = [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1300103810),
+                       fakedb.BuildRequestClaim(brid=4, objectid=self.MASTER_ID, claimed_at=1300103810)]
+
+        def fakeRequest(brid, bsid, results, complete):
+            return {'slavepool': None,
+                    'artifactbrid': None,
+                    'buildername': 'bldr1',
+                    'claimed_at': None,
+                    'results': results,
+                    'mine': False,
+                    'triggeredbybrid': None,
+                    'submitted_at': None,
+                    'claimed': False,
+                    'complete': complete,
+                    'complete_at': None,
+                    'buildsetid': bsid,
+                    'priority': 0,
+                    'mergebrid': None,
+                    'brid': brid,
+                    'startbrid': None}
+
+        d = self.insertTestData(breqs + breqsclaims)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestInQueue(buildername="bldr1"))
+        d.addCallback(lambda queue: self.assertEqual(queue, [fakeRequest(1, 1, -1, False), fakeRequest(3, 3, 9, True)]))
         return d

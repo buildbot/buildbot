@@ -14,15 +14,17 @@
 # Copyright Buildbot Team Members
 
 from buildbot.interfaces import ITriggerableScheduler
-from buildbot.process.buildstep import LoggingBuildStep, BuildStep, SUCCESS, FAILURE, EXCEPTION
+from buildbot.process.buildstep import BuildStep, SUCCESS, FAILURE, EXCEPTION
 from buildbot.process.properties import Properties, Property
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import config
-from buildbot.status.results import DEPENDENCY_FAILURE
+from buildbot.status.results import DEPENDENCY_FAILURE, RETRY, WARNINGS, SKIPPED, CANCELED
+from twisted.python.failure import Failure
+from buildbot.schedulers.triggerable import TriggerableSchedulerStopped
+from buildbot.steps.resumebuild import ResumeBuild
 
-
-class Trigger(LoggingBuildStep):
+class Trigger(ResumeBuild):
     name = "Trigger"
 
     renderables = [ 'set_properties', 'schedulerNames', 'sourceStamps',
@@ -32,8 +34,7 @@ class Trigger(LoggingBuildStep):
 
     def __init__(self, schedulerNames=[], sourceStamp = None, sourceStamps = None,
                  updateSourceStamp=None, alwaysUseLatest=False,
-                 waitForFinish=False, set_properties={}, 
-                 copy_properties=[], **kwargs):
+                 waitForFinish=False, set_properties={},  copy_properties=[], **kwargs):
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
@@ -64,7 +65,7 @@ class Trigger(LoggingBuildStep):
         self.set_properties = properties
         self.running = False
         self.ended = False
-        LoggingBuildStep.__init__(self, **kwargs)
+        ResumeBuild.__init__(self, **kwargs)
 
     def interrupt(self, reason):
         if self.running:
@@ -83,6 +84,7 @@ class Trigger(LoggingBuildStep):
         # properties object
         trigger_properties = Properties()
         trigger_properties.update(self.set_properties, "Trigger")
+        trigger_properties.setProperty("stepname", self.name, "Trigger")
         return trigger_properties
 
     # Get all scheduler instances that were configured
@@ -91,6 +93,7 @@ class Trigger(LoggingBuildStep):
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
         invalid_schedulers = []
+        duplicated_schedulers = []
         triggered_schedulers = []
         # don't fire any schedulers if we discover an unknown one
         for scheduler in self.schedulerNames:
@@ -98,13 +101,16 @@ class Trigger(LoggingBuildStep):
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if ITriggerableScheduler.providedBy(sch):
-                    triggered_schedulers.append(sch)
+                    if sch not in triggered_schedulers:
+                        triggered_schedulers.append(sch)
+                    else:
+                        duplicated_schedulers.append(sch.name)
                 else:
                     invalid_schedulers.append(scheduler)
             else:
                 invalid_schedulers.append(scheduler)
 
-        return (triggered_schedulers, invalid_schedulers)
+        return (triggered_schedulers, invalid_schedulers, duplicated_schedulers)
 
     def prepareSourcestampListForTrigger(self):
         if self.sourceStamps:
@@ -137,12 +143,21 @@ class Trigger(LoggingBuildStep):
         if self.running:
             self.finished(result)
 
+    def checkDisconection(self, result, results):
+        if (isinstance(results, Failure) and results.check(TriggerableSchedulerStopped)) or results == RETRY:
+            result = RETRY
+            self.addErrorResult(results)
+        return result
+
     @defer.inlineCallbacks
     def start(self):
         # Get all triggerable schedulers and check if there are invalid schedules
-        (triggered_schedulers, invalid_schedulers) = self.getSchedulers()
-        if invalid_schedulers:
-            self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
+        (triggered_schedulers, invalid_schedulers, duplicated_schedulers) = self.getSchedulers()
+        if invalid_schedulers or duplicated_schedulers:
+            if invalid_schedulers:
+                self.step_status.setText(['not valid scheduler:'] + invalid_schedulers)
+            if duplicated_schedulers:
+                self.step_status.setText2(['duplicated scheduler:'] + duplicated_schedulers)
             self.finished(FAILURE)
             return
 
@@ -167,6 +182,7 @@ class Trigger(LoggingBuildStep):
 
         if self.waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=True)
+
         else:
             # do something to handle errors
             for d in dl:
@@ -195,8 +211,10 @@ class Trigger(LoggingBuildStep):
             result = DEPENDENCY_FAILURE
             self.step_status.setText(["Dependency failed to build."])
             self.step_status.setText2(["(dependency failed to build)"])
+            result = self.checkDisconection(result, results)
+
         else:
-            result = SUCCESS
+            result = results if results in (SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELED) else SUCCESS
 
         if brids:
             master = self.build.builder.botmaster.parent
@@ -247,5 +265,8 @@ class Trigger(LoggingBuildStep):
             else:
                 add_links(res_builds)
 
+        log.msg("Trigger scheduler result %d " % result)
         self.finishIfRunning(result)
         return
+
+

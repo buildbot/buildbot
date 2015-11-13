@@ -368,13 +368,13 @@ Libvirt
 
 `libvirt <http://www.libvirt.org/>`_ is a virtualization API for interacting
 with the virtualization capabilities of recent versions of Linux and other OSes.
-It is LGPL and comes with a stable C API, and python bindings.
+It is LGPL and comes with a stable C API, and Python bindings.
 
 This means we know have an API which when tied to buildbot allows us to have slaves
 that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
 
 The libvirt code in Buildbot was developed against libvirt 0.7.5 on Ubuntu Lucid. It
-is used with KVM to test python code on Karmic VM's, but obviously isn't limited to that.
+is used with KVM to test Python code on Karmic VM's, but obviously isn't limited to that.
 Each build is run on a new VM, images are temporary and thrown away after each build.
 
 Setting up libvirt
@@ -435,20 +435,23 @@ set the username to ``minion1``, the password to ``sekrit``. The base image is c
 and a copy of it will be made for the duration of the VM's life. That copy will be thrown
 away every time a build is complete. ::
 
-    from buildbot.libvirtbuildslave import LibVirtBuildSlave
-    c['slaves'] = [LibVirtBuildSlave('minion1', 'sekrit',
-                                       '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
+    from buildbot.libvirtbuildslave import LibVirtSlave, Connection
+    c['slaves'] = [LibVirtSlave('minion1', 'sekrit', Connection("qemu:///session"),
+                                '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
 
 You can use virt-manager to define ``minion1`` with the correct hardware. If you don't, buildbot
 won't be able to find a VM to start.
 
-:class:`LibVirtBuildSlave` accepts the following arguments:
+:class:`LibVirtSlave` accepts the following arguments:
 
 ``name``
-    Both a buildbot username and the name of the virtual machine
+    Both a buildbot username and the name of the virtual machine.
 
 ``password``
-    A password for the buildbot to login to the master with
+    A password for the buildbot to login to the master with.
+
+``connection``
+    :class:`Connection` instance wrapping connection to libvirt.
 
 ``hd_image``
     The path to a libvirt disk image, normally in qcow2 format when using KVM.
@@ -461,6 +464,101 @@ won't be able to find a VM to start.
     If a VM isn't predefined in virt-manager, then you can instead provide XML
     like that used with ``virsh define``. The VM will be created
     automatically when needed, and destroyed when not needed any longer.
+
+OpenStack
++++++++++
+`OpenStack <http://openstack.org/>`_ is a series of interconnected components
+that facilitates managing compute, storage, and network resources in a
+data center. It is available under the Apache License and has a REST interface
+along with a Python client.
+
+Get an Account in an OpenStack cloud
+####################################
+Setting up OpenStack is outside the domain of this document. There are four
+account details necessary for the Buildbot master to interact with your
+OpenStack cloud: username, password, a tenant name, and the auth URL to use.
+
+Create an Image
+###############
+OpenStack supports a large number of image formats. OpenStack maintains a short
+list of prebuilt images; if the desired image is not listed, The
+`OpenStack Compute Administration Manual <http://docs.openstack.org/trunk/openstack-compute/admin/content/index.html>`_
+is a good resource for creating new images. You need to configure the image with
+a buildbot slave to connect to the master on boot.
+
+Configure the Master with an OpenStackLatentBuildSlave
+######################################################
+With the configured image in hand, it is time to configure the buildbot master
+to create OpenStack instances of it. You will need the aforementioned account
+details. These are the same details set in either environment variables or
+passed as options to an OpenStack client.
+
+:class:`OpenStackLatentBuildSlave` accepts the following arguments:
+
+``name``
+    The buildslave name.
+
+``password``
+    A password for the buildslave to login to the master with.
+
+``flavor``
+    The flavor ID to use for the instance.
+
+``image``
+    A string containing the image UUID to use for the instance. A callable may
+    instead be passed. It will be passed the list of available images and must
+    return the image to use.
+
+``os_username``
+
+``os_password``
+
+``os_tenant_name``
+
+``os_auth_url``
+    The OpenStack authentication needed to create and delete instances. These
+    are the same as the environment variables with uppercase names of the
+    arguments.
+
+``meta``
+    A dictionary of string key-value pairs to pass to the instance. These will
+    be available under the ``metadata`` key from the metadata service.
+
+Here is the simplest example of configuring an OpenStack latent buildslave. ::
+
+    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
+                    flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
+                    os_username='user', os_password='password',
+                    os_tenant_name='tenant',
+                    os_auth_url='http://127.0.0.1:35357/v2.0')]
+
+The ``image`` argument also supports being given a callable. The callable will
+be passed the list of available images and must return the image to use. The
+invocation happens in a separate thread to prevent blocking the build master
+when interacting with OpenStack. ::
+
+    from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+
+    def find_image(images):
+        # Sort oldest to newest.
+        cmp_fn = lambda x,y: cmp(x.created, y.created)
+        candidate_images = sorted(images, cmp=cmp_fn)
+        # Return the oldest candiate image.
+        return candidate_images[0]
+
+    c['slaves'] = [OpenStackLatentBuildSlave('bot2', 'sekrit',
+                    flavor=1, image=find_image,
+                    os_username='user', os_password='password',
+                    os_tenant_name='tenant',
+                    os_auth_url='http://127.0.0.1:35357/v2.0')]
+
+
+:class:`OpenStackLatentBuildSlave` supports all other configuration from the
+standard :class:`BuildSlave`. The ``missing_timeout`` and ``notify_on_missing``
+specify how long to wait for an OpenStack instance to attach before considering
+the attempt to have failed and email addresses to alert, respectively.
+``missing_timeout`` defaults to 20 minutes.
 
 Dangers with Latent Buildslaves
 +++++++++++++++++++++++++++++++

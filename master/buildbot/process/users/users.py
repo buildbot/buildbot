@@ -17,6 +17,8 @@ import os
 from twisted.python import log
 from twisted.internet import defer
 
+from buildbot.util import flatten
+
 try:
     from hashlib import sha1 as sha
     assert sha
@@ -48,8 +50,6 @@ def createUserObject(master, author, src=None):
         return defer.succeed(None)
 
     if src in srcs:
-        log.msg("checking for User Object from %s Change for: %s" % (src,
-                                                                     author))
         usdict = dict(identifier=author, attr_type=src, attr_data=author)
     else:
         log.msg("Unrecognized source argument: %s" % src)
@@ -60,26 +60,86 @@ def createUserObject(master, author, src=None):
             attr_type=usdict['attr_type'],
             attr_data=usdict['attr_data'])
 
-def getUserContact(master, contact_type=None, uid=None):
+
+def _extractContact(usdict, contact_types, uid):
+    if usdict:
+        for type in contact_types:
+            contact = usdict.get(type)
+            if contact:
+                break
+    else:
+        contact = None
+    if contact is None:
+        log.msg(format="Unable to find any of %(contact_types)r for uid: %(uid)r",
+                contact_types=contact_types, uid=uid)
+    return contact
+
+def getUserContact(master, contact_types, uid):
     """
     This is a simple getter function that returns a user attribute
-    that matches the contact_type argument, or returns None if no
+    that matches the contact_types argument, or returns None if no
     uid/match is found.
 
     @param master: BuildMaster used to query the database
     @type master: BuildMaster instance
 
-    @param contact_type: type of contact attribute to look for in
+    @param contact_types: list of contact attributes to look for in
                          in a given user, such as 'email' or 'nick'
-    @type contact_type: string
+    @type contact_types: list of strings
 
-    @param uid: user that is searched for the contact_type match
+    @param uid: user that is searched for the contact_types match
     @type uid: integer
 
     @returns: string of contact information or None via deferred
     """
     d = master.db.users.getUser(uid)
-    d.addCallback(lambda usdict: usdict and usdict.get(contact_type))
+    d.addCallback(_extractContact, contact_types, uid)
+    return d
+
+def _filter(contacts):
+    def notNone(c):
+        return c is not None
+    return filter(notNone, contacts)
+
+def getUsersContacts(master, contact_types, uids):
+    d = defer.gatherResults([getUserContact(master, contact_types, uid) for uid in uids])
+    d.addCallback(_filter)
+    return d
+
+def getChangeContacts(master, change, contact_types):
+    d = master.db.changes.getChangeUids(change.number)
+    d.addCallback(lambda uids: getUsersContacts(master, contact_types, uids))
+    return d
+
+def getSourceStampContacts(master, ss, contact_types):
+    dl = [getChangeContacts(master, change, contact_types) for change in ss.changes]
+    if False and ss.patch_info:
+        d = master.db.users.getUserByUsername(ss.patch_into[0])
+        d.addCallback(_extractContact, contact_types, ss.patch_info[0])
+        d.addCallback(lambda contact: filter(None, [contact]))
+        dl.append(d)
+    d = defer.gatherResults(dl)
+    d.addCallback(flatten)
+    return d
+
+def getBuildContacts(master, build, contact_types):
+    dl = []
+    ss_list = build.getSourceStamps()
+    for ss in ss_list:
+        dl.append(getSourceStampContacts(master, ss, contact_types))
+    d = defer.gatherResults(dl)
+    d.addCallback(flatten)
+    @d.addCallback
+    def addOwners(recipients):
+        dl = []
+        for owner in build.getInterestedUsers():
+            d = master.db.users.getUserByUsername(owner)
+            d.addCallback(_extractContact, contact_types, owner)
+            dl.append(d)
+        d = defer.gatherResults(dl)
+        d.addCallback(_filter)
+        d.addCallback(lambda owners: recipients + owners)
+        return d
     return d
 
 def encrypt(passwd):

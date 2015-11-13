@@ -237,7 +237,7 @@ class RunProcess:
                  timeout=None, maxTime=None, initialStdin=None,
                  keepStdout=False, keepStderr=False,
                  logEnviron=True, logfiles={}, usePTY="slave-config",
-                 useProcGroup=True):
+                 useProcGroup=True, user=None):
         """
 
         @param keepStdout: if True, we keep a copy of all the stdout text
@@ -368,6 +368,11 @@ class RunProcess:
                                follow=follow)
             self.logFileWatchers.append(w)
 
+        if user is not None and runtime.platformType != 'posix':
+            raise RuntimeError(
+                "Cannot use 'user' parameter on this platform")
+        self.user = user
+
     def __repr__(self):
         return "<%s '%s'>" % (self.__class__.__name__, self.fake_command)
 
@@ -436,6 +441,11 @@ class RunProcess:
                 argv = self.command
             # Attempt to format this for use by a shell, although the process isn't perfect
             display = shell_quote(self.fake_command)
+
+        # If requested, wrap the call in 'sudo' to run the command as a
+        # different user.
+        if self.user is not None:
+            argv = ['sudo', '-u', self.user, '-H'] + argv
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.  This causes

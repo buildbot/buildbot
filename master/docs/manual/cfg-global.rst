@@ -263,7 +263,7 @@ The available caches are:
 ``Changes``
     the number of change objects to cache in memory.
     This should be larger than the number of changes that typically arrive in the span of a few minutes, otherwise your schedulers will be reloading changes from the database every time they run.
-    For distributed version control systems, like git or hg, several thousand changes may arrive at once, so setting this parameter to something like 10000 isn't unreasonable.
+    For distributed version control systems, like Git or Hg, several thousand changes may arrive at once, so setting this parameter to something like 10000 isn't unreasonable.
 
     This parameter is the same as the deprecated global parameter :bb:cfg:`changeCacheSize`.  Its default value is 10.
 
@@ -600,7 +600,7 @@ The results are the substituted into the replacement text, along with the revisi
 ::
 
         from buildbot import revlinks
-        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/\(.*\)'],
+        c['revlink'] = revlinks.RevlinkMatch([r'git://notmuchmail.org/git/(.*)'],
                                               r'http://git.notmuchmail.org/git/\1/commit/%s')
 
 :class:`buildbot.revlinks.RevlinkMultiplexer` takes a list of revision link callables, and tries each in turn, returning the first successful match.

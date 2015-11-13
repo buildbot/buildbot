@@ -191,13 +191,14 @@ class Trial(ShellCommand):
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
 
-    renderables = ['tests']
+    renderables = ['tests', 'jobs']
     flunkOnFailure = True
     python = None
     trial = "trial"
     trialMode = ["--reporter=bwverbose"] # requires Twisted-2.1.0 or newer
     # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs = []
+    jobs = None
     testpath = UNSPECIFIED # required (but can be None)
     testChanges = False # TODO: needs better name
     recurse = False
@@ -209,7 +210,7 @@ class Trial(ShellCommand):
                  testpath=UNSPECIFIED,
                  tests=None, testChanges=None,
                  recurse=None, randomly=None,
-                 trialMode=None, trialArgs=None,
+                 trialMode=None, trialArgs=None, jobs=None,
                  **kwargs):
         """
         @type  testpath: string
@@ -244,6 +245,11 @@ class Trial(ShellCommand):
         @type trialArgs: list of strings
         @param trialArgs: a list of arguments to pass to trial, available to
                           turn on any extra flags you like. Defaults to [].
+
+        @type jobs: integer
+        @param jobs: integer to be used as trial -j/--jobs option (for
+                     running tests on several workers).  Only supported
+                     since Twisted-12.3.0.
 
         @type  tests: list of strings
         @param tests: a list of test modules to run, like
@@ -310,6 +316,8 @@ class Trial(ShellCommand):
             self.trialMode = trialMode
         if trialArgs is not None:
             self.trialArgs = trialArgs
+        if jobs is not None:
+            self.jobs = jobs
 
         if testpath is not UNSPECIFIED:
             self.testpath = testpath
@@ -361,8 +369,6 @@ class Trial(ShellCommand):
 
         # this counter will feed Progress along the 'test cases' metric
         self.addLogObserver('stdio', TrialTestCaseCounter())
-        # this one just measures bytes of output in _trial_temp/test.log
-        self.addLogObserver('test.log', OutputProgressObserver('test.log'))
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
@@ -381,6 +387,25 @@ class Trial(ShellCommand):
                 e['PYTHONPATH'] = ppath
 
     def start(self):
+        # choose progressMetrics and logfiles based on whether trial is being
+        # run with multiple workers or not.
+        output_observer = OutputProgressObserver('test.log')
+        
+        if self.jobs is not None:
+            self.jobs = int(self.jobs)
+            self.command.append("--jobs=%d" % self.jobs)
+
+            # using -j/--jobs flag produces more than one test log.
+            self.logfiles = {}
+            for i in xrange(self.jobs):
+                self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
+                self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
+                self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
+                self.addLogObserver('test.%d.log' % i, output_observer)
+        else:
+            # this one just measures bytes of output in _trial_temp/test.log
+            self.addLogObserver('test.log', output_observer)
+
         # now that self.build.allFiles() is nailed down, finish building the
         # command
         if self.testChanges:

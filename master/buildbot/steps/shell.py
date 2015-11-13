@@ -15,12 +15,14 @@
 
 
 import re
+import inspect
 from twisted.python import log, failure
 from twisted.spread import pb
 from buildbot.process import buildstep
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE
 from buildbot.status.logfile import STDOUT, STDERR
 from buildbot import config
+from buildbot.util import flatten
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -120,6 +122,17 @@ class ShellCommand(buildstep.LoggingBuildStep):
                                             timestamp_stdio=timestamp_stdio,
                                             **buildstep_kwargs)
 
+        # check validity of arguments being passed to RemoteShellCommand
+        invalid_args = []
+        valid_rsc_args = inspect.getargspec(buildstep.RemoteShellCommand.__init__)[0]
+        for arg in kwargs.keys():
+            if arg not in valid_rsc_args:
+                invalid_args.append(arg)
+        # Raise Configuration error in case invalid arguments are present
+        if invalid_args:
+            config.error("Invalid argument(s) passed to RemoteShellCommand: "
+                         + ', '.join(invalid_args))
+
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
         kwargs['usePTY'] = usePTY
@@ -147,14 +160,6 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def setCommand(self, command):
         self.command = command
-
-    def _flattenList(self, mainlist, commands):
-        for x in commands:
-            if isinstance(x, (list, tuple)):
-                if x != []:
-                    self._flattenList(mainlist, x)
-            else:
-                mainlist.append(x)
 
     def describe(self, done=False):
         desc = self._describe(done)
@@ -202,9 +207,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 return ["???"]
 
             # flatten any nested lists
-            tmp = []
-            self._flattenList(tmp, words)
-            words = tmp
+            words = flatten(words, (list, tuple))
 
             # strip instances and other detritus (which can happen if a
             # description is requested before rendering)
@@ -242,13 +245,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def buildCommandKwargs(self, warnings):
         kwargs = buildstep.LoggingBuildStep.buildCommandKwargs(self)
         kwargs.update(self.remote_kwargs)
-        tmp = []
-        if isinstance(self.command, list):
-           self._flattenList(tmp, self.command) 
-        else:
-           tmp = self.command
 
-        kwargs['command'] = tmp 
+        kwargs['command'] = flatten(self.command, (list, tuple))
 
         # check for the usePTY flag
         if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
@@ -305,8 +303,7 @@ class TreeSize(ShellCommand):
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
 
-
-class SetProperty(ShellCommand):
+class SetPropertyFromCommand(ShellCommand):
     name = "setproperty"
     renderables = [ 'property' ]
 
@@ -355,6 +352,15 @@ class SetProperty(ShellCommand):
         else:
             # let ShellCommand describe
             return ShellCommand.getText(self, cmd, results)
+
+class SetProperty(SetPropertyFromCommand):
+    "alias for SetPropertyFromCommand"
+    def __init__(self, *args, **kwargs):
+        log.msg("WARNING: the name 'SetProperty' has been renamed to SetPropertyFromCommand; use " +
+                "buildbot.steps.slave.SetPropertyFromCommand instead " +
+                "(note that this may require you to change your import " +
+                "statement)")
+        SetPropertyFromCommand.__init__(self, *args, **kwargs)
 
 class Configure(ShellCommand):
 

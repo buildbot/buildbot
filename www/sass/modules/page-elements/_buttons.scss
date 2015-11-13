@@ -31,15 +31,15 @@ a.grey-btn,
 .grey-btn,
 .clear-btn,
 .blue-btn {
-	@include bgimage(linear-gradient(bottom, #CED3D7 0%, #FFFFFF 100%)); 
-    border: 1px solid #D9D9D9;
+	@include bgimage(linear-gradient(bottom, lighten($brand-katana, 20%) 10%, lighten($brand-primary, 5%) 100%)); 
+    border: 1px solid lighten($brand-katana, 5%);
     @include border-radius(7px);
-    color: #333333;
+    color: #eee;
     font-size: 10px;
     font-weight: bold;
     letter-spacing: 0.3px;
     padding: 10px;
-    @include text-shadow(0 1px 0 #FFF);
+  
     text-transform: uppercase;
     display: inline-block;
     &:hover {
@@ -48,8 +48,8 @@ a.grey-btn,
 }
 
 .blue-btn {
-    @include bgimage(linear-gradient(top, #5585BF 0%, #0B4A7D 100%)); 
-    border:1px solid #878787;
+	@include bgimage(linear-gradient(bottom, lighten($brand-katana, 20%) 10%, lighten($brand-primary, 5%) 100%)); 
+    border: 1px solid lighten($brand-katana, 5%);
     border-bottom:1px solid #6D6D6D;
     @include box-shadow( 0 1px 0 rgba(255, 255, 255, 0.45) inset, 1px 1px 0 #fff);
     @include border-radius(6px);
@@ -65,6 +65,16 @@ a.grey-btn,
         color: rgba(247, 247, 247, 0.72);
 
     }
+}
+
+.grey-btn{
+	@include bgimage(linear-gradient(bottom, $gray-lighter 10%, $gray-light 100%)); 
+		border: 1px solid $gray-lighter;
+		border-bottom:1px solid $gray-light;
+		color: $text-color;
+		&:hover{
+            color: $link-hover-color;
+		}
 }
 
 .grey-btn.var-1 {
@@ -128,7 +138,7 @@ a.grey-btn,
         font-family: "katana_icons";
         content: "";
         font-size: 15px;
-        color:#2B6194;
+        color:$link-color;
     }
     &:hover:before{
         color:#ccc;
@@ -140,7 +150,7 @@ a.grey-btn,
     @include box-shadow(1px 1px 0 #FFFFFF);
     border-bottom:1px solid #ccc;
     &:after {
-        color: #2B6194;
+        color: $link-color;
         font-family: katana_icons;
         content: "";
         font-size: 17px;
@@ -158,13 +168,13 @@ a.grey-btn,
 .removeBuildBtn {
     font-weight: bold;
     background: none;
-    color: #2B6194;
+    color: $link-color;
     float:right;
     border:none;
     margin-top: 9px;
     padding: 0;    
     &:hover{
-        color: #A4A4A4;
+        color: $link-hover-color;
     }    
 }
  
@@ -183,7 +193,7 @@ a.grey-btn,
     top: 4px;
     cursor: pointer;    
     &:hover:after {
-        color:#1f5184;
+        color:$link-hover-color;
     }    
 }
 

@@ -77,6 +77,7 @@ class TestPBChangeSource(
 
         if exp_registration:
             self.assertUnregistered(*exp_registration)
+        self.assertEqual(self.changesource.registration, None)
 
     def test_perspective(self):
         self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))

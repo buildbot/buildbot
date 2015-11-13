@@ -197,6 +197,8 @@ define(function (require) {
                         isRunning = false;
                     if (type.connected === undefined || type.connected === false) {
                         statusTxt = 'Offline';
+                    } else if(type.connected === true && type.paused === true){
+                        statusTxt = 'Paused';
                     } else if (type.connected === true && (type.runningBuilds === undefined || type.runningBuilds.length === 0)) {
                         statusTxt = 'Idle';
                     } else if (type.connected === true && type.runningBuilds.length > 0) {
@@ -208,6 +210,8 @@ define(function (require) {
                 "fnCreatedCell": function (nTd, sData, oData) {
                     if (oData.connected === undefined) {
                         $(nTd).addClass('offline');
+                    } else if (oData.connected === true && oData.paused === true){
+                      $(nTd).addClass('paused');
                     } else if (oData.connected === true && oData.runningBuilds === undefined) {
                         $(nTd).addClass('idle');
                     } else if (oData.connected === true && oData.runningBuilds.length > 0) {
@@ -307,17 +311,22 @@ define(function (require) {
                             if (times.length === 3) {
                                 return times[2] - times[0];
                             }
-                            return times[1] - times[0];
+                            if (times[1] > 0) {
+                                return times[1] - times[0];
+                            }
+                            return "N/A";
                         }
-
-                        var d = moment.duration((times[1] - times[0]) * 1000);
-                        if (times.length === 3) {
-                            d = moment.duration((times[2] - times[0]) * 1000);
+                        if (times[1] > 0) {
+                            var d = moment.duration((times[1] - times[0]) * 1000);
+                            if (times.length === 3) {
+                                d = moment.duration((times[2] - times[0]) * 1000);
+                            }
+                            if (d.hours() > 0) {
+                                return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
+                            }
+                            return "{0}m {1}s".format(d.minutes(), d.seconds());
                         }
-                        if (d.hours() > 0) {
-                            return "{0}h {1}m {2}s".format(d.hours(), d.minutes(), d.seconds());
-                        }
-                        return "{0}m {1}s".format(d.minutes(), d.seconds());
+                        return "N/A";
                     }
 
                     if (type === 'sort') {

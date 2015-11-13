@@ -26,24 +26,45 @@ class FakeBuildStatus(properties.PropertiesMixin, mock.Mock):
     def _get_child_mock(self, **kw):
         return mock.Mock(**kw)
 
+    def getInterestedUsers(self):
+        return []
+
 components.registerAdapter(
         lambda build_status : build_status.properties,
         FakeBuildStatus, interfaces.IProperties)
 
 
-class FakeBuild(mock.Mock, properties.PropertiesMixin):
+class FakeBuild(properties.PropertiesMixin):
 
-    def __init__(self, buildrequests=[], *args, **kwargs):
-        mock.Mock.__init__(self, *args, **kwargs)
+    def __init__(self, props=None, buildrequests=[]):
         self.build_status = FakeBuildStatus()
+        self.builder = mock.Mock(name='build.builder')
+        self.slavebuilder = mock.Mock(name='build.slavebuilder')
         self.path_module = posixpath
         pr = self.build_status.properties = properties.Properties()
         pr.build = self
         self.requests = buildrequests
 
-    # work around http://code.google.com/p/mock/issues/detail?id=105
-    def _get_child_mock(self, **kw):
-        return mock.Mock(**kw)
+        self.sources = {}
+        if props is None:
+            props = properties.Properties()
+        props.build = self
+        self.build_status.properties = props
+
+    def getSourceStamp(self, codebase):
+        if codebase in self.sources:
+            return self.sources[codebase]
+        return None
+
+    def allStepsDone(self):
+        return True
+
+    def releaseLocks(self):
+        pass
+
+    def buildFinished(self, text, results):
+        pass
+
 
 components.registerAdapter(
         lambda build : build.build_status.properties,

@@ -181,9 +181,7 @@ class StatusPush(StatusReceiverMultiService):
             # Call right now, we're shutting down.
             @defer.inlineCallbacks
             def BlockForEverythingBeingSent():
-                d = self.serverPushCb()
-                if d is not None:
-                    yield defer.maybeDeferred(d)
+                yield self.serverPushCb()
             return BlockForEverythingBeingSent()
         else:
             # delay should never be 0.  That can cause Buildbot to spin tightly
@@ -389,10 +387,16 @@ class HttpStatusPush(StatusPush):
 
         while True:
             items = self.queue.popChunk(chunkSize)
+            newitems = []
+            for item in items:
+                if hasattr(item, 'asDict'):
+                    newitems.append(item.asDict())
+                else:
+                    newitems.append(item)
             if self.debug:
-                packets = json.dumps(items, indent=2, sort_keys=True)
+                packets = json.dumps(newitems, indent=2, sort_keys=True)
             else:
-                packets = json.dumps(items, separators=(',',':'))
+                packets = json.dumps(newitems, separators=(',',':'))
             params = {'packets': packets}
             params.update(self.extra_post_params)
             data = urllib.urlencode(params)

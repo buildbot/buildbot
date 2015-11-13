@@ -10,6 +10,7 @@ define(function (require) {
         buildQueueTotal = $('#buildQueueTotal'),
         buildSlavesTotal = $('#buildSlavesTotal'),
         outerBar = $('#verticalProgressBar'),
+        imageTotalBuildsBox = $('#buildsTotal'),
         $buildLoadBox = $('#buildLoad'),
         infoSpan = $buildLoadBox.find('span'),
         minBuildsPerSlave = 1, // The amount of builds each agent is allowed to have before we get yellow build load
@@ -31,7 +32,8 @@ define(function (require) {
 
             var buildLoadPerSlave = buildLoad / data.slaves_count,
                 statusColorClass = buildLoadPerSlave <= minBuildsPerSlave ? 'green' : buildLoadPerSlave <= maxBuildsPerSlave ? 'yellow' : 'red';
-
+            var buildsCountYesterday = data.total_builds_lastday;
+            
             bKatanaLoaded = buildLoadPerSlave > maxBuildsPerSlave;
 
             buildQueueTotal.show();
@@ -51,6 +53,7 @@ define(function (require) {
 
             buildSlavesTotal.text(slaveCount);
             infoSpan.text(buildLoad);
+            imageTotalBuildsBox.text(buildsCountYesterday);
         },
         initDataTable: function () {
             var $table = $('.tablesorter-js');

@@ -108,12 +108,6 @@
                             {{ elapsed }}
                         </td>
                     </tr>
-                    {% if raw_elapsed %}
-                    <tr>
-                        <td>Timing</td>
-                        <td>{{ raw_elapsed }}</td>
-                    </tr>
-                    {% endif %}
                 </table>
             </div>
             <h2 class="head-2">
@@ -193,6 +187,60 @@
                 </table>
             </div>
             {% endfor %}
+
+            {% if resume %}
+            <div class="divider"></div>
+            <h2 class="head-2">
+                Build Resume Information
+            </h2>
+
+            {% for rb in resume %}
+            <div class="dataTables_wrapper">
+                <table class="table table-katana table-stripes m-bottom">
+                    <tr>
+                        <td>
+                            Start
+                        </td>
+                        <td class="start-time-js">
+                            {{ rb.startTime }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            End
+                        </td>
+                        <td class="end-time-js">
+                            {{ rb.finishedTime }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            BuildSlave
+                        </td>
+                        <td >
+                            {{ rb.slavename }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Last Step
+                        </td>
+                        <td > {{ rb.lastStepName }}
+                        </td>
+                    </tr>
+                    {% if rb.elapsed %}
+                    <tr>
+                        <td>
+                            Elapsed
+                        </td>
+                        <td> {{ rb.elapsed}}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+            {% endfor %}
+            {% endif %}
 
             {#
             # TODO: turn this into a table, or some other sort of definition-list

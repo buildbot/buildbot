@@ -20,7 +20,11 @@ from twisted.internet import defer, task
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
+from twisted.python import log
 import re
+
+class TriggerableSchedulerStopped(StandardError):
+    pass
 
 class Triggerable(base.BaseScheduler):
     implements(ITriggerableScheduler)
@@ -84,7 +88,7 @@ class Triggerable(base.BaseScheduler):
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
             for d, brids in self._waiters.values():
-                d.errback(failure.Failure(RuntimeError(msg)))
+                d.errback(failure.Failure(TriggerableSchedulerStopped(msg)))
             self._waiters = {}
 
         return base.BaseScheduler.stopService(self)

@@ -300,6 +300,9 @@ class IBuilderStatus(Interface):
     def getCategory():
         """Return the category of this builder (a string)."""
 
+    def getDescription():
+        """Return the description of this builder (a string)."""
+
     def getState():
         # TODO: this isn't nearly as meaningful as it used to be
         """Return a tuple (state, builds) for this Builder. 'state' is the
@@ -478,10 +481,8 @@ class IBuildStatus(Interface):
 
     def getInterestedUsers():
         """Return a list of Users who will want to know about the results of
-        this build. This is a superset of getResponsibleUsers(): it adds
-        people who are interested in this build but who did not actually
-        make the Changes that went into it (build sheriffs, code-domain
-        owners)."""
+        this build but who did not actually make the Changes that went into it
+        (build sheriffs, code-domain owners)."""
 
     def getNumber():
         """Within each builder, each Build has a number. Return it."""
@@ -975,13 +976,12 @@ class IStatusReceiver(Interface):
     def slaveDisconnected(slaveName):
         """The slave has disconnected."""
 
-    def checkConfig(otherStatusReceivers, errors):
+    def checkConfig(otherStatusReceivers):
         """Verify that there are no other status receivers which conflict with
         the current one.
 
         @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
         will contain self.
-        @type  errors: L{ConfigErrors} instance to which errors should be added
         """
 
 

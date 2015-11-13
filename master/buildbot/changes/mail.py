@@ -398,7 +398,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 class BzrLaunchpadEmailMaildirSource(MaildirSource):
     name = "Launchpad"
 
-    compare_attrs = MaildirSource.compare_attrs + ["branchMap", "defaultBranch"]
+    compare_attrs = ["branchMap", "defaultBranch"]
 
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap

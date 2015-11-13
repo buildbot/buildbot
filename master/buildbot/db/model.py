@@ -75,7 +75,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('artifactbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
         sa.Column('triggeredbybrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
         sa.Column('mergebrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
-        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True)
+        sa.Column('startbrid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=True),
+        sa.Column('slavepool', sa.Text, nullable=True)
     )
 
     # Each row in this table represents a claimed build request, where the
@@ -110,7 +111,7 @@ class Model(base.DBConnectorComponent):
             nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
-        sa.Column('property_value', sa.String(1024), nullable=False),
+        sa.Column('property_value', sa.Text, nullable=False),
     )
 
     # This table represents Buildsets - sets of BuildRequests that share the
@@ -178,7 +179,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('author', sa.String(255), nullable=False),
 
         # commit comment
-        sa.Column('comments', sa.String(1024), nullable=False),
+        sa.Column('comments', sa.Text, nullable=False),
 
         # old, CVS-related boolean
         sa.Column('is_dir', sa.SmallInteger, nullable=False), # old, for CVS

@@ -24,12 +24,13 @@ from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.config import ConfigErrors
 from buildbot.status.results import SUCCESS, RETRY
 
+
 class Mercurial(Source):
     """ Class for Mercurial with all the smarts """
     name = "hg"
 
     renderables = [ "repourl" ]
-    possible_modes = ('incremental', 'full')
+    possible_modes = ('incremental', 'full', 'identify')
     possible_methods = (None, 'clean', 'fresh', 'clobber')
     possible_branchTypes = ('inrepo', 'dirname')
 
@@ -96,9 +97,19 @@ class Mercurial(Source):
         if errors:
             raise ConfigErrors(errors)
 
+    @defer.inlineCallbacks
+    def identifyLastRevision(self):
+        branchOrRevision = self.revision if self.revision else self.update_branch
+        command = ['identify', self.repourl, '--debug', '--rev', branchOrRevision]
+        stdout= yield self._dovccmd(command, collectStdout=True)
+        result = [rn for rn in stdout.strip().split()]
+        lastRevision = result[-1]
+        self.checkRevisionID(lastRevision)
+        yield self.updateBuildRevision(revision=lastRevision)
+        defer.returnValue(SUCCESS)
+
     def startVC(self, branch, revision, patch):
         self.revision = revision
-        self.method = self._getMethod()
 
         d = self.checkHg()
         def checkInstall(hgInstalled):
@@ -114,6 +125,13 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             self.update_branch = (branch or 'default')
 
+        if self.mode == "identify":
+            d.addCallback(lambda _: self.identifyLastRevision() if self.validateRevision() else SUCCESS)
+            d.addCallback(self.finish)
+            d.addErrback(self.failed)
+            return
+
+        self.method = self._getMethod()
         if self.mode == 'full':
             d.addCallback(lambda _: self.full())
         elif self.mode == 'incremental':
@@ -123,13 +141,8 @@ class Mercurial(Source):
             d.addCallback(self.patch, patch)
 
         d.addCallback(self.parseGotRevision)
-        d.addCallback(self.parseChanges)
         d.addCallback(self.finish)
         d.addErrback(self.failed)
-
-    def parseChanges(self, _):
-        #implement
-        return 0
 
     def shouldReboot(self, rc):
         return rc is not None and rc != SUCCESS and self._isWindowsSlave()
@@ -173,7 +186,7 @@ class Mercurial(Source):
         d = self._sourcedirIsUpdatable()
         def _cmd(updatable):
             if updatable:
-                command = ['pull', self.repourl]
+                command = self.getHgPullCommand()
             else:
                 command = ['clone', '--uncompressed', self.repourl, '.', '--noupdate']
             return command
@@ -286,6 +299,11 @@ class Mercurial(Source):
         d.addCallbacks(self.finished, self.checkDisconnect)
         return d
 
+    def checkRevisionID(self, revision):
+        if len(revision) != 40:
+            log.msg("Got Incorrect Mercurial revision %s" % (revision, ))
+            raise ValueError("Got Incorrect Mercurial revision id %s" % (revision, ))
+
     def parseGotRevision(self, _):
         if self.ended:
             return
@@ -293,12 +311,12 @@ class Mercurial(Source):
         d = self._dovccmd(['parents', '--template', '{node}\\n'], collectStdout=True)
         def _setrev(stdout):
             revision = stdout.strip()
-            if len(revision) != 40:
-                raise ValueError("Incorrect revision id")
+            self.checkRevisionID(revision)
             log.msg("Got Mercurial revision %s" % (revision, ))
             self.updateSourceProperty('got_revision', revision)
-            return 0
+            return revision
         d.addCallback(_setrev)
+        d.addCallback(lambda revision: self.updateBuildRevision(revision=revision))
         return d
 
     @defer.inlineCallbacks
@@ -315,6 +333,14 @@ class Mercurial(Source):
         log.msg(msg)
         yield self._removeAddedFilesAndUpdate(None)
 
+    def getHgPullCommand(self):
+        command = ['pull', self.repourl]
+        if self.revision:
+            command.extend(['--rev', self.revision])
+        elif self.branchType == 'inrepo':
+            command.extend(['--rev', self.update_branch])
+        return command
+
     def checkExpectedFailure(self, cmd, errors):
         for error in errors:
             if (error in cmd.stdout) or (error in cmd.stderr):
@@ -323,9 +349,7 @@ class Mercurial(Source):
         return True
 
     def _pullUpdate(self, res):
-        command = ['pull' , self.repourl]
-        if self.revision:
-            command.extend(['--rev', self.revision])
+        command = self.getHgPullCommand()
 
         errors = ['could not lock repository']
 
@@ -405,52 +429,16 @@ class Mercurial(Source):
             return 'fresh'
 
     def _sourcedirIsUpdatable(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/hgrc',
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/hgrc'))
 
     def _sourcedirContainsJournal(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/store/journal',
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/store/journal'))
 
     def _sourcedirContainsLock(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/store/lock',
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/store/lock'))
 
     def _sourcedirContainsWorkdirLock(self):
-        cmd = buildstep.RemoteCommand('stat', {'file': self.workdir + '/.hg/wlock',
-                                               'logEnviron': self.logEnviron})
-        cmd.useLog(self.stdio_log, False)
-        d = self.runCommand(cmd)
-        def _fail(tmp):
-            if cmd.didFail():
-                return False
-            return True
-        d.addCallback(_fail)
-        return d
+        return self.pathExists(self.build.path_module.join(self.workdir, '.hg/wlock'))
 
     def _removeAddedFilesAndUpdate(self, _):
         command = ['locate', 'set:added()']

@@ -24,7 +24,13 @@
       {% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
         <a href="#" class="custom-build more-info fl-right m-top4" title="Run Custom Build" data-popup-title="Run Custom Build" data-builder-name="{{ builder_name }}" data-builder-url="{{ builder_url }}" data-return-page="pending_json">Run build
         </a>
-      {% endif %}          
+      {% endif %}
+
+    {% if description %}
+    
+    <div class="head-2">{{ description }}</div>
+
+    {% endif %}
      
       <h2 class="head-2">
         Current Builds
@@ -70,6 +76,24 @@
         </thead>
       </table>
 
+    {% if instant_json.start_slaves %}
+
+      <h2 class="head-2">
+        Processing Slaves
+      </h2>
+
+      <table id="rtStartSlavesTable" class="table table-katana tablesorter-js tablesorter first-child">
+        <thead>
+        {% if start_slaves %}
+          <tr>
+            <th>Name</th>
+            <th>Status</th>
+          </tr>
+        {% endif %}
+        </thead>
+      </table>
+
+    {% endif %}
     </div>
     <div class="col-md-7">    
       <h2 class="head-2">
@@ -93,7 +117,11 @@
             </select>
 
             <button id="btnFilter" class="blue-btn">Apply</button>
+            <div>
+                <a href="?numbuilds={{numbuilds + 5}}">Show more</a>
+            </div>
         </div>
+
       <table id="rtBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
       </table>
 
@@ -131,13 +159,15 @@
                   </b>
                 </td>
                 {% if s.connected %}
-                  <td class="idle">connected</td>
-                  <td>{{ s.admin|email if s.admin else ""}}</td>
+                    {% if s.paused %}
+                      <td class="paused">paused</td>
+                    {% else %}
+                      <td class="idle">connected</td>
+                    {% endif %}
                 {% else %}
                   <td class="offline">offline</td>
-                  <td>&nbsp;</td>
                 {% endif %}
-                
+                  <td>{{ s.admin|email if s.admin else ""}}</td>
               {% else %}
                 <td>no slaves attached</td>
                 </tr>

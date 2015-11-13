@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
 import logging
 from twisted.python import log
 

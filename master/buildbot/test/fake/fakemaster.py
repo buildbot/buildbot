@@ -18,6 +18,7 @@ from twisted.internet import defer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import pbmanager
+from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot import config
 from buildbot.process import properties
 from buildbot.config import ProjectConfig
@@ -46,17 +47,16 @@ class FakeCaches(object):
         return FakeCache(name, miss_fn)
 
 
-class FakeBotMaster(object):
-    builders = {}
-    pass
-
-
 class FakeStatus(object):
 
     def __init__(self):
         self.master = None
 
-    def builderAdded(self, name, basedir, category=None, friendly_name=None):
+    def slaveConnected(self, name):
+        pass
+
+
+    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None):
         return FakeBuilderStatus(self.master)
 
     def build_started(self, brid, buildername, build_status):
@@ -67,8 +67,17 @@ class FakeBuilderStatus(object):
     def __init__(self, master=None):
         self.master = master
 
+    def setDescription(self, description):
+        self._description = description
+
+    def getDescription(self):
+        return self._description
+
     def setCategory(self, category):
-        pass
+        self._category = category
+
+    def getCategory(self):
+        return self._category
 
     def setProject(self, project):
         pass
@@ -86,6 +95,9 @@ class FakeBuilderStatus(object):
         pass
 
     def setTags(self, tags):
+        pass
+
+    def setStartSlavenames(self, startSlavenames):
         pass
 
     def newBuild(self):
@@ -109,10 +121,11 @@ class FakeMaster(object):
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
         self.basedir = 'basedir'
-        self.botmaster = FakeBotMaster()
+        self.botmaster = FakeBotMaster(master=self)
         self.botmaster.parent = self
         self.status = FakeStatus()
         self.status.master = self
+        self.locks = {}
 
     def getStatus(self):
         return self.status
@@ -132,6 +145,11 @@ class FakeMaster(object):
 
     def buildRequestRemoved(self, bsid, brid, buildername):
         pass
+
+    def getLockByID(self, lockid):
+        if not lockid in self.locks:
+            self.locks[lockid] = lockid.lockClass(lockid)
+        return self.locks[lockid]
 
     def getProject(self, name):
         pass

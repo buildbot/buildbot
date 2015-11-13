@@ -22,7 +22,6 @@ try:
     assert StringIO
 except ImportError:
     from StringIO import StringIO
-from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
 from buildbot.process import buildstep
@@ -30,6 +29,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import json
+from buildbot.util.eventual import eventually
 from buildbot import config
 
 
@@ -445,7 +445,7 @@ class FileDownload(_TransferBuildStep):
                                 'File %r not available at master' % source)
             # TODO: once BuildStep.start() gets rewritten to use
             # maybeDeferred, just re-raise the exception here.
-            reactor.callLater(0, BuildStep.finished, self, FAILURE)
+            eventually(BuildStep.finished, self, FAILURE)
             return
         fileReader = _FileReader(fp)
 

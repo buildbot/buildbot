@@ -16,8 +16,9 @@
 import time
 from zope.interface import implements
 from buildbot import interfaces
-from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE
+from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, SUCCESS, RESUME, CANCELED, NOT_REBUILT
 from buildbot.util.eventual import eventually
+from twisted.internet import defer
 
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
@@ -29,6 +30,7 @@ class SlaveStatus:
     connected = False
     graceful_shutdown = False
     friendly_name = None
+    paused = False
 
     def __init__(self, name):
         self.name = name
@@ -54,6 +56,8 @@ class SlaveStatus:
         return self.version
     def isConnected(self):
         return self.connected
+    def isPaused(self):
+        return self.paused
     def lastMessageReceived(self):
         return self._lastMessageReceived
     def getRunningBuilds(self):
@@ -76,6 +80,11 @@ class SlaveStatus:
         self.connected = isConnected
     def setLastMessageReceived(self, when):
         self._lastMessageReceived = when
+    def setPaused(self, isPaused):
+        self.paused = isPaused
+        if not self.paused and self.name in self.master.botmaster.slaves:
+            self.master.botmaster.maybeStartBuildsForSlave(self.name)
+
 
     def setMaster(self, master):
         self.master = master
@@ -87,9 +96,18 @@ class SlaveStatus:
 
     def buildStarted(self, build):
         self.runningBuilds.append(build)
+
+    def removeRunningBuild(self, build_status):
+        if build_status in self.runningBuilds:
+            self.runningBuilds.remove(build_status)
+
+    @defer.inlineCallbacks
     def buildFinished(self, build):
-        self.updateHealth()
-        self.runningBuilds.remove(build)
+        shouldUpdateHealth = build.results not in (RESUME, CANCELED, NOT_REBUILT) and \
+                             (self.health != SUCCESS or build.results != SUCCESS)
+        if shouldUpdateHealth:
+            yield self.updateHealth()
+        self.removeRunningBuild(build)
 
     def getGraceful(self):
         """Return the graceful shutdown flag"""
@@ -115,31 +133,23 @@ class SlaveStatus:
         my_builders = []
         for bname in status.getBuilderNames():
             b = status.getBuilder(bname)
-            for bs in b.getSlaves():
+            for bs in b.getAllSlaves():
                 if bs.getName() == self.name:
                     my_builders.append(b)
 
         return my_builders
 
+    @defer.inlineCallbacks
     def getRecentBuilds(self, num_builds=15):
         status = self.master.status
-        n = 0
-        my_builders = self.getBuilders()
-        recent_builds = []
+        builds = yield status.generateFinishedBuildsAsync(num_builds=num_builds, slavename=self.name)
+        defer.returnValue(builds)
 
-        for rb in status.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
-            if rb.getSlavename() == self.name:
-                n += 1
-                recent_builds.append(rb)
-                if n > num_builds:
-                    return recent_builds
-
-        return recent_builds
-
+    @defer.inlineCallbacks
     def updateHealth(self):
         num_builds = 15
         health = 0
-        builds = self.getRecentBuilds(num_builds)
+        builds = yield self.getRecentBuilds(num_builds)
 
         if len(builds) == 0:
             self.health = 0
@@ -177,5 +187,7 @@ class SlaveStatus:
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
         result['eid'] = self.eid
+        result['graceful_shutdown'] = self.graceful_shutdown
+        result['paused'] = self.isPaused()
         return result
 

@@ -187,7 +187,7 @@ background: #BBBBBB;
 	}
 	h1.logo a {
 			opacity: 1;
-		   	color: #445873;
+		   	color: $brand-primary;
 		    display: block;
 		    float: none;
 		    font-size: 1.7em;
@@ -196,7 +196,7 @@ background: #BBBBBB;
 		    margin-right: 14px;
 		span {
 			font-size: 0.8em;
-			color:#445873;
+			color:$brand-katana;
 		}
 		&:hover {
 			opacity: 0.5;
@@ -318,7 +318,7 @@ body.log.interface {
 .footer {
 	background: none repeat scroll 0 0 #FFFFFF;
     border-top: 2px solid #E3E3E3;
-    color: #B7B7B7;
+    color: lighten($text-color, 20%);
     font-size: 11px;
     padding: 20px 0;
     text-align: center;
@@ -342,24 +342,54 @@ body.log.interface {
     	font-weight: bold;
 	}
 	a {
-		color: #3f81b5;
+		color: lighten($brand-primary, 30%);
 		@include transition (color 0.5s ease);
 		&:hover {
-			color:#fff;
+			color: lighten($brand-primary, 40%);
 		}
 	}
 }
 
 
     #image {
-		width:275px;
+		width:375px;
+		position: relative;
 		img {
 			width: 100%;
 		}
+		.image-text {
+			position: absolute;
+			width: 375px;
+			text-transform: uppercase;
+			font-family: 'Impact';
+			font-size: 24px;
+			color: white;
+			text-align: center;
+			text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+		}
+		.image-text:first-of-type {
+			top: 0;
+		}
+		.image-text:last-of-type {
+			bottom: 0;
+		}
+
 		@media (min-width: $screen-lg-min) {
-			width:auto;
+			width:500px;
+
+		 .image-text {
+				font-size: 25px;
+				width:500px;
+			}
+		}
+		@media (max-width: $screen-xs-min) {
+			width:325px;
+			.image-text {
+				font-size: 20px;
+				width:325px;
+			}
 			img {
-				width: auto;
+				width: 100%;
 			}
 		}
 
@@ -390,7 +420,7 @@ body.log.interface {
 }
 
 .sticky-bar {
-  @include bgimage (linear-gradient(top, #3f81b5 0%, #37709d 100%));
+  @include bgimage (linear-gradient(top, lighten($brand-katana, 10%) 0%, lighten($brand-primary, 10%) 100%));
   position: fixed;
   width: 100%;
   padding: 10px 0 ;

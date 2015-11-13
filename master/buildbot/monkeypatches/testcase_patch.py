@@ -24,8 +24,8 @@ def patch_testcase_patch():
 
     (used for debugging only)
     """
-    # versions of Twisted before 9.0.0 did not have a UnitTest.patch that
-    # worked on Python-2.7
+    # Twisted-9.0.0 and earlier did not have a UnitTest.patch that worked on
+    # Python-2.7
     if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
         def nopatch(self, *args):
             raise unittest.SkipTest('unittest.TestCase.patch is not available')

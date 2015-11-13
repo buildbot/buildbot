@@ -97,7 +97,7 @@ buildrequests
         returns ``None`` if there is no such buildrequest.  Note that build
         requests are not cached, as the values in the database are not fixed.
 
-    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None)
+    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None))
 
         :param buildername: limit results to buildrequests for this builder
         :type buildername: string
@@ -106,6 +106,8 @@ buildrequests
             completion.
         :param claimed: see below
         :param bsid: see below
+        :param repository: the repository associated with the sourcestamps originating the requests
+        :param branch: the branch associated with the sourcestamps originating the requests
         :returns: list of brdicts, via Deferred
 
         Get a list of build requests matching the given characteristics.
@@ -357,6 +359,23 @@ buildsets
 
         Get a list of bsdicts matching the given criteria.
 
+    .. py:method:: getRecentBuildsets(count, branch=None, repository=None,
+                           complete=None):
+
+        :param count: maximum number of buildsets to retrieve.
+        :type branch: integer
+        :param branch: optional branch name. If specified, only buildsets
+            affecting such branch will be returned.
+        :type branch: string
+        :param repository: optional repository name. If specified, only
+            buildsets affecting such repository will be returned.
+        :type repository: string
+        :param complete: if true, return only complete buildsets; if false,
+            return only incomplete buildsets; if ``None`` or omitted, return all
+            buildsets
+        :type complete: Boolean
+        :returns: list of bsdicts, via Deferred
+
     .. py:method:: getBuildsetProperties(buildsetid)
 
         :param buildsetid: buildset ID
@@ -561,8 +580,8 @@ sourcestamps
 .. py:class:: SourceStampsConnectorComponent
 
     This class manages source stamps, as stored in the database. Source stamps
-    are linked to changes. Source stamps with the same sourcestampsetid belong 
-    to the same sourcestampset. Buildsets link to one or more source stamps via 
+    are linked to changes. Source stamps with the same sourcestampsetid belong
+    to the same sourcestampset. Buildsets link to one or more source stamps via
     a sourcestampset id.
 
     An instance of this class is available at ``master.db.sourcestamps``.
@@ -592,7 +611,7 @@ sourcestamps
 
     .. py:method:: addSourceStamp(branch, revision, repository, project, patch_body=None, patch_level=0, patch_author="", patch_comment="", patch_subdir=None, changeids=[])
 
-        :param branch: 
+        :param branch:
         :type branch: unicode string
         :param revision:
         :type revision: unicode string
@@ -629,15 +648,15 @@ sourcestamps
         such source stamp exists.
 
     .. py:method:: getSourceStamps(sourcestampsetid)
-    
+
         :param sourcestampsetid: identification of the set, all returned sourcestamps belong to this set
         :type sourcestampsetid: integer
         :returns: sslist of ssdict
-        
+
         Get a set of sourcestamps identified by a set id. The set is returned as
-        a sslist that contains one or more sourcestamps (represented as ssdicts). 
+        a sslist that contains one or more sourcestamps (represented as ssdicts).
         The list is empty if the set does not exist or no sourcestamps belong to the set.
-    
+
 sourcestampset
 ~~~~~~~~~~~~~~
 
@@ -649,19 +668,19 @@ sourcestampset
 
     This class is responsible for adding new sourcestampsets to the database.
     Build sets link to sourcestamp sets, via their (set) id's.
-    
+
     An instance of this class is available at ``master.db.sourcestampsets``.
-    
+
     Sourcestamp sets are identified by a sourcestampsetid.
 
     .. py:method:: addSourceStampSet()
-    
+
         :returns: new sourcestampsetid as integer, via Deferred
-        
+
         Add a new (empty) sourcestampset to the database. The unique identification
         of the set is returned as integer. The new id can be used to add
         new sourcestamps to the database and as reference in a buildset.
-    
+
 state
 ~~~~~
 

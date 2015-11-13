@@ -49,7 +49,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                      "p4bin", "pollInterval"]
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
-                "P4CHARSET"]
+                "P4CHARSET" , "PATH"]
 
     changes_line_re = re.compile(
             r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")

@@ -22,6 +22,8 @@ from buildbot.test.util import steps
 from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps import master
 from buildbot.process.properties import WithProperties
+from buildbot.process.properties import Interpolate
+import pprint
 
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
@@ -97,9 +99,9 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                 master.MasterShellCommand(description='x', descriptionDone='y',
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
-        
+
         self.assertEqual(self.step.describe(), ['x'])
-        
+
         if runtime.platformType == 'win32':
             exp_argv = [ r'C:\WINDOWS\system32\cmd.exe', '/c', 'true' ]
         else:
@@ -133,6 +135,26 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         d.addBoth(_restore_env)
         return d
 
+    def test_env_list_subst(self):
+        cmd = [ sys.executable, '-c', 'import os; print os.environ["HELLO"]' ]
+        os.environ['WORLD'] = 'hello'
+        os.environ['LIST'] = 'world'
+        self.setupStep(
+                master.MasterShellCommand(command=cmd,
+                                env={'HELLO': ['${WORLD}', '${LIST}']}))
+        if runtime.platformType == 'win32':
+            self.expectLogfile('stdio', "hello;world\r\n")
+        else:
+            self.expectLogfile('stdio', "hello:world\n")
+        self.expectOutcome(result=SUCCESS, status_text=["Ran"])
+        def _restore_env(res):
+            del os.environ['WORLD']
+            del os.environ['LIST']
+            return res
+        d = self.runStep()
+        d.addBoth(_restore_env)
+        return d
+
     def test_prop_rendering(self):
         cmd = [ sys.executable, '-c', WithProperties(
                     'import os; print "%s"; print os.environ[\"BUILD\"]',
@@ -155,8 +177,8 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                                 env={'a':'b'}, path=['/usr/bin'], usePTY=True,
                                 command='true'))
 
-        # call twice to make sure the suffix doesnt get double added
-        self.assertEqual(self.step.describe(), ['x', 'z'])        
+        # call twice to make sure the suffix doesn't get double added
+        self.assertEqual(self.step.describe(), ['x', 'z'])
         self.assertEqual(self.step.describe(), ['x', 'z'])
 
         if runtime.platformType == 'win32':
@@ -172,4 +194,36 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
                     ('rc', 0),
                 ])
         self.expectOutcome(result=SUCCESS, status_text=['y', 'z'])
+        return self.runStep()
+
+class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
+    
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_simple(self):
+        self.setupStep(master.SetProperty(property="testProperty", value=Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+        self.properties.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
+        self.properties.setProperty('slavename', 'testSlave', source='SetPropery', runtime=True)
+        self.expectOutcome(result=SUCCESS, status_text=["SetProperty"])
+        self.expectProperty('testProperty', 'sch=force, slave=testSlave', source='SetProperty')
+        return self.runStep()
+
+class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_simple(self):
+        self.setupStep(master.LogRenderable(content=Interpolate('sch=%(prop:scheduler)s, slave=%(prop:slavename)s')))
+        self.properties.setProperty('scheduler', 'force', source='TestSetProperty', runtime=True)
+        self.properties.setProperty('slavename', 'testSlave', source='TestSetProperty', runtime=True)
+        self.expectOutcome(result=SUCCESS, status_text=['LogRenderable'])
+        self.expectLogfile('Output', pprint.pformat('sch=force, slave=testSlave'))
         return self.runStep()

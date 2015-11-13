@@ -16,13 +16,14 @@
 import re
 import mock
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process.buildstep import regex_log_evaluator
 from buildbot.status.results import FAILURE, SUCCESS, WARNINGS, EXCEPTION, SKIPPED
 from buildbot.test.fake import fakebuild, remotecommand
-from buildbot.test.util import steps, compat
+from buildbot.test.util import config, steps, compat
+from buildbot.util.eventual import eventually
 
 class FakeLogFile:
     def __init__(self, text):
@@ -81,11 +82,11 @@ class TestRegexLogEvaluator(unittest.TestCase):
                 % (new_status, WARNINGS))
 
 
-class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
+class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     class FakeBuildStep(buildstep.BuildStep):
         def start(self):
-            reactor.callLater(0, self.finished, 0)
+            eventually(self.finished, 0)
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -102,6 +103,23 @@ class TestBuildStep(steps.BuildStepMixin, unittest.TestCase):
         self.expectHidden(expect)
 
     # tests
+
+    def test_nameIsntString(self):
+        """
+        When BuildStep is passed a name that isn't a string, it reports
+        a config error.
+        """
+        self.assertRaisesConfigError("BuildStep name must be a string",
+                lambda: buildstep.BuildStep(name=5))
+
+    def test_unexpectedKeywordArgument(self):
+        """
+        When BuildStep is passed an unknown keyword argument, it reports
+        a config error.
+        """
+        self.assertRaisesConfigError("__init__ got unexpected keyword argument(s) ['oogaBooga']",
+                lambda: buildstep.BuildStep(oogaBooga=5))
+
 
     def test_getProperty(self):
         bs = buildstep.BuildStep()
@@ -327,3 +345,36 @@ class TestCustomStepExecution(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
         return d
 
+
+class RemoteShellCommandTests(object):
+
+    def test_user_argument(self):
+        """
+        Test that the 'user' parameter is correctly threaded through
+        RemoteShellCommand to the 'args' member of the RemoteCommand
+        parent command, if and only if it is passed in as a non-None
+        value.
+        """
+
+        rc = self.makeRemoteShellCommand("build", ["echo", "hello"])
+        self.assertNotIn('user', rc.args)
+
+        rc = self.makeRemoteShellCommand("build", ["echo", "hello"], user=None)
+        self.assertNotIn('user', rc.args)
+
+        user = 'test'
+        rc = self.makeRemoteShellCommand("build", ["echo", "hello"], user=user)
+        self.assertIn('user', rc.args)
+        self.assertEqual(rc.args['user'], user)
+
+
+class TestRealRemoteShellCommand(unittest.TestCase, RemoteShellCommandTests):
+
+    def makeRemoteShellCommand(self, *args, **kwargs):
+        return buildstep.RemoteShellCommand(*args, **kwargs)
+
+
+class TestFakeRemoteShellCommand(unittest.TestCase, RemoteShellCommandTests):
+
+    def makeRemoteShellCommand(self, *args, **kwargs):
+        return remotecommand.FakeRemoteShellCommand(*args, **kwargs)

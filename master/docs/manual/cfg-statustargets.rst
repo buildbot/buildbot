@@ -269,7 +269,7 @@ be used to access them.
 
     The console view is still in development. At this moment by
     default the view sorts revisions lexically, which can lead to odd
-    behavior with non-integer revisions (e.g., git), or with integer
+    behavior with non-integer revisions (e.g., Git), or with integer
     revisions of different length (e.g., 999 and 1000). It also has
     some issues with displaying multiple branches at the same time. If
     you do have multiple branches, you should use the ``branch=``
@@ -302,7 +302,10 @@ be used to access them.
 :samp:`/builders/${BUILDERNAME}`
     This describes the given :class:`Builder` and provides buttons to force a
     build.  A ``numbuilds=`` argument will control how many build lines
-    are displayed (5 by default).
+    are displayed (5 by default).  This page also accepts property filters
+    of the form ``property.${PROPERTYNAME}=${PROPERTVALUE}``.  When used,
+    only builds and build requests which have properties with matching string
+    representations will be shown.
 
 :samp:`/builders/${BUILDERNAME}/builds/${BUILDNUM}`
     This describes a specific Build.
@@ -358,6 +361,14 @@ be used to access them.
     
     As with ``/one_line_per_build``, this page will also honor
     ``builder=`` and ``branch=`` arguments.
+
+``/png``
+    This view produces an image in png format with information about the last build for the given builder name or whatever other build number if is passed as an argument to the view.
+
+:samp:`/png?builder=${BUILDERNAME}&number=$BUILDNUM&size=large`
+    This generate a large png image reporting the status of the given $BUILDNUM for the given builder $BUILDERNAME. The sizes are `small`, `normal` and `large` if no size is given the `normal` size is returned, if no $BUILDNUM is given the last build is returned. For example:
+
+    .. image:: ../_images/success_normal.png
 
 ``/users``
     This page exists for authentication reasons when checking ``showUsersPage``.
@@ -442,6 +453,9 @@ authentication.  The actions are:
 
 ``gracefulShutdown``
     gracefully shut down a slave when it is finished with its current build
+
+``pauseSlave``
+    temporarily stop running new builds on a slave
 
 ``stopBuild``
     stop a running build
@@ -702,7 +716,7 @@ submission of an arbitrary change request. Run :command:`post_build_request.py
 --help` for more information.  The ``base`` dialect must be enabled for this to
 work.
 
-github hook
+GitHub hook
 ###########
 
 The GitHub hook is simple and takes no options. ::
@@ -723,10 +737,52 @@ useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
-    The incoming HTTP requests for this hook are not authenticated in
-    any way.  Anyone who can access the web status can "fake" a request from
-    GitHub, potentially causing the buildmaster to run arbitrary code.  See
-    :bb:bug:`2186` for work to fix this problem.
+    The incoming HTTP requests for this hook are not authenticated by default.
+    Anyone who can access the web status can "fake" a request from
+    GitHub, potentially causing the buildmaster to run arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+
+    c['status'].append(html.WebStatus(..
+                                      change_hook_auth=('user', 'password')))
+
+Then, create a GitHub service hook (see https://help.github.com/articles/post-receive-hooks) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/github``.
+
+Note that not using ``change_hook_auth`` can expose you to security risks.
+
+BitBucket hook
+##############
+
+The BitBucket hook is as simple as GitHub one and it also takes no options. ::
+
+    c['status'].append(html.WebStatus(..
+                       change_hook_dialects={ 'bitbucket' : True }))
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket``
+relative to the root of the web status. For example, it the grid URL is
+``http://builds.mycompany.com/bbot/grid``, then point BitBucket to
+``http://builds.mycompany.com/change_hook/bitbucket``. To specify a project associated
+to the repository, append ``?project=name`` to the URL.
+
+Note that there is a satandalone HTTP server available for receiving BitBucket
+notifications, as well: :file:`contrib/bitbucket_buildbot.py`. This script may be
+useful in cases where you cannot expose the WebStatus for public consumption.
+
+.. warning::
+
+    As in the previous case, the incoming HTTP requests for this hook are not
+    authenticated bu default. Anyone who can access the web status can "fake"
+    a request from BitBucket, potentially causing the buildmaster to run
+    arbitrary code.
+
+To protect URL against unauthorized access you should use ``change_hook_auth`` option. ::
+
+  c['status'].append(html.WebStatus(..
+                                    change_hook_auth=('user', 'password')))
+
+Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.mycompany.com/bbot/change_hook/bitbucket``.
+
+Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
 Google Code hook
 ################
@@ -1136,8 +1192,8 @@ status objects:
 Name of the builder that generated this event
     ``name``
 
-Name of the project
-    :meth:`master_status.getProjectName()`
+Title of the buildmaster
+    :meth:`master_status.getTitle()`
 
 MailNotifier mode
     ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``,
@@ -1318,6 +1374,22 @@ Some of the commands currently available:
 :samp:`help {COMMAND}`
     Describe a command. Use :command:`help commands` to get a list of known
     commands.
+
+:samp:`shutdown {ARG}`
+    Control the shutdown process of the buildbot master.
+    Available arguments are:
+
+    ``check``
+        Check if the buildbot master is running or shutting down
+
+    ``start``
+        Start clean shutdown
+
+    ``stop``
+        Stop clean shutdown
+
+    ``now``
+        Shutdown immediately without waiting for the builders to finish
     
 ``source``
     Announce the URL of the Buildbot's home page.
@@ -1462,14 +1534,28 @@ GerritStatusPush
         # message, verified, reviewed
         return message, (result == SUCCESS or -1), 0
 
+    def gerritStartCB(builderName, build, arg):
+        message = "Buildbot started compiling your patchset\n"
+        message += "on configuration: %s\n" % builderName
+
+        if arg:
+            message += "\nFor more details visit:\n"
+            message += status.getURLForThing(build) + "\n"
+
+        return message
+
     c['buildbotURL'] = 'http://buildbot.example.com/'
     c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
                                         reviewCB=gerritReviewCB,
-                                        reviewArg=c['buildbotURL']))
+                                        reviewArg=c['buildbotURL'],
+                                        startCB=gerritStartCB,
+                                        startArg=c['buildbotURL']))
 
-GerritStatusPush sends review of the :class:`Change` back to the Gerrit server.
+GerritStatusPush sends review of the :class:`Change` back to the Gerrit server,
+optionally also sending a message when a build is started.
 ``reviewCB`` should return a tuple of message, verified, reviewed. If message
 is ``None``, no review will be sent.
+``startCB`` should return a message.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 

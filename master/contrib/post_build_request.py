@@ -93,7 +93,7 @@ c['schedulers'].append(s)
 
 Then run this script with the options:
 
---repostitory <REPOSTORY> --project <PROJECT> --category release
+--repository <REPOSTORY> --project <PROJECT> --category release
 """
 
 parser = optparse.OptionParser(description=description,

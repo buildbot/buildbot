@@ -28,17 +28,16 @@ There are many ways to get the code on your machine.
 For this tutorial, we will use easy_install to install and run buildbot.
 While this isn't the preferred method to install buildbot, it is the simplest
 one to use for the purposes of this tutorial because it should work on all
-systems.  (The preferred method would be to install buildbot from packages
-of your distribution.)
+systems.  (The preferred method would be to install buildbot via ``pip``.)
 
 To make this work, you will need the following installed:
- * python_ and the development packages for it
+ * Python_ and the development packages for it
  * virtualenv_
- * git_
+ * Git_
 
-.. _python: http://www.python.org/
+.. _Python: http://www.python.org/
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv/
-.. _git: http://git-scm.com/
+.. _Git: http://git-scm.com/
 
 Preferably, use your package installer to install these.
 
@@ -57,7 +56,12 @@ Let's dive in by typing at the terminal::
   cd tmp/buildbot
   virtualenv --no-site-packages sandbox
   source sandbox/bin/activate
+  easy_install sqlalchemy==0.7.10
   easy_install buildbot
+
+.. note::
+
+    The requirement to install SQLAlchemy-0.7.10 is due to a conflict between newer versions of SQLAlchemy and SQLAlchemy-Migrate.
 
 Creating a master
 -----------------
@@ -89,13 +93,13 @@ You should see lines like this::
 Creating a slave
 ----------------
 
-Open a new terminal, and first enter the same sandbox you created before::
+Open a new terminal and enter the same sandbox you created before::
 
   cd
   cd tmp/buildbot
   source sandbox/bin/activate
 
-Install buildslave command::
+Install the ``buildslave`` command::
 
    easy_install buildbot-slave
 
@@ -104,8 +108,8 @@ Now, create the slave::
   buildslave create-slave slave localhost:9989 example-slave pass
 
 The user:host pair, username, and password should be the same as the ones in
-master.cfg; verify this is the case by looking at the section for `c['slaves']`
-and `c['slavePortnum']`::
+master.cfg; verify this is the case by looking at the section for ``c['slaves']``
+and ``c['slavePortnum']``::
 
   cat master/master.cfg
 

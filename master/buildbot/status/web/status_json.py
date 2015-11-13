@@ -144,6 +144,9 @@ def FilterOut(data):
     else:
         return data
 
+def getSlaveName(slave_status):
+    return slave_status.getName() if slave_status else None
+
 
 class JsonResource(resource.Resource):
     """Base class for json data."""
@@ -420,6 +423,8 @@ class BuilderJsonResource(JsonResource):
         self.putChild('builds', BuildsJsonResource(status, builder_status))
         self.putChild('slaves', BuilderSlavesJsonResources(status,
                                                            builder_status))
+        self.putChild('startslaves', BuilderStartSlavesJsonResources(status,
+                                                           builder_status))
         self.putChild(
             'pendingBuilds',
             BuilderPendingBuildsJsonResource(status, builder_status))
@@ -455,6 +460,25 @@ class BuilderSlavesJsonResources(JsonResource):
                           SlaveJsonResource(status,
                                             self.status.getSlave(slave_name)))
 
+class BuilderStartSlavesJsonResources(JsonResource):
+    help = """Describe the start slaves attached to a single builder.
+"""
+    pageTitle = 'BuilderStartSlaves'
+
+    def __init__(self, status, builder_status):
+        JsonResource.__init__(self, status)
+        self.builder_status = builder_status
+        if self.builder_status.startSlavenames:
+            for slave_name in self.builder_status.startSlavenames:
+                self.putChild(slave_name,
+                          SlaveJsonResource(status,
+                                            self.status.getSlave(slave_name)))
+
+    def asDict(self, request):
+        """Don't throw an exception when there is no child."""
+        if not self.children:
+            return {}
+        return JsonResource.asDict(self, request)
 
 class BuildJsonResource(JsonResource):
     help = """Describe a single build.
@@ -551,7 +575,6 @@ class PastBuildsJsonResource(JsonResource):
 
         if self.slave_status is not None:
             slavename = self.slave_status.getName()
-
             builds = yield self.status.generateFinishedBuildsAsync(num_builds=self.number, results=results,
                                                                    slavename=slavename)
 
@@ -846,7 +869,8 @@ class QueueJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        unclaimed_brq = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=True, limit=200)
+        unclaimed_brq = yield self.status.master.db.buildrequests\
+            .getBuildRequestInQueue(sorted=True, limit=200)
 
         #Convert to dictionary
         output = []
@@ -928,7 +952,7 @@ class SlaveBuildsJsonResource(JsonResource):
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
         self.slave_status = slave_status
-        self.name = self.slave_status.getName()
+        self.name = getSlaveName(self.slave_status)
 
     def getChild(self, path, request):
         # Dynamic childs.
@@ -944,7 +968,7 @@ class SlaveBuildsJsonResource(JsonResource):
         return JsonResource.getChild(self, path, request)
 
     def asDict(self, request):
-        slavename = self.slave_status.getName()
+        slavename = getSlaveName(self.slave_status)
         my_builders = []
         for bname in self.status.getBuilderNames():
             b = self.status.getBuilder(bname)
@@ -961,7 +985,6 @@ class SlaveBuildsJsonResource(JsonResource):
         return current_builds
 
 
-
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
 """
@@ -970,7 +993,7 @@ class SlaveJsonResource(JsonResource):
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
         self.slave_status = slave_status
-        self.name = self.slave_status.getName()
+        self.name = getSlaveName(self.slave_status)
         self.builders = None
         self.putChild('builds', SlaveBuildsJsonResource(status, slave_status))
 
@@ -979,7 +1002,7 @@ class SlaveJsonResource(JsonResource):
             # Figure out all the builders to which it's attached
             self.builders = []
             for builderName in self.status.getBuilderNames():
-                if self.name in self.status.getBuilder(builderName).slavenames:
+                if self.name in self.status.getBuilder(builderName).getAllSlaveNames():
                     builder_status = self.status.getBuilder(builderName)
                     builderDict = {'name': builderName, 'friendly_name': builder_status.getFriendlyName(),
                            'url': self.status.getURLForThing(builder_status)}
@@ -987,9 +1010,10 @@ class SlaveJsonResource(JsonResource):
         return self.builders
 
     def asDict(self, request):
-        results = self.slave_status.asDict()
+        results = self.slave_status.asDict() if self.slave_status else None
         #Add builder information
-        results['builders'] = self.getBuilders()
+        if results:
+            results['builders'] = self.getBuilders()
         return results
 
 
@@ -1064,12 +1088,14 @@ class GlobalJsonResource(JsonResource):
             b = self.status.getBuilder(b_name)
             current_builds |= set(b.getCurrentBuilds())
 
-        queue = yield self.status.master.db.buildrequests.getUnclaimedBuildRequest(sorted=False)
+        queue = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=False)
+        total_builds_lastday = yield self.status.getNumberOfBuildsInLastDay()
         result = {"slaves_count": len(connected_slaves),
                   "slaves_busy": len(slave_busy),
                   "running_builds": len(current_builds),
                   "build_load": len(queue) + len(current_builds),
-                  "utc": time.time() * 1000}
+                  "utc": time.time() * 1000,
+                  "total_builds_lastday": total_builds_lastday}
 
         defer.returnValue(result)
 

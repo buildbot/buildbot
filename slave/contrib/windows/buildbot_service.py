@@ -144,6 +144,9 @@ class BBService(win32serviceutil.ServiceFramework):
                 # for ppl who build Python itself from source.
                 python_exe = os.path.join(sys.prefix, "PCBuild", "python.exe")
             if not os.path.isfile(python_exe):
+                # virtualenv support
+                python_exe = os.path.join(sys.prefix, "Scripts", "python.exe")
+            if not os.path.isfile(python_exe):
                 self.error("Can not find python.exe to spawn subprocess")
                 return False
 
@@ -208,7 +211,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # Set the stop event - the main loop takes care of termination.
         win32event.SetEvent(self.hWaitStop)
 
-    # SvcStop only gets triggered when the user explictly stops (or restarts)
+    # SvcStop only gets triggered when the user explicitly stops (or restarts)
     # the service.  To shut the service down cleanly when Windows is shutting
     # down, we also need to hook SvcShutdown.
     SvcShutdown = SvcStop
@@ -226,7 +229,7 @@ class BBService(win32serviceutil.ServiceFramework):
             self.info("Starting BuildBot in directory '%s'" % (bbdir, ))
             hstop = self.hWaitStop
 
-            cmd = '%s --spawn %d start %s' % (self.runner_prefix, hstop, bbdir)
+            cmd = '%s --spawn %d start --nodaemon %s' % (self.runner_prefix, hstop, bbdir)
             #print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
@@ -342,7 +345,7 @@ class BBService(win32serviceutil.ServiceFramework):
         self._dolog(servicemanager.LogErrorMsg, s)
 
     # Functions that spawn a child process, redirecting any output.
-    # Although builtbot itself does this, it is very handy to debug issues
+    # Although buildbot itself does this, it is very handy to debug issues
     # such as ImportErrors that happen before buildbot has redirected.
 
     def createProcess(self, cmd):
@@ -545,7 +548,7 @@ def HandleCommandLine():
         # child-process.
         # First arg is the handle to wait on
         # Fourth arg is the config directory to use for the buildbot/slave
-        _RunChild(DetermineRunner(sys.argv[4]))
+        _RunChild(DetermineRunner(sys.argv[5]))
     else:
         win32serviceutil.HandleCommandLine(BBService,
                                            customOptionHandler=CustomInstall)

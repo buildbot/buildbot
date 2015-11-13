@@ -29,6 +29,7 @@ from buildbot.util.eventual import eventually
 from buildbot.changes import changes
 from buildbot.status import buildset, builder, buildrequest
 from buildbot.status.results import RETRY
+from datetime import datetime, timedelta
 
 class Status(config.ReconfigurableServiceMixin, service.MultiService):
     implements(interfaces.IStatus)
@@ -45,7 +46,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         self._builder_observers = bbcollections.KeyedSets()
         self._buildreq_observers = bbcollections.KeyedSets()
         self._buildset_finished_waiters = bbcollections.KeyedSets()
+        self._buildset_completion_sub = None
+        self._buildset_sub = None
+        self._build_request_sub = None
+        self._change_sub = None
         self.rev_url_func = None
+        self.total_builds_lastday = {}
 
     # service management
 
@@ -94,10 +100,18 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                                                             new_config)
 
     def stopService(self):
-        self._buildset_completion_sub.unsubscribe()
-        self._buildset_sub.unsubscribe()
-        self._build_request_sub.unsubscribe()
-        self._change_sub.unsubscribe()
+        if self._buildset_completion_sub:
+            self._buildset_completion_sub.unsubscribe()
+            self._buildset_completion_sub = None
+        if self._buildset_sub:
+            self._buildset_sub.unsubscribe()
+            self._buildset_sub = None
+        if self._build_request_sub:
+            self._build_request_sub.unsubscribe()
+            self._build_request_sub = None
+        if self._change_sub:
+            self._change_sub.unsubscribe()
+            self._change_sub = None
 
         return service.MultiService.stopService(self)
 
@@ -214,7 +228,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         # ISlaveStatus
         if interfaces.ISlaveStatus.providedBy(thing):
             slave = thing
-            return prefix + "buildslaves/%s" % (urllib.quote(slave.getName(), safe=''))
+            return prefix + "buildslaves/%s" % (
+                    urllib.quote(slave.getName(), safe=''),
+                    )
 
         # IStatusEvent
         if interfaces.IStatusEvent.providedBy(thing):
@@ -320,6 +336,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         return builder_names
 
     @defer.inlineCallbacks
+    def getNumberOfBuildsInLastDay(self):
+        lastday = datetime.now().date() - timedelta(1)
+        if lastday not in self.total_builds_lastday:
+            total_builds_lastday = yield self.master.db.buildrequests.getTotalBuildsInTheLastDay()
+            self.total_builds_lastday = {lastday: total_builds_lastday}
+        defer.returnValue(self.total_builds_lastday[lastday])
+
+    @defer.inlineCallbacks
     def generateFinishedBuildsAsync(self, num_builds=15, results=None, slavename=None):
         #TODO: support filter by RETRY result
         results_filter = [r for r in results if r is not None and r != RETRY] if results else []
@@ -409,7 +433,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if t:
             builder_status.subscribe(t)
 
-    def builderAdded(self, name, basedir, category=None, friendly_name=None):
+    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None):
         """
         @rtype: L{BuilderStatus}
         """
@@ -444,12 +468,14 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = builder.BuilderStatus(name, category, self.master, friendly_name)
+            builder_status = builder.BuilderStatus(name, category, self.master, friendly_name,
+                                                   description)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,
         # so set it here to make sure
         builder_status.category = category
+        builder_status.description = description
         builder_status.master = self.master
         builder_status.basedir = os.path.join(self.basedir, basedir)
         builder_status.name = name # it might have been updated

@@ -28,7 +28,7 @@ from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.sourcestamp import SourceStamp
-
+from buildbot.process.properties import Properties
 
 class PastBuildsJsonResource(unittest.TestCase):
     def setUp(self):
@@ -83,9 +83,9 @@ def mockBuilder(master, master_status, buildername, proj):
     builder.config = BuilderConfig(name=buildername, friendly_name=buildername,
                                    project=proj,
                                    slavenames=['build-slave-01'],
-                                   factory=BuildFactory(),
+                                   factory=BuildFactory(), description="Describing my builder",
                                    slavebuilddir="test", tags=['tag1', 'tag2'])
-    builder.builder_status = BuilderStatus(buildername, None, master)
+    builder.builder_status = BuilderStatus(buildername, None, master, description="Describing my builder")
     builder.builder_status.setSlavenames(['build-slave-01'])
     builder.builder_status.setTags(['tag1', 'tag2'])
     builder.builder_status.status = master_status
@@ -115,6 +115,7 @@ def setUpFakeMasterStatus(fakemaster):
 
 def fakeBuildStatus(master, builder, num):
     build_status = BuildStatus(builder.builder_status, master, num)
+    build_status.started = 1422441500
     build_status.finished = 1422441501.21
     build_status.reason = 'A build was forced by user@localhost'
     build_status.slavename = 'build-slave-01'
@@ -163,7 +164,7 @@ class TestBuildJsonResource(unittest.TestCase):
                                                         'revision': 'abcdef123456789',
                                                         'url': u'https://github.com/test/repo/commit/abcdef123456789'}],
                           'results': 0, 'number': 1, 'currentStep': None,
-                          'times': (None, 1422441501.21, 1422441501.21),
+                          'times': (1422441500, 1422441501.21),
                           'buildChainID': None, 'owners': None, 'submittedTime': None,
                           'blame': [],
                           'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
@@ -212,6 +213,8 @@ class TestBuilderSlavesJsonResources(unittest.TestCase):
                              'runningBuilds': [], 'friendly_name': None, 'admin': None, 'host': None,
                              'version': None, 'connected': False, 'eid': -1, 'lastMessage': 0,
                              'health': 0,
+                             'paused': False,
+                             'graceful_shutdown': False,
                              'builders': [
                                  {'url': 'http://localhost:8080/projects/Katana/builders/builder-01',
                                   'friendly_name': 'builder-01', 'name': 'builder-01'}],
@@ -266,7 +269,7 @@ class TestPastBuildsJsonResource(unittest.TestCase):
                     'slave_friendly_name': 'build-slave-01', 'slave_url': None,
                     'sourceStamps': [], 'steps': [], 'buildChainID': None, 'owners': None,
                      'submittedTime': None,
-                    'text': [], 'times': (None, 1422441501.21, 1422441501.21),
+                    'text': [], 'times': (1422441500, 1422441501.21),
                     'url': {
                         'path':
                             'http://localhost:8080/builders/builder-01/builds/%d?katana-buildbot_branch=katana' % num,
@@ -326,10 +329,10 @@ class TestSingleProjectJsonResource(unittest.TestCase):
             return {'name': builder_name, 'tags': ['tag1', 'tag2'],
                     'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +
                            '?katana-buildbot_branch=katana',
-                    'friendly_name': builder_name,
+                    'friendly_name': builder_name, 'description': 'Describing my builder',
                     'project': 'Katana',
                     'state': 'offline',
-                    'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0}
+                    'slaves': ['build-slave-01'], 'startSlavenames ': [], 'currentBuilds': [], 'pendingBuilds': 0}
 
         expected_project_dict = {'comparisonURL': '../../projects/Katana/comparison?builders0=katana-buildbot%3Dkatana',
                                  'builders': [
@@ -393,10 +396,11 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                      'reason': 'A build was forced by user@localhost',
                      'eta': None, 'builderFriendlyName': 'builder-01',
                      'failure_url': None, 'slave_friendly_name': 'build-slave-01',
-                     'times': (None, 1422441501.21, 1422441501.21)},
+                     'times': (1422441500, 1422441501.21)},
                    'name': 'builder-01', 'tags': ['tag1', 'tag2'],
                    'url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
-                   'friendly_name': 'builder-01',
+                   'description': 'Describing my builder',
+                   'friendly_name': 'builder-01', 'startSlavenames ': [],
                    'project': 'Katana', 'state': 'offline', 'slaves': ['build-slave-01'],
                    'currentBuilds': [], 'pendingBuilds': 0}],
              'latestRevisions': {}}
@@ -432,8 +436,8 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'tags': ['tag1', 'tag2'],
                           'url': 'http://localhost:8080/projects/Katana/builders/' +
                                  'builder-01?katana-buildbot_branch=katana',
-                          'friendly_name': 'builder-01',
-                          'project': 'Katana',
+                          'friendly_name': 'builder-01', 'description': 'Describing my builder',
+                          'project': 'Katana', 'startSlavenames ': [],
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
 
     @defer.inlineCallbacks
@@ -452,6 +456,7 @@ class TestSingleProjectBuilderJsonResource(unittest.TestCase):
                           'url': 'http://localhost:8080/projects/Katana/builders/' +
                                  'builder-01?katana-buildbot_branch=katana',
                           'friendly_name': 'builder-01',
+                          'description': 'Describing my builder', 'startSlavenames ': [],
                           'project': 'Katana',
                           'state': 'offline', 'slaves': ['build-slave-01'], 'currentBuilds': [], 'pendingBuilds': 0})
 
@@ -487,6 +492,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
             brstatus.getSourceStamps = lambda: {}
             brstatus.getSourceStamp = lambda: ss
+            brstatus.getBuildProperties = lambda: Properties()
             return brstatus
 
         def getPendingBuildRequestStatuses():
@@ -502,6 +508,8 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                     'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01?' +
                                   'katana-buildbot_branch=katana',
                     'builds': [],
+                    'properties': [],
+                    'lastBuildNumber': None,
                     'reason': 'because',
                     'slaves': ['build-slave-01'],
                     'source': {'branch': 'b',

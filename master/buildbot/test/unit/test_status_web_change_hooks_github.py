@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import calendar
+
 import buildbot.status.web.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.util import compat
@@ -139,8 +141,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
             self.assertEquals(change['files'], ['filepath.rb'])
             self.assertEquals(change["repository"], "http://github.com/defunkt/github")
-            self.assertEquals(change["when"], 1203116237)
-            self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
+            self.assertEquals(
+                calendar.timegm(change["when_timestamp"].utctimetuple()),
+                1203116237
+            )
+            self.assertEquals(change["author"], "Fred Flinstone <fred@flinstone.org>")
             self.assertEquals(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
             self.assertEquals(change["comments"], "okay i give in")
             self.assertEquals(change["branch"], "master")
@@ -149,8 +154,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             change = self.request.addedChanges[1]
             self.assertEquals(change['files'], [ 'modfile', 'removedFile' ])
             self.assertEquals(change["repository"], "http://github.com/defunkt/github")
-            self.assertEquals(change["when"], 1203114994)
-            self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
+            self.assertEquals(
+                calendar.timegm(change["when_timestamp"].utctimetuple()),
+                1203114994
+            )
+            self.assertEquals(change["author"], "Fred Flinstone <fred@flinstone.org>")
             self.assertEquals(change["src"], "git")
             self.assertEquals(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
             self.assertEquals(change["comments"], "update pricing a tad")

@@ -133,4 +133,62 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, status_text=['2 tests', 'passed'])
         return self.runStep()
 
+    def test_run_jobs(self):
+        """
+        The C{jobs} kwarg should correspond to trial's -j option (
+        included since Twisted 12.3.0), and make corresponding changes to
+        logfiles.
+        """
+        self.setupStep(python_twisted.Trial(workdir='build',
+                                    tests = 'testname',
+                                    testpath = None,
+                                    jobs=2))
+
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', '--jobs=2',
+                                 'testname'],
+                        usePTY="slave-config",
+                        logfiles={
+                            'test.0.log': '_trial_temp/0/test.log',
+                            'err.0.log': '_trial_temp/0/err.log',
+                            'out.0.log': '_trial_temp/0/out.log',
+                            'test.1.log': '_trial_temp/1/test.log',
+                            'err.1.log': '_trial_temp/1/err.log',
+                            'out.1.log': '_trial_temp/1/out.log',
+                        })
+            + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+        return self.runStep()
+
+    def test_run_jobsProperties(self):
+        """
+        C{jobs} should accept Properties
+        """
+        self.setupStep(python_twisted.Trial(workdir='build',
+                                     tests = 'testname',
+                                     jobs=Property('jobs_count'),
+                                     testpath=None))
+        self.properties.setProperty('jobs_count', '2', 'Test')
+
+        self.expectCommands(
+            ExpectShell(workdir='build',
+                        command=['trial', '--reporter=bwverbose', '--jobs=2',
+                                 'testname'],
+                        usePTY="slave-config",
+                        logfiles={
+                            'test.0.log': '_trial_temp/0/test.log',
+                            'err.0.log': '_trial_temp/0/err.log',
+                            'out.0.log': '_trial_temp/0/out.log',
+                            'test.1.log': '_trial_temp/1/test.log',
+                            'err.1.log': '_trial_temp/1/err.log',
+                            'out.1.log': '_trial_temp/1/out.log',
+                        })
+            + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=['1 test', 'passed'])
+        return self.runStep()
 

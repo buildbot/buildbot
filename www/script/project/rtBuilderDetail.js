@@ -20,6 +20,7 @@ define(function (require) {
         $tbPendingBuildsTable,
         $tbBuildsTable,
         $tbSlavesTable,
+        $tbStartSlavesTable,
         hbBuilderDetail = hb.builderDetail;
 
     rtBuilderDetail = {
@@ -30,12 +31,14 @@ define(function (require) {
                 return latestRevDict;
             });
             $tbSlavesTable = rtBuilderDetail.slavesTableInit($('#rtSlavesTable'));
+            $tbStartSlavesTable = rtBuilderDetail.slavesTableInit($('#rtStartSlavesTable'));
 
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
             realtimeFunctions.project = rtBuilderDetail.rtfProcessCurrentBuilds;
             realtimeFunctions.pending_builds = rtBuilderDetail.rtfProcessPendingBuilds;
             realtimeFunctions.builds = rtBuilderDetail.rtfProcessBuilds;
             realtimeFunctions.slaves = rtBuilderDetail.rtfProcessSlaves;
+            realtimeFunctions.start_slaves = rtBuilderDetail.rtfProcessStartSlaves;
 
             realtimePages.initRealtime(realtimeFunctions);
 
@@ -65,6 +68,10 @@ define(function (require) {
         rtfProcessSlaves: function (data) {
             data = helpers.objectPropertiesToArray(data);
             rtTable.table.rtfGenericTableProcess($tbSlavesTable, data);
+        },
+        rtfProcessStartSlaves: function (data) {
+            data = helpers.objectPropertiesToArray(data);
+            rtTable.table.rtfGenericTableProcess($tbStartSlavesTable, data);
         },
         rtfProcessBuilds: function (data) {
             rtTable.table.rtfGenericTableProcess($tbBuildsTable, data);

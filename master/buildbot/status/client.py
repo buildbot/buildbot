@@ -16,7 +16,6 @@
 
 from twisted.spread import pb
 from twisted.python import components, log as twlog
-from twisted.internet import reactor
 from twisted.application import strports
 from twisted.cred import portal, checkers
 
@@ -24,6 +23,7 @@ from buildbot import interfaces
 from zope.interface import Interface, implements
 from buildbot.status import logfile, base
 from buildbot.changes import changes
+from buildbot.util.eventual import eventually
 
 class IRemote(Interface):
     pass
@@ -418,7 +418,7 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         self.subscribed_to.append(self.status)
         # wait a moment before subscribing, so the new-builder messages
         # won't appear before this remote method finishes
-        reactor.callLater(0, self.status.subscribe, self)
+        eventually(self.status.subscribe, self)
         return None
 
     def perspective_unsubscribe(self):

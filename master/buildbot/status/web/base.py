@@ -23,7 +23,7 @@ from twisted.web import resource, static, server
 from twisted.python import log
 from buildbot.status import builder, buildstep, build
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE
-from buildbot.status.results import EXCEPTION, RETRY
+from buildbot.status.results import EXCEPTION, RETRY, RESUME, MERGED
 from buildbot import version, util
 from buildbot.process.properties import Properties
 
@@ -60,6 +60,8 @@ css_classes = {SUCCESS: "success",
                RETRY: "retry",
                CANCELED: "exception",
                NOT_REBUILT: "not_rebuilt",
+               RESUME: "success",
+               MERGED: "success",
                None: "",
                }
 
@@ -298,6 +300,9 @@ def path_to_json_slave_builds(request, slaveName):
 
 def path_to_json_builder_slaves(builderName):
     return "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
+
+def path_to_json_builder_startslaves(builderName):
+    return "json/builders/{0}/startslaves".format(urllib.quote(builderName, safe=''))
 
 def path_to_json_build(status, request, builderName, buildID):
     return "{0}{1}{2}/{3}{4}".format(status.getBuildbotURL(), "json/builders/", urllib.quote(builderName, safe=''), "builds/?select=", buildID)

@@ -120,11 +120,12 @@ setup_args = {
     'packages': ["buildbot",
               "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
               "buildbot.changes",
+              "buildbot.buildslave",
               "buildbot.steps",
               "buildbot.steps.package",
               "buildbot.steps.package.deb",
               "buildbot.steps.package.rpm",
-              "buildbot.steps.source", "buildbot.steps.source.custom",
+              "buildbot.steps.source",
               "buildbot.process",
               "buildbot.process.users",
               "buildbot.clients",
@@ -151,6 +152,7 @@ setup_args = {
                 ("buildbot/clients", [
                     "buildbot/clients/debug.glade",
                 ]),
+                include("buildbot/status/web/files/", '*.png'),
                 include("www/fonts/katana_icons", '*', package_path="../www/fonts/katana_icons"),
                 include("www/fonts/leckerlione", '*', package_path="../www/fonts/leckerlione"),
                 include("www/fonts/pacifico", '*', package_path="../www/fonts/pacifico"),
@@ -189,12 +191,16 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 9.0.0',
         'Jinja2 >= 2.1',
-        # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
-        'sqlalchemy >= 0.6, <= 0.7.10',
+        # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so
+        # stick to 0.7.9
+        'sqlalchemy >= 0.6, <= 0.7.9',
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
         'sqlalchemy-migrate ==0.7.2',
         'python-dateutil==1.5',
+        'autobahn',
+        'python-ldap',
+        'mysql-python'
     ]
     setup_args['tests_require'] = [
         'mock',

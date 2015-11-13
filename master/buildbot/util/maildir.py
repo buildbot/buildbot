@@ -41,6 +41,7 @@ class MaildirService(service.MultiService):
             self.setBasedir(basedir)
         self.files = []
         self.dnotify = None
+        self.timerService = None
 
     def setBasedir(self, basedir):
         # some users of MaildirService (scheduler.Try_Jobdir, in particular)
@@ -68,10 +69,11 @@ class MaildirService(service.MultiService):
             # because of a python bug
             log.msg("DNotify failed, falling back to polling")
         if not self.dnotify:
-            t = internet.TimerService(self.pollinterval, self.poll)
-            t.setServiceParent(self)
-        self.poll()
-
+            self.timerService = internet.TimerService(self.pollinterval, self.poll)
+            self.timerService.setServiceParent(self)
+        self.poll()  
+           
+        
     def dnotify_callback(self):
         log.msg("dnotify noticed something, now polling")
 
@@ -91,26 +93,31 @@ class MaildirService(service.MultiService):
         if self.dnotify:
             self.dnotify.remove()
             self.dnotify = None
+        if self.timerService is not None:
+            self.timerService.disownServiceParent() 
+            self.timerService = None
         return service.MultiService.stopService(self)
 
     @defer.inlineCallbacks
     def poll(self):
-        assert self.basedir
-        # see what's new
-        for f in self.files:
-            if not os.path.isfile(os.path.join(self.newdir, f)):
-                self.files.remove(f)
-        newfiles = []
-        for f in os.listdir(self.newdir):
-            if not f in self.files:
-                newfiles.append(f)
-        self.files.extend(newfiles)
-        for n in newfiles:
-            try:
-                yield self.messageReceived(n)
-            except:
-                log.msg("while reading '%s' from maildir '%s':" % (n, self.basedir))
-                log.err()
+        try:
+            assert self.basedir
+            # see what's new
+            for f in self.files:
+                if not os.path.isfile(os.path.join(self.newdir, f)):
+                    self.files.remove(f)
+            newfiles = []
+            for f in os.listdir(self.newdir):
+                if not f in self.files:
+                    newfiles.append(f)
+            self.files.extend(newfiles)
+            for n in newfiles:
+                try:
+                    yield self.messageReceived(n)
+                except:
+                    log.err(None, "while reading '%s' from maildir '%s':" % (n, self.basedir))
+        except Exception:
+            log.err(None, "while polling maildir '%s':" % (self.basedir,))
 
     def moveToCurDir(self, filename):
         if runtime.platformType == "posix":

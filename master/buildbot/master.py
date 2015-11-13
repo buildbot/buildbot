@@ -40,6 +40,7 @@ from buildbot.process import cache
 from buildbot.process.users import users
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, NOT_REBUILT
+from buildbot.util.eventual import eventually
 from buildbot import monkeypatches
 from buildbot import config
 
@@ -81,10 +82,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         # loop for polling the db
         self.db_loop = None
         # db configured values
-        self.configured_db_url = None
-        self.configured_poll_interval = None
+        self.configured_db_url = None       
+        self.configured_poll_interval = None        
+
         # running multimaster mode
-        self.configured_buildbotURL = None        
+        self.configured_buildbotURL = None 
 
         # configuration / reconfiguration handling
         self.config = config.MasterConfig()
@@ -128,11 +130,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.change_svc = ChangeManager(self)
         self.change_svc.setServiceParent(self)
 
-        self.botmaster = BotMaster(self)
-        self.botmaster.setServiceParent(self)
-
         self.scheduler_manager = SchedulerManager(self)
         self.scheduler_manager.setServiceParent(self)
+
+        self.botmaster = BotMaster(self)
+        self.botmaster.setServiceParent(self)
 
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
@@ -199,8 +201,13 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
             if hasattr(signal, "SIGHUP"):
                 def sighup(*args):
-                    _reactor.callLater(0, self.reconfig)
+                    eventually(self.reconfig)
                 signal.signal(signal.SIGHUP, sighup)
+
+            if hasattr(signal, "SIGUSR1"):
+                def sigusr1(*args):
+                    _reactor.callLater(0, self.botmaster.cleanShutdown)
+                signal.signal(signal.SIGUSR1, sigusr1)
 
             # call the parent method
             yield defer.maybeDeferred(lambda :
@@ -216,8 +223,10 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         log.msg("BuildMaster is running")
 
-
+    @defer.inlineCallbacks
     def stopService(self):
+        if self.running:
+            yield service.MultiService.stopService(self)
         if self.db_loop:
             self.db_loop.stop()
             self.db_loop = None
