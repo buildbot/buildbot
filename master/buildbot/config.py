@@ -194,7 +194,7 @@ class MasterConfig(util.ComparableMixin):
         sys.path.append(basedir)
         try:
             try:
-                exec f in localDict
+                exec(f, localDict)
             except ConfigErrors as e:
                 for err in e.errors:
                     error(err)

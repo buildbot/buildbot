@@ -211,7 +211,7 @@ class SubcommandOptions(usage.Options):
                     try:
                         with open(optfile, "r") as f:
                             options = f.read()
-                        exec options in localDict
+                        exec(options, localDict)
                     except Exception:
                         print("error while reading %s" % optfile)
                         raise
