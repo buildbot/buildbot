@@ -813,20 +813,18 @@ Methods:
 Mocks and testing utils
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-httpMock.coffee
-...............
+DataService provides an easy way to mock data requests in tests.
 
-This modules adds ``decorateHttpBackend($httpBackend)`` to the global namespace. This function decorate the $httpBackend with additional functionality:
+* ``.when(url, [query], returnValue)``
 
-* ``.expectDataGET(ep, {nItems:<int or undefined>, override: <fn or undefined>})``
-
-    Automatically create a GET expectation to the data api, given the data spec
+    You can to specify on which parameters what value needs to be returned by the dataService's ``.get`` method.
     Available options are:
 
-    * ``nItems``: if defined, this will generate a collection of nItems instead of single value
-    * ``override``: a custom function to override the resulting generated data
+    * ``url``: the url of the request
+    * ``query``: the query of the request (default: {})
+    * ``returnValue``: the value that will be returned
 
-    Example: ``$httpBackend.expectDataGET("change", {nItems:2, override: (val) -> val[1].id=4 })`` will create 2 changes, but the id of the second change will be overridden to 4
+    Example: ``dataService.when('buildrequests/1', [{buildrequestid: 1}])``
 
 Linking with Buildbot
 ~~~~~~~~~~~~~~~~~~~~~
