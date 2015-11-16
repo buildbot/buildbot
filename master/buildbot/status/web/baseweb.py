@@ -414,13 +414,14 @@ class WebStatus(service.MultiService):
         return wrapper
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
+        # Disabled buildbot pages that we don't use on Katana
         #self.putChild("", IndexOrWaterfallRedirection())
-        self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
-                                        num_events_max=num_events_max))
-        self.putChild("grid", GridStatusResource())
-        self.putChild("console", ConsoleStatusResource(
-                orderByTime=self.orderConsoleByTime))
-        self.putChild("tgrid", TransposedGridStatusResource())
+        #self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
+        #                                num_events_max=num_events_max))
+        #self.putChild("grid", GridStatusResource())
+        #self.putChild("console", ConsoleStatusResource(
+        #        orderByTime=self.orderConsoleByTime))
+        #self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("buildqueue", BuildQueueResource()) # has buildqueue
         self.putChild("one_box_per_builder", Redirect("builders"))
         self.putChild("changes", ChangesResource())
