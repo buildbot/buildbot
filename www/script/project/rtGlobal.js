@@ -12,8 +12,8 @@ define(function (require) {
         outerBar = $('#verticalProgressBar'),
         $buildLoadBox = $('#buildLoad'),
         infoSpan = $buildLoadBox.find('span'),
-        minBuildsPerSlave = 1, // The amount of builds each agent is allowed to have before we get yellow build load
-        maxBuildsPerSlave = 2, // The amount of builds each agent is allowed to have before we get red build load
+        minBuildsPerSlave = 3, // The amount of builds each agent is allowed to have before we get yellow build load
+        maxBuildsPerSlave = 5, // The amount of builds each agent is allowed to have before we get red build load
         buildLoad = 0,
         bKatanaLoaded = false;
 
