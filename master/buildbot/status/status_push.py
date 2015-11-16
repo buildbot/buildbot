@@ -17,12 +17,12 @@ Push events to an abstract receiver.
 
 Implements the HTTP receiver.
 """
+from future.moves.urllib.parse import urlencode
+from future.moves.urllib.parse import urlparse
 from future.utils import iteritems
 
 import datetime
 import os
-import urllib
-import urlparse
 
 try:
     import simplejson as json
@@ -398,7 +398,7 @@ class HttpStatusPush(StatusPush):
         if maxDiskItems:
             # The queue directory is determined by the server url.
             path = ('events_' +
-                    urlparse.urlparse(self.serverUrl)[1].split(':')[0])
+                    urlparse(self.serverUrl)[1].split(':')[0])
             queue = PersistentQueue(
                 primaryQueue=MemoryQueue(maxItems=maxMemoryItems),
                 secondaryQueue=DiskQueue(path, maxItems=maxDiskItems))
@@ -436,7 +436,7 @@ class HttpStatusPush(StatusPush):
                 packets = json.dumps(newitems, separators=(',', ':'))
             params = {'packets': packets}
             params.update(self.extra_post_params)
-            data = urllib.urlencode(params)
+            data = urlencode(params)
             if (not self.maxHttpRequestSize or
                     len(data) < self.maxHttpRequestSize):
                 return (data, items)

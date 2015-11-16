@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from future.moves.urllib.parse import urlencode
+from future.moves.urllib.parse import urljoin
+
 import hashlib
-import urllib
 
 from buildbot.util import config
 from buildbot.www import resource
 from twisted.internet import defer
-from urlparse import urljoin
 
 
 class AvatarBase(config.ConfiguredMixin):
@@ -41,7 +42,7 @@ class AvatarGravatar(AvatarBase):
         gravatar_url += hashlib.md5(email.lower()).hexdigest() + "?"
         if self.default != "url":
             defaultAvatarUrl = self.default
-        gravatar_url += urllib.urlencode({'s': str(size), 'd': defaultAvatarUrl})
+        gravatar_url += urlencode({'s': str(size), 'd': defaultAvatarUrl})
         raise resource.Redirect(gravatar_url)
 
 
