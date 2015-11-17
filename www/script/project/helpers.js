@@ -105,52 +105,43 @@ define(function (require) {
                     $elem.addClass('tipped');
                 }
 
-                var $toolTipCont = $("<div/>").addClass("tooltip-cont"),
-                    clickEvent;
-
-                $elem.hover(function (e) {
+                var hoverIn = function (e) {
                     var title,
+                        toolTipCont = $("<div/>").addClass("tooltip-cont"),
                         cursorPosTop = e.pageY + 20,
-                        cursorPosLeft = e.pageX + 5,
-                        clickHandler = function (event) {
-                            clickEvent = event;
-                            $toolTipCont.remove();
-                            $(e.target).unbind(event);
-                        };
+                        cursorPosLeft = e.pageX + 5;
 
                     if ($elem.attr("title") !== undefined) {
                         $elem.attr("data-title", $elem.attr("title"));
                         $elem.removeAttr("title");
                     }
-                    title = $elem.attr("data-title");
-
-                    $elem.bind("click.katana", clickHandler);
+                    title = $elem.attr("data-title");      
 
                     if (screenSize.isMediumScreen() || !$elem.hasClass('responsive-tooltip')) {
-                        $toolTipCont.html(title)
+                        toolTipCont.html(title)
                             .appendTo('body')
                             .css({'top': cursorPosTop, 'left': cursorPosLeft})
                             .fadeIn('fast');
                     } else if ($elem.hasClass('responsive-tooltip')) {
 
-                        $toolTipCont.html(title)
+                        toolTipCont.html(title)
                             .appendTo('body')
                             .css({'top': cursorPosTop, 'right': 28})
                             .fadeIn('fast');
                     }
 
-                }, function () {
-                    if (clickEvent !== undefined) {
-                        $elem.unbind(clickEvent);
-                        clickEvent = undefined;
-                    }
+                };
 
-                    var toolTipCont = $('.tooltip-cont');
-                    toolTipCont.fadeOut('fast', function () {
+                var hoverOut = function () {                 
+                    var fadeOut = function () {
                         $(this).unbind();
                         $(this).remove();
-                    });
-                });
+                    };
+                    $('.tooltip-cont').fadeOut('fast', fadeOut);
+                };
+
+                $elem.hover(hoverIn, hoverOut);    
+                $elem.bind('click.katana', hoverOut);    
             });
         },
         setCurrentItem: function () {
