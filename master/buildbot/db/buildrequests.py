@@ -219,6 +219,40 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
+    @with_master_objectid
+    def getOldestBuildRequestInQueue(self, buildername, _master_objectid=None):
+        def thd(conn):
+            reqs_tbl = self.db.model.buildrequests
+            claims_tbl = self.db.model.buildrequest_claims
+
+            pending = sa.select([reqs_tbl.c.buildername, reqs_tbl.c.submitted_at],
+                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)),
+                          whereclause=((claims_tbl.c.claimed_at == None) &
+                                       (reqs_tbl.c.complete == 0)))\
+                .where(reqs_tbl.c.buildername == buildername)\
+                .order_by(reqs_tbl.c.submitted_at).limit(1)
+
+            resumebuilds = sa.select([reqs_tbl.c.id, reqs_tbl.c.submitted_at],
+                               from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
+                                                      & (claims_tbl.c.objectid == _master_objectid)))\
+                .where(reqs_tbl.c.results == RESUME)\
+                .where(reqs_tbl.c.mergebrid == None)\
+                .where(reqs_tbl.c.buildername == buildername)\
+                .order_by(reqs_tbl.c.submitted_at).limit(1)
+
+            buildersqueue = pending.alias('pending').select().union_all(resumebuilds.alias('resume').select())
+
+            res = conn.execute(buildersqueue)
+            rows = res.fetchall()
+            rv = []
+            for row in rows:
+                if row:
+                    rv.append(dict(buildername=row.buildername, submitted_at=mkdt(row.submitted_at)))
+
+            return rv
+
+        return self.db.pool.do(thd)
+
     def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
         def thd(conn):
             sourcestampsets_tbl = self.db.model.sourcestampsets
