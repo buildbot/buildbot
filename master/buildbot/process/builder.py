@@ -132,8 +132,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
-        unclaimed = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.name, claimed=False)
+        unclaimed = yield self.master.db.buildrequests.getBuildersInQueue([self.name])
 
         if unclaimed:
             unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
