@@ -1,4 +1,4 @@
-/*global define, requirejs, jQuery, confirm*/
+/*global define, requirejs, jQuery, confirm, alert*/
 define(function (require) {
 
     "use strict";
@@ -376,6 +376,17 @@ define(function (require) {
                                             beforeSubmit: function () {
                                                 $elem.hidePopup();
                                                 $("#preloader").preloader("hidePreloader");
+
+                                                if (rtGlobal.isKatanaFull()) {
+                                                    alert("In order to ensure rapid processing of pending builds" +
+                                                        " (and because  we notice a significant degradation in" +
+                                                        " processing time due to non-scalable resource constraints" +
+                                                        " when the outstanding build load is too high), users are not" +
+                                                        " allowed to initiate builds when the build load is above 500." +
+                                                        "  We apologize for the inconvenience and hope to be able to" +
+                                                        " raise this limit in the future.");
+                                                    return false;
+                                                }
 
                                                 if (rtGlobal.isKatanaLoaded()) {
                                                     return confirm('The build load is currently very high, if possible ' +

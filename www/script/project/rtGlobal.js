@@ -15,8 +15,10 @@ define(function (require) {
         infoSpan = $buildLoadBox.find('span'),
         minBuildsPerSlave = 3, // The amount of builds each agent is allowed to have before we get yellow build load
         maxBuildsPerSlave = 5, // The amount of builds each agent is allowed to have before we get red build load
+        maxAllowedLoad = 500, // The maximum number of builds allowed before people cannot schedule anymore builds
         buildLoad = 0,
-        bKatanaLoaded = false;
+        bKatanaLoaded = false,
+        bKatanaMaxLoaded = false;
 
     var rtGlobal = {
         init: function () {
@@ -31,22 +33,21 @@ define(function (require) {
             buildLoad = data.build_load;
 
             var buildLoadPerSlave = buildLoad / data.slaves_count,
-                statusColorClass = buildLoadPerSlave <= minBuildsPerSlave ? 'green' : buildLoadPerSlave <= maxBuildsPerSlave ? 'yellow' : 'red';
-            var buildsCountYesterday = data.total_builds_lastday;
-            
+                statusColorClass = buildLoadPerSlave <= minBuildsPerSlave ? 'green' : buildLoadPerSlave <= maxBuildsPerSlave ? 'yellow' : 'red',
+                buildsCountYesterday = data.total_builds_lastday,
+                slaveCount = data.slaves_count,
+                slavesInUsePer = (data.slaves_busy / slaveCount) * 100.0,
+                slavesFree = slaveCount - data.slaves_busy,
+                runningBuilds = data.running_builds;
+
             bKatanaLoaded = buildLoadPerSlave > maxBuildsPerSlave;
+            bKatanaMaxLoaded = buildLoad >= maxAllowedLoad;
 
             buildQueueTotal.show();
             buildSlavesTotal.show();
             outerBar.show();
 
             $buildLoadBox.attr({'class': 'info-box ' + statusColorClass}).show();
-
-            var slaveCount = data.slaves_count;
-            var slavesInUsePer = (data.slaves_busy / slaveCount) * 100.0;
-            var slavesFree = slaveCount - data.slaves_busy;
-            var runningBuilds = data.running_builds;
-
 
             helpers.verticalProgressBar(outerBar.children(), slavesInUsePer);
             outerBar.attr("title", "{0} builds are running, {1}, agents are idle".format(runningBuilds, slavesFree));
@@ -70,6 +71,9 @@ define(function (require) {
         },
         isKatanaLoaded: function isKatanaLoaded() {
             return bKatanaLoaded;
+        },
+        isKatanaFull: function isKatanaFull() {
+            return bKatanaMaxLoaded;
         }
     };
 
