@@ -189,5 +189,13 @@ define(["jquery", "realtimePages", "rtGlobal"], function ($, rt, rtGlobal) {
 
             expect(isLoaded).toBeTruthy();
         });
+
+        it("becomes full when build load is very high", function () {
+            var customData = $.extend({}, rtGlobalData, {build_load: 500});
+            rtGlobal.processGlobalInfo(customData);
+            var isFull = rtGlobal.isKatanaFull();
+
+            expect(isFull).toBeTruthy();
+        });
     });
 });
