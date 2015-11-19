@@ -121,10 +121,11 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                {"mData": null, "sWidth": "28%"},
-                {"mData": null, "sWidth": "28%"},
-                {"mData": null, "sWidth": "28%"},
-                {"mData": null, "sWidth": "16%"}
+                {"mData": null, "sWidth": "4%", "sTitle": ""},
+                {"mData": null, "sWidth": "27%", "sTitle": "Requested at"},
+                {"mData": null, "sWidth": "27%", "sTitle": "Waiting"},
+                {"mData": null, "sWidth": "27%", "sTitle": "Branch"},
+                {"mData": null, "sWidth": "15%", "sTitle": "Select all"}
             ];
 
             options.aoColumnDefs = [
@@ -132,11 +133,20 @@ define(function (require) {
                     "aTargets": [0],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
-                        return extendMoment.getDateFormatted(full.submittedAt);
+                        // If the build result is not resume then we are in the normal queue and not the
+                        // resume queue
+                        return hb.partials.cells["cells:pendingIcons"]({initial_queue: data.results !== 9});
                     }
                 },
                 {
                     "aTargets": [1],
+                    "sClass": "txt-align-left",
+                    "mRender": function (data, type, full) {
+                        return extendMoment.getDateFormatted(full.submittedAt);
+                    }
+                },
+                {
+                    "aTargets": [2],
                     "sClass": "txt-align-left",
                     "mRender": function () {
                         return hbBuilderDetail({pendingBuildWait: true});
@@ -145,9 +155,9 @@ define(function (require) {
                         timeElements.addElapsedElem($(nTd).find('.waiting-time-js'), oData.submittedAt);
                     }
                 },
-                rtTable.cell.revision(2, "sources", helpers.urlHasCodebases()),
+                rtTable.cell.revision(3, "sources", helpers.urlHasCodebases()),
                 {
-                    "aTargets": [3],
+                    "aTargets": [4],
                     "sClass": "txt-align-right",
                     "mRender": function (data, type, full) {
                         return hbBuilderDetail({removeBuildSelector: true, data: full});
