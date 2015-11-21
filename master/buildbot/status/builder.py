@@ -838,6 +838,7 @@ class BuilderStatus(styles.Versioned):
                 log.msg("Exception caught notifying %r of buildStarted event" % w)
                 log.err()
 
+    @defer.inlineCallbacks
     def _buildFinished(self, s):
         assert s in self.currentBuilds
         s.saveYourself()
@@ -853,7 +854,7 @@ class BuilderStatus(styles.Versioned):
                 log.err()
 
         self.saveLatestBuild(s)
-        self.prune() # conserve disk
+        yield threads.deferToThread(self.prune) # conserve disk
 
     def getCodebaseBranch(self, branch, codebases, key):
         if key in codebases:
