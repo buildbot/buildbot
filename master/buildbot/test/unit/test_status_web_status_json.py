@@ -487,6 +487,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus = BuildRequestStatus(builder.builder_status.name, id, self.master_status)
             brstatus._buildrequest = mock.Mock()
             brstatus.getSubmitTime = lambda: 1418823086
+            brstatus.getResults = lambda : -1
             brstatus.getReason = lambda: 'because'
 
             ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
@@ -523,7 +524,8 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                                'revision_short': '',
                                'url': ''},
                     'sources': [],
-                    'submittedAt': 1418823086}
+                    'submittedAt': 1418823086,
+                    'results': -1}
 
         self.assertEqual(pending_dict, [pendingBuildRequestDict(1),
                                         pendingBuildRequestDict(2),
