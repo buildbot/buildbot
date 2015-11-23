@@ -333,7 +333,8 @@ class Build(properties.PropertiesMixin):
         return sp, step
 
     def maybeAddGlobalFactoryInitialSteps(self, laststep, stepnames, stepProgresses):
-        if 'initialSteps' not in self.builder.botmaster.master.config.globalFactory:
+        if 'initialSteps' not in self.builder.botmaster.master.config.globalFactory \
+                or self.builder.config.excludeGlobalFactory:
             return
         intialSteps = self.builder.botmaster.master.config.globalFactory['initialSteps']
         if intialSteps and intialSteps.steps:
@@ -346,7 +347,8 @@ class Build(properties.PropertiesMixin):
                     stepProgresses.insert(index, sp)
 
     def maybeAddGlobalFactoryLastSteps(self, stepnames, stepProgresses):
-        if 'lastSteps' not in self.builder.botmaster.master.config.globalFactory:
+        if 'lastSteps' not in self.builder.botmaster.master.config.globalFactory \
+                or self.builder.config.excludeGlobalFactory:
             return
         lastSteps = self.builder.botmaster.master.config.globalFactory['lastSteps']
         if lastSteps and lastSteps.steps:
