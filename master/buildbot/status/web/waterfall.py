@@ -285,7 +285,7 @@ class WaterfallHelp(HtmlResource):
         show_builders = request.args.get("show", [])
         show_builders.extend(request.args.get("builder", []))
         cxt['show_builders'] = show_builders
-        cxt['all_builders'] = status.getBuilderNames(categories=self.categories)
+        cxt['all_builders'] = status.getBuilderNames(categories=self.categories, sort=True)
 
         # a couple of radio-button selectors for refresh time will appear
         # just after that text
@@ -408,7 +408,7 @@ class WaterfallStatusResource(HtmlResource):
         changes_d.addCallback(keep_changes)
 
         # build request counts for each builder
-        allBuilderNames = status.getBuilderNames(categories=self.categories)
+        allBuilderNames = status.getBuilderNames(categories=self.categories, sort=True)
         brstatus_ds = []
         brcounts = {}
         def keep_count(statuses, builderName):
@@ -434,7 +434,7 @@ class WaterfallStatusResource(HtmlResource):
         # we start with all Builders available to this Waterfall: this is
         # limited by the config-file -time categories= argument, and defaults
         # to all defined Builders.
-        allBuilderNames = status.getBuilderNames(categories=self.categories)
+        allBuilderNames = status.getBuilderNames(categories=self.categories, sort=True)
         builders = [status.getBuilder(name) for name in allBuilderNames]
 
         # but if the URL has one or more builder= arguments (or the old show=
