@@ -290,6 +290,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
                 l.append(name)
         return util.naturalSort(l)
 
+    def getBuilders(self):
+        return self.botmaster.builders
+
     def getBuilderNamesByProject(self, projectName):
         l = []
         for name in self.botmaster.builderNames:
@@ -315,6 +318,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             return self.botmaster.slaves[slavename].slave_status
         else:
             return None
+
+    def getSlaves(self):
+        return self.botmaster.slaves
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)

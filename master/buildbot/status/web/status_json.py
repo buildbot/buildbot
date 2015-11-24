@@ -26,6 +26,7 @@ from twisted.web import html, resource, server
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset, getResultsArg
 import json
+import time
 
 
 _IS_INT = re.compile(r'^[-+]?\d+$')
@@ -1069,31 +1070,30 @@ class GlobalJsonResource(JsonResource):
 
     def __init__(self, status):
         JsonResource.__init__(self, status)
-        self.slaves = status.getSlaveNames()
+        self.slaves = status.getSlaves()
+        self.builders = status.getBuilders()
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        import time
-        connected_slaves = []
-        slave_busy = []
-        for s in self.slaves:
-            ss = self.status.getSlave(s)
-            if ss and ss.isConnected:
-                connected_slaves.append(s)
-            if ss and len(ss.getRunningBuilds()) > 0:
-                slave_busy.append(s)
+        connected_slaves = 0
+        slave_busy = 0
+        for s in self.slaves.values():
+            ss = s.slave_status
+            if ss.isConnected:
+                connected_slaves += 1
+            if len(ss.getRunningBuilds()) > 0:
+                slave_busy += 1
 
-        current_builds = set()
-        for b_name in self.status.getBuilderNames():
-            b = self.status.getBuilder(b_name)
-            current_builds |= set(b.getCurrentBuilds())
+        current_builds = 0
+        for b in self.builders.values():
+            current_builds += len(b.builder_status.getCurrentBuilds())
 
         queue = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=False)
         total_builds_lastday = yield self.status.getNumberOfBuildsInLastDay()
-        result = {"slaves_count": len(connected_slaves),
-                  "slaves_busy": len(slave_busy),
-                  "running_builds": len(current_builds),
-                  "build_load": len(queue) + len(current_builds),
+        result = {"slaves_count": connected_slaves,
+                  "slaves_busy": slave_busy,
+                  "running_builds": current_builds,
+                  "build_load": len(queue) + current_builds,
                   "utc": time.time() * 1000,
                   "total_builds_lastday": total_builds_lastday}
 
