@@ -62,6 +62,11 @@ FLAGS = """\
     - Filter builds by the build results. For example:
       results=0&results=7
       will only return the build where the result is either 0 or 7.
+  - Slave Filters
+    build_steps
+    Show or hide the build steps set to 1 to show
+    build_props
+    Show or hide the build properties set to 1 to show
 
 """
 
@@ -90,7 +95,7 @@ EXAMPLES = """\
     - Slaves associated to this builder.
   - /json/builders/<A_BUILDER>?select=&select=slaves
     - Builder information plus details information about its slaves. Neat eh?
-  - /json/slaves/<A_SLAVE>
+  - /json/slaves/<A_SLAVE>?build_steps=0&build_props=0
     - A specific slave.
   - /json/slaves/<A_SLAVE>/builds
     - The current builds on a specific slave
@@ -1011,7 +1016,15 @@ class SlaveJsonResource(JsonResource):
         return self.builders
 
     def asDict(self, request):
-        results = self.slave_status.asDict() if self.slave_status else None
+        include_build_steps = True
+        include_build_props = True
+
+        if "build_steps" in request.args:
+            include_build_steps = True if "1" in request.args["build_steps"] else False
+        if "build_props" in request.args:
+            include_build_props = True if "1" in request.args["build_props"] else False
+        results = self.slave_status.asDict(include_build_steps=include_build_steps,
+                                           include_build_props=include_build_props) if self.slave_status else None
         #Add builder information
         if results:
             results['builders'] = self.getBuilders()

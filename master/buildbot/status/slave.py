@@ -168,7 +168,7 @@ class SlaveStatus:
         else:
             self.health = -2
 
-    def asDict(self):
+    def asDict(self, include_build_steps=True, include_build_props=True):
         result = {}
         # Constant
         result['name'] = self.getName()
@@ -181,7 +181,8 @@ class SlaveStatus:
         result['admin'] = self.getAdmin()
         result['version'] = self.getVersion()
         result['connected'] = self.isConnected()
-        builds = [b.asDict() for b in self.getRunningBuilds()]
+        builds = [b.asDict(include_steps=include_build_steps, include_properties=include_build_props)
+                  for b in self.getRunningBuilds()]
         builds = sorted(builds, key=lambda b: b['isWaiting'])
         result['runningBuilds'] = builds
         result['lastMessage'] = self.lastMessageReceived()

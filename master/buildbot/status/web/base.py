@@ -284,11 +284,18 @@ def path_to_change(request, change):
 def path_to_json_global_status(status, request):
     return status.getBuildbotURL() + "json/globalstatus"
 
-def path_to_json_slaves(request):
-    return "json/slaves/"
 
-def path_to_json_slave(request, slaveName):
-    return "json/slaves/{0}".format(urllib.quote(slaveName, safe=''))
+def path_to_json_slaves(slaveName=None, filter_data=True):
+    url = "json/slaves/"
+
+    if slaveName:
+        url += urllib.quote(slaveName, safe='')
+
+    if filter_data:
+        url += "?build_steps=0&build_props=0&filter=1"
+
+    return url
+
 
 def path_to_json_past_slave_builds(request, slaveName, number):
     codebases_arg = getCodebasesArg(request=request)

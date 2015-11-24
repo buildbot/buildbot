@@ -675,7 +675,8 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         return result
 
-    def asDict(self, request=None, include_artifacts=False, include_failure_url=False):
+    def asDict(self, request=None, include_artifacts=False, include_failure_url=False, include_steps=True,
+               include_properties=True):
         from buildbot.status.web.base import getCodebasesArg
         result = self.asBaseDict(request, include_artifacts=include_artifacts, include_failure_url=include_failure_url)
 
@@ -687,11 +688,14 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
         result['isWaiting'] = False
 
-        result['steps'] = [bss.asDict(request) for bss in self.steps]
+        if include_steps:
+            result['steps'] = [bss.asDict(request) for bss in self.steps]
+
         result = self.currentStepDict(result)
 
         # Transient
-        result['properties'] = self.getProperties().asList()
+        if include_properties:
+            result['properties'] = self.getProperties().asList()
 
         return result
 
