@@ -146,7 +146,7 @@ class ConsoleStatusResource(HtmlResource):
         
         allChanges = list()
         build_count = 0
-        for builderName in status.getBuilderNames()[:]:
+        for builderName in status.getBuilderNames(sort=True)[:]:
             if build_count > max_builds:
                 break
             
@@ -306,7 +306,7 @@ class ConsoleStatusResource(HtmlResource):
 
         debugInfo["builds_scanned"] = 0
         # Get all the builders.
-        builderNames = status.getBuilderNames()[:]
+        builderNames = status.getBuilderNames(sort=True)[:]
         for builderName in builderNames:
             builder = status.getBuilder(builderName)
 

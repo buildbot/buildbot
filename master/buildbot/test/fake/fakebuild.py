@@ -44,6 +44,7 @@ class FakeBuild(properties.PropertiesMixin):
         pr = self.build_status.properties = properties.Properties()
         pr.build = self
         self.requests = buildrequests
+        self.steps = []
 
         self.sources = {}
         if props is None:

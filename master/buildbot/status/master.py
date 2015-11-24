@@ -278,17 +278,24 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
     def getSchedulers(self):
         return self.master.allSchedulers()
 
-    def getBuilderNames(self, categories=None):
-        if categories == None:
-            return util.naturalSort(self.botmaster.builderNames) # don't let them break it
-        
+    def getBuilderNames(self, categories=None, sort=False):
         l = []
-        # respect addition order
-        for name in self.botmaster.builderNames:
-            bldr = self.botmaster.builders[name]
-            if bldr.config.category in categories:
-                l.append(name)
-        return util.naturalSort(l)
+        if categories is not None:
+            # respect addition order
+            for name in self.botmaster.builderNames:
+                bldr = self.botmaster.builders[name]
+                if bldr.config.category in categories:
+                    l.append(name)
+        else:
+            l = self.botmaster.builderNames
+
+        if sort:
+            return util.naturalSort(l)
+
+        return l
+
+    def getBuilders(self):
+        return self.botmaster.builders
 
     def getBuilderNamesByProject(self, projectName):
         l = []
@@ -315,6 +322,9 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             return self.botmaster.slaves[slavename].slave_status
         else:
             return None
+
+    def getSlaves(self):
+        return self.botmaster.slaves
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)

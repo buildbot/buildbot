@@ -131,6 +131,14 @@ class BuildRequestStatus:
         br = yield self._getBuildRequest()
         defer.returnValue(br.reason)
 
+    @defer.inlineCallbacks
+    def getResults(self):
+        br = yield self._getBuildRequest()
+        if hasattr(br, 'results'):
+            defer.returnValue(br.results)
+        else:
+            defer.returnValue(-1)
+
     def getSlaves(self):
         builder = self.status.getBuilder(self.getBuilderName())
         if builder is not None:
@@ -169,6 +177,7 @@ class BuildRequestStatus:
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
+        result['results'] = yield self.getResults()
 
         builder = self.status.getBuilder(self.getBuilderName())
         if builder is not None:

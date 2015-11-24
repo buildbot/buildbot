@@ -692,7 +692,7 @@ class BuilderConfig:
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
             properties=None, mergeRequests=None, project=None, friendly_name=None, tags=[], description=None,
-            canStartBuild=None):
+            canStartBuild=None, excludeGlobalFactory=False):
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -745,6 +745,11 @@ class BuilderConfig:
                     error("builder '%s': startSlavenames must not contain slaves from slavenames list" % (name,))
 
         self.startSlavenames = startSlavenames
+
+        if not isinstance(excludeGlobalFactory, bool):
+            error("builder's excludeGlobalFactory must be a bool")
+
+        self.excludeGlobalFactory = excludeGlobalFactory
 
         if not project:
             error(
