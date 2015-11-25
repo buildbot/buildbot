@@ -339,7 +339,7 @@ def path_to_json_project_builder(request, project, builder, filter_data=True):
         else:
             url += "?"
 
-        url += "build_steps=0&build_props=0&filter=1"
+        url += "build_steps=0&build_props=0&filter=0"
 
     return url
 
