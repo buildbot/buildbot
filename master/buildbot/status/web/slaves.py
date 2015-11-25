@@ -21,9 +21,8 @@ from twisted.web.util import Redirect
 from twisted.web.resource import NoResource
 from buildbot.status.web.base import HtmlResource, \
     BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_json_slaves, \
-    path_to_json_past_slave_builds, path_to_json_slave_builds, path_to_json_slave
-from buildbot.status.web.status_json import SlavesJsonResource, FilterOut, PastBuildsJsonResource, \
-    SlaveBuildsJsonResource, SlaveJsonResource
+    path_to_json_past_slave_builds
+from buildbot.status.web.status_json import SlavesJsonResource, FilterOut, PastBuildsJsonResource, SlaveJsonResource
 
 
 class ShutdownActionResource(ActionResource):
@@ -106,7 +105,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
 
         slave_json = SlaveJsonResource(s, slave_status)
         slave_dict = slave_json.asDict(request)
-        slave_url = bbURL + path_to_json_slave(request, self.slavename)
+        slave_url = bbURL + path_to_json_slaves(self.slavename)
         ctx['instant_json']['slave'] = {"url": slave_url,
                                                  "data": json.dumps(slave_dict, separators=(',', ':')),
                                                  "waitForPush": s.master.config.autobahn_push,
@@ -172,7 +171,7 @@ class BuildSlavesResource(HtmlResource):
         slaves_dict = yield slaves.asDict(request)
         slaves_dict = FilterOut(slaves_dict)
 
-        cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(request) + "?filter=1",
+        cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(),
                                          "data": json.dumps(slaves_dict, separators=(',', ':')),
                                          "waitForPush": s.master.config.autobahn_push,
                                          "pushFilters": {
