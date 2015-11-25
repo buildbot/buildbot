@@ -116,7 +116,7 @@ EXAMPLES = """\
     - All projects
   - /json/projects/<A_PROJECT>
     - A specific project.
-  - /json/projects/<A_PROJECT>/<A_BUILDER>
+  - /json/projects/<A_PROJECT>/<A_BUILDER>?build_steps=0&build_props=0
     - A specific builder on a project.
   - /json/buildqueue/
     - The current build queue
@@ -873,8 +873,9 @@ class SingleProjectBuilderJsonResource(LatestRevisionResource):
 
 
     @defer.inlineCallbacks
-    def builder_dict(self, builder, codebases, request, branches, base_build_dict):
-        d = yield builder.asDict_async(codebases, request, base_build_dict)
+    def builder_dict(self, builder, codebases, request, branches, base_build_dict, include_build_steps,
+                     include_build_props):
+        d = yield builder.asDict_async(codebases, request, base_build_dict, include_build_steps, include_build_props)
 
         #Get latest build
         builds = yield builder.generateFinishedBuildsAsync(branches=map_branches(branches),
@@ -887,7 +888,20 @@ class SingleProjectBuilderJsonResource(LatestRevisionResource):
         defer.returnValue(d)
 
     @defer.inlineCallbacks
-    def asDict(self, request, codebases=None, branches=None, base_build_dict=False):
+    def asDict(self, request, codebases=None, branches=None, base_build_dict=False, params=None):
+        include_build_steps = True
+        include_build_props = True
+
+        # We pass params only if we are doing this directly and not from a user
+        args = request.args
+        if params is not None:
+            args = params
+
+        if "build_steps" in args:
+            include_build_steps = True if "1" in args["build_steps"] else False
+        if "build_props" in args:
+            include_build_props = True if "1" in args["build_props"] else False
+
         if codebases is None or branches is None:
             #Get codebases
             codebases = {}
@@ -896,7 +910,8 @@ class SingleProjectBuilderJsonResource(LatestRevisionResource):
             branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
 
-        builder_dict = yield self.builder_dict(self.builder, codebases, request, branches, base_build_dict)
+        builder_dict = yield self.builder_dict(self.builder, codebases, request, branches, base_build_dict,
+                                               include_build_steps, include_build_props)
 
         if self.latest_rev:
             builder_dict['latestRevisions'] = yield self.getLatestRevision(codebases)

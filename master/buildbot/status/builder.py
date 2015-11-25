@@ -935,8 +935,8 @@ class BuilderStatus(styles.Versioned):
 
         self.updateLatestBuildCache(cache, key)
 
-
-    def asDict(self, codebases={}, request=None, base_build_dict=False):
+    def asDict(self, codebases={}, request=None, base_build_dict=False, include_build_steps=True,
+               include_build_props=True):
         from buildbot.status.web.base import codebases_to_args
 
         result = {}
@@ -956,9 +956,10 @@ class BuilderStatus(styles.Versioned):
         # Transient
         def build_dict(b):
             if base_build_dict is True:
-                return b.asBaseDict(request, include_current_step=True)
+                return b.asBaseDict(request, include_current_step=True, include_steps=include_build_steps,
+                                    include_properties=include_build_props)
             else:
-                return b.asDict(request)
+                return b.asDict(request, include_steps=include_build_steps, include_properties=include_build_props)
 
         current_builds_dict = [build_dict(b) for b in self.getCurrentBuilds(codebases)]
         result['currentBuilds'] = current_builds_dict
@@ -975,9 +976,11 @@ class BuilderStatus(styles.Versioned):
                 'project': self.project}
 
     @defer.inlineCallbacks
-    def asDict_async(self, codebases={}, request=None, base_build_dict=False):
+    def asDict_async(self, codebases={}, request=None, base_build_dict=False, include_build_steps=True,
+               include_build_props=True):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
-        result = self.asDict(codebases, request, base_build_dict)
+        result = self.asDict(codebases, request, base_build_dict, include_build_steps=include_build_steps,
+                             include_build_props=include_build_props)
         builds = self.pendingBuildCache.getPendingBuilds()
 
         #Remove builds not within this codebase
