@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 import json
 from buildbot.status.web.status_json import SingleProjectJsonResource, SingleProjectBuilderJsonResource, \
-    SinglePendingBuildsJsonResource, PastBuildsJsonResource, FilterOut, \
-    BuilderSlavesJsonResources, BuilderStartSlavesJsonResources
+    SinglePendingBuildsJsonResource, PastBuildsJsonResource, FilterOut, BuilderStartSlavesJsonResources, \
+    SlaveJsonResource
 
 from twisted.web import html
-import urllib, time
+import time
 from twisted.python import log
 from twisted.internet import defer
 from buildbot import interfaces
@@ -356,9 +356,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                              "buildFinished": filters
                                          }}
 
-        slaves = BuilderSlavesJsonResources(self.status, self.builder_status)
-        slaves_dict = yield slaves.asDict(req)
-        url = self.status.getBuildbotURL() + path_to_json_builder_slaves(self.builder_status.getName()) + "?filter=1"
+        slave_params = {
+            "build_steps": ["0"],
+            "build_props": ["0"],
+            "builders": ["0"]
+        }
+        slaves = b.getSlaves()
+        slaves_array = [SlaveJsonResource(self.status, ss).asDict(req, params=slave_params)
+                        for ss in slaves]
+        slaves_dict = FilterOut(slaves_array)
+        url = self.status.getBuildbotURL() + path_to_json_builder_slaves(self.builder_status.getName())
         cxt['instant_json']["slaves"] = self.getSlavesJsonResource(filters, url, slaves_dict)
 
         startslaves = BuilderStartSlavesJsonResources(self.status, self.builder_status)
