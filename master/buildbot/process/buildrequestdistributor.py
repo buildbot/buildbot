@@ -385,7 +385,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
 
     @defer.inlineCallbacks
-    def _chooseBuild(self, buildrequests):
+    def _chooseBuild(self, buildrequests, useSelectedSlave=True):
         """
         Choose the next build from the given set of build requests (represented
         as dictionaries).  Defaults to returning the first request (earliest
@@ -397,7 +397,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         sorted_requests = sorted(buildrequests, key=lambda br: (-br["priority"], br["submitted_at"]))
         for b in sorted_requests:
             breq = yield self._getBuildRequestForBrdict(b)
-            if self.buildRequestHasSelectedSlave(breq):
+            if useSelectedSlave and self.buildRequestHasSelectedSlave(breq):
                 selected_slave = self.getSelectedSlaveFromBuildRequest(breq)
                 if selected_slave and selected_slave.isAvailable():
                     defer.returnValue(b)
@@ -407,10 +407,10 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def _chooseBuildRequest(self, buildrequests):
+    def _chooseBuildRequest(self, buildrequests, useSelectedSlave=True):
         nextBreq = None
 
-        brdict = yield self._chooseBuild(buildrequests)
+        brdict = yield self._chooseBuild(buildrequests, useSelectedSlave=useSelectedSlave)
 
         if brdict:
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
@@ -457,7 +457,8 @@ class KatanaBuildChooser(BasicBuildChooser):
                 nextBreq = None
         else:
             # otherwise just return the first build
-            nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts)
+            nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts,
+                                                      useSelectedSlave=self.bldr.shouldUseSelectedSlave())
 
         defer.returnValue(nextBreq)
 
