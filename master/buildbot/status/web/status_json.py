@@ -91,7 +91,7 @@ EXAMPLES = """\
     - Two last builds on '<A_BUILDER>' builder.
   - /json/builders/<A_BUILDER>/builds?select=-1/source_stamp/changes&select=-2/source_stamp/changes
     - Changes of the two last builds on '<A_BUILDER>' builder.
-  - /json/builders/<A_BUILDER>/slaves
+  - /json/builders/<A_BUILDER>/slaves?build_steps=0&build_props=0
     - Slaves associated to this builder.
   - /json/builders/<A_BUILDER>?select=&select=slaves
     - Builder information plus details information about its slaves. Neat eh?
