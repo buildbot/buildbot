@@ -67,6 +67,11 @@ FLAGS = """\
     Show or hide the build steps set to 1 to show
     build_props
     Show or hide the build properties set to 1 to show
+  - Build Filters
+    steps
+    Show or hide the build steps set to 1 to show
+    props
+    Show or hide the build properties set to 1 to show
 
 """
 
@@ -88,6 +93,8 @@ EXAMPLES = """\
   - /json/builders/<A_BUILDER>/builds/-1/source_stamp/changes
     - Build changes
   - /json/builders/<A_BUILDER>/builds?select=-1&select=-2
+    - Builds without properties or steps
+  - /json/builders/<A_BUILDER>/builds?props=0&steps=0
     - Two last builds on '<A_BUILDER>' builder.
   - /json/builders/<A_BUILDER>/builds?select=-1/source_stamp/changes&select=-2/source_stamp/changes
     - Changes of the two last builds on '<A_BUILDER>' builder.
@@ -101,7 +108,7 @@ EXAMPLES = """\
     - The current builds on a specific slave
   - /json/slaves/<A_SLAVE>/builders
     - The current builders on a specific slave
-  - /json/slaves/<A_SLAVE>/builds/<15
+  - /json/slaves/<A_SLAVE>/builds/<15?build_steps=1&build_props=1
     - The last 15 builds built on a specific slave
   - /json?select=slaves/<A_SLAVE>/&select=project&select=builders/<A_BUILDER>/builds/<A_BUILD>
     - A selection of random unrelated stuff as an random example. :)
@@ -563,7 +570,20 @@ class PastBuildsJsonResource(JsonResource):
         self.slave_status = slave_status
 
     @defer.inlineCallbacks
-    def asDict(self, request):
+    def asDict(self, request, params=None):
+        include_steps = True
+        include_props = True
+
+        # We pass params only if we are doing this directly and not from a user
+        args = request.args
+        if params is not None:
+            args = params
+
+        if "steps" in args:
+            include_steps = True if "1" in args["steps"] else False
+        if "props" in args:
+            include_props = True if "1" in args["props"] else False
+
         results = getResultsArg(request)
 
         if self.builder_status is not None:
@@ -572,13 +592,16 @@ class PastBuildsJsonResource(JsonResource):
             encoding = getRequestCharset(request)
             branches = [b.decode(encoding) for b in request.args.get("branch", []) if b]
 
-
             builds = yield self.builder_status.generateFinishedBuildsAsync(branches=map_branches(branches),
-                                                              codebases=codebases,
-                                                              results=results,
-                                                              num_builds=self.number)
+                                                                           codebases=codebases,
+                                                                           results=results,
+                                                                           num_builds=self.number)
 
-            defer.returnValue([b.asDict(request, include_artifacts=True, include_failure_url=True) for b in builds])
+            defer.returnValue([b.asDict(request,
+                                        include_artifacts=True,
+                                        include_failure_url=True,
+                                        include_steps=include_steps,
+                                        include_properties=include_props) for b in builds])
             return
 
         if self.slave_status is not None:
@@ -586,7 +609,7 @@ class PastBuildsJsonResource(JsonResource):
             builds = yield self.status.generateFinishedBuildsAsync(num_builds=self.number, results=results,
                                                                    slavename=slavename)
 
-            defer.returnValue([rb.asDict(request=request) for rb in builds])
+            defer.returnValue([rb.asDict(request=request, include_steps=False) for rb in builds])
             return
 
 
@@ -603,13 +626,27 @@ class BuildsJsonResource(AllBuildsJsonResource):
         # Transparently redirects to _all if path is not ''.
         return self.children['_all'].getChildWithDefault(path, request)
 
-    def asDict(self, request):
+    def asDict(self, request, params=None):
+        include_steps = True
+        include_props = True
+
+        # We pass params only if we are doing this directly and not from a user
+        args = request.args
+        if params is not None:
+            args = params
+
+        if "steps" in args:
+            include_steps = True if "1" in args["steps"] else False
+        if "props" in args:
+            include_props = True if "1" in args["props"] else False
+
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
 
         builds = self.builder_status.getCachedBuilds(codebases=codebases)
-        return [b.asDict() for b in builds]
+
+        return [b.asDict(include_steps=include_steps, include_properties=include_props) for b in builds]
 
 
 class BuildStepJsonResource(JsonResource):
