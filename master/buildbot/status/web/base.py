@@ -337,7 +337,7 @@ def path_to_json_pending(request, builderName):
     return "json/pending/" + urllib.quote(builderName, safe='') + codebases_arg
 
 
-def path_to_json_past_builds(request, builderName, number):
+def path_to_json_past_builds(request, builderName, number, filter_data=False):
     args = []
     for name, values in request.args.iteritems():
         if name == "numbuilds":
@@ -346,9 +346,16 @@ def path_to_json_past_builds(request, builderName, number):
         for value in values:
             args.append((name, value))
 
-    return "json/builders/{0}/builds/<{1}?{2}".format(urllib.quote(builderName, safe=''),
+    url = "json/builders/{0}/builds/<{1}?{2}".format(urllib.quote(builderName, safe=''),
                                                       number,
                                                       urllib.urlencode(args))
+
+    if filter_data:
+        if len(args):
+            url += "&"
+        url += "steps=0"
+
+    return url
 
 
 class Box:

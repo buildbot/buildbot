@@ -344,11 +344,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                                      "requestSubmitted": filters,
                                                      "requestCancelled": filters,
                                                  }}
-        numbuilds = cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
+
+        builds_params = {
+            "steps": ["0"],
+        }
 
         builds_json = PastBuildsJsonResource(self.status, num_builds,  builder_status=self.builder_status)
-        builds_dict = yield builds_json.asDict(req)
-        builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name, num_builds)
+        builds_dict = yield builds_json.asDict(req, params=builds_params)
+        builds_url = self.status.getBuildbotURL() + path_to_json_past_builds(req, self.builder_status.name,
+                                                                             num_builds, filter_data=True)
         cxt['instant_json']['builds'] = {"url": builds_url,
                                          "data": json.dumps(builds_dict, separators=(',', ':')),
                                          "waitForPush": self.status.master.config.autobahn_push,
@@ -373,6 +377,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         url = self.status.getBuildbotURL() + \
               path_to_json_builder_startslaves(self.builder_status.getName()) + "?filter=1"
         cxt['instant_json']["start_slaves"] = self.getSlavesJsonResource(filters, url, startslaves_dict)
+
+        cxt['numbuilds'] = int(req.args.get('numbuilds', [self.numbuilds])[0])
 
         buildForceContext(cxt, req, self.getBuildmaster(req), b.getName())
         template = req.site.buildbot_service.templates.get_template("builder.html")
