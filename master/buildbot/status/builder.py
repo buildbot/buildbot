@@ -956,8 +956,7 @@ class BuilderStatus(styles.Versioned):
         # Transient
         def build_dict(b):
             if base_build_dict is True:
-                return b.asBaseDict(request, include_current_step=True, include_steps=include_build_steps,
-                                    include_properties=include_build_props)
+                return b.asBaseDict(request, include_current_step=True)
             else:
                 return b.asDict(request, include_steps=include_build_steps, include_properties=include_build_props)
 
