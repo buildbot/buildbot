@@ -103,8 +103,13 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
 
         bbURL = s.getBuildbotURL()
 
+        slave_params = {
+            "build_steps": ["0"],
+            "build_props": ["0"],
+            "builders": ["0"]
+        }
         slave_json = SlaveJsonResource(s, slave_status)
-        slave_dict = slave_json.asDict(request)
+        slave_dict = slave_json.asDict(request, params=slave_params)
         slave_url = bbURL + path_to_json_slaves(self.slavename)
         ctx['instant_json']['slave'] = {"url": slave_url,
                                                  "data": json.dumps(slave_dict, separators=(',', ':')),
@@ -115,7 +120,6 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                                                      "stepStarted": filters,
                                                      "stepFinished": filters,
                                                  }}
-
 
         recent_builds_json = PastBuildsJsonResource(s, max_builds, slave_status=slave_status)
         recent_builds_dict = yield recent_builds_json.asDict(request)
@@ -163,13 +167,19 @@ class BuildSlavesResource(HtmlResource):
     pageTitle = "Katana Build slaves"
     addSlash = True
 
-    @defer.inlineCallbacks
     def content(self, request, cxt):
         s = self.getStatus(request)
 
-        slaves = SlavesJsonResource(s)
-        slaves_dict = yield slaves.asDict(request)
-        slaves_dict = FilterOut(slaves_dict)
+        slave_params = {
+            "build_steps": ["0"],
+            "build_props": ["0"],
+            "builders": ["0"]
+        }
+
+        slaves = s.getSlaves()
+        slaves_array = [SlaveJsonResource(s, ss.slave_status).asDict(request, params=slave_params)
+                        for ss in slaves.values()]
+        slaves_dict = FilterOut(slaves_array)
 
         cxt['instant_json']["slaves"] = {"url": s.getBuildbotURL() + path_to_json_slaves(),
                                          "data": json.dumps(slaves_dict, separators=(',', ':')),
@@ -184,7 +194,7 @@ class BuildSlavesResource(HtmlResource):
                                          }}
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
-        defer.returnValue(template.render(**cxt))
+        return template.render(**cxt)
 
     def getChild(self, path, req):
         try:

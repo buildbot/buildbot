@@ -292,7 +292,7 @@ def path_to_json_slaves(slaveName=None, filter_data=True):
         url += urllib.quote(slaveName, safe='')
 
     if filter_data:
-        url += "?build_steps=0&build_props=0&filter=1"
+        url += "?build_steps=0&build_props=0&builders=0&filter=1"
 
     return url
 
@@ -301,12 +301,19 @@ def path_to_json_past_slave_builds(request, slaveName, number):
     codebases_arg = getCodebasesArg(request=request)
     return "json/slaves/{0}/builds/<{1}{2}".format(urllib.quote(slaveName, safe=''), number, codebases_arg)
 
+
 def path_to_json_slave_builds(request, slaveName):
     codebases_arg = getCodebasesArg(request=request)
     return "json/slaves/{0}/builds{1}".format(urllib.quote(slaveName, safe=''), codebases_arg)
 
-def path_to_json_builder_slaves(builderName):
-    return "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
+
+def path_to_json_builder_slaves(builderName, filter_data=True):
+    url = "json/builders/{0}/slaves".format(urllib.quote(builderName, safe=''))
+    if filter_data:
+        url += "?build_steps=0&build_props=0&builders=0&filter=1"
+
+    return url
+
 
 def path_to_json_builder_startslaves(builderName):
     return "json/builders/{0}/startslaves".format(urllib.quote(builderName, safe=''))

@@ -49,7 +49,7 @@ define(function (require) {
                     },
                     "fnCreatedCell": function (nTd, sData, oData) {
                         var $jsonPopup = $(nTd).find('a.popup-btn-json-js');
-                        popup.initJSONPopup($jsonPopup, {showBuilders: oData});
+                        popup.initSlaveBuildersPopup($jsonPopup, oData.name);
                     }
                 },
                 {

@@ -99,6 +99,8 @@ EXAMPLES = """\
     - A specific slave.
   - /json/slaves/<A_SLAVE>/builds
     - The current builds on a specific slave
+  - /json/slaves/<A_SLAVE>/builders
+    - The current builders on a specific slave
   - /json/slaves/<A_SLAVE>/builds/<15
     - The last 15 builds built on a specific slave
   - /json?select=slaves/<A_SLAVE>/&select=project&select=builders/<A_BUILDER>/builds/<A_BUILD>
@@ -991,6 +993,27 @@ class SlaveBuildsJsonResource(JsonResource):
         return current_builds
 
 
+class SlaveBuildersJsonResource(JsonResource):
+    help = """List builds related with a slave."""
+    pageTitle = 'Slave Builds'
+
+    def __init__(self, status, slave_status):
+        JsonResource.__init__(self, status)
+        self.slave_status = slave_status
+        self.name = getSlaveName(self.slave_status)
+
+    def asDict(self, request):
+        slavename = getSlaveName(self.slave_status)
+        my_builders = []
+        for bname in self.status.getBuilderNames():
+            b = self.status.getBuilder(bname)
+            for bs in b.getSlaves():
+                if bs.getName() == slavename:
+                    my_builders.append(b.asSlaveDict())
+
+        return my_builders
+
+
 class SlaveJsonResource(JsonResource):
     help = """Describe a slave.
 """
@@ -1002,6 +1025,7 @@ class SlaveJsonResource(JsonResource):
         self.name = getSlaveName(self.slave_status)
         self.builders = None
         self.putChild('builds', SlaveBuildsJsonResource(status, slave_status))
+        self.putChild('builders', SlaveBuildersJsonResource(status, slave_status))
 
     def getBuilders(self):
         if self.builders is None:
@@ -1010,23 +1034,30 @@ class SlaveJsonResource(JsonResource):
             for builderName in self.status.getBuilderNames():
                 if self.name in self.status.getBuilder(builderName).getAllSlaveNames():
                     builder_status = self.status.getBuilder(builderName)
-                    builderDict = {'name': builderName, 'friendly_name': builder_status.getFriendlyName(),
-                           'url': self.status.getURLForThing(builder_status)}
-                    self.builders.append(builderDict)
+                    self.builders.append(builder_status.asSlaveDict())
         return self.builders
 
-    def asDict(self, request):
+    def asDict(self, request, params=None):
         include_build_steps = True
         include_build_props = True
+        include_builders = True
 
-        if "build_steps" in request.args:
-            include_build_steps = True if "1" in request.args["build_steps"] else False
-        if "build_props" in request.args:
-            include_build_props = True if "1" in request.args["build_props"] else False
+        # We pass params only if we are doing this directly and not from a user
+        args = request.args
+        if params is not None:
+            args = params
+
+        if "build_steps" in args:
+            include_build_steps = True if "1" in args["build_steps"] else False
+        if "build_props" in args:
+            include_build_props = True if "1" in args["build_props"] else False
+        if "builders" in args:
+            include_builders = True if "1" in args["builders"] else False
+
         results = self.slave_status.asDict(include_build_steps=include_build_steps,
                                            include_build_props=include_build_props) if self.slave_status else None
         #Add builder information
-        if results:
+        if results and include_builders:
             results['builders'] = self.getBuilders()
         return results
 

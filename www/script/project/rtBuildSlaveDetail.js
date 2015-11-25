@@ -78,7 +78,7 @@ define(function (require) {
 
             $slaveInfo.html(hbBuildSlaveDetail(data));
             var $jsonPopup = $slaveInfo.find('a.popup-btn-json-js');
-            popup.initJSONPopup($jsonPopup, {showBuilders: data});
+            popup.initSlaveBuildersPopup($jsonPopup, data.name);
 
             privFunc.renderSlaveStatus($slaveInfo, data);
             var $slaveStatusPopup = $slaveInfo.find('div#slave-status a.popup-btn-json-js');
