@@ -12,12 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from future.moves.urllib.parse import quote as urlquote
 from future.utils import itervalues
 
 import itertools
 import os
 import re
-import urllib
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -146,7 +147,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return branch
 
     def _trackerBranch(self, branch):
-        return "refs/buildbot/%s/%s" % (urllib.quote(self.repourl, ''),
+        return "refs/buildbot/%s/%s" % (urlquote(self.repourl, ''),
                                         self._removeHeads(branch))
 
     @defer.inlineCallbacks
