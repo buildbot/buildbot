@@ -328,9 +328,20 @@ def path_to_json_project(request, project):
     codebases_arg = getCodebasesArg(request=request)
     return "json/projects/" + urllib.quote(project, safe='') + codebases_arg
 
-def path_to_json_project_builder(request, project, builder):
+
+def path_to_json_project_builder(request, project, builder, filter_data=True):
     codebases_arg = getCodebasesArg(request=request)
-    return "json/projects/" + urllib.quote(project, safe='') + "/" + urllib.quote(builder, safe='') + codebases_arg
+    url = "json/projects/" + urllib.quote(project, safe='') + "/" + urllib.quote(builder, safe='') + codebases_arg
+
+    if filter_data:
+        if len(codebases_arg):
+            url += "&"
+        else:
+            url += "?"
+
+        url += "build_steps=0&build_props=0&filter=1"
+
+    return url
 
 def path_to_json_pending(request, builderName):
     codebases_arg = getCodebasesArg(request=request)
