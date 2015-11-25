@@ -208,11 +208,12 @@ define(function (require) {
                     return hb.partials.slave["slave:slaveStatus"]({slaveStatus: true, showStatusTxt: statusTxt, showSpinIcon: isRunning});
                 },
                 "fnCreatedCell": function (nTd, sData, oData) {
-                    if (oData.connected === undefined) {
+                    if (oData.connected === undefined || oData.connected === false) {
                         $(nTd).addClass('offline');
-                    } else if (oData.connected === true && oData.paused === true){
-                      $(nTd).addClass('paused');
-                    } else if (oData.connected === true && oData.runningBuilds === undefined) {
+                    } else if (oData.connected === true && oData.paused === true) {
+                        $(nTd).addClass('paused');
+                    } else if (oData.connected === true && (oData.runningBuilds === undefined
+                        || oData.runningBuilds.length === 0)) {
                         $(nTd).addClass('idle');
                     } else if (oData.connected === true && oData.runningBuilds.length > 0) {
                         var overtime = false;
