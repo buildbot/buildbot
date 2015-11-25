@@ -217,6 +217,7 @@ class TestBuilderSlavesJsonResources(unittest.TestCase):
                              'graceful_shutdown': False,
                              'builders': [
                                  {'url': 'http://localhost:8080/projects/Katana/builders/builder-01',
+                                  'project': 'Katana',
                                   'friendly_name': 'builder-01', 'name': 'builder-01'}],
                              'access_uri': None}})
 
