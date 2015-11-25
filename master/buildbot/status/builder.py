@@ -968,6 +968,12 @@ class BuilderStatus(styles.Versioned):
         result['pendingBuilds'] = 0
         return result
 
+    def asSlaveDict(self):
+        return {'name': self.name,
+                'friendly_name': self.getFriendlyName(),
+                'url': self.status.getURLForThing(self),
+                'project': self.project}
+
     @defer.inlineCallbacks
     def asDict_async(self, codebases={}, request=None, base_build_dict=False):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""

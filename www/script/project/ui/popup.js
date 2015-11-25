@@ -8,7 +8,8 @@ define(function (require) {
         hb = require('project/handlebars-extend'),
         timeElements = require('timeElements'),
         toastr = require('toastr'),
-        popups = hb.popups;
+        popups = hb.popups,
+        naturalSort = require('libs/natural-sort');
 
     require('libs/jquery.form');
 
@@ -253,7 +254,43 @@ define(function (require) {
                     });
             });
         },
-        initPendingPopup: function (pendingElem) {
+        initSlaveBuildersPopup: function initSlaveBuildersPopup(jsonPopupElem, slaveName) {
+            var $jsonPopupElem = $(jsonPopupElem),
+                url = "/json/slaves/{0}/builders".format(slaveName);
+
+            function openPopup() {
+                $("#preloader").preloader("showPreloader");
+
+                $.ajax({
+                    url: url,
+                    cache: true,
+                    dataType: "json",
+                    success: function success(data) {
+                        $("#preloader").preloader("hidePreloader");
+
+
+                        data = data.sort(function (a, b) {
+                            a = a.friendly_name;
+                            b = b.friendly_name;
+                            return naturalSort.sort(a, b);
+                        });
+
+                        var html = popups({showBuilders: {"builders": data}});
+
+                        $body.append($("<div/>").popup({
+                            html: html,
+                            destroyAfter: true
+                        }));
+                    }
+                });
+            }
+
+            $jsonPopupElem.bind("click.katana", function (event) {
+                event.preventDefault();
+                openPopup();
+            });
+        },
+        initPendingPopup: function initPendingPopup(pendingElem) {
             var $pendingElem = $(pendingElem),
                 builder_name = encodeURIComponent($pendingElem.attr('data-builderName')),
                 urlParams = helpers.codebasesFromURL({}),
