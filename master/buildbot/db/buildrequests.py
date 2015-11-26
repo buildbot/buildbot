@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
+from buildbot.util import json
 from buildbot.util import epoch2datetime, datetime2epoch
 from buildbot.status.results import RESUME, CANCELED
 
@@ -148,9 +149,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             yesterday = datetime.now().date() - timedelta(1)
-            lastday = datetime2epoch(datetime(yesterday.year, yesterday.month, yesterday.day))
+            beforeyesterday = datetime.now().date() - timedelta(2)
+            yesterday_epoch = datetime2epoch(datetime(yesterday.year, yesterday.month, yesterday.day))
+            beforeyesterday_epoch = datetime2epoch(datetime(beforeyesterday.year, beforeyesterday.month, beforeyesterday.day))
             query = sa.select([func.count(reqs_tbl.c.id).label("totalbuilds")])\
-                .where(reqs_tbl.c.submitted_at >= lastday)\
+                .where(reqs_tbl.c.complete_at >= beforeyesterday_epoch)\
+                .where(reqs_tbl.c.complete_at <= yesterday_epoch)\
                 .where(reqs_tbl.c.complete == 1)\
                 .where(reqs_tbl.c.mergebrid == None)\
                 .where(reqs_tbl.c.artifactbrid == None)
@@ -224,30 +228,50 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
+            buildset_properties_tbl = self.db.model.buildset_properties
 
-            pending = sa.select([reqs_tbl.c.buildername, reqs_tbl.c.submitted_at],
-                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)),
+            pending = sa.select([reqs_tbl.c.buildername, reqs_tbl.c.priority,
+                                 reqs_tbl.c.submitted_at, reqs_tbl.c.results,
+                                 buildset_properties_tbl.c.property_value],
+                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
+                                .outerjoin(buildset_properties_tbl,
+                                      (buildset_properties_tbl.c.buildsetid == reqs_tbl.c.buildsetid)
+                                           & (buildset_properties_tbl.c.property_name == 'selected_slave')),
                           whereclause=((claims_tbl.c.claimed_at == None) &
                                        (reqs_tbl.c.complete == 0)))\
                 .where(reqs_tbl.c.buildername == buildername)\
-                .order_by(reqs_tbl.c.submitted_at).limit(1)
+                .order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
-            resumebuilds = sa.select([reqs_tbl.c.id, reqs_tbl.c.submitted_at],
-                               from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
-                                                      & (claims_tbl.c.objectid == _master_objectid)))\
+            resumebuilds = sa.select([reqs_tbl.c.buildername, reqs_tbl.c.priority,
+                                      reqs_tbl.c.submitted_at, reqs_tbl.c.results,
+                                      buildset_properties_tbl.c.property_value],
+                               from_obj=reqs_tbl.join(claims_tbl,
+                                                      (reqs_tbl.c.id == claims_tbl.c.brid)
+                                                      & (claims_tbl.c.objectid == _master_objectid))
+                                     .outerjoin(buildset_properties_tbl,
+                                                (buildset_properties_tbl.c.buildsetid == reqs_tbl.c.buildsetid)
+                                                & (buildset_properties_tbl.c.property_name == 'selected_slave')))\
                 .where(reqs_tbl.c.results == RESUME)\
                 .where(reqs_tbl.c.mergebrid == None)\
                 .where(reqs_tbl.c.buildername == buildername)\
-                .order_by(reqs_tbl.c.submitted_at).limit(1)
+                .order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
             buildersqueue = pending.alias('pending').select().union_all(resumebuilds.alias('resume').select())
 
             res = conn.execute(buildersqueue)
             rows = res.fetchall()
             rv = []
+
+            def getSelectedSlave(row):
+                return json.loads(row.property_value)[0] if row.property_value and len(row.property_value) > 0 else None
+
             for row in rows:
                 if row:
-                    rv.append(dict(buildername=row.buildername, submitted_at=mkdt(row.submitted_at)))
+                    rv.append(dict(buildername=row.buildername,
+                                   priority=row.priority,
+                                   submitted_at=mkdt(row.submitted_at),
+                                   results=row.results,
+                                   selected_slave=getSelectedSlave(row)))
 
             return rv
 
