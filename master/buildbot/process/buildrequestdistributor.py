@@ -864,6 +864,29 @@ class BuildRequestDistributor(service.Service):
         defer.returnValue(rv)
 
     @defer.inlineCallbacks
+    def _globalPrioritySorter(self, master, builders):
+        timer = metrics.Timer("BuildRequestDistributor._globalPrioritySorter()")
+        timer.start()
+
+        def findPrioritizedBuildRequest(bldr):
+            d = defer.maybeDeferred(lambda :
+                    bldr.getPrioritizedBuildRequest())
+            d.addCallback(lambda br: (br, bldr))
+            return d
+
+        builRequesPriorityPerBuilder = yield defer.gatherResults(
+                [findPrioritizedBuildRequest(bldr) for bldr in builders])
+
+        priorityBuilders = sorted(builRequesPriorityPerBuilder,
+                                  key=lambda (br, priority_bldr): (-br["priority"], br["submitted_at"])
+                                  if br else (True, True))
+
+        rv = [sorted_bldr[1] for sorted_bldr in priorityBuilders]
+        timer.stop()
+        defer.returnValue(rv)
+
+
+    @defer.inlineCallbacks
     def _sortBuilders(self, buildernames):
         timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
         timer.start()
@@ -878,7 +901,7 @@ class BuildRequestDistributor(service.Service):
         # find a sorting function
         sorter = self.master.config.prioritizeBuilders
         if not sorter:
-            sorter = self._defaultSorter
+            sorter = self._globalPrioritySorter
 
         # run it
         try:

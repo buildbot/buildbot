@@ -224,7 +224,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getOldestBuildRequestInQueue(self, buildername, _master_objectid=None):
+    def getPrioritizedBuildRequestsInQueue(self, buildername, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims

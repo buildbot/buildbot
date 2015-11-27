@@ -132,12 +132,26 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
-        unclaimed = yield self.master.db.buildrequests.getOldestBuildRequestInQueue(buildername=self.name)
+        unclaimed = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(buildername=self.name)
 
         if unclaimed:
             unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
             unclaimed.sort()
             defer.returnValue(unclaimed[0])
+        else:
+            defer.returnValue(None)
+
+    @defer.inlineCallbacks
+    def getPrioritizedBuildRequest(self):
+
+        buildrequestQueue = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(buildername=self.name)
+
+        if buildrequestQueue:
+            sortedRequests = sorted(buildrequestQueue, key=lambda br: (-br["priority"], br["submitted_at"]))
+            nextRequest=sortedRequests[0]
+            # check conditions to use selected slave and pick the next one slave is not available for build
+
+            defer.returnValue(nextRequest)
         else:
             defer.returnValue(None)
 
