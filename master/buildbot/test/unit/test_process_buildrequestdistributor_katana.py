@@ -207,7 +207,7 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
                                                                 property_value='["slave-02", "Force Build Form"]')]
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1, 2], exp_builds=[('slave-01', [2]), ('slave-02', [1])])
+                exp_claims=[1], exp_builds=[('slave-02', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchForceRebuild(self):

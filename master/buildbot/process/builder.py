@@ -141,6 +141,11 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             defer.returnValue(None)
 
+    def getSlaveBuilder(self, slavename):
+        for sb in self.bldr.slaves:
+            if sb.slave.slave_status.getName() == slavename:
+                return sb
+
     @defer.inlineCallbacks
     def getPrioritizedBuildRequest(self):
 
@@ -148,12 +153,28 @@ class Builder(config.ReconfigurableServiceMixin,
 
         if buildrequestQueue:
             sortedRequests = sorted(buildrequestQueue, key=lambda br: (-br["priority"], br["submitted_at"]))
-            nextRequest=sortedRequests[0]
-            # check conditions to use selected slave and pick the next one slave is not available for build
 
-            defer.returnValue(nextRequest)
-        else:
-            defer.returnValue(None)
+            def slaveIsAvailable(slavename):
+                slave_builder = self.getSlaveBuilder(slavename=slavename)
+                return slave_builder.isAvailable()
+
+            for br in sortedRequests:
+                if br["selected_slave"] is None:
+                    defer.returnValue(br)
+                    return
+
+                buildRequestShouldUseSelectedSlave = br["selected_slave"] \
+                                            and br['results'] == BEGINNING and self.shouldUseSelectedSlave()
+
+                resumingBuildRequestShouldUseSelectedSlave = br["selected_slave"] \
+                                            and br['results'] == RESUME and br['slavepool'] != 'startSlavenames'
+
+                if (buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave) \
+                        and slaveIsAvailable(slavename=br["selected_slave"]):
+                    defer.returnValue(br)
+                    return
+
+        defer.returnValue(None)
 
     def reclaimAllBuilds(self):
         brids = set()
