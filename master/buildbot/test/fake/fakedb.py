@@ -967,7 +967,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             rv.append(self._brdictFromRow(br))
         return defer.succeed(rv)
 
-    def getPrioritizedBuildRequestsInQueue(self, buildername):
+    def getPrioritizedBuildRequestsInQueue(self, buildername, queue=None):
         return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
 
     def getBuildRequestInQueue(self, buildername, sorted=True):

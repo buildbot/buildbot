@@ -147,9 +147,10 @@ class Builder(config.ReconfigurableServiceMixin,
                 return sb
 
     @defer.inlineCallbacks
-    def getPrioritizedBuildRequest(self):
+    def getPrioritizedBuildRequest(self, queue=None):
 
-        buildrequestQueue = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(buildername=self.name)
+        buildrequestQueue = yield self.master.db.buildrequests\
+            .getPrioritizedBuildRequestsInQueue(buildername=self.name, queue=queue)
 
         if buildrequestQueue:
             sortedRequests = sorted(buildrequestQueue, key=lambda br: (-br["priority"], br["submitted_at"]))

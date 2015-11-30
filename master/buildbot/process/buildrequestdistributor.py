@@ -823,7 +823,7 @@ class BuildRequestDistributor(service.Service):
                 # then sort the new, expanded set of builders
                 self._pending_builders = \
                     yield self._sortBuilders(
-                            list(existing_pending | new_builders))
+                            list(existing_pending | new_builders), queue='unclaimed')
 
                 # start the activity loop, if we aren't already
                 # working on that.
@@ -865,13 +865,13 @@ class BuildRequestDistributor(service.Service):
         defer.returnValue(rv)
 
     @defer.inlineCallbacks
-    def _globalPrioritySorter(self, master, builders):
+    def _globalPrioritySorter(self, master, builders, queue=None):
         timer = metrics.Timer("BuildRequestDistributor._globalPrioritySorter()")
         timer.start()
 
         def findPrioritizedBuildRequest(bldr):
             d = defer.maybeDeferred(lambda :
-                    bldr.getPrioritizedBuildRequest())
+                    bldr.getPrioritizedBuildRequest(queue=queue))
             d.addCallback(lambda br: (br, bldr))
             return d
 
@@ -888,7 +888,7 @@ class BuildRequestDistributor(service.Service):
 
 
     @defer.inlineCallbacks
-    def _sortBuilders(self, buildernames):
+    def _sortBuilders(self, buildernames, queue=None):
         timer = metrics.Timer("BuildRequestDistributor._sortBuilders()")
         timer.start()
         # note that this takes and returns a list of builder names
@@ -906,14 +906,15 @@ class BuildRequestDistributor(service.Service):
 
         # run it
         try:
-            builders = yield defer.maybeDeferred(lambda :
-                    sorter(self.master, builders))
+            builders = yield defer.maybeDeferred(lambda:
+                                                 sorter(self.master, builders, queue=queue))
+
         except Exception:
             log.msg("Exception prioritizing builders; order unspecified")
             log.err(Failure())
 
         # and return the names
-        rv = [ b.name for b in builders ]
+        rv = [b.name for b in builders]
         timer.stop()
         defer.returnValue(rv)
 
@@ -921,7 +922,7 @@ class BuildRequestDistributor(service.Service):
     def _maybeUpdatePendingBuilders(self, buildername):
         yield self.pending_builders_lock.acquire()
         self._pending_builders = yield self._sortBuilders(
-                            list(set(self._pending_builders) | set([buildername])))
+                            list(set(self._pending_builders) | set([buildername])), queue='unclaimed')
         self.pending_builders_lock.release()
 
     @defer.inlineCallbacks

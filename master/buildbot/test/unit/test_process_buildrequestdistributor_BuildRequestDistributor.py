@@ -43,7 +43,7 @@ class Test(unittest.TestCase):
     def setUp(self):
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
-        def prioritizeBuilders(master, builders):
+        def prioritizeBuilders(master, builders, queue):
             # simple sort-by-name by default
             return sorted(builders, lambda b1,b2 : cmp(b1.name, b2.name))
         self.master = self.botmaster.master = mock.Mock(name='master')
@@ -132,7 +132,7 @@ class Test(unittest.TestCase):
         # #1979.
         builders = ['bldr%02d' % i for i in xrange(15) ]
 
-        def slow_sorter(master, bldrs):
+        def slow_sorter(master, bldrs, queue):
             bldrs.sort(lambda b1, b2 : cmp(b1.name, b2.name))
             d = defer.Deferred()
             reactor.callLater(0, d.callback, bldrs)
@@ -210,9 +210,9 @@ class Test(unittest.TestCase):
 
         def mklambda(br): # work around variable-binding issues
             if returnDeferred:
-                return lambda: defer.succeed(br)
+                return lambda queue: defer.succeed(br)
             else:
-                return lambda: br
+                return lambda queue: br
 
         for n, br in oldestRequestTimes.iteritems():
             self.builders[n].getPrioritizedBuildRequest = mklambda(br)
@@ -247,7 +247,7 @@ class Test(unittest.TestCase):
                 ['bldr3', 'bldr1', 'bldr2'])
 
     def test_sortBuilders_custom(self):
-        def prioritizeBuilders(master, builders):
+        def prioritizeBuilders(master, builders, queue):
             self.assertIdentical(master, self.master)
             return sorted(builders, key=lambda b : b.name)
 
@@ -256,7 +256,7 @@ class Test(unittest.TestCase):
                 ['bldr1', 'bldr2', 'bldr3'])
 
     def test_sortBuilders_custom_async(self):
-        def prioritizeBuilders(master, builders):
+        def prioritizeBuilders(master, builders, queue):
             self.assertIdentical(master, self.master)
             return defer.succeed(sorted(builders, key=lambda b : b.name))
 
@@ -268,7 +268,7 @@ class Test(unittest.TestCase):
     def test_sortBuilders_custom_exception(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['x', 'y'])
-        def fail(m, b):
+        def fail(m, b, queue):
             raise RuntimeError("oh noes")
         self.master.config.prioritizeBuilders = fail
 

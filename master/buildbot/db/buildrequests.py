@@ -34,6 +34,9 @@ class NotClaimedError(Exception):
 class UpdateBuildRequestError(Exception):
     pass
 
+class UnsupportedQueueError(Exception):
+    pass
+
 class BrDict(dict):
     pass
 
@@ -184,7 +187,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     query = query.limit(200)
 
                 if sorted:
-                    query = query.order_by(reqs_tbl.c.submitted_at)
+                    query = query.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
                 return query
 
@@ -224,7 +227,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getPrioritizedBuildRequestsInQueue(self, buildername, _master_objectid=None):
+    def getPrioritizedBuildRequestsInQueue(self, buildername, queue=None, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -258,7 +261,17 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 .where(reqs_tbl.c.buildername == buildername)\
                 .order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
-            buildersqueue = pending.alias('pending').select().union_all(resumebuilds.alias('resume').select())
+            if queue is None:
+                buildersqueue = pending.alias('pending').select().union_all(resumebuilds.alias('resume').select())
+
+            elif queue == 'unclaimed':
+                buildersqueue = pending
+
+            elif queue == 'resume':
+                buildersqueue = resumebuilds
+
+            else:
+                raise UnsupportedQueueError
 
             res = conn.execute(buildersqueue)
             rows = res.fetchall()
