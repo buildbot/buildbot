@@ -12,10 +12,10 @@ class ResumeBuild(LoggingBuildStep):
     description="Resume Build..."
     descriptionDone="Resume Build"
 
-    def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
+    def __init__(self, resumeBuild=True, resumeSlavepool=None, haltOnFailure=True, **kwargs):
         self.resumeBuild = resumeBuild if resumeBuild is not None else True
         self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
-        LoggingBuildStep.__init__(self, **kwargs)
+        LoggingBuildStep.__init__(self, haltOnFailure=haltOnFailure, **kwargs)
 
     def releaseBuildLocks(self):
         self.build.releaseLocks()
@@ -63,10 +63,10 @@ class ShellCommandResumeBuild(ShellCommand):
     description="Resume Build..."
     descriptionDone="Resume Build"
 
-    def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
+    def __init__(self, resumeBuild=True, resumeSlavepool=None, haltOnFailure=True, **kwargs):
         self.resumeBuild = resumeBuild if resumeBuild is not None else True
         self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
-        ShellCommand.__init__(self, **kwargs)
+        ShellCommand.__init__(self, haltOnFailure=haltOnFailure, **kwargs)
 
     def finished(self, results):
         if shouldResumeBuild(self.resumeBuild, results, self.build.steps):
