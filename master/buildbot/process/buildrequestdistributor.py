@@ -24,6 +24,7 @@ from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.status.results import RESUME, BEGINNING
+from buildbot.util import epoch2datetime
 
 import random
 
@@ -966,6 +967,10 @@ class BuildRequestDistributor(service.Service):
         self.active = False
         self._quiet()
 
+    def logResumeOrStartBuildStatus(self, msg, slave, breqs):
+        log.msg(" %s for buildername %s using slave %s buildrequest id %d priority %d submittedAt %s" %
+                (msg, breqs[0].buildername, slave, breqs[0].id, breqs[0].priority, epoch2datetime(breqs[0].submittedAt)))
+
     @defer.inlineCallbacks
     def _maybeResumeBuildOnBuilder(self, bc, bldr):
         slave, buildnumber, breqs = yield bc.chooseNextBuildToResume()
@@ -978,11 +983,16 @@ class BuildRequestDistributor(service.Service):
 
         buildStarted = yield bldr.maybeResumeBuild(slave, buildnumber, breqs)
 
+        msg = "_maybeResumeBuildOnBuilder is resuming build"
+
         if not buildStarted:
             bc.resumeSlavePool = bldr.getAvailableSlavesToResume()
             bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
             self.botmaster.maybeStartBuildsForBuilder(bldr.name)
+            msg = "_maybeResumeBuildOnBuilder could not resume build"
+
+        self.logResumeOrStartBuildStatus(msg, slave, breqs)
 
     @defer.inlineCallbacks
     def _maybeStartNewBuildsOnBuilder(self, bc, bldr):
@@ -997,13 +1007,17 @@ class BuildRequestDistributor(service.Service):
 
         buildStarted = yield bldr.maybeStartBuild(slave, breqs)
 
+        msg = "_maybeStartNewBuildsOnBuilder is starting build"
+
         if not buildStarted:
             bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
             # and try starting builds again.  If we still have a working slave,
             # then this may re-claim the same buildrequests
             self.botmaster.maybeStartBuildsForBuilder(bldr.name)
+            msg = "_maybeStartNewBuildsOnBuilder could not start build"
 
+        self.logResumeOrStartBuildStatus(msg, slave, breqs)
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr):
