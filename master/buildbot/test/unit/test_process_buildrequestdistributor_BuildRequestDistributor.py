@@ -244,7 +244,7 @@ class Test(unittest.TestCase):
                 dict(bldr1=dict(priority=20,submitted_at=1448540542),
                      bldr2=None,
                      bldr3=dict(priority=30,submitted_at=1448541047)),
-                ['bldr3', 'bldr1', 'bldr2'])
+                ['bldr3', 'bldr1'])
 
     def test_sortBuilders_custom(self):
         def prioritizeBuilders(master, builders, queue):

@@ -882,7 +882,7 @@ class BuildRequestDistributor(service.Service):
                                   key=lambda (br, priority_bldr): (-br["priority"], br["submitted_at"])
                                   if br else (True, True))
 
-        rv = [sorted_bldr[1] for sorted_bldr in priorityBuilders]
+        rv = [sorted_bldr[1] for sorted_bldr in priorityBuilders if sorted_bldr[0] is not None]
         timer.stop()
         defer.returnValue(rv)
 
@@ -969,8 +969,11 @@ class BuildRequestDistributor(service.Service):
         self._quiet()
 
     def logResumeOrStartBuildStatus(self, msg, slave, breqs):
-        log.msg(" %s for buildername %s using slave %s buildrequest id %d priority %d submittedAt %s" %
-                (msg, breqs[0].buildername, slave, breqs[0].id, breqs[0].priority, epoch2datetime(breqs[0].submittedAt)))
+        if len(breqs) > 0:
+            log.msg(" %s for buildername %s using slave %s buildrequest id %d priority %d submittedAt %s buildsetid %d" %
+                    (msg, breqs[0].buildername, slave, breqs[0].id, breqs[0].priority,
+                     epoch2datetime(breqs[0].submittedAt),
+                     breqs[0].bsid))
 
     @defer.inlineCallbacks
     def _maybeResumeBuildOnBuilder(self, bc, bldr):

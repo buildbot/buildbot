@@ -149,8 +149,23 @@ class Builder(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def getPrioritizedBuildRequest(self, queue=None):
 
+        getSlavesFunc = self.getAvailableSlaves if queue == 'unclaimed' \
+            else self.getAvailableSlavesToResume if queue == 'resume' \
+            else self.getAllSlaves
+
+        availableSlavesToProcessBuildRequests = [slavebuilder.slave.slavename
+                                  for slavebuilder in getSlavesFunc()
+                                  if slavebuilder.isAvailable()]
+
+        if len(availableSlavesToProcessBuildRequests) < 1:
+            defer.returnValue(None)
+            return
+
+        # TODO: check performance when there are many things in queue, maybe it will be faster to limit the search
+        # we may need to do the same for KatanaBuildChooser
         buildrequestQueue = yield self.master.db.buildrequests\
-            .getPrioritizedBuildRequestsInQueue(buildername=self.name, queue=queue)
+            .getPrioritizedBuildRequestsInQueue(buildername=self.name,
+                                                queue=queue)
 
         if buildrequestQueue:
             sortedRequests = sorted(buildrequestQueue, key=lambda br: (-br["priority"], br["submitted_at"]))
