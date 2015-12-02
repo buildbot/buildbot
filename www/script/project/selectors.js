@@ -13,7 +13,7 @@ define(['jquery', 'select2'], function ($) {
 
             $selectBranches.removeClass("hide");
             $selectBranches.select2({
-                width: selectors.getMaxChildWidth($selectBranches),
+                width: '100%',
                 minimumResultsForSearch: 10
             });
 
@@ -27,7 +27,7 @@ define(['jquery', 'select2'], function ($) {
 
             //Invoke select2 for the common selector
             $commonBranchSelect.select2({
-                width: selectors.getMaxChildWidth($commonBranchSelect),
+                width: '100%',
                 placeholder: "Select a branch"
             });
 
@@ -40,20 +40,7 @@ define(['jquery', 'select2'], function ($) {
             $selectBranches.on("select2-selecting", function () {
                 $commonBranchSelect.select2("val", "");
             });
-        },
-        getMaxChildWidth: function ($elems) {
-            var max = 80;
-
-            $elems.each(function () {
-                var c_width = $(this).width();
-
-                if (c_width > max) {
-                    max = c_width + 30;
-                }
-            });
-
-            return max;
-        },
+        },        
         // combobox on codebases
         comboBox: function (selector, commonbranchSelect) {
 
