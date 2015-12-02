@@ -22,9 +22,8 @@ from twisted.application import service
 
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
-from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.status.results import RESUME, BEGINNING
-from buildbot.util import epoch2datetime
+from buildbot import util
 
 import random
 
@@ -892,6 +891,8 @@ class BuildRequestDistributor(service.Service):
     def _globalPrioritySorter(self, master, builders, queue=None):
         timer = metrics.Timer("BuildRequestDistributor._globalPrioritySorter()")
         timer.start()
+        log.msg("starting _globalPrioritySorter started at %s number of builders %d" %
+                (util.epoch2datetime(timer.started), len(builders)))
 
         def findPrioritizedBuildRequest(bldr):
             d = defer.maybeDeferred(lambda :
@@ -907,6 +908,11 @@ class BuildRequestDistributor(service.Service):
                                   if br else (True, True))
 
         rv = [sorted_bldr[1] for sorted_bldr in priorityBuilders if sorted_bldr[0] is not None]
+
+        log.msg("finished _globalPrioritySorter started at %s finished at %s elapsed %s" %
+                (util.epoch2datetime(timer.started),
+                 util.epoch2datetime(util.now(timer._reactor)),
+                 util.formatInterval(util.now(timer._reactor) - timer.started)))
         timer.stop()
         defer.returnValue(rv)
 
@@ -1032,7 +1038,7 @@ class BuildRequestDistributor(service.Service):
         if len(breqs) > 0:
             log.msg(" %s for buildername %s using slave %s buildrequest id %d priority %d submittedAt %s buildsetid %d" %
                     (msg, breqs[0].buildername, slave, breqs[0].id, breqs[0].priority,
-                     epoch2datetime(breqs[0].submittedAt),
+                     util.epoch2datetime(breqs[0].submittedAt),
                      breqs[0].bsid))
 
     @defer.inlineCallbacks

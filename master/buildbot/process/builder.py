@@ -149,6 +149,18 @@ class Builder(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def getPrioritizedBuildRequest(self, queue=None):
 
+        """
+        Finds the next build request that should run on the builder
+        selecting the one with the higher priority and oldest submitted time.
+
+        it will return None right away if there are no slaves available for the task.
+
+        @param queue: None will select the higher priority overall pending buids,
+        if queue is 'unclaimed' will select only the pending builds and if queue='resume'
+        it will select only builds pending to be resume
+        @returns: a build request dictionary or None via Deferred
+        """
+
         getSlavesFunc = self.getAvailableSlaves if queue == 'unclaimed' \
             else self.getAvailableSlavesToResume if queue == 'resume' \
             else self.getAllSlaves
@@ -163,7 +175,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # TODO: check performance when there are many things in queue, maybe it will be faster to limit the search
         # we may need to do the same for KatanaBuildChooser
-        buildrequestQueue = yield self.master.db.buildrequests\
+        buildrequestQueue = yield self.master.db.buildrequests \
             .getPrioritizedBuildRequestsInQueue(buildername=self.name,
                                                 queue=queue)
 
