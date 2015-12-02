@@ -242,7 +242,6 @@ div.common-branch-select {
 }
 .common-branch-select {
     margin: -7px 0 -6px;
-    min-width: 204px;
     .select2-choice {
         @include box-shadow(0 1px 0 rgba(255, 255, 255, 0.45) inset, 1px 1px 0 #FFFFFF);
         @include bgimage (linear-gradient(top , #858585 0%, #555555 100%));
