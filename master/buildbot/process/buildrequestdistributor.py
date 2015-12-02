@@ -761,10 +761,12 @@ class BuildRequestDistributor(service.Service):
 
         # lock to ensure builders are only sorted once at any time
         self.pending_builders_lock = defer.DeferredLock()
+        self.resume_pending_builders_lock = defer.DeferredLock()
 
         # sorted list of names of builders that need their maybeStartBuild
         # method invoked.
         self._pending_builders = []
+        self._resume_pending_builders = []
         self.activity_lock = defer.DeferredLock()
         self.active = False
 
@@ -802,15 +804,21 @@ class BuildRequestDistributor(service.Service):
         def remove(x):
             self._pendingMSBOCalls.remove(d)
             return x
-        d.addErrback(log.err, "while strting builds on %s" % (new_builders,))
+        d.addErrback(log.err, "while sorting builds on %s" % (new_builders,))
 
+    def _hasPendingBuilders(self):
+        return len(self._pending_builders) > 0 or len(self._resume_pending_builders) > 0
+
+    @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
-        existing_pending = set(self._pending_builders)
+        alreadyHasPendingBuilders = new_builders <= set(self._pending_builders)
+        alreadyHasResumePendingBuilders = new_builders <= set(self._resume_pending_builders)
 
         # if we won't add any builders, there's nothing to do
-        if new_builders < existing_pending:
-            return defer.succeed(None)
+        if alreadyHasPendingBuilders and alreadyHasResumePendingBuilders:
+            defer.succeed(None)
+            return
 
         # reset the list of pending builders
         @defer.inlineCallbacks
@@ -821,20 +829,36 @@ class BuildRequestDistributor(service.Service):
                 existing_pending = set(self._pending_builders)
 
                 # then sort the new, expanded set of builders
-                self._pending_builders = \
-                    yield self._sortBuilders(
-                            list(existing_pending | new_builders), queue='unclaimed')
+                self._pending_builders = yield self._sortBuilders(
+                    list(existing_pending | new_builders), queue='unclaimed')
 
-                # start the activity loop, if we aren't already
-                # working on that.
-                if not self.active:
-                    self._activityLoop()
             except Exception:
                 log.err(Failure(),
                         "while attempting to resetPendingBuildersList")
 
-        return self.pending_builders_lock.run(
-                resetPendingBuildersList, new_builders)
+        @defer.inlineCallbacks
+        def resetResumePendingBuildersList(new_builders):
+            try:
+                existing_pending = set(self._resume_pending_builders)
+
+                self._resume_pending_builders = yield self._sortBuilders(
+                    list(existing_pending | new_builders), queue='resume')
+
+            except Exception:
+                log.err(Failure(),
+                        "while attempting to resetPendingBuildersList")
+
+
+        if not alreadyHasPendingBuilders:
+            yield self.pending_builders_lock.run(resetPendingBuildersList, new_builders)
+
+        if not alreadyHasResumePendingBuilders:
+            yield self.resume_pending_builders_lock.run(resetResumePendingBuildersList, new_builders)
+
+        # start the activity loop, if we aren't already
+        #  working on that.
+        if self._hasPendingBuilders() and not self.active:
+            self._activityLoop()
 
     @defer.inlineCallbacks
     def _defaultSorter(self, master, builders):
@@ -926,42 +950,78 @@ class BuildRequestDistributor(service.Service):
         self.pending_builders_lock.release()
 
     @defer.inlineCallbacks
+    def _maybeUpdateResumePendingBuilders(self, buildername):
+        yield self.resume_pending_builders_lock.acquire()
+        self._resume_pending_builders = yield self._sortBuilders(
+                            list(set(self._resume_pending_builders) | set([buildername])), queue='resume')
+        yield self.resume_pending_builders_lock.release()
+
+    @defer.inlineCallbacks
+    def _callMaybeStartBuildsOnBuilder(self):
+        # lock pending_builders, pop an element from it, and release
+        if not self._pending_builders:
+            return
+
+        yield self.pending_builders_lock.acquire()
+        bldr_name = self._pending_builders.pop(0)
+        self.pending_builders_lock.release()
+
+        try:
+            # get the actual builder object
+            bldr = self.botmaster.builders.get(bldr_name)
+
+            if bldr:
+                log.msg("_maybeStartBuildsOnBuilder:  %s" % bldr_name)
+                hasPendingBuildRequestsAndAvailableSlaves = yield self._maybeStartBuildsOnBuilder(bldr)
+                if hasPendingBuildRequestsAndAvailableSlaves:
+                    log.msg("builder %s has pending BuildRequests and availiable slaves prioritizing queue" % bldr_name)
+                    yield self._maybeUpdatePendingBuilders(bldr_name)
+
+        except Exception:
+            log.err(Failure(), "from maybeStartBuild for builder '%s'" % (bldr_name,))
+
+    @defer.inlineCallbacks
+    def _callMaybeResumeBuildsOnBuilder(self):
+        if not self._resume_pending_builders:
+            return
+        # lock pending_builders, pop an element from it, and release
+        yield self.resume_pending_builders_lock.acquire()
+        bldr_name = self._resume_pending_builders.pop(0)
+        self.resume_pending_builders_lock.release()
+
+        try:
+            # get the actual builder object
+            bldr = self.botmaster.builders.get(bldr_name)
+
+            if bldr:
+                log.msg("_maybeResumeBuildsOnBuilder:  %s" % bldr_name)
+                hasPendingBuildRequestsAndAvailableSlaves = yield self._maybeResumeBuildsOnBuilder(bldr)
+                if hasPendingBuildRequestsAndAvailableSlaves:
+                    log.msg("builder %s has pending BuildRequests for resume and availiable slaves prioritizing queue"
+                            % bldr_name)
+                    yield self._maybeUpdateResumePendingBuilders(bldr_name)
+
+        except Exception:
+            log.err(Failure(), "from maybeStartBuild for builder '%s'" % (bldr_name,))
+
+    @defer.inlineCallbacks
     def _activityLoop(self):
         self.active = True
 
         timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
         timer.start()
 
-        while 1:
+        while self._hasPendingBuilders():
             yield self.activity_lock.acquire()
 
-            # lock pending_builders, pop an element from it, and release
-            yield self.pending_builders_lock.acquire()
-
-            # bail out if we shouldn't keep looping
-            if not self.running or not self._pending_builders:
-                self.pending_builders_lock.release()
-                self.activity_lock.release()
-                break
-
-            bldr_name = self._pending_builders.pop(0)
-            self.pending_builders_lock.release()
-
-            try:
-                # get the actual builder object
-                bldr = self.botmaster.builders.get(bldr_name)
-                if bldr:
-                    log.msg("_maybeStartBuildsOnBuilder:  %s" % bldr_name)
-                    hasPendingBuildRequestsAndAvailableSlaves = yield self._maybeStartBuildsOnBuilder(bldr)
-                    if hasPendingBuildRequestsAndAvailableSlaves:
-                        log.msg("builder %s has pending BuildRequests and availiable slaves prioritizing queue" % bldr_name)
-                        yield self._maybeUpdatePendingBuilders(bldr_name)
-
-            except Exception:
-                log.err(Failure(),
-                        "from maybeStartBuild for builder '%s'" % (bldr_name,))
+            yield self._callMaybeStartBuildsOnBuilder()
+            yield self._callMaybeResumeBuildsOnBuilder()
 
             self.activity_lock.release()
+
+            # bail out if we shouldn't keep looping
+            if not self.running or not self._hasPendingBuilders():
+                break
 
         timer.stop()
 
@@ -1024,7 +1084,7 @@ class BuildRequestDistributor(service.Service):
         self.logResumeOrStartBuildStatus(msg, slave, breqs)
 
     @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr):
+    def _maybeResumeBuildsOnBuilder(self, bldr):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
 
@@ -1034,11 +1094,33 @@ class BuildRequestDistributor(service.Service):
 
             if isinstance(bc, KatanaBuildChooser):
                  yield self._maybeResumeBuildOnBuilder(bc, bldr)
+
+        except Exception:
+            log.msg(Failure(), "from _maybeResumeBuildsOnBuilder for builder '%s'" % bldr.name)
                 
+        def hasPendingBuildRequestsAndCanStartBuilds(pendingQueue, slavePool):
+            return (pendingQueue is not None and len(pendingQueue) > 0) \
+                   and (slavePool is not None and len(slavePool) > 0)
+
+        # take into accound if there are slaves available for next pending builds
+        hasPendingBuildRequestsAndAvailableSlaves = isinstance(bc, KatanaBuildChooser) and \
+                                                    hasPendingBuildRequestsAndCanStartBuilds(bc.resumeBrdicts,
+                                                                                             bc.resumeSlavePool)
+
+        defer.returnValue(hasPendingBuildRequestsAndAvailableSlaves)
+
+    @defer.inlineCallbacks
+    def _maybeStartBuildsOnBuilder(self, bldr):
+        # create a chooser to give us our next builds
+        # this object is temporary and will go away when we're done
+
+        bc = self.createBuildChooser(bldr, self.master)
+
+        try:
             yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
 
-        except AlreadyClaimedError:
-            bc = self.createBuildChooser(bldr, self.master)
+        except Exception:
+            log.msg(Failure(), "from _maybeStartBuildsOnBuilder for builder '%s'" % bldr.name)
 
         def hasPendingBuildRequestsAndCanStartBuilds(pendingQueue, slavePool):
             return (pendingQueue is not None and len(pendingQueue) > 0) \
@@ -1046,13 +1128,9 @@ class BuildRequestDistributor(service.Service):
 
         # take into accound if there are slaves available for next pending builds
         hasPendingBuildRequestsAndAvailableSlaves =  hasPendingBuildRequestsAndCanStartBuilds(bc.unclaimedBrdicts,
-                                                                                              bc.slavepool) \
-                                                     or (isinstance(bc, KatanaBuildChooser) and \
-                                                        hasPendingBuildRequestsAndCanStartBuilds(bc.resumeBrdicts,
-                                                                                                 bc.resumeSlavePool))
+                                                                                              bc.slavepool)
 
         defer.returnValue(hasPendingBuildRequestsAndAvailableSlaves)
-
 
     def createBuildChooser(self, bldr, master):
         # just instantiate the build chooser requested
