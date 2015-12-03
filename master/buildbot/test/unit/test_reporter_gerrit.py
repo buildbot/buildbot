@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot.reporters import utils
 from buildbot.reporters.gerrit import GERRIT_LABEL_REVIEWED
@@ -159,7 +160,7 @@ class TestGerritStatusPush(unittest.TestCase):
                 fakedb.BuildProperty(buildid=20 + i, name="slavename", value="sl"),
                 fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),
             ])
-            for k, v in self.TEST_PROPS.items():
+            for k, v in iteritems(self.TEST_PROPS):
                 self.db.insertTestData([
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                     ])
@@ -295,6 +296,24 @@ class TestGerritStatusPush(unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
+    def test_buildsetComplete_filtered_builder(self):
+        gsp = yield self.setupGerritStatusPush(summaryCB=testSummaryCB)
+        gsp.builders = ["foo"]
+        yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
+                                          ["failed", "failed"])
+
+        self.assertFalse(gsp.sendCodeReview.called, "sendCodeReview should not be called")
+
+    @defer.inlineCallbacks
+    def test_buildsetComplete_filtered_matching_builder(self):
+        gsp = yield self.setupGerritStatusPush(summaryCB=testSummaryCB)
+        gsp.builders = ["Builder1"]
+        yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
+                                          ["failed", "failed"])
+
+        self.assertTrue(gsp.sendCodeReview.called, "sendCodeReview should be called")
+
+    @defer.inlineCallbacks
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
         buildset, builds = yield self.setupBuildResults([buildResult], buildResult)
 
@@ -352,6 +371,21 @@ class TestGerritStatusPush(unittest.TestCase):
 
     def test_buildComplete_failure_sends_review_legacy(self):
         return self.check_single_build_legacy(FAILURE, -1)
+
+    # same goes for check_single_build and check_single_build_legacy
+    @defer.inlineCallbacks
+    def test_single_build_filtered(self):
+
+        gsp = yield self.setupGerritStatusPush(reviewCB=testReviewCB,
+                                               startCB=testStartCB)
+
+        gsp.builders = ["Builder0"]
+        yield self.run_fake_single_build(gsp, SUCCESS)
+        self.assertTrue(gsp.sendCodeReview.called, "sendCodeReview should be called")
+        gsp.sendCodeReview = Mock()
+        gsp.builders = ["foo"]
+        yield self.run_fake_single_build(gsp, SUCCESS)
+        self.assertFalse(gsp.sendCodeReview.called, "sendCodeReview should not be called")
 
     def test_defaultReviewCBSuccess(self):
         res = defaultReviewCB("builderName", {}, SUCCESS, None, None)

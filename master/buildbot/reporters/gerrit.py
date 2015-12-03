@@ -17,6 +17,7 @@
 """Push events to gerrit
 
 ."""
+from future.utils import iteritems
 
 import time
 
@@ -151,7 +152,7 @@ class GerritStatusPush(service.BuildbotService):
     def reconfigService(self, server, username, reviewCB=DEFAULT_REVIEW,
                         startCB=None, port=29418, reviewArg=None,
                         startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
-                        identity_file=None):
+                        identity_file=None, builders=None):
 
         # If neither reviewCB nor summaryCB were specified, default to sending
         # out "summary" reviews. But if we were given a reviewCB and only a
@@ -177,6 +178,7 @@ class GerritStatusPush(service.BuildbotService):
         self.startArg = startArg
         self.summaryCB = summaryCB
         self.summaryArg = summaryArg
+        self.builders = builders
 
     def _gerritCmd(self, *args):
         '''Construct a command as a list of strings suitable for
@@ -278,8 +280,10 @@ class GerritStatusPush(service.BuildbotService):
     def buildStarted(self, key, build):
         if self.startCB is not None:
             builder = yield self.master.data.get(("builders", build['builderid']))
-            message = self.startCB(builder['name'], build, self.startArg)
-            self.sendCodeReviews(build, message)
+            build['builder'] = builder
+            if self.isBuildReported(build):
+                message = self.startCB(builder['name'], build, self.startArg)
+                self.sendCodeReviews(build, message)
 
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
@@ -294,7 +298,11 @@ class GerritStatusPush(service.BuildbotService):
         buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
         yield utils.getDetailsForBuilds(self.master, buildset, [build])
         build['url'] = utils.getURLForBuild(self.master, build['builder']['builderid'], build['number'])
-        self.buildFinished(build['builder']['name'], build, build['results'])
+        if self.isBuildReported(build):
+            self.buildFinished(build['builder']['name'], build, build['results'])
+
+    def isBuildReported(self, build):
+        return self.builders is None or build['builder']['name'] in self.builders
 
     @defer.inlineCallbacks
     def buildsetComplete(self, key, msg):
@@ -308,7 +316,8 @@ class GerritStatusPush(service.BuildbotService):
         self.sendBuildSetSummary(buildset, builds)
 
     def sendBuildSetSummary(self, buildset, builds):
-        if self.summaryCB:
+        builds = filter(self.isBuildReported, builds)
+        if builds and self.summaryCB:
             def getBuildInfo(build):
                 result = build['results']
                 resultText = {
@@ -326,7 +335,8 @@ class GerritStatusPush(service.BuildbotService):
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
-            result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']], self.master, self.summaryArg))
+            result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']],
+                                                        self.master, self.summaryArg))
             self.sendCodeReviews(builds[0], result)
 
     def sendCodeReviews(self, build, result):
@@ -362,10 +372,11 @@ class GerritStatusPush(service.BuildbotService):
             revision = getProperty(build, "got_revision") or build.getProperty("revision")
 
             if isinstance(revision, dict):
-                revision = None
                 # in case of the revision is a codebase revision, we just take the revisionfor current codebase
                 if codebase is not None:
                     revision = revision[codebase]
+                else:
+                    revision = None
 
             if project is not None and revision is not None:
                 self.sendCodeReview(project, revision, result)
@@ -377,7 +388,7 @@ class GerritStatusPush(service.BuildbotService):
             self.callWithVersion(lambda: self.sendCodeReview(project, revision, result))
             return
 
-        command = self._gerritCmd("review", "--project %s" % str(project))
+        command = self._gerritCmd("review", "--project %s" % (project,))
         message = result.get('message', None)
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))
@@ -390,10 +401,11 @@ class GerritStatusPush(service.BuildbotService):
             else:
                 add_label = _new_add_label
 
-            for label, value in labels.items():
+            for label, value in iteritems(labels):
                 command.extend(add_label(label, value))
 
-        command.append(str(revision))
+        command.append(revision)
+        command = [str(s) for s in command]
         self.spawnProcess(self.LocalPP(self), command[0], command)
 
     def spawnProcess(self, *arg, **kw):

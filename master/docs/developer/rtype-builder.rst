@@ -4,7 +4,8 @@ Builders
 .. bb:rtype:: builder
 
     :attr integer builderid: the ID of this builder
-    :attr unicode name: builder name
+    :attr name: builder name
+    :type name: 20-character :ref:`identifier <type-identifier>`
     :attr integer masterid: the ID of the master this builder is running on (only for messages; see below)
 
     This resource type describes a builder.

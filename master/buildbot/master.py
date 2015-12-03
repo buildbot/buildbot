@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from future.utils import iteritems
 
 import datetime
 import os
@@ -55,6 +55,7 @@ from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
+from buildbot.wamp import connector as wampconnector
 from buildbot.www import service as wwwservice
 
 #
@@ -141,10 +142,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.buildslaves = bslavemanager.BuildslaveManager(self)
         self.buildslaves.setServiceParent(self)
 
-        self.change_svc = ChangeManager(self)
+        self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)
 
-        self.botmaster = BotMaster(self)
+        self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self)
 
         self.scheduler_manager = SchedulerManager()
@@ -153,22 +154,25 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
 
-        self.db = dbconnector.DBConnector(self, self.basedir)
+        self.db = dbconnector.DBConnector(self.basedir)
         self.db.setServiceParent(self)
 
-        self.mq = mqconnector.MQConnector(self)
+        self.wamp = wampconnector.WampConnector()
+        self.wamp.setServiceParent(self)
+
+        self.mq = mqconnector.MQConnector()
         self.mq.setServiceParent(self)
 
-        self.data = dataconnector.DataConnector(self)
+        self.data = dataconnector.DataConnector()
         self.data.setServiceParent(self)
 
-        self.www = wwwservice.WWWService(self)
+        self.www = wwwservice.WWWService()
         self.www.setServiceParent(self)
 
-        self.debug = debug.DebugServices(self)
+        self.debug = debug.DebugServices()
         self.debug.setServiceParent(self)
 
-        self.status = Status(self)
+        self.status = Status()
         self.status.setServiceParent(self)
 
         self.service_manager = service.BuildbotServiceManager()
@@ -186,7 +190,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             yield self.data.updates.expireMasters((self.masterHouskeepingTimer % (24 * 60)) == 0)
             self.masterHouskeepingTimer += 1
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
-        self.masterHeartbeatService.setServiceParent(self)
+        # we do setServiceParent only when the master is configured
+        # master should advertise itself only at that time
 
     # setup and reconfig handling
 
@@ -284,12 +289,12 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         log.msg("BuildMaster is running")
 
     @defer.inlineCallbacks
-    def stopService(self):
-        if self.running:
-            yield service.AsyncMultiService.stopService(self)
+    def stopService(self, _reactor=reactor):
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
                 name=self.name, masterid=self.masterid)
+        if self.running:
+            yield service.AsyncMultiService.stopService(self)
 
         log.msg("BuildMaster is stopped")
         self._master_initialized = False
@@ -327,6 +332,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 self.reconfig_requested = False
                 self.reconfig()
             return res
+
+        @d.addCallback
+        def advertiseItself(res):
+            if self.masterHeartbeatService.parent is None:
+                self.masterHeartbeatService.setServiceParent(self)
 
         d.addErrback(log.err, 'while reconfiguring')
 
@@ -432,7 +442,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                                for f in kwargs['files']]
         if kwargs.get('properties'):
             kwargs['properties'] = dict((ascii2unicode(k), v)
-                                        for k, v in kwargs['properties'].iteritems())
+                                        for k, v in iteritems(kwargs['properties']))
 
         # pass the converted call on to the data API
         changeid = yield self.data.updates.addChange(**kwargs)

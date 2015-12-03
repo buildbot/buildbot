@@ -12,24 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import json
+from buildbot.util import service
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 
 
-class FakeUpdates(object):
+class FakeUpdates(service.AsyncService):
 
     # unlike "real" update methods, all of the fake methods are here in a
     # single class.
 
-    def __init__(self, master, testcase):
-        self.master = master
+    def __init__(self, testcase):
         self.testcase = testcase
 
         # test cases should assert the values here:
@@ -53,7 +55,7 @@ class FakeUpdates(object):
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
-        for k, v in properties.iteritems():
+        for k, v in iteritems(properties):
             self.testcase.assertIsInstance(k, unicode)
             if sourced:
                 self.testcase.assertIsInstance(v, tuple)
@@ -223,6 +225,9 @@ class FakeUpdates(object):
         validation.verifyType(self.testcase, "old", old, validation.IntValidator())
         return defer.succeed(None)
 
+    def rebuildBuildrequest(self, buildrequest):
+        return defer.succeed(None)
+
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
         for n in builderNames:
@@ -240,14 +245,14 @@ class FakeUpdates(object):
         validation.verifyType(self.testcase, 'scheduler name', name,
                               validation.StringValidator())
         if name not in self.schedulerIds:
-            self.schedulerIds[name] = max([0] + self.schedulerIds.values()) + 1
+            self.schedulerIds[name] = max([0] + list(itervalues(self.schedulerIds))) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
         validation.verifyType(self.testcase, 'changesource name', name,
                               validation.StringValidator())
         if name not in self.changesourceIds:
-            self.changesourceIds[name] = max([0] + self.changesourceIds.values()) + 1
+            self.changesourceIds[name] = max([0] + list(itervalues(self.changesourceIds))) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):
@@ -362,7 +367,7 @@ class FakeUpdates(object):
                               validation.StringValidator())
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
-        logid = max([0] + self.logs.keys()) + 1
+        logid = max([0] + list(self.logs)) + 1
         self.logs[logid] = dict(name=name, type=type, content=[], finished=False)
         return defer.succeed(logid)
 
@@ -415,18 +420,21 @@ class FakeUpdates(object):
             masterid=masterid)
 
 
-class FakeDataConnector(object):
+class FakeDataConnector(service.AsyncMultiService):
     # FakeDataConnector delegates to the real DataConnector so it can get all
     # of the proper getter and consumer behavior; it overrides all of the
     # relevant updates with fake methods, though.
 
     def __init__(self, master, testcase):
-        self.master = master
-        self.updates = FakeUpdates(master, testcase)
+        service.AsyncMultiService.__init__(self)
+        self.setServiceParent(master)
+        self.updates = FakeUpdates(testcase)
+        self.updates.setServiceParent(self)
 
         # get, startConsuming, and control are delegated to a real connector,
         # after some additional assertions
-        self.realConnector = connector.DataConnector(master)
+        self.realConnector = connector.DataConnector()
+        self.realConnector.setServiceParent(self)
         self.rtypes = self.realConnector.rtypes
 
     def _scanModule(self, mod):

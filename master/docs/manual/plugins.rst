@@ -1,3 +1,5 @@
+.. _Plugins:
+
 =================================
 Plugin Infrastructure in Buildbot
 =================================
@@ -56,6 +58,6 @@ Developing Plugins
 Plugins of note
 ===============
 
-Plugins were introduced in Buildbot-0.9.0, so as of this writing, only components that are bundled with Buildbot are available as plugins.
+Plugins were introduced in Buildbot-0.8.11, so as of this writing, only components that are bundled with Buildbot are available as plugins.
 
 If you have an idea/need about extending Buildbot, head to :doc:`../developer/plugins-publish`, create your own plugins and let the world now how Buildbot can be made even more useful.

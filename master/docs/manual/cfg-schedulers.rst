@@ -460,10 +460,11 @@ The full list of parameters is:
     When ``False``, the default value, codebases without changes will use the revision from the ``codebases`` argument.
 
 ``onlyIfChanged``
-    If this is true, then builds will not be scheduled at the designated time *unless* the specified branch has seen an important change since the previous build.
+    If this is true, then builds will not be scheduled at the designated time *unless* the change filter has accepted an important change since the previous build.
 
 ``branch``
-    (required) The branch to build when the time comes.
+    (deprecated; use ``change_filter`` and ``codebases``)
+    The branch to build when the time comes, and the branch to filter for if ``change_filter`` is not specified.
     Remember that a value of ``None`` here means the default branch, and will not match other branches!
 
 ``minute``
@@ -642,6 +643,8 @@ The parameters are just the basics:
 ``builderNames``
 
 ``properties``
+
+``reason``
 
 ``codebases``
     See :ref:`Configuring-Schedulers`.

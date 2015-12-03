@@ -6,18 +6,35 @@ Release Notes for Buildbot |version|
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
-The following are the release notes for Buildbot 0.9.1
-Buildbot 0.9.1 was released on the ...
+..
+    NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b{1,2}
+    into one single set of notes.  Also, link prominently to the migration guide.
+
+The following are the release notes for Buildbot |version|
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
 Master
 ------
 
 Features
 ~~~~~~~~
+* ``hello`` now returns 'Hello' in a random language if invoked more than once.
 
+* :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
+
+* :bb:reporter:`GerritStatusPush` now accepts a ``builders`` parameter.
 
 Fixes
 ~~~~~
+
+* The :bb:step:`PyFlakes` and :bb:step:`PyLint` steps no longer parse output in Buildbot log headers (:bug:`3337`).
+
+* :bb:chsrc:`GerritChangeSource` is now less verbose by default, and has a ``debug`` option to enable the logs.
+
+* :bb:chsrc:`P4Source` no longer relies on the perforce server time to poll for new changes.
+
+* The commit message for a change from :bb:chsrc:`P4Source` now matches what the user typed in.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,6 +47,13 @@ Slave
 
 Features
 ~~~~~~~~
+
+* Buildbot now supports wamp as a mq backend.
+  This allows to run a multi-master configuration.
+  See :ref:`MQ-Specification`.
+
+* The Buildbot slave now includes the number of CPUs in the information it supplies to the master on connection.
+  This value is autodetected, but can be overridden with the ``--numcpus`` argument to ``buildslave create-slave``.
 
 Fixes
 ~~~~~
@@ -57,8 +81,11 @@ Newer versions are also available here:
 
     0.9.0b2
     0.9.0b1
+    0.8.12
     0.8.10
     0.8.9
     0.8.8
     0.8.7
     0.8.6
+
+Note that Buildbot-0.8.11 was never released.

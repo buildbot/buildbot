@@ -13,6 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from future.utils import itervalues
 
 import time
 
@@ -497,7 +498,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
             return False
 
         if self.max_builds:
-            active_builders = [sb for sb in self.slavebuilders.values()
+            active_builders = [sb for sb in itervalues(self.slavebuilders)
                                if sb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
@@ -553,7 +554,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         and has no active builders."""
         if not self.slave_status.getGraceful():
             return
-        active_builders = [sb for sb in self.slavebuilders.values()
+        active_builders = [sb for sb in itervalues(self.slavebuilders)
                            if sb.isBusy()]
         if active_builders:
             return
@@ -732,7 +733,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             self.substantiation_deferred = None
             self.substantiation_build = None
             d.errback(failure)
-        self.insubstantiate()
+        d = self.insubstantiate()
+        d.addErrback(log.err, 'while insubstantiating')
         # notify people, but only if we're still in the config
         if not self.parent or not self.notify_on_missing:
             return
@@ -769,7 +771,12 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building.remove(sb.builder_name)
         if not self.building:
             if self.build_wait_timeout == 0:
-                self.insubstantiate()
+                d = self.insubstantiate()
+                # try starting builds for this slave after insubstantiating;
+                # this will cause the slave to re-substantiate immediately if
+                # there are pending build requests.
+                d.addCallback(lambda _:
+                    self.botmaster.maybeStartBuildsForSlave(self.slavename))
             else:
                 self._setBuildWaitTimer()
 

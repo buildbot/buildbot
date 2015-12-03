@@ -18,3 +18,7 @@
 
 class PluginDBError(Exception):
     pass
+
+
+class CaptureCallbackError(Exception):
+    pass

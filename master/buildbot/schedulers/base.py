@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 
 from buildbot import config
 from buildbot import interfaces
@@ -70,7 +72,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         elif not isinstance(codebases, dict):
             config.error("Codebases must be a dict of dicts, or list of strings")
         else:
-            for codebase, attrs in codebases.iteritems():
+            for codebase, attrs in iteritems(codebases):
                 if not isinstance(attrs, dict):
                     config.error("Codebases must be a dict of dicts")
                 else:

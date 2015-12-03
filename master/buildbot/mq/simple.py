@@ -24,8 +24,8 @@ from twisted.python import log
 
 class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
-    def __init__(self, master):
-        base.MQBase.__init__(self, master)
+    def __init__(self):
+        base.MQBase.__init__(self)
         self.qrefs = []
         self.persistent_qrefs = {}
         self.debug = False

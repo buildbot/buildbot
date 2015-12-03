@@ -5,8 +5,6 @@ describe 'changeitem', ->
     injected = ($injector) ->
         $compile = $injector.get('$compile')
         $rootScope = $injector.get('$rootScope')
-        webSocketService = $injector.get('webSocketService')
-        spyOn(webSocketService, 'getWebSocket').and.returnValue({})
 
     beforeEach inject injected
 

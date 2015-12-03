@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import mock
 import random
@@ -104,7 +105,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def setSlaveBuilders(self, slavebuilders):
         """C{slaves} maps name : available"""
         self.bldr.slaves = []
-        for name, avail in slavebuilders.iteritems():
+        for name, avail in iteritems(slavebuilders):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail

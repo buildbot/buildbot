@@ -180,7 +180,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         for b in self.building:
             if b.build_status and b.build_status.number == number:
                 return b
-        for b in self.old_building.keys():
+        for b in self.old_building:
             if b.build_status and b.build_status.number == number:
                 return b
         return None

@@ -66,7 +66,7 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
     def __init__(self, master):
         service.AsyncMultiService.__init__(self)
 
-        self.pb = bbpb.Listener(master)
+        self.pb = bbpb.Listener()
         self.pb.setServiceParent(master)
 
         # BuildslaveRegistration instances keyed by buildslave name

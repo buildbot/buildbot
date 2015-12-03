@@ -18,6 +18,8 @@ A complete re-implementation of the database connector components, but without
 using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
+from future.utils import iteritems
+from future.utils import itervalues
 
 import base64
 import copy
@@ -29,6 +31,7 @@ from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
 from buildbot.util import json
+from buildbot.util import service
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -81,10 +84,10 @@ class Row(object):
             setattr(self, col, [])
         for col in self.dicts:
             setattr(self, col, {})
-        for col in kwargs.keys():
+        for col in kwargs:
             assert col in self.defaults, "%s is not a valid column" % col
         # cast to unicode
-        for k, v in self.values.iteritems():
+        for k, v in iteritems(self.values):
             if isinstance(v, str):
                 self.values[k] = unicode(v)
         # calculate any necessary hashes
@@ -650,7 +653,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
     # component methods
 
     def findChangeSourceId(self, name):
-        for cs_id, cs_name in self.changesources.iteritems():
+        for cs_id, cs_name in iteritems(self.changesources):
             if cs_name == name:
                 return defer.succeed(cs_id)
         new_id = (max(self.changesources) + 1) if self.changesources else 1
@@ -757,7 +760,7 @@ class FakeChangesComponent(FakeDBComponent):
             properties = {}
 
         if self.changes:
-            changeid = max(self.changes.iterkeys()) + 1
+            changeid = max(list(self.changes)) + 1
         else:
             changeid = 500
 
@@ -792,12 +795,12 @@ class FakeChangesComponent(FakeDBComponent):
 
     def getLatestChangeid(self):
         if self.changes:
-            return defer.succeed(max(self.changes.iterkeys()))
+            return defer.succeed(max(list(self.changes)))
         return defer.succeed(None)
 
     def getParentChangeIds(self, branch, repository, project, codebase):
         if self.changes:
-            for changeid, change in self.changes.iteritems():
+            for changeid, change in iteritems(self.changes):
                 if (change['branch'] == branch and
                         change['repository'] == repository and
                         change['project'] == project and
@@ -826,7 +829,7 @@ class FakeChangesComponent(FakeDBComponent):
         return defer.succeed(chdicts)
 
     def getChanges(self):
-        chdicts = [self._chdict(v) for v in self.changes.values()]
+        chdicts = [self._chdict(v) for v in itervalues(self.changes)]
         return defer.succeed(chdicts)
 
     def getChangesCount(self):
@@ -837,7 +840,7 @@ class FakeChangesComponent(FakeDBComponent):
         raise NotImplementedError("Please patch in tests to return appropriate results")
 
     def getChangeFromSSid(self, ssid):
-        chdicts = [self._chdict(v) for v in self.changes.values() if v['sourcestampid'] == ssid]
+        chdicts = [self._chdict(v) for v in itervalues(self.changes) if v['sourcestampid'] == ssid]
         if chdicts:
             return defer.succeed(chdicts[0])
         else:
@@ -879,7 +882,7 @@ class FakeChangesComponent(FakeDBComponent):
     def fakeAddChangeInstance(self, change):
         if not hasattr(change, 'number') or not change.number:
             if self.changes:
-                changeid = max(self.changes.iterkeys()) + 1
+                changeid = max(list(self.changes)) + 1
             else:
                 changeid = 500
         else:
@@ -932,7 +935,7 @@ class FakeSchedulersComponent(FakeDBComponent):
     def flushChangeClassifications(self, schedulerid, less_than=None):
         if less_than is not None:
             classifications = self.classifications.setdefault(schedulerid, {})
-            for changeid in classifications.keys():
+            for changeid in list(classifications):
                 if changeid < less_than:
                     del classifications[changeid]
         else:
@@ -949,31 +952,31 @@ class FakeSchedulersComponent(FakeDBComponent):
         if branch != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.iteritems()
+                (k, v) for (k, v) in iteritems(classifications)
                 if self.db.changes.changes.get(k, sentinel)['branch'] == branch)
 
         if repository != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.iteritems()
+                (k, v) for (k, v) in iteritems(classifications)
                 if self.db.changes.changes.get(k, sentinel)['repository'] == repository)
 
         if project != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.iteritems()
+                (k, v) for (k, v) in iteritems(classifications)
                 if self.db.changes.changes.get(k, sentinel)['project'] == project)
 
         if codebase != -1:
             # filter out the classifications for the requested branch
             classifications = dict(
-                (k, v) for (k, v) in classifications.iteritems()
+                (k, v) for (k, v) in iteritems(classifications)
                 if self.db.changes.changes.get(k, sentinel)['codebase'] == codebase)
 
         return defer.succeed(classifications)
 
     def findSchedulerId(self, name):
-        for sch_id, sch_name in self.schedulers.iteritems():
+        for sch_id, sch_name in iteritems(self.schedulers):
             if sch_name == name:
                 return defer.succeed(sch_id)
         new_id = (max(self.schedulers) + 1) if self.schedulers else 1
@@ -1097,7 +1100,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         new_ssdict = dict(branch=branch, revision=revision, codebase=codebase,
                           patchid=patchid, repository=repository, project=project,
                           created_at=_mkdt(_reactor.seconds()))
-        for id, ssdict in self.sourcestamps.iteritems():
+        for id, ssdict in iteritems(self.sourcestamps):
             keys = ['branch', 'revision', 'repository',
                     'codebase', 'project', 'patchid']
             if [ssdict[k] for k in keys] == [new_ssdict[k] for k in keys]:
@@ -1239,7 +1242,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
     def getBuildsets(self, complete=None):
         rv = []
-        for bs in self.buildsets.itervalues():
+        for bs in itervalues(self.buildsets):
             if complete is not None:
                 if complete and bs['complete']:
                     rv.append(self._row2dict(bs))
@@ -1363,7 +1366,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
     def findBuildslaveId(self, name, _reactor=reactor):
         validation.verifyType(self.t, 'name', name,
                               validation.IdentifierValidator(50))
-        for m in self.buildslaves.itervalues():
+        for m in itervalues(self.buildslaves):
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.buildslaves) + 1
@@ -1374,7 +1377,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
         return defer.succeed(id)
 
     def _getBuildslaveByName(self, name):
-        for slave in self.buildslaves.itervalues():
+        for slave in itervalues(self.buildslaves):
             if slave['name'] == name:
                 return slave
         return None
@@ -1382,7 +1385,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
     def getBuildslave(self, buildslaveid=None, name=None, masterid=None, builderid=None):
         # get the id and the slave
         if buildslaveid is None:
-            for slave in self.buildslaves.itervalues():
+            for slave in itervalues(self.buildslaves):
                 if slave['name'] == name:
                     buildslaveid = slave['id']
                     break
@@ -1402,7 +1405,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
         if masterid is not None or builderid is not None:
             builder_masters = self.db.builders.builder_masters
             slaves = []
-            for sl in self.buildslaves.itervalues():
+            for sl in itervalues(self.buildslaves):
                 configured = [cfg for cfg in self.configured.itervalues()
                               if cfg['buildslaveid'] == sl['id']]
                 pairs = [builder_masters[cfg['buildermasterid']]
@@ -1418,7 +1421,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                         continue
                 slaves.append(sl)
         else:
-            slaves = self.buildslaves.values()
+            slaves = list(itervalues(self.buildslaves))
 
         return defer.succeed([
             self._mkdict(sl, builderid, masterid)
@@ -1431,13 +1434,13 @@ class FakeBuildslavesComponent(FakeDBComponent):
         if slave is not None:
             slave['info'] = slaveinfo
         new_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
-        if new_conn not in self.connected.itervalues():
-            conn_id = max([0] + self.connected.keys()) + 1
+        if new_conn not in itervalues(self.connected):
+            conn_id = max([0] + list(self.connected)) + 1
             self.connected[conn_id] = new_conn
         return defer.succeed(None)
 
     def deconfigureAllBuidslavesForMaster(self, masterid):
-        buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
+        buildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                             if mid == masterid]
         for k, v in self.configured.items():
             if v['buildermasterid'] in buildermasterids:
@@ -1445,7 +1448,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
 
     def buildslaveConfigured(self, buildslaveid, masterid, builderids):
 
-        buildermasterids = [_id for _id, (builderid, mid) in self.db.builders.builder_masters.items()
+        buildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                             if mid == masterid and builderid in builderids]
         if len(buildermasterids) != len(builderids):
             raise ValueError("Some builders are not configured for this master: "
@@ -1459,7 +1462,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
 
     def buildslaveDisconnected(self, buildslaveid, masterid):
         del_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
-        for id, conn in self.connected.iteritems():
+        for id, conn in iteritems(self.connected):
             if conn == del_conn:
                 del self.connected[id]
                 break
@@ -1467,7 +1470,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
 
     def _configuredOn(self, buildslaveid, builderid=None, masterid=None):
         cfg = []
-        for cs in self.configured.itervalues():
+        for cs in itervalues(self.configured):
             if cs['buildslaveid'] != buildslaveid:
                 continue
             bid, mid = self.db.builders.builder_masters[cs['buildermasterid']]
@@ -1480,7 +1483,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
 
     def _connectedTo(self, buildslaveid, masterid=None):
         conns = []
-        for cs in self.connected.itervalues():
+        for cs in itervalues(self.connected):
             if cs['buildslaveid'] != buildslaveid:
                 continue
             if masterid is not None and cs['masterid'] != masterid:
@@ -1512,7 +1515,7 @@ class FakeStateComponent(FakeDBComponent):
 
         for row in rows:
             if isinstance(row, ObjectState):
-                assert row.objectid in self.objects.values()
+                assert row.objectid in list(itervalues(self.objects))
                 self.states[row.objectid][row.name] = row.value_json
 
     # component methods
@@ -1551,7 +1554,7 @@ class FakeStateComponent(FakeDBComponent):
         id = self.objects[(name, class_name)] = self._newId()
         self.objects[(name, class_name)] = id
         self.states[id] = dict((k, json.dumps(v))
-                               for k, v in kwargs.iteritems())
+                               for k, v in iteritems(kwargs))
         return id
 
     # assertions
@@ -1562,7 +1565,7 @@ class FakeStateComponent(FakeDBComponent):
         state = self.states[objectid]
         for k in missing_keys:
             self.t.assertFalse(k in state, "%s in %s" % (k, state))
-        for k, v in kwargs.iteritems():
+        for k, v in iteritems(kwargs):
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,
                                "state is %r" % (state,))
@@ -1570,7 +1573,7 @@ class FakeStateComponent(FakeDBComponent):
     def assertStateByClass(self, name, class_name, **kwargs):
         objectid = self.objects[(name, class_name)]
         state = self.states[objectid]
-        for k, v in kwargs.iteritems():
+        for k, v in iteritems(kwargs):
             self.t.assertIn(k, state)
             self.t.assertEqual(json.loads(state[k]), v,
                                "state is %r" % (state,))
@@ -1619,7 +1622,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
                          bsid=None, branch=None, repository=None):
         rv = []
-        for br in self.reqs.itervalues():
+        for br in itervalues(self.reqs):
             if builderid and br.builderid != builderid:
                 continue
             if complete is not None:
@@ -1717,7 +1720,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def unclaimExpiredRequests(self, old, _reactor=reactor):
         old_epoch = _reactor.seconds() - old
 
-        for br in self.reqs.itervalues():
+        for br in itervalues(self.reqs):
             if br.complete == 1:
                 continue
 
@@ -1743,7 +1746,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     def assertMyClaims(self, claimed_brids):
         self.t.assertEqual(
-            [id for (id, brc) in self.claims.iteritems()
+            [id for (id, brc) in iteritems(self.claims)
              if brc.masterid == self.MASTER_ID],
             claimed_brids)
 
@@ -1794,14 +1797,14 @@ class FakeBuildsComponent(FakeDBComponent):
         return defer.succeed(self._row2dict(row))
 
     def getBuildByNumber(self, builderid, number):
-        for row in self.builds.itervalues():
+        for row in itervalues(self.builds):
             if row['builderid'] == builderid and row['number'] == number:
                 return defer.succeed(self._row2dict(row))
         return defer.succeed(None)
 
     def getBuilds(self, builderid=None, buildrequestid=None, buildslaveid=None, complete=None):
         ret = []
-        for (id, row) in self.builds.items():
+        for (id, row) in iteritems(self.builds):
             if builderid is not None and row['builderid'] != builderid:
                 continue
             if buildrequestid is not None and row['buildrequestid'] != buildrequestid:
@@ -1819,7 +1822,7 @@ class FakeBuildsComponent(FakeDBComponent):
         validation.verifyType(self.t, 'state_string', state_string,
                               validation.StringValidator())
         id = self._newId()
-        number = max([0] + [r['number'] for r in self.builds.itervalues()
+        number = max([0] + [r['number'] for r in itervalues(self.builds)
                             if r['builderid'] == builderid]) + 1
         self.builds[id] = dict(id=id, number=number,
                                buildrequestid=buildrequestid, builderid=builderid,
@@ -1897,7 +1900,7 @@ class FakeStepsComponent(FakeDBComponent):
         else:
             if number is None and name is None:
                 return defer.fail(RuntimeError("specify both name and number"))
-            for row in self.steps.itervalues():
+            for row in itervalues(self.steps):
                 if row['buildid'] != buildid:
                     continue
                 if number is not None and row['number'] != number:
@@ -1924,7 +1927,7 @@ class FakeStepsComponent(FakeDBComponent):
         validation.verifyType(self.t, 'name', name,
                               validation.IdentifierValidator(50))
         # get a unique name and number
-        build_steps = [r for r in self.steps.itervalues()
+        build_steps = [r for r in itervalues(self.steps)
                        if r['buildid'] == buildid]
         if build_steps:
             number = max([r['number'] for r in build_steps]) + 1
@@ -2045,7 +2048,7 @@ class FakeLogsComponent(FakeDBComponent):
     def getLogs(self, stepid=None):
         return defer.succeed([
             self._row2dict(row)
-            for row in self.logs.itervalues()
+            for row in itervalues(self.logs)
             if row['stepid'] == stepid])
 
     def getLogLines(self, logid, first_line, last_line):
@@ -2216,7 +2219,7 @@ class FakeMastersComponent(FakeDBComponent):
                     last_active=_mkdt(row.last_active))
 
     def findMasterId(self, name, _reactor=reactor):
-        for m in self.masters.itervalues():
+        for m in itervalues(self.masters):
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.masters) + 1
@@ -2277,7 +2280,7 @@ class FakeBuildersComponent(FakeDBComponent):
                                               []).append(row.tagid)
 
     def findBuilderId(self, name, _reactor=reactor):
-        for m in self.builders.itervalues():
+        for m in itervalues(self.builders):
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.builders) + 1
@@ -2289,14 +2292,14 @@ class FakeBuildersComponent(FakeDBComponent):
         return defer.succeed(id)
 
     def addBuilderMaster(self, builderid=None, masterid=None):
-        if (builderid, masterid) not in self.builder_masters.itervalues():
+        if (builderid, masterid) not in list(itervalues(self.builder_masters)):
             self.insertTestData([
                 BuilderMaster(builderid=builderid, masterid=masterid),
             ])
         return defer.succeed(None)
 
     def removeBuilderMaster(self, builderid=None, masterid=None):
-        for id, tup in self.builder_masters.iteritems():
+        for id, tup in iteritems(self.builder_masters):
             if tup == (builderid, masterid):
                 del self.builder_masters[id]
                 break
@@ -2304,7 +2307,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def getBuilder(self, builderid):
         if builderid in self.builders:
-            masterids = [bm[1] for bm in self.builder_masters.itervalues()
+            masterids = [bm[1] for bm in itervalues(self.builder_masters)
                          if bm[0] == builderid]
             bldr = self.builders[builderid].copy()
             bldr['masterids'] = sorted(masterids)
@@ -2314,7 +2317,7 @@ class FakeBuildersComponent(FakeDBComponent):
     def getBuilders(self, masterid=None):
         rv = []
         for builderid, bldr in self.builders.iteritems():
-            masterids = [bm[1] for bm in self.builder_masters.itervalues()
+            masterids = [bm[1] for bm in itervalues(self.builder_masters)
                          if bm[0] == builderid]
             bldr = bldr.copy()
             bldr['masterids'] = sorted(masterids)
@@ -2365,7 +2368,7 @@ class FakeTagsComponent(FakeDBComponent):
                     name=row.name)
 
     def findTagId(self, name, _reactor=reactor):
-        for m in self.tags.itervalues():
+        for m in itervalues(self.tags):
             if m['name'] == name:
                 return defer.succeed(m['id'])
         id = len(self.tags) + 1
@@ -2375,7 +2378,7 @@ class FakeTagsComponent(FakeDBComponent):
         return defer.succeed(id)
 
 
-class FakeDBConnector(object):
+class FakeDBConnector(service.AsyncMultiService):
 
     """
     A stand-in for C{master.db} that operates without an actual database
@@ -2386,10 +2389,10 @@ class FakeDBConnector(object):
     see their documentation for more.
     """
 
-    def __init__(self, master, testcase):
+    def __init__(self, testcase):
+        service.AsyncMultiService.__init__(self)
         # reset the id generator, for stable id's
         Row._next_id = 1000
-        self.master = master
         self.t = testcase
         self.checkForeignKeys = False
         self._components = []

@@ -42,7 +42,8 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.svc = self.master.www = service.WWWService(self.master)
+        self.svc = self.master.www = service.WWWService()
+        self.svc.setServiceParent(self.master)
 
     def makeConfig(self, **kwargs):
         pwd = os.getcwd()

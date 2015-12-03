@@ -1,0 +1,21 @@
+div.meta(layout="row", ng-click="buildstep.toggleExpand()")
+  span.caret-container
+    div.caret(ng-class="{expand: buildstep.isExpanded}")
+  span.name {{ buildstep.step.name }}
+  span.state-string(flex) {{ buildstep.step.state_string }}
+  span.duration
+    | {{ buildstep.duration }}s
+  span.state-dot-container
+    div.state-dot(ng-class="buildstep.state_class")
+div.logs(ng-if="buildstep.isExpanded")
+  div.log-switch(layout="row")
+    a.md-button(
+      ng-repeat="log in buildstep.step.logs",
+      ng-click="buildstep.selectedLog = log",
+      ng-class="{selected: (buildstep.selectedLog == log)}",
+    ) {{ log.name }}
+    span(flex)
+    a.md-button.download-button(ng-href="/api/v2/logs/{{ buildstep.selectedLog.logid }}/raw")
+      md-icon(md-svg-icon="download")
+  div.log-view
+    build-log(log="buildstep.selectedLog")

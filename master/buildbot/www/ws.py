@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
+from future.utils import itervalues
 
 from buildbot.util import json
 from buildbot.util import toJson
@@ -26,14 +27,17 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 class WsProtocol(WebSocketServerProtocol):
 
     def __init__(self, master):
+        WebSocketServerProtocol.__init__(self)
         self.master = master
         self.qrefs = {}
+        self.debug = self.master.config.www.get('debug', False)
 
     def sendJsonMessage(self, **msg):
         return self.sendMessage(json.dumps(msg, default=toJson, separators=(',', ':')).encode('utf8'))
 
     def onMessage(self, frame, isBinary):
-        log.msg("FRAME %s" % frame)
+        if self.debug:
+            log.msg("FRAME %s" % frame)
         # parse the incoming request
 
         frame = json.loads(frame)
@@ -108,8 +112,9 @@ class WsProtocol(WebSocketServerProtocol):
         self.sendJsonMessage(msg="pong", code=200, _id=_id)
 
     def connectionLost(self, reason):
-        log.msg("connection lost", system=self)
-        for qref in self.qrefs.values():
+        if self.debug:
+            log.msg("connection lost", system=self)
+        for qref in itervalues(self.qrefs):
             qref.stopConsuming()
         self.qrefs = None  # to be sure we don't add any more
 

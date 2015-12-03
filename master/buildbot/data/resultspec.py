@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot.data import base
 
@@ -152,7 +153,7 @@ class ResultSpec(object):
             fields = set(self.fields)
 
             def includeFields(d):
-                return dict((k, v) for k, v in d.iteritems()
+                return dict((k, v) for k, v in iteritems(d)
                             if k in fields)
             applyFields = includeFields
         else:

@@ -7,7 +7,7 @@ Buildbot Manual
    :maxdepth: 2
 
    introduction
-   installation
+   installation/index
    concepts
    configuration
    customization

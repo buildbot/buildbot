@@ -24,12 +24,15 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
             'class': "buildbot.mq.simple.SimpleMQ",
             'keys': set(['debug']),
         },
+        'wamp': {
+            'class': "buildbot.mq.wamp.WampMQ",
+            'keys': set(["router_url", "debug", "realm", "debug_websockets", "debug_lowlevel"]),
+        },
     }
+    name = 'mq'
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('mq')
-        self.master = master
         self.impl = None  # set in setup
         self.impl_type = None  # set in setup
 
@@ -42,7 +45,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         assert typ in self.classes  # this is checked by MasterConfig
         self.impl_type = typ
         cls = namedObject(self.classes[typ]['class'])
-        self.impl = cls(self.master)
+        self.impl = cls()
 
         # set up the impl as a child service
         self.impl.setServiceParent(self)

@@ -922,21 +922,25 @@ The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH 
 The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
 ``gerritserver``
-   the dns or ip that host the gerrit ssh server
+    the dns or ip that host the gerrit ssh server
 
 ``gerritport``
-   the port of the gerrit ssh server
+    the port of the gerrit ssh server
 
 ``username``
-   the username to use to connect to gerrit
+    the username to use to connect to gerrit
 
 ``identity_file``
-   ssh identity file to for authentication (optional).
-   Pay attention to the `ssh passphrase`
+    ssh identity file to for authentication (optional).
+    Pay attention to the `ssh passphrase`
 
 ``handled_events``
-   event to be handled (optional).
-   By default processes `patchset-created` and `ref-updated`
+    event to be handled (optional).
+    By default processes `patchset-created` and `ref-updated`
+
+``debug``
+    Print gerrit event in the log (default False).
+    This allows to debug event content, but will eventually fill your logs with useless gerrit event logs.
 
 By default this class adds a change to the buildbot system for each of the following events:
 

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import iteritems
+from future.utils import itervalues
+
 
 import mock
 
@@ -28,6 +31,55 @@ from buildbot.test.fake import remotecommand
 from buildbot.test.fake import slave
 from twisted.internet import defer
 from twisted.internet import task
+
+
+def _dict_diff(d1, d2):
+    """
+    Given two dictionaries describe their difference
+    For nested dictionaries, key-paths are concatenated with the '.' operator
+
+    @return The list of keys missing in d1, the list of keys missing in d2, and the differences
+    in any nested keys
+    """
+    d1_keys = set(d1.keys())
+    d2_keys = set(d2.keys())
+    both = d1_keys & d2_keys
+
+    missing_in_d1 = []
+    missing_in_d2 = []
+    different = []
+
+    for k in both:
+        if isinstance(d1[k], dict) and isinstance(d2[k], dict):
+            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(d1[k], d2[k])
+            missing_in_d1.extend(['{0}.{1}'.format(k, m) for m in missing_in_v1])
+            missing_in_d2.extend(['{0}.{1}'.format(k, m) for m in missing_in_v2])
+            for child_k, left, right in different_in_v:
+                different.append(('{0}.{1}'.format(k, child_k), left, right))
+            continue
+        if d1[k] != d2[k]:
+            different.append((k, d1[k], d2[k]))
+    missing_in_d1.extend(d2_keys - both)
+    missing_in_d2.extend(d1_keys - both)
+    return missing_in_d1, missing_in_d2, different
+
+
+def _describe_cmd_difference(exp, command):
+    if exp.args == command.args:
+        return
+
+    missing_in_exp, missing_in_cmd, diff = _dict_diff(exp.args, command.args)
+    if missing_in_exp:
+        log.msg(
+            'Keys in cmd missing from expectation: {0}'.format(missing_in_exp))
+    if missing_in_cmd:
+        log.msg(
+            'Keys in expectation missing from command: {0}'.format(missing_in_cmd))
+    if diff:
+        formatted_diff = [
+            '"{0}": expected {1!r}, got {2!r}'.format(*d) for d in diff]
+        log.msg('Key differences between expectation and command: {0}'.format(
+            '\n'.join(formatted_diff)))
 
 
 class BuildStepMixin(object):
@@ -65,6 +117,16 @@ class BuildStepMixin(object):
         del remotecommand.FakeRemoteCommand.testcase
 
     # utilities
+    def _getSlaveCommandVersionWrapper(self):
+        originalGetSlaveCommandVersion = self.step.build.getSlaveCommandVersion
+
+        def getSlaveCommandVersion(cmd, oldversion):
+            if cmd == 'shell':
+                if hasattr(self, 'slaveShellCommandVersion'):
+                    return self.slaveShellCommandVersion
+            return originalGetSlaveCommandVersion(cmd, oldversion)
+
+        return getSlaveCommandVersion
 
     def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
                   buildFiles=[], wantDefaultWorkdir=True, wantData=True,
@@ -228,6 +290,8 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
+        self.step.build.getSlaveCommandVersion = self._getSlaveCommandVersionWrapper()
+
         self.conn = mock.Mock(name="SlaveBuilder(connection)")
         self.step.setupProgress()
         d = self.step.startStep(self.conn)
@@ -236,43 +300,92 @@ class BuildStepMixin(object):
         def check(result):
             # finish up the debounced updateSummary before checking
             self.debounceClock.advance(1)
-            self.assertEqual(self.expected_remote_commands, [],
-                             "assert all expected commands were run")
+            if self.expected_remote_commands:
+                log.msg("un-executed remote commands:")
+                for rc in self.expected_remote_commands:
+                    log.msg(repr(rc))
+                raise AssertionError("un-executed remote commands; see logs")
 
-            # in case of unexpected result, display logs in stdout for debugging failing tests
+            # in case of unexpected result, display logs in stdout for
+            # debugging failing tests
             if result != self.exp_result:
-                for loog in self.step.logs.values():
-                    print(loog.stdout)
-                    print(loog.stderr)
+                log.msg("unexpected result from step; dumping logs")
+                for l in itervalues(self.step.logs):
+                    if l.stdout:
+                        log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
+                    if l.stderr:
+                        log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+                raise AssertionError("unexpected result; see logs")
 
-            self.assertEqual(result, self.exp_result, "expected result")
             if self.exp_state_string:
                 stepStateString = self.master.data.updates.stepStateString
-                stepids = stepStateString.keys()
+                stepids = list(stepStateString)
                 assert stepids, "no step state strings were set"
-                self.assertEqual(stepStateString[stepids[0]],
-                                 self.exp_state_string,
-                                 "expected step state strings")
-            for pn, (pv, ps) in self.exp_properties.iteritems():
+                self.assertEqual(
+                    self.exp_state_string,
+                    stepStateString[stepids[0]],
+                    "expected state_string {0!r}, got {1!r}".format(
+                        self.exp_state_string,
+                        stepStateString[stepids[0]]))
+            for pn, (pv, ps) in iteritems(self.exp_properties):
                 self.assertTrue(self.properties.hasProperty(pn),
                                 "missing property '%s'" % pn)
                 self.assertEqual(self.properties.getProperty(pn),
                                  pv, "property '%s'" % pn)
                 if ps is not None:
                     self.assertEqual(
-                        self.properties.getPropertySource(pn), ps, "property '%s' source" % pn)
+                        self.properties.getPropertySource(pn), ps,
+                        "property {0!r} source has source {1!r}".format(
+                            pn, self.properties.getPropertySource(pn)))
             for pn in self.exp_missing_properties:
                 self.assertFalse(self.properties.hasProperty(pn),
                                  "unexpected property '%s'" % pn)
-            for l, contents in self.exp_logfiles.iteritems():
-                self.assertEqual(
-                    self.step.logs[l].stdout, contents, "log '%s' contents" % l)
+            for l, exp in iteritems(self.exp_logfiles):
+                got = self.step.logs[l].stdout
+                if got != exp:
+                    log.msg("Unexpected log output:\n" + got)
+                    raise AssertionError("Unexpected log output; see logs")
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
 
     # callbacks from the running step
 
+    @defer.inlineCallbacks
+    def _validate_expectation(self, exp, command):
+        got = (command.remote_command, command.args)
+
+        for child_exp in exp.nestedExpectations():
+            try:
+                yield self._validate_expectation(child_exp, command)
+                exp.expectationPassed(exp)
+            except AssertionError as e:
+                # log this error, as the step may swallow the AssertionError or
+                # otherwise obscure the failure.  Trial will see the exception in
+                # the log and print an [ERROR].  This may result in
+                # double-reporting, but that's better than non-reporting!
+                log.err()
+                exp.raiseExpectationFailure(child_exp, e)
+
+        if exp.shouldAssertCommandEqualExpectation():
+            # handle any incomparable args
+            for arg in exp.incomparable_args:
+                self.failUnless(arg in got[1],
+                                "incomparable arg '%s' not received" % (arg,))
+                del got[1][arg]
+
+            # first check any ExpectedRemoteReference instances
+            exp_tup = (exp.remote_command, exp.args)
+            if exp_tup != got:
+                _describe_cmd_difference(exp, command)
+                raise AssertionError(
+                    "Command contents different from expected; see logs")
+
+        if exp.shouldRunBehaviors():
+            # let the Expect object show any behaviors that are required
+            yield exp.runBehaviors(command)
+
+    @defer.inlineCallbacks
     def _remotecommand_run(self, command, step, conn, builder_name):
         self.assertEqual(step, self.step)
         self.assertEqual(conn, self.conn)
@@ -282,26 +395,20 @@ class BuildStepMixin(object):
             self.fail("got command %r when no further commands were expected"
                       % (got,))
 
-        exp = self.expected_remote_commands.pop(0)
+        exp = self.expected_remote_commands[0]
 
-        # handle any incomparable args
-        for arg in exp.incomparable_args:
-            self.failUnless(arg in got[1],
-                            "incomparable arg '%s' not received" % (arg,))
-            del got[1][arg]
-
-        # first check any ExpectedRemoteReference instances
         try:
-            self.assertEqual((exp.remote_command, exp.args), got)
-        except AssertionError:
+            yield self._validate_expectation(exp, command)
+            exp.expectationPassed(exp)
+        except AssertionError as e:
             # log this error, as the step may swallow the AssertionError or
             # otherwise obscure the failure.  Trial will see the exception in
             # the log and print an [ERROR].  This may result in
             # double-reporting, but that's better than non-reporting!
             log.err()
-            raise
+            exp.raiseExpectationFailure(exp, e)
+        finally:
+            if not exp.shouldKeepMatchingAfter(command):
+                self.expected_remote_commands.pop(0)
 
-        # let the Expect object show any behaviors that are required
-        d = exp.runBehaviors(command)
-        d.addCallback(lambda _: command)
-        return d
+        defer.returnValue(command)

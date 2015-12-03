@@ -12,18 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import mock
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
 
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
 from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.trial import unittest
+from buildbot.test.util.decorators import flaky
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
@@ -101,12 +104,12 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         for expected_ss, actual_ss in zip(sourcestamps, actual_sourcestamps):
             actual_ss = actual_ss.copy()
             # We don't care if the actual sourcestamp has *more* attributes than expected.
-            for key in actual_ss.keys():
+            for key in list(actual_ss.keys()):
                 if key not in expected_ss:
                     del actual_ss[key]
             self.assertEqual(expected_ss, actual_ss)
 
-        for brid in brids.values():
+        for brid in itervalues(brids):
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,
@@ -153,6 +156,11 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler()
         self.assertEqual(sched.reason, "The Triggerable scheduler named 'n' triggered this build")
 
+    def test_constructor_explicit_reason(self):
+        sched = self.makeScheduler(reason="Because I said so")
+        self.assertEqual(sched.reason, "Because I said so")
+
+    @flaky(bugNumber=3339)
     def test_trigger(self):
         sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
         # no subscription should be in place yet

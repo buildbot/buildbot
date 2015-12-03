@@ -17,6 +17,7 @@ import mock
 
 from buildbot import config
 from buildbot.process import debug
+from buildbot.test.fake import fakemaster
 from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -34,9 +35,10 @@ class TestDebugServices(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_manhole(self):
-        master = mock.Mock(name='master')
-        ds = debug.DebugServices(master)
-        ds.startService()
+        master = fakemaster.make_master()
+        ds = debug.DebugServices()
+        ds.setServiceParent(master)
+        yield master.startService()
 
         # start off with no manhole
         yield ds.reconfigServiceWithBuildbotConfig(self.config)
@@ -59,8 +61,8 @@ class TestDebugServices(unittest.TestCase):
         self.config.manhole = manhole
         yield ds.reconfigServiceWithBuildbotConfig(self.config)
 
-        # stop the service, and see that it unregisters
-        yield ds.stopService()
+        # disown the service, and see that it unregisters
+        yield ds.disownServiceParent()
 
         self.assertFalse(manhole.running)
         self.assertIdentical(manhole.master, None)

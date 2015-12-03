@@ -54,13 +54,16 @@ class DataConnector(service.AsyncService):
         'buildbot.data.root',
         'buildbot.data.properties',
     ]
+    name = "data"
 
-    def __init__(self, master):
-        self.setName('data')
-        self.master = master
+    def __init__(self):
 
         self.matcher = pathmatch.Matcher()
         self.rootLinks = []  # links from the root of the API
+
+    @defer.inlineCallbacks
+    def setServiceParent(self, parent):
+        yield service.AsyncService.setServiceParent(self, parent)
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import sqlalchemy as sa
 
@@ -59,7 +60,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "gz": {"id": 1, "dumps": dumps_gzip, "read": read_gzip},
                         "bz2": {"id": 2, "dumps": dumps_bz2, "read": read_bz2},
                         "lz4": {"id": 3, "dumps": dumps_lz4, "read": read_lz4}}
-    COMPRESSION_BYID = dict((x["id"], x) for x in COMPRESSION_MODE.itervalues())
+    COMPRESSION_BYID = dict((x["id"], x) for x in itervalues(COMPRESSION_MODE))
     total_raw_bytes = 0
     total_compressed_bytes = 0
 

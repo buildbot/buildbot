@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from future.utils import iteritems
 
 import inspect
 import re
@@ -112,7 +112,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         buildstep_kwargs = {}
         # workdir is here first positional argument, but it belongs to BuildStep parent
         kwargs['workdir'] = workdir
-        for k in kwargs.keys()[:]:
+        for k in list(kwargs):
             if k in self.__class__.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
@@ -121,7 +121,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
         valid_rsc_args = inspect.getargspec(remotecommand.RemoteShellCommand.__init__)[0]
-        for arg in kwargs.keys():
+        for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
         # Raise Configuration error in case invalid arguments are present
@@ -329,21 +329,21 @@ class SetPropertyFromCommand(ShellCommand):
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
-            for k, v in new_props.items():
+            for k, v in iteritems(new_props):
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
         if self.property_changes:
             props_set = ["%s: %r" % (k, v)
-                         for k, v in self.property_changes.items()]
+                         for k, v in iteritems(self.property_changes)]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def describe(self, done=False):
         if len(self.property_changes) > 1:
             return ["%d properties set" % len(self.property_changes)]
         elif len(self.property_changes) == 1:
-            return ["property '%s' set" % self.property_changes.keys()[0]]
+            return ["property '%s' set" % list(self.property_changes)[0]]
         else:
             # let ShellCommand describe
             return ShellCommand.describe(self, done)

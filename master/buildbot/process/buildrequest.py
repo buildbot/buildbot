@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 import calendar
 
@@ -108,7 +110,7 @@ class TempSourceStamp(object):
 
         assert all(
             isinstance(val, (unicode, type(None), int))
-            for attr, val in result.items()
+            for attr, val in iteritems(result)
         ), result
         return result
 
@@ -117,10 +119,10 @@ class TempChange(object):
     # temporary fake change
 
     def __init__(self, d):
-        for k, v in d.items():
+        for k, v in iteritems(d):
             setattr(self, k, v)
         self.properties = properties.Properties()
-        for k, v in d['properties'].items():
+        for k, v in iteritems(d['properties']):
             self.properties.setProperty(k, v[0], v[1])
         self.who = d['author']
 
@@ -259,7 +261,7 @@ class BuildRequest(object):
             defer.returnValue(False)
             return
 
-        for c, selfSS in selfSources.iteritems():
+        for c, selfSS in iteritems(selfSources):
             otherSS = otherSources[c]
             if selfSS['revision'] != otherSS['revision']:
                 defer.returnValue(False)
@@ -283,9 +285,9 @@ class BuildRequest(object):
     def mergeSourceStampsWith(self, others):
         """ Returns one merged sourcestamp for every codebase """
         # get all codebases from all requests
-        all_codebases = set(self.sources.iterkeys())
+        all_codebases = set(self.sources)
         for other in others:
-            all_codebases |= set(other.sources.iterkeys())
+            all_codebases |= set(other.sources)
 
         all_merged_sources = {}
         # walk along the codebases
@@ -303,7 +305,7 @@ class BuildRequest(object):
             # looking at changeids and picking the highest-numbered.
             all_merged_sources[codebase] = all_sources[-1]
 
-        return [source for source in all_merged_sources.itervalues()]
+        return list(itervalues(all_merged_sources))
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""

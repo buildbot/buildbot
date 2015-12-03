@@ -130,10 +130,10 @@ class CmdInterface(basic.LineReceiver):
             self.transport.write("\n# ")
 
 
-class FakeMaster(service.AsyncMultiService):
+class FakeMaster(service.MasterService):
 
     def __init__(self, port):
-        service.AsyncMultiService.__init__(self)
+        service.MasterService.__init__(self)
         self.setName("fakemaster")
 
         self.dispatcher = Dispatcher()
@@ -149,7 +149,7 @@ class FakeMaster(service.AsyncMultiService):
         self.slavePort.setServiceParent(self)
 
         stdio.StandardIO(self.stdio)
-        return service.AsyncMultiService.startService(self)
+        return service.MasterService.startService(self)
 
     def getPerspective(self, mind, avatarID):
         self.bot = FakeBot()

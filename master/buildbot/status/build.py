@@ -253,10 +253,10 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.currentStep = None
         self.finished = util.now()
 
-        for r in self.updates.keys():
-            if self.updates[r] is not None:
-                self.updates[r].cancel()
-                del self.updates[r]
+        for update in self.updates:
+            if self.updates[update] is not None:
+                self.updates[update].cancel()
+                del self.updates[update]
 
         watchers = self.finishedWatchers
         self.finishedWatchers = []

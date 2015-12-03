@@ -26,7 +26,9 @@ from twisted.trial import unittest
 class TestCleanShutdown(unittest.TestCase):
 
     def setUp(self):
-        self.botmaster = BotMaster(mock.Mock())
+        master = fakemaster.make_master(testcase=self, wantData=True)
+        self.botmaster = BotMaster()
+        self.botmaster.setServiceParent(master)
         self.reactor = mock.Mock()
         self.botmaster.startService()
 
@@ -114,7 +116,9 @@ class TestBotMaster(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self, wantMq=True,
                                              wantData=True)
         self.master.mq = self.master.mq
-        self.botmaster = BotMaster(self.master)
+        self.master.botmaster.disownServiceParent()
+        self.botmaster = BotMaster()
+        self.botmaster.setServiceParent(self.master)
         self.new_config = mock.Mock()
         self.botmaster.startService()
 

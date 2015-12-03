@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 from twisted.application import service
 from twisted.internet import defer
@@ -24,7 +25,7 @@ from buildbot.util import ascii2unicode
 from buildbot.util import config
 
 
-class ReconfigurableServiceMixin:
+class ReconfigurableServiceMixin(object):
 
     reconfig_priority = 128
 
@@ -45,7 +46,9 @@ class ReconfigurableServiceMixin:
             yield svc.reconfigServiceWithBuildbotConfig(new_config)
 
 
-class AsyncService(service.Service):
+# twisted 16's Service is now an new style class, better put everybody new style
+# to catch issues even on twisted < 16
+class AsyncService(service.Service, object):
 
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
@@ -54,6 +57,13 @@ class AsyncService(service.Service):
         parent = service.IServiceCollection(parent, parent)
         self.parent = parent
         yield self.parent.addService(self)
+
+    # We recurse over the parent services until we find a MasterService
+    @property
+    def master(self):
+        if self.parent is None:
+            return None
+        return self.parent.master
 
 
 class AsyncMultiService(AsyncService, service.MultiService):
@@ -90,13 +100,6 @@ class AsyncMultiService(AsyncService, service.MultiService):
             return service.startService()
         else:
             return defer.succeed(None)
-
-    # We recurse over the parent services until we find a MasterService
-    @property
-    def master(self):
-        if self.parent is None:
-            return None
-        return self.parent.master
 
 
 class MasterService(AsyncMultiService):
@@ -142,11 +145,14 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         return self.reconfigService(*sibling._config_args,
                                     **sibling._config_kwargs)
 
+    def configureService(self):
+        # reconfigServiceWithSibling with self, means first configuration
+        return self.reconfigServiceWithSibling(self)
+
     @defer.inlineCallbacks
     def startService(self):
         if not self.configured:
-            # reconfigServiceWithSibling with self, means first configuration
-            yield self.reconfigServiceWithSibling(self)
+            yield self.configureService()
         yield AsyncMultiService.startService(self)
 
     def checkConfig(self, *args, **kwargs):
@@ -333,14 +339,14 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
     def getConfigDict(self):
         return {'name': self.name,
                 'childs': [v.getConfigDict()
-                           for v in self.namedServices.values()]}
+                           for v in itervalues(self.namedServices)]}
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
 
         # arrange childs by name
         old_by_name = self.namedServices
-        old_set = set(old_by_name.iterkeys())
+        old_set = set(old_by_name)
         new_config_attr = getattr(new_config, self.config_attr)
         if isinstance(new_config_attr, list):
             new_by_name = dict([(s.name, s)
@@ -349,7 +355,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             new_by_name = new_config_attr
         else:
             raise TypeError("config.%s should be a list or dictionary" % (self.config_attr))
-        new_set = set(new_by_name.iterkeys())
+        new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs
         removed_names, added_names = util.diffSets(old_set, new_set)

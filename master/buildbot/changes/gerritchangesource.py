@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot import util
 from buildbot.changes import base
@@ -74,36 +75,26 @@ class GerritChangeSource(base.ChangeSource):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
-    def __init__(self,
-                 gerritserver,
-                 username,
-                 gerritport=29418,
-                 identity_file=None,
-                 name=None,
-                 handled_events=("patchset-created", "ref-updated")):
-        """
-        @type  gerritserver: string
-        @param gerritserver: the dns or ip that host the gerrit ssh server,
+    name = None
 
-        @type  gerritport: int
-        @param gerritport: the port of the gerrit ssh server,
+    def checkConfig(self,
+                    gerritserver,
+                    username,
+                    gerritport=29418,
+                    identity_file=None,
+                    handled_events=("patchset-created", "ref-updated"),
+                    debug=False):
+        if self.name is None:
+            self.name = u"GerritChangeSource:%s@%s:%d" % (username, gerritserver, gerritport)
 
-        @type  username: string
-        @param username: the username to use to connect to gerrit,
-
-        @type  identity_file: string
-        @param identity_file: identity file to for authentication (optional),
-
-        @type  handled_events: list
-        @param handled_events: event to be handled (optional).
-        """
-        # TODO: delete API comment when documented
-
-        if not name:
-            name = "GerritChangeSource:%s@%s:%d" % (username, gerritserver, gerritport)
-
-        base.ChangeSource.__init__(self, name=name)
-
+    def reconfigService(self,
+                        gerritserver,
+                        username,
+                        gerritport=29418,
+                        identity_file=None,
+                        name=None,
+                        handled_events=("patchset-created", "ref-updated"),
+                        debug=False):
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username
@@ -111,6 +102,7 @@ class GerritChangeSource(base.ChangeSource):
         self.handled_events = list(handled_events)
         self.process = None
         self.wantProcess = False
+        self.debug = debug
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     class LocalPP(ProcessProtocol):
@@ -127,11 +119,13 @@ class GerritChangeSource(base.ChangeSource):
             # last line is either empty or incomplete
             self.data = lines.pop(-1)
             for line in lines:
-                log.msg("gerrit: %s" % line)
+                if self.change_source.debug:
+                    log.msg("gerrit: %s" % line)
                 yield self.change_source.lineReceived(line)
 
         def errReceived(self, data):
-            log.msg("gerrit stderr: %s" % data)
+            if self.change_source.debug:
+                log.msg("gerrit stderr: %s" % data)
 
         def processEnded(self, status_object):
             self.change_source.streamProcessStopped()
@@ -156,7 +150,7 @@ class GerritChangeSource(base.ChangeSource):
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
-            for k, v in event.items():
+            for k, v in iteritems(event):
                 name = "%s.%s" % (base, k)
                 if isinstance(v, dict):
                     flatten(properties, name, v)
@@ -171,7 +165,8 @@ class GerritChangeSource(base.ChangeSource):
         if func is None and event_with_change:
             return self.addChangeFromEvent(properties, event)
         elif func is None:
-            log.msg("unsupported event %s" % (event["type"],))
+            if self.debug:
+                log.msg("unsupported event %s" % (event["type"],))
             return defer.succeed(None)
         else:
             return func(properties, event)
@@ -258,11 +253,16 @@ class GerritChangeSource(base.ChangeSource):
         else:
             # good startup, but lost connection; restart immediately,
             # and set the timeout to its minimum
+
+            # make sure we log the reconnection, so that it might be detected
+            # and network connectivity fixed
+            log.msg("gerrit stream-events lost connection. Reconnecting...")
             self.startStreamProcess()
             self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     def startStreamProcess(self):
-        log.msg("starting 'gerrit stream-events'")
+        if self.debug:
+            log.msg("starting 'gerrit stream-events'")
         self.lastStreamProcessStart = util.now()
         uri = "%s@%s" % (self.username, self.gerritserver)
         args = [uri, "-p", str(self.gerritport)]

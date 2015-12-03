@@ -44,7 +44,8 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
         @d.addCallback
         def make_dbc(_):
             master = fakemaster.make_master()
-            self.db = connector.DBConnector(master, self.basedir)
+            self.db = connector.DBConnector(self.basedir)
+            self.db.setServiceParent(master)
             self.db.pool = self.db_pool
         return d
 

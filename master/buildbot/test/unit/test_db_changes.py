@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import sqlalchemy as sa
 
@@ -754,7 +755,7 @@ class RealTests(Tests):
             buildRows = [fakedb.Buildset(id=lastID["buildsetid"],
                                          reason='foo',
                                          submitted_at=1300305012, results=-1)]
-            for cb, ss in codebase_ss.iteritems():
+            for cb, ss in iteritems(codebase_ss):
                 lastID["buildsetSourceStampid"] += 1
                 buildRows.append(
                     fakedb.BuildsetSourceStamp(id=lastID["buildsetSourceStampid"],
@@ -822,8 +823,8 @@ class RealTests(Tests):
 class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
-        self.db = fakedb.FakeDBConnector(self.master, self)
+        self.master = fakemaster.make_master(wantDb=True, testcase=self)
+        self.db = self.master.db
         self.db.checkForeignKeys = True
         self.insertTestData = self.db.insertTestData
 

@@ -147,7 +147,8 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=None, umask=None,
-                 maxdelay=300, unicode_encoding=None, allow_shutdown=None):
+                 maxdelay=300, numcpus=None, unicode_encoding=None,
+                 allow_shutdown=None):
 
         # note: keepaliveTimeout is ignored, but preserved here for
         # backward-compatibility
@@ -157,6 +158,7 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
         if keepalive == 0:
             keepalive = None
 
+        self.numcpus = numcpus
         self.shutdown_loop = None
 
         if allow_shutdown == 'signal':

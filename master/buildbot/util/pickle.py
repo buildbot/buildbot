@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import iteritems
+from future.utils import itervalues
+
 
 import cPickle
 import cStringIO
@@ -755,7 +758,7 @@ class StepProgress:
         """The step can call this to explicitly set a target value for one
         of its metrics. E.g., ShellCommands knows how many commands it will
         execute, so it could set the 'commands' expectation."""
-        for metric, value in metrics.items():
+        for metric, value in iteritems(metrics):
             self.expectations[metric] = value
         self.buildProgress.newExpectations()
 
@@ -810,7 +813,7 @@ class StepProgress:
         # scheme currently implemented.
 
         percentages = []
-        for metric, value in self.progress.items():
+        for metric, value in iteritems(self.progress):
             expectation = self.expectations[metric]
             if value is not None and expectation is not None:
                 p = 1.0 * value / expectation
@@ -857,7 +860,7 @@ class BuildProgress(pb.Referenceable):
 
     def setExpectationsFrom(self, exp):
         """Set our expectations from the builder's Expectations object."""
-        for name, metrics in exp.steps.items():
+        for name, metrics in iteritems(exp.steps):
             s = self.steps.get(name)
             if s:
                 s.setExpectedTime(exp.times[name])
@@ -872,7 +875,7 @@ class BuildProgress(pb.Referenceable):
     def stepFinished(self, stepname):
         assert(stepname not in self.finishedSteps)
         self.finishedSteps.append(stepname)
-        if len(self.finishedSteps) == len(self.steps.keys()):
+        if len(self.finishedSteps) == len(list(self.steps)):
             self.sendLastUpdates()
 
     def newProgress(self):
@@ -885,7 +888,7 @@ class BuildProgress(pb.Referenceable):
     def remaining(self):
         # sum eta of all steps
         sum = 0
-        for name, step in self.steps.items():
+        for name, step in iteritems(self.steps):
             rem = step.remaining()
             if rem is None:
                 return None  # not sure
@@ -927,7 +930,7 @@ class BuildProgress(pb.Referenceable):
                     remote)
 
     def sendAllUpdates(self):
-        for r in self.watchers.keys():
+        for r in self.watchers:
             self.updateWatcher(r)
 
     def updateWatcher(self, remote):
@@ -968,7 +971,7 @@ class BuildProgress(pb.Referenceable):
             self.startTimer(remote)
 
     def sendLastUpdates(self):
-        for remote in self.watchers.keys():
+        for remote in self.watchers:
             self.sendUpdate(remote, 1)
             self.removeWatcher(remote)
 substituteClasses['buildbot.status.progress', 'BuildProgress'] = BuildProgress
@@ -992,9 +995,9 @@ class Expectations:
         # .times maps stepname to per-step elapsed time
         self.times = {}
 
-        for name, step in buildprogress.steps.items():
+        for name, step in iteritems(buildprogress.steps):
             self.steps[name] = {}
-            for metric, value in step.progress.items():
+            for metric, value in iteritems(step.progress):
                 self.steps[name][metric] = value
             self.times[name] = None
             if step.startTime is not None and step.stopTime is not None:
@@ -1009,7 +1012,7 @@ class Expectations:
             return (current * self.decay) + (old * (1 - self.decay))
 
     def update(self, buildprogress):
-        for name, stepprogress in buildprogress.steps.items():
+        for name, stepprogress in iteritems(buildprogress.steps):
             old = self.times.get(name)
             current = stepprogress.totalTime()
             if current is None:
@@ -1021,7 +1024,7 @@ class Expectations:
                 print("new expected time[%s] = %s, old %s, cur %s" %
                       (name, new_, old, current))
 
-            for metric, current in stepprogress.progress.items():
+            for metric, current in iteritems(stepprogress.progress):
                 old = self.steps[name].get(metric)
                 new_ = self.wavg(old, current)
                 if self.debug:
@@ -1030,14 +1033,10 @@ class Expectations:
                 self.steps[name][metric] = new_
 
     def expectedBuildTime(self):
-        if None in self.times.values():
+        if None in list(itervalues(self.times)):
             return None
-        # return sum(self.times.values())
-        # python-2.2 doesn't have 'sum'. TODO: drop python-2.2 support
-        s = 0
-        for v in self.times.values():
-            s += v
-        return s
+        return sum(list(itervalues(self.times)))
+
 substituteClasses['buildbot.status.progress', 'Expectations'] = Expectations
 
 
@@ -1053,7 +1052,7 @@ def setup():
 
     # move each of the substitute classes to its proper module in sys.modules,
     # creating it if necessary, and set its __module__ attribute.
-    for info, cls in substituteClasses.iteritems():
+    for info, cls in iteritems(substituteClasses):
         mod_name, cls_name = info
         try:
             mod = reflect.namedModule(mod_name)

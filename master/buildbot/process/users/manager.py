@@ -35,10 +35,8 @@ class UserManagerManager(util_service.ReconfigurableServiceMixin,
         for mgr in list(self):
             yield defer.maybeDeferred(lambda:
                                       mgr.disownServiceParent())
-            mgr.master = None
 
         for mgr in new_config.user_managers:
-            mgr.master = self.master
             yield mgr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import re
 
@@ -73,7 +74,7 @@ class Matcher(object):
             raise KeyError('No match for %r' % (path,))
 
     def iterPatterns(self):
-        return self._patterns.iteritems()
+        return list(iteritems(self._patterns))
 
     def _compile(self):
         self._by_length = {}

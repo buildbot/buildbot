@@ -142,8 +142,10 @@ fi
 if ! $quick; then
     status "running Python tests"
     run_tests || not_ok "Python tests failed"
+elif [ -z `which cctrial` ]; then
+    warning "Skipping Python Tests ('pip install cctrial' for quick tests)"
 else
-    warning "Skipping Python Tests"
+    cctrial -H buildbot buildslave || not_ok "Python tests failed"
 fi
 
 status "checking formatting"

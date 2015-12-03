@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot import config
 from buildbot import util
@@ -108,7 +110,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers():
-            for timer in self._stable_timers.values():
+            for timer in itervalues(self._stable_timers):
                 if timer:
                     timer.cancel()
             self._stable_timers.clear()
@@ -158,7 +160,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 self.objectid)
 
         # call gotChange for each change, after first fetching it from the db
-        for changeid, important in classifications.iteritems():
+        for changeid, important in iteritems(classifications):
             chdict = yield self.master.db.changes.getChange(changeid)
 
             if not chdict:
@@ -202,7 +204,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getPendingBuildTimes(self):
         # This isn't locked, since the caller expects an immediate value,
         # and in any case, this is only an estimate.
-        return [timer.getTime() for timer in self._stable_timers.values() if timer and timer.active()]
+        return [timer.getTime() for timer in itervalues(self._stable_timers) if timer and timer.active()]
 
 
 class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):

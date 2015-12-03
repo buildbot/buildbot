@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot.db import sourcestamps
 from buildbot.test.fake import fakedb
@@ -186,7 +187,7 @@ class Tests(interfaces.InterfaceTests):
 
         def check(ssdict):
             validation.verifyDbDict(self, 'ssdict', ssdict)
-            self.assertEqual(dict((k, v) for k, v in ssdict.iteritems()
+            self.assertEqual(dict((k, v) for k, v in iteritems(ssdict)
                                   if k.startswith('patch_')),
                              dict(patch_body='hello, world',
                                   patch_level=3,

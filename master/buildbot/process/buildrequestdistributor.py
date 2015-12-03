@@ -17,7 +17,6 @@
 from buildbot.data import resultspec
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
-from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service
 from twisted.internet import defer
@@ -287,7 +286,7 @@ class BasicBuildChooser(BuildChooserBase):
         return self.bldr.canStartBuild(slave, breq)
 
 
-class BuildRequestDistributor(service.AsyncService):
+class BuildRequestDistributor(service.AsyncMultiService):
 
     """
     Special-purpose class to handle distributing build requests to builders by
@@ -303,8 +302,8 @@ class BuildRequestDistributor(service.AsyncService):
     BuildChooser = BasicBuildChooser
 
     def __init__(self, botmaster):
+        service.AsyncMultiService.__init__(self)
         self.botmaster = botmaster
-        self.master = botmaster.master
 
         # lock to ensure builders are only sorted once at any time
         self.pending_builders_lock = defer.DeferredLock()
@@ -504,40 +503,10 @@ class BuildRequestDistributor(service.AsyncService):
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
-            # the claim was successful, so publish a message for each brid
-            for brid in brids:
-                # TODO: inefficient..
-                brdict = yield self.master.db.buildrequests.getBuildRequest(brid)
-                key = ('buildsets', str(brdict['buildsetid']),
-                       'builders', str(-1),
-                       'buildrequests', str(brdict['buildrequestid']), 'claimed')
-                msg = dict(
-                    bsid=brdict['buildsetid'],
-                    brid=brdict['buildrequestid'],
-                    buildername=brdict['buildername'],
-                    builderid=-1,
-                    # TODO:
-                    # claimed_at=claimed_at_epoch,
-                    # masterid=masterid)
-                )
-                self.master.mq.produce(key, msg)
-
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
             if not buildStarted:
                 yield self.master.data.updates.unclaimBuildRequests(brids)
-
-                for breq in breqs:
-                    bsid = breq.bsid
-                    buildername = ascii2unicode(breq.buildername)
-                    brid = breq.id
-                    key = ('buildsets', str(brdict['buildsetid']),
-                           'builders', str(-1),
-                           'buildrequests', str(brdict['buildrequestid']), 'unclaimed')
-                    msg = dict(brid=brid, bsid=bsid, buildername=buildername,
-                               builderid=-1)
-                    self.master.mq.produce(key, msg)
-
-                # and try starting builds again.  If we still have a working slave,
+                # try starting builds again.  If we still have a working slave,
                 # then this may re-claim the same buildrequests
                 self.botmaster.maybeStartBuildsForBuilder(self.name)
 

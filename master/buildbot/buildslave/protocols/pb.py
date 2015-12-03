@@ -12,8 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from __future__ import absolute_import
+from future.utils import itervalues
 
 from buildbot.buildslave.protocols import base
 from twisted.internet import defer
@@ -25,9 +25,8 @@ from twisted.spread import pb
 class Listener(base.Listener):
     name = "pbListener"
 
-    def __init__(self, master):
-        assert master
-        base.Listener.__init__(self, master)
+    def __init__(self):
+        base.Listener.__init__(self)
 
         # username : (password, portstr, PBManager registration)
         self._registrations = {}
@@ -46,7 +45,7 @@ class Listener(base.Listener):
             if currentReg:
                 yield currentReg.unregister()
                 del self._registrations[username]
-            if portStr:
+            if portStr and password:
                 reg = self.master.pbmanager.register(
                     portStr, username, password, self._getPerspective)
                 self._registrations[username] = (password, portStr, reg)
@@ -237,7 +236,7 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the slave buildbot process to exit.
         def old_way():
             d = None
-            for b in self.buildslave.slavebuilders.values():
+            for b in itervalues(self.buildslave.slavebuilders):
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break

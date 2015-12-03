@@ -12,16 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 from buildbot.util import service
 from buildbot.util import subscription
 
 
 class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-
-    def __init__(self, master):
-        service.AsyncMultiService.__init__(self)
-        self.master = master
+    pass
 
 
 class Connection(object):
@@ -37,8 +35,8 @@ class Connection(object):
     # This method replace all Impl args by their Proxy protocol implementation
     def createArgsProxies(self, args):
         newargs = {}
-        for k, v in args.iteritems():
-            for implclass, proxyclass in self.proxies.items():
+        for k, v in iteritems(args):
+            for implclass, proxyclass in iteritems(self.proxies):
                 if isinstance(v, implclass):
                     v = proxyclass(v)
             newargs[k] = v

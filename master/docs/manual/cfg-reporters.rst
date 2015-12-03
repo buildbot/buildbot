@@ -754,6 +754,10 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                       .. literalinclude:: /examples/git_gerrit.cfg
                          :pyobject: gerritSummaryCB
 
+   :param builders: (optional) list of builders to send results for.
+                    This method allows to filter results for a specific set of builder.
+                    By default, or if builders is None, then no filtering is performed.
+
 .. note::
 
    By default, a single summary review is sent; that is, a default :py:func:`summaryCB` is provided, but no :py:func:`reviewCB` or :py:func:`startCB`.

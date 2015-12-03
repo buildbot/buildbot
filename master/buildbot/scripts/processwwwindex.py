@@ -29,8 +29,8 @@ from twisted.internet import defer
 @defer.inlineCallbacks
 def processwwwindex(config):
     master = yield fakemaster.make_master()
-    master_service = WWWService(master)
-
+    master_service = WWWService()
+    master_service.setServiceParent(master)
     if not config.get('index-file'):
         print("Path to the index.html file is required with option --index-file or -i")
         defer.returnValue(1)

@@ -41,7 +41,9 @@ class OldTriggeringMethods(unittest.TestCase):
         self.master = master.BuildMaster(basedir=None)
 
         self.master.data = fakedata.FakeDataConnector(self.master, self)
-        self.master.db = fakedb.FakeDBConnector(self.master, self)
+        self.master.data.setServiceParent(self.master)
+        self.db = self.master.db = fakedb.FakeDBConnector(self)
+        self.db.setServiceParent(self.master)
         self.master.db.insertTestData([
             fakedb.Change(changeid=1, author='this is a test'),
         ])
@@ -136,9 +138,12 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
                        classmethod(lambda cls, b, f: cls()))
 
             self.master = master.BuildMaster(self.basedir)
-            self.db = self.master.db = fakedb.FakeDBConnector(self.master, self)
-            self.mq = self.master.mq = fakemq.FakeMQConnector(self.master, self)
+            self.db = self.master.db = fakedb.FakeDBConnector(self)
+            self.db.setServiceParent(self.master)
+            self.mq = self.master.mq = fakemq.FakeMQConnector(self)
+            self.mq.setServiceParent(self.master)
             self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
+            self.data.setServiceParent(self.master)
 
         return d
 
@@ -219,19 +224,16 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.assertFalse(self.master.data.updates.thisMasterActive)
         return d
 
+    @defer.inlineCallbacks
     def test_reconfig(self):
         reactor = self.make_reactor()
         self.master.reconfigServiceWithBuildbotConfig = mock.Mock(
             side_effect=lambda n: defer.succeed(None))
-
-        d = self.master.startService(_reactor=reactor)
-        d.addCallback(lambda _: self.master.reconfig())
-        d.addCallback(lambda _: self.master.stopService())
-
-        @d.addCallback
-        def check(_):
-            self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
-        return d
+        self.master.masterHeartbeatService = mock.Mock()
+        yield self.master.startService(_reactor=reactor)
+        yield self.master.reconfig()
+        yield self.master.stopService()
+        self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
 
     @defer.inlineCallbacks
     def test_reconfig_bad_config(self):
@@ -239,6 +241,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.master.reconfigService = mock.Mock(
             side_effect=lambda n: defer.succeed(None))
 
+        self.master.masterHeartbeatService = mock.Mock()
         yield self.master.startService(_reactor=reactor)
 
         # reset, since startService called reconfigService

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import collections
 import re
@@ -63,7 +64,7 @@ class Properties(util.ComparableMixin):
     @classmethod
     def fromDict(cls, propDict):
         properties = cls()
-        for name, (value, source) in propDict.iteritems():
+        for name, (value, source) in iteritems(propDict):
             properties.setProperty(name, value, source)
         return properties
 
@@ -93,22 +94,22 @@ class Properties(util.ComparableMixin):
 
     def asList(self):
         """Return the properties as a sorted list of (name, value, source)"""
-        l = sorted([(k, v[0], v[1]) for k, v in self.properties.iteritems()])
+        l = sorted([(k, v[0], v[1]) for k, v in iteritems(self.properties)])
         return l
 
     def asDict(self):
         """Return the properties as a simple key:value dictionary,
         properly unicoded"""
-        return dict((k, (v, s)) for k, (v, s) in self.properties.iteritems())
+        return dict((k, (v, s)) for k, (v, s) in iteritems(self.properties))
 
     def __repr__(self):
         return ('Properties(**' +
-                repr(dict((k, v[0]) for k, v in self.properties.iteritems())) +
+                repr(dict((k, v[0]) for k, v in iteritems(self.properties))) +
                 ')')
 
     def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
-        for k, v in dict.items():
+        for k, v in iteritems(dict):
             self.setProperty(k, v, source, runtime=runtime)
 
     def updateFromProperties(self, other):
@@ -119,7 +120,7 @@ class Properties(util.ComparableMixin):
     def updateFromPropertiesNoRuntime(self, other):
         """Update this object based on another object, but don't
         include properties that were marked as runtime."""
-        for k, v in other.properties.iteritems():
+        for k, v in iteritems(other.properties):
             if k not in other.runtime:
                 self.properties[k] = v
 
@@ -286,7 +287,7 @@ class WithProperties(util.ComparableMixin):
         self.args = args
         if not self.args:
             self.lambda_subs = lambda_subs
-            for key, val in self.lambda_subs.iteritems():
+            for key, val in iteritems(self.lambda_subs):
                 if not callable(val):
                     raise ValueError('Value for lambda substitution "%s" must be callable.' % key)
         elif lambda_subs:
@@ -300,7 +301,7 @@ class WithProperties(util.ComparableMixin):
                 strings.append(pmap[name])
             s = self.fmtstring % tuple(strings)
         else:
-            for k, v in self.lambda_subs.iteritems():
+            for k, v in iteritems(self.lambda_subs):
                 pmap.add_temporary_value(k, v(build))
             s = self.fmtstring % pmap
         return s
@@ -364,7 +365,7 @@ def _getInterpolationList(fmtstring):
     # TODO: Verify that no positional substitutions are requested
     dd = collections.defaultdict(str)
     fmtstring % dd
-    return dd.keys()
+    return list(dd)
 
 
 class _PropertyDict(object):
@@ -734,7 +735,7 @@ class _DictRenderer(object):
     implements(IRenderable)
 
     def __init__(self, value):
-        self.value = _ListRenderer([_TupleRenderer((k, v)) for k, v in value.iteritems()])
+        self.value = _ListRenderer([_TupleRenderer((k, v)) for k, v in iteritems(value)])
 
     def getRenderingFor(self, build):
         d = self.value.getRenderingFor(build)

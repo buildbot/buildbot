@@ -28,7 +28,8 @@ from twisted.internet import defer
 @defer.inlineCallbacks
 def dataspec(config):
     master = yield fakemaster.make_master()
-    data = connector.DataConnector(master)
+    data = connector.DataConnector()
+    data.setServiceParent(master)
     if config['out'] != '--':
         dirs = os.path.dirname(config['out'])
         if dirs and not os.path.exists(dirs):

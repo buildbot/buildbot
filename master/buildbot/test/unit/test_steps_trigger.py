@@ -106,7 +106,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         m = self.master
         m.db.checkForeignKeys = True
         self.build.builder.botmaster = m.botmaster
-        m.status = master.Status(m)
+        m.status = master.Status()
+        m.status.setServiceParent(m)
         m.config.buildbotURL = "baseurl/"
         m.scheduler_manager = FakeSchedulerManager()
 
@@ -168,7 +169,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             # check the URLs
             stepUrls = self.master.data.updates.stepUrls
             if stepUrls:
-                got_added_urls = stepUrls[stepUrls.keys()[0]]
+                got_added_urls = stepUrls[list(stepUrls)[0]]
             else:
                 got_added_urls = []
             self.assertEqual(sorted(got_added_urls),

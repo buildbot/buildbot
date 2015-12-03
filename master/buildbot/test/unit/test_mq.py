@@ -128,4 +128,5 @@ class TestSimpleMQ(unittest.TestCase, RealTests):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.mq = simple.SimpleMQ(self.master)
+        self.mq = simple.SimpleMQ()
+        self.mq.setServiceParent(self.master)

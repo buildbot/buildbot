@@ -35,12 +35,7 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
     implements(interfaces.IEventSource)
 
-    name = "changemanager"
-
-    def __init__(self, master):
-        service.AsyncMultiService.__init__(self)
-        self.setName('change_manager')
-        self.master = master
+    name = "change_manager"
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):

@@ -1,0 +1,41 @@
+build-log {
+  display: block;
+  padding: 10px 0;
+  font-size: 12px;
+  font-family: monospace;
+  overflow-x: auto;
+
+  table {
+    td {
+      padding: 0;
+      border-width: 0;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    tr:hover {
+      .lineno {
+        opacity: 1;
+      }
+
+      .code {
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  .lineno {
+    min-width: 30px;
+    text-align: right;
+    padding: 0 5px;
+    white-space: nowrap;
+    opacity: 0.3;
+  }
+
+  .code {
+    padding-left: 5px;
+    overflow: visible;
+    white-space: pre;
+    word-wrap: normal;
+  }
+}

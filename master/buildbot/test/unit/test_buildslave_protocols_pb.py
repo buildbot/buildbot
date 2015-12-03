@@ -29,14 +29,19 @@ class TestListener(unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master()
 
+    def makeListener(self):
+        listener = pb.Listener()
+        listener.setServiceParent(self.master)
+        return listener
+
     def test_constructor(self):
-        listener = pb.Listener(self.master)
+        listener = self.makeListener()
         self.assertEqual(listener.master, self.master)
         self.assertEqual(listener._registrations, {})
 
     @defer.inlineCallbacks
     def test_updateRegistration_simple(self):
-        listener = pb.Listener(self.master)
+        listener = self.makeListener()
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
                          [('tcp:1234', 'example', 'pass')])
@@ -44,7 +49,7 @@ class TestListener(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_pass_changed(self):
-        listener = pb.Listener(self.master)
+        listener = self.makeListener()
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
         self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1))
@@ -52,7 +57,7 @@ class TestListener(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateRegistration_port_changed(self):
-        listener = pb.Listener(self.master)
+        listener = self.makeListener()
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
         self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1))
@@ -60,7 +65,7 @@ class TestListener(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getPerspective(self):
-        listener = pb.Listener(self.master)
+        listener = self.makeListener()
         buildslave = mock.Mock()
         buildslave.slavename = 'test'
         mind = mock.Mock()

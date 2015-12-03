@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import mock
 
@@ -61,6 +62,7 @@ class TestBRDBase(unittest.TestCase):
         self.master.caches = fakemaster.FakeCaches()
         self.master.config.prioritizeBuilders = prioritizeBuilders
         self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
+        self.brd.parent = self.botmaster
         self.brd.startService()
 
         # TODO: this is a terrible way to detect the "end" of the test -
@@ -99,7 +101,7 @@ class TestBRDBase(unittest.TestCase):
 
     def addSlaves(self, slavebuilders):
         """C{slaves} maps name : available"""
-        for name, avail in slavebuilders.iteritems():
+        for name, avail in iteritems(slavebuilders):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail
@@ -274,7 +276,7 @@ class Test(TestBRDBase):
     def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes,
                              expected, returnDeferred=False):
         self.useMock_maybeStartBuildsOnBuilder()
-        self.addBuilders(oldestRequestTimes.keys())
+        self.addBuilders(list(oldestRequestTimes))
         self.master.config.prioritizeBuilders = prioritizeBuilders
 
         def mklambda(t):  # work around variable-binding issues
@@ -283,12 +285,12 @@ class Test(TestBRDBase):
             else:
                 return lambda: t
 
-        for n, t in oldestRequestTimes.iteritems():
+        for n, t in iteritems(oldestRequestTimes):
             if t is not None:
                 t = epoch2datetime(t)
             self.builders[n].getOldestRequestTime = mklambda(t)
 
-        d = self.brd._sortBuilders(oldestRequestTimes.keys())
+        d = self.brd._sortBuilders(list(oldestRequestTimes))
 
         def check(result):
             self.assertEqual(result, expected)

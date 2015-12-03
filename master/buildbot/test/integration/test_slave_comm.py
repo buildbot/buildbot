@@ -157,13 +157,16 @@ class TestSlaveComm(unittest.TestCase):
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
         self.pbmanager.setServiceParent(self.master)
 
+        # remove the fakeServiceParent from fake service hierarchy, and replace by a real one
+        yield self.master.buildslaves.disownServiceParent()
         self.buildslaves = self.master.buildslaves = bslavemanager.BuildslaveManager(self.master)
         self.buildslaves.setServiceParent(self.master)
 
-        self.botmaster = botmaster.BotMaster(self.master)
+        self.botmaster = botmaster.BotMaster()
         self.botmaster.setServiceParent(self.master)
 
-        self.master.status = master.Status(self.master)
+        self.master.status = master.Status()
+        self.master.status.setServiceParent(self.master)
         self.master.botmaster = self.botmaster
         self.master.data.updates.buildslaveConfigured = lambda *a, **k: None
         yield self.master.startService()

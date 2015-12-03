@@ -12,7 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot import locks
 from buildbot import util
@@ -32,11 +33,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     them."""
 
     debug = 0
+    name = "botmaster"
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName("botmaster")
-        self.master = master
 
         self.builders = {}
         self.builderNames = []
@@ -115,20 +115,20 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     @metrics.countMethod('BotMaster.slaveLost()')
     def slaveLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
-        for name, b in self.builders.items():
+        for name, b in iteritems(self.builders):
             if bot.slavename in b.config.slavenames:
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
-        return [b for b in self.builders.values()
+        return [b for b in itervalues(self.builders)
                 if slavename in b.config.slavenames]
 
     def getBuildernames(self):
         return self.builderNames
 
     def getBuilders(self):
-        return self.builders.values()
+        return list(itervalues(self.builders))
 
     @defer.inlineCallbacks
     def startService(self):
@@ -137,7 +137,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             builderid = msg['builderid']
             buildername = None
             # convert builderid to buildername
-            for builder in self.builders.values():
+            for builder in itervalues(self.builders):
                 if builderid == (yield builder.getBuilderId()):
                     buildername = builder.name
                     break
@@ -182,10 +182,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         old_by_name = dict([(b.name, b)
                             for b in list(self)
                             if isinstance(b, Builder)])
-        old_set = set(old_by_name.iterkeys())
+        old_set = set(old_by_name)
         new_by_name = dict([(bc.name, bc)
                             for bc in new_config.builders])
-        new_set = set(new_by_name.iterkeys())
+        new_set = set(new_by_name)
 
         # calculate new builders, by name, and removed builders
         removed_names, added_names = util.diffSets(old_set, new_set)
@@ -212,7 +212,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 builder.master = self.master
                 yield builder.setServiceParent(self)
 
-        self.builderNames = self.builders.keys()
+        self.builderNames = list(self.builders)
 
         yield self.master.data.updates.updateBuilderList(
             self.master.masterid,
@@ -230,7 +230,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if self.buildrequest_consumer_unclaimed:
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
-        for b in self.builders.values():
+        for b in itervalues(self.builders):
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()
         return service.AsyncMultiService.stopService(self)

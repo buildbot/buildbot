@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
+
 
 from zope.interface import implements
 
@@ -26,13 +28,15 @@ from twisted.python import failure
 class Triggerable(base.BaseScheduler):
     implements(ITriggerableScheduler)
 
-    compare_attrs = base.BaseScheduler.compare_attrs
+    compare_attrs = base.BaseScheduler.compare_attrs + ('reason',)
 
-    def __init__(self, name, builderNames, **kwargs):
+    def __init__(self, name, builderNames, reason=None, **kwargs):
         base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
-        self.reason = u"The Triggerable scheduler named '%s' triggered this build" % name
+        if reason is None:
+            reason = u"The Triggerable scheduler named '%s' triggered this build" % name
+        self.reason = reason
 
     def trigger(self, waited_for, sourcestamps=None, set_props=None,
                 parent_buildid=None, parent_relationship=None):
@@ -86,7 +90,7 @@ class Triggerable(base.BaseScheduler):
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
-            for d, brids in self._waiters.values():
+            for d, brids in itervalues(self._waiters):
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 

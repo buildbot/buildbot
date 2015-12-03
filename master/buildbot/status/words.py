@@ -1,3 +1,4 @@
+# coding: utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -38,6 +39,26 @@ from buildbot.status.results import FAILURE
 from buildbot.status.results import RETRY
 from buildbot.status.results import SUCCESS
 from buildbot.status.results import WARNINGS
+
+# Used in command_HELLO and it's test. 'Hi' in 100 languages.
+
+GREETINGS = [
+    "ږغ كول ، هركلى كول ږغ، هركلى", "Goeie dag", "Tungjatjeta",
+    "Yatasay", "Ahlan bik", "Voghdzuyin", "hola", "kaixo", "Horas",
+    "Pryvitańnie", "Nomoskar", "Oki", "Selam", "Dez-mat", "Zdrávejte",
+    "Mingala ba", "Hola", "Hafa dai", "Oh-see-YOH", "Nín hao", "Bonjou",
+    "Zdravo", "Nazdar", "Hallo", "Hallo", "Iiti", "Kotáka", "Saluton", "Tere",
+    "Hallo", "Hallo", "Bula", "Helo", "Hei", "Goede morgen", "Bonjour", "Hoi",
+    "Ola", "Gamardžoba", "Guten Tag", "Mauri", "Geia!", "Inuugujoq", "Kem cho",
+    "Sannu", "Aloha", "Shalóm", "Namasté", "Szia", "Halló", "Hai", "Kiana",
+    "Dia is muire dhuit", "Buongiorno", "Kónnichi wa", "Salam",
+    "Annyeonghaseyo", "Na", "Sabai dii", "Ave", "Es mīlu tevi", "Labas.",
+    "Selamat petang", "Ni hao", "Kia ora", "Yokwe", "Kwe", "sain baina uu",
+    "niltze", "Yá'át'ééh", "Namaste", "Hallo.", "Salâm", "Witajcie", "Olá",
+    "Kâils", "Aroha", "Salut", "Privét", "Talofa", "Namo namah", "ćao",
+    "Nazdar", "Zdravo", "Hola", "Jambo", "Hej", "Sälü", "Halo", "Selam",
+    "Sàwàtdee kráp", "Dumela", "Merhaba", "Pryvít", "Adaab arz hai", "Chào",
+    "Glidis", "Helo", "Sawubona", "Hoi"]
 
 
 # This should probably move to the irc class.
@@ -145,7 +166,8 @@ class Contact(base.StatusReceiver):
         """
         assert user or channel, "At least one of user or channel must be set"
         self.bot = bot
-        self.master = bot.master
+        # hack for self.master, but this module needs a much bigger rework
+        self.setServiceParent(bot.master)
         self.notify_events = {}
         self.subscribed = []
         self.build_subscriptions = []
@@ -158,6 +180,7 @@ class Contact(base.StatusReceiver):
 
         self.user = user
         self.channel = channel
+        self._next_HELLO = 'yes?'
 
     # silliness
 
@@ -274,7 +297,8 @@ class Contact(base.StatusReceiver):
             raise UsageError(e)
 
     def command_HELLO(self, args):
-        self.send("yes?")
+        self.send(self._next_HELLO)
+        self._next_HELLO = random.choice(GREETINGS)
 
     def command_VERSION(self, args):
         self.send("buildbot-%s at your service" % version)
@@ -320,7 +344,7 @@ class Contact(base.StatusReceiver):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
-        self.send("The following events are being notified: %r" % self.notify_events.keys())
+        self.send("The following events are being notified: %r" % list(self.notify_events))
 
     def notify_for(self, *events):
         for event in events:

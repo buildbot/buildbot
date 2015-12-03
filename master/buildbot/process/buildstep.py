@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import itervalues
 
 try:
     import cStringIO as StringIO
@@ -309,11 +311,18 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         if kwargs:
             config.error("%s.__init__ got unexpected keyword argument(s) %s"
-                         % (self.__class__, kwargs.keys()))
+                         % (self.__class__, list(kwargs)))
         self._pendingLogObservers = []
 
         if not isinstance(self.name, str):
             config.error("BuildStep name must be a string: %r" % (self.name,))
+
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
 
         self._acquiringLock = None
         self.stopped = False
@@ -807,7 +816,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         if not desc:
             return []
         if self.descriptionSuffix:
-            desc = desc + u' ' + util.join_list(self.descriptionSuffix)
+            desc += self.descriptionSuffix
         return desc
 
 
@@ -901,7 +910,7 @@ class LoggingBuildStep(BuildStep):
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
-        for logname, remotefilename in logfiles.items():
+        for logname, remotefilename in iteritems(logfiles):
             if self.lazylogfiles:
                 # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
@@ -1081,7 +1090,7 @@ class ShellMixin(object):
             else:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
-        for arg in constructorArgs.keys():
+        for arg in constructorArgs:
             if arg not in BuildStep.parms:
                 bad(arg)
                 del constructorArgs[arg]
@@ -1148,7 +1157,7 @@ class ShellMixin(object):
         # set up logging
         if stdio is not None:
             cmd.useLog(stdio, False)
-        for logname, remotefilename in self.logfiles.items():
+        for logname, remotefilename in iteritems(self.logfiles):
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
                 callback = lambda cmd_arg, logname=logname: self.addLog(
@@ -1187,7 +1196,7 @@ def regex_log_evaluator(cmd, _, regexes):
         if worst_status(worst, possible_status) == possible_status:
             if isinstance(err, (basestring)):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
-            for l in cmd.logs.values():
+            for l in itervalues(cmd.logs):
                 if err.search(l.getText()):
                     worst = possible_status
     return worst

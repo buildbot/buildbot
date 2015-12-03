@@ -15,6 +15,7 @@
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
+
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -382,7 +383,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                         if key in where:
                             branches[branch][key] = where[key]
 
-            for branch in branches.keys():
+            for branch in branches:
                 action = branches[branch]['action']
                 files = branches[branch]['files']
 

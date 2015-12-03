@@ -103,7 +103,8 @@ class TestDataConnector(unittest.TestCase, Tests):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True)
-        self.data = connector.DataConnector(self.master)
+        self.data = connector.DataConnector()
+        self.data.setServiceParent(self.master)
 
 
 class DataConnector(unittest.TestCase):
@@ -112,7 +113,8 @@ class DataConnector(unittest.TestCase):
         self.master = fakemaster.make_master()
         # don't load by default
         self.patch(connector.DataConnector, 'submodules', [])
-        self.data = connector.DataConnector(self.master)
+        self.data = connector.DataConnector()
+        self.data.setServiceParent(self.master)
 
     def patchFooPattern(self):
         cls = type('FooEndpoint', (base.Endpoint,), {})

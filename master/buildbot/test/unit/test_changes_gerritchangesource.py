@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import types
 
@@ -89,6 +90,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         s = gerritchangesource.GerritChangeSource(
             host, user, *args, **kwargs)
         self.attachChangeSource(s)
+        s.configureService()
         return s
 
     # tests
@@ -150,7 +152,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         def check(_):
             self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
-            for k, v in c.items():
+            for k, v in iteritems(c):
                 self.assertEqual(self.expected_change[k], v)
         return d
 

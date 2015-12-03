@@ -15,20 +15,30 @@
 
 
 import buildslave
+
 from buildslave.commands import base
 
 
 class RemovedSourceCommand(base.SourceBaseCommand):
+
     def start(self):
         self.sendStatus(
             {"header":
-             "slave-side source checkout for '%s' is no longer supported by "
-             "build slave of version %s\n" % (self.name, buildslave.version)})
+             "slave-side source checkout for '{0}' is no longer supported by "
+             "build slave of version {1}\n"
+             "\n"
+             "Since BuildBot 0.9 old source checkout method with logic on slave-side\n"
+             "buildbot.steps.source.{0} was removed (deprecated since BuildBot 0.8)\n"
+             "\n"
+             "Instead please use new method which has its logic on master-side and has unified params list.\n"
+             "Using the plugin infrastructure it's available as buildbot.plugins.{0}\n"
+             "\n"
+             .format(self.name, buildslave.version)})
         self.sendStatus({"rc": 1})
 
 
 class Svn(RemovedSourceCommand):
-    name = "git"
+    name = "SVN"
 
 
 class Bk(RemovedSourceCommand):

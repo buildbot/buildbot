@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 
 from buildbot.test.util import validation
+from buildbot.util import service
 from buildbot.util import tuplematch
 from twisted.internet import defer
 
 
-class FakeMQConnector(object):
+class FakeMQConnector(service.AsyncMultiService):
 
     # a fake connector that doesn't actually bridge messages from production to
     # consumption, and thus doesn't do any topic handling or persistence
@@ -27,8 +28,8 @@ class FakeMQConnector(object):
     # is set to false:
     verifyMessages = True
 
-    def __init__(self, master, testcase):
-        self.master = master
+    def __init__(self, testcase):
+        service.AsyncMultiService.__init__(self)
         self.testcase = testcase
         self.setup_called = False
         self.productions = []

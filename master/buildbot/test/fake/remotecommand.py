@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
@@ -194,7 +195,7 @@ class Expect(object):
         if behavior == 'rc':
             command.rc = args[0]
             d = defer.succeed(None)
-            for log in command.logs.values():
+            for log in itervalues(command.logs):
                 if hasattr(log, 'unwrap'):
                     # We're handling an old style log that was
                     # used in an old style step. We handle the necessary
@@ -232,6 +233,58 @@ class Expect(object):
         """
         for behavior in self.behaviors:
             yield self.runBehavior(behavior[0], behavior[1:], command)
+
+    def expectationPassed(self, exp):
+        """
+        Some expectations need to be able to distinguish pass/fail of
+        nested expectations.
+
+        This will get invoked once for every nested exception and once
+        for self unless anything fails.  Failures are passed to raiseExpectationFailure for
+        handling.
+
+        @param exp: The nested exception that passed or self.
+        """
+        pass
+
+    def raiseExpectationFailure(self, exp, failure):
+        """
+        Some expectations may wish to supress failure.
+        The default expectation does not.
+
+        This will get invoked if the expectations fails on a command.
+
+        @param exp: the expectation that failed.  this could be self or a nested exception
+        """
+        raise failure
+
+    def shouldAssertCommandEqualExpectation(self):
+        """
+        Whether or not we should validate that the current command matches the expecation.
+        Some expectations may not have a way to match a command.
+        """
+        return True
+
+    def shouldRunBehaviors(self):
+        """
+        Whether or not, once the command matches the expectation,
+        the behaviors should be run for this step.
+        """
+        return True
+
+    def shouldKeepMatchingAfter(self, command):
+        """
+        Expectations are by default not kept matching multiple commands.
+
+        Return True if you want to re-use a command for multiple commands.
+        """
+        return False
+
+    def nestedExpectations(self):
+        """
+        Any sub-expectations that should be validated.
+        """
+        return []
 
     def __repr__(self):
         return "Expect(" + repr(self.remote_command) + ")"

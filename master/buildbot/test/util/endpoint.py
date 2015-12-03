@@ -100,8 +100,10 @@ class EndpointMixin(interfaces.InterfaceTests):
         self.assertIdentical(qref.callback, cb)
         self.assertEqual(qref.filter, expected_filter)
 
-    def callControl(self, action, args, kwargs):
-        self.assertIn(set(kwargs), self.pathArgs)
+    def callControl(self, action, args, path):
+        self.assertIsInstance(path, tuple)
+        endpoint, kwargs = self.matcher[path]
+        self.assertIdentical(endpoint, self.ep)
         d = self.ep.control(action, args, kwargs)
         self.assertIsInstance(d, defer.Deferred)
         return d

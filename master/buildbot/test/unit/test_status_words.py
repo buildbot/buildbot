@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import mock
 import re
@@ -122,7 +123,7 @@ class TestContactChannel(unittest.TestCase):
         clock = task.Clock()
         self.patch(reactor, 'callLater', clock.callLater)
         self.patch_send()
-        silly_prompt, silly_response = self.contact.silly.items()[0]
+        silly_prompt, silly_response = list(iteritems(self.contact.silly))[0]
 
         self.contact.doSilly(silly_prompt)
         clock.pump([0.5] * 20)
@@ -298,6 +299,13 @@ class TestContactChannel(unittest.TestCase):
     def test_command_hustle(self):
         yield self.do_test_command('hustle', clock_ticks=[1.0] * 2, exp_usage=False)
         self.assertEqual(self.actions, ['does the hustle'])
+
+    @defer.inlineCallbacks
+    def test_command_hello(self):
+        yield self.do_test_command('hello', exp_usage=False)
+        self.assertEqual(self.sent, ['yes?'])
+        yield self.do_test_command('hello', exp_usage=False)
+        self.assertIn(self.sent[0], words.GREETINGS)
 
     @defer.inlineCallbacks
     def test_command_list(self):
@@ -551,7 +559,7 @@ class TestContactChannel(unittest.TestCase):
         ])
 
     def test_handleMessage_silly(self):
-        silly_prompt = self.contact.silly.keys()[0]
+        silly_prompt = list(self.contact.silly)[0]
         self.contact.doSilly = mock.Mock()
         d = self.contact.handleMessage(silly_prompt)
 

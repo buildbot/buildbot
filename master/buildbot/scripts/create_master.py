@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import iteritems
+
 
 import jinja2
 import os
 
 from buildbot import config as config_module
 from buildbot import monkeypatches
-from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
 from twisted.internet import defer
@@ -42,7 +43,7 @@ def makeTAC(config):
     env = jinja2.Environment(loader=loader, undefined=jinja2.StrictUndefined)
     env.filters['repr'] = repr
     tpl = env.get_template('buildbot_tac.tmpl')
-    cxt = dict((k.replace('-', '_'), v) for k, v in config.iteritems())
+    cxt = dict((k.replace('-', '_'), v) for k, v in iteritems(config))
     contents = tpl.render(cxt)
 
     tacfile = os.path.join(config['basedir'], "buildbot.tac")
@@ -100,7 +101,7 @@ def createDB(config, _noMonkey=False):
     master_cfg.db['db_url'] = config['db']
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
-    db = connector.DBConnector(master, config['basedir'])
+    db = master.db
     yield db.setup(check_version=False, verbose=not config['quiet'])
     if not config['quiet']:
         print("creating database (%s)" % (master_cfg.db['db_url'],))

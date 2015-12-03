@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
+
 import itertools
 import os
 import re
@@ -196,7 +198,7 @@ class BuilderStatus(styles.Versioned):
             # upgradeToVersionNN methods all set this.
             versioneds = styles.versionedsToUpgrade
             styles.doUpgrade()
-            if True in [hasattr(o, 'wasUpgraded') for o in versioneds.values()]:
+            if True in [hasattr(o, 'wasUpgraded') for o in itervalues(versioneds)]:
                 log.msg("re-writing upgraded build pickle")
                 build.saveYourself()
 
@@ -605,7 +607,7 @@ class BuilderStatus(styles.Versioned):
         # Collect build numbers.
         # Important: Only grab the *cached* builds numbers to reduce I/O.
         current_builds = [b.getNumber() for b in self.currentBuilds]
-        cached_builds = sorted(set(self.buildCache.keys() + current_builds))
+        cached_builds = sorted(set(list(self.buildCache) + current_builds))
 
         result = {
             # Constant

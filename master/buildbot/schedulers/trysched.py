@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import os
 
@@ -246,11 +247,11 @@ class RemoteBuildSetStatus(pb.Referenceable):
     @defer.inlineCallbacks
     def remote_getBuildRequests(self):
         brids = dict()
-        for builderid, brid in self.brids.iteritems():
+        for builderid, brid in iteritems(self.brids):
             builderDict = yield self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid
         defer.returnValue([(n, RemoteBuildRequest(self.master, n, brid))
-                           for n, brid in brids.iteritems()])
+                           for n, brid in iteritems(brids)])
 
 
 class RemoteBuildRequest(pb.Referenceable):
@@ -289,7 +290,7 @@ class RemoteBuildRequest(pb.Referenceable):
         builds = yield self.master.data.get(('buildrequests', self.brid, 'builds'))
         for build in builds:
             if build['buildid'] in reportedBuilds:
-                return
+                continue
             reportedBuilds.add(build['buildid'])
             yield subscriber.callRemote('newbuild',
                                         RemoteBuild(self.master, build, self.builderName),

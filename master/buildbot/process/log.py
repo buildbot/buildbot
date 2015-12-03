@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import itervalues
 
 import re
 
@@ -179,7 +180,7 @@ class StreamLog(Log):
 
     @defer.inlineCallbacks
     def finish(self):
-        for lbf in self.lbfs.values():
+        for lbf in itervalues(self.lbfs):
             yield lbf.flush()
         yield super(StreamLog, self).finish()
 

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
 
 import os
 
@@ -36,11 +37,10 @@ from zope.interface import implements
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+    name = 'www'
 
-    def __init__(self, master):
+    def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('www')
-        self.master = master
 
         self.port = None
         self.port_service = None
@@ -130,7 +130,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
         root = self.apps.get('base').resource
-        for key, plugin in new_config.www.get('plugins', {}).items():
+        for key, plugin in iteritems(new_config.www.get('plugins', {})):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
@@ -171,14 +171,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.root = root
 
-        def either(a, b):  # a if a else b for py2.4
-            if a:
-                return a
-            else:
-                return b
-
-        rotateLength = either(new_config.www.get('logRotateLength'), self.master.log_rotation.rotateLength)
-        maxRotatedFiles = either(new_config.www.get('maxRotatedFiles'), self.master.log_rotation.maxRotatedFiles)
+        rotateLength = new_config.www.get('logRotateLength') or self.master.log_rotation.rotateLength
+        maxRotatedFiles = new_config.www.get('maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
 
         class RotateLogSite(server.Site):
 

@@ -16,6 +16,7 @@
 from builtins import range
 
 import mock
+import multiprocessing
 import os
 import shutil
 
@@ -88,7 +89,8 @@ class TestBot(unittest.TestCase):
                 admin='testy!', foo='bar',
                 environ=os.environ, system=os.name, basedir=self.basedir,
                 slave_commands=self.real_bot.remote_getCommands(),
-                version=self.real_bot.remote_getVersion()))
+                version=self.real_bot.remote_getVersion(),
+                numcpus=multiprocessing.cpu_count()))
         d.addCallback(check)
         return d
 
@@ -96,7 +98,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'basedir', 'slave_commands', 'version']))
+            self.assertEqual(set(info.keys()), set(['environ', 'system', 'numcpus', 'basedir', 'slave_commands', 'version']))
         d.addCallback(check)
         return d
 

@@ -3,6 +3,37 @@ class Builder extends Controller
     selectLock: true
     autoSelect: true
 
+    constructor: ($scope, @$state, @$mdDialog, @dataService) ->
+        @info = {}
+        @builds = []
+        @lastBuild = {}
+        @forceschedulers = []
+        @buildTabs = []
+        
+        opened = dataService.open($scope)
+
+        @builderid = $state.params.builderid
+        @dataService.getBuilders(@builderid).then (data) =>
+            if data.length == 0
+                alert 'Builder not found!'
+                $state.go('builds')
+            else
+                @info = data[0]
+                @forceschedulers = @info.loadForceschedulers().getArray()
+                @builds = @info.loadBuilds
+                    builderid: @builderid
+                    order: '-number'
+                    limit: 20
+                .getArray()
+                @loadMoreBuilderInfo()
+                
+                # go to buildstab if no child state is selected
+                if @$state.is('builds.builder', builderid:@builderid)
+                    @$state.go 'builds.builder.buildstab', builderid: @builderid
+
+        $scope.$watch 'builder.builds.length', => @updateLastBuild()
+        $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)
+
     tabSelected: (index) ->
         return if @selectLock # avoid loading one page twice
         if index == 0
@@ -65,35 +96,3 @@ class Builder extends Controller
             if build.number > lastNumber
                 @lastBuild = build
                 return
-
-    constructor: ($scope, @$state, @$mdDialog, @dataService) ->
-        @info = {}
-        @builds = []
-        @lastBuild = {}
-        @forceschedulers = []
-        @buildTabs = []
-        
-        opened = dataService.open()
-        opened.closeOnDestroy($scope)
-
-        @builderid = $state.params.builderid
-        @dataService.getBuilders(@builderid).then (data) =>
-            if data.length == 0
-                alert 'Builder not found!'
-                $state.go('builds')
-            else
-                @info = data[0]
-                @forceschedulers = @info.loadForceschedulers().getArray()
-                @builds = @info.loadBuilds
-                    builderid: @builderid
-                    order: '-number'
-                    limit: 20
-                .getArray()
-                @loadMoreBuilderInfo()
-                
-                # go to buildstab if no child state is selected
-                if @$state.is('builds.builder', builderid:@builderid)
-                    @$state.go 'builds.builder.buildstab', builderid: @builderid
-
-        $scope.$watch 'builder.builds.length', => @updateLastBuild()
-        $scope.$watch 'builder.selectedTab', => @tabSelected(@selectedTab)
