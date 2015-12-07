@@ -126,11 +126,11 @@ class GNUAutoconf(BuildFactory):
                 command = configure + configureFlags
             self.addStep(Configure(command=command, env=configureEnv))
         if compile is not None:
-            self.addStep(Compile(command=compile))
+            self.addStep(Compile(command=compile, env=configureEnv))
         if test is not None:
-            self.addStep(Test(command=test))
+            self.addStep(Test(command=test, env=configureEnv))
         if distcheck is not None:
-            self.addStep(Test(command=distcheck))
+            self.addStep(Test(command=distcheck, env=configureEnv))
 
 
 class CPAN(BuildFactory):
