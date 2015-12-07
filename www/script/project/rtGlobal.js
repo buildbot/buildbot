@@ -13,9 +13,9 @@ define(function (require) {
         imageTotalBuildsBox = $('#buildsTotal'),
         $buildLoadBox = $('#buildLoad'),
         infoSpan = $buildLoadBox.find('span'),
-        minBuildsPerSlave = 1, // The amount of builds each agent is allowed to have before we get yellow build load
-        maxBuildsPerSlave = 2, // The amount of builds each agent is allowed to have before we get red build load
-        maxAllowedLoad = 500, // The maximum number of builds allowed before people cannot schedule anymore builds
+        minBuildsPerSlave = 3, // The amount of builds each agent is allowed to have before we get yellow build load
+        maxBuildsPerSlave = 5, // The amount of builds each agent is allowed to have before we get red build load
+        maxAllowedLoad = 1000, // The maximum number of builds allowed before people cannot schedule anymore builds
         buildLoad = 0,
         bKatanaLoaded = false,
         bKatanaMaxLoaded = false;
