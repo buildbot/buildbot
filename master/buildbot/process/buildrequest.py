@@ -29,7 +29,7 @@ class Priority(object):
     VeryHigh = 80
     High =  75
     TimedScheduler = 70
-    Default = Medium = 50
+    Medium = Default = 50
     Low = 25
 
 
