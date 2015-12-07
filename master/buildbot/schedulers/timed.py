@@ -23,6 +23,8 @@ from twisted.internet import defer, reactor
 from twisted.python import log
 from buildbot import config
 from buildbot.changes import filter
+from buildbot.process.buildrequest import Priority
+
 # Import croniter if available.
 # This is only required for Nightly schedulers,
 # so fail gracefully if it isn't present.
@@ -41,7 +43,11 @@ class Timed(base.BaseScheduler):
     """
 
     def __init__(self, name, builderNames, properties={}, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, properties, 
+
+        if 'priority' not in properties:
+            properties['priority'] = Priority.TimedScheduler
+
+        base.BaseScheduler.__init__(self, name, builderNames, properties,
                                     **kwargs)
 
         # tracking for when to start the next build
