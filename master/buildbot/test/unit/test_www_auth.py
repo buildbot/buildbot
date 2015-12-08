@@ -118,7 +118,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
         try:
             yield self.auth.maybeAutoLogin(self.request)
         except Error as e:
-            self.assertEqual(e.status, 403)
+            self.assertEqual(str(e.status), '403')
         else:
             self.fail("403 expected")
 
@@ -128,7 +128,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
         try:
             yield self.auth.maybeAutoLogin(self.request)
         except Error as e:
-            self.assertEqual(e.status, 403)
+            self.assertEqual(str(e.status), '403')
         else:
             self.fail("403 expected")
 
