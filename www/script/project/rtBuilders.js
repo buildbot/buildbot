@@ -175,18 +175,13 @@ define(function (require) {
                     return $.inArray(NO_TAG, selectedTags) > -1;
                 }
 
-                var result = true;
+                var result = false;
                 if ($.inArray(NO_TAG, selectedTags) > -1) {
                     selectedTags.push(branch_type);
                 }
                 $.each(selectedTags, function eachSelectedTag(i, tag) {
-                    if (tag === NO_TAG) {
-                        if (filteredTags.length == 0 && builderTags.some(hasBranch)) {
-                            // Exit early we have found a builder with the branch as a tag
-                            return false;
-                        }
-                    } else if ($.inArray(tag, filteredTags) === -1) {
-                        result = false;
+                    if ((tag === NO_TAG && filteredTags.length === 0 && builderTags.some(hasBranch)) || ($.inArray(tag, filteredTags) > -1)) {
+                        result = true;
                         return false;
                     }
                 });
