@@ -616,7 +616,6 @@ class KatanaBuildChooser(BasicBuildChooser):
 
     @defer.inlineCallbacks
     def _getBuildRequest(self, claim=True):
-        breq = None
 
         getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest if claim else self._getNextBuildToResume
 
@@ -625,76 +624,74 @@ class KatanaBuildChooser(BasicBuildChooser):
                 return self.unclaimedBrdicts
             return self.resumeBrdicts
 
-        while breq is None:
-            # 1. pick a build request
-            breq = yield getNextBuildRequestFunc()
+        # 1. pick a build request
+        breq = yield getNextBuildRequestFunc()
 
-            if not breq:
-                break
+        if not breq:
+            defer.returnValue(breq)
+            return
 
-            # 2. try merge this build with a compatible running build
-            if breq and self.bldr.building:
+        # 2. try merge this build with a compatible running build
+        if breq and self.bldr.building:
+            breqs = yield self.mergeRequests(breq, pendingBrdicts=getPendingBrdict())
+            totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(breqs)
+            brids = [br.id for br in totalBreqs]
+
+            try:
+                build = yield self.mergeBuildingRequests(brids, totalBreqs, claim=claim)
+                if build is not None:
+                    for b in totalBreqs:
+                        self._removeBuildRequest(b, pendingBrdicts=getPendingBrdict())
+
+                    yield self.bldr.maybeUpdateMergedBuilds(brid=build.requests[0].id,
+                                                            buildnumber=build.build_status.number,
+                                                            brids=brids)
+                    defer.returnValue(None)
+                    return
+
+            except Exception:
+                log.msg(Failure(), "from _getBuildRequest for builder '%s'" % self.bldr.name)
+                log.msg("mergeBuildingRequests skipped: merge brids %s with building request failed" % brids)
+
+        # 3. try merge with compatible finished build in the same chain
+        brdict = self._getBrdictForBuildRequest(breq, getPendingBrdict())
+        if breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
+            #check if can be merged with finished build
+            finished_br = yield self.master.db.buildrequests\
+                .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
+            if finished_br:
                 breqs = yield self.mergeRequests(breq, pendingBrdicts=getPendingBrdict())
-                totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(breqs)
-                brids = [br.id for br in totalBreqs]
+                brids = [br.id for br in breqs]
+                merged_brids = yield self.master.db.buildrequests\
+                    .getRequestsCompatibleToMerge(self.bldr.name, brdict['startbrid'], brids)
+                merged_breqs = []
+
+                for br in breqs:
+                    if br.id in merged_brids:
+                        merged_breqs.append(br)
+
+                totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(merged_breqs)
+                totalBrids = [br.id for br in totalBreqs]
 
                 try:
-                    build = yield self.mergeBuildingRequests(brids, totalBreqs, claim=claim)
-                    if build is not None:
-                        for b in totalBreqs:
-                            self._removeBuildRequest(b, pendingBrdicts=getPendingBrdict())
+                    log.msg("merge finished buildresquest %s with %s" % (finished_br, totalBrids))
+                    yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br,
+                                                                                 totalBrids,
+                                                                                 claim=claim)
+                    yield self.bldr._maybeBuildsetsComplete(totalBreqs, requestRemoved=True)
+                    for b in totalBreqs:
+                        self._removeBuildRequest(b, getPendingBrdict())
+                    buildnumber = yield self.master.db.builds.getBuildNumberForRequest(finished_br['brid'])
+                    yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],
+                                                            buildnumber=buildnumber,
+                                                            brids=brids)
+                    defer.returnValue(None)
+                    return
 
-                        yield self.bldr.maybeUpdateMergedBuilds(brid=build.requests[0].id,
-                                                                buildnumber=build.build_status.number,
-                                                                brids=brids)
-                        breq = None
-                        continue
-                except:
-                    # update unclaimed list
-                    yield self.resetQueue(claim=claim)
-                    breq = None
-                    continue
-
-            # 3. try merge with compatible finished build in the same chain
-            brdict = self._getBrdictForBuildRequest(breq, getPendingBrdict())
-            if breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
-                #check if can be merged with finished build
-                finished_br = yield self.master.db.buildrequests\
-                    .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
-                if finished_br:
-                    breqs = yield self.mergeRequests(breq, pendingBrdicts=getPendingBrdict())
-                    brids = [br.id for br in breqs]
-                    merged_brids = yield self.master.db.buildrequests\
-                        .getRequestsCompatibleToMerge(self.bldr.name, brdict['startbrid'], brids)
-                    merged_breqs = []
-
-                    for br in breqs:
-                        if br.id in merged_brids:
-                            merged_breqs.append(br)
-
-                    totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(merged_breqs)
-                    totalBrids = [br.id for br in totalBreqs]
-
-                    try:
-                        log.msg("merge finished buildresquest %s with %s" % (finished_br, totalBrids))
-                        yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br,
-                                                                                     totalBrids,
-                                                                                     claim=claim)
-                        yield self.bldr._maybeBuildsetsComplete(totalBreqs, requestRemoved=True)
-                        for b in totalBreqs:
-                            self._removeBuildRequest(b, getPendingBrdict())
-                        buildnumber = yield self.master.db.builds.getBuildNumberForRequest(finished_br['brid'])
-                        yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],
-                                                                buildnumber=buildnumber,
-                                                                brids=brids)
-                        breq = None
-                        continue
-
-                    except:
-                        # update unclaimed list
-                        yield self.resetQueue(claim=claim)
-                        breq = None
-                        continue
+                except Exception:
+                    log.msg(Failure(), "from _getBuildRequest for builder '%s'" % self.bldr.name)
+                    log.msg("mergeFinishedBuildRequest skipped: merge finished buildresquest %s with %s failed"
+                            % (finished_br, totalBrids))
 
         defer.returnValue(breq)
 
