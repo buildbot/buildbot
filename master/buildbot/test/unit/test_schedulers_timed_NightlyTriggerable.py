@@ -19,6 +19,7 @@ from buildbot.process import properties
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+from buildbot.process.buildrequest import Priority
 
 class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -66,6 +67,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                      ],
                      reason="The NightlyTriggerable scheduler named 'test' triggered this build",
@@ -94,6 +96,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                      ],
                      reason="The NightlyTriggerable scheduler named 'test' triggered this build",
@@ -119,6 +122,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                      ],
                      reason="The NightlyTriggerable scheduler named 'test' triggered this build",
@@ -150,6 +154,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                      ],
                      reason="The NightlyTriggerable scheduler named 'test' triggered this build",
@@ -169,6 +174,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                      ],
                      reason="The NightlyTriggerable scheduler named 'test' triggered this build",
@@ -194,6 +200,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                      ],
                      reason="The NightlyTriggerable scheduler named 'test' triggered this build",
@@ -272,6 +279,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                          ('testprop', ('test', 'TEST')),
                      ],
@@ -298,6 +306,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.db.buildsets.assertBuildset('?',
                 dict(external_idstring=None,
                      properties=[
+                         ('priority', (Priority.TimedScheduler, 'Scheduler')),
                          ('scheduler', ('test', 'Scheduler')),
                          ('testprop', ('test', 'TEST')),
                      ],

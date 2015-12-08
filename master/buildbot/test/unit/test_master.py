@@ -260,7 +260,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            reactor.stop.assert_called()
+            reactor.stop.assert_called_with()
             self.assertLogged("oh noes")
         return d
 
@@ -275,7 +275,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            reactor.stop.assert_called()
+            reactor.stop.assert_called_with()
             self.assertLogged("GOT HERE")
         return d
 
@@ -290,7 +290,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            reactor.stop.assert_called()
+            reactor.stop.assert_called_with()
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         return d
 
@@ -317,7 +317,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            self.master.reconfigService.assert_called()
+            self.master.reconfigService.called
         return d
 
     @defer.inlineCallbacks
@@ -378,7 +378,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         new.db['db_poll_interval'] = None
         yield self.master.reconfigService(new)
 
-        db_loop.stop.assert_called()
+        db_loop.stop.assert_called_with()
         self.assertEqual(self.master.db_loop, None)
 
 

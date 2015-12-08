@@ -23,6 +23,7 @@ from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
 from buildbot.changes import filter
 from buildbot import config
+from buildbot.process.buildrequest import Priority
 
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -239,7 +240,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             self.db.buildsets.assertBuildset(200+i, dict(
                 reason="The Nightly scheduler named 'test' triggered this build",
                 external_idstring=None,
-                properties=[('run_all_slaves', (True, 'Scheduler')),
+                properties=[('priority', (Priority.TimedScheduler, 'Scheduler')),
+                            ('run_all_slaves', (True, 'Scheduler')),
                             ('scheduler', ('test', 'Scheduler')),
                             ('selected_slave', ('slave-0%s' % i, 'Scheduler'))],
                 sourcestampsetid=100+i),

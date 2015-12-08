@@ -20,6 +20,7 @@ from buildbot.db import buildsets
 from buildbot.util import json, UTC, epoch2datetime
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
+from buildbot.process.buildrequest import Priority
 import sqlalchemy as sa
 
 class TestBuildsetsConnectorComponent(
@@ -81,13 +82,13 @@ class TestBuildsetsConnectorComponent(
                     row.submitted_at, row.complete_at)
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, brids['bldr'], 'bldr', 0, 0,
+                    [ ( bsid, brids['bldr'], 'bldr', Priority.Default, 0,
                         -1, self.now, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
 
-    def checkBuildRequest(self, triggeredbybrid=None, startbrid=None, priority=0):
+    def checkBuildRequest(self, triggeredbybrid=None, startbrid=None, priority=Priority.Default):
         def check((bsid, brids)):
             def thd(conn):
                 reqs_tbl = self.db.model.buildrequests
@@ -108,9 +109,10 @@ class TestBuildsetsConnectorComponent(
 
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(sourcestampsetid=234, reason='because',
-                                properties={}, builderNames=['a'], triggeredbybrid=1))
+                                properties={'priority':  ('75', 'Force Build Form')},
+                                          builderNames=['a'], triggeredbybrid=1))
 
-        d.addCallback(self.checkBuildRequest(triggeredbybrid=1, startbrid=1))
+        d.addCallback(self.checkBuildRequest(triggeredbybrid=1, startbrid=1, priority=Priority.High))
         return d
 
     def test_addBuildset_trigger_subchain(self):
@@ -123,7 +125,7 @@ class TestBuildsetsConnectorComponent(
             self.db.buildsets.addBuildset(sourcestampsetid=234, reason='because',
                                 properties={}, builderNames=['a'], triggeredbybrid=2))
 
-        d.addCallback(self.checkBuildRequest(triggeredbybrid=2, startbrid=1))
+        d.addCallback(self.checkBuildRequest(triggeredbybrid=2, startbrid=1, priority=Priority.Default))
         return d
 
     def test_addBuildset_priority(self):
@@ -131,7 +133,7 @@ class TestBuildsetsConnectorComponent(
                                 properties={'priority': ('50', 'Force Build Form')},
                                 builderNames=['a'])
 
-        d.addCallback(self.checkBuildRequest(priority=50))
+        d.addCallback(self.checkBuildRequest(priority=Priority.Medium))
         return d
 
     def test_addBuildset_bigger(self):

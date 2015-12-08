@@ -23,6 +23,16 @@ from buildbot.status.results import CANCELED, RESUME
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.db import buildrequests
 
+
+class Priority(object):
+    Emergency = 100
+    VeryHigh = 80
+    High =  75
+    TimedScheduler = 70
+    Medium = Default = 50
+    Low = 25
+
+
 class BuildRequest(object):
     """
 

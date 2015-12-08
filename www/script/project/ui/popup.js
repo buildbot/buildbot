@@ -419,7 +419,7 @@ define(function (require) {
                                                         " (and because  we notice a significant degradation in" +
                                                         " processing time due to non-scalable resource constraints" +
                                                         " when the outstanding build load is too high), users are not" +
-                                                        " allowed to initiate builds when the build load is above 500." +
+                                                        " allowed to initiate builds when the build load is above 1000." +
                                                         "  We apologize for the inconvenience and hope to be able to" +
                                                         " raise this limit in the future.");
                                                     return false;
