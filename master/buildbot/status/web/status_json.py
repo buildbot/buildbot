@@ -1032,7 +1032,7 @@ class SlaveBuildsJsonResource(JsonResource):
         my_builders = []
         for bname in self.status.getBuilderNames():
             b = self.status.getBuilder(bname)
-            for bs in b.getSlaves():
+            for bs in b.getAllSlaves():
                 if bs.getName() == slavename:
                     my_builders.append(b)
 
@@ -1046,8 +1046,8 @@ class SlaveBuildsJsonResource(JsonResource):
 
 
 class SlaveBuildersJsonResource(JsonResource):
-    help = """List builds related with a slave."""
-    pageTitle = 'Slave Builds'
+    help = """List builders related with a slave."""
+    pageTitle = 'Slave Builders'
 
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
@@ -1059,7 +1059,7 @@ class SlaveBuildersJsonResource(JsonResource):
         my_builders = []
         for bname in self.status.getBuilderNames():
             b = self.status.getBuilder(bname)
-            for bs in b.getSlaves():
+            for bs in b.getAllSlaves():
                 if bs.getName() == slavename:
                     my_builders.append(b.asSlaveDict())
 

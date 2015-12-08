@@ -22,6 +22,7 @@ from twisted.internet import reactor
 from buildbot.util import json
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
+from buildbot.process.buildrequest import Priority
 
 class BsDict(dict):
     pass
@@ -32,7 +33,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     def addBuildset(self, sourcestampsetid, reason, properties, triggeredbybrid=None,
                     builderNames=None, external_idstring=None,  _reactor=reactor):
         def thd(conn):
-            priority = 0
+            priority = Priority.Default
             buildsets_tbl = self.db.model.buildsets
             submitted_at = _reactor.seconds()
 
@@ -56,8 +57,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 if 'priority' in properties:
                     priority_property = properties.get('priority')[0]
                     priority = priority_property if priority_property \
-                                                    and priority_property.isdigit() \
-                                                    and int(priority_property) > 0 else 0
+                                                    and int(priority_property) > 0 else Priority.Default
 
                 inserts = [
                     dict(buildsetid=bsid, property_name=k,
