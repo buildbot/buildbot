@@ -142,7 +142,7 @@ class Builder(config.ReconfigurableServiceMixin,
             defer.returnValue(None)
 
     def getSlaveBuilder(self, slavename):
-        for sb in self.bldr.slaves:
+        for sb in self.getAllSlaves():
             if sb.slave.slave_status.getName() == slavename:
                 return sb
 
@@ -184,7 +184,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
             def slaveIsAvailable(slavename):
                 slave_builder = self.getSlaveBuilder(slavename=slavename)
-                return slave_builder.isAvailable()
+                return slave_builder.isAvailable() if slave_builder else False
 
             for br in sortedRequests:
                 if br["selected_slave"] is None:
@@ -197,10 +197,14 @@ class Builder(config.ReconfigurableServiceMixin,
                 resumingBuildRequestShouldUseSelectedSlave = br["selected_slave"] \
                                             and br['results'] == RESUME and br['slavepool'] != 'startSlavenames'
 
-                if (buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave) \
-                        and slaveIsAvailable(slavename=br["selected_slave"]):
-                    defer.returnValue(br)
-                    return
+                if (buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave):
+                    if slaveIsAvailable(slavename=br["selected_slave"]):
+                        defer.returnValue(br)
+                        return
+                    # slave not available check next br
+                    continue
+
+                defer.returnValue(br)
 
         defer.returnValue(None)
 

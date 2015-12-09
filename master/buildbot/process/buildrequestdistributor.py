@@ -565,43 +565,37 @@ class KatanaBuildChooser(BasicBuildChooser):
     @defer.inlineCallbacks
     def popNextBuildToResume(self):
         nextBuild = (None, None)
-        selectNextBuild = True
 
-        while selectNextBuild:
-            # 1. pick a request
-            breq = yield self._getBuildRequest(claim=False)
+        # 1. pick a request
+        breq = yield self._getBuildRequest(claim=False)
 
-            if not breq:
-                break
+        if not breq:
+            defer.returnValue(nextBuild)
 
-            slavepool = self.getResumeSlavepool(breq.slavepool)
+        slavepool = self.getResumeSlavepool(breq.slavepool)
 
-            # run the build on a specific slave
-            if breq.slavepool != "startSlavenames" and self.buildRequestHasSelectedSlave(breq):
-                slavebuilder = yield self.buildHasSelectedSlave(breq, slavepool)
-                if slavebuilder is not None:
-                    nextBuild = (slavebuilder, breq)
-                    break
-                # slave maybe not available anymore try another build
-                self._removeBuildRequest(breq, self.resumeBrdicts)
-                continue
+        # run the build on a specific slave
+        if breq.slavepool != "startSlavenames" and self.buildRequestHasSelectedSlave(breq):
+            slavebuilder = yield self.buildHasSelectedSlave(breq, slavepool)
+            if slavebuilder is not None:
+                nextBuild = (slavebuilder, breq)
 
-            #  2. pick a slave
-            slave = yield self._popNextSlave(slavepool)
+            # if the slave is not available anymore try another build
+            defer.returnValue(nextBuild)
+            return
 
-            if not slave:
-                break
+        #  2. pick a slave
+        slave = yield self._popNextSlave(slavepool)
 
-            # either satisfy this build or we leave it for another day
-            self._removeBuildRequest(breq, self.resumeBrdicts)
+        # either satisfy this build or we leave it for another day
+        self._removeBuildRequest(breq, self.resumeBrdicts)
 
-            #  3. make sure slave+ is usable for the breq
-            slave = yield self._pickUpSlave(slave, breq, slavepool)
+        #  3. make sure slave+ is usable for the breq
+        slave = yield self._pickUpSlave(slave, breq, slavepool) if slave else None
 
-            #  4. done? otherwise we will try another build
-            if slave:
-                nextBuild = (slave, breq)
-                break
+        #  4. done? otherwise we will try another build
+        if slave:
+            nextBuild = (slave, breq)
 
         defer.returnValue(nextBuild)
 
@@ -698,40 +692,36 @@ class KatanaBuildChooser(BasicBuildChooser):
     @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
-        selectNextBuild = True
 
-        while selectNextBuild:
-            #1. pick a buildrequest
-            breq = yield self._getBuildRequest(claim=True)
+        #1. pick a buildrequest
+        breq = yield self._getBuildRequest(claim=True)
 
-            if not breq:
-                break
+        if not breq:
+            defer.returnValue(nextBuild)
+            return
 
-            # check if should run the build on a specific slave
-            if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
-                slavebuilder = yield self.buildHasSelectedSlave(breq, self.slavepool)
-                if slavebuilder is not None:
-                    nextBuild = (slavebuilder, breq)
-                    break
-                # slave maybe not available anymore try another build
-                self._removeBuildRequest(breq, self.unclaimedBrdicts)
-                continue
+        # check if should run the build on a specific slave
+        if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
+            slavebuilder = yield self.buildHasSelectedSlave(breq, self.slavepool)
+            if slavebuilder is not None:
+                nextBuild = (slavebuilder, breq)
 
-            #  2. pick a slave
-            slave = yield self._popNextSlave(self.slavepool)
-            if not slave:
-                break
+            # if the slave is not available anymore try another build
+            defer.returnValue(nextBuild)
+            return
 
-            # either satisfy this build or we leave it for another day
-            self._removeBuildRequest(breq, self.unclaimedBrdicts)
+        #  2. pick a slave
+        slave = yield self._popNextSlave(self.slavepool)
 
-            #  3. make sure slave+ is usable for the breq
-            slave = yield self._pickUpSlave(slave, breq, self.slavepool)
+        # either satisfy this build or we leave it for another day
+        self._removeBuildRequest(breq, self.unclaimedBrdicts)
 
-            #  4. done? otherwise we will try another build
-            if slave:
-                nextBuild = (slave, breq)
-                break
+        #  3. make sure slave+ is usable for the breq
+        slave = yield self._pickUpSlave(slave, breq, self.slavepool) if slave else None
+
+        #  4. done? otherwise we will try another build
+        if slave:
+            nextBuild = (slave, breq)
 
         defer.returnValue(nextBuild)
 
