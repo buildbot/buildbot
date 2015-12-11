@@ -43,6 +43,7 @@ define(function (require) {
             window.addEventListener('popstate', function (event) {
                 rtBuilders.loadStateFromURL();
             });
+            helpers.tooltip($("[data-title]"));
         },
         realtimeFunctionsProcessBuilders: function (data) {
             if (initializedCodebaseOverview === false) {
@@ -65,9 +66,6 @@ define(function (require) {
             }
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
-
-            //Setup tooltips
-            helpers.tooltip($("[data-title]"));
         },
         setupTagsSelector: function setupTagsSelector() {
 
