@@ -540,7 +540,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         # since the status is not in the db
         if self.resumeBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                        buildername=self.bldr.name, claimed="mine", results=RESUME, mergebrids="exclude")
+                buildername=self.bldr.name, claimed="mine", complete=False, results=RESUME, mergebrids="exclude")
             brdicts.sort(key=lambda brd : brd['submitted_at'])
             self.resumeBrdicts = brdicts
         defer.returnValue(self.resumeBrdicts)
@@ -934,6 +934,16 @@ class BuildRequestDistributor(service.Service):
         rv = [b.name for b in builders]
         timer.stop()
         defer.returnValue(rv)
+
+    #TODO: use one instead of _sortBuilders
+    @defer.inlineCallbacks
+    def _getNextPriorityBuilder(self, queue):
+        builder = None
+
+        buildrequestQueue = yield self.master.db.buildrequests\
+            .getPrioritizedBuildRequestsInQueue(queue=queue)
+
+        defer.returnValue(builder)
 
     @defer.inlineCallbacks
     def _maybeUpdatePendingBuilders(self, buildername):

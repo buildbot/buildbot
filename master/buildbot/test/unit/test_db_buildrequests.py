@@ -1125,7 +1125,7 @@ class TestBuildsetsConnectorComponent(
     def test_getBuildRequestInQueue(self):
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1"),
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2"),
-                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=9, complete=1),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=9, complete=0),
                  fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1", results=0, complete=1)]
 
         breqsclaims = [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1300103810),
@@ -1151,5 +1151,5 @@ class TestBuildsetsConnectorComponent(
 
         d = self.insertTestData(breqs + breqsclaims)
         d.addCallback(lambda _: self.db.buildrequests.getBuildRequestInQueue(buildername="bldr1"))
-        d.addCallback(lambda queue: self.assertEqual(queue, [fakeRequest(1, 1, -1, False), fakeRequest(3, 3, 9, True)]))
+        d.addCallback(lambda queue: self.assertEqual(queue, [fakeRequest(1, 1, -1, False), fakeRequest(3, 3, 9, False)]))
         return d
