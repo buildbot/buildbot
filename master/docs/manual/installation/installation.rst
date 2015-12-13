@@ -75,7 +75,7 @@ If you cannot or do not wish to install the buildbot into a site-wide location l
 Running Buildbot's Tests (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you wish, you can run the buildbot unit test suite.
+If you wish, you can run the buildbot unit test suite. You must not be using a wheels packaged version of buildbot or have specified the bdist_wheel flag when building. The test suite is not included with the PyPi packaged version. 
 First, ensure you have the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from PyPi.
 This module is not required for ordinary Buildbot operation - only to run the tests.
 Note that this is not the same as the Fedora ``mock`` package!
