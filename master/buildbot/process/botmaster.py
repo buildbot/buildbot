@@ -24,7 +24,7 @@ from buildbot.process.builder import Builder
 from buildbot import interfaces, locks, config, util
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest, BuildRequestControl
-from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+from buildbot.process.buildrequestdistributor import KatanaBuildRequestDistributor
 
 class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
@@ -67,7 +67,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.buildrequest_sub = None
 
         # a distributor for incoming build requests; see below
-        self.brd = BuildRequestDistributor(self)
+        self.brd = KatanaBuildRequestDistributor(self)
         self.brd.setServiceParent(self)
 
     def cleanShutdown(self, _reactor=reactor):
