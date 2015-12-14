@@ -78,8 +78,8 @@ describe 'Data service', ->
             expect(restService.post).not.toHaveBeenCalled()
             method = 'force'
             params = a: 1
-            dataService.control(method, params)
-            expect(restService.post).toHaveBeenCalledWith
+            dataService.control("a", 1, method, params)
+            expect(restService.post).toHaveBeenCalledWith "a/1",
                 id: 1
                 jsonrpc: '2.0'
                 method: method

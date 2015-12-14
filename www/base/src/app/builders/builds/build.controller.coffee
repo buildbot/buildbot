@@ -22,7 +22,7 @@ class Build extends Controller
 
             failure = (why) ->
                 $scope.is_rebuilding = false
-                $scope.error = "Cannot rebuild: " + why.data.error.message
+                $scope.error = "Cannot rebuild: " + why.error.message
                 refreshContextMenu()
 
             $scope.build.control('rebuild').then(success, failure)
@@ -35,7 +35,7 @@ class Build extends Controller
 
             failure = (why) ->
                 $scope.is_stopping = false
-                $scope.error = "Cannot Stop: " + why.data.error.message
+                $scope.error = "Cannot Stop: " + why.error.message
                 refreshContextMenu()
 
             $scope.build.control('stop').then(success, failure)

@@ -27,6 +27,9 @@ class Base extends Factory
             get: (args...) ->
                 dataService.get(@_endpoint, @_id, args...)
 
+            control: (method, params) ->
+                dataService.control(@_endpoint, @_id, method, params)
+
             subscribe: ->
                 listener = (data) =>
                     key = data.k
