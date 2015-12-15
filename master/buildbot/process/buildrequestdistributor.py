@@ -489,8 +489,6 @@ class KatanaBuildChooser(BasicBuildChooser):
             yield self.master.db.buildrequests.mergePendingBuildRequests(brids, artifactbrid=breq.id, claim=False)
 
         breqs = yield self.fetchPreviouslyMergedBuildRequests([breq])
-        for b in breqs:
-            self._removeBuildRequest(b, self.resumeBrdicts)
 
         defer.returnValue((slave, buildnumber, breqs))
 
@@ -505,8 +503,6 @@ class KatanaBuildChooser(BasicBuildChooser):
             return
 
         breqs = yield self.mergeRequests(breq)
-        for b in breqs:
-                self._removeBuildRequest(b)
 
         defer.returnValue((slave, breqs))
 
@@ -588,9 +584,6 @@ class KatanaBuildChooser(BasicBuildChooser):
         #  2. pick a slave
         slave = yield self._popNextSlave(slavepool)
 
-        # either satisfy this build or we leave it for another day
-        self._removeBuildRequest(breq, self.resumeBrdicts)
-
         #  3. make sure slave+ is usable for the breq
         slave = yield self._pickUpSlave(slave, breq, slavepool) if slave else None
 
@@ -599,15 +592,6 @@ class KatanaBuildChooser(BasicBuildChooser):
             nextBuild = (slave, breq)
 
         defer.returnValue(nextBuild)
-
-    @defer.inlineCallbacks
-    def resetQueue(self, claim):
-        if claim:
-            self.unclaimedBrdicts = None
-            yield self._fetchUnclaimedBrdicts()
-        else:
-            self.resumeBrdicts = None
-            yield self._fetchResumeBrdicts()
 
     @defer.inlineCallbacks
     def _getBuildRequest(self, claim=True):
@@ -635,9 +619,6 @@ class KatanaBuildChooser(BasicBuildChooser):
             try:
                 build = yield self.mergeBuildingRequests(brids, totalBreqs, claim=claim)
                 if build is not None:
-                    for b in totalBreqs:
-                        self._removeBuildRequest(b, pendingBrdicts=getPendingBrdict())
-
                     yield self.bldr.maybeUpdateMergedBuilds(brid=build.requests[0].id,
                                                             buildnumber=build.build_status.number,
                                                             brids=brids)
@@ -674,8 +655,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                                                                                  totalBrids,
                                                                                  claim=claim)
                     yield self.bldr._maybeBuildsetsComplete(totalBreqs, requestRemoved=True)
-                    for b in totalBreqs:
-                        self._removeBuildRequest(b, getPendingBrdict())
+
                     buildnumber = yield self.master.db.builds.getBuildNumberForRequest(finished_br['brid'])
                     yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],
                                                             buildnumber=buildnumber,
@@ -713,9 +693,6 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         #  2. pick a slave
         slave = yield self._popNextSlave(self.slavepool)
-
-        # either satisfy this build or we leave it for another day
-        self._removeBuildRequest(breq, self.unclaimedBrdicts)
 
         #  3. make sure slave+ is usable for the breq
         slave = yield self._pickUpSlave(slave, breq, self.slavepool) if slave else None
