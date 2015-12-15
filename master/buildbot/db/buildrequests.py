@@ -238,7 +238,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getPrioritizedBuildRequestsInQueue(self, buildername=None, queue=None, _master_objectid=None):
+    def getPrioritizedBuildRequestsInQueue(self, queue=None, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -281,9 +281,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             else:
                 raise UnsupportedQueueError
-
-            if buildername:
-                buildersqueue = buildersqueue.where(reqs_tbl.c.buildername == buildername)
 
             # TODO: for performance we may need to limit the result
             res = conn.execute(buildersqueue.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at)))

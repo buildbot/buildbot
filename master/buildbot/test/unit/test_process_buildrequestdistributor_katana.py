@@ -19,7 +19,7 @@ class KatanaBuildChooserTestCase(unittest.TestCase):
             def get(self, name):
                 return
         self.master.caches = fakemaster.FakeCaches()
-        self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
+        self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
         self.brd.startService()
 
         self.startedBuilds = []
