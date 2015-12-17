@@ -23,12 +23,6 @@ class JSONTestResource(HtmlResource):
         self.log = log
         self.step_status = step_status
 
-    def etree_to_dict(self, t):
-        d = {t.tag: map(self.etree_to_dict, list(t))}
-        d.update((k, v) for k, v in t.attrib.iteritems())
-        d['text'] = t.text
-        return d
-
     def suite_command_line(self, suite):
         result = 'perl ./Tools/UnifiedTestRunner/test.pl --suite=' + suite["name"]
         if suite["minimalCommandLine"]:
