@@ -821,7 +821,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                         & (claims_tbl.c.objectid == _master_objectid))
                     conn.execute(q)
 
-                    q = req_tbl.update(req_tbl.c.id.in_(batch)).values(mergebrid=None)
+                    q = req_tbl.update(req_tbl.c.id.in_(batch)) \
+                        .values(mergebrid=None) \
+                        .values(artifactbrid=None) \
+                        .values(slavepool=None)
 
                     if results is not None:
                         q = q.values(results=results)
