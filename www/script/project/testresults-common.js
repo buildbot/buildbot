@@ -46,6 +46,12 @@ define(['main'], function () {
                         "bInfo": false,
                         "bAutoWidth": false
                     });
+
+                    $('a.collapse').click(function () {
+                        var target = $(this).attr('data-target');
+                        var hidden = $(target).is(":hidden");
+                        $(target).toggle(hidden);
+                    });
                 },
                 addFailureButtons: function () {
                     $('.failure-detail-cont', th).each(function () {
