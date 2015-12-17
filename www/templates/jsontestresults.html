@@ -1,0 +1,207 @@
+{% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
+
+{% block submenu %}
+    {{ submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Test Results", selectedProject=selectedproject) }}
+{% endblock %}
+
+{% block extra_script %}
+    <script type="text/javascript">
+        require.deps.push('testResults');
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="top left"></div>
+    <div class="log-main" data-failed-tests="{{ data.summary.failedCount }}">
+        <div id="dataTablesFilter" class="fl-right top-filter-list">
+            <div id="CheckBoxesList" class="check-boxes-list">
+                <label for="inconclusiveInput">Inconclusive</label>
+                <input checked="checked" type="checkbox" value="Inconclusive" id="inconclusiveInput"/>
+                <label for="skippedInput">Skipped</label>
+                <input type="checkbox" value="Skipped" id="skippedInput"/>
+                <label for="ignoredInput">Ignored</label>
+                <input type="checkbox" value="Ignored" id="ignoredInput"/>
+                <label for="successInput">Success</label>
+                <input type="checkbox" value="Success" id="successInput"/>
+                <label for="failureInput">Failure</label>
+                <input type="checkbox" value="Failure" id="failureInput"/>
+                <label for="errorInput">Error</label>
+                <input type="checkbox" value="Failure" id="errorInput"/>
+                <label for="cancelledInput">Failure</label>
+                <input type="checkbox" value="Cancelled" id="cancelledInput"/>
+            </div>
+            <div class="dataTables_filter">
+                <label class="input-label"></label>
+                <input type="text" placeholder="Free text filter" id="filterinput"/>
+            </div>
+            <button class="grey-btn" id="submitFilter">Filter</button>
+            <button class="grey-btn" id="clearFilter">Clear</button>
+        </div>
+    </div>
+
+    <h1 class="main-head" id=":i18n:Summary">Summary</h1>
+
+    <div class="container">
+        <table class="table table-katana" id="summaryTable">
+            <thead>
+            <tr>
+                <th class="txt-align-left first-child">All tests</th>
+                <th class="txt-align-left first-child">Passed</th>
+                <th class="txt-align-left">Failures</th>
+                <th class="txt-align-left">Errors</th>
+                <th class="txt-align-left">Ignored</th>
+                <th class="txt-align-left">Skipped</th>
+                <th class="txt-align-left">Inconclusive</th>
+                <th class="txt-align-left">Time(s)</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if data.summary.failedCount > 0 %}
+                <tr class="Failure">
+                    {% else %}
+                <tr class="Pass">
+            {% endif %}
+            <td class="txt-align-left first-child">{{ data.summary.testsCount }}</td>
+            <td class="txt-align-left">{{ data.summary.successCount }}</td>
+            <td class="txt-align-left">{{ data.summary.failedCount }}</td>
+            <td class="txt-align-left">{{ data.summary.errorCount }}</td>
+            <td class="txt-align-left">{{ data.summary.ignoredCount }}</td>
+            <td class="txt-align-left">{{ data.summary.skippedCount }}</td>
+            <td class="txt-align-left">{{ data.summary.inconclusiveCount }}</td>
+            <td class="txt-align-left" data-time="{{ data.summary.time }}">{{ data.summary.time }}</td>
+            </tr>
+            </tbody>
+        </table>
+
+        {% for suite in data.suites %}
+            {% if suite.summary.result %}
+                <div class="row">
+                    <h2>Suite type: {{ suite.name }}</h2>
+
+                    <a class="label label-default collapse" data-target="#suiteCommand" href="#">Command to run
+                        locally</a>
+
+                    <div id="suiteCommand" class="command">
+                        <input class="command-text" type="text" value="{{ suite_command_line(suite) }}"
+                               onclick="this.select();" readonly/>
+                    </div>
+                </div>
+
+                {% if suite.error %}
+                    <div class="fail"> suite.error</div>
+                {% endif %}
+
+                {% if suite.artifacts %}
+                    <div class="row" id="suite_artifacts">
+                        <h2>Suite Artifacts:</h2>
+
+                        <div class="clearfix"></div>
+                        {% for artifact in suite.artifacts %}
+                            <div class="artifact">
+                                <a target="_blank" href="{{ artifact }}">{{ artifact }}</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    </div>
+                {% endif %}
+                <div class="table-holder">
+                    <div class="row">
+                        <ul class="summary-list">
+                            <li><b id="Tests">Tests </b>{{ suite.summary.testsCount }}</li>
+                            <li><b id="Passed">Passed </b>{{ suite.summary.successCount }}</li>
+                            <li><b id="Failures">Failures </b><span>{{ suite.summary.failedCount }}</span></li>
+                            <li><b id="Error">Ignored </b><span>{{ suite.summary.errorCount }}</span></li>
+                            <li><b id="Skipped">Skipped </b><span>{{ suite.summary.skippedCount }}</span></li>
+                            <li><b id="Inconclusive">Inconclusive </b><span>{{ suite.summary.inconclusiveCount }}</span>
+                            </li>
+                            <li data-time="{{ suite.summary.time }}"><b id="Time">Time(s) </b>{{ suite.summary.time }}
+                            </li>
+                        </ul>
+                    </div>
+                    <table class="table table-katana tablesorter tablesorter-log-js">
+                        <colgroup>
+                            <col span="1" style="width: 50%;">
+                            <col span="1" style="width: 20%;">
+                            <col span="1" style="width: 10%;">
+                            <col span="1" style="width: 20%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th class="txt-align-left first-child" id=":i18n:Name">Name</th>
+                            <th id=":i18n:Status">Status</th>
+                            <th id=":i18n:Time">Time(s)</th>
+                            <th id=":i18n:Time">Artifacts</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        {% set i = 0 %}
+                        {% for test in suite.tests %}
+                            <tr>
+                                <td class="txt-align-left">
+                                    <h5><strong>{{ test.name }}</strong></h5>
+
+                                    <a class="label label-default collapse" data-target="#testCommand{{ i }}">Command
+                                        to run locally</a>
+
+                                    <div id="testCommand{{ i }}" class="command">
+                                        <input class="command-text" type="text"
+                                               value="{{ suite_command_line(suite) + " --testfilter=" + test.name }}"
+                                               onclick="this.select();" readonly/>
+                                    </div>
+
+                                    {% if test.message %}
+                                        <div><b>Message:</b></div>
+                                        <div class="formatted_text">{{ test.message }}</div>
+                                    {% endif %}
+                                    {% if test.stackTrace %}
+                                        <div><b>Stack trace:</b></div>
+                                        <div class="formatted_text">{{ test.stackTrace }}</div>
+                                    {% endif %}
+                                    {% if test.reason %}
+                                        <div><b>Reason:</b></div>
+                                        <div class="formatted_text">{{ test.reason }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="{{ results[test.state] }}">{{ results[test.state] }}</td>
+                                {% if test.time %}
+                                    <td data-time="{{ test.time }}">{{ test.time }}</td>
+                                {% else %}
+                                    <td>N/A</td>
+                                {% endif %}
+                                <td class="txt-align-left first-child ">
+                                    {% for artifact in test.artifacts %}
+                                        <div class="artifact">
+                                            <a target="_blank" href="{{ artifact }}">{{ artifact }}</a>
+                                        </div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            {% if test.state and test.state|lower == "false" %}
+                                <tr>
+                                    <td class="txt-align-left failure-detail-cont colspan-js">
+                                        <div class="pos-relative">
+                                            <div class="failure-detail-txt">
+                                                {% for line in test.message %}
+                                                    {{ line.text|e|trim }}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="hidden-result">{{ test.result }}</td>
+                                    <td>&nbsp;</td>
+                                </tr>
+                            {% endif %}
+
+                            {% set i = i + 1 %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <a class="back-top-top" href="#top">Back to top</a>
+                </div>
+
+                </div>
+            {% endif %}
+        {% endfor %}
+
+{% endblock %}
