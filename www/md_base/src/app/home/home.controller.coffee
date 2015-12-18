@@ -6,7 +6,7 @@ class Home extends Controller
         @title = config.title
         @titleURL = config.titleURL
 
-        @settings = bbSettingsService.getSettingsGroup("home")
+        @settings = @bbSettingsService.getSettingsGroup("home")
 
         @sortable_settings =
             disabled: @settings.lock_panels.value

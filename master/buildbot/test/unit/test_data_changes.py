@@ -94,11 +94,6 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(changes[1]['changeid'], 14)
         return d
 
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {},
-                                       expected_filter=('changes',
-                                                        None, 'new'))
-
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):
     changeEvent = {

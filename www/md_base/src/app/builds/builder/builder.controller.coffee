@@ -10,7 +10,7 @@ class Builder extends Controller
         @forceschedulers = []
         @buildTabs = []
         
-        opened = dataService.open($scope)
+        data = @dataService.open($scope)
 
         @builderid = $state.params.builderid
         @dataService.getBuilders(@builderid).then (data) =>

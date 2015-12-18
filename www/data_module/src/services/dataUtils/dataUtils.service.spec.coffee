@@ -115,3 +115,9 @@ describe 'Data utils service', ->
         it 'should return the string if it is not a number', ->
             result = dataUtilsService.numberOrString('w3as')
             expect(result).toBe('w3as')
+
+    describe 'emailInString(string)', ->
+
+        it 'should return an email from a string', ->
+            email = dataUtilsService.emailInString('foo <bar@foo.com>')
+            expect(email).toBe('bar@foo.com')

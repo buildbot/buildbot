@@ -16,6 +16,8 @@
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
 
+import socket
+
 from io import BytesIO
 
 from twisted.internet import defer
@@ -58,6 +60,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
+                 masterFQDN=None,
                  **kwargs):
 
         if not client:
@@ -93,7 +96,9 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         self.image = image
         self.command = command or []
         self.dockerfile = dockerfile
-
+        if masterFQDN is None:
+            masterFQDN = socket.getfqdn()
+        self.masterFQDN = masterFQDN
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
@@ -101,14 +106,25 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         if tls is not None:
             self.client_args['tls'] = tls
 
+    def createEnvironment(self):
+        result = {
+            "BUILDMASTER": self.masterFQDN,
+            "SLAVENAME": self.name,
+            "SLAVEPASS": self.password
+        }
+        if self.registration is not None:
+            result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
+        return result
+
+    @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        return threads.deferToThread(self._thd_start_instance)
+        image = yield build.render(self.image)
+        res = yield threads.deferToThread(self._thd_start_instance, image)
+        defer.returnValue(res)
 
-    def _image_exists(self, client, name=None):
-        if name is None:
-            name = self.image
+    def _image_exists(self, client, name):
         # Make sure the image exists
         for image in client.images():
             for tag in image['RepoTags']:
@@ -118,13 +134,12 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                     return True
         return False
 
-    def _thd_start_instance(self):
+    def _thd_start_instance(self, image):
         docker_client = client.Client(**self.client_args)
 
         found = False
-        if self.image is not None:
-            found = self._image_exists(docker_client)
-            image = self.image
+        if image is not None:
+            found = self._image_exists(docker_client, image)
         else:
             image = '%s_%s_image' % (self.slavename, id(self))
         if (not found) and (self.dockerfile is not None):
@@ -146,6 +161,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
             self.command,
             name='%s_%s' % (self.slavename, id(self)),
             volumes=self.volumes,
+            environment=self.createEnvironment()
         )
 
         if instance.get('Id') is None:
@@ -166,7 +182,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
                 if self.conn:
                     break
             del logs
-        return [instance['Id'], self.image]
+        return [instance['Id'], image]
 
     def stop_instance(self, fast=False):
         if self.instance is None:

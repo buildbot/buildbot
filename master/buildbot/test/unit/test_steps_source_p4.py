@@ -19,8 +19,8 @@ import platform
 import textwrap
 
 from buildbot import config
-from buildbot.status.results import RETRY
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import RETRY
+from buildbot.process.results import SUCCESS
 from buildbot.steps.source.p4 import P4
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell

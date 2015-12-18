@@ -348,8 +348,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         changes_made = False
         failed = False
         try:
-            new_config = config.MasterConfig.loadConfig(self.basedir,
-                                                        self.configFileName)
+            # Run the master.cfg in thread, so that it cas use blocking code
+            new_config = yield threads.deferToThread(config.MasterConfig.loadConfig,
+                                                     self.basedir,
+                                                     self.configFileName)
             changes_made = True
             self.config = new_config
 

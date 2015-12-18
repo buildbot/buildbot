@@ -19,6 +19,7 @@ from buildbot.www import authz
 from buildbot.www.authz.endpointmatchers import AnyEndpointMatcher
 from buildbot.www.authz.endpointmatchers import BranchEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
+from buildbot.www.authz.endpointmatchers import RebuildBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
 from buildbot.www.authz.roles import RolesFromEmails
@@ -47,6 +48,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                 ViewBuildsEndpointMatcher(project="*", role="*"),
 
                 StopBuildEndpointMatcher(role="owner"),
+                RebuildBuildEndpointMatcher(role="owner"),
 
                 # nine-* groups can do stuff on the nine branch
                 BranchEndpointMatcher(branch="nine", role="nine-*"),
@@ -116,3 +118,14 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         # not owner cannot stop
         yield self.assertUserForbidden("builds/13", "stop", {}, "eightuser")
         yield self.assertUserForbidden("buildrequests/82", "stop", {}, "eightuser")
+
+    @defer.inlineCallbacks
+    def test_rebuildBuild(self):
+        # admin can rebuild
+        yield self.assertUserAllowed("builds/13", "rebuild", {}, "homer")
+        # owner can always rebuild
+        yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
+        yield self.assertUserAllowed("buildrequests/82", "rebuild", {}, "nineuser")
+        # not owner cannot rebuild
+        yield self.assertUserForbidden("builds/13", "rebuild", {}, "eightuser")
+        yield self.assertUserForbidden("buildrequests/82", "rebuild", {}, "eightuser")

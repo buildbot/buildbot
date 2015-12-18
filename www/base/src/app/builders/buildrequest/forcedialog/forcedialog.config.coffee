@@ -3,9 +3,9 @@ class State extends Config
         $stateProvider.state "builder.forcebuilder",
             url: "/force/:scheduler",
             ### @ngInject ###
-            onEnter: ($stateParams, $state, $modal, buildbotService) ->
-                scheduler = buildbotService.one('forceschedulers', $stateParams.scheduler)
-                scheduler.get().then (scheduler_data) ->
+            onEnter: ($stateParams, $state, $modal, dataService) ->
+                dataService.getForceschedulers($stateParams.scheduler).then (schedulers) ->
+                    scheduler = schedulers[0]
                     modal = {}
                     modal.modal = $modal.open
                         templateUrl: "views/forcedialog.html"
@@ -13,7 +13,6 @@ class State extends Config
                         resolve:
                             builderid: -> $stateParams.builder
                             scheduler: -> scheduler
-                            scheduler_data: -> scheduler_data
                             modal: -> modal
 
                     # We exit the state if the dialog is closed or dismissed

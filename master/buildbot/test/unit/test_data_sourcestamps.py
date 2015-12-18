@@ -98,11 +98,6 @@ class SourceStampsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                              [13, 14])
         return d
 
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {},
-                                       expected_filter=('sourcestamps',
-                                                        None, None))
-
 
 class SourceStamp(unittest.TestCase):
 

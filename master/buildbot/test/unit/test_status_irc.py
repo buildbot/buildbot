@@ -15,16 +15,20 @@
 
 import mock
 
-from buildbot.status import irc
-from buildbot.status import words
-from buildbot.test.util import config
 from twisted.application import internet
+from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.reporters import irc
+from buildbot.reporters import words
+from buildbot.test.util import config
+from buildbot.util import service
 
-class FakeContact(object):
+
+class FakeContact(service.AsyncService):
 
     def __init__(self, bot, user=None, channel=None):
+        service.AsyncService.__init__(self)
         self.bot = bot
         self.user = user
         self.channel = channel
@@ -40,12 +44,9 @@ class FakeContact(object):
 
 class TestIrcStatusBot(unittest.TestCase):
 
-    def setUp(self):
-        self.status = mock.Mock(name='status')
-
     def makeBot(self, *args, **kwargs):
         if not args:
-            args = ('nick', 'pass', ['#ch'], [], self.status, [], {})
+            args = ('nick', 'pass', ['#ch'], [], [], {})
         return irc.IrcStatusBot(*args, **kwargs)
 
     def test_groupChat(self):
@@ -91,7 +92,7 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(c.messages, ['hello'])
 
     def test_privmsg_user_uppercase(self):
-        b = self.makeBot('NICK', 'pass', ['#ch'], [], self.status, [], {})
+        b = self.makeBot('NICK', 'pass', ['#ch'], [], [], {})
         b.contactClass = FakeContact
         b.privmsg('jimmy!~foo@bar', 'NICK', 'hello')
 
@@ -141,7 +142,7 @@ class TestIrcStatusBot(unittest.TestCase):
     def test_signedOn(self):
         b = self.makeBot('nick', 'pass',
                          ['#ch1', dict(channel='#ch2', password='sekrits')],
-                         ['jimmy', 'bobby'], self.status, [], {})
+                         ['jimmy', 'bobby'], [], {})
         evts = []
 
         def msg(d, m):
@@ -204,6 +205,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
 
         def TCPClient(host, port, factory):
             client = mock.Mock(name='tcp-client')
+            print "host"
             client.host = host
             client.port = port
             client.factory = factory
@@ -214,17 +216,21 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         self.patch(internet, 'TCPClient', TCPClient)
         return irc.IRC(**kwargs)
 
+    @defer.inlineCallbacks
     def test_constr(self):
         ircStatus = self.makeIRC(host='foo', port=123)
+        yield ircStatus.startService()
+
         self.client.setServiceParent.assert_called_with(ircStatus)
         self.assertEqual(self.client.host, 'foo')
         self.assertEqual(self.client.port, 123)
         self.assertIsInstance(self.client.factory, irc.IrcStatusFactory)
 
+    @defer.inlineCallbacks
     def test_constr_args(self):
         # test that the args to IRC(..) make it all the way down to
         # the IrcStatusBot class
-        self.makeIRC(
+        s = self.makeIRC(
             host='host',
             nick='nick',
             channels=['channels'],
@@ -240,19 +246,19 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             lostDelay=10,
             failedDelay=20,
             useColors=False)
+        yield s.startService()
 
         # patch it up
         factory = self.factory
         proto_obj = mock.Mock(name='proto_obj')
         factory.protocol = mock.Mock(name='protocol', return_value=proto_obj)
-        factory.status = 'STATUS'
 
         # run it
         p = factory.buildProtocol('address')
         self.assertIdentical(p, proto_obj)
         factory.protocol.assert_called_with(
             'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'],
-            factory.status, ['tags'], {'successToFailure': 1},
+            ['tags'], {'successToFailure': 1},
             useColors=False,
             useRevisions=True,
             showBlameList=False)

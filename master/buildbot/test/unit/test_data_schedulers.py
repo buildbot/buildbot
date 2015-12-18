@@ -149,11 +149,6 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(schedulers, [])
         return d
 
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {},
-                                       expected_filter=('schedulers',
-                                                        None, None))
-
 
 class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
 

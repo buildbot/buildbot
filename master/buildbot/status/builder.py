@@ -31,15 +31,15 @@ from twisted.python import runtime
 from zope.interface import implements
 
 # user modules expect these symbols to be present here
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import RETRY
-from buildbot.status.results import Results
-from buildbot.status.results import SKIPPED
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
-from buildbot.status.results import worst_status
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import Results
+from buildbot.process.results import SKIPPED
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
+from buildbot.process.results import worst_status
 _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
                   EXCEPTION, RETRY, CANCELLED, Results, worst_status]
 

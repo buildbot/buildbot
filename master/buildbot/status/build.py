@@ -18,18 +18,16 @@ import shutil
 
 from buildbot import interfaces
 from buildbot import util
-from buildbot.process import properties
 from buildbot.util import pickle
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.persisted import styles
-from twisted.python import components
 from twisted.python import log
 from twisted.python import runtime
 from zope.interface import implements
 
 
-class BuildStatus(styles.Versioned, properties.PropertiesMixin):
+class BuildStatus(styles.Versioned):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
     persistenceVersion = 4
@@ -46,8 +44,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     text = []
     results = None
     slavename = "???"
-
-    set_runtime_properties = True
 
     # these lists/dicts are defined here so that unserialized instances have
     # (empty) values. They are set in __init__ to new objects to make sure
@@ -71,7 +67,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
-        self.properties = properties.Properties()
 
     def __repr__(self):
         return "<%s #%s>" % (self.__class__.__name__, self.number)
@@ -91,14 +86,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if self.number == 0:
             return None
         return self.builder.getBuild(self.number - 1)
-
-    def getAllGotRevisions(self):
-        all_got_revisions = self.properties.getProperty('got_revision', {})
-        # For backwards compatibility all_got_revisions is a string if codebases
-        # are not used. Convert to the default internal type (dict)
-        if not isinstance(all_got_revisions, dict):
-            all_got_revisions = {'': all_got_revisions}
-        return all_got_revisions
 
     def getSourceStamps(self, absolute=False):
         return {}
@@ -120,10 +107,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def getResponsibleUsers(self):
         return self.blamelist
-
-    def getInterestedUsers(self):
-        # TODO: the Builder should add others: sheriffs, domain-owners
-        return self.properties.getProperty('owners', [])
 
     def getSteps(self):
         """Return a list of IBuildStepStatus objects. For invariant builds
@@ -365,14 +348,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.wasUpgraded = True
 
     def upgradeToVersion2(self):
-        self.properties = {}
         self.wasUpgraded = True
 
     def upgradeToVersion3(self):
-        # in version 3, self.properties became a Properties object
-        propdict = self.properties
-        self.properties = properties.Properties()
-        self.properties.update(propdict, "Upgrade from previous version")
         self.wasUpgraded = True
 
     def upgradeToVersion4(self):
@@ -420,7 +398,6 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['blame'] = self.getResponsibleUsers()
 
         # Transient
-        result['properties'] = self.getProperties().asList()
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
@@ -436,6 +413,3 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         else:
             result['currentStep'] = None
         return result
-
-components.registerAdapter(lambda build_status: build_status.properties,
-                           BuildStatus, interfaces.IProperties)

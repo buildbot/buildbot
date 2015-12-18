@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot.status.buildset import BuildSetSummaryNotifierMixin
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus

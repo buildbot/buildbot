@@ -281,8 +281,8 @@ class RemoteBuildRequest(pb.Referenceable):
             return subscriber.callRemote('newbuild',
                                          RemoteBuild(self.master, msg, self.builderName),
                                          self.builderName)
-        self.consumer = yield self.master.data.startConsuming(
-            gotBuild, {}, ('builders', builderId, 'builds'))
+        self.consumer = yield self.master.mq.startConsuming(
+            gotBuild, ('builders', str(builderId), 'builds', None, None))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
 
@@ -314,15 +314,16 @@ class RemoteBuild(pb.Referenceable):
     def remote_subscribe(self, subscriber, interval):
         # subscribe to any new steps..
         def stepChanged(key, msg):
+            log.msg("SC")
             if key[-1] == 'started':
                 return subscriber.callRemote('stepStarted',
                                              self.builderName, self, msg['name'], None)
             elif key[-1] == 'finished':
                 return subscriber.callRemote('stepFinished',
                                              self.builderName, self, msg['name'], None, msg['results'])
-        self.consumer = yield self.master.data.startConsuming(
-            stepChanged, {},
-            ('builds', self.builddict['buildid'], 'steps'))
+        self.consumer = yield self.master.mq.startConsuming(
+            stepChanged,
+            ('builds', str(self.builddict['buildid']), 'steps', None, None))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
 
@@ -336,11 +337,12 @@ class RemoteBuild(pb.Referenceable):
         d = defer.Deferred()
 
         def buildEvent(key, msg):
+            log.msg("BE")
             if key[-1] == 'finished':
                 d.callback(None)
-        consumer = yield self.master.data.startConsuming(
-            buildEvent, {},
-            ('builds', self.builddict['buildid']))
+        consumer = yield self.master.mq.startConsuming(
+            buildEvent,
+            ('builds', str(self.builddict['buildid']), None))
 
         yield d  # wait for event
         consumer.stopConsuming()

@@ -16,9 +16,9 @@
 import re
 
 from buildbot.process import logobserver
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
 
 

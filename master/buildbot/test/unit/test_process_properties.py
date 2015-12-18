@@ -22,6 +22,7 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.properties import PropertiesMixin
 from buildbot.process.properties import Property
+from buildbot.process.properties import Transform
 from buildbot.process.properties import WithProperties
 from buildbot.process.properties import _Lazy
 from buildbot.process.properties import _Lookup
@@ -276,7 +277,7 @@ class TestPropertyMap(unittest.TestCase):
 class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
 
     """
-    Test that Interpolate reports erros in the interpolation string
+    Test that Interpolate reports errors in the interpolation string
     at configure time.
     """
 
@@ -1235,7 +1236,7 @@ class TestProperty(unittest.TestCase):
         return d
 
 
-class TestRenderalbeAdapters(unittest.TestCase):
+class TestRenderableAdapters(unittest.TestCase):
 
     """
     Tests for list, tuple and dict renderers.
@@ -1458,3 +1459,58 @@ class Compare(unittest.TestCase):
         self.failUnlessEqual(
             _SourceStampDict('binary'),
             _SourceStampDict('binary'))
+
+
+class TestTransform(unittest.TestCase, ConfigErrorsMixin):
+
+    def setUp(self):
+        self.props = Properties(propname='propvalue')
+
+    def test_invalid_first_arg(self):
+        self.assertRaisesConfigError("function given to Transform neither callable nor renderable",
+                                     lambda: Transform(None))
+
+    def test_argless(self):
+        t = Transform(lambda: 'abc')
+        d = self.props.render(t)
+        d.addCallback(self.failUnlessEqual, 'abc')
+        return d
+
+    def test_argless_renderable(self):
+        @renderer
+        def function(iprops):
+            return lambda: iprops.getProperty('propname')
+
+        t = Transform(function)
+        d = self.props.render(t)
+        d.addCallback(self.failUnlessEqual, 'propvalue')
+        return d
+
+    def test_args(self):
+        t = Transform(lambda x, y: x + '|' + y,
+                      'abc', Property('propname'))
+        d = self.props.render(t)
+        d.addCallback(self.failUnlessEqual, 'abc|propvalue')
+        return d
+
+    def test_kwargs(self):
+        t = Transform(lambda x, y: x + '|' + y,
+                      x='abc', y=Property('propname'))
+        d = self.props.render(t)
+        d.addCallback(self.failUnlessEqual, 'abc|propvalue')
+        return d
+
+    def test_deferred(self):
+        function = DeferredRenderable()
+        arg = DeferredRenderable()
+        kwarg = DeferredRenderable()
+
+        t = Transform(function, arg, y=kwarg)
+        d = self.props.render(t)
+        d.addCallback(self.failUnlessEqual, 'abc|def')
+
+        function.callback(lambda x, y: x + '|' + y)
+        arg.callback('abc')
+        kwarg.callback('def')
+
+        return d

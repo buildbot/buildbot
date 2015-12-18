@@ -3,7 +3,7 @@ class App extends App
         'ngAnimate'
         'ui.bootstrap'
         'ui.router'
-        'restangular'
         'RecursionHelper'
         'guanlecoja.ui'
+        'bbData'
     ]

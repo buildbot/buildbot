@@ -17,8 +17,8 @@ from future.utils import iteritems
 import mock
 import re
 
-from buildbot.status import words
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
+from buildbot.reporters import words
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import datetime2epoch
@@ -74,6 +74,8 @@ class TestContactChannel(unittest.TestCase):
         self.bot.master.botmaster.cancelCleanShutdown = cancelCleanShutdown
 
         self.contact = words.Contact(self.bot, user='me', channel='#buildbot')
+        self.contact.setServiceParent(self.master)
+        return self.master.startService()
 
     def patch_send(self):
         self.sent = []
@@ -477,7 +479,7 @@ class TestContactChannel(unittest.TestCase):
                                         complete_at=datetime2epoch(build['complete_at']),
                                         state_string=u'',
                                         results=results,
-            ))
+                                    ))
 
     @defer.inlineCallbacks
     def test_command_stop(self):

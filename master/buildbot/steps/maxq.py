@@ -15,8 +15,8 @@
 
 from buildbot import config
 from buildbot.process import buildstep
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.steps.shell import ShellCommand
 
 

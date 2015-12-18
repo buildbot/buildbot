@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.3.1"
+ANGULAR_TAG = "~1.4.6"
 gulp = require("gulp")
 path = require("path")
 shell = require("gulp-shell")
@@ -30,14 +30,11 @@ config =
         # JavaScript libraries (order matters)
         deps:
             "guanlecoja-ui":
-                version: '~1.4.1'
+                version: '~1.5.0'
                 files: ['vendors.js', 'scripts.js']
             moment:
                 version: "~2.6.0"
                 files: 'moment.js'
-            restangular:
-                version: "~1.4.0"
-                files: 'dist/restangular.js'
             d3:  # d3 is loaded on demand via d3Service
                 version: "~3.4.11"
                 files: []
@@ -47,12 +44,10 @@ config =
             "bootstrap":
                 version: "~3.1.1"
                 files: []
-            # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
-            # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
-            # reimplement reconnecting ourselves
-            "reconnectingWebsocket":
-                version: "master"
-                files: ["reconnecting-websocket.js"]
+            'buildbot-data':
+                version: '~1.1.0'
+                files: 'dist/buildbot-data.js'
+
         testdeps:
             "angular-mocks":
                 version: ANGULAR_TAG
@@ -85,7 +80,7 @@ gulp.task 'proxy', ['processindex'], ->
         console.log "[Proxy] #{req.method} #{req.url}"
 
     server = http.createServer (req, res) ->
-        if req.url.match /^\/(api|sse)/
+        if req.url.match /^\/(api|sse|avatar)/
             proxy.web req, res, {target: 'http://' + argv.host}
         else
             filepath = config.dir.build + req.url.split('?')[0]

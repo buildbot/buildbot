@@ -5,6 +5,27 @@
           th Builder Name
           th Builds
           th
+            span(ng-init="help=false", ng-click="help=!help")
+                i.fa.fa-question-circle(style="position:relative")
+                    .popover.bottom.anim-popover(ng-if="help",
+                       style="display:block;min-width:600px;left:-300px;top:30px")
+                        h5.popover-title
+                            | Tags filtering
+                        .popover-content
+                            p
+                              b
+                                  pre +{tag}
+                              | all tags with '+' must be present in the builder tags
+                            p
+                              b
+                                  pre -{tag}
+                              | no tags with '-' must be present in the builder tags
+                            p
+                              b
+                                  pre {tag}
+                              | at least one of the filtered tag should be present
+                            p url bar is updated with you filter configuration, so you can bookmark your filters!
+                        .arrow
             span(ng-show="tags_filter.length==0") Tags
             span(ng-show="tags_filter.length < 5", ng-repeat="tag in tags_filter")
                 span.label.label-success(ng-click="toggleTag(tag)")
@@ -21,7 +42,7 @@
             a(ui-sref='builder({builder: builder.builderid})')
               | {{ builder.name }}
           td
-            span(ng-repeat="build in builder.builds")
+            span(ng-repeat="build in builder.builds | orderBy : '-number' |limitTo: '15' ")
                 a(ui-sref='build({builder: builder.builderid, build: build.number})')
                     span.badge-status(ng-class="results2class(build, 'pulse')")
                       | {{ build.number }}
@@ -34,7 +55,7 @@
             span(data-ng-repeat="slave in builder.buildslaves")
                 a(ui-sref='slave({slave: slave.slaveid})')
                     span.badge-status(title="{{slave.name}}" ng-class="connected2class(slave, 'pulse')")
-                        .badge-inactive {{slave.id}}
+                        .badge-inactive {{slave.buildslaveid}}
                         .badge-active {{slave.name}}
   .row
       .form-group

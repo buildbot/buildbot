@@ -24,6 +24,7 @@ include buildbot/scripts/sample.cfg
 include buildbot/scripts/buildbot_tac.tmpl
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
+include buildbot/reporters/templates/*.txt
 
 include buildbot/db/migrate/README buildbot/db/migrate/migrate.cfg
 

@@ -176,7 +176,7 @@ class GitHubBuildBot(resource.Resource):
         changes = None
         refname = payload['ref']
 
-        m = re.match(r"^refs\/(heads|tags)\/(.+)$", refname)
+        m = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not m:
             logging.info(
                 "Ignoring refname `%s': Not a branch or a tag", refname)

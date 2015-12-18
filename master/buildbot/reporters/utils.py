@@ -15,7 +15,7 @@
 
 from UserList import UserList
 from buildbot.data import resultspec
-from buildbot.status.results import RETRY
+from buildbot.process.results import RETRY
 from buildbot.util import flatten
 from twisted.internet import defer
 

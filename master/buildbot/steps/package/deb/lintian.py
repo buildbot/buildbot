@@ -19,9 +19,9 @@ Steps and objects related to lintian
 
 from buildbot import config
 from buildbot.process import buildstep
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.steps.package import util as pkgutil
 from buildbot.steps.shell import ShellCommand
 

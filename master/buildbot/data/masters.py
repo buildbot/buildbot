@@ -16,7 +16,7 @@
 from buildbot.data import base
 from buildbot.data import resultspec
 from buildbot.data import types
-from buildbot.status.results import RETRY
+from buildbot.process.results import RETRY
 from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -78,10 +78,6 @@ class MastersEndpoint(base.Endpoint):
             else:
                 masterlist = []
         defer.returnValue([_db2data(m) for m in masterlist])
-
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('masters', None, None))
 
 
 class Master(base.ResourceType):

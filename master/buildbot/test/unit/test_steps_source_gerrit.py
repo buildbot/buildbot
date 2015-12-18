@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
 from buildbot.steps.source import gerrit
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell

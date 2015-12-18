@@ -97,9 +97,9 @@ class MasterConfig(util.ComparableMixin):
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
-            revision=re.compile(r'^[ \w\.\-\/]*$'),
-            property_name=re.compile(r'^[\w\.\-\/\~:]*$'),
-            property_value=re.compile(r'^[\w\.\-\/\~:]*$'),
+            revision=re.compile(r'^[ \w\.\-/]*$'),
+            property_name=re.compile(r'^[\w\.\-/~:]*$'),
+            property_value=re.compile(r'^[\w\.\-/~:]*$'),
         )
         self.db = dict(
             db_url=DEFAULT_DB_URL,
@@ -194,7 +194,7 @@ class MasterConfig(util.ComparableMixin):
         sys.path.append(basedir)
         try:
             try:
-                exec f in localDict
+                exec(f, localDict)
             except ConfigErrors as e:
                 for err in e.errors:
                     error(err)
@@ -586,9 +586,10 @@ class MasterConfig(util.ComparableMixin):
             error(msg)
             return
 
+        msg = lambda s: "c['status'] contains an object that is not a status receiver (type %r)" % type(s)
         for s in status:
             if not interfaces.IStatusReceiver.providedBy(s):
-                error(msg)
+                error(msg(s))
                 return
 
         self.status = status

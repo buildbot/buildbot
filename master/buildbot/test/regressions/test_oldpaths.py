@@ -109,7 +109,7 @@ class OldImportPaths(unittest.TestCase):
         assert SubunitShellCommand
 
     def test_status_builder_results(self):
-        # these symbols are now in buildbot.status.results, but lots of user
+        # these symbols are now in buildbot.process.results, but lots of user
         # code references them here:
         from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
         from buildbot.status.builder import EXCEPTION, RETRY, Results

@@ -1,5 +1,5 @@
 class Masters extends Controller
     constructor: ($scope, dataService) ->
-        opened = dataService.open()
-        opened.closeOnDestroy($scope)
-        @list = opened.getMasters().getArray()
+        data = dataService.open()
+        data.closeOnDestroy($scope)
+        @list = data.getMasters().getArray()

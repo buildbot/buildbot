@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
-
 from buildbot.data import base
 from buildbot.data import resultspec
 from buildbot.test.fake import fakemaster
@@ -90,16 +88,6 @@ class EndpointMixin(interfaces.InterfaceTests):
             return rv
         return d
 
-    @defer.inlineCallbacks
-    def callStartConsuming(self, options, kwargs, expected_filter=None):
-        self.assertIn(set(kwargs), self.pathArgs)
-        cb = mock.Mock()
-        qref = yield self.ep.startConsuming(cb, options, kwargs)
-        self.assertTrue(hasattr(qref, 'stopConsuming'))
-        self.assertIdentical(self.mq.qrefs[0], qref)
-        self.assertIdentical(qref.callback, cb)
-        self.assertEqual(qref.filter, expected_filter)
-
     def callControl(self, action, args, path):
         self.assertIsInstance(path, tuple)
         endpoint, kwargs = self.matcher[path]
@@ -113,11 +101,6 @@ class EndpointMixin(interfaces.InterfaceTests):
     def test_get_spec(self):
         @self.assertArgSpecMatches(self.ep.get)
         def get(self, resultSpec, kwargs):
-            pass
-
-    def test_startConsuming_spec(self):
-        @self.assertArgSpecMatches(self.ep.startConsuming)
-        def startConsuming(self, callback, options, kwargs):
             pass
 
     def test_control_spec(self):

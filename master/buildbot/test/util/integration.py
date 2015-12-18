@@ -26,8 +26,8 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.master import BuildMaster
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import statusToString
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import statusToString
 from buildbot.test.util import dirs
 from buildslave.bot import BuildSlave
 

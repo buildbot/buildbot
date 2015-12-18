@@ -49,7 +49,7 @@ Rewriting ``start``
 +++++++++++++++++++
 
 If your custom buildstep implements the ``start`` method, then rename that method to ``run`` and set it up to return a Deferred, either explicitly or via ``inlineCallbacks``.
-The value of the Deferred should be the result of the step (one of the codes in :py:mod:`buildbot.status.results`), or a Twisted failure instance to complete the step as EXCEPTION.
+The value of the Deferred should be the result of the step (one of the codes in :py:mod:`buildbot.process.results`), or a Twisted failure instance to complete the step as EXCEPTION.
 The new ``run`` method should *not* call ``self.finished`` or ``self.failed``, instead signalling the same via Deferred.
 
 For example, the following old-style ``start`` method ::

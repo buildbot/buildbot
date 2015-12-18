@@ -13,14 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+from future.moves.urllib.parse import quote as urlquote
+from future.moves.urllib.parse import unquote as urlunquote
+from future.moves.urllib.parse import urlparse
+from future.moves.urllib.parse import urlunparse
+
 import re
-import urllib
 import xml.dom.minidom
 import xml.parsers.expat
 
 from string import lower
-from urlparse import urlparse
-from urlparse import urlunparse
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -411,13 +413,13 @@ class SVN(Source):
     @staticmethod
     def svnUriCanonicalize(uri):
         collapse = re.compile(r'([^/]+/\.\./?|/\./|//|/\.$|/\.\.$|^/\.\.)')
-        server_authority = re.compile(r'^(?:([^\@]+)\@)?([^\:]+)(?:\:(.+))?$')
+        server_authority = re.compile(r'^(?:([^@]+)@)?([^:]+)(?::(.+))?$')
         default_port = {'http': '80',
                         'https': '443',
                         'svn': '3690'}
 
         relative_schemes = ['http', 'https', 'svn']
-        quote = lambda uri: urllib.quote(uri, "!$&'()*+,-./:=@_~")
+        quote = lambda uri: urlquote(uri, "!$&'()*+,-./:=@_~")
 
         if len(uri) == 0 or uri == '/':
             return uri
@@ -445,7 +447,7 @@ class SVN(Source):
                     break
                 last_path = path
 
-        path = quote(urllib.unquote(path))
+        path = quote(urlunquote(path))
         canonical_uri = urlunparse((scheme, authority, path, parameters, query, fragment))
         if canonical_uri == '/':
             return canonical_uri

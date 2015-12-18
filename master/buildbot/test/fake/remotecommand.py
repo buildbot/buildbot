@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.test.fake import logfile
 from twisted.internet import defer
 from twisted.python import failure

@@ -18,8 +18,8 @@ from future.utils import iteritems
 from buildbot import util
 from buildbot.buildslave.protocols import base
 from buildbot.process import metrics
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.internet import error

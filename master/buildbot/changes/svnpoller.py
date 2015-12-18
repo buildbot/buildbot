@@ -16,6 +16,8 @@
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
 
+from future.moves.urllib.parse import quote_plus as urlquote_plus
+
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -24,7 +26,6 @@ from buildbot import util
 from buildbot.changes import base
 
 import os
-import urllib
 import xml.dom.minidom
 
 # these split_file_* functions are available for use as values to the
@@ -328,7 +329,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             revlink = u''
 
             if self.revlinktmpl and revision:
-                revlink = self.revlinktmpl % urllib.quote_plus(revision)
+                revlink = self.revlinktmpl % urlquote_plus(revision)
                 revlink = unicode(revlink)
 
             log.msg("Adding change revision %s" % (revision,))

@@ -25,15 +25,15 @@ from zope.interface import implements
 from buildbot import interfaces
 from buildbot.process import metrics
 from buildbot.process import properties
-from buildbot.status.builder import Results
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import RETRY
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
-from buildbot.status.results import computeResultAndTermination
-from buildbot.status.results import worst_status
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import Results
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
+from buildbot.process.results import computeResultAndTermination
+from buildbot.process.results import worst_status
 from buildbot.util.eventual import eventually
 
 
@@ -90,6 +90,7 @@ class Build(properties.PropertiesMixin):
 
         self._acquiringLock = None
         self.results = SUCCESS   # overall results, may downgrade after each step
+        self.properties = properties.Properties()
 
     def setBuilder(self, builder):
         """
@@ -178,8 +179,7 @@ class Build(properties.PropertiesMixin):
         props.build = self
 
         # start with global properties from the configuration
-        master = self.builder.master
-        props.updateFromProperties(master.config.properties)
+        props.updateFromProperties(self.master.config.properties)
 
         # from the SourceStamps, which have properties via Change
         for change in self.allChanges():
@@ -284,7 +284,8 @@ class Build(properties.PropertiesMixin):
             self.results = EXCEPTION
             self.deferred = None
             return
-
+        # flush properties in the beginning of the build
+        yield self._flushProperties(None)
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'starting')
         self.build_status.buildStarted(self)
@@ -427,12 +428,7 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def _flushProperties(self, results):
         # `results` is just passed on to the next callback
-        props = interfaces.IProperties(self)
-
-        properties = props.getProperties().asList()
-        for name, value, source in properties:
-            yield self.master.data.updates.setBuildProperty(
-                self.buildid, name, value, source)
+        yield self.master.data.updates.setBuildProperties(self.buildid, self)
 
         defer.returnValue(results)
 
@@ -538,7 +534,7 @@ class Build(properties.PropertiesMixin):
         state.
 
         It takes two arguments which describe the overall build status:
-        text, results. 'results' is one of the possible results (see buildbot.status.results).
+        text, results. 'results' is one of the possible results (see buildbot.process.results).
 
         If 'results' is SUCCESS or WARNINGS, we will permit any dependant
         builds to start. If it is 'FAILURE', those builds will be
@@ -586,5 +582,5 @@ class Build(properties.PropertiesMixin):
     # stopBuild is defined earlier
 
 components.registerAdapter(
-    lambda build: interfaces.IProperties(build.build_status),
+    lambda build: interfaces.IProperties(build.properties),
     Build, interfaces.IProperties)
