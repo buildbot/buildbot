@@ -24,6 +24,7 @@ from buildbot.db import base
 from buildbot.util import json
 from buildbot.util import epoch2datetime, datetime2epoch
 from buildbot.status.results import RESUME, CANCELED
+from twisted.python.failure import Failure
 
 
 class AlreadyClaimedError(Exception):
@@ -861,6 +862,44 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             except:
                 transaction.rollback()
                 log.msg("build request already started; cannot cancel")
+                return
+
+            transaction.commit()
+
+        return self.db.pool.do(thd)
+
+    def cancelBuildRequestsByBuildNumber(self, number, buildername):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            transaction = conn.begin()
+            try:
+
+                stmt = sa.select(columns=[buildrequests_tbl.c.id],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.number == number))) \
+                    .where(buildrequests_tbl.c.buildername == buildername)
+
+                res = conn.execute(stmt)
+                rows = res.fetchall()
+                brids = []
+                for row in rows:
+                    if row.id not in brids:
+                        brids.append(row.id)
+                res.close()
+
+                if brids:
+                    q = buildrequests_tbl.update()\
+                        .where(or_(buildrequests_tbl.c.id.in_(brids), buildrequests_tbl.c.mergebrid.in_(brids))) \
+                        .values(complete=1).values(results=CANCELED)
+
+                    conn.execute(q)
+            except Exception:
+                transaction.rollback()
+                log.msg(Failure(), "Could not cancel build requests %s" % brids)
+
                 return
 
             transaction.commit()

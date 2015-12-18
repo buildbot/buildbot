@@ -681,6 +681,13 @@ class BuilderStatus(styles.Versioned):
 
         defer.returnValue(build)
 
+    @defer.inlineCallbacks
+    def cancelBuildRequestsOnResume(self, number):
+        build = yield self.cancelBuildOnResume(number)
+        # the builder cancel related requests in the db
+        if build:
+            yield self.master.db.buildrequests.cancelBuildRequestsByBuildNumber(number=number, buildername=self.name)
+
     def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and

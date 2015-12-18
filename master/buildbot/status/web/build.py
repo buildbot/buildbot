@@ -98,6 +98,35 @@ class ForceBuildActionResource(ActionResource):
             url = path_to_builder(req, self.builder), msg
         defer.returnValue(url)
 
+class CancelBuildActionResource(ActionResource):
+    def __init__(self, build_status):
+        self.build_status = build_status
+        self.action = "stopBuild"
+
+    @defer.inlineCallbacks
+    def performAction(self, req):
+        authz = self.getAuthz(req)
+        res = yield authz.actionAllowed(self.action, req, self.build_status)
+
+        if not res:
+            defer.returnValue(path_to_authzfail(req))
+            return
+
+        b = self.build_status
+        log.msg("web cancel of build %s:%s" % \
+                    (b.getBuilder().getName(), b.getNumber()))
+        name = authz.getUsernameFull(req)
+        comments = req.args.get("comments", ["<no reason specified>"])[0]
+        comments.decode(getRequestCharset(req))
+        # html-quote both the username and comments, just to be safe
+        reason = ("The web-page 'Cancel Build' button was pressed by "
+                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
+
+        if self.build_status.getResults() == RESUME:
+            yield self.build_status.builder.cancelBuildRequestsOnResume(self.build_status.getNumber())
+
+        defer.returnValue(path_to_build(req, self.build_status))
+
 
 class StopBuildActionResource(ActionResource):
 
@@ -281,6 +310,8 @@ class StatusResourceBuild(HtmlResource):
             if b.getTestResults():
                 cxt['tests_link'] = req.childLink("tests")
 
+        cxt['resuming_build'] = b.getResults() == RESUME
+
         ssList = b.getSourceStamps()
         sourcestamps = cxt['sourcestamps'] = ssList
 
@@ -455,9 +486,14 @@ class StatusResourceBuild(HtmlResource):
         return ForceBuildActionResource(self.build_status,
                                         self.build_status.getBuilder())
 
+    def cancelBuild(self, req):
+        return CancelBuildActionResource(self.build_status)
+
     def getChild(self, path, req):
         if path == "stop":
             return self.stop(req)
+        if path == "cancel":
+            return self.cancelBuild(req)
         if path == "stopchain":
             return self.stopchain(req)
         if path == "rebuild":
