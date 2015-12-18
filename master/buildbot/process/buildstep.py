@@ -804,9 +804,9 @@ class BuildStep(object, properties.PropertiesMixin):
         loog.finish()
         self._connectPendingLogObservers()
 
-    def addHTMLLog(self, name, html, type):
+    def addHTMLLog(self, name, html, content_type=None):
         log.msg("addHTMLLog(%s)" % name)
-        self.step_status.addHTMLLog(name, html, type)
+        self.step_status.addHTMLLog(name, html, content_type=content_type)
         self._connectPendingLogObservers()
 
     def addLogObserver(self, logname, observer):

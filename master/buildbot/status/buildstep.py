@@ -248,11 +248,11 @@ class BuildStepStatus(styles.Versioned):
         d.addCallback(self.logFinished)
         return log
 
-    def addHTMLLog(self, name, html, type):
+    def addHTMLLog(self, name, html, content_type=None):
         assert self.started # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = HTMLLogFile(self, name, logfilename, html)
-        log.set_content_type(type)
+        log.set_content_type(content_type)
         self.logs.append(log)
         for w in self.watchers:
             w.logStarted(self.build, self, log)
