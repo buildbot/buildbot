@@ -23,13 +23,6 @@ class JSONTestResource(HtmlResource):
         self.log = log
         self.step_status = step_status
 
-    def suite_command_line(self, suite):
-        result = 'perl ./Tools/UnifiedTestRunner/test.pl --suite=' + suite["name"]
-        if suite["minimalCommandLine"]:
-            for arg in suite["minimalCommandLine"]:
-                result += " " + arg
-        return result
-
     def content(self, req, cxt):
         s = self.step_status
         b = s.getBuild()

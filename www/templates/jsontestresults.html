@@ -82,8 +82,8 @@
                         locally</a>
 
                     <div id="suiteCommand" class="command">
-                        <input class="command-text" type="text" value="{{ suite_command_line(suite) }}"
-                               onclick="this.select();" readonly/>
+                        //TODO: here should be inserted command from json
+                        <input class="command-text" type="text" value="" onclick="this.select();" readonly/>
                     </div>
                 </div>
 
@@ -145,9 +145,8 @@
                                         to run locally</a>
 
                                     <div id="testCommand{{ i }}" class="command">
-                                        <input class="command-text" type="text"
-                                               value="{{ suite_command_line(suite) + " --testfilter=" + test.name }}"
-                                               onclick="this.select();" readonly/>
+                                        //TODO: here should be inserted command from json
+                                        <input class="command-text" type="text" value="" onclick="this.select();" readonly/>
                                     </div>
 
                                     {% if test.message %}
