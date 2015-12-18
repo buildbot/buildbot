@@ -188,6 +188,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         else:
             return reduce(summary_fn, step_stats_list, initial_value)
 
+    def isResuming(self):
+        return self.getResults() == RESUME and self.started is None
+
     def isFinished(self):
         return (self.finished is not None)
 

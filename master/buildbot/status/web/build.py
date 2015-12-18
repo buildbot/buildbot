@@ -310,8 +310,6 @@ class StatusResourceBuild(HtmlResource):
             if b.getTestResults():
                 cxt['tests_link'] = req.childLink("tests")
 
-        cxt['resuming_build'] = b.getResults() == RESUME
-
         ssList = b.getSourceStamps()
         sourcestamps = cxt['sourcestamps'] = ssList
 
