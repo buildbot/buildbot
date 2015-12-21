@@ -62,7 +62,7 @@ def getChanges(request, options=None):
         author = firstOrNothing(args.get('author'))
         if not author:
             author = firstOrNothing(args.get('who'))
-        comments = firstOrNothing(args.get('comments'))
+        comments = firstOrNothing(args.get('comments')).decode('utf-8')
         isdir = firstOrNothing(args.get('isdir', 0))
         branch = firstOrNothing(args.get('branch'))
         category = firstOrNothing(args.get('category'))

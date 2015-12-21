@@ -106,16 +106,15 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 'supply both or neither of identifier, secret_identifier')
             if aws_id_file_path is None:
                 home = os.environ['HOME']
-                aws_id_file_path = os.path.join(home, '.ec2', 'aws_id')
-            if not os.path.exists(aws_id_file_path):
-                raise ValueError(
-                    "Please supply your AWS access key identifier and secret "
-                    "access key identifier either when instantiating this %s "
-                    "or in the %s file (on two lines).\n" %
-                    (self.__class__.__name__, aws_id_file_path))
-            with open(aws_id_file_path, 'r') as aws_file:
-                identifier = aws_file.readline().strip()
-                secret_identifier = aws_file.readline().strip()
+                default_path = os.path.join(home, '.ec2', 'aws_id')
+                if os.path.exists(default_path):
+                    aws_id_file_path = default_path
+            if aws_id_file_path:
+                log.msg('WARNING: EC2LatentBuildSlave is using deprecated '
+                        'aws_id file')
+                with open(aws_id_file_path, 'r') as aws_file:
+                    identifier = aws_file.readline().strip()
+                    secret_identifier = aws_file.readline().strip()
         else:
             assert aws_id_file_path is None, \
                 'if you supply the identifier and secret_identifier, ' \
@@ -160,6 +159,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             if 'InvalidKeyPair.NotFound' not in e.body:
                 if 'AuthFailure' in e.body:
                     print ('POSSIBLE CAUSES OF ERROR:\n'
+                           '  Did you supply your AWS credentials?\n'
                            '  Did you sign up for EC2?\n'
                            '  Did you put a credit card number in your AWS '
                            'account?\n'

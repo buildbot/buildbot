@@ -18,13 +18,17 @@ import pprint
 import re
 import types
 
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import FAILURE
-from buildbot.process.buildstep import SUCCESS
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
+from twisted.internet import defer
+
+from buildbot import config
+from buildbot import interfaces
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
 
 
 class MasterShellCommand(BuildStep):
@@ -46,24 +50,11 @@ class MasterShellCommand(BuildStep):
     flunkOnFailure = True
 
     def __init__(self, command,
-                 description=None, descriptionDone=None, descriptionSuffix=None,
                  env=None, path=None, usePTY=0, interruptSignal="KILL",
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
 
         self.command = command
-        if description:
-            self.description = description
-        if isinstance(self.description, str):
-            self.description = [self.description]
-        if descriptionDone:
-            self.descriptionDone = descriptionDone
-        if isinstance(self.descriptionDone, str):
-            self.descriptionDone = [self.descriptionDone]
-        if descriptionSuffix:
-            self.descriptionSuffix = descriptionSuffix
-        if isinstance(self.descriptionSuffix, str):
-            self.descriptionSuffix = [self.descriptionSuffix]
         self.env = env
         self.path = path
         self.usePTY = usePTY
@@ -242,3 +233,134 @@ class LogRenderable(BuildStep):
         self.addCompleteLog(name='Output', text=content)
         self.step_status.setText(self.describe(done=True))
         self.finished(SUCCESS)
+
+
+class _HandleRelatedBuilds(BuildStep):
+    def __init__(self, builderNames=None, isRelevant=None, preProcess=None,
+                 **kwargs):
+        BuildStep.__init__(self, **kwargs)
+
+        self._builder_names = builderNames
+
+        if isRelevant is None:
+            config.error('You must provide a function to check '
+                         'if a build is relevant')
+        if not callable(isRelevant):
+            config.error('isRelevant must be a callable')
+
+        if preProcess is None:
+            preProcess = lambda x: x
+
+        if not callable(preProcess):
+            config.error('preProcess must be callable')
+
+        self._is_relevant = isRelevant
+        self._pre_process = preProcess
+
+    def get_candidates(self, builder_names):
+        _hush_pyflakes = [builder_names]
+        del _hush_pyflakes
+        raise NotImplementedError
+
+    def handle_candidate(self, control):
+        _hush_pyflakes = [control]
+        del _hush_pyflakes
+        raise NotImplementedError
+
+    @defer.inlineCallbacks
+    def run(self):
+        all_names = self.master.botmaster.builderNames[:]
+
+        if self._builder_names is None:
+            builder_names = all_names
+        else:
+            builder_names = [name for name in self._builder_names in all_names]
+
+        ours = self._pre_process(self.build.sources)
+
+        candidates = yield self.get_candidates(builder_names)
+
+        for control, theirs in candidates:
+            if self._is_relevant(ours, theirs):
+                self.handle_candidate(control)
+
+        # This step can never fail
+        defer.returnValue(SUCCESS)
+
+
+class CancelRelatedBuilds(_HandleRelatedBuilds):
+    name = 'CancelRelatedBuilds'
+    description = ['Checking']
+    descriptionDone = ['Checked']
+
+    def __init__(self, builderNames=None, isRelevant=None, preProcess=None,
+                 **kwargs):
+        _HandleRelatedBuilds.__init__(self, builderNames, isRelevant,
+                                      preProcess)
+
+    @defer.inlineCallbacks
+    def get_candidates(self, builder_names):
+        result = []
+
+        master_control = interfaces.IControl(self.master)
+
+        for name in builder_names:
+            builder_control = master_control.getBuilder(name)
+
+            pending = yield builder_control.getPendingBuildRequestControls()
+
+            # How can it even return None?
+            if pending is None:
+                continue
+
+            for buildrequest in pending:
+                result.append((buildrequest,
+                               [buildrequest.original_request.source]))
+
+        defer.returnValue(result)
+
+    def handle_candidate(self, control):
+        control.cancel()
+
+
+class StopRelatedBuilds(_HandleRelatedBuilds):
+    name = 'StopRelatedBuilds'
+    description = ['Checking']
+    descriptionDone = ['Checked']
+
+    def __init__(self, builderNames=None, isRelevant=None, preProcess=None,
+                 reason=None, **kwargs):
+        _HandleRelatedBuilds.__init__(self, builderNames, isRelevant,
+                                      preProcess)
+
+        if reason is None:
+            reason = 'Stopped by StopRelatedBuilds'
+
+        self._reason = reason
+
+    @defer.inlineCallbacks
+    def get_candidates(self, builder_names):
+        result = []
+
+        master_status = self.master.status
+        master_control = interfaces.IControl(self.master)
+
+        for name in builder_names:
+            builder_status = master_status.getBuilder(name)
+
+            state, current_builds = builder_status.getState()
+
+            if not current_builds:
+                continue
+
+            builder_control = master_control.getBuilder(name)
+
+            for build in current_builds:
+                source_stamps = yield build.getSourceStamps()
+                result.append((builder_control.getBuild(build.getNumber()),
+                               source_stamps))
+
+        defer.returnValue(result)
+
+    def handle_candidate(self, control):
+        control.stopBuild(self._reason)

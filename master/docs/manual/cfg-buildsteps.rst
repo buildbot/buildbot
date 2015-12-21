@@ -144,8 +144,6 @@ Arguments common to all :class:`BuildStep` subclasses:
 
 ``locks``
     a list of ``Locks`` (instances of :class:`buildbot.locks.SlaveLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
-    Alternatively this could be a renderable that returns this list during build execution.
-    This lets you defer picking the locks to acquire until the build step is about to start running.
     The ``Locks`` will be released when the step is complete.
     Note that this is a list of actual :class:`Lock` instances, not names.
     Also note that all Locks must have unique names.
@@ -2261,7 +2259,7 @@ To run trial tests manually, you run the :command:`trial` executable and tell it
 The most common way of doing this is with a module name.
 For petmail, this might look like :command:`trial petmail.test`, which would locate all the :file:`test_*.py` files under :file:`petmail/test/`, running every test case it could find in them.
 Unlike the ``unittest.py`` that comes with Python, it is not necessary to run the :file:`test_foo.py` as a script; you always let trial do the importing and running.
-The step's ``tests``` parameter controls which tests trial will run: it can be a string or a list of strings.
+The step's ``tests`` parameter controls which tests trial will run: it can be a string or a list of strings.
 
 To find the test cases, the Python search path must allow something like ``import petmail.test`` to work.
 For packages that don't use a separate top-level :file:`lib` directory, ``PYTHONPATH=.`` will work, and will use the test cases (and the code they are testing) in-place.
@@ -2575,6 +2573,163 @@ LogRenderable
 
 This build step takes content which can be renderable and logs it in a pretty-printed format.
 It can be useful for debugging properties during a build.
+
+.. _handle-related-builds:
+
+Handling Related Builds
+-----------------------
+
+There are situations when you want to cancel and/or stop related builds (for example, when the Buildbot is configured to build every new change, however build results for an older change might not be relevant any more).
+To handle these situations Buildbot offers two build steps (which are executed on master):
+
+* CancelRelatedBuilds
+* StopRelatedBuilds
+
+and specific implementation for Gerrit
+
+* CancelGerritRelatedBuilds
+* StopGerritRelatedBuilds
+
+These steps work in a pretty much same way: they look at possible candidates' source stamps and decide whether the step is relevant based on own source stamp.
+If the source stamps are somehow relevant (decided by a function provided as a parameter), then the corresponding build request will be cancelled, or the corresponding build will be stopped.
+
+.. bb:step:: CancelRelatedBuilds
+
+CancelRelatedBuilds
++++++++++++++++++++
+
+.. py:class:: buildbot.steps.master.CancelRelatedBuilds
+
+Beside `common parameters <Buildstep-Common-Parameters>`_ `CancelRelatedBuilds` accepts following parameters:
+
+``builderNames``
+    This is the set of builders which this step will check for possible candidates.
+    Possible values:
+
+    ``None``
+        check all builders known to the system
+
+    list of strings
+        check only these builders
+
+``preProcess``
+    This is an optional parameter to specify a function that would preprocess own build's source stamp.
+    This might be useful if the computations are extensive and there could be a lot of possible candidates to check.
+    Default: just use own build's source stamp.
+
+    .. code-block:: python
+
+        def preProcess(source_stamps):
+            """
+            :returns: what is passed as the first argument to `isRelevant`
+            """
+
+``isRelevant``
+    This is a mandatory parameter to specify a function that would take two parameters: own source stamps (possibly pre-processed) and the source stamps of the candidate build request.
+    If this function returns `True`, the candidate will be cancelled.
+
+    .. code-block:: python
+
+        def isRelevant(own_source_stamps, their_source_stamps):
+            """
+            :type own_source_stamps: either list(SourceStamp) or what is returned by `preProcess`
+            :type their_source_stamps: list(SourceStamp)
+            """
+
+    .. note::
+
+       It is possible that by the time the cancel request is sent, the corresponding build request is already started to build.
+
+.. bb:step:: StopRelatedBuilds
+
+StopRelatedBuilds
++++++++++++++++++
+
+.. py:class:: buildbot.steps.master.StopRelatedBuilds
+
+Beside `common parameters <Buildstep-Common-Parameters>`_ `StopRelatedBuilds` accepts following parameters:
+
+``builderNames``
+    This is the set of builders which this step will check for possible candidates.
+    Possible values:
+
+    ``None``
+        check all builders known to the system
+
+    list of strings
+        check only these builders
+
+``preProcess``
+    This is an optional parameter to specify a function that would preprocess own build's source stamp.
+    This might be useful if the computations are extensive and there could be a lot of possible candidates to check.
+    Default: just use own build's source stamp.
+
+    .. code-block:: python
+
+        def preProcess(source_stamps):
+            """
+            :returns: what is passed as the first argument to `isRelevant`
+            """
+
+``isRelevant``
+    This is a mandatory parameter to specify a function that would take two parameters: own source stamp (possibly pre-processed) and the source stamp of the candidate build.
+    If this function returns `True`, the candidate will be stopped.
+
+    .. code-block:: python
+
+        def isRelevant(own_source_stamps, their_source_stamps):
+            """
+            :type own_source_stamps: either list(SourceStamp) or what is returned by `preProcess`
+            :type their_source_stamps: list(SourceStamp)
+            """
+
+    .. note::
+
+       It is possible that by the time the stop request is sent, the corresponding build request is already finished.
+
+``reason`` (default: `Stopped by StopRelatedBuilds`)
+    This is an optional parameter to specify a string that will be used as a reason for stopping candidates.
+
+.. bb:step:: CancelGerritRelatedBuilds
+
+CancelGerritRelatedBuilds
++++++++++++++++++++++++++
+
+This is a convenience step that provides `preProcess` and `isRelevant` parameters to constructor of `CancelRelatedBuilds`.
+It's a rough equivalent of:
+
+.. code-block:: python
+
+    from buildbot.plugins import steps, util
+
+    class CancelGerritRelatedBuilds(CancelRelatedBuilds):
+        def __init__(self, **kwargs):
+            CancelRelatedBuilds.__init__(
+                self,
+                preProcess=util.gerrit.pre_process,
+                isRelevant=util.gerrit.is_relevant,
+                **kwargs)
+
+.. bb:step:: StopGerritRelatedBuilds
+
+StopGerritRelatedBuilds
++++++++++++++++++++++++
+
+This is a convenience step that provides `preProcess`, `isRelevant` and `reason` parameters to constructor of `StopRelatedBuilds`.
+It's a rough equivalent of:
+
+.. code-block:: python
+
+    from buildbot.plugins import steps, util
+
+    class StopGerritRelatedBuilds(StopRelatedBuilds):
+        def __init__(self, **kwargs):
+            StopRelatedBuilds.__init__(
+                self,
+                preProcess=util.gerrit.pre_process,
+                isRelevant=util.gerrit.is_relevant,
+                reason='A new patch set for the same change is submitted',
+                **kwargs)
 
 .. index:: Properties; from steps
 

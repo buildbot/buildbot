@@ -62,8 +62,12 @@ There are several common arguments for schedulers, although not all are availabl
 
 ``codebases``
     When the scheduler processes data from more than 1 repository at the same time then a corresponding codebase definition should be passed for each repository.
-    A codebase definition is a dictionary with one or more of the following keys: repository, branch, revision.
-    The codebase definitions have also to be passed as dictionary.
+
+    This parameter can be specified either as a list of strings (simplest form; use if no special
+    overrides are needed) or as a dictionary of dictionaries (where each dict is a codebase definition
+    as described next).
+
+    A codebase definition is a dictionary with one or more of the following keys: repository, branch, revision. The codebase definitions are combined in a dictionary keyed by the name of the codebase.
 
     .. code-block:: python
 
@@ -617,6 +621,8 @@ The parameters are just the basics:
 ``builderNames``
 
 ``properties``
+
+``reason``
 
 ``codebases``
     See :ref:`Configuring-Schedulers`.

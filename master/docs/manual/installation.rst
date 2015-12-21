@@ -588,7 +588,7 @@ As of this release, you will need to install ``buildbot-slave`` to run a slave.
 
 Any automatic startup scripts that had run ``buildbot start`` for previous versions should be changed to run ``buildslave start`` instead.
 
-If you are running a version later than 0.8.1, then you can skip the remainder of this section: the ```upgrade-slave`` command will take care of this.
+If you are running a version later than 0.8.1, then you can skip the remainder of this section: the ``upgrade-slave`` command will take care of this.
 If you are upgrading directly to 0.8.1, read on.
 
 The existing :file:`buildbot.tac` for any buildslaves running older versions will need to be edited or replaced.

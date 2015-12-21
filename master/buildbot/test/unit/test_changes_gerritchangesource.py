@@ -16,9 +16,63 @@
 import types
 
 from buildbot.changes import gerritchangesource
+from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
 from buildbot.util import json
 from twisted.trial import unittest
+
+
+class TestGerritHelpers(unittest.TestCase):
+    def test_proper_json(self):
+        self.assertEqual(u"Justin Case <justin.case@example.com>",
+                         gerritchangesource._gerrit_user_to_author({
+                             "username": "justincase",
+                             "name": "Justin Case",
+                             "email": "justin.case@example.com"
+                         }))
+
+    def test_missing_username(self):
+        self.assertEqual(u"Justin Case <justin.case@example.com>",
+                         gerritchangesource._gerrit_user_to_author({
+                             "name": "Justin Case",
+                             "email": "justin.case@example.com"
+                         }))
+
+    def test_missing_name(self):
+        self.assertEqual(u"unknown <justin.case@example.com>",
+                         gerritchangesource._gerrit_user_to_author({
+                             "email": "justin.case@example.com"
+                         }))
+        self.assertEqual(u"gerrit <justin.case@example.com>",
+                         gerritchangesource._gerrit_user_to_author({
+                             "email": "justin.case@example.com"
+                         }, u"gerrit"))
+        self.assertEqual(u"justincase <justin.case@example.com>",
+                         gerritchangesource._gerrit_user_to_author({
+                             "username": "justincase",
+                             "email": "justin.case@example.com"
+                         }, u"gerrit"))
+
+    def test_missing_email(self):
+        self.assertEqual(u"Justin Case",
+                         gerritchangesource._gerrit_user_to_author({
+                             "username": "justincase",
+                             "name": "Justin Case"
+                         }))
+        self.assertEqual(u"Justin Case",
+                         gerritchangesource._gerrit_user_to_author({
+                             "name": "Justin Case"
+                         }))
+        self.assertEqual(u"justincase",
+                         gerritchangesource._gerrit_user_to_author({
+                             "username": "justincase"
+                         }))
+        self.assertEqual(u"unknown",
+                         gerritchangesource._gerrit_user_to_author({
+                         }))
+        self.assertEqual(u"gerrit",
+                         gerritchangesource._gerrit_user_to_author({
+                         }, u"gerrit"))
 
 
 class TestGerritChangeSource(changesource.ChangeSourceMixin,
@@ -144,15 +198,17 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
 class TestGerritChangeFilter(unittest.TestCase):
     def test_basic(self):
-        class Change(object):
-            def __init__(self, chdict):
-                self.__dict__ = chdict
+        ch = Change(**TestGerritChangeSource.expected_change)
 
-        ch = Change(TestGerritChangeSource.expected_change)
-        f = gerritchangesource.GerritChangeFilter(branch=["br"], eventtype=["patchset-created"])
+        f = gerritchangesource.GerritChangeFilter(branch=["br"],
+                                                  eventtype=["patchset-created"])
         self.assertTrue(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(branch="br2", eventtype=["patchset-created"])
+
+        f = gerritchangesource.GerritChangeFilter(branch="br2",
+                                                  eventtype=["patchset-created"])
         self.assertFalse(f.filter_change(ch))
-        f = gerritchangesource.GerritChangeFilter(branch="br", eventtype="ref-updated")
+
+        f = gerritchangesource.GerritChangeFilter(branch="br",
+                                                  eventtype="ref-updated")
         self.assertFalse(f.filter_change(ch))
         self.assertEqual(repr(f), '<GerritChangeFilter on prop:event.change.branch == br and prop:event.type == ref-updated>')

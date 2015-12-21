@@ -16,8 +16,17 @@ Features
 
 * :bb:step:`Git` supports an "origin" option to give a name to the remote repo.
 
+* two new general steps are added to handle related builds -- :bb:step:`CancelRelatedBuilds` and :bb:step:`StopRelatedBuilds` -- as well as Gerrit specific ones -- :bb:step:`CancelGerritRelatedBuilds` and :bb:step:`StopGerritRelatedBuilds`.
+  More information in :ref:`the manual <handle-related-builds>`.
+
+* :class:`~buildbot.status.github.GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
+
+* :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
+
 Fixes
 ~~~~~
+
+* Cloning :bb:step:`Git` repository with submodules now works with Git < 1.7.6 instead of failing due to the use of the unsupported ``--force`` option.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,11 +40,18 @@ Slave
 Features
 ~~~~~~~~
 
+* :bb:status:`GerritStatusPush` now has parameter --notify which is used to control e-mail notifications from Gerrit.
+
+* Schedulers: the ``codebases`` parameter can now be specified in a simple list-of-strings form
+
 Fixes
 ~~~~~
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Providing Latent AWS EC2 credentails by the .ec2/aws_id file is deprecated:
+  Instead, use the standard .aws/credentials file.
 
 Details
 -------
@@ -44,7 +60,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.8.11..eight
+   git log v0.8.12..eight
 
 Older Versions
 --------------

@@ -13,17 +13,21 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.config import ConfigErrors
 from buildbot.status.results import FAILURE
 from buildbot.status.results import SUCCESS
 from buildbot.status.status_gerrit import GERRIT_LABEL_REVIEWED
 from buildbot.status.status_gerrit import GERRIT_LABEL_VERIFIED
 from buildbot.status.status_gerrit import GerritStatusPush
 from buildbot.status.status_gerrit import makeReviewResult
-from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from mock import call, Mock
+from buildbot.test.fake.fakebuild import FakeBuildStatus
+from mock import Mock
+from mock import call
+from mock import patch
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 
 
@@ -225,7 +229,7 @@ class TestGerritStatusPush(unittest.TestCase):
         self.assertEqual(expected1, without_identity._gerritCmd('foo'))
 
         with_identity = GerritStatusPush(
-                identity_file='/path/to/id_rsa', **kwargs)
+            identity_file='/path/to/id_rsa', **kwargs)
         expected2 = [
             'ssh', '-i', '/path/to/id_rsa', 'buildbot@example.com', '-p', '29418',
             'gerrit', 'foo',
@@ -333,3 +337,36 @@ class TestGerritStatusPush(unittest.TestCase):
 
     def test_buildsetComplete_failure_sends_review_legacy(self):
         self.check_single_build_legacy(FAILURE, -1)
+
+    # check all possible values of flag 'notify'
+
+    @patch.object(reactor, 'spawnProcess')
+    @defer.inlineCallbacks
+    def check_notify_flag_in_ssh_command(self, spawn_process, notify, expected_value):
+        gsp = yield GerritStatusPush('host.example.com', 'username',
+                                     reviewCB=testReviewCB, notify=notify)
+
+        gsp.master = yield fakemaster.make_master()
+        gsp.master_status = gsp.master.status
+        gsp.getCachedVersion = yield Mock(return_value="2.9")
+
+        yield self.run_fake_single_build(gsp, SUCCESS)
+
+        ssh_args = spawn_process.call_args[0][2]
+        ssh_msg = ' '.join(ssh_args)
+        assert expected_value in ssh_msg, "Flag value wrong or not present"
+
+    @defer.inlineCallbacks
+    def test_valid_notify_flag(self):
+        # If any of these flag values fail, the test fails by
+        # GerritStatusPush raising a ConfigErrors exception.
+
+        yield _get_prepared_gsp(notify=None)
+
+        for flag in ['ALL', 'OWNER', 'OWNER_REVIEWERS', 'NONE']:
+            yield self.check_notify_flag_in_ssh_command(notify=flag,
+                                                        expected_value='--notify %s' % flag)
+
+    @defer.inlineCallbacks
+    def test_invalid_notify_flag(self):
+        yield self.assertRaises(ConfigErrors, _get_prepared_gsp, notify='WRONG_VAL')

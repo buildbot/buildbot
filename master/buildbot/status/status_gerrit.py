@@ -21,6 +21,7 @@
 import time
 import warnings
 
+from buildbot import config
 from buildbot.status import buildset
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import EXCEPTION
@@ -134,7 +135,7 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
     def __init__(self, server, username, reviewCB=DEFAULT_REVIEW,
                  startCB=None, port=29418, reviewArg=None,
                  startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
-                 identity_file=None, **kwargs):
+                 identity_file=None, notify=None, **kwargs):
         StatusReceiverMultiService.__init__(self)
 
         # If neither reviewCB nor summaryCB were specified, default to sending
@@ -156,6 +157,13 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         self.gerrit_version = None
         self.gerrit_version_time = 0
         self.gerrit_identity_file = identity_file
+        notify_values = ['NONE', 'OWNER', 'OWNER_REVIEWERS', 'ALL']
+        if notify is None or notify in notify_values:
+            self.gerrit_notify = notify
+        else:
+            config.error(
+                "gerrit: wrong value of --notify %s "
+                "(possible values: %s)" % (notify, ','.join(notify_values)))
         self.reviewCB = reviewCB
         self.reviewArg = reviewArg
         self.startCB = startCB
@@ -348,6 +356,9 @@ class GerritStatusPush(StatusReceiverMultiService, buildset.BuildSetSummaryNotif
         message = result.get('message', None)
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))
+
+        if self.gerrit_notify:
+            command.extend(['--notify', self.gerrit_notify])
 
         labels = result.get('labels', None)
         if labels:

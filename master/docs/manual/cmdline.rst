@@ -619,7 +619,7 @@ Note carefully that the names in the :file:`options` file usually do not match t
 ``master``
     Equivalent to :option:`--master` for :bb:cmdline:`debugclient` and :bb:cmdline:`sendchange`.
     This option is used for two purposes.
-    It is the location of the ``debugPort`` for ``debugclient`` and the location of the :class:`pb.PBChangeSource` for ```sendchange``.
+    It is the location of the ``debugPort`` for ``debugclient`` and the location of the :class:`pb.PBChangeSource` for ``sendchange``.
     Generally these are the same port.
 
 ``debugPassword``

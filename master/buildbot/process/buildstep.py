@@ -100,7 +100,6 @@ class BuildStep(object, properties.PropertiesMixin):
     set_runtime_properties = True
 
     renderables = [
-        'locks',
         'haltOnFailure',
         'flunkOnWarnings',
         'flunkOnFailure',
@@ -159,6 +158,13 @@ class BuildStep(object, properties.PropertiesMixin):
 
         if not isinstance(self.name, str):
             config.error("BuildStep name must be a string: %r" % (self.name,))
+
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+        if isinstance(self.descriptionSuffix, str):
+            self.descriptionSuffix = [self.descriptionSuffix]
 
         self._acquiringLock = None
         self.stopped = False
@@ -383,11 +389,24 @@ class BuildStep(object, properties.PropertiesMixin):
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
+        # TODO: consider adding an INTERRUPTED or STOPPED status to use
+        # instead of FAILURE, might make the text a bit more clear.
+        # 'reason' can be a Failure, or text
         self.stopped = True
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
             d.callback(None)
+
+        if self._step_status.isWaitingForLocks():
+            self.addCompleteLog(
+                'interrupt while waiting for locks', str(reason))
+        else:
+            self.addCompleteLog('interrupt', str(reason))
+
+        if self.cmd:
+            d = self.cmd.interrupt(reason)
+            d.addErrback(log.err, 'while interrupting command')
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
@@ -676,21 +695,6 @@ class LoggingBuildStep(BuildStep):
                 newlog = self.addLog(logname)
                 # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, True)
-
-    def interrupt(self, reason):
-        # TODO: consider adding an INTERRUPTED or STOPPED status to use
-        # instead of FAILURE, might make the text a bit more clear.
-        # 'reason' can be a Failure, or text
-        BuildStep.interrupt(self, reason)
-        if self._step_status.isWaitingForLocks():
-            self.addCompleteLog(
-                'interrupt while waiting for locks', str(reason))
-        else:
-            self.addCompleteLog('interrupt', str(reason))
-
-        if self.cmd:
-            d = self.cmd.interrupt(reason)
-            d.addErrback(log.err, 'while interrupting command')
 
     def checkDisconnect(self, f):
         # this is now handled by self.failed

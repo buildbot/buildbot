@@ -132,6 +132,8 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.assertEqual(status._sha, Interpolate("%(src::revision)s"))
         self.assertEqual(status._startDescription, "Build started.")
         self.assertEqual(status._endDescription, "Build done.")
+        self.assertEqual(status._context,
+                         Interpolate("buildbot/%(prop:buildername)s"))
 
     def test_custom_github_url(self):
         """
@@ -271,6 +273,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': '123',
             'targetURL': 'http://example.tld',
             'buildNumber': '1',
+            'context': 'context',
         }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, None)
@@ -286,6 +289,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': '123',
             'targetURL': 'http://example.tld',
             'buildNumber': '1',
+            'context': 'context',
             # Augmented arguments.
             'state': 'pending',
             'description': 'Build started.',
@@ -330,6 +334,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': '123',
             'targetURL': 'http://example.tld',
             'buildNumber': '1',
+            'context': 'context',
         }
         self.status._sendGitHubStatus = Mock(return_value=defer.succeed(None))
         self.build.getTimes = lambda: (1, 3)
@@ -346,6 +351,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'sha': '123',
             'targetURL': 'http://example.tld',
             'buildNumber': '1',
+            'context': 'context',
             # Augmented arguments.
             'state': 'success',
             'description': 'Build done.',
@@ -398,6 +404,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
         self.status._repoOwner = Interpolate('owner')
         self.status._repoName = Interpolate('name')
         self.status._sha = Interpolate('sha')
+        self.status._context = Interpolate('context')
         self.status._status = Mock()
         self.status._status.getURLForThing = lambda build: 'http://example.org'
         self.build.getNumber = lambda: 1
@@ -411,8 +418,8 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'repoOwner': 'owner',
             'sha': 'sha',
             'targetURL': 'http://example.org',
-        },
-            result)
+            'context': 'context',
+        }, result)
 
     def test_getGitHubState(self):
         """
@@ -435,6 +442,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': u'state-resum\xe9',
             'targetURL': u'targetURL-resum\xe9',
             'description': u'description-resum\xe9',
+            'context': u'context-resum\xe9',
         }
         self.status._github.repos.createStatus = Mock(
             return_value=defer.succeed(None))
@@ -450,6 +458,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             state='state-resum\xc3\xa9',
             target_url='targetURL-resum\xc3\xa9',
             description='description-resum\xc3\xa9',
+            context='context-resum\xc3\xa9',
         )
 
         self.assertLog(
@@ -468,6 +477,7 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin):
             'state': u'state',
             'targetURL': u'targetURL',
             'description': u'description',
+            'context': u'context',
         }
         error = MarkerError('fail-send-status')
         self.status._github.repos.createStatus = Mock(
