@@ -75,7 +75,7 @@ Avoid the temptatation to reach into the Buildbot source code to find other usef
 Common uses of the status API are:
 
  * ``getBuild`` in a custom renderable
- * ``MailNotifier`` message formatters
+ * ``MailNotifier`` message formatters (see below for upgrade hints)
  * ``doIf`` funtions on steps
 
 Import paths for several classes under the ``buildbot.status`` package but which remain useful have changed.
@@ -127,6 +127,8 @@ A few notes on changes to the configuration of these reporters:
 
 * :bb:reporter:`GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
+* :py:class:`~buildbot.status.builder.Results` and the constants :py:class:`~buildbot.status.results.SUCCESS` should be imported from the :py:class:`~buildbot.process.results` module instead.
+
 Steps
 -----
 
@@ -151,6 +153,13 @@ The following fields are identifiers:
 * buildslave name (50-character)
 * builder name (20-character)
 * step name (50-character)
+
+Other Config Settings
+---------------------
+
+The default master.cfg file contains some new changes, which you should look over:
+* ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the buildslaves)
+* Waterfall View: requires installation (``pip install buildbot-waterfall-view``) and configuration (``c['www'] = { ..., 'plugins': {'waterfall_view': {} }``).
 
 Build History
 -------------

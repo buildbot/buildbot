@@ -1455,6 +1455,11 @@ class FakeBuildslavesComponent(FakeDBComponent):
                              "builders: %s, master: %s buildermaster:%s" %
                              (builderids, masterid, self.db.builders.builder_masters))
 
+        allbuildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
+                               if mid == masterid]
+        for k, v in self.configured.items():
+            if v['buildermasterid'] in allbuildermasterids and v['buildslaveid'] == buildslaveid:
+                del self.configured[k]
         self.insertTestData([ConfiguredBuildslave(buildslaveid=buildslaveid,
                                                   buildermasterid=buildermasterid)
                              for buildermasterid in buildermasterids])

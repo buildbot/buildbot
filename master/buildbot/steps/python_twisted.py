@@ -17,10 +17,10 @@
 from twisted.python import log
 
 from buildbot.process import logobserver
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SKIPPED
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SKIPPED
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
 
 import re
@@ -544,6 +544,6 @@ class Trial(ShellCommand):
 
 class RemovePYCs(ShellCommand):
     name = "remove-.pyc"
-    command = ['find', '.', '-name', '*.pyc', '-exec', 'rm', '{}', ';']
+    command = ['find', '.', '-name', "'*.pyc'", '-exec', 'rm', '{}', ';']
     description = ["removing", ".pyc", "files"]
     descriptionDone = ["remove", ".pycs"]

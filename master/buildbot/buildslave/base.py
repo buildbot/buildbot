@@ -274,6 +274,8 @@ class AbstractBuildSlave(service.BuildbotService, object):
             yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
+        # mark this slave as configured for zero builders in this master
+        yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
 
     def startMissingTimer(self):
@@ -776,7 +778,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                 # this will cause the slave to re-substantiate immediately if
                 # there are pending build requests.
                 d.addCallback(lambda _:
-                    self.botmaster.maybeStartBuildsForSlave(self.slavename))
+                              self.botmaster.maybeStartBuildsForSlave(self.slavename))
             else:
                 self._setBuildWaitTimer()
 

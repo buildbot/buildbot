@@ -10,10 +10,12 @@ class Buildrequestsummary extends Directive('common')
         }
 
 class _buildrequestsummary extends Controller('common')
-    constructor: ($scope, buildbotService, findBuilds) ->
+    constructor: ($scope, dataService, findBuilds) ->
         $scope.$watch "buildrequest.claimed", (n, o) ->
             if n  # if it is unclaimed, then claimed, we need to try again
                 findBuilds $scope,
                     $scope.buildrequest.buildrequestid
 
-        buildbotService.one('buildrequests', $scope.buildrequestid).bind($scope)
+        data = dataService.open($scope)
+        data.getBuildrequests($scope.buildrequestid).then (buildrequests) ->
+            $scope.buildrequest = buildrequests[0]

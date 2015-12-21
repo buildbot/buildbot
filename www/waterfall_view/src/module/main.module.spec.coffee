@@ -20,7 +20,68 @@ beforeEach ->
     module 'waterfall_view'
 
 describe 'Waterfall view controller', ->
-    $rootScope = $state = elem = w = $document = $window = $modal = $timeout = bbSettingsService = null
+    $rootScope = $state = elem = w = $document = $window = $modal = $timeout =
+        bbSettingsService = dataService = null
+
+    builders = [
+        builderid: 1
+        name: 'builder1'
+    ,
+        builderid: 2
+        name: 'builder2'
+    ,
+        builderid: 3
+        name: 'builder3'
+    ,
+        builderid: 4
+        name: 'builder4'
+    ]
+
+    builds = [
+        buildid: 1
+        builderid: 1
+        started_at: 1403059709
+        complete_at: 1403059772
+        complete: true
+        results: 'success'
+    ,
+        buildid: 2
+        builderid: 2
+        buildrequestid: 1
+        started_at: 1403059802
+        complete_at: 1403060287
+        complete: true
+        results: 'success'
+    ,
+        buildid: 3
+        builderid: 2
+        buildrequestid: 2
+        started_at: 1403059710
+        complete_at: 1403060278
+        complete: true
+        results: 'failure'
+    ,
+        buildid: 4
+        builderid: 3
+        buildrequestid: 2
+        started_at: 1403060250
+        complete_at: 0
+        complete: false
+    ]
+
+    buildrequests = [
+        builderid: 1
+        buildrequestid: 1
+        buildsetid: 1
+    ,
+        builderid: 1
+        buildrequestid: 2
+        buildsetid: 1
+    ,
+        builderid: 1
+        buildrequestid: 3
+        buildsetid: 2
+    ]
 
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
@@ -33,14 +94,22 @@ describe 'Waterfall view controller', ->
         $modal = $injector.get('$modal')
         $timeout = $injector.get('$timeout')
         bbSettingsService = $injector.get('bbSettingsService')
-        elem = angular.element('<div></div>')
-        elem.append($compile('<ui-view></ui-view>')(scope))
+        dataService = $injector.get('dataService')
+
+        dataService.when('builds', {limit: 2}, builds[...2])
+        dataService.when('builders', builders)
+        dataService.when('buildrequests', buildrequests)
+        dataService.when('builds/1/steps', [{buildid: 1}])
+
+        elem = $compile('<div><ui-view></ui-view></div>')(scope)
         $document.find('body').append(elem)
 
         $state.transitionTo('waterfall')
         $rootScope.$digest()
-        scope = $document.find('.waterfall').scope()
-        w = $document.find('.waterfall').controller()
+        elem = elem.children()
+        waterfall = elem.children()
+        scope = waterfall.scope()
+        w = waterfall.controller()
         spyOn(w, 'mouseOver').and.callThrough()
         spyOn(w, 'mouseOut').and.callThrough()
         spyOn(w, 'mouseMove').and.callThrough()
@@ -53,7 +122,7 @@ describe 'Waterfall view controller', ->
 
     # make sure we remove the element from the dom
     afterEach ->
-        expect($document.find("svg").length).toEqual(2)
+        expect($document.find('svg').length).toEqual(2)
         elem.remove()
         expect($document.find('svg').length).toEqual(0)
 
@@ -72,31 +141,6 @@ describe 'Waterfall view controller', ->
         expect(elem.find('svg').length).toBeGreaterThan(1)
         expect(elem.find('g').length).toBeGreaterThan(1)
 
-    it 'should trigger mouse events on builds', ->
-        e = d3.select('.build')
-        n = e.node()
-        # Test click event
-        spyOn($modal, 'open')
-        expect($modal.open).not.toHaveBeenCalled()
-        n.__onclick()
-        expect($modal.open).toHaveBeenCalled()
-        # Test mouseover
-        expect(w.mouseOver).not.toHaveBeenCalled()
-        expect(e.select('.svg-tooltip').empty()).toBe(true)
-        n.__onmouseover({})
-        expect(w.mouseOver).toHaveBeenCalled()
-        expect(e.select('.svg-tooltip').empty()).toBe(false)
-        # Test mousemove
-        expect(w.mouseMove).not.toHaveBeenCalled()
-        n.__onmousemove({})
-        expect(w.mouseMove).toHaveBeenCalled()
-        # Test mouseout
-        expect(w.mouseOut).not.toHaveBeenCalled()
-        expect(e.select('.svg-tooltip').empty()).toBe(false)
-        n.__onmouseout({})
-        expect(w.mouseOut).toHaveBeenCalled()
-        expect(e.select('.svg-tooltip').empty()).toBe(true)
-
     it 'should rerender the waterfall on resize', ->
         spyOn(w, 'render').and.callThrough()
         expect(w.render).not.toHaveBeenCalled()
@@ -104,6 +148,7 @@ describe 'Waterfall view controller', ->
         expect(w.render).toHaveBeenCalled()
 
     it 'should rerender the waterfall on data change', ->
+        dataService.when('builds', builds)
         spyOn(w, 'render').and.callThrough()
         expect(w.render).not.toHaveBeenCalled()
         w.loadMore()
@@ -114,11 +159,12 @@ describe 'Waterfall view controller', ->
         spyOn(w, 'getHeight').and.returnValue(900)
         e = d3.select('.inner-content')
         n = e.node()
+        w.loadMore.calls.reset()
         callCount = w.loadMore.calls.count()
-        expect(callCount).toBe(1)
+        expect(callCount).toBe(0)
         angular.element(n).triggerHandler('scroll')
         callCount = w.loadMore.calls.count()
-        expect(callCount).toBe(2)
+        expect(callCount).toBe(1)
 
     it 'height should be scalable', ->
         height = w.getInnerHeight()

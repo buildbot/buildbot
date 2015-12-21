@@ -745,6 +745,7 @@ buildslaves
         :returns: Deferred
 
         Record the given buildslave as being configured on the given master and for given builders.
+        This method will also remove any other builder that were configured previously for same (slave, master) combination.
 
 
     .. py:method:: deconfigureAllBuidslavesForMaster(masterid)

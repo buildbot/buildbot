@@ -20,7 +20,7 @@ from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
 from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
-from buildbot.status.results import CANCELLED
+from buildbot.process.results import CANCELLED
 from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and slave environment,

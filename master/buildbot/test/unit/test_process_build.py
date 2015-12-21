@@ -21,12 +21,12 @@ from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.properties import Properties
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import RETRY
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
@@ -40,9 +40,9 @@ from mock import call
 
 
 class FakeChange:
-    properties = Properties()
 
     def __init__(self, number=None):
+        self.properties = Properties()
         self.number = number
         self.who = "me"
 
@@ -634,24 +634,14 @@ class TestBuild(unittest.TestCase):
     def testflushProperties(self):
         b = self.build
 
-        class FakeBuildStatus(Mock):
-            implements(interfaces.IProperties)
         b.build_status = FakeBuildStatus()
-
-        class Properties(Mock):
-
-            def asList(self):
-                return [(u'p', 5, u'fake'),
-                        (u'p2', ['abc', 9], u'mock')]
-        b.master.data.updates.setBuildProperty = Mock()
-        b.build_status.getProperties.return_value = Properties()
-        b.buildid = 42
+        b.setProperty("foo", "bar", "test")
+        b.buildid = 43
         result = 'SUCCESS'
         res = yield b._flushProperties(result)
         self.assertEquals(res, result)
-        b.master.data.updates.setBuildProperty.assert_has_calls([
-            call(42, u'p', 5, u'fake'),
-            call(42, u'p2', ['abc', 9], u'mock')])
+        self.assertEqual(self.master.data.updates.properties,
+                         [(43, u'foo', 'bar', u'test')])
 
     def create_mock_steps(self, names):
         steps = []
@@ -863,7 +853,7 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
-        self.build.build_status.properties.setProperty = self.setProperty
+        self.build.properties.setProperty = self.setProperty
 
     def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
@@ -905,7 +895,7 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         self.build.setBuilder(self.builder)
         self.build.build_status = FakeBuildStatus()
         # record properties that will be set
-        self.build.build_status.properties.setProperty = self.setProperty
+        self.build.properties.setProperty = self.setProperty
 
     def setProperty(self, n, v, s, runtime=False):
         if s not in self.props:
@@ -949,8 +939,11 @@ class TestBuildProperties(unittest.TestCase):
     """
 
     def setUp(self):
-        class FakeBuildStatus(Mock):
+        class FakeProperties(Mock):
             implements(interfaces.IProperties)
+
+        class FakeBuildStatus(Mock):
+            pass
         r = FakeRequest()
         r.sources = [FakeSource()]
         r.sources[0].changes = [FakeChange()]
@@ -965,34 +958,36 @@ class TestBuildProperties(unittest.TestCase):
         self.builder = FakeBuilder(
             fakemaster.make_master(wantData=True, testcase=self))
         self.build.setBuilder(self.builder)
+        self.properties = self.build.properties = FakeProperties()
         self.build_status = FakeBuildStatus()
+        self.build._flushProperties = Mock()
         self.build.startBuild(self.build_status, None, self.slavebuilder)
 
     def test_getProperty(self):
         self.build.getProperty('x')
-        self.build_status.getProperty.assert_called_with('x', None)
+        self.properties.getProperty.assert_called_with('x', None)
 
     def test_getProperty_default(self):
         self.build.getProperty('x', 'nox')
-        self.build_status.getProperty.assert_called_with('x', 'nox')
+        self.properties.getProperty.assert_called_with('x', 'nox')
 
     def test_setProperty(self):
         self.build.setProperty('n', 'v', 's')
-        self.build_status.setProperty.assert_called_with('n', 'v', 's',
-                                                         runtime=True)
+        self.properties.setProperty.assert_called_with('n', 'v', 's',
+                                                       runtime=True)
 
     def test_hasProperty(self):
-        self.build_status.hasProperty.return_value = True
+        self.properties.hasProperty.return_value = True
         self.assertTrue(self.build.hasProperty('p'))
-        self.build_status.hasProperty.assert_called_with('p')
+        self.properties.hasProperty.assert_called_with('p')
 
     def test_has_key(self):
-        self.build_status.has_key.return_value = True
+        self.properties.has_key.return_value = True
         # getattr because pep8 doesn't like calls to has_key
         self.assertTrue(getattr(self.build, 'has_key')('p'))
         # has_key calls through to hasProperty
-        self.build_status.hasProperty.assert_called_with('p')
+        self.properties.hasProperty.assert_called_with('p')
 
     def test_render(self):
         self.build.render("xyz")
-        self.build_status.render.assert_called_with("xyz")
+        self.properties.render.assert_called_with("xyz")

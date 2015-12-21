@@ -70,7 +70,7 @@ class SmtplibMock:
             sys.stdout.write(msg)
 
 
-rfc822_specials_re = re.compile(r'[\(\)\<\>\@\,\;\:\\\"\.\[\]]')
+rfc822_specials_re = re.compile(r'[\(\)<>@,;:\\\"\.\[\]]')
 
 
 def quotename(name):

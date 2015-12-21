@@ -16,7 +16,7 @@
 import os
 import shutil
 
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
 

@@ -273,6 +273,7 @@ setup_args = {
             ('buildbot.steps.source.bzr', ['Bzr']),
             ('buildbot.steps.source.cvs', ['CVS']),
             ('buildbot.steps.source.darcs', ['Darcs']),
+            ('buildbot.steps.source.gerrit', ['Gerrit']),
             ('buildbot.steps.source.git', ['Git']),
             ('buildbot.steps.source.mercurial', ['Mercurial']),
             ('buildbot.steps.source.mtn', ['Monotone']),
@@ -293,6 +294,8 @@ setup_args = {
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
+            ('buildbot.reporters.irc', ['IRC']),
+
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though
@@ -314,8 +317,8 @@ setup_args = {
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
             ('buildbot.process.logobserver', ['LogLineObserver']),
             ('buildbot.process.properties', [
-                'FlattenList', 'Interpolate', 'Property', 'WithProperties',
-                'renderer']),
+                'FlattenList', 'Interpolate', 'Property', 'Transform',
+                'WithProperties', 'renderer']),
             ('buildbot.process.properties', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
@@ -325,7 +328,7 @@ setup_args = {
                 'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
                 'StringParameter', 'TextParameter', 'UserNameParameter']),
-            ('buildbot.status.results', [
+            ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),
             ('buildbot.steps.mtrlogobserver', ['EqConnectionPool']),
@@ -379,6 +382,12 @@ if 'a' in version or 'b' in version:
         if LooseVersion(pip_dist.version) < LooseVersion('1.4'):
             raise RuntimeError(VERSION_MSG)
 
+if sys.version_info[:2] == (2, 6):
+    # Twisted-15.4.0 doesn't support Python 2.6 anymore
+    twisted_req = "Twisted >= 12.1.0, < 15.4.0"
+else:
+    twisted_req = "Twisted >= 12.1.0"
+
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
@@ -388,17 +397,11 @@ except ImportError:
 else:
     # dependencies
     setup_args['install_requires'] = [
-        'twisted >= 12.1.0',
+        twisted_req,
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
-        'future'
-    ]
-
-    setup_args['install_requires'] += [
-        # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so stick to 0.7.10
+        'future',
         'sqlalchemy >= 0.6, <= 0.7.10',
-        # buildbot depends on sqlalchemy internals, and this is the tested
-        # version.
         'sqlalchemy-migrate==0.7.2',
         'python-dateutil>=1.5',
         'autobahn >= 0.10.2',

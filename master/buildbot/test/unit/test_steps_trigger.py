@@ -18,11 +18,11 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot.process import properties
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.status import master
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
 from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
 from buildbot.test.util import steps
@@ -144,7 +144,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         def getAllGotRevisions():
             return got_revisions
-        self.build.build_status.getAllGotRevisions = getAllGotRevisions
+        self.step.getAllGotRevisions = getAllGotRevisions
 
         self.exp_add_sourcestamp = None
         self.exp_a_trigger = None

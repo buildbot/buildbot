@@ -113,6 +113,33 @@ When your Dockerfile is ready, you can build your first image using the followin
 
     docker build -t myslavename - < Dockerfile
 
+Reuse same image for different slaves
+-------------------------------------
+
+Previous simple example hardcodes the slave name into the dockerfile, which will not work if you want to share your docker image between slaves.
+
+You can find in buildbot source code in ``master/contrib/docker`` two example configurations:
+
+``slave``
+    the base buildslave configuration, including a custom buildbot.tac, which takes environment variables into account for setting the correct slave name, and connect to the correct master.
+
+``pythonnode_slave``
+    a slave with python and node installed, which demonstrate how to reuse the base slave to create variations of build environments.
+
+The master setups several environment variables before starting the buildslaves:
+
+``BUILDMASTER``
+    The address of the master the slave shall connect to
+
+``BUILDMASTER_PORT``
+    The port of the master's slave 'pb' protocol.
+
+``SLAVENAME``
+    The name the slave should use to connect to master
+
+``SLAVEPASS``
+    The password the slave should use to connect to master
+
 Master Setup
 ------------
 
@@ -153,7 +180,8 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
 ``image``
     (optional if ``dockerfile`` is given)
     This is the name of the image that will be started by the build master. It should start a buildslave.
-
+    This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
+    
 ``command``
     (optional)
     This will override the command setup during image creation.
@@ -182,6 +210,11 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
 ``followStartupLogs``
     (optional, defaults to false)
     This transfers docker container's log inside master logs during slave startup (before connection). This can be useful to debug slave startup. e.g network issues, etc.
+
+``masterFQDN``
+    (optional, defaults to socket.getfqdn())
+    Address of the master the slave should connect to. Use if you master machine does not have proper fqdn.
+    This value is passed to the docker image via environment variable ``BUILDMASTER``
 
 Setting up Volumes
 ..................

@@ -51,6 +51,7 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
                     (len(added), len(removed)))
 
             for src in removed:
+                yield src.deactivate()
                 yield defer.maybeDeferred(
                     src.disownServiceParent)
 

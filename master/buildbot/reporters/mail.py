@@ -44,12 +44,12 @@ from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import Results
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import Results
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.util import service
 
 # Email parsing can be complex. We try to take a very liberal

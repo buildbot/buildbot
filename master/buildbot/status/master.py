@@ -12,12 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from future.moves.urllib.parse import quote as urlquote
 from future.utils import iteritems
 from future.utils import itervalues
 
-
 import os
-import urllib
 
 from buildbot import interfaces
 from buildbot import util
@@ -151,7 +151,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # its here waiting for getURLForThing removal or switch to deferred
         prefix = self.getBuildbotURL()
         return prefix + "#builders/%s/builds/%d" % (
-            urllib.quote(builder_name, safe=''),
+            urlquote(builder_name, safe=''),
             build_number)
 
     def getURLForBuildrequest(self, buildrequestid):
@@ -169,7 +169,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if interfaces.IBuilderStatus.providedBy(thing):
             bldr = thing
             return prefix + "#builders/%s" % (
-                urllib.quote(bldr.getName(), safe=''),
+                urlquote(bldr.getName(), safe=''),
             )
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
@@ -184,16 +184,16 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             build = step.getBuild()
             bldr = build.getBuilder()
             return prefix + "#builders/%s/builds/%d/steps/%s" % (
-                urllib.quote(bldr.getName(), safe=''),
+                urlquote(bldr.getName(), safe=''),
                 build.getNumber(),
-                urllib.quote(step.getName(), safe=''))
+                urlquote(step.getName(), safe=''))
         # IBuildSetStatus
         # IBuildRequestStatus
         # ISlaveStatus
         if interfaces.ISlaveStatus.providedBy(thing):
             slave = thing
             return prefix + "#buildslaves/%s" % (
-                urllib.quote(slave.getName(), safe=''),
+                urlquote(slave.getName(), safe=''),
             )
 
         # IStatusEvent

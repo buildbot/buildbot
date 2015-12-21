@@ -13,13 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from future.moves.urllib.parse import urlparse
+
 import ldap3
 
 from buildbot.util import flatten
 from buildbot.www import auth
 from buildbot.www import avatar
 from twisted.internet import threads
-from urlparse import urlparse
 
 
 class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):

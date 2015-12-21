@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 
 from buildbot.process import properties
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.steps import http
 from buildbot.test.util import steps
 from twisted.internet import reactor

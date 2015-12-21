@@ -18,7 +18,7 @@ from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 
 from buildbot.db.buildrequests import NotClaimedError
-from buildbot.status import results
+from buildbot.process import results
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -58,11 +58,6 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         if buildrequest:
             defer.returnValue((yield self.db2data(buildrequest)))
         defer.returnValue(None)
-
-    def startConsuming(self, callback, options, kwargs):
-        buildrequestid = kwargs.get('buildrequestid')
-        return self.master.mq.startConsuming(callback,
-                                             ('buildrequests', buildrequestid, None))
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -129,10 +124,6 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             bsid=bsid)
         defer.returnValue(
             [(yield self.db2data(br)) for br in buildrequests])
-
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('buildrequests', None, None, None, None))
 
 
 class BuildRequest(base.ResourceType):

@@ -25,6 +25,6 @@ class Builds extends Controller
         @$state.go('builds.builder', builderid: builder.builderid)
 
     constructor: ($scope, dataService, @$state, @$mdMedia) ->
-        opened = dataService.open()
-        opened.closeOnDestroy($scope)
-        @builders = opened.getBuilders().getArray()
+        data = dataService.open()
+        data.closeOnDestroy($scope)
+        @builders = data.getBuilders().getArray()

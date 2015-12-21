@@ -19,9 +19,9 @@ import sys
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import WithProperties
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.util import steps
 from twisted.internet import error

@@ -21,8 +21,8 @@ from buildbot.data import base
 from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import types
 from buildbot.process.buildrequest import BuildRequestCollapser
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import worst_status
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import worst_status
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from twisted.internet import defer
@@ -71,10 +71,6 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
         res = yield self.db2data(res)
         defer.returnValue(res)
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('buildsets', str(kwargs['bsid']), 'complete'))
-
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
@@ -98,10 +94,6 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
                 return [r[1] for r in res]
             return d
         return d
-
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('buildsets', None, 'new'))
 
 
 class Buildset(base.ResourceType):

@@ -50,7 +50,7 @@ class FakeUpdates(service.AsyncService):
         self.claimedBuildRequests = set([])
         self.stepStateString = {}  # { stepid : string }
         self.stepUrls = {}  # { stepid : [(name,url)] }
-
+        self.properties = []
     # extra assertions
 
     def assertProperties(self, sourced, properties):
@@ -321,6 +321,12 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         return defer.succeed(None)
 
+    @defer.inlineCallbacks
+    def setBuildProperties(self, buildid, properties):
+        for k, v, s in properties.getProperties().asList():
+            self.properties.append((buildid, k, v, s))
+            yield self.setBuildProperty(buildid, k, v, s)
+
     def addStep(self, buildid, name):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())
@@ -431,7 +437,7 @@ class FakeDataConnector(service.AsyncMultiService):
         self.updates = FakeUpdates(testcase)
         self.updates.setServiceParent(self)
 
-        # get, startConsuming, and control are delegated to a real connector,
+        # get and control are delegated to a real connector,
         # after some additional assertions
         self.realConnector = connector.DataConnector()
         self.realConnector.setServiceParent(self)
@@ -454,11 +460,6 @@ class FakeDataConnector(service.AsyncMultiService):
             raise TypeError('path must be a tuple')
         return self.realConnector.get(path, filters=filters, fields=fields,
                                       order=order, limit=limit, offset=offset)
-
-    def startConsuming(self, callback, options, path):
-        if not isinstance(path, tuple):
-            raise TypeError('path must be a tuple')
-        return self.realConnector.startConsuming(callback, options, path)
 
     def control(self, action, args, path):
         if not isinstance(path, tuple):

@@ -16,7 +16,7 @@
 import mock
 
 from buildbot.data import masters
-from buildbot.status.results import RETRY
+from buildbot.process.results import RETRY
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -141,11 +141,6 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         def check(masters):
             self.assertEqual(masters, [])
         return d
-
-    def test_startConsuming(self):
-        return self.callStartConsuming({}, {},
-                                       expected_filter=('masters',
-                                                        None, None))
 
 
 class Master(interfaces.InterfaceTests, unittest.TestCase):

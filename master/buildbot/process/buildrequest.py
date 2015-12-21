@@ -19,7 +19,7 @@ import calendar
 
 from buildbot.data import resultspec
 from buildbot.process import properties
-from buildbot.status.results import SKIPPED
+from buildbot.process.results import SKIPPED
 from twisted.internet import defer
 
 

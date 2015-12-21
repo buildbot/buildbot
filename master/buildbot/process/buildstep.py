@@ -43,16 +43,16 @@ from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
-from buildbot.status import results
-from buildbot.status.results import CANCELLED
-from buildbot.status.results import EXCEPTION
-from buildbot.status.results import FAILURE
-from buildbot.status.results import RETRY
-from buildbot.status.results import Results
-from buildbot.status.results import SKIPPED
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
-from buildbot.status.results import worst_status
+from buildbot.process import results
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import Results
+from buildbot.process.results import SKIPPED
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
+from buildbot.process.results import worst_status
 from buildbot.util import debounce
 from buildbot.util import flatten
 
@@ -658,11 +658,24 @@ class BuildStep(results.ResultComputingConfigMixin,
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
+        # TODO: consider adding an INTERRUPTED or STOPPED status to use
+        # instead of FAILURE, might make the text a bit more clear.
+        # 'reason' can be a Failure, or text
         self.stopped = True
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
             lock.stopWaitingUntilAvailable(self, access, d)
             d.callback(None)
+
+        if self._waitingForLocks:
+            self.addCompleteLog(
+                'cancelled while waiting for locks', str(reason))
+        else:
+            self.addCompleteLog('cancelled', str(reason))
+
+        if self.cmd:
+            d = self.cmd.interrupt(reason)
+            d.addErrback(log.err, 'while cancelling command')
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
@@ -926,21 +939,6 @@ class LoggingBuildStep(BuildStep):
                 newlog = self.addLog(logname)
                 # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, True)
-
-    def interrupt(self, reason):
-        # TODO: consider adding an INTERRUPTED or STOPPED status to use
-        # instead of FAILURE, might make the text a bit more clear.
-        # 'reason' can be a Failure, or text
-        BuildStep.interrupt(self, reason)
-        if self._waitingForLocks:
-            self.addCompleteLog(
-                'cancelled while waiting for locks', str(reason))
-        else:
-            self.addCompleteLog('cancelled', str(reason))
-
-        if self.cmd:
-            d = self.cmd.interrupt(reason)
-            d.addErrback(log.err, 'while cancelling command')
 
     def checkDisconnect(self, f):
         # this is now handled by self.failed

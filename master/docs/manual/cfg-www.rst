@@ -436,6 +436,13 @@ Several endpoints  matchers are currently implemented
 
     StopBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
 
+.. py:class:: buildbot.www.authz.endpointmatchers.RebuildBuildEndpointMatcher(builder, role)
+
+    :param builder: name of the builder.
+    :param role: The role needed to get access to such endpoints.
+
+    RebuildBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
+
 Role matchers
 +++++++++++++
 Endpoint matchers are responsible for creating rules to match people and grant them roles.
@@ -491,7 +498,8 @@ Simple config which allows admin people to run everything:
     authz = util.Authz(
       allowRules=[
         util.StopBuildEndpointMatcher(role="admins"),
-        util.ForceBuildEndpointMatcher(role="admins")
+        util.ForceBuildEndpointMatcher(role="admins"),
+        util.RebuildBuildEndpointMatcher(role="admins)
       ],
       roleMatchers=[
         util.RolesFromEmails(admins=["my@email.com"])

@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status import results
+from buildbot.process import results
 from twisted.python import log
 from twisted.trial import unittest
 

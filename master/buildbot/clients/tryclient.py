@@ -263,7 +263,7 @@ class PerforceExtractor(SourceStampExtractor):
         found = False
         for line in res.split("\n"):
             m = re.search('==== //depot/' + self.branch
-                          + r'/([\w\/\.\d\-\_]+)#(\d+) -', line)
+                          + r'/([\w/\.\d\-_]+)#(\d+) -', line)
             if m:
                 mpatch += "--- %s#%s\n" % (m.group(1), m.group(2))
                 mpatch += "+++ %s\n" % (m.group(1))

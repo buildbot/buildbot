@@ -72,10 +72,6 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
             consumeErrors=True, fireOnOneErrback=True)
         defer.returnValue([r for (s, r) in csdicts])
 
-    def startConsuming(self, callback, options, kwargs):
-        return self.master.mq.startConsuming(callback,
-                                             ('changesources', None, None))
-
 
 class ChangeSource(base.ResourceType):
 

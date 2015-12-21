@@ -12,13 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import iteritems
 
 import cgi
 import mock
 import os
 import pkg_resources
-import urllib
 
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
@@ -56,7 +57,7 @@ class FakeRequest(object):
             path, argstring = x
             self.path = path
             self.args = cgi.parse_qs(argstring, 1)
-        self.postpath = list(map(urllib.unquote, path[1:].split('/')))
+        self.postpath = list(map(urlunquote, path[1:].split('/')))
 
         self.deferred = defer.Deferred()
 

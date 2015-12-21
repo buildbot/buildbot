@@ -16,9 +16,9 @@
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.schedulers import base
-from buildbot.status.results import SUCCESS
-from buildbot.status.results import WARNINGS
 from twisted.internet import defer
 
 
@@ -45,9 +45,9 @@ class Dependent(base.BaseScheduler):
     def activate(self):
         yield base.BaseScheduler.deactivate(self)
 
-        self._buildset_new_consumer = yield self.master.data.startConsuming(
+        self._buildset_new_consumer = yield self.master.mq.startConsuming(
             self._buildset_new_cb,
-            {}, ('buildsets',))
+            ('buildsets', None, 'new'))
         # TODO: refactor to subscribe only to interesting buildsets, and
         # subscribe to them directly, via the data API
         self._buildset_complete_consumer = yield self.master.mq.startConsuming(

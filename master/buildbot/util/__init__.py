@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from future.moves.urllib.parse import urlsplit
+from future.moves.urllib.parse import urlunsplit
+
 import calendar
 import datetime
 import dateutil.tz
@@ -21,7 +24,6 @@ import locale
 import re
 import string
 import time
-import urlparse
 
 from twisted.python import reflect
 
@@ -325,9 +327,9 @@ _netloc_url_re = re.compile(r':[^@]*@')
 
 
 def stripUrlPassword(url):
-    parts = list(urlparse.urlsplit(url))
+    parts = list(urlsplit(url))
     parts[1] = _netloc_url_re.sub(':xxxx@', parts[1])
-    return urlparse.urlunsplit(parts)
+    return urlunsplit(parts)
 
 
 def join_list(maybeList):

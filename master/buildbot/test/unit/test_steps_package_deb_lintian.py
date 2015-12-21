@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
-from buildbot.status.results import SUCCESS
+from buildbot.process.results import SUCCESS
 from buildbot.steps.package.deb import lintian
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
