@@ -675,8 +675,8 @@ class HTMLLogFile(styles.Versioned, LogFile):
     def hasContents(self):
         return True
 
-    def set_content_type(self, type):
-        self.content_type = type
+    def set_content_type(self, content_type):
+        self.content_type = content_type
 
     def __getstate__(self):
         d = styles.Versioned.__getstate__(self)
@@ -689,7 +689,6 @@ class HTMLLogFile(styles.Versioned, LogFile):
         self.watchers = []
         self.finishedWatchers = []
         self.finished = True
-        self.content_type = ""
 
     def upgradeToVersion1(self):
         # buildbot <= 0.8.8 stored all html logs in the html property

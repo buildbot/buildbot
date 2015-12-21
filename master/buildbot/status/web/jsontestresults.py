@@ -29,7 +29,7 @@ class JSONTestResource(HtmlResource):
         builder_status = b.getBuilder()
         project = builder_status.getProject()
 
-        cxt['builder_name'] = b.getBuilder().getFriendlyName()
+        cxt['builder_name'] = builder_status.getFriendlyName()
         cxt['path_to_builder'] = path_to_builder(req, builder_status)
         cxt['path_to_builders'] = path_to_builders(req, project)
         cxt['path_to_codebases'] = path_to_codebases(req, project)
@@ -51,8 +51,6 @@ class JSONTestResource(HtmlResource):
                 6: 'Error',
                 7: 'Cancelled'
             }
-
-            cxt['suite_command_line'] = self.suite_command_line
 
         except ValueError as e:
             log.msg("Error with parsing json: {0}".format(e))
