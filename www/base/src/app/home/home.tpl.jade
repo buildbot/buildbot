@@ -9,11 +9,11 @@
     .col-sm-12
       .well
         h2 Welcome to buildbot
-        h4 {{ builds_running.length }} Build{{ builds_running.length > 1 ? 's' : '' }} running currently
+        h4 {{ buildsRunning.length }} Build{{ buildsRunning.length > 1 ? 's' : '' }} running currently
         ul
-          li.unstyled(ng-repeat="build in builds_running | filter:complete:false")
+          li.unstyled(ng-repeat="build in buildsRunning | filter:complete:false")
             buildsticker(build="build")
-        h4 {{ recent_builds.length }} recent builds
+        h4 {{ recentBuilds.length }} recent builds
         .row
             .col-md-4(ng-repeat="builder in builders | filter:hasBuilds")
                 .panel.panel-primary
