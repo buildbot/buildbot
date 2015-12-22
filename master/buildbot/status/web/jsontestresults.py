@@ -42,6 +42,13 @@ class JSONTestResource(HtmlResource):
 
             cxt['data'] = json_data
 
+            if json_data['summary']:
+                success_count = json_data['summary']['successCount']
+                total_count = json_data['summary']['testsCount']
+                if success_count != 0 and total_count != 0:
+                    success_per = (float(success_count) / float(total_count)) * 100.0
+                    json_data['summary']['success_rate'] = success_per
+
             cxt['results'] = {
                 0: 'Inconclusive',
                 2: 'Skipped',
