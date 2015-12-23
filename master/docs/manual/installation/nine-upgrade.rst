@@ -158,6 +158,7 @@ Other Config Settings
 ---------------------
 
 The default master.cfg file contains some new changes, which you should look over:
+
 * ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the buildslaves)
 * Waterfall View: requires installation (``pip install buildbot-waterfall-view``) and configuration (``c['www'] = { ..., 'plugins': {'waterfall_view': {} }``).
 
