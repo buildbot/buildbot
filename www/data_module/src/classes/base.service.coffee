@@ -21,7 +21,7 @@ class Base extends Factory
 
 
             update: (o) ->
-                angular.merge(@, o)
+                angular.merge(this, o)
 
             get: (args...) ->
                 dataService.get(@_endpoint, @_id, args...)
@@ -35,10 +35,10 @@ class Base extends Factory
                     # capitalize endpoint names
                     E = dataUtilsService.capitalize(e)
                     # adds loadXXX functions to the prototype
-                    @::["load#{E}"] = (args...) ->
+                    this::["load#{E}"] = (args...) ->
                         p = @get(e, args...)
                         @[e] = p.getArray()
                         return p
                     # adds getXXX functions to the prototype
-                    @::["get#{E}"] = (args...) ->
+                    this::["get#{E}"] = (args...) ->
                         return @get(e, args...)

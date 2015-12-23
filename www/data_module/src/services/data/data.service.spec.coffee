@@ -100,17 +100,16 @@ describe 'Data service', ->
                 expect(opened["get#{E}"]).toBeDefined()
                 expect(angular.isFunction(opened["get#{E}"])).toBeTruthy()
 
-        it 'should call unsubscribe on each root class on close', ->
-            p = $q.resolve(builds: [{}, {}, {}])
+        it 'should call unsubscribe on each subscribed collection on close', ->
+            p = $q.resolve(builds: [{buildid:1}, {buildid:2}, {buildid:3}])
             spyOn(restService, 'get').and.returnValue(p)
             builds = null
             $rootScope.$apply ->
                 builds = opened.getBuilds(subscribe: false).getArray()
             expect(builds.length).toBe(3)
-            spyOn(b, 'unsubscribe') for b in builds
-            expect(b.unsubscribe).not.toHaveBeenCalled() for b in builds
+            spyOn(builds, 'unsubscribe')
             opened.close()
-            expect(b.unsubscribe).toHaveBeenCalled() for b in builds
+            expect(builds.unsubscribe).toHaveBeenCalled()
 
         it 'should call close when the $scope is destroyed', ->
             spyOn(opened, 'close')
@@ -120,4 +119,16 @@ describe 'Data service', ->
             scope.$destroy()
             expect(opened.close).toHaveBeenCalled()
 
-        # TODO ...
+        it 'should work with mock calls as well', ->
+            dataService.when('builds/1', [{buildid: 1, builderid: 1}])
+            builds = opened.getBuilds(1, subscribe: false).getArray()
+
+    describe 'when()', ->
+        it 'should autopopulate ids', (done) ->
+            dataService.when('builds', [{}, {}, {}])
+            $rootScope.$apply ->
+                dataService.getBuilds().then (builds) ->
+                    expect(builds.length).toBe(3)
+                    expect(builds[1].buildid).toBe(2)
+                    expect(builds[2].buildid).toBe(3)
+                    done()

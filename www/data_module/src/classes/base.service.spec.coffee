@@ -22,6 +22,6 @@ describe 'Base class', ->
     it 'should have loadXxx function for child endpoints', ->
         children = ['a', 'bcd', 'ccc']
         base = new Base({}, 'ab', children)
-        for e in children
-            E = e[0].toUpperCase() + e[1..-1].toLowerCase()
-            expect(angular.isFunction(base["load#{E}"])).toBeTruthy()
+        expect(angular.isFunction(base.loadA)).toBeTruthy()
+        expect(angular.isFunction(base.loadBcd)).toBeTruthy()
+        expect(angular.isFunction(base.loadCcc)).toBeTruthy()

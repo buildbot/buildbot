@@ -1,5 +1,5 @@
 class Collection extends Factory
-    constructor: ($q, $injector, $log, dataUtilsService) ->
+    constructor: ($q, $injector, $log, dataUtilsService, socketService) ->
         return class CollectionInstance extends Array
             constructor: (restPath, query = {}) ->
                 @getRestPath = -> restPath
@@ -22,6 +22,7 @@ class Collection extends Factory
                     console.log "unknown wrapper for", className
                     WrapperClass = $injector.get('Base')
                 @getWrapper = -> WrapperClass
+                socketService.eventStream.subscribe(@listener)
 
                 @subscribers = []
 
