@@ -28,7 +28,8 @@ class DataProcessor extends Service
 
             if build.complete_at > last.time then last.time = build.complete_at
         # The last group maximum time
-        groups[last.groupid].max = last.time
+        if groups[last.groupid]
+            groups[last.groupid].max = last.time
 
         return groups
 
