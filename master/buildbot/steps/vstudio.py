@@ -173,21 +173,21 @@ class VisualStudio(ShellCommand):
         if done:
             if not description:
                 description = ['compile']
-            description.append('%d projects' % self.step_status.getStatistic('projects', 0))
-            description.append('%d files' % self.step_status.getStatistic('files', 0))
-            warnings = self.step_status.getStatistic('warnings', 0)
+            description.append('%d projects' % self.getStatistic('projects', 0))
+            description.append('%d files' % self.getStatistic('files', 0))
+            warnings = self.getStatistic('warnings', 0)
             if warnings > 0:
                 description.append('%d warnings' % warnings)
-            errors = self.step_status.getStatistic('errors', 0)
+            errors = self.getStatistic('errors', 0)
             if errors > 0:
                 description.append('%d errors' % errors)
         return description
 
     def createSummary(self, log):
-        self.step_status.setStatistic('projects', self.logobserver.nbProjects)
-        self.step_status.setStatistic('files', self.logobserver.nbFiles)
-        self.step_status.setStatistic('warnings', self.logobserver.nbWarnings)
-        self.step_status.setStatistic('errors', self.logobserver.nbErrors)
+        self.setStatistic('projects', self.logobserver.nbProjects)
+        self.setStatistic('files', self.logobserver.nbFiles)
+        self.setStatistic('warnings', self.logobserver.nbWarnings)
+        self.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
         if cmd.didFail():
