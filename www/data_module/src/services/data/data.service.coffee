@@ -17,35 +17,36 @@ class Data extends Provider
 
             # the arguments are in this order: endpoint, id, child, id of child, query
             get: (args...) ->
-                # keep defined arguments only
-                args = args.filter (e) -> e?
 
                 # get the query parameters
-                [..., last] = args
+                [args, query] = dataUtilsService.splitOptions(args)
+                subscribe = accessor = undefined
+
                 # subscribe for changes if 'subscribe' is true or undefined
-                subscribe = last.subscribe or not last.subscribe?
-                if angular.isObject(last)
-                    query = args.pop()
-                    # 'subscribe' is not part of the query
-                    delete query.subscribe
+                subscribe = query.subscribe or not query.subscribe?
+                accessor = query.accessor
+                if subscribe and not accessor
+                    $log.warn "subscribe call should be done after DataService.open()"
+                    $log.warn "for maintaining trace of observers"
+                    subscribe = false
+
+                # 'subscribe' is not part of the query
+                delete query.subscribe
+                delete query.observer
 
                 restPath = dataUtilsService.restPath(args)
                 # up to date array, this will be returned
-                collection = new Collection(restPath, query)
-                collection.subscribe()
+                collection = new Collection(restPath, query, accessor)
+                if subscribe
+                    subscribePromise = collection.subscribe()
+                else
+                    subscribePromise = $q.resolve()
 
-                promise = $q (resolve, reject) =>
+                promise = $q (resolve, reject) ->
 
-                    # start consuming WebSocket messages
-                    if subscribe
-                        socketPromise = @startConsuming(collection.getSocketPath())
-                    else socketPromise = $q.resolve()
-
-                    socketPromise.then ->
+                    subscribePromise.then ->
                         # get the data from the rest api
-                        restPromise = restService.get(restPath, query)
-
-                        restPromise.then (response) ->
+                        restService.get(restPath, query).then (response) ->
 
                             type = dataUtilsService.type(restPath)
                             response = response[type]
@@ -123,8 +124,11 @@ class Data extends Provider
                     constructor: ->
                         @constructor.generateEndpoints()
 
+                    registerCollection: (c) ->
+                        collectionRefs.push(c)
+
                     close: ->
-                        collectionRefs.forEach (c) => c.unsubscribe(this)
+                        collectionRefs.forEach (c) -> c.close()
 
                     # Closes the group when the scope is destroyed
                     closeOnDestroy: (scope) ->
@@ -137,14 +141,10 @@ class Data extends Provider
                         ENDPOINTS.forEach (e) =>
                             # capitalize endpoint names
                             E = dataUtilsService.capitalize(e)
-                            this::["get#{E}"] = (args...) =>
-                                p = self["get#{E}"](args...)
-                                a = p.getArray()
-                                a.subscribe(this)
-                                collectionRefs.push(a)
-                                # FIXME Need to track and unsubscribe collections that will be
-                                # accessed via this collection
-                                return p
+                            this::["get#{E}"] = (args...) ->
+                                [args, query] = dataUtilsService.splitOptions(args)
+                                query.accessor = this
+                                return self.get(e, args..., query)
 
         ############## utils for testing
         # register return values for the mocked get function
@@ -175,12 +175,7 @@ class Data extends Provider
                 return p
 
             processArguments: (args) ->
-                # keep defined arguments only
-                args.filter (e) -> e?
-                # get the query parameters
-                [..., last] = args
-                if angular.isObject(last)
-                    query = args.pop()
+                [args, query] = dataUtilsService.splitOptions(args)
                 restPath = dataUtilsService.restPath(args)
                 return [restPath, query or {}]
 
@@ -193,7 +188,7 @@ class Data extends Provider
 
                 # populate the response with default ids
                 # for convenience
-                id = collection.getId()
+                id = collection.id
                 idCounter = 1
                 response.forEach (d) ->
                     if not d.hasOwnProperty(id)

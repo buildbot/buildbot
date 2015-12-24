@@ -5,6 +5,7 @@ class Base extends Factory
                 if not angular.isString(@_endpoint)
                     throw new TypeError("Parameter 'endpoint' must be a string, not #{typeof @endpoint}")
 
+                @accessor = null
                 # add object fields to the instance
                 @update(object)
 
@@ -19,7 +20,8 @@ class Base extends Factory
                 if @_id?
                     @_endpoint = dataUtilsService.type(@_endpoint)
 
-
+            setAccessor: (a) ->
+                @accessor = a
             update: (o) ->
                 angular.merge(this, o)
 

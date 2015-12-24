@@ -38,19 +38,39 @@ describe 'Data service', ->
             expect(restService.get).toHaveBeenCalledWith('asd', {})
 
         it 'should send startConsuming with the socket path', ->
-            d = $q.defer()
-            spyOn(socketService, 'send').and.returnValue(d.promise)
+            data = dataService.open()
+            p = $q.resolve([])
+            spyOn(socketService, 'send').and.returnValue(p)
+            spyOn(restService, 'get').and.returnValue(p)
             expect(socketService.send).not.toHaveBeenCalled()
             $rootScope.$apply ->
-                dataService.get('asd')
+                data.getBuilds()
             expect(socketService.send).toHaveBeenCalledWith
                 cmd: 'startConsuming'
-                path: 'asd/*/*'
+                path: 'builds/*/*'
+            socketService.send.calls.reset()
+
             $rootScope.$apply ->
-                dataService.get('asd', 1)
+                data.getBuilds(1)
             expect(socketService.send).toHaveBeenCalledWith
                 cmd: 'startConsuming'
-                path: 'asd/1/*'
+                path: 'builds/1/*'
+            # get same build again, it should not register again
+            socketService.send.calls.reset()
+            $rootScope.$apply ->
+                data.getBuilds(1)
+            expect(socketService.send).not.toHaveBeenCalled()
+
+            # now we close the accessor, and we should send stopConsuming
+            $rootScope.$apply ->
+                data.close()
+            expect(socketService.send).toHaveBeenCalledWith
+                cmd: 'stopConsuming'
+                path: 'builds/*/*'
+            expect(socketService.send).toHaveBeenCalledWith
+                cmd: 'stopConsuming'
+                path: 'builds/1/*'
+
 
         it 'should not call startConsuming when {subscribe: false} is passed in', ->
             d = $q.defer()
@@ -107,9 +127,9 @@ describe 'Data service', ->
             $rootScope.$apply ->
                 builds = opened.getBuilds(subscribe: false).getArray()
             expect(builds.length).toBe(3)
-            spyOn(builds, 'unsubscribe')
+            spyOn(builds, 'close')
             opened.close()
-            expect(builds.unsubscribe).toHaveBeenCalled()
+            expect(builds.close).toHaveBeenCalled()
 
         it 'should call close when the $scope is destroyed', ->
             spyOn(opened, 'close')

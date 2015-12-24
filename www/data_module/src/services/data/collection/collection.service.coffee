@@ -1,47 +1,44 @@
 class Collection extends Factory
     constructor: ($q, $injector, $log, dataUtilsService, socketService) ->
         return class CollectionInstance extends Array
-            constructor: (restPath, query = {}) ->
-                @getRestPath = -> restPath
-                @getQuery = -> query
-                @getSocketPath = -> dataUtilsService.socketPath(restPath)
-                @getType = -> dataUtilsService.type(restPath)
-                id = dataUtilsService.classId(restPath)
-                @getId = -> id
-                @getEndpoint = -> dataUtilsService.endpointPath(restPath)
-                streamRegex = ///^#{restPath}\/(\w+|\d+)\/.*$///g
-                @getSocketPathRE = -> streamRegex
+            constructor: (@restPath, @query = {}, @accessor) ->
+                @socketPath = dataUtilsService.socketPath(@restPath)
+                @type = dataUtilsService.type(@restPath)
+                @id = dataUtilsService.classId(@restPath)
+                @endpoint = dataUtilsService.endpointPath(@restPath)
+                @socketPathRE = ///^#{@restPath}\/(\w+|\d+)\/.*$///g
+
+                # default event handlers
+                @onChange = angular.nop
+                @onNew = angular.nop
+                @onChange = angular.nop
+
                 try
                     # try to get the wrapper class
-                    className = dataUtilsService.className(restPath)
+                    className = dataUtilsService.className(@restPath)
                     # the classes have the dataService as a dependency
                     # $injector.get doesn't throw circular dependency exception
-                    WrapperClass = $injector.get(className)
+                    @WrapperClass = $injector.get(className)
                 catch e
                     # use the Base class otherwise
                     console.log "unknown wrapper for", className
-                    WrapperClass = $injector.get('Base')
-                @getWrapper = -> WrapperClass
+                    @WrapperClass = $injector.get('Base')
                 socketService.eventStream.subscribe(@listener)
-
-                @subscribers = []
-
-            subscribe: (subscriber) ->
-                if @subscribers.indexOf(subscriber) < 0
-                    @subscribers.push(subscriber)
-
-            unsubscribe: (subscriber) ->
-                i = @subscribers.indexOf(subscriber)
-                if i >= 0
-                    @subscribers.splice(i, 1)
+                @accessor?.registerCollection(this)
 
             listener: (data) =>
                 key = data.k
                 message = data.m
                 # Test if the message is for me
-                if @getSocketPathRE().test(key)
+                if @socketPathRE.test(key)
                     @put(message)
                     @recomputeQuery()
+
+            subscribe: ->
+                return socketService.subscribe(@socketPath, this)
+
+            close: ->
+                return socketService.unsubscribe(@socketPath, this)
 
             from: (data) ->
                 # put items one by one
@@ -49,19 +46,18 @@ class Collection extends Factory
                 @recomputeQuery()
 
             add: (element) ->
-                Wrapper = @getWrapper()
-                instance = new Wrapper(element, @getEndpoint(), @getQuery().subscribe)
+                instance = new @WrapperClass(element, @endpoint)
+                instance.setAccessor(@accessor)
                 @push(instance)
 
             put: (element) ->
-                id = @getId()
                 for old in this
-                    if old[id] == element[id]
+                    if old[@id] == element[@id]
                         old.update(element)
-                        return
+                        return true
                 # if not found, add it.
                 @add(element)
-
+                return false
             clear: ->
                 @pop() while @length > 0
 

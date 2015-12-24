@@ -53,8 +53,23 @@ class DataUtils extends Service
                     arrayOrString.split('/')
                 else
                     throw new TypeError("Parameter 'arrayOrString' must be a array or a string, not #{typeof arrayOrString}")
+
             unWrap: (object, path) ->
                 object[@type(path)]
+
+            splitOptions: (args) ->
+                # keep defined arguments only
+                args = args.filter (e) -> e?
+
+                query = {} # default
+                # get the query parameters
+                [..., last] = args
+                subscribe = accessor = null
+
+                if angular.isObject(last)
+                    query = args.pop()
+
+                return [args, query]
 
             parse: (object) ->
                 for k, v of object

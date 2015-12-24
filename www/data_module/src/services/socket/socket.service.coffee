@@ -10,6 +10,7 @@ class Socket extends Service
                 # deferred object for resolving response promises
                 # map of id: promise
                 @deferred = {}
+                @subscribers = {}
                 # open socket
                 @open()
 
@@ -80,3 +81,24 @@ class Socket extends Service
                 path = @getRootPath()
                 port = if $location.port() is defaultport then '' else ':' + $location.port()
                 return "#{protocol}://#{host}#{port}#{path}ws"
+
+            # High level api. Maintain a list of subscribers for one event path
+            subscribe: (eventPath, collection) ->
+                l = @subscribers[eventPath] ?= []
+                l.push(collection)
+                if l.length == 1
+                    return @send
+                        cmd: "startConsuming"
+                        path: eventPath
+                return $q.resolve()
+
+            unsubscribe: (eventPath, collection) ->
+                l = @subscribers[eventPath]
+                pos = l.indexOf(collection)
+                if pos >= 0
+                    l.splice(pos, 1)
+                    if l.length == 0
+                        return @send
+                            cmd: "stopConsuming"
+                            path: eventPath
+                return $q.resolve()
