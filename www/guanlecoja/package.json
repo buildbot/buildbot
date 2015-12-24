@@ -73,7 +73,6 @@
     "jasmine-core": "*"
   },
   "dependencies": {
-
     "coffee-script": "~1.10.0",
 
     "gulp-ng-classify": "~4.0.0",
@@ -88,9 +87,10 @@
   "main": "./main",
   "bin": {},
   "engines": {
-    "node": "~0.8 || ~0.10 || ~0.12"
+    "node": "~4.4.0",
+    "npm": "<3.0.0"
   },
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}

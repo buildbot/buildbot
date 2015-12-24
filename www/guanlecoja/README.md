@@ -182,6 +182,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.5.1: mark it does not support npm>3. Peer dependencies were removed, and directories are flatten. Need more time to fix it correctly
 * 0.5.0: make output configurable
 * 0.4.2: update gulp-bower-deps to retry after cleaning up the lib directory
 * 0.4.1: Do not uglyfy vendor.js. Some vendors actually fail to run properly when uglified
