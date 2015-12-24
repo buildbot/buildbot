@@ -76,7 +76,7 @@ Running Buildbot's Tests (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you wish, you can run the buildbot unit test suite.
-First, ensure you have the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from PyPi.
+First, ensure you have the `mock <http://pypi.python.org/pypi/mock>`_ Python module installed from PyPI.
 This module is not required for ordinary Buildbot operation - only to run the tests.
 Note that this is not the same as the Fedora ``mock`` package!
 
