@@ -1,5 +1,5 @@
 class Collection extends Factory
-    constructor: ($q, $injector, $log, dataUtilsService, socketService) ->
+    constructor: ($q, $injector, $log, dataUtilsService, socketService, DataQuery) ->
         return class CollectionInstance extends Array
             constructor: (@restPath, @query = {}, @accessor) ->
                 @socketPath = dataUtilsService.socketPath(@restPath)
@@ -7,12 +7,13 @@ class Collection extends Factory
                 @id = dataUtilsService.classId(@restPath)
                 @endpoint = dataUtilsService.endpointPath(@restPath)
                 @socketPathRE = ///^#{@restPath}\/(\w+|\d+)\/.*$///g
-
+                @queryExecutor = new DataQuery(@query)
                 # default event handlers
-                @onChange = angular.nop
-                @onNew = angular.nop
-                @onChange = angular.nop
-
+                @onUpdate = angular.noop
+                @onNew = angular.noop
+                @onChange = angular.noop
+                @_new = []
+                @_updated = []
                 try
                     # try to get the wrapper class
                     className = dataUtilsService.className(@restPath)
@@ -33,6 +34,7 @@ class Collection extends Factory
                 if @socketPathRE.test(key)
                     @put(message)
                     @recomputeQuery()
+                    @sendEvents()
 
             subscribe: ->
                 return socketService.subscribe(@socketPath, this)
@@ -44,20 +46,22 @@ class Collection extends Factory
                 # put items one by one
                 @put(i) for i in data
                 @recomputeQuery()
+                @sendEvents()
 
             add: (element) ->
                 instance = new @WrapperClass(element, @endpoint)
                 instance.setAccessor(@accessor)
+                @_new.push(instance)
                 @push(instance)
 
             put: (element) ->
                 for old in this
                     if old[@id] == element[@id]
                         old.update(element)
-                        return true
+                        @_updated.push(old)
+                        return
                 # if not found, add it.
                 @add(element)
-                return false
             clear: ->
                 @pop() while @length > 0
 
@@ -66,3 +70,25 @@ class Collection extends Factory
                 if index > -1 then @splice(index, 1)
 
             recomputeQuery: ->
+                @queryExecutor.computeQuery(this)
+
+            sendEvents: ->
+                changed = false
+
+                for i in @_new
+                    # is it still in the array?
+                    if i in this
+                        @onNew(i)
+                        changed = true
+
+                for i in @_updated
+                    # is it still in the array?
+                    if i in this
+                        @onUpdate(i)
+                        changed = true
+
+                if changed
+                    @onChange()
+
+                @_new = []
+                @_updated = []
