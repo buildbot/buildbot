@@ -9,6 +9,7 @@ class Buildrequestsummary extends Directive('common')
             controller: '_buildrequestsummaryController'
         }
 
+
 class _buildrequestsummary extends Controller('common')
     constructor: ($scope, dataService, findBuilds) ->
         $scope.$watch "buildrequest.claimed", (n, o) ->
