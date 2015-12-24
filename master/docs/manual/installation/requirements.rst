@@ -51,7 +51,7 @@ Pywin32: http://sourceforge.net/projects/pywin32/
 Buildmaster Requirements
 ------------------------
 
-Note that all of these requirements aside from SQLite can easily be installed from the Python package repository, PyPi.
+Note that all of these requirements aside from SQLite can easily be installed from the Python package repository, PyPI.
 
 sqlite3: http://www.sqlite.org
 

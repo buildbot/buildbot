@@ -8,7 +8,7 @@ in sibling directories.
 
 The setup.py script in each directory is designed to create wheel packages
 containing pre-built Angular files.  This means that installing the
-buildbot-www package from PyPi gets all of the code required to run the
+buildbot-www package from PyPI gets all of the code required to run the
 Buildbot UI, without any requirement for Node.js or any NPM install.
 
 The ordinary 'python setup.py sdist' and 'python setup.py install' commands
