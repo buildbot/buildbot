@@ -57,9 +57,8 @@ class _buildsummary extends Controller('common')
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
             data.getBuilds(buildid).getArray().onNew = (build) ->
-                window.build = build
                 self.build = build
-                data.getBuilders(build.builderid).getArray().onNew (builder) ->
+                data.getBuilders(build.builderid).getArray().onNew = (builder) ->
                     self.builder = builder
 
                 self.steps = build.getSteps().getArray()

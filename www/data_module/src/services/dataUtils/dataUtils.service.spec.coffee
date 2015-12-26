@@ -46,6 +46,19 @@ describe 'Data utils service', ->
             result = dataUtilsService.socketPath('asd/1')
             expect(result).toBe('asd/1/*')
 
+    describe 'socketPathRE(arg)', ->
+
+        it 'should return the WebSocket subscribe path of the parameter path', ->
+            result = dataUtilsService.socketPathRE('asd/1/*')
+            expect(result.test("asd/1/new")).toBeTruthy()
+
+            result = dataUtilsService.socketPathRE('asd/1/bnm/*/*').source
+            expect(result).toBe('^asd\\/1\\/bnm\\/[^/]+\\/[^/]+$')
+
+            result = dataUtilsService.socketPathRE('asd/1/*').source
+            expect(result).toBe('^asd\\/1\\/[^/]+$')
+
+
     describe 'restPath(arg)', ->
 
         it 'should return the rest path of the parameter WebSocket subscribe path', ->

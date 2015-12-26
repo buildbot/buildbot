@@ -10,6 +10,3 @@ class Build extends Factory
                 ]
 
                 super(object, endpoint, endpoints)
-            update: (o) ->
-                console.log "update", o
-                angular.merge(this, o)

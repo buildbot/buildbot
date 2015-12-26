@@ -33,6 +33,9 @@ class DataUtils extends Service
                 if a.length % 2 is 1 then stars.push('*')
                 a.concat(stars).join('/')
 
+            socketPathRE: (socketPath) ->
+                return new RegExp("^" + socketPath.replace(/\*/g, "[^/]+") + "$")
+
             restPath: (arg) ->
                 a = @copyOrSplit(arg)
                 a = a.filter (e) -> e isnt '*'

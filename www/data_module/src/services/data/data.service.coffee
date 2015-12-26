@@ -58,7 +58,7 @@ class Data extends Provider
                                 return
 
                             # fill up the collection with data
-                            collection.from(response)
+                            collection.initial(response)
                             # the collection is ready to be used
                             resolve(collection)
 

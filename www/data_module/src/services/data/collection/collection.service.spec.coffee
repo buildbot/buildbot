@@ -35,15 +35,15 @@ describe 'Collection', ->
             ]
             expect(c.length).toEqual(2)
 
-        fit "should order the updates correctly", ->
+        it "should order the updates correctly", ->
             c.listener k: "builds/1/update", m: {buildid: 1, value:1}
-            c.from [
+            c.initial [
                 buildid: 1
                 value: 0
             ]
             expect(c[0].value).toEqual(1)
             c.listener k: "builds/1/update", m: {buildid: 1, value:2}
-            expect(c[0].value).toEqual(1)
+            expect(c[0].value).toEqual(2)
 
     describe "queried collection", ->
         beforeEach ->
@@ -96,3 +96,20 @@ describe 'Collection', ->
             expect(c.onNew.calls.count()).toEqual(2)
             expect(c.onUpdate.calls.count()).toEqual(0)
             expect(c.onChange.calls.count()).toEqual(1)
+
+
+    describe "singleid collection", ->
+        beforeEach ->
+            c = new Collection('builds/1')
+
+        it "should manage the updates correctly", ->
+            c.listener k: "builds/1/update", m: {buildid: 1, value:1}
+            c.listener k: "builds/2/update", m: {buildid: 2, value:2}
+            c.initial [
+                buildid: 1
+                value: 0
+            ]
+            expect(c.length).toEqual(1)
+            expect(c[0].value).toEqual(1)
+            c.listener k: "builds/1/update", m: {buildid: 1, value:2}
+            expect(c[0].value).toEqual(2)
