@@ -169,7 +169,7 @@ class Data extends Provider
                 delete queryWithoutSubscribe.subscribe
                 delete queryWithoutSubscribe.accessor
                 returnValue = @mocks[url]?[query] or @mocks[url]?[queryWithoutSubscribe]
-                if not returnValue? then throw new Error("No return value for: #{url} (#{angular.toJson(query)})")
+                if not returnValue? then throw new Error("No return value for: #{url} (#{angular.toJson(queryWithoutSubscribe)})")
                 collection = @createCollection(url, queryWithoutSubscribe, returnValue)
                 p = $q.resolve(collection)
                 p.getArray = -> collection

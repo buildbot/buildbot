@@ -21,6 +21,8 @@ class DataUtils extends Service
                 @capitalize(@singularType(arg))
 
             classId: (arg) ->
+                if @singularType(arg) == "forcescheduler"
+                    return "name"
                 @singularType(arg) + "id"
 
             socketPath: (arg) ->
