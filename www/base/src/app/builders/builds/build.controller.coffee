@@ -70,12 +70,12 @@ class Build extends Controller
         $scope.$watch('build.complete', refreshContextMenu)
 
         data = dataService.open().closeOnDestroy($scope)
-        data.getBuilders(builderid).getArray().onChange = (builders) ->
+        data.getBuilders(builderid).onChange = (builders) ->
             $scope.builder = builder = builders[0]
             # get the build plus the previous and next
             # note that this registers to the updates for all the builds for that builder
             # need to see how that scales
-            builder.getBuilds(number__lt: buildnumber + 2, limit: 3, order: '-number').getArray().onChange = (builds) ->
+            builder.getBuilds(number__lt: buildnumber + 2, limit: 3, order: '-number').onChange = (builds) ->
                 $scope.prevbuild = null
                 $scope.nextbuild = null
                 build = null
@@ -114,21 +114,17 @@ class Build extends Controller
                     link: "#/builders/#{$scope.builder.builderid}/builds/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
-                $scope.properties = build.getProperties().getArray()
-                $scope.changes = build.getChanges().getArray()
-                $scope.$watch 'changes', (changes) ->
-                    if changes?
-                        responsibles = {}
-                        for change in changes
-                            change.author_email = dataUtilsService.emailInString(change.author)
-                            responsibles[change.author] = change.author_email
-                        $scope.responsibles = responsibles
-                , true
+                $scope.properties = build.getProperties()
+                $scope.changes = build.getChanges()
+                $scope.responsibles = {}
+                $scope.changes.onNew = (change) ->
+                    console.log change
+                    $scope.responsibles[change.author_name] = change.author_email
 
-                data.getBuildslaves(build.buildslaveid).then (buildslaves) ->
+                data.getBuildslaves(build.buildslaveid).onChange = (buildslaves) ->
                     $scope.buildslave = publicFieldsFilter(buildslaves[0])
 
-                data.getBuildrequests(build.buildrequestid).then (buildrequests) ->
+                data.getBuildrequests(build.buildrequestid).onChange = (buildrequests) ->
                     $scope.buildrequest = buildrequest = buildrequests[0]
-                    data.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
+                    data.getBuildsets(buildrequest.buildsetid).onChange = (buildsets) ->
                         $scope.buildset = buildsets[0]

@@ -37,64 +37,29 @@ class Data extends Provider
                 restPath = dataUtilsService.restPath(args)
                 # up to date array, this will be returned
                 collection = new Collection(restPath, query, accessor)
+
                 if subscribe
                     subscribePromise = collection.subscribe()
                 else
                     subscribePromise = $q.resolve()
 
-                promise = $q (resolve, reject) ->
+                subscribePromise.then ->
+                    # get the data from the rest api
+                    restService.get(restPath, query).then (response) ->
 
-                    subscribePromise.then ->
-                        # get the data from the rest api
-                        restService.get(restPath, query).then (response) ->
+                        type = dataUtilsService.type(restPath)
+                        response = response[type]
+                        # the response should always be an array
+                        if not angular.isArray(response)
+                            e = "#{response} is not an array"
+                            $log.error(e)
+                            return
 
-                            type = dataUtilsService.type(restPath)
-                            response = response[type]
-                            # the response should always be an array
-                            if not angular.isArray(response)
-                                e = "#{response} is not an array"
-                                $log.error(e)
-                                reject(e)
-                                return
+                        # fill up the collection with initial data
+                        collection.initial(response)
 
-                            # fill up the collection with data
-                            collection.initial(response)
-                            # the collection is ready to be used
-                            resolve(collection)
+                return collection
 
-                        , (e) -> reject(e)
-                    , (e) -> reject(e)
-
-                promise.getArray = -> collection
-
-                return promise
-
-            startConsuming: (path) ->
-                socketService.send({
-                    cmd: 'startConsuming'
-                    path: path
-                })
-
-            stopConsuming: (path) ->
-                socketService.send({
-                    cmd: 'stopConsuming'
-                    path: path
-                })
-
-            # make the stopConsuming calls when there is no listener for a specific endpoint
-            unsubscribeListener: (removed) =>
-                for path, ids of @listeners
-                    i = ids.indexOf(removed.id)
-                    if i > -1
-                        ids.splice(i, 1)
-                        if ids.length is 0 then @stopConsuming(path)
-
-            # resend the start consuming messages for active paths
-            socketCloseListener: =>
-                if not @listeners? then return
-                for path, ids of @listeners
-                    if ids.length > 0 then @startConsuming(path)
-                return null
 
             control: (ep, id, method, params = {}) ->
                 restPath = dataUtilsService.restPath([ep, id])
@@ -134,6 +99,7 @@ class Data extends Provider
                     closeOnDestroy: (scope) ->
                         if not angular.isFunction(scope.$on)
                             throw new TypeError("Parameter 'scope' doesn't have an $on function")
+                        this.scope = scope
                         scope.$on '$destroy', => @close()
                         return this
 
@@ -178,9 +144,10 @@ class Data extends Provider
             # when testing get will return the given values
             _mockGet: (args...) ->
                 [url, query] = @processArguments(args)
-                queryWithoutSubscribe = angular.copy(query)
-                delete queryWithoutSubscribe.subscribe
-                delete queryWithoutSubscribe.accessor
+                queryWithoutSubscribe = {}
+                for k, v of query
+                    if k != "subscribe" and k != "accessor"
+                        queryWithoutSubscribe[k] = v
                 if @_expects
                     [exp_url, exp_query] = @_expects.shift()
                     expect(exp_url).toEqual(url)
@@ -189,9 +156,7 @@ class Data extends Provider
                 if not returnValue? then throw new Error("No return value for: #{url} " +
                     "(#{angular.toJson(queryWithoutSubscribe)})")
                 collection = @createCollection(url, queryWithoutSubscribe, returnValue)
-                p = $q.resolve(collection)
-                p.getArray = -> collection
-                return p
+                return collection
 
             processArguments: (args) ->
                 [args, query] = dataUtilsService.splitOptions(args)
@@ -213,5 +178,5 @@ class Data extends Provider
                     if not d.hasOwnProperty(id)
                         d[id] = idCounter++
 
-                collection.from(response)
+                collection.initial(response)
                 return collection

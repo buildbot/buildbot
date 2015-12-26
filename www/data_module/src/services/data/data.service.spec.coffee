@@ -1,10 +1,11 @@
 describe 'Data service', ->
     beforeEach module 'bbData'
 
-    dataService = restService = socketService = ENDPOINTS = $rootScope = $q = $httpBackend = null
+    dataService = restService = socketService = ENDPOINTS = $rootScope = $q = $httpBackend = $timeout = null
     injected = ($injector) ->
         dataService = $injector.get('dataService')
         restService = $injector.get('restService')
+        $timeout = $injector.get('$timeout')
         socketService = $injector.get('socketService')
         ENDPOINTS = $injector.get('ENDPOINTS')
         $rootScope = $injector.get('$rootScope')
@@ -23,10 +24,9 @@ describe 'Data service', ->
             expect(angular.isFunction(dataService["get#{E}"])).toBeTruthy()
 
     describe 'get()', ->
-        it 'should return a promise', ->
-            p = dataService.getBuilds()
-            expect(angular.isFunction(p.then)).toBeTruthy()
-            expect(angular.isFunction(p.getArray)).toBeTruthy()
+        it 'should return a collection', ->
+            ret = dataService.getBuilds()
+            expect(ret.length).toBeDefined()
 
         it 'should call get for the rest api endpoint', ->
             d = $q.defer()
@@ -75,17 +75,17 @@ describe 'Data service', ->
         it 'should not call startConsuming when {subscribe: false} is passed in', ->
             d = $q.defer()
             spyOn(restService, 'get').and.returnValue(d.promise)
-            spyOn(dataService, 'startConsuming')
-            expect(dataService.startConsuming).not.toHaveBeenCalled()
+            spyOn(socketService, 'send').and.returnValue(d.promise)
+            expect(socketService.send).not.toHaveBeenCalled()
             $rootScope.$apply ->
                 dataService.getBuilds(subscribe: false)
-            expect(dataService.startConsuming).not.toHaveBeenCalled()
+            expect(socketService.send).not.toHaveBeenCalled()
 
         it 'should add the new instance on /new WebSocket message', ->
             spyOn(restService, 'get').and.returnValue($q.resolve(builds: []))
             builds = null
             $rootScope.$apply ->
-                builds = dataService.getBuilds(subscribe: false).getArray()
+                builds = dataService.getBuilds(subscribe: false)
             socketService.eventStream.push
                 k: 'builds/111/new'
                 m: asd: 111
@@ -125,7 +125,7 @@ describe 'Data service', ->
             spyOn(restService, 'get').and.returnValue(p)
             builds = null
             $rootScope.$apply ->
-                builds = opened.getBuilds(subscribe: false).getArray()
+                builds = opened.getBuilds(subscribe: false)
             expect(builds.length).toBe(3)
             spyOn(builds, 'close')
             opened.close()
@@ -141,14 +141,14 @@ describe 'Data service', ->
 
         it 'should work with mock calls as well', ->
             dataService.when('builds/1', [{buildid: 1, builderid: 1}])
-            builds = opened.getBuilds(1, subscribe: false).getArray()
+            builds = opened.getBuilds(1, subscribe: false)
 
     describe 'when()', ->
         it 'should autopopulate ids', (done) ->
             dataService.when('builds', [{}, {}, {}])
-            $rootScope.$apply ->
-                dataService.getBuilds().then (builds) ->
-                    expect(builds.length).toBe(3)
-                    expect(builds[1].buildid).toBe(2)
-                    expect(builds[2].buildid).toBe(3)
-                    done()
+            dataService.getBuilds().onChange = (builds) ->
+                expect(builds.length).toBe(3)
+                expect(builds[1].buildid).toBe(2)
+                expect(builds[2].buildid).toBe(3)
+                done()
+            $timeout.flush()

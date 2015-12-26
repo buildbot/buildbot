@@ -30,8 +30,8 @@ describe 'buildrequest summary controller', ->
         dataService.expect('buildrequests/1', buildrequests)
         expect(dataService.get).not.toHaveBeenCalled()
         controller = createController()
+        $timeout.flush()
         dataService.verifyNoOutstandingExpectation()
-        $scope.$apply()
         expect($scope.buildrequest.buildrequestid).toBe(1)
 
     it 'should query for builds again if first query returns 0', ->
@@ -40,19 +40,20 @@ describe 'buildrequest summary controller', ->
         builds = []
 
         controller = createController()
-        $scope.$apply()
+        $timeout.flush()
         dataService.verifyNoOutstandingExpectation()
 
         dataService.expect('builds', {buildrequestid: 1}, builds)
 
         $scope.$apply ->
             $scope.buildrequest.claimed = true
+        $timeout.flush()
 
         dataService.verifyNoOutstandingExpectation()
         expect($scope.builds.length).toBe(builds.length)
 
         builds = [{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}]
-        dataService.expect('builds', {buildrequestid: 1}, builds)
+        $scope.builds.from(builds)
 
         $timeout.flush()
         dataService.verifyNoOutstandingExpectation()

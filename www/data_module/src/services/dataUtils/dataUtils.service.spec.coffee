@@ -134,3 +134,5 @@ describe 'Data utils service', ->
         it 'should return an email from a string', ->
             email = dataUtilsService.emailInString('foo <bar@foo.com>')
             expect(email).toBe('bar@foo.com')
+            email = dataUtilsService.emailInString('bar@foo.com')
+            expect(email).toBe('bar@foo.com')

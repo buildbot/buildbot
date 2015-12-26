@@ -16,4 +16,4 @@ class _CurrentBuilds extends Controller
         @builds = data.getBuilds(
             complete: false
             order:'-started_at'
-        ).getArray()
+        )

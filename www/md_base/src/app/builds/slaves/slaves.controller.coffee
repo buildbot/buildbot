@@ -3,4 +3,4 @@ class Slaves extends Controller
         data = dataService.open().closeOnDestroy($scope)
         # TODO: show builder names related to one slave after cache function
         #       of dataService has been finished.
-        @list = data.getBuildslaves().getArray()
+        @list = data.getBuildslaves()

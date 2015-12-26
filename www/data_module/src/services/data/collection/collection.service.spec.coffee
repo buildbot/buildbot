@@ -1,11 +1,12 @@
 describe 'Collection', ->
     beforeEach module 'bbData'
 
-    Collection = $q = $rootScope = tabexService = indexedDBService = c = undefined
+    Collection = $q = $rootScope = tabexService = indexedDBService = c = $timeout = undefined
     injected = ($injector) ->
         $q = $injector.get('$q')
         $rootScope = $injector.get('$rootScope')
         Collection = $injector.get('Collection')
+        $timeout = $injector.get('$timeout')
 
     beforeEach(inject(injected))
 
@@ -80,6 +81,7 @@ describe 'Collection', ->
             ,
                 buildid: 2
             ]
+            $timeout.flush()
             expect(c.onNew.calls.count()).toEqual(2)
             expect(c.onUpdate.calls.count()).toEqual(1)
             expect(c.onChange.calls.count()).toEqual(1)
@@ -93,6 +95,7 @@ describe 'Collection', ->
             ,
                 buildid: 5
             ]
+            $timeout.flush()
             expect(c.onNew.calls.count()).toEqual(2)
             expect(c.onUpdate.calls.count()).toEqual(0)
             expect(c.onChange.calls.count()).toEqual(1)

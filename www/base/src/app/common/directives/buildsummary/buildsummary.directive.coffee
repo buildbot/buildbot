@@ -56,12 +56,12 @@ class _buildsummary extends Controller('common')
         data = dataService.open().closeOnDestroy($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
-            data.getBuilds(buildid).getArray().onNew = (build) ->
+            data.getBuilds(buildid).onNew = (build) ->
                 self.build = build
-                data.getBuilders(build.builderid).getArray().onNew = (builder) ->
+                data.getBuilders(build.builderid).onNew = (builder) ->
                     self.builder = builder
 
-                self.steps = build.getSteps().getArray()
+                self.steps = build.getSteps()
 
                 self.steps.onNew = (step) ->
                     step.loadLogs()

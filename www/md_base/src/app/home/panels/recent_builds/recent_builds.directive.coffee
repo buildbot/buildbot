@@ -20,4 +20,4 @@ class _RecentBuilds extends Controller
             complete: true
             order:'-complete_at'
             limit: homeSetting.n_recent_builds.value
-        ).getArray()
+        )

@@ -26,4 +26,4 @@ class Builds extends Controller
 
     constructor: ($scope, dataService, @$state, @$mdMedia) ->
         data = dataService.open().closeOnDestroy($scope)
-        @builders = data.getBuilders().getArray()
+        @builders = data.getBuilders()

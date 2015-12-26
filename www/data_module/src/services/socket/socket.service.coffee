@@ -93,7 +93,7 @@ class Socket extends Service
                 return $q.resolve()
 
             unsubscribe: (eventPath, collection) ->
-                l = @subscribers[eventPath]
+                l = @subscribers[eventPath] ?= []
                 pos = l.indexOf(collection)
                 if pos >= 0
                     l.splice(pos, 1)

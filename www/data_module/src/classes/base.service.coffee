@@ -39,9 +39,8 @@ class Base extends Factory
                     E = dataUtilsService.capitalize(e)
                     # adds loadXXX functions to the prototype
                     this::["load#{E}"] = (args...) ->
-                        p = @get(e, args...)
-                        @[e] = p.getArray()
-                        return p
+                        return @[e] = @get(e, args...)
+
                     # adds getXXX functions to the prototype
                     this::["get#{E}"] = (args...) ->
                         [args, query] = dataUtilsService.splitOptions(args)

@@ -93,34 +93,39 @@ class Builders extends Controller
             else
                 $scope.tags_filter.splice(i, 1)
 
-        $scope.builders = []
         data = dataService.open().closeOnDestroy($scope)
         byNumber = (a, b) -> return a.number - b.number
-        data.getBuilders().then (builders) ->
-            $scope.builders = builders
-            buildersById = {}
-            builders.forEach (builder) ->
-                builder.buildslaves = []
-                builder.builds = []
-                buildersById[builder.builderid] = builder
+        slavesByBuilderId = {}
+        buildsByBuilderId = {}
 
-            # as there is usually lots of builders, its better to get the overall list of slaves
-            # and then associate by builder
+        $scope.builders = data.getBuilders()
+        $scope.builders.onNew = (builder) ->
+            builder.buildslaves ?= slavesByBuilderId[builder.builderid] || []
+            builder.builds ?= buildsByBuilderId[builder.builderid] || []
+            builder.loadMasters()
 
-            #@todo: how could we update this when new slaves are seen?
-            data.getBuildslaves().then (slaves) ->
-                slaves.forEach (slave) ->
-                    slave.configured_on?.forEach (conf) ->
-                        buildersById[conf.builderid].buildslaves.push(slave)
+        # as there is usually lots of builders, its better to get the overall list of slaves, and builds
+        # and then associate by builder
+        # @todo, we cannot do same optims for masters due to lack of data api
 
+        slaves = data.getBuildslaves()
+        slaves.onNew = slaves.onUpdate =  (slave) ->
+            slave.configured_on?.forEach (conf) ->
+                # the builder might not be yet loaded, so we need to store the slave list
+                if $scope.builders.hasOwnProperty(conf.builderid)
+                    builder = []
+                    slaveslist = $scope.builders.get(conf.builderid).buildslaves ?= []
+                else
+                    slaveslist = slavesByBuilderId[conf.builderid] ?= []
+                slaveslist.push(slave)
 
-            #@todo: how could we update this when new builds are seen?
-            data.getBuilds(limit: 200, order: '-started_at').then (builds) ->
-                builds.forEach (build) ->
-                    buildersById[build.builderid].builds.push(build)
-                    buildersById[build.builderid].builds.sort(byNumber)
-
-            # @todo, we cannot do same optims for masters due to lack of data api
-            # to map builders and masters
-            builders.forEach (builder) ->
-                builder.loadMasters()
+        builds = data.getBuilds(limit: 200, order: '-started_at')
+        builds.onNew = builds.onUpdate = (build) ->
+            # the builder might not be yet loaded, so we need to store the slave list
+            if $scope.builders.hasOwnProperty(build.builderid)
+                builder = []
+                buildslist = $scope.builders.get(build.builderid).builds ?= []
+            else
+                buildslist = buildsByBuilderId[build.builderid] ?= []
+            buildslist.push(build)
+            buildslist.sort(byNumber)
