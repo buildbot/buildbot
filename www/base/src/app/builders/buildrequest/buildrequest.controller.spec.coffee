@@ -30,9 +30,10 @@ describe 'buildrequest controller', ->
         dataService.when('buildsets/1', [{buildsetid: 1}])
         controller = createController()
         $rootScope.$apply()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1)
+        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1, jasmine.any(Object))
         $scope.buildrequest.claimed = true
-        dataService.when('builds', {buildrequestid: 1}, [{buildid: 1}, {buildid: 2}])
+        dataService.when('builds', {buildrequestid: 1},
+            [{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}])
         $rootScope.$apply()
         expect($scope.builds[0]).toBeDefined()
 
@@ -47,7 +48,7 @@ describe 'buildrequest controller', ->
         $rootScope.$apply()
         expect($scope.builds.length).toBe(0)
 
-        dataService.when('builds', {buildrequestid: 1}, [{}, {}])
+        dataService.when('builds', {buildrequestid: 1}, [{buildrequestid: 1}, {buildrequestid: 1}])
         $timeout.flush()
         $rootScope.$apply()
         expect($scope.builds.length).toBe(2)
@@ -60,7 +61,7 @@ describe 'buildrequest controller', ->
         controller = createController()
         $rootScope.$apply()
         $scope.buildrequest.claimed = true
-        dataService.when('builds', {buildrequestid: 1}, [{buildid: 1, builderid: 3, number: 1}])
+        dataService.when('builds', {buildrequestid: 1}, [{buildid: 1, builderid: 3, number: 1, buildrequestid: 1}])
         $timeout.flush()
         $rootScope.$apply()
         expect(goneto).toEqual(['build', { builder : 3, build : 1 }])

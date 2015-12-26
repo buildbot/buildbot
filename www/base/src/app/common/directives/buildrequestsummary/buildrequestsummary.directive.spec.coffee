@@ -30,7 +30,7 @@ describe 'buildrequest summary controller', ->
         dataService.when('buildrequests/1', buildrequests)
         expect(dataService.get).not.toHaveBeenCalled()
         controller = createController()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', $scope.buildrequestid)
+        expect(dataService.get).toHaveBeenCalledWith('buildrequests', $scope.buildrequestid, jasmine.any(Object))
         $scope.$apply()
         expect($scope.buildrequest.buildrequestid).toBe(1)
 
@@ -41,20 +41,20 @@ describe 'buildrequest summary controller', ->
         dataService.when('builds', {buildrequestid: 1}, builds)
 
         controller = createController()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1)
+        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1, jasmine.any(Object))
         $scope.$apply()
 
         $scope.buildrequest.claimed = true
         $scope.$apply()
-        expect(dataService.get).toHaveBeenCalledWith('builds', {buildrequestid: 1})
+        expect(dataService.get).toHaveBeenCalledWith('builds', {buildrequestid: 1, accessor: jasmine.any(Object)})
         lastCount = dataService.get.calls.count()
         expect($scope.builds.length).toBe(builds.length)
 
-        builds = [{buildid: 1}, {buildid: 2}]
+        builds = [{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}]
         dataService.when('builds', {buildrequestid: 1}, builds)
 
         $timeout.flush()
-        expect(dataService.get).toHaveBeenCalledWith('builds', {buildrequestid: 1})
+        expect(dataService.get).toHaveBeenCalledWith('builds', {buildrequestid: 1, accessor: jasmine.any(Object)})
         count = dataService.get.calls.count()
         expect(count).toBe(lastCount + 1)
         expect($scope.builds.length).toBe(builds.length)

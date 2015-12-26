@@ -32,7 +32,7 @@ class Data extends Provider
 
                 # 'subscribe' is not part of the query
                 delete query.subscribe
-                delete query.observer
+                delete query.accessor
 
                 restPath = dataUtilsService.restPath(args)
                 # up to date array, this will be returned
@@ -167,9 +167,10 @@ class Data extends Provider
                 [url, query] = @processArguments(args)
                 queryWithoutSubscribe = angular.copy(query)
                 delete queryWithoutSubscribe.subscribe
+                delete queryWithoutSubscribe.accessor
                 returnValue = @mocks[url]?[query] or @mocks[url]?[queryWithoutSubscribe]
                 if not returnValue? then throw new Error("No return value for: #{url} (#{angular.toJson(query)})")
-                collection = @createCollection(url, query, returnValue)
+                collection = @createCollection(url, queryWithoutSubscribe, returnValue)
                 p = $q.resolve(collection)
                 p.getArray = -> collection
                 return p
