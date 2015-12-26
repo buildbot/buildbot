@@ -10,7 +10,7 @@ class Buildslaves extends Controller
                 return "(" + $scope.mastersById[buildermaster.masterid].name.split(":")[0] + ")"
             return ""
 
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
 
         $scope.buildersById = {}
         data.getBuilders().then (builders) ->

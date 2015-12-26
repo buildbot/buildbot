@@ -23,7 +23,7 @@ class Data extends Provider
                 subscribe = accessor = undefined
 
                 # subscribe for changes if 'subscribe' is true or undefined
-                subscribe = query.subscribe or not query.subscribe?
+                subscribe = query.subscribe == true
                 accessor = query.accessor
                 if subscribe and not accessor
                     $log.warn "subscribe call should be done after DataService.open()"
@@ -135,6 +135,7 @@ class Data extends Provider
                         if not angular.isFunction(scope.$on)
                             throw new TypeError("Parameter 'scope' doesn't have an $on function")
                         scope.$on '$destroy', => @close()
+                        return this
 
                     # Generate functions for root endpoints
                     @generateEndpoints: ->
@@ -143,6 +144,7 @@ class Data extends Provider
                             E = dataUtilsService.capitalize(e)
                             this::["get#{E}"] = (args...) ->
                                 [args, query] = dataUtilsService.splitOptions(args)
+                                query.subscribe ?= true
                                 query.accessor = this
                                 return self.get(e, args..., query)
 
@@ -150,8 +152,7 @@ class Data extends Provider
         # register return values for the mocked get function
             mocks: {}
             spied: false
-            when: (args...) ->
-                [url, query, returnValue] = args
+            when: (url, query, returnValue) ->
                 if not returnValue?
                     [query, returnValue] = [{}, query]
                 if jasmine? and not @spied
@@ -161,6 +162,18 @@ class Data extends Provider
                 @mocks[url] ?= {}
                 @mocks[url][query] = returnValue
 
+            expect: (url, query, returnValue) ->
+                if not returnValue?
+                    [query, returnValue] = [{}, query]
+                @_expects ?= []
+                @_expects.push([url, query])
+                @when(url, query, returnValue)
+
+            verifyNoOutstandingExpectation:  ->
+                if @_expects? and @_expects.length
+                    fail("expecting #{@_expects.length} more data requests " +
+                        "(#{angular.toJson(@_expects)})")
+
             # register return values with the .when function
             # when testing get will return the given values
             _mockGet: (args...) ->
@@ -168,8 +181,13 @@ class Data extends Provider
                 queryWithoutSubscribe = angular.copy(query)
                 delete queryWithoutSubscribe.subscribe
                 delete queryWithoutSubscribe.accessor
+                if @_expects
+                    [exp_url, exp_query] = @_expects.shift()
+                    expect(exp_url).toEqual(url)
+                    expect(exp_query).toEqual(queryWithoutSubscribe)
                 returnValue = @mocks[url]?[query] or @mocks[url]?[queryWithoutSubscribe]
-                if not returnValue? then throw new Error("No return value for: #{url} (#{angular.toJson(queryWithoutSubscribe)})")
+                if not returnValue? then throw new Error("No return value for: #{url} " +
+                    "(#{angular.toJson(queryWithoutSubscribe)})")
                 collection = @createCollection(url, queryWithoutSubscribe, returnValue)
                 p = $q.resolve(collection)
                 p.getArray = -> collection

@@ -69,7 +69,7 @@ class Build extends Controller
             glTopbarContextualActionsService.setContextualActions(actions)
         $scope.$watch('build.complete', refreshContextMenu)
 
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         data.getBuilders(builderid).then (builders) ->
             $scope.builder = builder = builders[0]
             builder.getBuilds(number__lt: buildnumber + 2, limit: 3, order: '-number').then (builds) ->

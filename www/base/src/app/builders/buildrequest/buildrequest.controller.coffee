@@ -41,7 +41,7 @@ class Buildrequest extends Controller
             glTopbarContextualActionsService.setContextualActions(actions)
         $scope.$watch('buildrequest.complete', refreshContextMenu)
 
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         data.getBuildrequests($stateParams.buildrequest).then (buildrequests) ->
             buildrequest = buildrequests[0]
             $scope.buildrequest = publicFieldsFilter(buildrequest)

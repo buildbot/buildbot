@@ -53,7 +53,7 @@ class _buildsummary extends Controller('common')
         @isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
             data.getBuilds(buildid).then (builds) ->

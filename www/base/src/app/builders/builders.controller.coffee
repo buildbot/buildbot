@@ -94,7 +94,7 @@ class Builders extends Controller
                 $scope.tags_filter.splice(i, 1)
 
         $scope.builders = []
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         byNumber = (a, b) -> return a.number - b.number
         data.getBuilders().then (builders) ->
             $scope.builders = builders

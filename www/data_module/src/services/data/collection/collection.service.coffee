@@ -5,7 +5,6 @@ class Collection extends Factory
                 @socketPath = dataUtilsService.socketPath(@restPath)
                 @type = dataUtilsService.type(@restPath)
                 @id = dataUtilsService.classId(@restPath)
-                console.log @id
                 @endpoint = dataUtilsService.endpointPath(@restPath)
                 @socketPathRE = ///^#{@restPath}\/(\w+|\d+)\/.*$///g
                 @queryExecutor = new DataQuery(@query)

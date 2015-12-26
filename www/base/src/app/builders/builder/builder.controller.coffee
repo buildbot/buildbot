@@ -3,7 +3,7 @@ class Builder extends Controller
         glBreadcrumbService, $state, glTopbarContextualActionsService) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         builderid = $stateParams.builder
         data.getBuilders(builderid).then (builders) ->
             builder = builders[0]
