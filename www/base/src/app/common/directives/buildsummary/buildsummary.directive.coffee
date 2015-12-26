@@ -56,16 +56,18 @@ class _buildsummary extends Controller('common')
         data = dataService.open().closeOnDestroy($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
-            data.getBuilds(buildid).then (builds) ->
-                self.build = build = builds[0]
-                data.getBuilders(build.builderid).then (builders) ->
-                    self.builder = builder = builders[0]
+            data.getBuilds(buildid).getArray().onNew = (build) ->
+                window.build = build
+                self.build = build
+                data.getBuilders(build.builderid).getArray().onNew (builder) ->
+                    self.builder = builder
 
-                build.getSteps().then (steps) ->
-                    self.steps = steps
-                    steps.forEach (step) ->
-                        $scope.$watch (-> step.complete), ->
-                            step.fulldisplay = step.complete == 0 || step.results > 0
-                            if step.complete
-                                step.duration = step.complete_at - step.started_at
-                        step.loadLogs()
+                self.steps = build.getSteps().getArray()
+
+                self.steps.onNew = (step) ->
+                    step.loadLogs()
+
+                self.steps.onUpdate = (step) ->
+                    step.fulldisplay = step.complete == 0 || step.results > 0
+                    if step.complete
+                        step.duration = step.complete_at - step.started_at

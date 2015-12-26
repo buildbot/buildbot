@@ -14,6 +14,8 @@ class Collection extends Factory
                 @onChange = angular.noop
                 @_new = []
                 @_updated = []
+                @_gotInitialData = false
+                @_initialUpdates = []
                 try
                     # try to get the wrapper class
                     className = dataUtilsService.className(@restPath)
@@ -32,10 +34,12 @@ class Collection extends Factory
                 message = data.m
                 # Test if the message is for me
                 if @socketPathRE.test(key)
-                    @put(message)
-                    @recomputeQuery()
-                    @sendEvents()
-
+                    if @_gotInitialData
+                        @put(message)
+                        @recomputeQuery()
+                        @sendEvents()
+                    else
+                        @_initialUpdates.push(message)
             subscribe: ->
                 return socketService.subscribe(@socketPath, this)
 
@@ -43,6 +47,10 @@ class Collection extends Factory
                 return socketService.unsubscribe(@socketPath, this)
 
             from: (data) ->
+                if not @_gotInitialData
+                    @_gotInitialData = true
+                    data = data.concat(@_initialUpdates)
+                    @_initialUpdates = []
                 # put items one by one
                 @put(i) for i in data
                 @recomputeQuery()

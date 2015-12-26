@@ -35,6 +35,16 @@ describe 'Collection', ->
             ]
             expect(c.length).toEqual(2)
 
+        fit "should order the updates correctly", ->
+            c.listener k: "builds/1/update", m: {buildid: 1, value:1}
+            c.from [
+                buildid: 1
+                value: 0
+            ]
+            expect(c[0].value).toEqual(1)
+            c.listener k: "builds/1/update", m: {buildid: 1, value:2}
+            expect(c[0].value).toEqual(1)
+
     describe "queried collection", ->
         beforeEach ->
             c = new Collection('builds', {order:'-buildid', limit:2})
