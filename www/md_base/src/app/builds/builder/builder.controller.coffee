@@ -9,11 +9,11 @@ class Builder extends Controller
         @lastBuild = {}
         @forceschedulers = []
         @buildTabs = []
-        
-        data = @dataService.open($scope)
+
+        data = @dataService.open().closeOnDestroy($scope)
 
         @builderid = $state.params.builderid
-        @dataService.getBuilders(@builderid).then (data) =>
+        data.getBuilders(@builderid).getArray().onChange = (data) =>
             if data.length == 0
                 alert 'Builder not found!'
                 $state.go('builds')
@@ -26,7 +26,7 @@ class Builder extends Controller
                     limit: 20
                 .getArray()
                 @loadMoreBuilderInfo()
-                
+
                 # go to buildstab if no child state is selected
                 if @$state.is('builds.builder', builderid:@builderid)
                     @$state.go 'builds.builder.buildstab', builderid: @builderid

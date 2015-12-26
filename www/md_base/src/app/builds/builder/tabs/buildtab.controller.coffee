@@ -4,8 +4,7 @@ class BuildTab extends Controller
     number: ''
 
     constructor: ($scope, $state, dataService) ->
-        data = dataService.open()
-        data.closeOnDestroy($scope)
+        data = dataService.open().closeOnDestroy($scope)
 
         @builderid = parseInt($state.params.builderid)
         @number = parseInt($state.params.number)

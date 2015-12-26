@@ -11,8 +11,7 @@ class CurrentBuilds extends Directive
 class _CurrentBuilds extends Controller
     showBuilders: true
     constructor: ($scope, dataService, bbSettingsService) ->
-        data = dataService.open()
-        data.closeOnDestroy($scope)
+        data = dataService.open().closeOnDestroy($scope)
 
         @builds = data.getBuilds(
             complete: false

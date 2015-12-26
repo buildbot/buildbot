@@ -18,7 +18,7 @@ describe 'buildsticker controller', ->
         build = buildid: 3, builderid: 2, number: 1
         dataService.when('builds/3', [build])
         dataService.when('builders/2', [{builderid: 2}])
-        dataService.open(scope).getBuilds(build.buildid).then (builds) ->
+        dataService.getBuilds(build.buildid).then (builds) ->
             scope.build = builds[0]
         scope.$apply()
         element = $compile("<buildsticker build='build'></buildsticker>")(scope)

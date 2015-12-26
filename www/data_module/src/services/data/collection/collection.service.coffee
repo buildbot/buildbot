@@ -88,7 +88,7 @@ class Collection extends Factory
                         changed = true
 
                 if changed
-                    @onChange()
+                    @onChange(this)
 
                 @_new = []
                 @_updated = []
