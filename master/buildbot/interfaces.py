@@ -25,6 +25,8 @@ Define the interfaces that are implemented by various buildbot classes.
 from zope.interface import Attribute
 from zope.interface import Interface
 
+from buildbot.worker_rename import define_old_worker_class_alias
+
 # exceptions that can be raised while trying to start a build
 
 
@@ -147,12 +149,13 @@ class ILogObserver(Interface):
         pass
 
 
-class IBuildSlave(IPlugin):
+class IWorker(IPlugin):
     # callback methods from the manager
     pass
+define_old_worker_class_alias(globals(), IWorker, pattern="BuildWorker")
 
 
-class ILatentBuildSlave(IBuildSlave):
+class ILatentBuildSlave(IWorker):
 
     """A build slave that is not always running, but can run when requested.
     """

@@ -56,6 +56,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
+from buildbot.worker_rename import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
 
 #
@@ -68,7 +69,8 @@ class LogRotation(object):
         self.maxRotatedFiles = 10
 
 
-class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
+class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
+                  WorkerAPICompatMixin):
 
     # frequency with which to reclaim running builds; this should be set to
     # something fairly long, to avoid undue database load
@@ -139,8 +141,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
         self.pbmanager = buildbot.pbmanager.PBManager()
         self.pbmanager.setServiceParent(self)
 
-        self.buildslaves = bslavemanager.BuildslaveManager(self)
-        self.buildslaves.setServiceParent(self)
+        self.workers = bslavemanager.BuildslaveManager(self)
+        self._register_old_worker_attr("workers", pattern="buildworker")
+        self.workers.setServiceParent(self)
 
         self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)
