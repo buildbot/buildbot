@@ -26,7 +26,7 @@ from twisted.python.reflect import namedModule
 from zope.interface import implements
 
 from buildbot import config
-from buildbot.interfaces import IBuildSlave
+from buildbot.interfaces import IWorker
 from buildbot.interfaces import ILatentBuildSlave
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.process import metrics
@@ -36,6 +36,8 @@ from buildbot.status.slave import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
+from buildbot.worker_rename import define_old_worker_property, \
+    define_old_worker_method
 
 
 class AbstractBuildSlave(service.BuildbotService, object):
@@ -50,7 +52,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
 
-    implements(IBuildSlave)
+    implements(IWorker)
 
     # reconfig slaves after builders
     reconfig_priority = 64
@@ -124,9 +126,10 @@ class AbstractBuildSlave(service.BuildbotService, object):
         return "<%s %r>" % (self.__class__.__name__, self.name)
 
     @property
-    def slavename(self):
+    def workername(self):
         # slavename is now an alias to twisted.Service's name
         return self.name
+    define_old_worker_property(locals(), "workername")
 
     @property
     def botmaster(self):
@@ -318,7 +321,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         subject = "Buildbot: buildslave %s was lost" % (self.name,)
         return self._mail_missing_message(subject, text)
 
-    def updateSlave(self):
+    def updateWorker(self):
         """Called to add or remove builders after the slave has connected.
 
         @return: a Deferred that indicates when an attached slave has
@@ -327,6 +330,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
             return self.sendBuilderList()
         else:
             return defer.succeed(None)
+    define_old_worker_method(locals(), updateWorker)
 
     def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
         # TODO
