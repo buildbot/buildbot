@@ -119,7 +119,7 @@ def _on_old_name_usage(new_name, compat_name):
 
     elif level == CompatibilityLevel.warning:
         # TODO: Use logging
-        print("WARNING: {}".format(message))
+        print("WARNING: {0}".format(message))
     else:
         assert level == CompatibilityLevel.allow
 
