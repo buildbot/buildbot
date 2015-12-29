@@ -30,7 +30,7 @@ class IWorkerCommand(Interface):
         """Create the Command. 'builder' is a reference to the parent
         buildbot.bot.Worker instance, which will be used to send status
         updates (by calling builder.sendStatus). 'stepId' is a random string
-        which helps correlate slave logs with the master. 'args' is a dict of
+        which helps correlate worker logs with the master. 'args' is a dict of
         arguments that comes from the master-side BuildStep, with contents
         that are specific to the individual Command subclass.
 
@@ -66,7 +66,7 @@ class IWorkerCommand(Interface):
         error condition). The Command's deferred should still be fired when
         the command has finally completed.
 
-        If the build is being stopped because the slave it shutting down or
+        If the build is being stopped because the worker it shutting down or
         because the connection to the buildmaster has been lost, the status
         updates will simply be discarded. The Command does not need to be
         aware of this.
