@@ -28,7 +28,7 @@ class IWorkerCommand(Interface):
 
     def __init__(builder, stepId, args):
         """Create the Command. 'builder' is a reference to the parent
-        buildbot.bot.SlaveBuilder instance, which will be used to send status
+        buildbot.bot.Worker instance, which will be used to send status
         updates (by calling builder.sendStatus). 'stepId' is a random string
         which helps correlate slave logs with the master. 'args' is a dict of
         arguments that comes from the master-side BuildStep, with contents
