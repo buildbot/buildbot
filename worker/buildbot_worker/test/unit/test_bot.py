@@ -123,7 +123,7 @@ class TestBot(unittest.TestCase):
     def test_setBuilderList_updates(self):
         d = defer.succeed(None)
 
-        slavebuilders = {}
+        workers = {}
 
         def add_my(_):
             d = self.bot.callRemote("setBuilderList", [
@@ -132,7 +132,7 @@ class TestBot(unittest.TestCase):
             def check(builders):
                 self.assertEqual(list(builders), ['mybld'])
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                slavebuilders['my'] = builders['mybld']
+                workers['my'] = builders['mybld']
             d.addCallback(check)
             return d
         d.addCallback(add_my)
@@ -146,8 +146,8 @@ class TestBot(unittest.TestCase):
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 # 'my' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['my']), id(builders['mybld']))
-                slavebuilders['your'] = builders['yourbld']
+                self.assertEqual(id(workers['my']), id(builders['mybld']))
+                workers['your'] = builders['yourbld']
             d.addCallback(check)
             return d
         d.addCallback(add_your)
@@ -163,7 +163,7 @@ class TestBot(unittest.TestCase):
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
                 # 'your' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['your']), id(builders['yourbld']))
+                self.assertEqual(id(workers['your']), id(builders['yourbld']))
             d.addCallback(check)
             return d
         d.addCallback(remove_my)

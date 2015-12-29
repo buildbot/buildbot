@@ -228,7 +228,7 @@ class WorkerBuilderBase(service.Service):
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
-        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
+        log.msg("NOTE: master is using deprecated worker.shutdown method")
         reactor.stop()
 
 
