@@ -64,7 +64,7 @@ class WorkerBuilderBase(service.Service):
         self.setName(name)
 
     def __repr__(self):
-        return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
+        return "<WorkerBuilder '%s' at %d>" % (self.name, id(self))
 
     def setServiceParent(self, parent):
         service.Service.setServiceParent(self, parent)
