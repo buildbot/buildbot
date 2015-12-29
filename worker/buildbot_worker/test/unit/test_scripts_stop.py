@@ -25,12 +25,12 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestStopSlave(misc.FileIOMixin,
-                    misc.LoggingMixin,
-                    unittest.TestCase):
+class TestStopWorker(misc.FileIOMixin,
+                     misc.LoggingMixin,
+                     unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.stop.stopSlave()
+    Test buildbot_worker.scripts.stop.stopWorker()
     """
     PID = 9876
 
@@ -42,7 +42,7 @@ class TestStopSlave(misc.FileIOMixin,
 
     def test_no_pid_file(self):
         """
-        test calling stopSlave() when no pid file is present
+        test calling stopWorker() when no pid file is present
         """
 
         # patch open() to raise 'file not found' exception
@@ -50,12 +50,12 @@ class TestStopSlave(misc.FileIOMixin,
 
         # check that stop() raises SlaveNotRunning exception
         self.assertRaises(stop.SlaveNotRunning,
-                          stop.stopSlave, None, False)
+                          stop.stopWorker, None, False)
 
     @compat.skipUnlessPlatformIs("posix")
     def test_successful_stop(self):
         """
-        test stopSlave() on a successful slave stop
+        test stopWorker() on a successful slave stop
         """
 
         def emulated_kill(pid, sig):
@@ -74,9 +74,9 @@ class TestStopSlave(misc.FileIOMixin,
         # don't waste time
         self.patch(time, "sleep", mock.Mock())
 
-        # check that stopSlave() sends expected signal to right PID
+        # check that stopWorker() sends expected signal to right PID
         # and print correct message to the log
-        stop.stopSlave(None, False)
+        stop.stopWorker(None, False)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
 
@@ -115,9 +115,9 @@ class TestStop(misc.IsBuildslaveDirMixin,
         # patch basedir check to always succeed
         self.setupUpIsBuildslaveDir(True)
 
-        # patch stopSlave() to raise an exception
-        mock_stopSlave = mock.Mock(side_effect=stop.SlaveNotRunning())
-        self.patch(stop, "stopSlave", mock_stopSlave)
+        # patch stopWorker() to raise an exception
+        mock_stopWorker = mock.Mock(side_effect=stop.SlaveNotRunning())
+        self.patch(stop, "stopWorker", mock_stopWorker)
 
         stop.stop(self.config)
 
@@ -131,11 +131,11 @@ class TestStop(misc.IsBuildslaveDirMixin,
         # patch basedir check to always succeed
         self.setupUpIsBuildslaveDir(True)
 
-        # patch stopSlave() to do nothing
-        mock_stopSlave = mock.Mock()
-        self.patch(stop, "stopSlave", mock_stopSlave)
+        # patch stopWorker() to do nothing
+        mock_stopWorker = mock.Mock()
+        self.patch(stop, "stopWorker", mock_stopWorker)
 
         stop.stop(self.config)
-        mock_stopSlave.assert_called_once_with(self.config["basedir"],
+        mock_stopWorker.assert_called_once_with(self.config["basedir"],
                                                self.config["quiet"],
                                                "TERM")

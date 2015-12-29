@@ -28,7 +28,7 @@ class SlaveNotRunning(Exception):
     """
 
 
-def stopSlave(basedir, quiet, signame="TERM"):
+def stopWorker(basedir, quiet, signame="TERM"):
     """
     Stop slave process by sending it a signal.
 
@@ -81,7 +81,7 @@ def stop(config, signame="TERM"):
         return 1
 
     try:
-        stopSlave(basedir, quiet, signame)
+        stopWorker(basedir, quiet, signame)
     except SlaveNotRunning:
         if not quiet:
             log.msg("buildbot_worker not running")

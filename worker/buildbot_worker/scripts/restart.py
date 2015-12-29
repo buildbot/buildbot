@@ -28,7 +28,7 @@ def restart(config):
         return 1
 
     try:
-        stop.stopSlave(basedir, quiet)
+        stop.stopWorker(basedir, quiet)
     except stop.SlaveNotRunning:
         if not quiet:
             log.msg("no old buildbot_worker process found to stop")
