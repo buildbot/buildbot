@@ -147,7 +147,7 @@ class TestUpgradeWorkerOptions(BaseDirTestsMixin, unittest.TestCase):
         self.assertIn('buildbot_worker upgrade-slave', opts.getSynopsis())
 
 
-class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
+class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.CreateSlaveOptions class.
