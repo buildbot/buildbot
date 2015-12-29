@@ -195,7 +195,7 @@ def _makeInfoFiles(basedir, quiet):
         log.msg("Please edit the files in %s appropriately." % path)
 
 
-def createSlave(config):
+def createWorker(config):
     basedir = config['basedir']
     quiet = config['quiet']
 

@@ -111,7 +111,7 @@ class UpgradeWorkerOptions(MakerBase):
 
 
 class CreateWorkerOptions(MakerBase):
-    subcommandFunction = "buildbot_worker.scripts.create_slave.createSlave"
+    subcommandFunction = "buildbot_worker.scripts.create_slave.createWorker"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
