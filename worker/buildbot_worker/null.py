@@ -25,7 +25,7 @@ class LocalWorker(WorkerBase):
         from buildbot.buildslave.protocols.null import Connection
 
         yield WorkerBase.startService(self)
-        self.slavename = self.name
+        self.workername = self.name
         conn = Connection(self.parent, self)
         # I don't have a master property, but my parent has.
         master = self.parent.master

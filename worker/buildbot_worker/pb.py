@@ -53,7 +53,7 @@ class BotFactory(ReconnectingPBClientFactory):
     # of such (although this could take several minutes).
     keepaliveInterval = None  # None = do not use keepalives
 
-    # 'maxDelay' determines the maximum amount of time the slave will wait
+    # 'maxDelay' determines the maximum amount of time the worker will wait
     # between connection retries
     maxDelay = 300
 
@@ -79,7 +79,7 @@ class BotFactory(ReconnectingPBClientFactory):
         self.connector = connector
 
     def gotPerspective(self, perspective):
-        log.msg("Connected to %s:%s; slave is ready" % (self.buildmaster_host, self.port))
+        log.msg("Connected to %s:%s; worker is ready" % (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:

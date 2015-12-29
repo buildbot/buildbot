@@ -493,7 +493,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # arguments
         "host": "masterhost",
         "port": 1234,
-        "name": "slavename",
+        "name": "workername",
         "passwd": "orange"
     }
 

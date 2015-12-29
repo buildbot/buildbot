@@ -50,7 +50,7 @@ except ImportError:
                     """
 buildmaster_host = %(host)r
 port = %(port)d
-slavename = %(name)r
+workername = %(name)r
 passwd = %(passwd)r
 keepalive = %(keepalive)d
 usepty = %(usepty)d
@@ -59,7 +59,7 @@ maxdelay = %(maxdelay)d
 numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
 
-s = Worker(buildmaster_host, port, slavename, passwd, basedir,
+s = Worker(buildmaster_host, port, workername, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
                numcpus=numcpus, allow_shutdown=allow_shutdown)
 s.setServiceParent(application)
