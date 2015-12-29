@@ -53,7 +53,7 @@ class TestRestart(misc.IsWorkerDirMixin,
         # check that isWorkerDir was called with correct argument
         self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
-    def test_no_slave_running(self):
+    def test_no_worker_running(self):
         """
         test calling restart() when no slave is running
         """
