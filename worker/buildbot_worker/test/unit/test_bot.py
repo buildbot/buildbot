@@ -145,7 +145,7 @@ class TestBot(unittest.TestCase):
                 self.assertEqual(sorted(builders.keys()), sorted(['mybld', 'yourbld']))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                # 'my' should still be the same slavebuilder object
+                # 'my' should still be the same worker object
                 self.assertEqual(id(workers['my']), id(builders['mybld']))
                 workers['your'] = builders['yourbld']
             d.addCallback(check)
@@ -162,7 +162,7 @@ class TestBot(unittest.TestCase):
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
-                # 'your' should still be the same slavebuilder object
+                # 'your' should still be the same worker object
                 self.assertEqual(id(workers['your']), id(builders['yourbld']))
             d.addCallback(check)
             return d
@@ -214,7 +214,7 @@ class FakeStep(object):
         self.finished_d.callback(None)
 
 
-class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
+class TestWorker(command.CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
