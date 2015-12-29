@@ -34,9 +34,9 @@ class TestRestart(misc.IsWorkerDirMixin,
     def setUp(self):
         self.setUpLogging()
 
-        # patch start.startSlave() to do nothing
+        # patch start.startWorker() to do nothing
         self.startSlave = mock.Mock()
-        self.patch(start, "startSlave", self.startSlave)
+        self.patch(start, "startWorker", self.startSlave)
 
     def test_bad_basedir(self):
         """
@@ -64,7 +64,7 @@ class TestRestart(misc.IsWorkerDirMixin,
         mock_stopWorker = mock.Mock(side_effect=stop.WorkerNotRunning())
         self.patch(stop, "stopWorker", mock_stopWorker)
 
-        # check that restart() calls startSlave() and outputs correct messages
+        # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
         self.startSlave.assert_called_once_with(self.config["basedir"],
                                                 self.config["quiet"],
@@ -84,7 +84,7 @@ class TestRestart(misc.IsWorkerDirMixin,
         mock_stopWorker = mock.Mock()
         self.patch(stop, "stopWorker", mock_stopWorker)
 
-        # check that restart() calls startSlave() and outputs correct messages
+        # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
         self.startSlave.assert_called_once_with(self.config["basedir"],
                                                 self.config["quiet"],

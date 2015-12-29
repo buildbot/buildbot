@@ -49,14 +49,14 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         # patch basedir check to always succeed
         self.setupUpIsWorkerDir(True)
 
-        # patch startSlave() to do nothing
+        # patch startWorker() to do nothing
         mocked_startSlave = mock.Mock(return_value=0)
-        self.patch(start, "startSlave", mocked_startSlave)
+        self.patch(start, "startWorker", mocked_startSlave)
 
         config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
         self.assertEqual(start.startCommand(config), 0, "unexpected exit code")
 
-        # check that isWorkerDir() and startSlave() were called
+        # check that isWorkerDir() and startWorker() were called
         # with correct argument
         self.isWorkerDir.assert_called_once_with("dummy")
         mocked_startSlave.assert_called_once_with(config["basedir"],
