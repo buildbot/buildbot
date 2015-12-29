@@ -175,9 +175,14 @@ class Connection(base.Connection, pb.Avatar):
     def remoteGetWorkerInfo(self):
         info = {}
         try:
-            info = yield self.mind.callRemote('getSlaveInfo')
+            info = yield self.mind.callRemote('getWorkerInfo')
+            info["slave_commands"] = info["worker_commands"]
         except pb.NoSuchMethod:
-            log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
+            try:
+                info = yield self.mind.callRemote('getSlaveInfo')
+                info["worker_commands"] = info["slave_commands"]
+            except pb.NoSuchMethod:
+                log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
 
         # newer slaves send all info in one command
         if "slave_commands" in info:
