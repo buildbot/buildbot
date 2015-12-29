@@ -75,7 +75,7 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
 
     def setUp(self):
         self.realm = None
-        self.buildslave = None
+        self.worker = None
         self.listeningport = None
 
         self.basedir = os.path.abspath("basedir")
@@ -87,8 +87,8 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
         d = defer.succeed(None)
         if self.realm:
             d.addCallback(lambda _: self.realm.shutdown())
-        if self.buildslave and self.buildslave.running:
-            d.addCallback(lambda _: self.buildslave.stopService())
+        if self.worker and self.worker.running:
+            d.addCallback(lambda _: self.worker.stopService())
         if self.listeningport:
             d.addCallback(lambda _: self.listeningport.stopListening())
         if os.path.exists(self.basedir):
@@ -131,10 +131,10 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
         # start up the master and slave
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
-        self.buildslave = bot.Worker("127.0.0.1", port,
+        self.worker = bot.Worker("127.0.0.1", port,
                                          "testy", "westy", self.basedir,
-                                     keepalive=0, usePTY=False, umask=0o22)
-        self.buildslave.startService()
+                                 keepalive=0, usePTY=False, umask=0o22)
+        self.worker.startService()
 
         # and wait for the result of the print
         return d
@@ -142,10 +142,10 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
     def test_recordHostname_uname(self):
         self.patch_os_uname(lambda: [0, 'test-hostname.domain.com'])
 
-        self.buildslave = bot.Worker("127.0.0.1", 9999,
+        self.worker = bot.Worker("127.0.0.1", 9999,
                                          "testy", "westy", self.basedir,
-                                     keepalive=0, usePTY=False, umask=0o22)
-        self.buildslave.recordHostname(self.basedir)
+                                 keepalive=0, usePTY=False, umask=0o22)
+        self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
@@ -155,10 +155,10 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
         self.patch_os_uname(missing)
         self.patch(socket, "getfqdn", lambda: 'test-hostname.domain.com')
 
-        self.buildslave = bot.Worker("127.0.0.1", 9999,
+        self.worker = bot.Worker("127.0.0.1", 9999,
                                          "testy", "westy", self.basedir,
-                                     keepalive=0, usePTY=False, umask=0o22)
-        self.buildslave.recordHostname(self.basedir)
+                                 keepalive=0, usePTY=False, umask=0o22)
+        self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
@@ -179,18 +179,18 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
         # set up to call shutdown when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_shutdown(mind):
-            self.buildslave.bf.perspective = fakepersp
-            shutdown_d = self.buildslave.gracefulShutdown()
+            self.worker.bf.perspective = fakepersp
+            shutdown_d = self.worker.gracefulShutdown()
             shutdown_d.addCallbacks(d.callback, d.errback)
 
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_shutdown)
 
-        self.buildslave = bot.Worker("127.0.0.1", port,
+        self.worker = bot.Worker("127.0.0.1", port,
                                          "testy", "westy", self.basedir,
-                                     keepalive=0, usePTY=False, umask=0o22)
+                                 keepalive=0, usePTY=False, umask=0o22)
 
-        self.buildslave.startService()
+        self.worker.startService()
 
         def check(ign):
             self.assertEquals(called, [('shutdown',)])
