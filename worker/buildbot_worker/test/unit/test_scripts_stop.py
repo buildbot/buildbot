@@ -83,7 +83,7 @@ class TestStopWorker(misc.FileIOMixin,
         self.assertLogged("buildbot_worker process %s is dead" % self.PID)
 
 
-class TestStop(misc.IsBuildslaveDirMixin,
+class TestStop(misc.IsWorkerDirMixin,
                misc.LoggingMixin,
                unittest.TestCase):
 

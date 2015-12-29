@@ -35,7 +35,7 @@ from buildbot.slave.bot import Worker
 """
 
 
-class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
+class TestUpgradeSlave(misc.IsWorkerDirMixin,
                        misc.FileIOMixin,
                        misc.LoggingMixin,
                        unittest.TestCase):

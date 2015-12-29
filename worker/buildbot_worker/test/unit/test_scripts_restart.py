@@ -22,7 +22,7 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestRestart(misc.IsBuildslaveDirMixin,
+class TestRestart(misc.IsWorkerDirMixin,
                   misc.LoggingMixin,
                   unittest.TestCase):
 

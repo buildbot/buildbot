@@ -49,7 +49,7 @@ class BasedirMixin(object):
             shutil.rmtree(self.basedir)
 
 
-class IsBuildslaveDirMixin(object):
+class IsWorkerDirMixin(object):
 
     """
     Mixin for setting up mocked base.isBuildslaveDir() function
