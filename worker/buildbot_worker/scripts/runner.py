@@ -48,7 +48,7 @@ class MakerBase(usage.Options):
         # only set completion suggestion if running with
         # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(
-            extraActions=[usage.CompleteDirs(descr="slave base directory")])
+            extraActions=[usage.CompleteDirs(descr="worker base directory")])
 
     opt_h = usage.Options.opt_help
 
@@ -95,14 +95,14 @@ class RestartOptions(MakerBase):
 
 
 class UpgradeWorkerOptions(MakerBase):
-    subcommandFunction = "buildbot_worker.scripts.upgrade_slave.upgradeWorker"
+    subcommandFunction = "buildbot_worker.scripts.upgrade_worker.upgradeWorker"
     optFlags = [
     ]
     optParameters = [
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildbot_worker upgrade-slave [<basedir>]"
+        return "Usage:    buildbot_worker upgrade-worker [<basedir>]"
 
     longdesc = """
     This command takes an existing buildbot_worker working directory and
@@ -111,7 +111,7 @@ class UpgradeWorkerOptions(MakerBase):
 
 
 class CreateWorkerOptions(MakerBase):
-    subcommandFunction = "buildbot_worker.scripts.create_slave.createWorker"
+    subcommandFunction = "buildbot_worker.scripts.create_worker.createWorker"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
@@ -184,7 +184,7 @@ class CreateWorkerOptions(MakerBase):
         return master, port
 
     def getSynopsis(self):
-        return "Usage:    buildbot_worker create-slave " \
+        return "Usage:    buildbot_worker create-worker " \
             "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
@@ -232,9 +232,9 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, CreateWorkerOptions,
+        ['create-worker', None, CreateWorkerOptions,
          "Create and populate a directory for a new buildbot_worker"],
-        ['upgrade-slave', None, UpgradeWorkerOptions,
+        ['upgrade-worker', None, UpgradeWorkerOptions,
          "Upgrade an existing buildbot_worker directory for the current version"],
         ['start', None, StartOptions, "Start a buildbot_worker"],
         ['stop', None, StopOptions, "Stop a buildbot_worker"],

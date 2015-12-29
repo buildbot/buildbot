@@ -93,7 +93,7 @@ def startCommand(config):
 
 def startWorker(basedir, quiet, nodaemon):
     """
-    Start slave process.
+    Start worker process.
 
     Fork and start twisted application described in basedir buildbot.tac file.
     Print it's log messages to stdout for a while and try to figure out if
@@ -105,8 +105,8 @@ def startWorker(basedir, quiet, nodaemon):
     @param  basedir: buildbot_worker's basedir path
     @param    quiet: don't display startup log messages
     @param nodaemon: don't daemonize (stay in foreground)
-    @return: 0 if slave was successfully started,
-             1 if we are not sure that slave started successfully
+    @return: 0 if worker was successfully started,
+             1 if we are not sure that worker started successfully
     """
 
     os.chdir(basedir)

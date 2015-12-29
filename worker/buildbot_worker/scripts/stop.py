@@ -24,22 +24,22 @@ from buildbot_worker.scripts import base
 class WorkerNotRunning(Exception):
 
     """
-    raised when trying to stop slave process that is not running
+    raised when trying to stop worker process that is not running
     """
 
 
 def stopWorker(basedir, quiet, signame="TERM"):
     """
-    Stop slave process by sending it a signal.
+    Stop worker process by sending it a signal.
 
-    Using the specified basedir path, read slave process's pid file and
+    Using the specified basedir path, read worker process's pid file and
     try to terminate that process with specified signal.
 
     @param basedir: buildbot_worker's basedir path
     @param   quite: if False, don't print any messages to stdout
-    @param signame: signal to send to the slave process
+    @param signame: signal to send to the worker process
 
-    @raise WorkerNotRunning: if slave pid file is not found
+    @raise WorkerNotRunning: if worker pid file is not found
     """
     import signal
 

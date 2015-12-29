@@ -32,7 +32,7 @@ def _regexp_path(name, *names):
 class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.create_slave._makeBaseDir()
+    Test buildbot_worker.scripts.create_worker._makeBaseDir()
     """
 
     def setUp(self):
@@ -124,7 +124,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
                           unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.create_slave._makeBuildbotTac()
+    Test buildbot_worker.scripts.create_worker._makeBuildbotTac()
     """
 
     def setUp(self):
@@ -287,7 +287,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
                         unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.create_slave._makeInfoFiles()
+    Test buildbot_worker.scripts.create_worker._makeInfoFiles()
     """
 
     def setUp(self):
@@ -471,7 +471,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
 class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.create_slave.createWorker()
+    Test buildbot_worker.scripts.create_worker.createWorker()
     """
     # default options and required arguments
     options = {
@@ -503,7 +503,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
 
     def setUpMakeFunctions(self, exception=None):
         """
-        patch create_slave._make*() functions with a mocks
+        patch create_worker._make*() functions with a mocks
 
         @param exception: if not None, the mocks will raise this exception.
         """
@@ -524,7 +524,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
 
     def assertMakeFunctionsCalls(self, basedir, tac_contents, quiet):
         """
-        assert that create_slave._make*() were called with specified arguments
+        assert that create_worker._make*() were called with specified arguments
         """
         self._makeBaseDir.assert_called_once_with(basedir, quiet)
         self._makeBuildbotTac.assert_called_once_with(basedir,
@@ -646,7 +646,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
         won't break generated TAC file.
         """
 
-        p = mock.patch.dict(self.options, {"basedir": r"C:\builslave dir\\"})
+        p = mock.patch.dict(self.options, {"basedir": r"C:\builworker dir\\"})
         p.start()
         try:
             self.assertTACFileContents(self.options)

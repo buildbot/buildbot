@@ -231,7 +231,7 @@ class RunProcessPP(protocol.ProcessProtocol):
 class RunProcess(object):
 
     """
-    This is a helper class, used by slave commands to run programs in a child
+    This is a helper class, used by worker commands to run programs in a child
     shell.
     """
 
@@ -262,7 +262,7 @@ class RunProcess(object):
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config",
+                 logEnviron=True, logfiles={}, usePTY="worker-config",
                  useProcGroup=True):
         """
 
@@ -272,7 +272,7 @@ class RunProcess(object):
                            has finished.
         @param keepStderr: same, for stderr
 
-        @param usePTY: "slave-config" -> use the WorkerBuilder's usePTY;
+        @param usePTY: "worker-config" -> use the WorkerBuilder's usePTY;
             otherwise, true to use a PTY, false to not use a PTY.
 
         @param useProcGroup: (default True) use a process group for non-PTY
@@ -288,8 +288,8 @@ class RunProcess(object):
                 return w
             command = [obfus(w) for w in command]
         # We need to take unicode commands and arguments and encode them using
-        # the appropriate encoding for the slave.  This is mostly platform
-        # specific, but can be overridden in the slave's buildbot.tac file.
+        # the appropriate encoding for the worker.  This is mostly platform
+        # specific, but can be overridden in the worker's buildbot.tac file.
         #
         # Encoding the command line here ensures that the called executables
         # receive arguments as bytestrings encoded with an appropriate
@@ -338,7 +338,7 @@ class RunProcess(object):
                 return os.environ.get(match.group(1), "")
             newenv = {}
             for key in os.environ:
-                # setting a key to None will delete it from the slave environment
+                # setting a key to None will delete it from the worker environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
             for key, v in iteritems(environ):
@@ -366,7 +366,7 @@ class RunProcess(object):
         self.buflen = 0
         self.sendBuffersTimer = None
 
-        if usePTY == "slave-config":
+        if usePTY == "worker-config":
             self.usePTY = self.builder.usePTY
         else:
             self.usePTY = usePTY
@@ -376,7 +376,7 @@ class RunProcess(object):
         # and in situations where ptys cause problems.  PTYs are posix-only,
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
-            if self.usePTY and usePTY != "slave-config":
+            if self.usePTY and usePTY != "worker-config":
                 self.sendStatus({'header': "WARNING: disabling usePTY for this command"})
             self.usePTY = False
 

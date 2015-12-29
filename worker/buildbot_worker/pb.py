@@ -134,7 +134,7 @@ class BotFactory(ReconnectingPBClientFactory):
 
     def activity(self, res=None):
         """Subclass or monkey-patch this method to be alerted whenever there is
-        active communication between the master and slave."""
+        active communication between the master and worker."""
         pass
 
     def stopFactory(self):
@@ -223,7 +223,7 @@ class Worker(WorkerBase, service.MultiService):
 
         def _shutdownfailed(err):
             if err.check(AttributeError):
-                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+                log.msg("Master does not support worker initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
             else:
                 log.msg('callRemote("shutdown") failed')
                 log.err(err)

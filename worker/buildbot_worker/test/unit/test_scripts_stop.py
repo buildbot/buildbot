@@ -55,7 +55,7 @@ class TestStopWorker(misc.FileIOMixin,
     @compat.skipUnlessPlatformIs("posix")
     def test_successful_stop(self):
         """
-        test stopWorker() on a successful slave stop
+        test stopWorker() on a successful worker stop
         """
 
         def emulated_kill(pid, sig):
@@ -108,7 +108,7 @@ class TestStop(misc.IsWorkerDirMixin,
 
     def test_no_worker_running(self):
         """
-        test calling stop() when no slave is running
+        test calling stop() when no worker is running
         """
         self.setUpLogging()
 
@@ -125,7 +125,7 @@ class TestStop(misc.IsWorkerDirMixin,
 
     def test_successful_stop(self):
         """
-        test calling stop() when slave is running
+        test calling stop() when worker is running
         """
 
         # patch basedir check to always succeed

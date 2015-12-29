@@ -40,7 +40,7 @@ class WorkerShellCommand(base.Command):
             sendRC=True,
             initialStdin=args.get('initial_stdin'),
             logfiles=args.get('logfiles', {}),
-            usePTY=args.get('usePTY', "slave-config"),
+            usePTY=args.get('usePTY', "worker-config"),
             logEnviron=args.get('logEnviron', True),
         )
         if args.get('interruptSignal'):

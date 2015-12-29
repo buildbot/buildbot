@@ -107,7 +107,7 @@ class FakeRunProcess(object):
                               sendStdout=True, sendStderr=True, sendRC=True,
                               timeout=None, maxTime=None, sigtermTime=None, initialStdin=None,
                               keepStdout=False, keepStderr=False,
-                              logEnviron=True, logfiles={}, usePTY="slave-config")
+                              logEnviron=True, logfiles={}, usePTY="worker-config")
 
         if not self._expectations:
             raise AssertionError("unexpected instantiation: %s" % (kwargs,))

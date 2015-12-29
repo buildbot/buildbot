@@ -125,10 +125,10 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
         # set up to call print when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_print(mind):
-            print_d = mind.callRemote("print", "Hi, slave.")
+            print_d = mind.callRemote("print", "Hi, worker.")
             print_d.addCallbacks(d.callback, d.errback)
 
-        # start up the master and slave
+        # start up the master and worker
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
         self.worker = bot.Worker("127.0.0.1", port,
@@ -163,7 +163,7 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
                          'test-hostname.domain.com')
 
     def test_worker_graceful_shutdown(self):
-        """Test that running the build slave's gracefulShutdown method results
+        """Test that running the build worker's gracefulShutdown method results
         in a call to the master's shutdown method"""
         d = defer.Deferred()
 

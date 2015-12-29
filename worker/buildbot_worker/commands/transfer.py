@@ -51,11 +51,11 @@ class TransferCommand(Command):
 class WorkerFileUploadCommand(TransferCommand):
 
     """
-    Upload a file from slave to build master
+    Upload a file from worker to build master
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['workersrc']:  name of the slave-side file to read from
+        - ['workersrc']:  name of the worker-side file to read from
         - ['writer']:    RemoteReference to a buildbot_worker.protocols.base.FileWriterProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -248,11 +248,11 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 class WorkerFileDownloadCommand(TransferCommand):
 
     """
-    Download a file from master to slave
+    Download a file from master to worker
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['workerdest']: name of the slave-side file to be created
+        - ['workerdest']: name of the worker-side file to be created
         - ['reader']:    RemoteReference to a buildbot_worker.protocols.base.FileReaderProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block

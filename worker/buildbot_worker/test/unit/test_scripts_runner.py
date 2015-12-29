@@ -144,7 +144,7 @@ class TestUpgradeWorkerOptions(BaseDirTestsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.UpgradeWorkerOptions()
-        self.assertIn('buildbot_worker upgrade-slave', opts.getSynopsis())
+        self.assertIn('buildbot_worker upgrade-worker', opts.getSynopsis())
 
 
 class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
@@ -167,7 +167,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.CreateWorkerOptions()
-        self.assertIn('buildbot_worker create-slave', opts.getSynopsis())
+        self.assertIn('buildbot_worker create-worker', opts.getSynopsis())
 
     def test_min_args(self):
 
