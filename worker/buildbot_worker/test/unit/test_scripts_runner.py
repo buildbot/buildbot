@@ -135,15 +135,15 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
                                 basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
 
 
-class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
+class TestUpgradeWorkerOptions(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.runner.UpgradeSlaveOptions class.
+    Test buildbot_worker.scripts.runner.UpgradeWorkerOptions class.
     """
-    options_class = runner.UpgradeSlaveOptions
+    options_class = runner.UpgradeWorkerOptions
 
     def test_synopsis(self):
-        opts = runner.UpgradeSlaveOptions()
+        opts = runner.UpgradeWorkerOptions()
         self.assertIn('buildbot_worker upgrade-slave', opts.getSynopsis())
 
 

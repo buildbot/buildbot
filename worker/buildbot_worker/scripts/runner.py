@@ -94,7 +94,7 @@ class RestartOptions(MakerBase):
         return "Usage:    buildbot_worker restart [<basedir>]"
 
 
-class UpgradeSlaveOptions(MakerBase):
+class UpgradeWorkerOptions(MakerBase):
     subcommandFunction = "buildbot_worker.scripts.upgrade_slave.upgradeSlave"
     optFlags = [
     ]
@@ -234,7 +234,7 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-slave', None, CreateSlaveOptions,
          "Create and populate a directory for a new buildbot_worker"],
-        ['upgrade-slave', None, UpgradeSlaveOptions,
+        ['upgrade-slave', None, UpgradeWorkerOptions,
          "Upgrade an existing buildbot_worker directory for the current version"],
         ['start', None, StartOptions, "Start a buildbot_worker"],
         ['stop', None, StopOptions, "Stop a buildbot_worker"],
