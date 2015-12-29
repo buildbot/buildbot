@@ -16,7 +16,7 @@
 import mock
 import os
 
-from buildbot_worker.scripts import upgrade_slave
+from buildbot_worker.scripts import upgrade_worker
 from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
@@ -60,7 +60,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         self.setupUpIsWorkerDir(False)
 
         # call upgradeSlave() and check that correct exit code is returned
-        self.assertEqual(upgrade_slave.upgradeSlave(self.config), 1,
+        self.assertEqual(upgrade_worker.upgradeSlave(self.config), 1,
                          "unexpected exit code")
 
         # check that isWorkerDir was called with correct argument
@@ -78,7 +78,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         self.setUpOpen(MODERN_BUILDBOT_TAC)
 
         # call upgradeSlave() and check the success exit code is returned
-        self.assertEqual(upgrade_slave.upgradeSlave(self.config), 0,
+        self.assertEqual(upgrade_worker.upgradeSlave(self.config), 0,
                          "unexpected exit code")
 
         # check message to the log
@@ -103,7 +103,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         self.setUpOpen(OLD_BUILDBOT_TAC)
 
         # call upgradeSlave() and check the success exit code is returned
-        self.assertEqual(upgrade_slave.upgradeSlave(self.config), 0,
+        self.assertEqual(upgrade_worker.upgradeSlave(self.config), 0,
                          "unexpected exit code")
 
         # check message to the log
