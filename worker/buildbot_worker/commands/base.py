@@ -47,7 +47,7 @@ command_version = "2.16"
 #          Darcs accepts 'revision' (now all do but Git) (well, and P4Sync)
 #          Arch/Baz should accept 'build-config'
 #  >=1.51: (release 0.7.3)
-#  >= 2.1: SlaveShellCommand now accepts 'initial_stdin', 'keep_stdin_open',
+#  >= 2.1: WorkerShellCommand now accepts 'initial_stdin', 'keep_stdin_open',
 #          and 'logfiles'. It now sends 'log' messages in addition to
 #          stdout/stdin/header/rc. It acquired writeStdin/closeStdin methods,
 #          but these are not remotely callable yet.
@@ -60,16 +60,16 @@ command_version = "2.16"
 #  >= 2.4: Git understands 'revision' and branches
 #  >= 2.5: workaround added for remote 'hg clone --rev REV' when hg<0.9.2
 #  >= 2.6: added uploadDirectory
-#  >= 2.7: added usePTY option to SlaveShellCommand
+#  >= 2.7: added usePTY option to WorkerShellCommand
 #  >= 2.8: added username and password args to SVN class
 #  >= 2.9: add depth arg to SVN class
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
 #  >= 2.11: Arch, Bazaar, and Monotone removed
-#  >= 2.12: SlaveShellCommand no longer accepts 'keep_stdin_open'
+#  >= 2.12: WorkerShellCommand no longer accepts 'keep_stdin_open'
 #  >= 2.13: SlaveFileUploadCommand supports option 'keepstamp'
 #  >= 2.14: RemoveDirectory can delete multiple directories
-#  >= 2.15: 'interruptSignal' option is added to SlaveShellCommand
-#  >= 2.16: 'sigtermTime' option is added to SlaveShellCommand
+#  >= 2.15: 'interruptSignal' option is added to WorkerShellCommand
+#  >= 2.16: 'sigtermTime' option is added to WorkerShellCommand
 #  >= 2.16: runprocess supports obfuscation via tuples (#1748)
 #  >= 2.16: listdir command added to read a directory
 
@@ -196,7 +196,7 @@ class Command(object):
         this matters."""
         pass
 
-    # utility methods, mostly used by SlaveShellCommand and the like
+    # utility methods, mostly used by WorkerShellCommand and the like
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):

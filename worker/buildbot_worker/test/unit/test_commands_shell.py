@@ -29,7 +29,7 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     def test_simple(self):
-        self.make_command(shell.SlaveShellCommand, dict(
+        self.make_command(shell.WorkerShellCommand, dict(
             command=['echo', 'hello'],
             workdir='workdir',
         ))
@@ -42,7 +42,7 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
 
         d = self.run_command()
 
-        # note that SlaveShellCommand does not add any extra updates of it own
+        # note that WorkerShellCommand does not add any extra updates of it own
         def check(_):
             self.assertUpdates(
                 [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
@@ -50,4 +50,4 @@ class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-    # TODO: test all functionality that SlaveShellCommand adds atop RunProcess
+    # TODO: test all functionality that WorkerShellCommand adds atop RunProcess
