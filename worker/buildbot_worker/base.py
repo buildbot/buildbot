@@ -49,7 +49,7 @@ class WorkerBuilderBase(service.Service):
     # is severed.
     remote = None
 
-    # .command points to a SlaveCommand instance, and is set while the step
+    # .command points to a WorkerCommand instance, and is set while the step
     # is running. We use it to implement the stopBuild method.
     command = None
 
@@ -137,7 +137,7 @@ class WorkerBuilderBase(service.Service):
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand("unrecognized SlaveCommand '%s'" % command)
+            raise UnknownCommand("unrecognized WorkerCommand '%s'" % command)
         self.command = factory(self, stepId, args)
 
         log.msg(" startCommand:%s [id %s]" % (command, stepId))
