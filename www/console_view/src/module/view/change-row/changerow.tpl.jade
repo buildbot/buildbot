@@ -1,22 +1,24 @@
-.change-row
+.change-row(ng-style="{height: 10 + (cr.change.maxbuilds*20)}")
     .col-15
         .name
-            i.fa.fa-chevron-circle-down(ng-click='cr.toggleInfo()' ng-class="{'fa-rotate-180': !cr.infoIsCollapsed}")
-            | {{ cr.change.changeid }}.
+            .change-avatar
+                img(ng-src="avatar?email={{cr.change.author_email}}")
+            i.fa.fa-chevron-circle-right(ng-click='cr.toggleInfo()' ng-class="{'fa-rotate-90': !cr.infoIsCollapsed}")
             span(tooltip='{{ cr.change.comments }}' tooltip-placement='top')
-                a(ng-if='cr.change.email'
-                  ng-href='mailto: {{cr.change.email}}'
+                a(ng-if='cr.change.author_email'
+                  ng-href='mailto: {{cr.change.author_email}}'
                   target='_blank')
-                  |  {{ cr.change.author }}
-                span(ng-if='!cr.change.email')  {{ cr.change.author }}
+                  |  {{ cr.change.author_name }}
+                span(ng-if='!cr.change.author_email')  {{ cr.change.author }}
     .col-85
         .builds
-            a.build(ng-repeat="build in cr.change.builds | orderBy:'builderid'"
-                    ng-style="{'width': cr.cellWidth}")
-                .badge-status(ng-if='build.buildid'
-                              ng-class="cr.results2class(build, 'pulse')"
-                              ng-click='cr.selectBuild(build)')
-                    | {{ build.number }}
+            span.build(ng-repeat="builder in builders | orderBy: 'name' track by builder.builderid"
+                 ng-style="{'width': cr.cellWidth}", title="{{builder.name}}")
+                a(ng-repeat="build in cr.change.buildsPerBuilder[builder.builderid] track by $index| orderBy:'started_at'")
+                    .badge-status(ng-if='build.buildid'
+                                  ng-class="cr.results2class(build, 'pulse')"
+                                  ng-click='cr.selectBuild(build)')
+                        | {{ build.number }}
     .col.info-collapse(ng-hide='cr.infoIsCollapsed')
         // Comment
         .info

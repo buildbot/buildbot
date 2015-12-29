@@ -7,7 +7,9 @@ class App extends App
             'common'
             'ngAnimate'
             'guanlecoja.ui'
+            'bbData'
         ]
+
 
 class State extends Config
     constructor: ($stateProvider, glMenuServiceProvider) ->
@@ -39,44 +41,59 @@ class State extends Config
         $stateProvider.state(state)
 
 class Console extends Controller
-    constructor: (@$scope, $q, $window, @buildbotService) ->
-        builds = @buildbotService.all('builds').bind @$scope
-        builders = @buildbotService.all('builders').bind @$scope
-        changes = @buildbotService.all('changes').bind @$scope
-        buildrequests = @buildbotService.all('buildrequests').bind @$scope
-        buildsets = @buildbotService.all('buildsets').bind @$scope
+    constructor: (@$scope, $q, @$window, dataService) ->
+        @buildLimit = 200
+        @changeLimit = 10
+        @dataAccessor = dataService.open().closeOnDestroy(@$scope)
+
+        @$scope.builders = @builders = @dataAccessor.getBuilders()
+        @$scope.builders.queryExecutor.isFiltered = (v) ->
+            return not v.masterids? or v.masterids.length > 0
+
+        @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
+        @changes = @dataAccessor.getChanges({limit: @changeLimit, order: '-when_timestamp'})
+        @buildrequests = @dataAccessor.getBuildrequests({limit: @buildLimit, order: '-submitted_at'})
+        @buildsets = @dataAccessor.getBuildsets({limit: @buildLimit, order: '-submitted_at'})
 
         @loading = true
-        $q.all([builds, builders, changes, buildrequests, buildsets])
-        .then ([@builds, @builders, @changes, @buildrequests, @buildsets]) =>
-            @loading = false
+        @builds.onChange = @changes.onChange = @buildrequests.onChange = @buildsets.onChange = @onChange
 
-            for change in @changes
-                change.builds = []
-                for builder in @builders
-                    change.builds[builder.builderid - 1] =
-                        builderid: builder.builderid
+    onChange: (s) =>
+        # @todo: no way to know if there are no builds, or if its not yet loaded
+        if @builds.length == 0 or @builders.length == 0 or @changes.length == 0 or @buildsets.length == 0 or @buildrequests == 0
+            return
+        @loading = false
 
-            for build in @builds
-                @matchBuildWithChange(build)
+        for build in @builds
+            @matchBuildWithChange(build)
+        for change in @changes
+            change.maxbuilds = 1
+            for k, b of change.buildsPerBuilder
+                if b.length > change.maxbuilds
+                    change.maxbuilds = b.length
 
-            @setWidth($window.innerWidth)
-            angular.element($window).bind 'resize', =>
-                @setWidth($window.innerWidth)
-                $scope.$apply()
+        @setWidth(@$window.innerWidth)
+        angular.element(@$window).bind 'resize', =>
+            @setWidth(@$window.innerWidth)
+            @$scope.$apply()
 
     ###
     # Match builds with a change
     ###
     matchBuildWithChange: (build) =>
-        buildrequest = @buildrequests[build.buildrequestid - 1]
-        buildset = @buildsets[buildrequest.buildsetid - 1]
-        if buildrequest? and buildset? and buildset.sourcestamps?
-            for sourcestamp in buildset.sourcestamps
-                for change in @changes
-                    if change.sourcestamp.ssid == sourcestamp.ssid
-                        change.builds[build.builderid - 1] = build
-
+        buildrequest = @buildrequests.get(build.buildrequestid)
+        if not buildrequest?
+            return
+        buildset = @buildsets.get(buildrequest.buildsetid)
+        if not buildset? or not buildset.sourcestamps?
+            return
+        for sourcestamp in buildset.sourcestamps
+            for change in @changes
+                if change.sourcestamp.ssid == sourcestamp.ssid
+                    change.buildsPerBuilder ?= {}
+                    change.buildsPerBuilder[build.builderid] ?= []
+                    if build not in change.buildsPerBuilder[build.builderid]
+                        change.buildsPerBuilder[build.builderid].push(build)
     ###
     # Set the content width
     ###

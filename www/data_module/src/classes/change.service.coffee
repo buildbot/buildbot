@@ -3,14 +3,18 @@ class Change extends Factory
         return class ChangeInstance extends Base
             constructor: (object, endpoint) ->
                 super(object, endpoint)
-                email = dataUtilsService.emailInString(@author)
+                author = @author
+                if not @author?
+                    author = "unknown"
+
+                email = dataUtilsService.emailInString(author)
                 # Remove email from author string
                 if email
-                    if  @author.split(' ').length > 1
-                        @author_name = @author.replace(///\s<#{email}>///, '')
+                    if  author.split(' ').length > 1
+                        @author_name = author.replace(///\s<#{email}>///, '')
                         @author_email = email
                     else
                         @author_name = email.split("@")[0]
                         @author_email = email
                 else
-                    @author_name = @author
+                    @author_name = author

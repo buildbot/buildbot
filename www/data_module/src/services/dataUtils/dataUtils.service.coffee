@@ -23,6 +23,8 @@ class DataUtils extends Service
             classId: (arg) ->
                 if @singularType(arg) == "forcescheduler"
                     return "name"
+                if @singularType(arg) == "buildset"
+                    return "bsid"
                 @singularType(arg) + "id"
 
             socketPath: (arg) ->

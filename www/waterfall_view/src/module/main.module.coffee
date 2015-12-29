@@ -51,7 +51,8 @@ class Waterfall extends Controller
 
         # Load data (builds and builders)
         @$scope.builders = @builders = @dataAccessor.getBuilders()
-        @$scope.builders.queryExecutor.isFiltered = (v) -> v.masterids.length > 0
+        @$scope.builders.queryExecutor.isFiltered = (v) ->
+            return not v.masterids? or v.masterids.length > 0
         @buildLimit = @c.limit
         @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
 
