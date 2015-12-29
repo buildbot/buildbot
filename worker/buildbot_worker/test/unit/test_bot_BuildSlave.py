@@ -198,7 +198,7 @@ class TestBuildWorker(misc.PatcherMixin, unittest.TestCase):
 
         return d
 
-    def test_buildslave_shutdown(self):
+    def test_worker_shutdown(self):
         """Test watching an existing shutdown_file results in gracefulShutdown
         being called."""
 
