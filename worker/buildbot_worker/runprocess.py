@@ -272,7 +272,7 @@ class RunProcess(object):
                            has finished.
         @param keepStderr: same, for stderr
 
-        @param usePTY: "slave-config" -> use the SlaveBuilder's usePTY;
+        @param usePTY: "slave-config" -> use the WorkerBuilder's usePTY;
             otherwise, true to use a PTY, false to not use a PTY.
 
         @param useProcGroup: (default True) use a process group for non-PTY

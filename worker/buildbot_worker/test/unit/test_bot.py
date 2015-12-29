@@ -116,7 +116,7 @@ class TestBot(unittest.TestCase):
         def check(builders):
             self.assertEqual(list(builders), ['mybld'])
             self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-            # note that we test the SlaveBuilder instance below
+            # note that we test the WorkerBuilder instance below
         d.addCallback(check)
         return d
 
@@ -226,7 +226,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot = base.BotBase(self.basedir, False)
         self.bot.startService()
 
-        # get a SlaveBuilder object from the bot and wrap it as a fake remote
+        # get a WorkerBuilder object from the bot and wrap it as a fake remote
         builders = yield self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = FakeRemote(builders['sb'])
 
@@ -243,10 +243,10 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_print(self):
-        return self.sb.callRemote("print", "Hello, SlaveBuilder.")
+        return self.sb.callRemote("print", "Hello, WorkerBuilder.")
 
     def test_setMaster(self):
-        # not much to check here - what the SlaveBuilder does with the
+        # not much to check here - what the WorkerBuilder does with the
         # master is not part of the interface (and, in fact, it does very little)
         return self.sb.callRemote("setMaster", mock.Mock())
 

@@ -99,7 +99,7 @@ class WorkerBuilderBase(service.Service):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
+        log.msg("WorkerBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
 
     def lostRemote(self, remote):
@@ -191,7 +191,7 @@ class WorkerBuilderBase(service.Service):
             updates = [update]
             d = self.remoteStep.callRemote("update", updates)
             d.addCallback(self.ackUpdate)
-            d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
+            d.addErrback(self._ackFailed, "WorkerBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
         self.activity()  # update the "last activity" timer
@@ -200,13 +200,13 @@ class WorkerBuilderBase(service.Service):
         self.activity()  # update the "last activity" timer
 
     def _ackFailed(self, why, where):
-        log.msg("SlaveBuilder._ackFailed:", where)
+        log.msg("WorkerBuilder._ackFailed:", where)
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def commandComplete(self, failure):
         if failure:
-            log.msg("SlaveBuilder.commandFailed", self.command)
+            log.msg("WorkerBuilder.commandFailed", self.command)
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -214,7 +214,7 @@ class WorkerBuilderBase(service.Service):
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("SlaveBuilder.commandComplete", self.command)
+            log.msg("WorkerBuilder.commandComplete", self.command)
         self.command = None
         if not self.running:
             log.msg(" but we weren't running, quitting silently")
@@ -237,7 +237,7 @@ class BotBase(service.MultiService):
     """I represent the slave-side bot."""
     usePTY = None
     name = "bot"
-    SlaveBuilder = WorkerBuilderBase
+    WorkerBuilder = WorkerBuilderBase
 
     def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
@@ -272,7 +272,7 @@ class BotBase(service.MultiService):
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = self.SlaveBuilder(name)
+                b = self.WorkerBuilder(name)
                 b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)

@@ -65,7 +65,7 @@ class CommandTestMixin(object):
         cmdclass argument is the Command class, and args is the args dict
         to pass to its constructor.
 
-        This always creates the SlaveBuilder with a basedir (self.basedir).  If
+        This always creates the WorkerBuilder with a basedir (self.basedir).  If
         makedirs is true, it will create the basedir and a workdir directory
         inside (named 'workdir').
 
@@ -73,7 +73,7 @@ class CommandTestMixin(object):
         attributes are set:
 
             self.cmd -- the command
-            self.builder -- the (fake) SlaveBuilder
+            self.builder -- the (fake) WorkerBuilder
         """
 
         # set up the workdir and basedir

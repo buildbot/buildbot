@@ -40,7 +40,7 @@ class WorkerBuilderPb(WorkerBuilderBase, pb.Referenceable):
 
 
 class BotPb(BotBase, pb.Referenceable):
-    SlaveBuilder = WorkerBuilderPb
+    WorkerBuilder = WorkerBuilderPb
 
 
 class BotFactory(ReconnectingPBClientFactory):

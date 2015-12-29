@@ -93,7 +93,7 @@ class Command(object):
 
     All Commands are constructed with the same signature:
      c = CommandClass(builder, stepid, args)
-    where 'builder' is the parent SlaveBuilder object, and 'args' is a
+    where 'builder' is the parent WorkerBuilder object, and 'args' is a
     dict that is interpreted per-command.
 
     The setup(args) method is available for setup, and is run from __init__.
