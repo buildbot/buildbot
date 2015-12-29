@@ -77,7 +77,7 @@ def stop(config, signame="TERM"):
     quiet = config['quiet']
     basedir = config['basedir']
 
-    if not base.isBuildslaveDir(basedir):
+    if not base.isWorkerDir(basedir):
         return 1
 
     try:

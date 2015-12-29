@@ -43,22 +43,22 @@ class TestRestart(misc.IsWorkerDirMixin,
         test calling restart() with invalid basedir path
         """
 
-        # patch isBuildslaveDir() to fail
-        self.setupUpIsBuildslaveDir(False)
+        # patch isWorkerDir() to fail
+        self.setupUpIsWorkerDir(False)
 
         # call startCommand() and check that correct exit code is returned
         self.assertEqual(restart.restart(self.config), 1,
                          "unexpected exit code")
 
-        # check that isBuildslaveDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with(self.config["basedir"])
+        # check that isWorkerDir was called with correct argument
+        self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
     def test_no_slave_running(self):
         """
         test calling restart() when no slave is running
         """
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch stopWorker() to raise an exception
         mock_stopWorker = mock.Mock(side_effect=stop.WorkerNotRunning())
@@ -78,7 +78,7 @@ class TestRestart(misc.IsWorkerDirMixin,
         test calling restart() when slave is running
         """
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch stopWorker() to do nothing
         mock_stopWorker = mock.Mock()

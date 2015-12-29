@@ -97,14 +97,14 @@ class TestStop(misc.IsWorkerDirMixin,
         test calling stop() with invalid basedir path
         """
 
-        # patch isBuildslaveDir() to fail
-        self.setupUpIsBuildslaveDir(False)
+        # patch isWorkerDir() to fail
+        self.setupUpIsWorkerDir(False)
 
         # call startCommand() and check that correct exit code is returned
         self.assertEqual(stop.stop(self.config), 1, "unexpected exit code")
 
-        # check that isBuildslaveDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with(self.config["basedir"])
+        # check that isWorkerDir was called with correct argument
+        self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
     def test_no_slave_running(self):
         """
@@ -113,7 +113,7 @@ class TestStop(misc.IsWorkerDirMixin,
         self.setUpLogging()
 
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch stopWorker() to raise an exception
         mock_stopWorker = mock.Mock(side_effect=stop.WorkerNotRunning())
@@ -129,7 +129,7 @@ class TestStop(misc.IsWorkerDirMixin,
         """
 
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch stopWorker() to do nothing
         mock_stopWorker = mock.Mock()
