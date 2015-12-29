@@ -41,7 +41,7 @@ class ReconfigError(Exception):
     pass
 
 
-class BuildSlaveDetectedError(Exception):
+class WorkerDetectedError(Exception):
     pass
 
 
