@@ -57,7 +57,7 @@ class Connection(object):
     def remotePrint(self, message):
         raise NotImplementedError
 
-    def remoteGetSlaveInfo(self):
+    def remoteGetWorkerInfo(self):
         raise NotImplementedError
 
     def remoteSetBuilderList(self, builders):

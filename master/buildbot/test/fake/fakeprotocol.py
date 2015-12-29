@@ -37,7 +37,7 @@ class FakeConnection(base.Connection):
         self.remoteCalls.append(('remotePrint', message))
         return defer.succeed(None)
 
-    def remoteGetSlaveInfo(self):
+    def remoteGetWorkerInfo(self):
         self.remoteCalls.append(('remoteGetSlaveInfo',))
         return defer.succeed(self.slaveInfo)
 
