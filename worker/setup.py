@@ -26,13 +26,13 @@ from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils.core import setup
 
-from buildslave import version
+from buildbot_worker import version
 
-scripts = ["bin/buildslave"]
-# sdist is usually run on a non-Windows platform, but the buildslave.bat file
+scripts = ["bin/buildbot-worker"]
+# sdist is usually run on a non-Windows platform, but the buildbot_worker.bat file
 # still needs to get packaged.
 if 'sdist' in sys.argv or sys.platform == 'win32':
-    scripts.append("contrib/windows/buildslave.bat")
+    scripts.append("contrib/windows/buildbot_worker.bat")
     scripts.append("contrib/windows/buildbot_service.py")
 
 
@@ -46,8 +46,8 @@ class our_install_data(install_data):
 
     def run(self):
         install_data.run(self)
-        # ensure there's a buildslave/VERSION file
-        fn = os.path.join(self.install_dir, 'buildslave', 'VERSION')
+        # ensure there's a buildbot_worker/VERSION file
+        fn = os.path.join(self.install_dir, 'buildbot_worker', 'VERSION')
         open(fn, 'w').write(version)
         self.outfiles.append(fn)
 
@@ -56,8 +56,8 @@ class our_sdist(sdist):
 
     def make_release_tree(self, base_dir, files):
         sdist.make_release_tree(self, base_dir, files)
-        # ensure there's a buildslave/VERSION file
-        fn = os.path.join(base_dir, 'buildslave', 'VERSION')
+        # ensure there's a buildbot_worker/VERSION file
+        fn = os.path.join(base_dir, 'buildbot_worker', 'VERSION')
         open(fn, 'w').write(version)
 
         # ensure that NEWS has a copy of the latest release notes, copied from
@@ -89,19 +89,19 @@ setup_args = {
     ],
 
     'packages': [
-        "buildslave",
-        "buildslave.commands",
-        "buildslave.scripts",
-        "buildslave.monkeypatches",
-        "buildslave.test",
-        "buildslave.test.fake",
-        "buildslave.test.util",
-        "buildslave.test.unit",
+        "buildbot_worker",
+        "buildbot_worker.commands",
+        "buildbot_worker.scripts",
+        "buildbot_worker.monkeypatches",
+        "buildbot_worker.test",
+        "buildbot_worker.test.fake",
+        "buildbot_worker.test.util",
+        "buildbot_worker.test.unit",
     ],
     'scripts': scripts,
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
-    'data_files': [("buildslave", [])],
+    'data_files': [("buildbot_worker", [])],
     'cmdclass': {
         'install_data': our_install_data,
         'sdist': our_sdist
