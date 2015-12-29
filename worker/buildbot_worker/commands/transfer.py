@@ -252,18 +252,18 @@ class WorkerFileDownloadCommand(TransferCommand):
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavedest']: name of the slave-side file to be created
+        - ['workerdest']: name of the slave-side file to be created
         - ['reader']:    RemoteReference to a buildbot_worker.protocols.base.FileReaderProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file
     """
     debug = False
-    requiredArgs = ['workdir', 'slavedest', 'reader', 'blocksize']
+    requiredArgs = ['workdir', 'workerdest', 'reader', 'blocksize']
 
     def setup(self, args):
         self.workdir = args['workdir']
-        self.filename = args['slavedest']
+        self.filename = args['workerdest']
         self.reader = args['reader']
         self.bytes_remaining = args['maxsize']
         self.blocksize = args['blocksize']
