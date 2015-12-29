@@ -43,14 +43,14 @@ class Follower(object):
     def _failure(self, why):
         from twisted.internet import reactor
         from buildbot_worker.scripts.logwatcher import BuildmasterTimeoutError, \
-            ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
+            ReconfigError, WorkerTimeoutError, BuildSlaveDetectedError
         if why.check(BuildmasterTimeoutError):
             log.msg("""
 The buildbot_worker took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'configuration update complete' to verify correct startup.
 """)
-        elif why.check(BuildslaveTimeoutError):
+        elif why.check(WorkerTimeoutError):
             log.msg("""
 The buildbot_worker took more than 10 seconds to start and/or connect to the
 buildbot_worker, so we were unable to confirm that it started and connected

@@ -33,7 +33,7 @@ class BuildmasterTimeoutError(Exception):
     pass
 
 
-class BuildslaveTimeoutError(Exception):
+class WorkerTimeoutError(Exception):
     pass
 
 
@@ -100,7 +100,7 @@ class LogWatcher(LineOnlyReceiver):
         if self.processtype == "buildmaster":
             e = BuildmasterTimeoutError()
         else:
-            e = BuildslaveTimeoutError()
+            e = WorkerTimeoutError()
         self.finished(Failure(e))
 
     def finished(self, results):
