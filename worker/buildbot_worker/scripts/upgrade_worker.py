@@ -20,7 +20,7 @@ from twisted.python import log
 from buildbot_worker.scripts import base
 
 
-def upgradeSlave(config):
+def upgradeWorker(config):
     basedir = os.path.expanduser(config['basedir'])
 
     if not base.isWorkerDir(basedir):
