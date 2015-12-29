@@ -37,7 +37,7 @@ from buildbot_worker.interfaces import IWorkerCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.16"
+command_version = "3.0"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -72,6 +72,7 @@ command_version = "2.16"
 #  >= 2.16: 'sigtermTime' option is added to WorkerShellCommand
 #  >= 2.16: runprocess supports obfuscation via tuples (#1748)
 #  >= 2.16: listdir command added to read a directory
+#  3.0 "slave" -> "worker" renaming
 
 
 class Command(object):
