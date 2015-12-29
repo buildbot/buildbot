@@ -35,7 +35,7 @@ class UnknownCommand(pb.Error):
     pass
 
 
-class SlaveBuilderBase(service.Service):
+class WorkerBuilderBase(service.Service):
 
     """This is the local representation of a single Builder: it handles a
     single kind of build (like an all-warnings build). It has a name and a
@@ -237,7 +237,7 @@ class BotBase(service.MultiService):
     """I represent the slave-side bot."""
     usePTY = None
     name = "bot"
-    SlaveBuilder = SlaveBuilderBase
+    SlaveBuilder = WorkerBuilderBase
 
     def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
