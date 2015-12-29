@@ -150,13 +150,13 @@ class TestUpgradeWorkerOptions(BaseDirTestsMixin, unittest.TestCase):
 class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.runner.CreateSlaveOptions class.
+    Test buildbot_worker.scripts.runner.CreateWorkerOptions class.
     """
 
     req_args = ["bdir", "mstr:5678", "name", "pswd"]
 
     def parse(self, *args):
-        opts = runner.CreateSlaveOptions()
+        opts = runner.CreateWorkerOptions()
         opts.parseOptions(args)
         return opts
 
@@ -166,7 +166,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
                                 self.parse)
 
     def test_synopsis(self):
-        opts = runner.CreateSlaveOptions()
+        opts = runner.CreateWorkerOptions()
         self.assertIn('buildbot_worker create-slave', opts.getSynopsis())
 
     def test_min_args(self):
@@ -263,30 +263,30 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     def test_validateMasterArgument_no_port(self):
         """
-        test calling CreateSlaveOptions.validateMasterArgument()
+        test calling CreateWorkerOptions.validateMasterArgument()
         on <master> argument without port specified.
         """
-        opts = runner.CreateSlaveOptions()
+        opts = runner.CreateWorkerOptions()
         self.assertEqual(opts.validateMasterArgument("mstrhost"),
                          ("mstrhost", 9989),
                          "incorrect master host and/or port")
 
     def test_validateMasterArgument_empty_master(self):
         """
-        test calling CreateSlaveOptions.validateMasterArgument()
+        test calling CreateWorkerOptions.validateMasterArgument()
         on <master> without host part specified.
         """
-        opts = runner.CreateSlaveOptions()
+        opts = runner.CreateWorkerOptions()
         self.assertRaisesRegexp(usage.UsageError,
                                 "invalid <master> argument ':1234'",
                                 opts.validateMasterArgument, ":1234")
 
     def test_validateMasterArgument_inv_port(self):
         """
-        test calling CreateSlaveOptions.validateMasterArgument()
+        test calling CreateWorkerOptions.validateMasterArgument()
         on <master> without with unparsable port part
         """
-        opts = runner.CreateSlaveOptions()
+        opts = runner.CreateWorkerOptions()
         self.assertRaisesRegexp(usage.UsageError,
                                 "invalid master port 'apple', "
                                 "needs to be an number",
@@ -294,10 +294,10 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     def test_validateMasterArgument_ok(self):
         """
-        test calling CreateSlaveOptions.validateMasterArgument()
+        test calling CreateWorkerOptions.validateMasterArgument()
         on <master> without host and port parts specified.
         """
-        opts = runner.CreateSlaveOptions()
+        opts = runner.CreateWorkerOptions()
         self.assertEqual(opts.validateMasterArgument("mstrhost:4321"),
                          ("mstrhost", 4321),
                          "incorrect master host and/or port")
