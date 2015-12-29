@@ -67,7 +67,7 @@ s.setServiceParent(application)
 """]
 
 
-class CreateSlaveError(Exception):
+class CreateWorkerError(Exception):
 
     """
     Raised on errors while setting up buildbot_worker directory.
@@ -81,7 +81,7 @@ def _makeBaseDir(basedir, quiet):
     @param basedir: buildbot_worker base directory relative path
     @param   quiet: if True, don't print info messages
 
-    @raise CreateSlaveError: on error making base directory
+    @raise CreateWorkerError: on error making base directory
     """
     if os.path.exists(basedir):
         if not quiet:
@@ -94,8 +94,8 @@ def _makeBaseDir(basedir, quiet):
     try:
         os.mkdir(basedir)
     except OSError as exception:
-        raise CreateSlaveError("error creating directory %s: %s" %
-                               (basedir, exception.strerror))
+        raise CreateWorkerError("error creating directory %s: %s" %
+                                (basedir, exception.strerror))
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -107,7 +107,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
     @param tac_file_contents: contents of buildbot.tac file to write
     @param quiet: if True, don't print info messages
 
-    @raise CreateSlaveError: on error reading or writing tac file
+    @raise CreateWorkerError: on error reading or writing tac file
     """
     tacfile = os.path.join(basedir, "buildbot.tac")
 
@@ -115,8 +115,8 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         try:
             oldcontents = open(tacfile, "rt").read()
         except IOError as exception:
-            raise CreateSlaveError("error reading %s: %s" %
-                                   (tacfile, exception.strerror))
+            raise CreateWorkerError("error reading %s: %s" %
+                                    (tacfile, exception.strerror))
 
         if oldcontents == tac_file_contents:
             if not quiet:
@@ -135,8 +135,8 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         f.close()
         os.chmod(tacfile, 0o600)
     except IOError as exception:
-        raise CreateSlaveError("could not write %s: %s" %
-                               (tacfile, exception.strerror))
+        raise CreateWorkerError("could not write %s: %s" %
+                                (tacfile, exception.strerror))
 
 
 def _makeInfoFiles(basedir, quiet):
@@ -146,7 +146,7 @@ def _makeInfoFiles(basedir, quiet):
     @param basedir: buildbot_worker base directory relative path
     @param   quiet: if True, don't print info messages
 
-    @raise CreateSlaveError: on error making info directory or
+    @raise CreateWorkerError: on error making info directory or
                              writing info files
     """
     def createFile(path, file, contents):
@@ -162,8 +162,8 @@ def _makeInfoFiles(basedir, quiet):
         try:
             open(filepath, "wt").write(contents)
         except IOError as exception:
-            raise CreateSlaveError("could not write %s: %s" %
-                                   (filepath, exception.strerror))
+            raise CreateWorkerError("could not write %s: %s" %
+                                    (filepath, exception.strerror))
         return True
 
     path = os.path.join(basedir, "info")
@@ -173,8 +173,8 @@ def _makeInfoFiles(basedir, quiet):
         try:
             os.mkdir(path)
         except OSError as exception:
-            raise CreateSlaveError("error creating directory %s: %s" %
-                                   (path, exception.strerror))
+            raise CreateWorkerError("error creating directory %s: %s" %
+                                    (path, exception.strerror))
 
     # create 'info/admin' file
     created = createFile(path, "admin",
@@ -216,7 +216,7 @@ def createSlave(config):
         _makeBaseDir(basedir, quiet)
         _makeBuildbotTac(basedir, contents, quiet)
         _makeInfoFiles(basedir, quiet)
-    except CreateSlaveError as exception:
+    except CreateWorkerError as exception:
         log.msg("%s\nfailed to configure buildbot_worker in %s" %
                 (exception, config['basedir']))
         return 1
