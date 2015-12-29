@@ -327,7 +327,7 @@ class BotBase(service.MultiService):
         files['numcpus'] = self.numcpus
 
         files['version'] = self.remote_getVersion()
-        files['slave_commands'] = self.remote_getCommands()
+        files['worker_commands'] = self.remote_getCommands()
         return files
 
     def remote_getVersion(self):
