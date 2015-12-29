@@ -71,7 +71,7 @@ now. Please inspect and fix master.cfg, then restart the buildbot_worker.
 """)
         elif why.check(WorkerDetectedError):
             log.msg("""
-Buildslave is starting up, not following logfile.
+Worker is starting up, not following logfile.
 """)
         else:
             log.msg("""

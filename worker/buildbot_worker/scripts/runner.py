@@ -244,7 +244,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot_worker
-        log.msg("Buildslave version: %s" % buildbot_worker.version)
+        log.msg("Worker version: %s" % buildbot_worker.version)
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
