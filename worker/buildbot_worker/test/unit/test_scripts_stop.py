@@ -19,9 +19,9 @@ import os
 import signal
 import time
 
-from buildslave.scripts import stop
-from buildslave.test.util import compat
-from buildslave.test.util import misc
+from buildbot_worker.scripts import stop
+from buildbot_worker.test.util import compat
+from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
@@ -30,7 +30,7 @@ class TestStopSlave(misc.FileIOMixin,
                     unittest.TestCase):
 
     """
-    Test buildslave.scripts.stop.stopSlave()
+    Test buildbot_worker.scripts.stop.stopSlave()
     """
     PID = 9876
 
@@ -80,7 +80,7 @@ class TestStopSlave(misc.FileIOMixin,
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
 
-        self.assertLogged("buildslave process %s is dead" % self.PID)
+        self.assertLogged("buildbot_worker process %s is dead" % self.PID)
 
 
 class TestStop(misc.IsBuildslaveDirMixin,
@@ -88,7 +88,7 @@ class TestStop(misc.IsBuildslaveDirMixin,
                unittest.TestCase):
 
     """
-    Test buildslave.scripts.stop.stop()
+    Test buildbot_worker.scripts.stop.stop()
     """
     config = {"basedir": "dummy", "quiet": False}
 
@@ -121,7 +121,7 @@ class TestStop(misc.IsBuildslaveDirMixin,
 
         stop.stop(self.config)
 
-        self.assertLogged("buildslave not running")
+        self.assertLogged("buildbot_worker not running")
 
     def test_successful_stop(self):
         """

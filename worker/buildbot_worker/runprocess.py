@@ -39,8 +39,8 @@ from twisted.python import log
 from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
 
-from buildslave import util
-from buildslave.exceptions import AbandonChain
+from buildbot_worker import util
+from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process

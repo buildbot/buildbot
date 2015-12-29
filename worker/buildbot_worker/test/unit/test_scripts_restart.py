@@ -15,10 +15,10 @@
 
 import mock
 
-from buildslave.scripts import restart
-from buildslave.scripts import start
-from buildslave.scripts import stop
-from buildslave.test.util import misc
+from buildbot_worker.scripts import restart
+from buildbot_worker.scripts import start
+from buildbot_worker.scripts import stop
+from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
@@ -27,7 +27,7 @@ class TestRestart(misc.IsBuildslaveDirMixin,
                   unittest.TestCase):
 
     """
-    Test buildslave.scripts.restart.restart()
+    Test buildbot_worker.scripts.restart.restart()
     """
     config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
 
@@ -70,8 +70,8 @@ class TestRestart(misc.IsBuildslaveDirMixin,
                                                 self.config["quiet"],
                                                 self.config["nodaemon"])
 
-        self.assertLogged("no old buildslave process found to stop")
-        self.assertLogged("now restarting buildslave process..")
+        self.assertLogged("no old buildbot_worker process found to stop")
+        self.assertLogged("now restarting buildbot_worker process..")
 
     def test_restart(self):
         """
@@ -89,4 +89,4 @@ class TestRestart(misc.IsBuildslaveDirMixin,
         self.startSlave.assert_called_once_with(self.config["basedir"],
                                                 self.config["quiet"],
                                                 self.config["nodaemon"])
-        self.assertLogged("now restarting buildslave process..")
+        self.assertLogged("now restarting buildbot_worker process..")

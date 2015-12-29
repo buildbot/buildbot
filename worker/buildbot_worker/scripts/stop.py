@@ -18,7 +18,7 @@ import time
 
 from twisted.python import log
 
-from buildslave.scripts import base
+from buildbot_worker.scripts import base
 
 
 class SlaveNotRunning(Exception):
@@ -35,7 +35,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
     Using the specified basedir path, read slave process's pid file and
     try to terminate that process with specified signal.
 
-    @param basedir: buildslave's basedir path
+    @param basedir: buildbot_worker's basedir path
     @param   quite: if False, don't print any messages to stdout
     @param signame: signal to send to the slave process
 
@@ -65,7 +65,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                log.msg("buildslave process %d is dead" % pid)
+                log.msg("buildbot_worker process %d is dead" % pid)
             return
         timer += 1
         time.sleep(1)
@@ -84,6 +84,6 @@ def stop(config, signame="TERM"):
         stopSlave(basedir, quiet, signame)
     except SlaveNotRunning:
         if not quiet:
-            log.msg("buildslave not running")
+            log.msg("buildbot_worker not running")
 
     return 0

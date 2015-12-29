@@ -17,28 +17,28 @@ from twisted.python import reflect
 
 commandRegistry = {
     # command name : fully qualified factory name (callable)
-    "shell": "buildslave.commands.shell.SlaveShellCommand",
-    "uploadFile": "buildslave.commands.transfer.SlaveFileUploadCommand",
-    "uploadDirectory": "buildslave.commands.transfer.SlaveDirectoryUploadCommand",
-    "downloadFile": "buildslave.commands.transfer.SlaveFileDownloadCommand",
-    "repo": "buildslave.commands.repo.Repo",
-    "mkdir": "buildslave.commands.fs.MakeDirectory",
-    "rmdir": "buildslave.commands.fs.RemoveDirectory",
-    "cpdir": "buildslave.commands.fs.CopyDirectory",
-    "stat": "buildslave.commands.fs.StatFile",
-    "glob": "buildslave.commands.fs.GlobPath",
-    "listdir": "buildslave.commands.fs.ListDir",
+    "shell": "buildbot_worker.commands.shell.SlaveShellCommand",
+    "uploadFile": "buildbot_worker.commands.transfer.SlaveFileUploadCommand",
+    "uploadDirectory": "buildbot_worker.commands.transfer.SlaveDirectoryUploadCommand",
+    "downloadFile": "buildbot_worker.commands.transfer.SlaveFileDownloadCommand",
+    "repo": "buildbot_worker.commands.repo.Repo",
+    "mkdir": "buildbot_worker.commands.fs.MakeDirectory",
+    "rmdir": "buildbot_worker.commands.fs.RemoveDirectory",
+    "cpdir": "buildbot_worker.commands.fs.CopyDirectory",
+    "stat": "buildbot_worker.commands.fs.StatFile",
+    "glob": "buildbot_worker.commands.fs.GlobPath",
+    "listdir": "buildbot_worker.commands.fs.ListDir",
 
     # Commands that are no longer supported
-    "svn": "buildslave.commands.removed.Svn",
-    "bk": "buildslave.commands.removed.Bk",
-    "cvs": "buildslave.commands.removed.Cvs",
-    "darcs": "buildslave.commands.removed.Darcs",
-    "git": "buildslave.commands.removed.Git",
-    "bzr": "buildslave.commands.removed.Bzr",
-    "hg": "buildslave.commands.removed.Hg",
-    "p4": "buildslave.commands.removed.P4",
-    "mtn": "buildslave.commands.removed.Mtn",
+    "svn": "buildbot_worker.commands.removed.Svn",
+    "bk": "buildbot_worker.commands.removed.Bk",
+    "cvs": "buildbot_worker.commands.removed.Cvs",
+    "darcs": "buildbot_worker.commands.removed.Darcs",
+    "git": "buildbot_worker.commands.removed.Git",
+    "bzr": "buildbot_worker.commands.removed.Bzr",
+    "hg": "buildbot_worker.commands.removed.Hg",
+    "p4": "buildbot_worker.commands.removed.P4",
+    "mtn": "buildbot_worker.commands.removed.Mtn",
 }
 
 

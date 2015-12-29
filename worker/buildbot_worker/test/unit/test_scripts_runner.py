@@ -17,8 +17,8 @@ import mock
 import os
 import sys
 
-from buildslave.scripts import runner
-from buildslave.test.util import misc
+from buildbot_worker.scripts import runner
+from buildbot_worker.test.util import misc
 from twisted.python import log
 from twisted.python import usage
 from twisted.trial import unittest
@@ -82,7 +82,7 @@ class BaseDirTestsMixin(object):
 class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.MakerBase class.
+    Test buildbot_worker.scripts.runner.MakerBase class.
     """
     options_class = runner.MakerBase
 
@@ -90,25 +90,25 @@ class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
 class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.StopOptions class.
+    Test buildbot_worker.scripts.runner.StopOptions class.
     """
     options_class = runner.StopOptions
 
     def test_synopsis(self):
         opts = runner.StopOptions()
-        self.assertIn('buildslave stop', opts.getSynopsis())
+        self.assertIn('buildbot_worker stop', opts.getSynopsis())
 
 
 class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.StartOptions class.
+    Test buildbot_worker.scripts.runner.StartOptions class.
     """
     options_class = runner.StartOptions
 
     def test_synopsis(self):
         opts = runner.StartOptions()
-        self.assertIn('buildslave start', opts.getSynopsis())
+        self.assertIn('buildbot_worker start', opts.getSynopsis())
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
@@ -120,13 +120,13 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.RestartOptions class.
+    Test buildbot_worker.scripts.runner.RestartOptions class.
     """
     options_class = runner.RestartOptions
 
     def test_synopsis(self):
         opts = runner.RestartOptions()
-        self.assertIn('buildslave restart', opts.getSynopsis())
+        self.assertIn('buildbot_worker restart', opts.getSynopsis())
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
@@ -138,19 +138,19 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.UpgradeSlaveOptions class.
+    Test buildbot_worker.scripts.runner.UpgradeSlaveOptions class.
     """
     options_class = runner.UpgradeSlaveOptions
 
     def test_synopsis(self):
         opts = runner.UpgradeSlaveOptions()
-        self.assertIn('buildslave upgrade-slave', opts.getSynopsis())
+        self.assertIn('buildbot_worker upgrade-slave', opts.getSynopsis())
 
 
 class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.CreateSlaveOptions class.
+    Test buildbot_worker.scripts.runner.CreateSlaveOptions class.
     """
 
     req_args = ["bdir", "mstr:5678", "name", "pswd"]
@@ -167,7 +167,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.CreateSlaveOptions()
-        self.assertIn('buildslave create-slave', opts.getSynopsis())
+        self.assertIn('buildbot_worker create-slave', opts.getSynopsis())
 
     def test_min_args(self):
 
@@ -306,7 +306,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 class TestOptions(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.Options class.
+    Test buildbot_worker.scripts.runner.Options class.
     """
 
     def setUp(self):
@@ -340,7 +340,7 @@ functionPlaceholder = None
 class TestRun(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.run()
+    Test buildbot_worker.scripts.runner.run()
     """
 
     def setUp(self):
@@ -368,7 +368,7 @@ class TestRun(misc.LoggingMixin, unittest.TestCase):
 
     def test_run_good(self):
         """
-        Test successful invocation of buildslave command.
+        Test successful invocation of buildbot_worker command.
         """
 
         self.patch(sys, "argv", ["command", 'test', '--test-opt'])

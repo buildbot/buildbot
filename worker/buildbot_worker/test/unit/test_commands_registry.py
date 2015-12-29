@@ -15,8 +15,8 @@
 
 from twisted.trial import unittest
 
-from buildslave.commands import registry
-from buildslave.commands import shell
+from buildbot_worker.commands import registry
+from buildbot_worker.commands import shell
 
 
 class Registry(unittest.TestCase):

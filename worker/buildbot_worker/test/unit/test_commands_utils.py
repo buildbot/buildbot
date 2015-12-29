@@ -23,7 +23,7 @@ import twisted.python.procutils
 from twisted.python import runtime
 from twisted.trial import unittest
 
-from buildslave.commands import utils
+from buildbot_worker.commands import utils
 
 
 class GetCommand(unittest.TestCase):

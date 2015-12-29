@@ -23,9 +23,9 @@ from twisted.internet import threads
 from twisted.python import log
 from twisted.python import runtime
 
-from buildslave import runprocess
-from buildslave.commands import base
-from buildslave.commands import utils
+from buildbot_worker import runprocess
+from buildbot_worker.commands import base
+from buildbot_worker.commands import utils
 
 
 class MakeDirectory(base.Command):

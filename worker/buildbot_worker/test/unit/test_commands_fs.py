@@ -18,9 +18,9 @@ import shutil
 
 from twisted.trial import unittest
 
-from buildslave.commands import fs
-from buildslave.commands import utils
-from buildslave.test.util.command import CommandTestMixin
+from buildbot_worker.commands import fs
+from buildbot_worker.commands import utils
+from buildbot_worker.test.util.command import CommandTestMixin
 from twisted.python import runtime
 
 # python-2.4 doesn't have os.errno

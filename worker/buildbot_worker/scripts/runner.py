@@ -66,52 +66,52 @@ class MakerBase(usage.Options):
 
 
 class StartOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.start.startCommand"
+    subcommandFunction = "buildbot_worker.scripts.start.startCommand"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave start [<basedir>]"
+        return "Usage:    buildbot_worker start [<basedir>]"
 
 
 class StopOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.stop.stop"
+    subcommandFunction = "buildbot_worker.scripts.stop.stop"
 
     def getSynopsis(self):
-        return "Usage:    buildslave stop [<basedir>]"
+        return "Usage:    buildbot_worker stop [<basedir>]"
 
 
 class RestartOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.restart.restart"
+    subcommandFunction = "buildbot_worker.scripts.restart.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave restart [<basedir>]"
+        return "Usage:    buildbot_worker restart [<basedir>]"
 
 
 class UpgradeSlaveOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.upgrade_slave.upgradeSlave"
+    subcommandFunction = "buildbot_worker.scripts.upgrade_slave.upgradeSlave"
     optFlags = [
     ]
     optParameters = [
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave upgrade-slave [<basedir>]"
+        return "Usage:    buildbot_worker upgrade-slave [<basedir>]"
 
     longdesc = """
-    This command takes an existing buildslave working directory and
+    This command takes an existing buildbot_worker working directory and
     upgrades it to the current version.
     """
 
 
 class CreateSlaveOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.create_slave.createSlave"
+    subcommandFunction = "buildbot_worker.scripts.create_slave.createSlave"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
@@ -137,12 +137,12 @@ class CreateSlaveOptions(MakerBase):
          "limit the number of kept old twisted log files "
          "(None for unlimited)"],
         ["allow-shutdown", "a", None,
-         "Allows the buildslave to initiate a graceful shutdown. One of "
+         "Allows the buildbot_worker to initiate a graceful shutdown. One of "
          "'signal' or 'file'"]
     ]
 
     longdesc = """
-    This command creates a buildslave working directory and buildbot.tac
+    This command creates a buildbot_worker working directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
     build-specific subdirectory of <basedir>. <master> is a string of the
@@ -184,7 +184,7 @@ class CreateSlaveOptions(MakerBase):
         return master, port
 
     def getSynopsis(self):
-        return "Usage:    buildslave create-slave " \
+        return "Usage:    buildbot_worker create-slave " \
             "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
@@ -228,23 +228,23 @@ class CreateSlaveOptions(MakerBase):
 
 
 class Options(usage.Options):
-    synopsis = "Usage:    buildslave <command> [command options]"
+    synopsis = "Usage:    buildbot_worker <command> [command options]"
 
     subCommands = [
         # the following are all admin commands
         ['create-slave', None, CreateSlaveOptions,
-         "Create and populate a directory for a new buildslave"],
+         "Create and populate a directory for a new buildbot_worker"],
         ['upgrade-slave', None, UpgradeSlaveOptions,
-         "Upgrade an existing buildslave directory for the current version"],
-        ['start', None, StartOptions, "Start a buildslave"],
-        ['stop', None, StopOptions, "Stop a buildslave"],
+         "Upgrade an existing buildbot_worker directory for the current version"],
+        ['start', None, StartOptions, "Start a buildbot_worker"],
+        ['stop', None, StopOptions, "Stop a buildbot_worker"],
         ['restart', None, RestartOptions,
-         "Restart a buildslave"],
+         "Restart a buildbot_worker"],
     ]
 
     def opt_version(self):
-        import buildslave
-        log.msg("Buildslave version: %s" % buildslave.version)
+        import buildbot_worker
+        log.msg("Buildslave version: %s" % buildbot_worker.version)
         usage.Options.opt_version(self)
 
     def opt_verbose(self):

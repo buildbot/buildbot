@@ -24,11 +24,11 @@ from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
 
-import buildslave
+import buildbot_worker
 
-from buildslave import monkeypatches
-from buildslave.commands import base
-from buildslave.commands import registry
+from buildbot_worker import monkeypatches
+from buildbot_worker.commands import base
+from buildbot_worker.commands import registry
 
 
 class UnknownCommand(pb.Error):
@@ -161,7 +161,7 @@ class SlaveBuilderBase(service.Service):
 
     def stopCommand(self):
         """Make any currently-running command die, with no further status
-        output. This is used when the buildslave is shutting down or the
+        output. This is used when the buildbot_worker is shutting down or the
         connection to the master has been lost. Interrupt the command,
         silence it, and then forget about it."""
         if not self.command:
@@ -332,7 +332,7 @@ class BotBase(service.MultiService):
 
     def remote_getVersion(self):
         """Send our version back to the Master"""
-        return buildslave.version
+        return buildbot_worker.version
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
@@ -362,7 +362,7 @@ class BuildSlaveBase(service.MultiService):
         # first, apply all monkeypatches
         monkeypatches.patch_all()
 
-        log.msg("Starting BuildSlave -- version: %s" % buildslave.version)
+        log.msg("Starting BuildSlave -- version: %s" % buildbot_worker.version)
 
         if self.umask is not None:
             os.umask(self.umask)

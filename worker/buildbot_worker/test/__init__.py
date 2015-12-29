@@ -17,7 +17,7 @@ import sys
 
 import twisted
 
-from buildslave import monkeypatches
+from buildbot_worker import monkeypatches
 from twisted.trial import unittest
 
 # apply the same patches the slave does when it starts

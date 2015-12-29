@@ -29,13 +29,13 @@ from twisted.python import runtime
 from twisted.python import util
 from twisted.trial import unittest
 
-from buildslave import runprocess
-from buildslave import util as bsutil
-from buildslave.exceptions import AbandonChain
-from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
-from buildslave.test.util import compat
-from buildslave.test.util.misc import BasedirMixin
-from buildslave.test.util.misc import nl
+from buildbot_worker import runprocess
+from buildbot_worker import util as bsutil
+from buildbot_worker.exceptions import AbandonChain
+from buildbot_worker.test.fake.slavebuilder import FakeSlaveBuilder
+from buildbot_worker.test.util import compat
+from buildbot_worker.test.util.misc import BasedirMixin
+from buildbot_worker.test.util.misc import nl
 
 
 def catCommand():

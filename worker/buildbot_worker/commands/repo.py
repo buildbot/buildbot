@@ -20,9 +20,9 @@ import textwrap
 from twisted.internet import defer
 from twisted.python import log
 
-from buildslave import runprocess
-from buildslave.commands.base import AbandonChain
-from buildslave.commands.base import SourceBaseCommand
+from buildbot_worker import runprocess
+from buildbot_worker.commands.base import AbandonChain
+from buildbot_worker.commands.base import SourceBaseCommand
 
 
 class Repo(SourceBaseCommand):

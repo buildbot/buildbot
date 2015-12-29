@@ -18,14 +18,14 @@ import sys
 import time
 from twisted.python import log
 
-from buildslave.scripts import base
+from buildbot_worker.scripts import base
 
 
 class Follower(object):
 
     def follow(self):
         from twisted.internet import reactor
-        from buildslave.scripts.logwatcher import LogWatcher
+        from buildbot_worker.scripts.logwatcher import LogWatcher
         self.rc = 0
         log.msg("Following twistd.log until startup finished..")
         lw = LogWatcher("twistd.log")
@@ -42,32 +42,32 @@ class Follower(object):
 
     def _failure(self, why):
         from twisted.internet import reactor
-        from buildslave.scripts.logwatcher import BuildmasterTimeoutError, \
+        from buildbot_worker.scripts.logwatcher import BuildmasterTimeoutError, \
             ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
         if why.check(BuildmasterTimeoutError):
             log.msg("""
-The buildslave took more than 10 seconds to start, so we were unable to
+The buildbot_worker took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'configuration update complete' to verify correct startup.
 """)
         elif why.check(BuildslaveTimeoutError):
             log.msg("""
-The buildslave took more than 10 seconds to start and/or connect to the
-buildslave, so we were unable to confirm that it started and connected
+The buildbot_worker took more than 10 seconds to start and/or connect to the
+buildbot_worker, so we were unable to confirm that it started and connected
 correctly. Please 'tail twistd.log' and look for a line that says 'message
 from master: attached' to verify correct startup. If you see a bunch of
-messages like 'will retry in 6 seconds', your buildslave might not have the
-correct hostname or portnumber for the buildslave, or the buildslave might
+messages like 'will retry in 6 seconds', your buildbot_worker might not have the
+correct hostname or portnumber for the buildbot_worker, or the buildbot_worker might
 not be running. If you see messages like
    'Failure: twisted.cred.error.UnauthorizedLogin'
-then your buildslave might be using the wrong botname or password. Please
-correct these problems and then restart the buildslave.
+then your buildbot_worker might be using the wrong botname or password. Please
+correct these problems and then restart the buildbot_worker.
 """)
         elif why.check(ReconfigError):
             log.msg("""
-The buildslave appears to have encountered an error in the master.cfg config
+The buildbot_worker appears to have encountered an error in the master.cfg config
 file during startup. It is probably running with an empty configuration right
-now. Please inspect and fix master.cfg, then restart the buildslave.
+now. Please inspect and fix master.cfg, then restart the buildbot_worker.
 """)
         elif why.check(BuildSlaveDetectedError):
             log.msg("""
@@ -75,7 +75,7 @@ Buildslave is starting up, not following logfile.
 """)
         else:
             log.msg("""
-Unable to confirm that the buildslave started correctly. You may need to
+Unable to confirm that the buildbot_worker started correctly. You may need to
 stop it, fix the config file, and restart.
 """)
             log.msg(why)
@@ -102,7 +102,7 @@ def startSlave(basedir, quiet, nodaemon):
     If quiet or nodaemon parameters are True, or we are running on a win32
     system, will not fork and log will not be printed to stdout.
 
-    @param  basedir: buildslave's basedir path
+    @param  basedir: buildbot_worker's basedir path
     @param    quiet: don't display startup log messages
     @param nodaemon: don't daemonize (stay in foreground)
     @return: 0 if slave was successfully started,

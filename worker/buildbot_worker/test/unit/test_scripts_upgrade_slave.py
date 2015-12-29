@@ -16,15 +16,15 @@
 import mock
 import os
 
-from buildslave.scripts import upgrade_slave
-from buildslave.test.util import misc
+from buildbot_worker.scripts import upgrade_slave
+from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 MODERN_BUILDBOT_TAC = \
 """# dummy buildbot.tac
 import os
 
-from buildslave.bot import BuildSlave
+from buildbot_worker.bot import BuildSlave
 """
 
 OLD_BUILDBOT_TAC = \
@@ -41,7 +41,7 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
                        unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.upgradeSlave()
+    Test buildbot_worker.scripts.runner.upgradeSlave()
     """
     config = {"basedir": "dummy"}
 

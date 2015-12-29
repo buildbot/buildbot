@@ -22,7 +22,7 @@ import re
 
 from twisted.python import log
 
-from buildslave.scripts import base
+from buildbot_worker.scripts import base
 
 
 def nl(s):

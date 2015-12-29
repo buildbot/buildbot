@@ -17,14 +17,14 @@ import io
 import os
 import sys
 
-from buildslave.scripts import base
-from buildslave.test.util import misc
+from buildbot_worker.scripts import base
+from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
 class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
 
-    """Test buildslave.scripts.base.isBuildslaveDir()"""
+    """Test buildbot_worker.scripts.base.isBuildslaveDir()"""
 
     def setUp(self):
         # capture output to stdout
@@ -39,7 +39,7 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
     def assertReadErrorMessage(self, strerror):
 
         self.assertLogged("error reading '%s': %s" % (self.tac_file_path, strerror),
-                          "invalid buildslave directory 'testdir'")
+                          "invalid buildbot_worker directory 'testdir'")
 
     def test_open_error(self):
         """Test that open() errors are handled."""
@@ -82,16 +82,16 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
 
         # check that correct error message was printed to the log
         self.assertLogged("unexpected content in '%s'" % self.tac_file_path,
-                         "invalid buildslave directory 'testdir'",
+                         "invalid buildbot_worker directory 'testdir'",
                          "unexpected error message on stdout")
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 
     def test_slavedir_good(self):
-        """Test checking valid buildslave directory."""
+        """Test checking valid buildbot_worker directory."""
 
-        # patch open() to return file with valid buildslave tac contents
-        self.setUpOpen("Application('buildslave')")
+        # patch open() to return file with valid buildbot_worker tac contents
+        self.setUpOpen("Application('buildbot_worker')")
 
         # check that isBuildslaveDir() flags directory as good
         self.assertTrue(base.isBuildslaveDir("testdir"))

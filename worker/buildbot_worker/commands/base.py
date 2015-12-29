@@ -28,11 +28,11 @@ from twisted.python import log
 from twisted.python import runtime
 from zope.interface import implements
 
-from buildslave import runprocess
-from buildslave import util
-from buildslave.commands import utils
-from buildslave.exceptions import AbandonChain
-from buildslave.interfaces import ISlaveCommand
+from buildbot_worker import runprocess
+from buildbot_worker import util
+from buildbot_worker.commands import utils
+from buildbot_worker.exceptions import AbandonChain
+from buildbot_worker.interfaces import ISlaveCommand
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -261,7 +261,7 @@ class SourceBaseCommand(Command):
 
     def setup(self, args):
         # if we need to parse the output, use this environment. Otherwise
-        # command output will be in whatever the buildslave's native language
+        # command output will be in whatever the buildbot_worker's native language
         # has been set to.
         self.env = os.environ.copy()
         self.env['LC_MESSAGES'] = "C"

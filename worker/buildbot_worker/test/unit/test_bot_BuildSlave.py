@@ -25,8 +25,8 @@ from twisted.spread import pb
 from twisted.trial import unittest
 from zope.interface import implements
 
-from buildslave import bot
-from buildslave.test.util import misc
+from buildbot_worker import bot
+from buildbot_worker.test.util import misc
 
 from mock import Mock
 

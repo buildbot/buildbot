@@ -25,9 +25,9 @@ from twisted.python import failure
 from twisted.python import runtime
 from twisted.trial import unittest
 
-from buildslave.commands import transfer
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.util.command import CommandTestMixin
+from buildbot_worker.commands import transfer
+from buildbot_worker.test.fake.remote import FakeRemote
+from buildbot_worker.test.util.command import CommandTestMixin
 
 
 class FakeMasterMethods(object):

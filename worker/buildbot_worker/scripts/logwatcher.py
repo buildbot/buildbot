@@ -123,13 +123,13 @@ class LogWatcher(LineOnlyReceiver):
         if "loading configuration from" in line:
             self.in_reconfig = True
         if "Creating BuildSlave" in line:
-            self.processtype = "buildslave"
+            self.processtype = "buildbot_worker"
 
         if self.in_reconfig:
             log.msg(line)
 
         if "message from master: attached" in line:
-            return self.finished("buildslave")
+            return self.finished("buildbot_worker")
         if "I will keep using the previous config file" in line:
             return self.finished(Failure(ReconfigError()))
         if "configuration update complete" in line:

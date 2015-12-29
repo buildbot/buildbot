@@ -27,14 +27,14 @@ from twisted.python import failure
 from twisted.python import log
 from twisted.trial import unittest
 
-import buildslave
+import buildbot_worker
 
-from buildslave import base
-from buildslave import pb
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util import command
-from buildslave.test.util import compat
+from buildbot_worker import base
+from buildbot_worker import pb
+from buildbot_worker.test.fake.remote import FakeRemote
+from buildbot_worker.test.fake.runprocess import Expect
+from buildbot_worker.test.util import command
+from buildbot_worker.test.util import compat
 
 
 class TestBot(unittest.TestCase):
@@ -71,7 +71,7 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getVersion")
 
         def check(vers):
-            self.assertEqual(vers, buildslave.version)
+            self.assertEqual(vers, buildbot_worker.version)
         d.addCallback(check)
         return d
 

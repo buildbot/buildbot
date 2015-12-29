@@ -22,8 +22,8 @@ from zope.interface import Interface
 
 class ISlaveCommand(Interface):
 
-    """This interface is implemented by all of the buildslave's Command
-    subclasses. It specifies how the buildslave can start, interrupt, and
+    """This interface is implemented by all of the buildbot_worker's Command
+    subclasses. It specifies how the buildbot_worker can start, interrupt, and
     query the various Commands running on behalf of the buildmaster."""
 
     def __init__(builder, stepId, args):

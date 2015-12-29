@@ -20,7 +20,7 @@ import tempfile
 from twisted.internet import defer
 from twisted.python import log
 
-from buildslave.commands.base import Command
+from buildbot_worker.commands.base import Command
 
 
 class TransferCommand(Command):
@@ -56,7 +56,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
         - ['workdir']:   base directory to use
         - ['slavesrc']:  name of the slave-side file to read from
-        - ['writer']:    RemoteReference to a buildslave.protocols.base.FileWriterProxy object
+        - ['writer']:    RemoteReference to a buildbot_worker.protocols.base.FileWriterProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['keepstamp']: whether to preserve file modified and accessed times
@@ -253,7 +253,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
         - ['workdir']:   base directory to use
         - ['slavedest']: name of the slave-side file to be created
-        - ['reader']:    RemoteReference to a buildslave.protocols.base.FileReaderProxy object
+        - ['reader']:    RemoteReference to a buildbot_worker.protocols.base.FileReaderProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['mode']:      access mode for the new file
@@ -290,9 +290,9 @@ class SlaveFileDownloadCommand(TransferCommand):
                 log.msg("Opened '%s' for download" % self.path)
             if self.mode is not None:
                 # note: there is a brief window during which the new file
-                # will have the buildslave's default (umask) mode before we
+                # will have the buildbot_worker's default (umask) mode before we
                 # set the new one. Don't use this mode= feature to keep files
-                # private: use the buildslave's umask for that instead. (it
+                # private: use the buildbot_worker's umask for that instead. (it
                 # is possible to call os.umask() before and after the open()
                 # call, but cleaning up from exceptions properly is more of a
                 # nuisance that way).

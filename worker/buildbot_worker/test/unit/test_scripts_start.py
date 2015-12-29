@@ -15,15 +15,15 @@
 
 import mock
 
-from buildslave.scripts import start
-from buildslave.test.util import misc
+from buildbot_worker.scripts import start
+from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
 class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
 
     """
-    Test buildslave.scripts.startup.startCommand()
+    Test buildbot_worker.scripts.startup.startCommand()
     """
 
     def test_start_command_bad_basedir(self):

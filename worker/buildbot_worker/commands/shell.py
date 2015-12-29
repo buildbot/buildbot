@@ -15,8 +15,8 @@
 
 import os
 
-from buildslave import runprocess
-from buildslave.commands import base
+from buildbot_worker import runprocess
+from buildbot_worker.commands import base
 
 
 class SlaveShellCommand(base.Command):

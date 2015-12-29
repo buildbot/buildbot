@@ -16,11 +16,11 @@
 import os
 import shutil
 
-import buildslave.runprocess
+import buildbot_worker.runprocess
 
-from buildslave.commands import utils
-from buildslave.test.fake import runprocess
-from buildslave.test.fake import slavebuilder
+from buildbot_worker.commands import utils
+from buildbot_worker.test.fake import runprocess
+from buildbot_worker.test.fake import slavebuilder
 
 
 class CommandTestMixin(object):
@@ -123,8 +123,8 @@ class CommandTestMixin(object):
         """
         Patch a fake RunProcess class in, and set the given expectations.
         """
-        self.patch(buildslave.runprocess, 'RunProcess', runprocess.FakeRunProcess)
-        buildslave.runprocess.RunProcess.expect(*expectations)
+        self.patch(buildbot_worker.runprocess, 'RunProcess', runprocess.FakeRunProcess)
+        buildbot_worker.runprocess.RunProcess.expect(*expectations)
         self.runprocess_patched = True
 
     def patch_getCommand(self, name, result):

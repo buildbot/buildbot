@@ -15,9 +15,9 @@
 
 from twisted.trial import unittest
 
-from buildslave.commands import shell
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.command import CommandTestMixin
+from buildbot_worker.commands import shell
+from buildbot_worker.test.fake.runprocess import Expect
+from buildbot_worker.test.util.command import CommandTestMixin
 
 
 class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):

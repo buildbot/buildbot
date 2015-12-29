@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 
-import buildslave
+import buildbot_worker
 
-from buildslave.commands import base
+from buildbot_worker.commands import base
 
 
 class RemovedSourceCommand(base.SourceBaseCommand):
@@ -33,7 +33,7 @@ class RemovedSourceCommand(base.SourceBaseCommand):
              "Instead please use new method which has its logic on master-side and has unified params list.\n"
              "Using the plugin infrastructure it's available as buildbot.plugins.{0}\n"
              "\n"
-             .format(self.name, buildslave.version)})
+             .format(self.name, buildbot_worker.version)})
         self.sendStatus({"rc": 1})
 
 

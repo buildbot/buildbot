@@ -20,7 +20,7 @@ from twisted.python import log
 
 def isBuildslaveDir(dir):
     def print_error(error_message):
-        log.msg("%s\ninvalid buildslave directory '%s'" % (error_message, dir))
+        log.msg("%s\ninvalid buildbot_worker directory '%s'" % (error_message, dir))
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
@@ -30,7 +30,7 @@ def isBuildslaveDir(dir):
                     (buildbot_tac, exception.strerror))
         return False
 
-    if "Application('buildslave')" not in contents:
+    if "Application('buildbot_worker')" not in contents:
         print_error("unexpected content in '%s'" % buildbot_tac)
         return False
 

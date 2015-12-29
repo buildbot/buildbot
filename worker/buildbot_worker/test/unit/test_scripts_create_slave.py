@@ -16,8 +16,8 @@
 import mock
 import os
 
-from buildslave.scripts import create_slave
-from buildslave.test.util import misc
+from buildbot_worker.scripts import create_slave
+from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
@@ -32,7 +32,7 @@ def _regexp_path(name, *names):
 class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave._makeBaseDir()
+    Test buildbot_worker.scripts.create_slave._makeBaseDir()
     """
 
     def setUp(self):
@@ -124,7 +124,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
                           unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave._makeBuildbotTac()
+    Test buildbot_worker.scripts.create_slave._makeBuildbotTac()
     """
 
     def setUp(self):
@@ -287,7 +287,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
                         unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave._makeInfoFiles()
+    Test buildbot_worker.scripts.create_slave._makeInfoFiles()
     """
 
     def setUp(self):
@@ -471,7 +471,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
 class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave.createSlave()
+    Test buildbot_worker.scripts.create_slave.createSlave()
     """
     # default options and required arguments
     options = {
@@ -534,7 +534,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     def testCreateError(self):
         """
-        test that errors while creating buildslave directory are handled
+        test that errors while creating buildbot_worker directory are handled
         correctly by createSlave()
         """
         # patch _make*() functions to raise an exception
@@ -546,7 +546,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
         # check that correct error message was printed the the log
         self.assertLogged("err-msg",
-                          "failed to configure buildslave in bdir")
+                          "failed to configure buildbot_worker in bdir")
 
     def testMinArgs(self):
         """
@@ -567,7 +567,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                                       self.options["quiet"])
 
         # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        self.assertLogged("buildbot_worker configured in bdir")
 
     def assertTACFileContents(self, options):
         """
@@ -578,7 +578,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # import modules for mocking
         import twisted.application.service
         import twisted.python.logfile
-        import buildslave.bot
+        import buildbot_worker.bot
 
         # mock service.Application class
         application_mock = mock.Mock()
@@ -594,7 +594,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # mock BuildSlave class
         buildslave_mock = mock.Mock()
         buildslave_class_mock = mock.Mock(return_value=buildslave_mock)
-        self.patch(buildslave.bot, "BuildSlave", buildslave_class_mock)
+        self.patch(buildbot_worker.bot, "BuildSlave", buildslave_class_mock)
 
         expected_tac_contents = \
             "".join(create_slave.slaveTACTemplate) % options
@@ -605,7 +605,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         exec(expected_tac_contents, glb, glb)
 
         # only one Application must be created in .tac
-        application_class_mock.assert_called_once_with("buildslave")
+        application_class_mock.assert_called_once_with("buildbot_worker")
 
         # check that BuildSlave created with passed options
         buildslave_class_mock.assert_called_once_with(
@@ -721,7 +721,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                                       self.options["quiet"])
 
         # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        self.assertLogged("buildbot_worker configured in bdir")
 
     def testWithOpts(self):
         """
@@ -748,7 +748,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                                       options["quiet"])
 
         # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        self.assertLogged("buildbot_worker configured in bdir")
 
     def testQuiet(self):
         """
