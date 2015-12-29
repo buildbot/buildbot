@@ -1,5 +1,7 @@
 class Collection extends Factory
     constructor: ($q, $injector, $log, dataUtilsService, socketService, DataQuery, $timeout) ->
+        angular.isArray = Array.isArray = (arg) ->
+            return arg instanceof Array
         return class CollectionInstance extends Array
             constructor: (@restPath, @query = {}, @accessor) ->
                 @socketPath = dataUtilsService.socketPath(@restPath)
@@ -74,13 +76,16 @@ class Collection extends Factory
                 @recomputeQuery()
                 @sendEvents()
 
+            item: (i) ->
+                return this[i]
+
             add: (element) ->
                 # dont create wrapper if element is filtered
                 if @queryExecutor.filter([element]).length == 0
                     return
                 instance = new @WrapperClass(element, @endpoint)
                 instance.setAccessor(@accessor)
-                instance._collection = this
+                instance.$collection = this
                 @_new.push(instance)
                 @_byId[instance[@id]] = instance
                 @push(instance)

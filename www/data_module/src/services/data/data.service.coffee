@@ -99,7 +99,6 @@ class Data extends Provider
                     closeOnDestroy: (scope) ->
                         if not angular.isFunction(scope.$on)
                             throw new TypeError("Parameter 'scope' doesn't have an $on function")
-                        this.scope = scope
                         scope.$on '$destroy', => @close()
                         return this
 

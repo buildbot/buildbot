@@ -5,7 +5,7 @@ class Base extends Factory
                 if not angular.isString(@_endpoint)
                     throw new TypeError("Parameter 'endpoint' must be a string, not #{typeof @endpoint}")
 
-                @_accessor = null
+                @$accessor = null
                 # add object fields to the instance
                 @update(object)
 
@@ -21,7 +21,7 @@ class Base extends Factory
                     @_endpoint = dataUtilsService.type(@_endpoint)
 
             setAccessor: (a) ->
-                @_accessor = a
+                @$accessor = a
 
             update: (o) ->
                 angular.merge(this, o)
@@ -44,7 +44,7 @@ class Base extends Factory
                     # adds getXXX functions to the prototype
                     this::["get#{E}"] = (args...) ->
                         [args, query] = dataUtilsService.splitOptions(args)
-                        if @_accessor
+                        if @$accessor
                             query.subscribe ?= true
-                            query.accessor = @_accessor
+                            query.accessor = @$accessor
                         return @.get(e, args..., query)

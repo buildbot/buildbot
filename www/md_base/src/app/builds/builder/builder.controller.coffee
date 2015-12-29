@@ -12,11 +12,11 @@ class Builder extends Controller
 
         data = @dataService.open().closeOnDestroy($scope)
 
-        @builderid = $state.params.builderid
+        @builderid = @$state.params.builderid
         data.getBuilders(@builderid).onChange = (data) =>
             if data.length == 0
                 alert 'Builder not found!'
-                $state.go('builds')
+                @$state.go('builds')
             else
                 @info = data[0]
                 @forceschedulers = @info.loadForceschedulers()
@@ -24,7 +24,7 @@ class Builder extends Controller
                     builderid: @builderid
                     order: '-number'
                     limit: 20
-                
+
                 @loadMoreBuilderInfo()
 
                 # go to buildstab if no child state is selected
@@ -52,7 +52,7 @@ class Builder extends Controller
     closeBuildTab: (number) ->
         idx = @buildTabs.indexOf(number)
         @selectedTab = (if idx > 0 then idx + 2 else 1)
-        @buildTabs.splice(idx, 1) if idx >=0
+        @buildTabs.splice(idx, 1) if idx >= 0
 
     selectTab: (tab, number) ->
         # We handle build tab first to avoid repeated load as md-tabs will auto select newly added tab

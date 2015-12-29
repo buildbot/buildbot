@@ -1,12 +1,13 @@
 describe 'Collection', ->
     beforeEach module 'bbData'
 
-    Collection = $q = $rootScope = tabexService = indexedDBService = c = $timeout = undefined
+    Collection = $q = $rootScope = tabexService = indexedDBService = c = $timeout = $filter = undefined
     injected = ($injector) ->
         $q = $injector.get('$q')
         $rootScope = $injector.get('$rootScope')
         Collection = $injector.get('Collection')
         $timeout = $injector.get('$timeout')
+        $filter = $injector.get('$filter')
 
     beforeEach(inject(injected))
 
@@ -17,6 +18,22 @@ describe 'Collection', ->
         it 'should be defined', ->
             expect(Collection).toBeDefined()
             expect(c).toBeDefined()
+
+        it 'should be like an array', ->
+            expect(angular.isArray(c)).toBeTruthy()
+
+        it 'should be filterable with angular.filter', ->
+            c.from [
+                buildid: 1
+            ,
+                buildid: 2
+            ]
+            filtered = $filter('filter')(c, {buildid:1})
+            expect(filtered.length).toBe(1)
+
+        it 'empty collection should be filterable with angular.filter', ->
+            filtered = $filter('filter')(c, {buildid:1})
+            expect(filtered.length).toBe(0)
 
         it 'should have a put function, which does not add twice for the same id', ->
             c.put(buildid: 1)
