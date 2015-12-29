@@ -207,10 +207,10 @@ def createWorker(config):
         config['allow-shutdown'] = repr(asd)
 
     if config['no-logrotate']:
-        slaveTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
+        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
     else:
-        slaveTAC = "".join(workerTACTemplate)
-    contents = slaveTAC % config
+        workerTAC = "".join(workerTACTemplate)
+    contents = workerTAC % config
 
     try:
         _makeBaseDir(basedir, quiet)

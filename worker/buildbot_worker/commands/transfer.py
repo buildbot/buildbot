@@ -55,18 +55,18 @@ class WorkerFileUploadCommand(TransferCommand):
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavesrc']:  name of the slave-side file to read from
+        - ['workersrc']:  name of the slave-side file to read from
         - ['writer']:    RemoteReference to a buildbot_worker.protocols.base.FileWriterProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
         - ['keepstamp']: whether to preserve file modified and accessed times
     """
     debug = False
-    requiredArgs = ['workdir', 'slavesrc', 'writer', 'blocksize']
+    requiredArgs = ['workdir', 'workersrc', 'writer', 'blocksize']
 
     def setup(self, args):
         self.workdir = args['workdir']
-        self.filename = args['slavesrc']
+        self.filename = args['workersrc']
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
@@ -182,11 +182,11 @@ class WorkerFileUploadCommand(TransferCommand):
 
 class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
     debug = False
-    requiredArgs = ['workdir', 'slavesrc', 'writer', 'blocksize']
+    requiredArgs = ['workdir', 'workersrc', 'writer', 'blocksize']
 
     def setup(self, args):
         self.workdir = args['workdir']
-        self.dirname = args['slavesrc']
+        self.dirname = args['workersrc']
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
