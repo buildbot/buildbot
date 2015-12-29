@@ -23,29 +23,29 @@ class DataQuery extends Factory
                 @limit(array, limit)
 
 
-            filter: (array) ->
-                isFiltered = (v) =>
-                    cmp = false
-                    for fieldAndOperator, value of @filters
-                        [field, operator] = fieldAndOperator.split('__')
-                        switch operator
-                            when 'ne' then cmp = v[field] != value
-                            when 'lt' then cmp = v[field] <  value
-                            when 'le' then cmp = v[field] <= value
-                            when 'gt' then cmp = v[field] >  value
-                            when 'ge' then cmp = v[field] >= value
-                            else cmp = v[field] == value or
-                                (angular.isArray(v[field]) and value in v[field]) or
-                                # private fields added by the data service
-                                v["_#{field}"] == value or
-                                (angular.isArray(v["_#{field}"]) and value in v["_#{field}"])
-                        if !cmp then return false
-                     return true
+            isFiltered: (v) ->
+                cmp = false
+                for fieldAndOperator, value of @filters
+                    [field, operator] = fieldAndOperator.split('__')
+                    switch operator
+                        when 'ne' then cmp = v[field] != value
+                        when 'lt' then cmp = v[field] <  value
+                        when 'le' then cmp = v[field] <= value
+                        when 'gt' then cmp = v[field] >  value
+                        when 'ge' then cmp = v[field] >= value
+                        else cmp = v[field] == value or
+                            (angular.isArray(v[field]) and value in v[field]) or
+                            # private fields added by the data service
+                            v["_#{field}"] == value or
+                            (angular.isArray(v["_#{field}"]) and value in v["_#{field}"])
+                    if !cmp then return false
+                 return true
 
+            filter: (array) ->
                 i = 0
                 while i < array.length
                     v = array[i]
-                    if isFiltered(v)
+                    if @isFiltered(v)
                         i += 1
                     else
                         array.splice(i, 1)
