@@ -561,7 +561,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = \
-            "".join(create_slave.slaveTACTemplate) % self.options
+            "".join(create_slave.workerTACTemplate) % self.options
         self.assertMakeFunctionsCalls(self.options["basedir"],
                                       expected_tac_contents,
                                       self.options["quiet"])
@@ -597,7 +597,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         self.patch(buildbot_worker.bot, "Worker", buildslave_class_mock)
 
         expected_tac_contents = \
-            "".join(create_slave.slaveTACTemplate) % options
+            "".join(create_slave.workerTACTemplate) % options
 
         # Executed .tac file with mocked functions with side effect.
         # This will raise exception if .tac file is not valid Python file.
@@ -714,8 +714,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
-        expected_tac_contents = (create_slave.slaveTACTemplate[0] +
-                                 create_slave.slaveTACTemplate[2]) % options
+        expected_tac_contents = (create_slave.workerTACTemplate[0] +
+                                 create_slave.workerTACTemplate[2]) % options
         self.assertMakeFunctionsCalls(self.options["basedir"],
                                       expected_tac_contents,
                                       self.options["quiet"])
@@ -742,7 +742,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # check _make*() functions were called with correct arguments
         options["allow-shutdown"] = "'signal'"
         expected_tac_contents = \
-            "".join(create_slave.slaveTACTemplate) % options
+            "".join(create_slave.workerTACTemplate) % options
         self.assertMakeFunctionsCalls(self.options["basedir"],
                                       expected_tac_contents,
                                       options["quiet"])
@@ -766,7 +766,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = \
-            "".join(create_slave.slaveTACTemplate) % options
+            "".join(create_slave.workerTACTemplate) % options
         self.assertMakeFunctionsCalls(options["basedir"],
                                       expected_tac_contents,
                                       options["quiet"])

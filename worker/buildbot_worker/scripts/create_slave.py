@@ -17,7 +17,7 @@ import os
 
 from twisted.python import log
 
-slaveTACTemplate = ["""
+workerTACTemplate = ["""
 import os
 
 from buildbot_worker.bot import Worker
@@ -36,7 +36,7 @@ if basedir == '.':
 # directory; do not edit it.
 application = service.Application('buildbot_worker')
 """,
-                    """
+                     """
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
@@ -47,7 +47,7 @@ except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
 """,
-                    """
+                     """
 buildmaster_host = %(host)r
 port = %(port)d
 workername = %(name)r
@@ -207,9 +207,9 @@ def createSlave(config):
         config['allow-shutdown'] = repr(asd)
 
     if config['no-logrotate']:
-        slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
+        slaveTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
     else:
-        slaveTAC = "".join(slaveTACTemplate)
+        slaveTAC = "".join(workerTACTemplate)
     contents = slaveTAC % config
 
     try:
