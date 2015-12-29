@@ -20,7 +20,7 @@ import buildbot_worker.runprocess
 
 from buildbot_worker.commands import utils
 from buildbot_worker.test.fake import runprocess
-from buildbot_worker.test.fake import slavebuilder
+from buildbot_worker.test.fake import worker
 
 
 class CommandTestMixin(object):
@@ -84,7 +84,7 @@ class CommandTestMixin(object):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir=self.basedir)
+        b = self.builder = worker.FakeWorker(basedir=self.basedir)
         self.cmd = cmdclass(b, 'fake-stepid', args)
 
         return self.cmd

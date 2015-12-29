@@ -16,7 +16,7 @@ from __future__ import print_function
 import pprint
 
 
-class FakeSlaveBuilder(object):
+class FakeWorker(object):
 
     """
     Simulates a SlaveBuilder, but just records the updates from sendUpdate
@@ -33,7 +33,7 @@ class FakeSlaveBuilder(object):
 
     def sendUpdate(self, data):
         if self.debug:
-            print("FakeSlaveBuilder.sendUpdate", data)
+            print("FakeWorker.sendUpdate", data)
         self.updates.append(data)
 
     def show(self):
