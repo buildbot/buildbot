@@ -35,8 +35,8 @@ class TestRestart(misc.IsWorkerDirMixin,
         self.setUpLogging()
 
         # patch start.startWorker() to do nothing
-        self.startSlave = mock.Mock()
-        self.patch(start, "startWorker", self.startSlave)
+        self.startWorker = mock.Mock()
+        self.patch(start, "startWorker", self.startWorker)
 
     def test_bad_basedir(self):
         """
@@ -66,9 +66,9 @@ class TestRestart(misc.IsWorkerDirMixin,
 
         # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
-        self.startSlave.assert_called_once_with(self.config["basedir"],
-                                                self.config["quiet"],
-                                                self.config["nodaemon"])
+        self.startWorker.assert_called_once_with(self.config["basedir"],
+                                                 self.config["quiet"],
+                                                 self.config["nodaemon"])
 
         self.assertLogged("no old buildbot_worker process found to stop")
         self.assertLogged("now restarting buildbot_worker process..")
@@ -86,7 +86,7 @@ class TestRestart(misc.IsWorkerDirMixin,
 
         # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
-        self.startSlave.assert_called_once_with(self.config["basedir"],
-                                                self.config["quiet"],
-                                                self.config["nodaemon"])
+        self.startWorker.assert_called_once_with(self.config["basedir"],
+                                                 self.config["quiet"],
+                                                 self.config["nodaemon"])
         self.assertLogged("now restarting buildbot_worker process..")
