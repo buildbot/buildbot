@@ -28,8 +28,8 @@ def upgradeSlave(config):
 
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
     new_buildbot_tac = buildbot_tac.replace(
-        "from buildbot.slave.bot import BuildSlave",
-        "from buildbot_worker.bot import BuildSlave")
+        "from buildbot.slave.bot import Worker",
+        "from buildbot_worker.bot import Worker")
     if new_buildbot_tac != buildbot_tac:
         open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
         log.msg("buildbot.tac updated")

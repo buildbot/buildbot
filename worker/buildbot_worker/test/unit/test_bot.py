@@ -426,4 +426,4 @@ class TestBotFactory(unittest.TestCase):
         clock.advance(35)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-# note that the BuildSlave class is tested in test_bot_BuildSlave
+# note that the Worker class is tested in test_bot_BuildSlave

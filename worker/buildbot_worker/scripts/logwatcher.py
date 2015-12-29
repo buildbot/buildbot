@@ -122,7 +122,7 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
         if "loading configuration from" in line:
             self.in_reconfig = True
-        if "Creating BuildSlave" in line:
+        if "Creating Worker" in line:
             self.processtype = "buildbot_worker"
 
         if self.in_reconfig:

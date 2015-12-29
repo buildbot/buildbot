@@ -26,7 +26,7 @@ from twisted.python import log
 from twisted.spread import pb
 
 from buildbot_worker.base import BotBase
-from buildbot_worker.base import BuildSlaveBase
+from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import SlaveBuilderBase
 from buildbot_worker.pbutil import ReconnectingPBClientFactory
 
@@ -142,7 +142,7 @@ class BotFactory(ReconnectingPBClientFactory):
         self.stopTimers()
 
 
-class BuildSlave(BuildSlaveBase, service.MultiService):
+class Worker(WorkerBase, service.MultiService):
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
@@ -154,7 +154,7 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
         # backward-compatibility
 
         service.MultiService.__init__(self)
-        BuildSlaveBase.__init__(self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
+        WorkerBase.__init__(self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
         if keepalive == 0:
             keepalive = None
 
@@ -175,7 +175,7 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
         c.setServiceParent(self)
 
     def startService(self):
-        BuildSlaveBase.startService(self)
+        WorkerBase.startService(self)
 
         if self.allow_shutdown == 'signal':
             log.msg("Setting up SIGHUP handler to initiate shutdown")

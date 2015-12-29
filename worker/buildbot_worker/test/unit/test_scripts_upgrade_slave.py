@@ -24,14 +24,14 @@ MODERN_BUILDBOT_TAC = \
 """# dummy buildbot.tac
 import os
 
-from buildbot_worker.bot import BuildSlave
+from buildbot_worker.bot import Worker
 """
 
 OLD_BUILDBOT_TAC = \
 """# dummy buildbot.tac
 import os
 
-from buildbot.slave.bot import BuildSlave
+from buildbot.slave.bot import Worker
 """
 
 

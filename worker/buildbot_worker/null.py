@@ -13,18 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot_worker.base import BuildSlaveBase
+from buildbot_worker.base import WorkerBase
 from twisted.internet import defer
 
 
-class LocalBuildSlave(BuildSlaveBase):
+class LocalWorker(WorkerBase):
 
     @defer.inlineCallbacks
     def startService(self):
         # importing here to avoid dependency on buildbot master package
         from buildbot.buildslave.protocols.null import Connection
 
-        yield BuildSlaveBase.startService(self)
+        yield WorkerBase.startService(self)
         self.slavename = self.name
         conn = Connection(self.parent, self)
         # I don't have a master property, but my parent has.

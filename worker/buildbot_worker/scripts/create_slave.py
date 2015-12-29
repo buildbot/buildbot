@@ -20,7 +20,7 @@ from twisted.python import log
 slaveTACTemplate = ["""
 import os
 
-from buildbot_worker.bot import BuildSlave
+from buildbot_worker.bot import Worker
 from twisted.application import service
 
 basedir = %(basedir)r
@@ -59,7 +59,7 @@ maxdelay = %(maxdelay)d
 numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
 
-s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+s = Worker(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
                numcpus=numcpus, allow_shutdown=allow_shutdown)
 s.setServiceParent(application)

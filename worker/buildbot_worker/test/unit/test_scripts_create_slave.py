@@ -591,10 +591,10 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         self.patch(twisted.python.logfile.LogFile, "fromFullPath",
                    logfile_mock)
 
-        # mock BuildSlave class
+        # mock Worker class
         buildslave_mock = mock.Mock()
         buildslave_class_mock = mock.Mock(return_value=buildslave_mock)
-        self.patch(buildbot_worker.bot, "BuildSlave", buildslave_class_mock)
+        self.patch(buildbot_worker.bot, "Worker", buildslave_class_mock)
 
         expected_tac_contents = \
             "".join(create_slave.slaveTACTemplate) % options
@@ -607,7 +607,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # only one Application must be created in .tac
         application_class_mock.assert_called_once_with("buildbot_worker")
 
-        # check that BuildSlave created with passed options
+        # check that Worker created with passed options
         buildslave_class_mock.assert_called_once_with(
             options["host"],
             options["port"],
@@ -621,7 +621,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
             maxdelay=options["maxdelay"],
             allow_shutdown=options["allow-shutdown"])
 
-        # check that BuildSlave instance attached to application
+        # check that Worker instance attached to application
         self.assertEqual(buildslave_mock.method_calls,
                          [mock.call.setServiceParent(application_mock)])
 
