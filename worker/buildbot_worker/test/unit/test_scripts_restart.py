@@ -61,7 +61,7 @@ class TestRestart(misc.IsWorkerDirMixin,
         self.setupUpIsBuildslaveDir(True)
 
         # patch stopWorker() to raise an exception
-        mock_stopWorker = mock.Mock(side_effect=stop.SlaveNotRunning())
+        mock_stopWorker = mock.Mock(side_effect=stop.WorkerNotRunning())
         self.patch(stop, "stopWorker", mock_stopWorker)
 
         # check that restart() calls startSlave() and outputs correct messages

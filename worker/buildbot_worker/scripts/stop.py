@@ -21,7 +21,7 @@ from twisted.python import log
 from buildbot_worker.scripts import base
 
 
-class SlaveNotRunning(Exception):
+class WorkerNotRunning(Exception):
 
     """
     raised when trying to stop slave process that is not running
@@ -39,7 +39,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
     @param   quite: if False, don't print any messages to stdout
     @param signame: signal to send to the slave process
 
-    @raise SlaveNotRunning: if slave pid file is not found
+    @raise WorkerNotRunning: if slave pid file is not found
     """
     import signal
 
@@ -47,7 +47,7 @@ def stopWorker(basedir, quiet, signame="TERM"):
     try:
         f = open("twistd.pid", "rt")
     except IOError:
-        raise SlaveNotRunning()
+        raise WorkerNotRunning()
 
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG" + signame)
@@ -82,7 +82,7 @@ def stop(config, signame="TERM"):
 
     try:
         stopWorker(basedir, quiet, signame)
-    except SlaveNotRunning:
+    except WorkerNotRunning:
         if not quiet:
             log.msg("buildbot_worker not running")
 
