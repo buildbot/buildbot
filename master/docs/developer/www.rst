@@ -557,80 +557,11 @@ We use angular directives as much as possible to implement reusable UI component
 Services
 ~~~~~~~~
 
-BuildbotService
-...............
-
-BuildbotService is the base service for accessing to the Buildbot data API.
-It uses and is derivated from `restangular <https://github.com/mgonto/restangular/blob/master/README.md>`_.
-Restangular offers nice semantics around nested REST endpoints. Please see restangular documentation for overview on how it works.
-
-BuildbotService adds serveral methods to restangular objects in order to integrate it with EventSource.
-The idea is to simplifify automatic update of the $scope based on events happening on a given data endpoint
-
-.. code-block:: coffeescript
-
-    # Following code will get initial data from 'api/v2/build/1/step/2'
-    # and register to events from 'sse/build/1/step/2'
-    # Up to the template to specify what to display
-
-    buildbotService.one("build", 1).one("step", 2).bind($scope)
-
-Difference with restangular is all restangular objects are reused, i.e. if you are calling bind() twice on the same
-object, no additionnal ressource is gathered via http.
-
-Several methods are added to each "restangularized" objects, aside from get(), put(), delete(), etc.:
-
-``.bind($scope, opts)``
-
-    Bind the api results to the `$scope`, automatically listening to events on this endpoint, and modifying the `$scope` object accordingly.
-    This method automatically references the scopes where the data is used, and will remove the reference when the `$scope` is destoyed.
-    When no scope is referencing the data anymore, the service will wait a configurable amount of time, and stop listening to associated events.
-    As a result, the service will loose real-time track of the underlying data, so any subsequent call to bind() will trigger another http requests to get updated data.
-    This delayed event unregister mechanism enables better user experience.
-    When user is going back and forth between several pages, chances are that the data is still on-track, so the page will be displayed instantly.
-
-    ``bind()`` takes several optional parameters in ``opts``:
-
-    ``dest`` (default: `$scope`)
-        object where to store the results
-
-    ``ismutable``: ``(elem) -> boolean`` (default: always false)
-        function used to know if the object will not evolve anymore (so no need to register to events)
-
-    ``onchild``: ``(child) ->``
-        function called for each child, at init time, and when new child is detected through events.
-        This can be used to get more data derived from a list. The child received are restangular elements
-
-``.on(eventtype, callback)``
-
-    Listen to events for this endpoint. When bind() semantic is not useful enough, you can use this lower level api.
-
-``.some(route, queryParams)``
-
-    like ``.all()``, but allows to specify query parameters
-
-    ``queryParams``
-        query parameters used to filter the results of a list api
-
-``.control(method, params)``
-
-    Call the control data api.
-    This builds up a POST with jsonapi encoded parameters
-
 DataService
 .............
 
-DataService is the replacement of BuildbotService for accessing the Buildbot data API.
-It has a modern interface for accessing data.
-It uses IndexedDB for storing cached data as a single data store, and LocalStorage for broadcasting events between browser tabs.
-DataService works in a master/slave architecture.
-The master browser tab is responsible for keeping the requested data up to date in the IndexedDB and notify slaves when a data is ready to be used or it is updated.
-It handles both the Rest API calls and the WebSocket subscriptions globally.
-
-It uses the following libraries:
-
-* Dexie.js (https://github.com/dfahlander/Dexie.js) - Minimalistic IndexedDB API with bulletproof transactions
-* Tabex (https://github.com/nodeca/tabex) - Master election and in browser message bus
+DataService is the service used for accessing the Buildbot data API.
+It has a modern interface for accessing data in such a way that the updating of the data via web socket is transparent.
 
 The DataService is available as a standalone AngularJS module.
 Installation via bower:
@@ -638,6 +569,16 @@ Installation via bower:
   .. code-block:: sh
 
       bower install buildbot-data --save
+
+Installation via guanlecoja, in the bower section of guanlecoja/config.coffee:
+
+  .. code-block:: coffee
+
+    'bower':
+        'deps':
+            'buildbot-data':
+                version: '~1.0.14'
+                files: 'dist/buildbot-data.js'
 
 Inject the ``bbData`` module to your application:
 
@@ -647,24 +588,37 @@ Inject the ``bbData`` module to your application:
 
 Methods:
 
-``.getXs([id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+``.open()``: returns a DataAccessor, which handles 3 way data binding
 
-  * it's highly advised to use these instead of the lower level ``.get('string')`` function
-  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Buildslaves``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
-  * call ``.getArray()`` on the returned promise to get the Collection before it's filled with the initial data
+  * open a new accessor every time you need updating data in a controller
+  * it registers on $destroy event on the scope, and thus automatically unsubscribes from updates when the data is not used anymore.
 
   .. code-block:: coffeescript
 
-      # assign builds to $scope.builds once the Collection is filled
-      dataService.getBuilds(builderid: 1).then (builds) ->
-          $scope.builds = builds
-          # load steps for every build
-          builds.forEach (b) -> b.loadSteps()
+      # open a new accessor every time you need updating data in a controller
+      class DemoController extends Controller
+          constructor: ($scope, dataService) ->
+              # automatically closes all the bindings when the $scope is destroyed
+              data = dataService.open().closeOnDestroy($scope)
 
-      # assign builds to $scope.builds before the Collection is filled using the .getArray() function
-      $scope.builds = dataService.getBuilds(builderid: 1).getArray()
+              # request new data, it updates automatically
+              @builders = data.getBuilders(limit: 10, order: '-started_at')
 
-``.get(endpoint, [id], [query])``: returns a promise<Collection>, when the promise is resolved, the Collection contains all the requested data
+``.getXs([id], [query])``: returns Collection which will eventually contain all the requested data
+
+  * it's highly advised to use these instead of the lower level ``.get('string')`` function
+  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Buildslaves``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
+
+  .. code-block:: coffeescript
+
+      # assign builds to $scope.builds and then load the steps when the builds are discovered
+      # onNew is called at initial load and also when a new build comes via event stream
+      $scope.builds = dataService.getBuilds(builderid: 1)
+      $scope.builds.onNew = (build) ->
+          build.loadSteps()
+
+
+``.get(endpoint, [id], [query])``: returns a <Collection>, when the promise is resolved, the Collection contains all the requested data
 
   * call ``.getArray()`` on the returned promise to get the Collection before it's filled with the initial data
 
@@ -680,26 +634,6 @@ Methods:
       # assign builds to $scope.builds before the Collection is filled using the .getArray() function
       $scope.builds = dataService.get('builds', builderid: 1).getArray()
 
-``.open(scope)``: returns a DataAccessor, handles bindings
-
-  * open a new accessor every time you need updating data in a controller
-  * it registers a $destroy event handling function on the scope, it automatically unsubscribes from updates that has been requested by the DataAccessor
-
-  .. code-block:: coffeescript
-
-      # open a new accessor every time you need updating data in a controller
-      class DemoController extends Controller
-          constructor: ($scope, dataService) ->
-              # automatically closes all the bindings when the $scope is destroyed
-              opened = dataService.open($scope)
-              # alternative syntax:
-              #   opened = dataService.open()
-              #   opened.closeOnDestroy($scope)
-              # closing it manually is also possible:
-              #   opened.close()
-
-              # request new data, it updates automatically
-              @builders = opened.getBuilders(limit: 10, order: '-started_at').getArray()
 
 ``.control(url, method, [params])``: returns a promise, sends a JSON RPC2 POST request to the server
 
