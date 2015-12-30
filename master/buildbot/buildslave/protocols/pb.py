@@ -177,7 +177,8 @@ class Connection(base.Connection, pb.Avatar):
         try:
             info = yield self.mind.callRemote('getWorkerInfo')
             info["slave_commands"] = info["worker_commands"]
-        except pb.NoSuchMethod:
+        #except pb.NoSuchMethod: # TODO!
+        except pb.RemoteError:
             try:
                 info = yield self.mind.callRemote('getSlaveInfo')
                 info["worker_commands"] = info["slave_commands"]
