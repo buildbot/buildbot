@@ -12,7 +12,7 @@ class Builder extends Controller
 
         data = @dataService.open().closeOnDestroy($scope)
 
-        @builderid = @$state.params.builderid
+        @builderid = parseInt(@$state.params.builderid)
         data.getBuilders(@builderid).onChange = (data) =>
             if data.length == 0
                 alert 'Builder not found!'
