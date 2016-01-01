@@ -109,7 +109,7 @@ class GNUAutoconf(BuildFactory):
         if reconf is True:
             reconf = ["autoreconf", "-si"]
         if reconf is not None:
-            self.addStep(ShellCommand(name="autoreconf", command=reconf))
+            self.addStep(ShellCommand(name="autoreconf", command=reconf, env=configureEnv))
 
         if configure is not None:
             # we either need to wind up with a string (which will be
