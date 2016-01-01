@@ -21,7 +21,6 @@ class Builder extends Controller
                 @info = data[0]
                 @forceschedulers = @info.loadForceschedulers()
                 @builds = @info.loadBuilds
-                    builderid: @builderid
                     order: '-number'
                     limit: 20
 

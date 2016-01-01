@@ -11,8 +11,10 @@ class DataUtils extends Service
                 a = a.filter (e) -> e isnt '*'
                 # if the argument count is even, the last argument is an id
                 if a.length % 2 is 0 then a.pop()
-                a.pop()
-
+                type = a.pop()
+                if type == "contents"
+                    type = "logchunks"
+                return type
             # singularize the type name
             singularType: (arg) ->
                 @type(arg).replace(/s$/, '')

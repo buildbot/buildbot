@@ -48,15 +48,15 @@ class Data extends Provider
                     restService.get(restPath, query).then (response) ->
 
                         type = dataUtilsService.type(restPath)
-                        response = response[type]
+                        datalist = response[type]
                         # the response should always be an array
-                        if not angular.isArray(response)
-                            e = "#{response} is not an array"
+                        if not angular.isArray(datalist)
+                            e = "#{datalist} is not an array"
                             $log.error(e)
                             return
 
                         # fill up the collection with initial data
-                        collection.initial(response)
+                        collection.initial(datalist)
 
                 return collection
 
