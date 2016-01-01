@@ -172,7 +172,7 @@ Web Interface
 The HTTP interface is implemented by the :py:mod:`buildbot.www` package, as configured by the user.
 Part of that configuration is a base URL, which is considered a prefix for all paths mentioned here.
 
-See :ref:`WWW` for more information.
+See :ref:`WWW-base-app` for more information.
 
 .. _Data Model:
 
