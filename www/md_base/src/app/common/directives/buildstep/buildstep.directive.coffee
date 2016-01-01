@@ -17,7 +17,7 @@ class _BuildStep extends Controller
     isExpanded: false
 
     constructor: ($scope, RESULTS_TEXT) ->
-        $scope.$watch 'buildstep.step', (=> @updateState(RESULTS_TEXT)), true
+        $scope.$watch 'buildstep.step', (=> @updateState(RESULTS_TEXT))
         @step.loadLogs()
 
     updateState: (RESULTS_TEXT) ->
