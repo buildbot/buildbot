@@ -29,7 +29,7 @@ $ karma start
 ## How to test within buildbot/www/base ?
 
 * run `gulp prod` in base (dependencies are installed)
-* run `gulp prod` in data
+* run `gulp prod` in data_module
 * create symlink from `www/data_module/dist` to `www/base/libs/buildbot-data/dist`
 * run `gulp dev proxy` in base
 * run `gulp dev` in data_module
