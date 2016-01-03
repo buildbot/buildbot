@@ -1,3 +1,4 @@
+set -e
 gulp scripts vendors
 npm link
 cd test
