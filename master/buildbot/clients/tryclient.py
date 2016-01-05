@@ -620,6 +620,7 @@ class Try(pb.Referenceable):
         # returns a Deferred that fires when the job has been delivered
         if self.connect == "ssh":
             tryhost = self.getopt("host")
+            tryport = self.getopt("port")
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
             buildbotbin = self.getopt("buildbotbin")
@@ -651,6 +652,9 @@ class Try(pb.Referenceable):
 
             if tryuser:
                 argv += ["-l", tryuser]
+                
+            if tryport:
+                argv += ["-p", tryport]
 
             argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)

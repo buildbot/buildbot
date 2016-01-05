@@ -315,6 +315,8 @@ class TryOptions(base.SubcommandOptions):
         # --ssh
         ["host", None, None,
          "Hostname (used by ssh) for the buildmaster"],
+        ["port", None, None,
+         "Port (used by ssh) for the buildmaster"],
         ["jobdir", None, None,
          "Directory (on the buildmaster host) where try jobs are deposited"],
         ["ssh", None, None,
