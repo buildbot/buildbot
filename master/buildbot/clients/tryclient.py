@@ -454,7 +454,7 @@ def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
         job += ns(branch)
         job += ns(str(baserev))
         job += ns("%d" % patch_level)
-        job += ns(patch_body)
+        job += ns(patch_body or "")
         job += ns(repository)
         job += ns(project)
         if (version >= 3):
