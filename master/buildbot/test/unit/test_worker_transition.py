@@ -22,6 +22,7 @@ from twisted.trial import unittest
 from buildbot.worker_transition import (
     _compat_name as compat_name, define_old_worker_class_alias,
     define_old_worker_class, define_old_worker_property,
+    define_old_worker_method,
     DeprecatedWorkerNameError,
 )
 
@@ -171,3 +172,20 @@ class PropertyWrapper(_TestBase):
 
         with self._assertProducesWarning():
             self.assertEqual(c.slavename, "name")
+
+
+class MethodWrapper(_TestBase):
+
+    def test_property_wrapper(self):
+        class C(object):
+            def updateWorker(self, res):
+                return res
+            define_old_worker_method(locals(), updateWorker)
+
+        c = C()
+
+        with self._assertNotProducesWarning():
+            self.assertEqual(c.updateWorker("test"), "test")
+
+        with self._assertProducesWarning():
+            self.assertEqual(c.updateSlave("test"), "test")
