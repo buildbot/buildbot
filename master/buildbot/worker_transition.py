@@ -37,7 +37,10 @@ __all__ = (
 # * function wrapper is almost identical to method wrapper (they are both
 #   just functions from Python side of view), probably method wrapper should
 #   be dropped.
-
+# * At some point old API support will be dropped and this module will be
+#   removed. It's good to think now how this can be gracefully done later.
+#   For example, if I explicitly configure warnings in buildbot.tac template
+#   now, later generated from such template buildbot.tac files will break.
 
 def _compat_name(new_name, pattern=None):
     """Returns old API ("slave") name for new name ("worker").
