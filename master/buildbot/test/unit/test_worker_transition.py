@@ -21,7 +21,8 @@ from twisted.trial import unittest
 
 from buildbot.worker_transition import (
     _compat_name as compat_name, define_old_worker_class_alias,
-    define_old_worker_class, DeprecatedWorkerNameError,
+    define_old_worker_class, define_old_worker_property,
+    DeprecatedWorkerNameError,
 )
 
 
@@ -67,7 +68,7 @@ class ClassAlias(unittest.TestCase):
         # warning?
 
 
-class ClassWrapper(unittest.TestCase):
+class _TestBase(unittest.TestCase):
 
     @contextlib.contextmanager
     def _assertProducesWarning(self):
@@ -82,6 +83,20 @@ class ClassWrapper(unittest.TestCase):
             self.assertTrue(issubclass(w[-1].category,
                                        DeprecatedWorkerNameError))
             self.assertIn("deprecated", str(w[-1].message))
+
+    @contextlib.contextmanager
+    def _assertNotProducesWarning(self):
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            yield
+
+            # Verify some things
+            self.assertEqual(len(w), 0)
+
+
+class ClassWrapper(_TestBase):
 
     def test_class_wrapper(self):
         class Worker(object):
@@ -138,3 +153,21 @@ class ClassWrapper(unittest.TestCase):
         Slave = globals["Slave"]
         self.assertEqual(Slave.__doc__, Worker.__doc__)
         self.assertEqual(Slave.__module__, Worker.__module__)
+
+
+class PropertyWrapper(_TestBase):
+
+    def test_property_wrapper(self):
+        class C(object):
+            @property
+            def workername(self):
+                return "name"
+            define_old_worker_property(locals(), "workername")
+
+        c = C()
+
+        with self._assertNotProducesWarning():
+            self.assertEqual(c.workername, "name")
+
+        with self._assertProducesWarning():
+            self.assertEqual(c.slavename, "name")
