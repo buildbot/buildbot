@@ -190,6 +190,16 @@ class MethodWrapper(_TestBase):
         with self._assertProducesWarning():
             self.assertEqual(c.updateSlave("test"), "test")
 
+    def test_method_meta(self):
+        class C(object):
+            def updateWorker(self, res):
+                """docstring"""
+                return res
+            define_old_worker_method(locals(), updateWorker)
+
+        self.assertEqual(C.updateSlave.__module__, C.updateWorker.__module__)
+        self.assertEqual(C.updateSlave.__doc__, C.updateWorker.__doc__)
+
 
 class FunctionWrapper(_TestBase):
 
@@ -206,3 +216,15 @@ class FunctionWrapper(_TestBase):
 
         with self._assertProducesWarning():
             self.assertEqual(globals["updateSlave"]("test"), "test")
+
+    def test_func_meta(self):
+        def updateWorker(self, res):
+            """docstring"""
+            return res
+        globals = {}
+        define_old_worker_func(globals, updateWorker)
+
+        self.assertEqual(globals["updateSlave"].__module__,
+                         updateWorker.__module__)
+        self.assertEqual(globals["updateSlave"].__doc__,
+                         updateWorker.__doc__)

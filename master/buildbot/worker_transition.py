@@ -22,6 +22,7 @@ as an error using Python builtin warnings API.
 """
 
 import warnings
+import functools
 
 __all__ = (
     "DeprecatedWorkerNameError", "define_old_worker_class_alias",
@@ -175,6 +176,8 @@ def define_old_worker_method(scope, method, pattern=None):
                 new=method.__name__, old=compat_name))
         return method(self, *args, **kwargs)
 
+    functools.update_wrapper(old_method, method)
+
     scope[compat_name] = old_method
 
 
@@ -188,6 +191,8 @@ def define_old_worker_func(scope, func, pattern=None):
             "'{old}' function is deprecated, use '{new}' instead.".format(
                 new=func.__name__, old=compat_name))
         return func(*args, **kwargs)
+
+    functools.update_wrapper(old_func, func)
 
     scope[compat_name] = old_func
 
