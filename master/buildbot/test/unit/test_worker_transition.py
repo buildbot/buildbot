@@ -23,7 +23,7 @@ from buildbot.worker_transition import (
     _compat_name as compat_name, define_old_worker_class_alias,
     define_old_worker_class, define_old_worker_property,
     define_old_worker_method, define_old_worker_func,
-    DeprecatedWorkerNameError,
+    DeprecatedWorkerNameError, WorkerAPICompatMixin,
 )
 
 
@@ -228,3 +228,20 @@ class FunctionWrapper(_TestBase):
                          updateWorker.__module__)
         self.assertEqual(globals["updateSlave"].__doc__,
                          updateWorker.__doc__)
+
+
+class AttributeMixin(_TestBase):
+
+    def test_attribute(self):
+        class C(WorkerAPICompatMixin):
+            def __init__(self):
+                self.workers = [1, 2, 3]
+                self._registerOldWorkerAttr("workers", pattern="buildworker")
+
+        with self._assertNotProducesWarning():
+            c = C()
+
+            self.assertEqual(c.workers, [1, 2, 3])
+
+        with self._assertProducesWarning():
+            self.assertEqual(c.buildslaves, [1, 2, 3])
