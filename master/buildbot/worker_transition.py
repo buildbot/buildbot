@@ -33,7 +33,6 @@ __all__ = (
 
 # TODO:
 # * Properly name classes and methods.
-# * Wrapped methods/classes should have appropriate docstrings.
 # * Aliases are defined even they usage will be forbidden later.
 # * function wrapper is almost identical to method wrapper (they are both
 #   just functions from Python side of view), probably method wrapper should
