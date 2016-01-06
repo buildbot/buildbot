@@ -13,10 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+import warnings
+import contextlib
+
 from twisted.trial import unittest
 
 
-from buildbot.worker_transition import _compat_name as compat_name
+from buildbot.worker_transition import (
+    _compat_name as compat_name, define_old_worker_class_alias,
+    define_old_worker_class, DeprecatedWorkerNameError,
+)
 
 
 class CompatNameGeneration(unittest.TestCase):
@@ -43,3 +49,82 @@ class CompatNameGeneration(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             compat_name("worker", pattern="missing")
+
+
+class ClassAlias(unittest.TestCase):
+
+    def test_class_alias(self):
+        class IWorker:
+            pass
+
+        globals = {}
+        define_old_worker_class_alias(
+            globals, IWorker, pattern="BuildWorker")
+        self.assertIn("IBuildSlave", globals)
+        self.assertIs(globals["IBuildSlave"], IWorker)
+
+        # TODO: Is there a way to detect usage of class alias and print
+        # warning?
+
+
+class ClassWrapper(unittest.TestCase):
+
+    @contextlib.contextmanager
+    def _assertProducesWarning(self):
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            yield
+
+            # Verify some things
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category,
+                                       DeprecatedWorkerNameError))
+            self.assertIn("deprecated", str(w[-1].message))
+
+    def test_class_wrapper(self):
+        class Worker(object):
+            def __init__(self, arg, **kwargs):
+                self.arg = arg
+                self.kwargs = kwargs
+
+        globals = {}
+        define_old_worker_class(globals, Worker)
+        self.assertIn("Slave", globals)
+        Slave = globals["Slave"]
+        self.assertTrue(issubclass(Slave, Worker))
+
+        with self._assertProducesWarning():
+            # Trigger a warning.
+            slave = Slave("arg", a=1, b=2)
+
+        self.assertEqual(slave.arg, "arg")
+        self.assertEqual(slave.kwargs, dict(a=1, b=2))
+
+    def test_class_with_new_wrapper(self):
+        class Worker(object):
+            def __init__(self, arg, **kwargs):
+                self.arg = arg
+                self.kwargs = kwargs
+
+            def __new__(cls, *args, **kwargs):
+                instance = object.__new__(cls)
+                instance.new_args = args
+                instance.new_kwargs = kwargs
+                return instance
+
+        globals = {}
+        define_old_worker_class(globals, Worker)
+        self.assertIn("Slave", globals)
+        Slave = globals["Slave"]
+        self.assertTrue(issubclass(Slave, Worker))
+
+        with self._assertProducesWarning():
+            # Trigger a warning.
+            slave = Slave("arg", a=1, b=2)
+
+        self.assertEqual(slave.arg, "arg")
+        self.assertEqual(slave.kwargs, dict(a=1, b=2))
+        self.assertEqual(slave.new_args, ("arg",))
+        self.assertEqual(slave.new_kwargs, dict(a=1, b=2))
