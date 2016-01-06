@@ -26,7 +26,8 @@ import warnings
 __all__ = (
     "DeprecatedWorkerNameError", "define_old_worker_class_alias",
     "define_old_worker_class", "define_old_worker_property",
-    "define_old_worker_method", "WorkerAPICompatMixin",
+    "define_old_worker_method", "define_old_worker_func",
+    "WorkerAPICompatMixin",
 )
 
 # TODO:
@@ -175,6 +176,20 @@ def define_old_worker_method(scope, method, pattern=None):
         return method(self, *args, **kwargs)
 
     scope[compat_name] = old_method
+
+
+def define_old_worker_func(scope, func, pattern=None):
+    """Define old-named function."""
+    compat_name = _compat_name(func.__name__, pattern=pattern)
+    assert compat_name not in scope
+
+    def old_func(*args, **kwargs):
+        _on_old_name_usage(
+            "'{old}' function is deprecated, use '{new}' instead.".format(
+                new=func.__name__, old=compat_name))
+        return func(*args, **kwargs)
+
+    scope[compat_name] = old_func
 
 
 class WorkerAPICompatMixin(object):
