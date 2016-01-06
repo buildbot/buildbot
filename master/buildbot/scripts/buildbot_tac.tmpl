@@ -1,5 +1,16 @@
 import os
 
+# TODO: Maybe include this part only if specific "create-master" flags are set?
+# TODO: Or exclude it when some flag is set?
+# Setup old worker API warnings
+import warnings
+from buildbot.worker_transition import DeprecatedWorkerNameError
+# Use "error" action to fail on old API usage or "ignore" action to completely
+# ignore old API usage warnings.
+# By default first occurrence of the warning for each location will be
+# displayed.
+warnings.simplefilter("default", DeprecatedWorkerNameError)
+
 from twisted.application import service
 from buildbot.master import BuildMaster
 

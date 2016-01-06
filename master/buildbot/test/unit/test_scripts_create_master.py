@@ -161,6 +161,12 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertNotInTacFile("import Log")
         self.assertWasQuiet()
 
+    def test_makeTAC_worker_old_api_setup_present(self):
+        create_master.makeTAC(mkconfig(basedir='test'))
+        self.assertInTacFile(
+            """warnings.simplefilter("default", DeprecatedWorkerNameError)""")
+        self.assertWasQuiet()
+
     def test_makeTAC_int_log_count(self):
         create_master.makeTAC(mkconfig(basedir='test', **{'log-count': 30}))
         self.assertInTacFile("\nmaxRotatedFiles = 30\n")
