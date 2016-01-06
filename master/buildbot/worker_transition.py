@@ -23,6 +23,12 @@ as an error using Python builtin warnings API.
 
 import warnings
 
+__all__ = (
+    "DeprecatedWorkerNameError", "define_old_worker_class_alias",
+    "define_old_worker_class", "define_old_worker_property",
+    "define_old_worker_method", "WorkerAPICompatMixin",
+)
+
 # TODO:
 # * Properly name classes and methods.
 # * Wrapped methods/classes should have appropriate docstrings.
