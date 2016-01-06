@@ -25,7 +25,7 @@ Define the interfaces that are implemented by various buildbot classes.
 from zope.interface import Attribute
 from zope.interface import Interface
 
-from buildbot.worker_rename import define_old_worker_class_alias
+from buildbot.worker_transition import define_old_worker_class_alias
 
 # exceptions that can be raised while trying to start a build
 

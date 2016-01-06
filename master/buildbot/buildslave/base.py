@@ -36,8 +36,8 @@ from buildbot.status.slave import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_rename import define_old_worker_property, \
-    define_old_worker_method
+from buildbot.worker_transition import (
+    define_old_worker_property, define_old_worker_method)
 
 
 class AbstractBuildSlave(service.BuildbotService, object):

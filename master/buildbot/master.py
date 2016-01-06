@@ -56,7 +56,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
-from buildbot.worker_rename import WorkerAPICompatMixin
+from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
 
 #
