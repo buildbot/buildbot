@@ -2,6 +2,10 @@ import os
 
 # TODO: Maybe include this part only if specific "create-master" flags are set?
 # TODO: Or exclude it when some flag is set?
+# TODO: Newly create buildbot.tac files should either set fallback setting
+# to "error", or pretend that there is no such settings at all (at some point
+# this fallback will be removed anyway).
+
 # Setup old worker API warnings
 import warnings
 from buildbot.worker_transition import DeprecatedWorkerNameError
