@@ -93,7 +93,7 @@ def _on_old_name_usage(message, stacklevel=None):
     """
 
     if stacklevel is None:
-        # Warning will refer to caller of caller of _on_old_name_usage.
+        # Warning will refer to the caller of the caller of this function.
         stacklevel = 3
 
     warnings.warn(DeprecatedWorkerNameError(message), None, stacklevel)
