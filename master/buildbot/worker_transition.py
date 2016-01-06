@@ -35,6 +35,9 @@ __all__ = (
 # * Properly name classes and methods.
 # * Wrapped methods/classes should have appropriate docstrings.
 # * Aliases are defined even they usage will be forbidden later.
+# * function wrapper is almost identical to method wrapper (they are both
+#   just functions from Python side of view), probably method wrapper should
+#   be dropped.
 
 
 def _compat_name(new_name, pattern=None):
