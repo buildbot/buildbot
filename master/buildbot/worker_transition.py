@@ -122,13 +122,21 @@ def define_old_worker_class(scope, cls, pattern=None):
     Useful for instantiable classes.
     """
 
+    assert issubclass(cls, object)
+
     compat_name = _compat_name(cls.__name__, pattern=pattern)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(instance_cls, *args, **kwargs):
         _on_old_name_usage(
             "'{old}' class is deprecated, use '{new}' instead.".format(
                 new=cls.__name__, old=compat_name))
-        instance = cls.__new__(cls, *args, **kwargs)
+        if cls.__new__ is object.__new__:
+            # object.__new__() doesn't accept arguments.
+            instance = cls.__new__(instance_cls)
+        else:
+            # Class has overloaded __new__(), pass arguments to it.
+            instance = cls.__new__(instance_cls, *args, **kwargs)
+
         return instance
 
     compat_class = type(compat_name, (cls,), {"__new__": __new__})
