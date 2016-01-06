@@ -239,10 +239,17 @@ class AttributeMixin(_TestBase):
                 self.workers = [1, 2, 3]
                 self._registerOldWorkerAttr("workers", pattern="buildworker")
 
+                self.workernames = ["a", "b", "c"]
+                self._registerOldWorkerAttr("workernames")
+
         with self._assertNotProducesWarning():
             c = C()
 
             self.assertEqual(c.workers, [1, 2, 3])
+            self.assertEqual(c.workernames, ["a", "b", "c"])
 
         with self._assertProducesWarning():
             self.assertEqual(c.buildslaves, [1, 2, 3])
+
+        with self._assertProducesWarning():
+            self.assertEqual(c.slavenames, ["a", "b", "c"])
