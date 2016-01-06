@@ -72,7 +72,7 @@ class ClassAlias(unittest.TestCase):
 class _TestBase(unittest.TestCase):
 
     @contextlib.contextmanager
-    def _assertProducesWarning(self):
+    def _assertProducesWarning(self, num_warnings=1):
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
@@ -80,10 +80,11 @@ class _TestBase(unittest.TestCase):
             yield
 
             # Verify some things
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category,
-                                       DeprecatedWorkerNameError))
-            self.assertIn("deprecated", str(w[-1].message))
+            self.assertEqual(len(w), num_warnings)
+            for warning in w:
+                self.assertTrue(issubclass(warning.category,
+                                           DeprecatedWorkerNameError))
+                self.assertIn("deprecated", str(warning.message))
 
     @contextlib.contextmanager
     def _assertNotProducesWarning(self):
