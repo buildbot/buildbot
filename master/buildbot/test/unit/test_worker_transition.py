@@ -35,8 +35,7 @@ class CompatNameGeneration(unittest.TestCase):
         self.assertEqual(compat_name("SomeWorkerStuff"), "SomeSlaveStuff")
         self.assertEqual(compat_name("theworkerstuff"), "theslavestuff")
 
-        with self.assertRaises(AssertionError):
-            compat_name("worKer")
+        self.assertRaises(AssertionError, compat_name, "worKer")
 
     def test_patterned_rename(self):
         self.assertEqual(
@@ -49,8 +48,7 @@ class CompatNameGeneration(unittest.TestCase):
             compat_name("someworker", pattern="buildworker"),
             "somebuildslave")
 
-        with self.assertRaises(KeyError):
-            compat_name("worker", pattern="missing")
+        self.assertRaises(KeyError, compat_name, "worker", pattern="missing")
 
 
 class ClassAlias(unittest.TestCase):
