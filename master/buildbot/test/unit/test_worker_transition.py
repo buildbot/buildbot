@@ -63,7 +63,7 @@ class ClassAlias(unittest.TestCase):
         define_old_worker_class_alias(
             globals, IWorker, pattern="BuildWorker")
         self.assertIn("IBuildSlave", globals)
-        self.assertIs(globals["IBuildSlave"], IWorker)
+        self.assertTrue(globals["IBuildSlave"] is IWorker)
 
         # TODO: Is there a way to detect usage of class alias and print
         # warning?
