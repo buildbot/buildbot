@@ -13,44 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import print_function
+"""
+Utility functions to support transition from "slave"-named API to
+"worker"-named.
+
+Use of old API generates Python warning which may be logged, ignored or treated
+as an error using Python builtin warnings API.
+"""
+
+import warnings
 
 # TODO:
 # * Properly name classes and methods.
 # * Wrapped methods/classes should have appropriate docstrings.
-
-
-class CompatibilityLevel:
-    # Allow use of old worker API.
-    allow = 0
-    # Raise warnings about use of old worker API.
-    warning = 1
-    # Raise error when old worker API is tried to use
-    error = 2
-
-
-# Global compatibility level setting
-_compatibility_level = None
-
-DEFAULT_COMPATIBILITY_LEVEL = CompatibilityLevel.warning
-
-
-def get_compatibility_level():
-    """Returns current worker API compatibility level."""
-    if _compatibility_level is None:
-        return DEFAULT_COMPATIBILITY_LEVEL
-    else:
-        return _compatibility_level
-
-
-def set_compatibility_level(level):
-    """Sets worker API compatibility level."""
-    global _compatibility_level
-    # TODO: Is it may be changed several times?
-    assert _compatibility_level is None, "API compatibility level already set"
-    CL = CompatibilityLevel
-    assert level in [CL.allow, CL.warning, CL.error]
-    _compatibility_level = level
+# * Aliases are defined even they usage will be forbidden later.
 
 
 def _compat_name(new_name, pattern=None):
@@ -102,35 +78,31 @@ def _compat_name(new_name, pattern=None):
     return compat_name
 
 
-def _on_old_name_usage(new_name, compat_name):
+# DeprecationWarning or PendingDeprecationWarning may be used as
+# the base class, but by default deprecation warnings are disabled in Python,
+# so by default old-API usage warnings will be ignored - this is not what
+# we want.
+class DeprecatedWorkerNameError(Warning):
+    pass
+
+
+def _on_old_name_usage(message, stacklevel=None):
     """Hook that is ran when old API name is used.
 
     This hook will raise if old name usage is forbidden in the global settings.
     """
-    message = (
-        "Use of obsolete name '{compat_name}'. Use '{new_name}' "
-        "instead. To disable this warning ...TODO".format(
-            compat_name=compat_name, new_name=new_name))
 
-    level = get_compatibility_level()
-    if level == CompatibilityLevel.error:
-        # TODO: Use proper exception class.
-        raise RuntimeError(message)
+    if stacklevel is None:
+        # Warning will refer to caller of caller of _on_old_name_usage.
+        stacklevel = 3
 
-    elif level == CompatibilityLevel.warning:
-        # TODO: Use logging
-        print("WARNING: {0}".format(message))
-    else:
-        assert level == CompatibilityLevel.allow
+    warnings.warn(DeprecatedWorkerNameError(message), None, stacklevel)
 
 
 def define_old_worker_class_alias(scope, cls, pattern=None):
     """Add same class but with old API name.
 
     Useful for interfaces."""
-    if get_compatibility_level() == CompatibilityLevel.error:
-        # Don't define compatibility name.
-        return
 
     compat_name = _compat_name(cls.__name__, pattern=pattern)
 
@@ -143,14 +115,13 @@ def define_old_worker_class(scope, cls, pattern=None):
 
     Useful for instantiable classes.
     """
-    if get_compatibility_level() == CompatibilityLevel.error:
-        # Don't define compatibility name.
-        return
 
     compat_name = _compat_name(cls.__name__, pattern=pattern)
 
     def __new__(cls, *args, **kwargs):
-        _on_old_name_usage(cls.__name__, compat_name)
+        _on_old_name_usage(
+            "'{old}' class is deprecated, use '{new}' instead.".format(
+                new=cls.__name__, old=compat_name))
         instance = cls.__new__(cls, *args, **kwargs)
         return instance
 
@@ -166,7 +137,9 @@ def define_old_worker_property(scope, name, pattern=None):
     assert compat_name not in scope
 
     def get(self):
-        _on_old_name_usage(name, compat_name)
+        _on_old_name_usage(
+            "'{old}' property is deprecated, use '{new}' instead.".format(
+                new=name, old=compat_name))
         return getattr(self, name)
 
     scope[compat_name] = property(get)
@@ -178,7 +151,9 @@ def define_old_worker_method(scope, method, pattern=None):
     assert compat_name not in scope
 
     def old_method(self, *args, **kwargs):
-        _on_old_name_usage(method.__name__, compat_name)
+        _on_old_name_usage(
+            "'{old}' method is deprecated, use '{new}' instead.".format(
+                new=method.__name__, old=compat_name))
         return method(self, *args, **kwargs)
 
     scope[compat_name] = old_method
@@ -194,7 +169,9 @@ class WorkerAPICompatMixin(object):
         new_name = self.__compat_attrs[name]
 
         # TODO: Log class name, operation type etc.
-        _on_old_name_usage(new_name, name)
+        _on_old_name_usage(
+            "'{old}' attribute is deprecated, use '{new}' instead.".format(
+                new=new_name, old=name))
 
         return getattr(self, new_name)
 
@@ -202,7 +179,9 @@ class WorkerAPICompatMixin(object):
         if name in self.__compat_attrs:
             new_name = self.__compat_attrs[name]
             # TODO: Log class name, operation type etc.
-            _on_old_name_usage(new_name, name)
+            _on_old_name_usage(
+                "'{old}' attribute is deprecated, use '{new}' instead.".format(
+                    new=new_name, old=name))
             return setattr(self, new_name, value)
         else:
             self.__dict__[name] = value
