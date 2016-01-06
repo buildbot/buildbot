@@ -128,3 +128,13 @@ class ClassWrapper(unittest.TestCase):
         self.assertEqual(slave.kwargs, dict(a=1, b=2))
         self.assertEqual(slave.new_args, ("arg",))
         self.assertEqual(slave.new_kwargs, dict(a=1, b=2))
+
+    def test_class_meta(self):
+        class Worker(object):
+            """docstring"""
+
+        globals = {}
+        define_old_worker_class(globals, Worker)
+        Slave = globals["Slave"]
+        self.assertEqual(Slave.__doc__, Worker.__doc__)
+        self.assertEqual(Slave.__module__, Worker.__module__)

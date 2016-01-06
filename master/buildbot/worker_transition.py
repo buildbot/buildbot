@@ -139,7 +139,11 @@ def define_old_worker_class(scope, cls, pattern=None):
 
         return instance
 
-    compat_class = type(compat_name, (cls,), {"__new__": __new__})
+    compat_class = type(compat_name, (cls,), {
+        "__new__": __new__,
+        "__module__": cls.__module__,
+        "__doc__": cls.__doc__,
+        })
 
     assert compat_name not in scope
     scope[compat_name] = compat_class
