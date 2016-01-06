@@ -216,7 +216,7 @@ class WorkerAPICompatMixin(object):
             self.__dict__["_compat_attrs_mapping"] = {}
         return self._compat_attrs_mapping
 
-    def _register_old_worker_attr(self, attr_name, pattern=None):
+    def _registerOldWorkerAttr(self, attr_name, pattern=None):
         """Define old-named attribute inside class instance."""
         compat_name = _compat_name(attr_name, pattern=pattern)
         assert compat_name not in self.__dict__

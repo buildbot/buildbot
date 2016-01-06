@@ -142,7 +142,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         self.pbmanager.setServiceParent(self)
 
         self.workers = bslavemanager.BuildslaveManager(self)
-        self._register_old_worker_attr("workers", pattern="buildworker")
+        self._registerOldWorkerAttr("workers", pattern="buildworker")
         self.workers.setServiceParent(self)
 
         self.change_svc = ChangeManager()
