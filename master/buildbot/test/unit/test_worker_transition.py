@@ -100,6 +100,7 @@ class ClassWrapper(_TestBase):
 
     def test_class_wrapper(self):
         class Worker(object):
+
             def __init__(self, arg, **kwargs):
                 self.arg = arg
                 self.kwargs = kwargs
@@ -119,6 +120,7 @@ class ClassWrapper(_TestBase):
 
     def test_class_with_new_wrapper(self):
         class Worker(object):
+
             def __init__(self, arg, **kwargs):
                 self.arg = arg
                 self.kwargs = kwargs
@@ -159,6 +161,7 @@ class PropertyWrapper(_TestBase):
 
     def test_property_wrapper(self):
         class C(object):
+
             @property
             def workername(self):
                 return "name"
@@ -177,6 +180,7 @@ class MethodWrapper(_TestBase):
 
     def test_method_wrapper(self):
         class C(object):
+
             def updateWorker(self, res):
                 return res
             define_old_worker_method(locals(), updateWorker)
@@ -191,6 +195,7 @@ class MethodWrapper(_TestBase):
 
     def test_method_meta(self):
         class C(object):
+
             def updateWorker(self, res):
                 """docstring"""
                 return res
@@ -233,6 +238,7 @@ class AttributeMixin(_TestBase):
 
     def test_attribute(self):
         class C(WorkerAPICompatMixin):
+
             def __init__(self):
                 self.workers = [1, 2, 3]
                 self._registerOldWorkerAttr("workers", pattern="buildworker")
