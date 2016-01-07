@@ -20,12 +20,12 @@ from twisted.trial import unittest
 
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecated_name as compat_name
 from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import define_old_worker_class_alias
 from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import define_old_worker_property
+from buildbot.worker_transition import deprecated_name as compat_name
 
 
 class CompatNameGeneration(unittest.TestCase):
