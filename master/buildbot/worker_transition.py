@@ -101,7 +101,7 @@ class DeprecatedWorkerNameWarning(Warning):
     pass
 
 
-def _on_old_name_usage(message, stacklevel=None):
+def on_deprecated_name_usage(message, stacklevel=None):
     """Hook that is ran when old API name is used.
 
     This hook will raise if old name usage is forbidden in the global settings.
@@ -131,7 +131,7 @@ def deprecated_worker_class(cls, pattern=None):
     compat_name = _compat_name(cls.__name__, pattern=pattern)
 
     def __new__(instance_cls, *args, **kwargs):
-        _on_old_name_usage(
+        on_deprecated_name_usage(
             "'{old}' class is deprecated, use '{new}' instead.".format(
                 new=cls.__name__, old=compat_name))
         if cls.__new__ is object.__new__:
@@ -170,7 +170,7 @@ def define_old_worker_property(scope, name, pattern=None):
     assert compat_name not in scope
 
     def get(self):
-        _on_old_name_usage(
+        on_deprecated_name_usage(
             "'{old}' property is deprecated, use '{new}' instead.".format(
                 new=name, old=compat_name))
         return getattr(self, name)
@@ -184,7 +184,7 @@ def define_old_worker_method(scope, method, pattern=None):
     assert compat_name not in scope
 
     def old_method(self, *args, **kwargs):
-        _on_old_name_usage(
+        on_deprecated_name_usage(
             "'{old}' method is deprecated, use '{new}' instead.".format(
                 new=method.__name__, old=compat_name))
         return method(self, *args, **kwargs)
@@ -200,7 +200,7 @@ def define_old_worker_func(scope, func, pattern=None):
     assert compat_name not in scope
 
     def old_func(*args, **kwargs):
-        _on_old_name_usage(
+        on_deprecated_name_usage(
             "'{old}' function is deprecated, use '{new}' instead.".format(
                 new=func.__name__, old=compat_name))
         return func(*args, **kwargs)
@@ -220,7 +220,7 @@ class WorkerAPICompatMixin(object):
         new_name = self.__compat_attrs[name]
 
         # TODO: Log class name, operation type etc.
-        _on_old_name_usage(
+        on_deprecated_name_usage(
             "'{old}' attribute is deprecated, use '{new}' instead.".format(
                 new=new_name, old=name))
 
@@ -230,7 +230,7 @@ class WorkerAPICompatMixin(object):
         if name in self.__compat_attrs:
             new_name = self.__compat_attrs[name]
             # TODO: Log class name, operation type etc.
-            _on_old_name_usage(
+            on_deprecated_name_usage(
                 "'{old}' attribute is deprecated, use '{new}' instead.".format(
                     new=new_name, old=name))
             return setattr(self, new_name, value)

@@ -16,9 +16,9 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
-from buildbot.worker_transition import _on_old_name_usage
+from buildbot.worker_transition import on_deprecated_name_usage
 
-_on_old_name_usage(
+on_deprecated_name_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.protocols.base' module instead".format(old=__name__))
 
