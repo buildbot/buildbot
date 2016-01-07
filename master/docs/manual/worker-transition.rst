@@ -60,9 +60,11 @@ Old name                                                           New name
 ================================================================== =====
 :py:class:`buildbot.interfaces.IBuildSlave`                        :py:class:`~buildbot.interfaces.IWorker`
 ------------------------------------------------------------------ -----
-:py:attr:`buildbot.buildslave.base.AbstractBuildSlave.slavename`   :py:attr:`~buildbot.buildslave.base.AbstractBuildSlave.workername`
+:py:mod:`buildbot.buildslave` module with all contents             :py:mod:`buildbot.worker`
 ------------------------------------------------------------------ -----
-:py:meth:`buildbot.buildslave.base.AbstractBuildSlave.updateSlave` :py:attr:`~buildbot.buildslave.base.AbstractBuildSlave.updateWorker`
+:py:attr:`buildbot.buildslave.base.AbstractBuildSlave.slavename`   :py:attr:`buildbot.worker.base.AbstractBuildSlave.workername`
 ------------------------------------------------------------------ -----
-:py:attr:`buildbot.master.BuildMaster.buildslaves`                 :py:attr:`~buildbot.buildslave.base.AbstractBuildSlave.workers`
+:py:meth:`buildbot.buildslave.base.AbstractBuildSlave.updateSlave` :py:attr:`buildbot.worker.base.AbstractBuildSlave.updateWorker`
+------------------------------------------------------------------ -----
+:py:attr:`buildbot.master.BuildMaster.buildslaves`                 :py:attr:`buildbot.worker.base.AbstractBuildSlave.workers`
 ================================================================== =====
