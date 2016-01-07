@@ -19,8 +19,8 @@ from __future__ import absolute_import
 import os
 
 from buildbot import config
-from buildbot.worker.base import AbstractBuildSlave
-from buildbot.worker.base import AbstractLatentBuildSlave
+from buildbot.worker.base import AbstractWorker
+from buildbot.worker.base import AbstractLatentWorker
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.internet import threads
@@ -155,10 +155,10 @@ class Connection(object):
         defer.returnValue(domains)
 
 
-class LibVirtSlave(AbstractLatentBuildSlave):
+class LibVirtSlave(AbstractLatentWorker):
     def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
                  **kwargs):
-        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
+        AbstractLatentWorker.__init__(self, name, password, **kwargs)
         if not libvirt:
             config.error("The python module 'libvirt' is needed to use a LibVirtSlave")
 
@@ -202,7 +202,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             log.msg("Not accepting builds as existing domain but slave not connected")
             return False
 
-        return AbstractLatentBuildSlave.canStartBuild(self)
+        return AbstractLatentWorker.canStartBuild(self)
 
     def _prepare_base_image(self):
         """
@@ -296,7 +296,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         @d.addCallback
         def _disconnect(res):
             log.msg("VM destroyed (%s): Forcing its connection closed." % self.slavename)
-            return AbstractBuildSlave.disconnect(self)
+            return AbstractWorker.disconnect(self)
 
         @d.addBoth
         def _disconnected(res):

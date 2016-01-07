@@ -15,15 +15,15 @@
 
 import os
 
-from buildbot.worker.base import BuildSlave
+from buildbot.worker.base import Worker
 from buildbot.config import error
 from twisted.internet import defer
 
 
-class LocalBuildSlave(BuildSlave):
+class LocalBuildSlave(Worker):
 
     def checkConfig(self, name, workdir=None, usePty=False, **kwargs):
-        BuildSlave.checkConfig(self, name, None, **kwargs)
+        Worker.checkConfig(self, name, None, **kwargs)
         self.LocalBuildSlaveFactory = None
         try:
             # importing here to avoid dependency on buildbot slave package
@@ -35,7 +35,7 @@ class LocalBuildSlave(BuildSlave):
 
     @defer.inlineCallbacks
     def reconfigService(self, name, workdir=None, usePty=False, **kwargs):
-        BuildSlave.reconfigService(self, name, None, **kwargs)
+        Worker.reconfigService(self, name, None, **kwargs)
         if workdir is None:
             workdir = name
         workdir = os.path.abspath(os.path.join(self.master.basedir, "slaves", workdir))

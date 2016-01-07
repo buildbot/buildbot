@@ -21,7 +21,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.worker.base import AbstractLatentBuildSlave
+from buildbot.worker.base import AbstractLatentWorker
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 
 try:
@@ -39,7 +39,7 @@ DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
 
-class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
+class OpenStackLatentBuildSlave(AbstractLatentWorker):
 
     instance = None
     _poll_resolution = 5  # hook point for tests
@@ -65,7 +65,7 @@ class OpenStackLatentBuildSlave(AbstractLatentBuildSlave):
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
 
-        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
+        AbstractLatentWorker.__init__(self, name, password, **kwargs)
 
         self.flavor = flavor
         self.os_username = os_username

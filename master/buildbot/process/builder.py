@@ -198,11 +198,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
     def attached(self, slave, commands):
-        """This is invoked by the BuildSlave when the self.slavename bot
+        """This is invoked by the Worker when the self.slavename bot
         registers their builder.
 
-        @type  slave: L{buildbot.buildslave.BuildSlave}
-        @param slave: the BuildSlave that represents the buildslave as a whole
+        @type  slave: L{buildbot.worker.Worker}
+        @param slave: the Worker that represents the buildslave as a whole
         @type  commands: dict: string -> string, or None
         @param commands: provides the slave's version of each RemoteCommand
 

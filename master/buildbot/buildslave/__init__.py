@@ -22,6 +22,8 @@ _on_old_name_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker' module instead".format(old=__name__))
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.worker import *  # noqa
+from buildbot.buildslave.base import AbstractBuildSlave
+from buildbot.buildslave.base import BuildSlave
+from buildbot.buildslave.base import AbstractLatentBuildSlave
+
+__all__ = ("AbstractBuildSlave", "BuildSlave", "AbstractLatentBuildSlave")

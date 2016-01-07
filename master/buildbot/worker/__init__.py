@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.worker.base import AbstractBuildSlave
-from buildbot.worker.base import AbstractLatentBuildSlave
-from buildbot.worker.base import BuildSlave
+from buildbot.worker.base import AbstractWorker
+from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker.base import Worker
 
 _hush_pyflakes = [
-    AbstractBuildSlave,
-    BuildSlave,
-    AbstractLatentBuildSlave,
+    AbstractWorker,
+    Worker,
+    AbstractLatentWorker,
 ]

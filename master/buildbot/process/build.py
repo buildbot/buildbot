@@ -210,7 +210,7 @@ class Build(properties.PropertiesMixin):
 
         self.path_module = slavebuilder.slave.path_module
 
-        # navigate our way back to the L{buildbot.worker.BuildSlave}
+        # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)

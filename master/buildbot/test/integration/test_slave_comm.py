@@ -45,7 +45,7 @@ class FakeSlaveBuilder(pb.Referenceable):
 class FakeSlaveBuildSlave(pb.Referenceable):
 
     """
-    Fake slave-side BuildSlave object
+    Fake slave-side Worker object
 
     @ivar master_persp: remote perspective on the master
     """
@@ -118,14 +118,14 @@ class FakeBuilder(builder.Builder):
         return defer.succeed(None)
 
 
-class MyBuildSlave(worker.BuildSlave):
+class MyBuildSlave(worker.Worker):
 
     def attached(self, conn):
         self.detach_d = defer.Deferred()
-        return worker.BuildSlave.attached(self, conn)
+        return worker.Worker.attached(self, conn)
 
     def detached(self):
-        worker.BuildSlave.detached(self)
+        worker.Worker.detached(self)
         self.detach_d, d = None, self.detach_d
         d.callback(None)
 
@@ -141,7 +141,7 @@ class TestSlaveComm(unittest.TestCase):
     @ivar master: fake build master
     @ivar pbamanger: L{PBManager} instance
     @ivar botmaster: L{BotMaster} instance
-    @ivar worker: master-side L{BuildSlave} instance
+    @ivar worker: master-side L{Worker} instance
     @ivar slavebuildslave: slave-side L{FakeSlaveBuildSlave} instance
     @ivar port: TCP port to connect to
     @ivar connector: outbound TCP connection from slave to master
@@ -200,7 +200,7 @@ class TestSlaveComm(unittest.TestCase):
         """
         Create a master-side slave instance and add it to the BotMaster
 
-        @param **kwargs: arguments to pass to the L{BuildSlave} constructor.
+        @param **kwargs: arguments to pass to the L{Worker} constructor.
         """
         self.buildslave = MyBuildSlave("testslave", "pw", **kwargs)
 

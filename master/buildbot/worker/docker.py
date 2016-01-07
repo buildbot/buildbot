@@ -25,7 +25,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.worker import AbstractLatentBuildSlave
+from buildbot.worker import AbstractLatentWorker
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.util import json
 
@@ -55,7 +55,7 @@ def handle_stream_line(line):
             yield streamline
 
 
-class DockerLatentBuildSlave(AbstractLatentBuildSlave):
+class DockerLatentBuildSlave(AbstractLatentWorker):
     instance = None
 
     def __init__(self, name, password, docker_host, image=None, command=None,
@@ -91,7 +91,7 @@ class DockerLatentBuildSlave(AbstractLatentBuildSlave):
         # container is almost immediate, we can affort doing so for each build.
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
-        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
+        AbstractLatentWorker.__init__(self, name, password, **kwargs)
 
         self.image = image
         self.command = command or []

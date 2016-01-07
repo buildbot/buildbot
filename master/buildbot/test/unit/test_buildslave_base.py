@@ -30,7 +30,7 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 
-class ConcreteBuildSlave(base.AbstractBuildSlave):
+class ConcreteWorker(base.AbstractWorker):
     pass
 
 
@@ -101,7 +101,7 @@ class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
 class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def setUp(self):
-        self.sl = ConcreteBuildSlave('sl', 'pa')
+        self.sl = ConcreteWorker('sl', 'pa')
 
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
@@ -139,7 +139,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.patch(reactor, 'seconds', self.clock.seconds)
 
     def createBuildslave(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
-        slave = ConcreteBuildSlave(name, password, **kwargs)
+        slave = ConcreteWorker(name, password, **kwargs)
         if configured:
             slave.setServiceParent(self.buildslaves)
         if attached:
@@ -147,7 +147,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         return slave
 
     def test_constructor_minimal(self):
-        bs = ConcreteBuildSlave('bot', 'pass')
+        bs = ConcreteWorker('bot', 'pass')
         self.assertEqual(bs.slavename, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.max_builds, None)
@@ -158,12 +158,12 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
-        bs = ConcreteBuildSlave('bot', 'pass',
-                                max_builds=2,
-                                notify_on_missing=['me@me.com'],
-                                missing_timeout=120,
-                                properties={'a': 'b'},
-                                locks=[lock1, lock2])
+        bs = ConcreteWorker('bot', 'pass',
+                            max_builds=2,
+                            notify_on_missing=['me@me.com'],
+                            missing_timeout=120,
+                            properties={'a': 'b'},
+                            locks=[lock1, lock2])
 
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
@@ -172,15 +172,15 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(bs.access, [lock1, lock2])
 
     def test_constructor_notify_on_missing_not_list(self):
-        bs = ConcreteBuildSlave('bot', 'pass',
-                                notify_on_missing='foo@foo.com')
+        bs = ConcreteWorker('bot', 'pass',
+                            notify_on_missing='foo@foo.com')
         # turned into a list:
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
     def test_constructor_notify_on_missing_not_string(self):
         self.assertRaises(config.ConfigErrors, lambda:
-                          ConcreteBuildSlave('bot', 'pass',
-                                             notify_on_missing=['a@b.com', 13]))
+                          ConcreteWorker('bot', 'pass',
+                                         notify_on_missing=['a@b.com', 13]))
 
     @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):
@@ -250,31 +250,31 @@ class TestAbstractBuildSlave(unittest.TestCase):
     # in both the initial config and a reconfiguration.
 
     def test_startMissingTimer_no_parent(self):
-        bs = ConcreteBuildSlave('bot', 'pass',
-                                notify_on_missing=['abc'],
-                                missing_timeout=10)
+        bs = ConcreteWorker('bot', 'pass',
+                            notify_on_missing=['abc'],
+                            missing_timeout=10)
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_startMissingTimer_no_timeout(self):
-        bs = ConcreteBuildSlave('bot', 'pass',
-                                notify_on_missing=['abc'],
-                                missing_timeout=0)
+        bs = ConcreteWorker('bot', 'pass',
+                            notify_on_missing=['abc'],
+                            missing_timeout=0)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_startMissingTimer_no_notify(self):
-        bs = ConcreteBuildSlave('bot', 'pass',
-                                missing_timeout=3600)
+        bs = ConcreteWorker('bot', 'pass',
+                            missing_timeout=3600)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertEqual(bs.missing_timer, None)
 
     def test_missing_timer(self):
-        bs = ConcreteBuildSlave('bot', 'pass',
-                                notify_on_missing=['abc'],
-                                missing_timeout=100)
+        bs = ConcreteWorker('bot', 'pass',
+                            notify_on_missing=['abc'],
+                            missing_timeout=100)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
         self.assertNotEqual(bs.missing_timer, None)
@@ -286,7 +286,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         master = self.master
         bsmanager = master.buildslaves
         yield master.startService()
-        bs = ConcreteBuildSlave('bot', 'pass')
+        bs = ConcreteWorker('bot', 'pass')
         bs.setServiceParent(bsmanager)
         self.assertEqual(bs.manager, bsmanager)
         self.assertEqual(bs.parent, bsmanager)
@@ -302,7 +302,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         bsmanager = master.buildslaves
         yield master.startService()
         lock = locks.MasterLock('masterlock')
-        bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
+        bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks
@@ -314,7 +314,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         bsmanager = master.buildslaves
         yield master.startService()
         lock = locks.SlaveLock('lock')
-        bs = ConcreteBuildSlave('bot', 'pass', locks=[lock.access("counting")])
+        bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(bsmanager)
 
     @defer.inlineCallbacks

@@ -58,7 +58,7 @@ class AbstractSlaveBuilder(object):
         if self.isBusy():
             return False
 
-        # otherwise, check in with the BuildSlave
+        # otherwise, check in with the Worker
         if self.slave:
             return self.slave.canStartBuild()
 
@@ -70,7 +70,7 @@ class AbstractSlaveBuilder(object):
 
     def buildStarted(self):
         self.state = BUILDING
-        # AbstractBuildSlave doesn't always have a buildStarted method
+        # AbstractWorker doesn't always have a buildStarted method
         # so only call it if it is available.
         try:
             slave_buildStarted = self.slave.buildStarted
@@ -86,8 +86,8 @@ class AbstractSlaveBuilder(object):
 
     def attached(self, slave, commands):
         """
-        @type  slave: L{buildbot.buildslave.BuildSlave}
-        @param slave: the BuildSlave that represents the buildslave as a
+        @type  slave: L{buildbot.worker.Worker}
+        @param slave: the Worker that represents the buildslave as a
                       whole
         @type  commands: dict: string -> string, or None
         @param commands: provides the slave's version of each RemoteCommand

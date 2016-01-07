@@ -61,7 +61,7 @@ class FakeRemoteSlave(pb.Referenceable):
         self.mind.broker.transport.loseConnection()
         self.mind = None
 
-    # BuildSlave methods
+    # Worker methods
 
     def remote_print(self, message):
         log.msg("from master: %s" % (message,))
@@ -328,7 +328,7 @@ BuildmasterConfig = {}
 
 def masterConfig():
     c = {}
-    from buildbot.worker import BuildSlave
+    from buildbot.worker import Worker
     from buildbot.config import BuilderConfig
     from buildbot.process.buildstep import BuildStep
     from buildbot.process.factory import BuildFactory
@@ -339,7 +339,7 @@ def masterConfig():
         def start(self):
             self.finished(results.SUCCESS)
 
-    c['slaves'] = [BuildSlave("local1", "localpw")]
+    c['slaves'] = [Worker("local1", "localpw")]
     c['slavePortnum'] = 0
     c['change_source'] = []
     c['schedulers'] = []  # filled in above

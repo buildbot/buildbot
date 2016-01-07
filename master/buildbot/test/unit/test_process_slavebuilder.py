@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.worker.base import AbstractBuildSlave
+from buildbot.worker.base import AbstractWorker
 from twisted.trial.unittest import TestCase
 
 from buildbot.process.slavebuilder import AbstractSlaveBuilder
@@ -31,20 +31,20 @@ class TestAbstractSlaveBuilder(TestCase):
         calling ``buildStarted`` on the slave builder calls the method on the
         slave with the slavebuilder as an argument.
         """
-        class ConcreteBuildSlave(AbstractBuildSlave):
+        class ConcreteWorker(AbstractWorker):
             _buildStartedCalls = []
 
             def buildStarted(self, slavebuilder):
                 self._buildStartedCalls.append(slavebuilder)
 
-        slave = ConcreteBuildSlave("slave", "pass")
+        slave = ConcreteWorker("slave", "pass")
         slavebuilder = AbstractSlaveBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
         slavebuilder.slave = slave
         slavebuilder.buildStarted()
 
-        self.assertEqual(ConcreteBuildSlave._buildStartedCalls, [slavebuilder])
+        self.assertEqual(ConcreteWorker._buildStartedCalls, [slavebuilder])
 
     def test_buildStarted_missing(self):
         """
@@ -52,10 +52,10 @@ class TestAbstractSlaveBuilder(TestCase):
         ``buildStarted`` method, calling ``buildStarted`` on the slave builder
         doesn't raise an exception.
         """
-        class ConcreteBuildSlave(AbstractBuildSlave):
+        class ConcreteWorker(AbstractWorker):
             pass
 
-        slave = ConcreteBuildSlave("slave", "pass")
+        slave = ConcreteWorker("slave", "pass")
         slavebuilder = AbstractSlaveBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly

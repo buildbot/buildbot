@@ -36,11 +36,11 @@ from buildbot.status.slave import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import (
-    define_old_worker_property, define_old_worker_method)
+from buildbot.worker_transition import define_old_worker_property
+from buildbot.worker_transition import define_old_worker_method
 
 
-class AbstractBuildSlave(service.BuildbotService, object):
+class AbstractWorker(service.BuildbotService, object):
 
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
@@ -229,8 +229,8 @@ class AbstractBuildSlave(service.BuildbotService, object):
     def reconfigService(self, name, password, max_builds=None,
                         notify_on_missing=None, missing_timeout=3600,
                         properties=None, locks=None, keepalive_interval=3600):
-        # Given a BuildSlave config arguments, configure this one identically.
-        # Because BuildSlave objects are remotely referenced, we can't replace them
+        # Given a Worker config arguments, configure this one identically.
+        # Because Worker objects are remotely referenced, we can't replace them
         # without disconnecting the slave, yet there's no reason to do that.
 
         assert self.name == name
@@ -403,7 +403,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.removePauseWatcher(self._pauseChanged)
         self.slave_status.setConnected(False)
-        log.msg("BuildSlave.detached(%s)" % (self.name,))
+        log.msg("Worker.detached(%s)" % (self.name,))
         self.master.status.slaveDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.buildslaveDisconnected(
@@ -586,10 +586,10 @@ class AbstractBuildSlave(service.BuildbotService, object):
         return self.slave_status.isPaused()
 
 
-class BuildSlave(AbstractBuildSlave):
+class Worker(AbstractWorker):
 
     def sendBuilderList(self):
-        d = AbstractBuildSlave.sendBuilderList(self)
+        d = AbstractWorker.sendBuilderList(self)
 
         def _sent(slist):
             # Nothing has changed, so don't need to re-attach to everything
@@ -605,7 +605,7 @@ class BuildSlave(AbstractBuildSlave):
             return defer.DeferredList(dl)
 
         def _set_failed(why):
-            log.msg("BuildSlave.sendBuilderList (%s) failed" % self)
+            log.msg("Worker.sendBuilderList (%s) failed" % self)
             log.err(why)
             # TODO: hang up on them?, without setBuilderList we can't use
             # them
@@ -613,20 +613,20 @@ class BuildSlave(AbstractBuildSlave):
         return d
 
     def detached(self):
-        AbstractBuildSlave.detached(self)
+        AbstractWorker.detached(self)
         self.botmaster.slaveLost(self)
         self.startMissingTimer()
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
-        AbstractBuildSlave.buildFinished(self, sb)
+        AbstractWorker.buildFinished(self, sb)
 
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect
         self.maybeShutdown()
 
 
-class AbstractLatentBuildSlave(AbstractBuildSlave):
+class AbstractLatentWorker(AbstractWorker):
 
     """A build slave that will start up a slave instance when needed.
 
@@ -648,7 +648,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def __init__(self, name, password,
                  build_wait_timeout=60 * 10,
                  **kwargs):
-        AbstractBuildSlave.__init__(self, name, password, **kwargs)
+        AbstractWorker.__init__(self, name, password, **kwargs)
 
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
@@ -724,10 +724,10 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             log.msg(msg)
             self._disconnect(bot)
             return defer.fail(RuntimeError(msg))
-        return AbstractBuildSlave.attached(self, bot)
+        return AbstractWorker.attached(self, bot)
 
     def detached(self):
-        AbstractBuildSlave.detached(self)
+        AbstractWorker.detached(self)
         if self.substantiation_deferred is not None:
             d = self._substantiate(self.substantiation_build)
             d.addErrback(log.err, 'while re-substantiating')
@@ -764,7 +764,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def canStartBuild(self):
         if self.insubstantiating:
             return False
-        return AbstractBuildSlave.canStartBuild(self)
+        return AbstractWorker.canStartBuild(self)
 
     def buildStarted(self, sb):
         assert self.substantiated
@@ -772,7 +772,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building.add(sb.builder_name)
 
     def buildFinished(self, sb):
-        AbstractBuildSlave.buildFinished(self, sb)
+        AbstractWorker.buildFinished(self, sb)
 
         self.building.remove(sb.builder_name)
         if not self.building:
@@ -819,7 +819,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         # a negative build_wait_timeout means the slave should never be shut
         # down, so just disconnect.
         if self.build_wait_timeout < 0:
-            yield AbstractBuildSlave.disconnect(self)
+            yield AbstractWorker.disconnect(self)
             return
 
         if self.missing_timer:
@@ -847,11 +847,11 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # possibility: make the master in charge of connecting to the
             # slave, rather than vice versa. TODO.
             yield defer.DeferredList([
-                AbstractBuildSlave.disconnect(self),
+                AbstractWorker.disconnect(self),
                 self.insubstantiate(fast)
             ], consumeErrors=True, fireOnOneErrback=True)
         else:
-            yield AbstractBuildSlave.disconnect(self)
+            yield AbstractWorker.disconnect(self)
             yield self.stop_instance(fast)
 
     def disconnect(self):
@@ -862,7 +862,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.botmaster.slaveLost(self)
 
     def stopService(self):
-        res = defer.maybeDeferred(AbstractBuildSlave.stopService, self)
+        res = defer.maybeDeferred(AbstractWorker.stopService, self)
         if self.conn is not None:
             d = self._soft_disconnect()
             res = defer.DeferredList([res, d])
@@ -878,10 +878,10 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         for b in self.botmaster.getBuildersForSlave(self.name):
             if b.name not in self.slavebuilders:
                 b.addLatentSlave(self)
-        return AbstractBuildSlave.updateSlave(self)
+        return AbstractWorker.updateSlave(self)
 
     def sendBuilderList(self):
-        d = AbstractBuildSlave.sendBuilderList(self)
+        d = AbstractWorker.sendBuilderList(self)
 
         def _sent(slist):
             if not slist:
@@ -899,7 +899,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             return defer.DeferredList(dl)
 
         def _set_failed(why):
-            log.msg("BuildSlave.sendBuilderList (%s) failed" % self)
+            log.msg("Worker.sendBuilderList (%s) failed" % self)
             log.err(why)
             # TODO: hang up on them?, without setBuilderList we can't use
             # them

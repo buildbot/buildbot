@@ -33,7 +33,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.worker.base import AbstractLatentBuildSlave
+from buildbot.worker.base import AbstractLatentWorker
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 
 PENDING = 'pending'
@@ -45,7 +45,7 @@ FULFILLED = 'fulfilled'
 PRICE_TOO_LOW = 'price-too-low'
 
 
-class EC2LatentBuildSlave(AbstractLatentBuildSlave):
+class EC2LatentBuildSlave(AbstractLatentWorker):
 
     instance = image = None
     _poll_resolution = 5  # hook point for tests
@@ -71,7 +71,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if tags is None:
             tags = {}
 
-        AbstractLatentBuildSlave.__init__(self, name, password, **kwargs)
+        AbstractLatentWorker.__init__(self, name, password, **kwargs)
 
         if not ((ami is not None) ^
                 (valid_ami_owners is not None or

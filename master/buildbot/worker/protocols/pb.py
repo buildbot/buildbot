@@ -175,7 +175,7 @@ class Connection(base.Connection, pb.Avatar):
         try:
             info = yield self.mind.callRemote('getSlaveInfo')
         except pb.NoSuchMethod:
-            log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
+            log.msg("Worker.getSlaveInfo is unavailable - ignoring")
 
         # newer slaves send all info in one command
         if "slave_commands" in info:
@@ -183,12 +183,12 @@ class Connection(base.Connection, pb.Avatar):
         try:
             info["slave_commands"] = yield self.mind.callRemote('getCommands')
         except pb.NoSuchMethod:
-            log.msg("BuildSlave.getCommands is unavailable - ignoring")
+            log.msg("Worker.getCommands is unavailable - ignoring")
 
         try:
             info["version"] = yield self.mind.callRemote('getVersion')
         except pb.NoSuchMethod:
-            log.msg("BuildSlave.getVersion is unavailable - ignoring")
+            log.msg("Worker.getVersion is unavailable - ignoring")
 
         defer.returnValue(info)
 

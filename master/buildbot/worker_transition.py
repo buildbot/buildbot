@@ -29,6 +29,7 @@ __all__ = (
     "define_old_worker_class", "define_old_worker_property",
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
+    "deprecated_worker_class",
 )
 
 # TODO:
@@ -126,12 +127,7 @@ def define_old_worker_class_alias(scope, cls, pattern=None):
     scope[compat_name] = cls
 
 
-def define_old_worker_class(scope, cls, pattern=None):
-    """Define old-named class that inherits new names class.
-
-    Useful for instantiable classes.
-    """
-
+def deprecated_worker_class(cls, pattern=None):
     assert issubclass(cls, object)
 
     compat_name = _compat_name(cls.__name__, pattern=pattern)
@@ -155,8 +151,19 @@ def define_old_worker_class(scope, cls, pattern=None):
         "__doc__": cls.__doc__,
         })
 
-    assert compat_name not in scope
-    scope[compat_name] = compat_class
+    return compat_class
+
+
+def define_old_worker_class(scope, cls, pattern=None):
+    """Define old-named class that inherits new names class.
+
+    Useful for instantiable classes.
+    """
+
+    compat_class = deprecated_worker_class(cls, pattern=None)
+
+    assert compat_class.__name__ not in scope
+    scope[compat_class.__name__] = compat_class
 
 
 def define_old_worker_property(scope, name, pattern=None):

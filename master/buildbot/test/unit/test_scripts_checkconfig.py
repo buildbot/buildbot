@@ -80,9 +80,9 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     BuilderConfig('testbuilder', factory=BuildFactory(),
                                   slavename='sl'),
                 ]
-                from buildbot.worker import BuildSlave
+                from buildbot.worker import Worker
                 c['slaves'] = [
-                    BuildSlave('sl', 'pass'),
+                    Worker('sl', 'pass'),
                 ]
                 c['slavePortnum'] = 9989
                 """)

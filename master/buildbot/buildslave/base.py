@@ -17,11 +17,21 @@
 # It should never be imported by Buildbot.
 
 from buildbot.worker_transition import _on_old_name_usage
+from buildbot.worker_transition import deprecated_worker_class
 
 _on_old_name_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.base' module instead".format(old=__name__))
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.worker.base import *  # noqa
+from buildbot.worker.base import AbstractWorker as _AbstractWorker
+from buildbot.worker.base import Worker as _Worker
+from buildbot.worker.base import AbstractLatentWorker as _AbstractLatentWorker
+
+AbstractBuildSlave = deprecated_worker_class(
+    _AbstractWorker, pattern="BuildWorker")
+BuildSlave = deprecated_worker_class(
+    _Worker, pattern="BuildWorker")
+AbstractLatentBuildSlave = deprecated_worker_class(
+    _AbstractLatentWorker, pattern="BuildWorker")
+
+__all__ = ("AbstractBuildSlave", "BuildSlave", "AbstractLatentBuildSlave")

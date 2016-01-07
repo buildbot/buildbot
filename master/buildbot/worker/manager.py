@@ -77,7 +77,7 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
 
     @property
     def slaves(self):
-        # self.slaves contains a ready BuildSlave instance for each
+        # self.slaves contains a ready Worker instance for each
         # potential worker, i.e. all the ones listed in the config file.
         # If the slave is connected, self.slaves[slavename].slave will
         # contain a RemoteReference to their Bot instance. If it is not

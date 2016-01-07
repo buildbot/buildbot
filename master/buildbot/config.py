@@ -542,7 +542,7 @@ class MasterConfig(util.ComparableMixin):
 
         for sl in slaves:
             if not interfaces.IBuildSlave.providedBy(sl):
-                msg = "c['slaves'] must be a list of BuildSlave instances"
+                msg = "c['slaves'] must be a list of Worker instances"
                 error(msg)
                 return
 

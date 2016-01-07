@@ -19,7 +19,7 @@ import mock
 from StringIO import StringIO
 
 from buildbot import config
-from buildbot.worker.base import BuildSlave
+from buildbot.worker.base import Worker
 from buildbot.process import builder
 from buildbot.process import buildrequest
 from buildbot.process import buildstep
@@ -172,7 +172,7 @@ class RunSteps(unittest.TestCase):
                                  factory=self.factory))
         yield self.builder.reconfigServiceWithBuildbotConfig(new_config)
 
-        self.slave = BuildSlave('bsl', 'pass')
+        self.slave = Worker('bsl', 'pass')
         self.slave.sendBuilderList = lambda: defer.succeed(None)
         self.slave.parent = mock.Mock()
         self.slave.master.botmaster = mock.Mock()

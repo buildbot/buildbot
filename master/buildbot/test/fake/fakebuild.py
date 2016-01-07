@@ -69,7 +69,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.build_status = FakeBuildStatus()
         self.builder = fakemaster.FakeBuilderStatus(master)
         self.slavebuilder = mock.Mock(spec=slavebuilder.SlaveBuilder)
-        self.slavebuilder.slave = mock.Mock(spec=base.BuildSlave)
+        self.slavebuilder.slave = mock.Mock(spec=base.Worker)
         self.builder.config = config.BuilderConfig(
             name='bldr',
             slavenames=['a'],
