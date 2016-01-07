@@ -106,3 +106,27 @@ Here is the complete list of changed API:
 
    * - :py:attr:`buildbot.master.BuildMaster.buildslaves`
      - :py:attr:`buildbot.worker.base.AbstractWorker.workers`
+
+Plugins
+-------
+
+``buildbot.buildslave`` entry point was renamed to ``buildbot.worker``, new
+plugins should be updated accordingly.
+
+Plugins that use old ``buildbot.buildslave`` entry point are available in
+the configuration file in the same way, as they were in versions prior 0.9.0:
+
+.. code-block:: python
+
+    from buildbot.plugins import buildslave
+    w = buildslave.ThirdPartyWorker()
+
+They will also be available using new entry point inside configuration file,
+so its recommended to use new API even if plugin uses old entry points:
+
+.. code-block:: python
+
+    from buildbot.plugins import worker
+    # ThirdPartyWorker can be defined in buildbot.buildslave entry point, this
+    # still will work.
+    w = worker.ThirdPartyWorker()
