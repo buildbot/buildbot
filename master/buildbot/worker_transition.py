@@ -25,7 +25,7 @@ import functools
 import warnings
 
 __all__ = (
-    "DeprecatedWorkerNameError", "define_old_worker_class_alias",
+    "DeprecatedWorkerNameWarning", "define_old_worker_class_alias",
     "define_old_worker_class", "define_old_worker_property",
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
@@ -97,9 +97,7 @@ def _compat_name(new_name, pattern=None):
 # the base class, but by default deprecation warnings are disabled in Python,
 # so by default old-API usage warnings will be ignored - this is not what
 # we want.
-# TODO: Perhaps name it "DeprecatedWorkerNameWarning"? Warnings in the console
-# "DeprecatedWorkerNameError: ..." looks like errors.
-class DeprecatedWorkerNameError(Warning):
+class DeprecatedWorkerNameWarning(Warning):
     pass
 
 
@@ -113,7 +111,7 @@ def _on_old_name_usage(message, stacklevel=None):
         # Warning will refer to the caller of the caller of this function.
         stacklevel = 3
 
-    warnings.warn(DeprecatedWorkerNameError(message), None, stacklevel)
+    warnings.warn(DeprecatedWorkerNameWarning(message), None, stacklevel)
 
 
 def define_old_worker_class_alias(scope, cls, pattern=None):

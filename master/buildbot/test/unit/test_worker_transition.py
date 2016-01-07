@@ -23,7 +23,7 @@ from buildbot.worker_transition import (
     _compat_name as compat_name, define_old_worker_class_alias,
     define_old_worker_class, define_old_worker_property,
     define_old_worker_method, define_old_worker_func,
-    DeprecatedWorkerNameError, WorkerAPICompatMixin,
+    DeprecatedWorkerNameWarning, WorkerAPICompatMixin,
 )
 
 
@@ -81,7 +81,7 @@ class _TestBase(unittest.TestCase):
             self.assertEqual(len(w), num_warnings)
             for warning in w:
                 self.assertTrue(issubclass(warning.category,
-                                           DeprecatedWorkerNameError))
+                                           DeprecatedWorkerNameWarning))
                 self.assertIn("deprecated", str(warning.message))
 
     @contextlib.contextmanager
