@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.buildslave.protocols import pb as bbpb
+from buildbot.worker.protocols import pb as bbpb
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
 from buildbot.util import service
@@ -69,16 +69,16 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
         self.pb = bbpb.Listener()
         self.pb.setServiceParent(master)
 
-        # BuildslaveRegistration instances keyed by buildslave name
+        # BuildslaveRegistration instances keyed by worker name
         self.registrations = {}
 
-        # connection objects keyed by buildslave name
+        # connection objects keyed by worker name
         self.connections = {}
 
     @property
     def slaves(self):
         # self.slaves contains a ready BuildSlave instance for each
-        # potential buildslave, i.e. all the ones listed in the config file.
+        # potential worker, i.e. all the ones listed in the config file.
         # If the slave is connected, self.slaves[slavename].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.

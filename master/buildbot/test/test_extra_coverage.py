@@ -19,8 +19,8 @@
 
 modules = []  # for the benefit of pyflakes
 
-from buildbot import buildslave
-modules.extend([buildslave])
+from buildbot import worker
+modules.extend([worker])
 from buildbot.changes import p4poller
 from buildbot.changes import svnpoller
 modules.extend([p4poller, svnpoller])

@@ -16,7 +16,7 @@
 import mock
 
 from buildbot import config
-from buildbot.buildslave import libvirt as libvirtbuildslave
+from buildbot.worker import libvirt as libvirtbuildslave
 from buildbot.test.fake import libvirt
 from twisted.internet import defer
 from twisted.internet import reactor

@@ -92,7 +92,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 # will help to flush out any bugs that may otherwise be difficult to find.
 
 c = BuildmasterConfig = {}
-from buildbot.buildslave import BuildSlave
+from buildbot.worker import BuildSlave
 from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.pb import PBChangeSource
 from buildbot.config import BuilderConfig

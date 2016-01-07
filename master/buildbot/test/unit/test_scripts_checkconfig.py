@@ -80,7 +80,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                     BuilderConfig('testbuilder', factory=BuildFactory(),
                                   slavename='sl'),
                 ]
-                from buildbot.buildslave import BuildSlave
+                from buildbot.worker import BuildSlave
                 c['slaves'] = [
                     BuildSlave('sl', 'pass'),
                 ]

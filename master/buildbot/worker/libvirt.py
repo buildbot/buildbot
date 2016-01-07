@@ -19,8 +19,8 @@ from __future__ import absolute_import
 import os
 
 from buildbot import config
-from buildbot.buildslave.base import AbstractBuildSlave
-from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.worker.base import AbstractBuildSlave
+from buildbot.worker.base import AbstractLatentBuildSlave
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 from twisted.internet import threads

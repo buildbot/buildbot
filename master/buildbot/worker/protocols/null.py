@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import
 
-from buildbot.buildslave.protocols import base
+from buildbot.worker.protocols import base
 from twisted.internet import defer
 from twisted.python import log
 

@@ -25,7 +25,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.buildslave import AbstractLatentBuildSlave
+from buildbot.worker import AbstractLatentBuildSlave
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.util import json
 

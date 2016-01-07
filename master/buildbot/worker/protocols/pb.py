@@ -15,7 +15,7 @@
 from __future__ import absolute_import
 from future.utils import itervalues
 
-from buildbot.buildslave.protocols import base
+from buildbot.worker.protocols import base
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -117,7 +117,7 @@ class Connection(base.Connection, pb.Avatar):
     def attached(self, mind):
         self.startKeepaliveTimer()
         # pbmanager calls perspective.attached; pass this along to the
-        # buildslave
+        # worker
         yield self.buildslave.attached(self)
         # and then return a reference to the avatar
         defer.returnValue(self)

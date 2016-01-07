@@ -151,8 +151,8 @@ setup_args = {
 
     'packages': [
         "buildbot",
-        "buildbot.buildslave",
-        "buildbot.buildslave.protocols",
+        "buildbot.worker",
+        "buildbot.worker.protocols",
         "buildbot.changes",
         "buildbot.clients",
         "buildbot.data",
@@ -231,13 +231,13 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
-        ('buildbot.buildslave', [
-            ('buildbot.buildslave.base', ['BuildSlave']),
-            ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
-            ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
-            ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave']),
-            ('buildbot.buildslave.local', ['LocalBuildSlave']),
+        ('buildbot.worker', [
+            ('buildbot.worker.base', ['BuildSlave']),
+            ('buildbot.worker.ec2', ['EC2LatentBuildSlave']),
+            ('buildbot.worker.libvirt', ['LibVirtSlave']),
+            ('buildbot.worker.openstack', ['OpenStackLatentBuildSlave']),
+            ('buildbot.worker.docker', ['DockerLatentBuildSlave']),
+            ('buildbot.worker.local', ['LocalBuildSlave']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
@@ -299,7 +299,7 @@ setup_args = {
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though
-            ('buildbot.buildslave.libvirt', ['Connection']),
+            ('buildbot.worker.libvirt', ['Connection']),
             ('buildbot.changes.filter', ['ChangeFilter']),
             ('buildbot.changes.gerritchangesource', ['GerritChangeFilter']),
             ('buildbot.changes.svnpoller', [

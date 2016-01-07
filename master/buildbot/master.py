@@ -35,7 +35,7 @@ import buildbot.pbmanager
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches
-from buildbot.buildslave import manager as bslavemanager
+from buildbot.worker import manager as bslavemanager
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector

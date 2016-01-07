@@ -15,7 +15,7 @@
 
 import os
 
-from buildbot.buildslave.base import BuildSlave
+from buildbot.worker.base import BuildSlave
 from buildbot.config import error
 from twisted.internet import defer
 
@@ -27,7 +27,7 @@ class LocalBuildSlave(BuildSlave):
         self.LocalBuildSlaveFactory = None
         try:
             # importing here to avoid dependency on buildbot slave package
-            from buildslave.bot import LocalBuildSlave as RemoteLocalBuildSlave
+            from worker.bot import LocalBuildSlave as RemoteLocalBuildSlave
             self.LocalBuildSlaveFactory = RemoteLocalBuildSlave
         except ImportError:
             error("LocalBuildSlave needs the buildbot-slave package installed (pip install buildbot-slave)")

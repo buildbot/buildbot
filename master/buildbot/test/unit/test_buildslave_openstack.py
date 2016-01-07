@@ -19,7 +19,7 @@ import mock
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.buildslave import openstack
+from buildbot.worker import openstack
 from twisted.internet import defer
 from twisted.trial import unittest
 

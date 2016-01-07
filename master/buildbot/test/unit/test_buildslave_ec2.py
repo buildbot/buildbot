@@ -24,7 +24,7 @@ except ImportError:
     ec2 = None
 
 if boto is not None:
-    from buildbot.buildslave import ec2
+    from buildbot.worker import ec2
 
 from twisted.trial import unittest
 

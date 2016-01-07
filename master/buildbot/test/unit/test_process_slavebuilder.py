@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.buildslave.base import AbstractBuildSlave
+from buildbot.worker.base import AbstractBuildSlave
 from twisted.trial.unittest import TestCase
 
 from buildbot.process.slavebuilder import AbstractSlaveBuilder

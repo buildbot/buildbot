@@ -33,7 +33,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.worker.base import AbstractLatentBuildSlave
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 
 PENDING = 'pending'

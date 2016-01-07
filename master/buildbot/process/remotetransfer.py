@@ -23,7 +23,7 @@ except ImportError:
     from StringIO import StringIO
 
 
-from buildbot.buildslave.protocols import base
+from buildbot.worker.protocols import base
 
 """
 module for regrouping all FileWriterImpl and FileReaderImpl away from steps

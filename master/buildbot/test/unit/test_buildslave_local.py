@@ -16,7 +16,7 @@
 import mock
 import os
 
-from buildbot.buildslave import local
+from buildbot.worker import local
 from buildbot.test.fake import fakemaster
 from twisted.internet import defer
 from twisted.trial import unittest

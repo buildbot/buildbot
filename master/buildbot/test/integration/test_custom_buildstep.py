@@ -19,7 +19,7 @@ import mock
 from StringIO import StringIO
 
 from buildbot import config
-from buildbot.buildslave.base import BuildSlave
+from buildbot.worker.base import BuildSlave
 from buildbot.process import builder
 from buildbot.process import buildrequest
 from buildbot.process import buildstep
@@ -118,7 +118,7 @@ class OldBuildEPYDoc(shell.ShellCommand):
     command = ['epydoc']
 
     def runCommand(self, cmd):
-        # we don't have a real buildslave in this test harness, so fake it
+        # we don't have a real worker in this test harness, so fake it
         l = cmd.logs['stdio']
         l.addStdout('some\noutput\n')
         return defer.succeed(None)
@@ -134,7 +134,7 @@ class OldPerlModuleTest(shell.Test):
     command = ['perl']
 
     def runCommand(self, cmd):
-        # we don't have a real buildslave in this test harness, so fake it
+        # we don't have a real worker in this test harness, so fake it
         l = cmd.logs['stdio']
         l.addStdout('a\nb\nc\n')
         return defer.succeed(None)

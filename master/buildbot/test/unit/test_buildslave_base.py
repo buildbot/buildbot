@@ -17,7 +17,7 @@ import mock
 
 from buildbot import config
 from buildbot import locks
-from buildbot.buildslave import base
+from buildbot.worker import base
 from buildbot.test.fake import bslavemanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster

@@ -328,7 +328,7 @@ BuildmasterConfig = {}
 
 def masterConfig():
     c = {}
-    from buildbot.buildslave import BuildSlave
+    from buildbot.worker import BuildSlave
     from buildbot.config import BuilderConfig
     from buildbot.process.buildstep import BuildStep
     from buildbot.process.factory import BuildFactory

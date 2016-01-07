@@ -16,7 +16,7 @@ from future.utils import iteritems
 
 
 from buildbot import util
-from buildbot.buildslave.protocols import base
+from buildbot.worker.protocols import base
 from buildbot.process import metrics
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS

@@ -16,10 +16,10 @@
 import buildbot
 import mock
 
-from buildbot import buildslave
+from buildbot import worker
 from buildbot import config
 from buildbot import pbmanager
-from buildbot.buildslave import manager as bslavemanager
+from buildbot.worker import manager as bslavemanager
 from buildbot.process import botmaster
 from buildbot.process import builder
 from buildbot.process import factory
@@ -118,14 +118,14 @@ class FakeBuilder(builder.Builder):
         return defer.succeed(None)
 
 
-class MyBuildSlave(buildslave.BuildSlave):
+class MyBuildSlave(worker.BuildSlave):
 
     def attached(self, conn):
         self.detach_d = defer.Deferred()
-        return buildslave.BuildSlave.attached(self, conn)
+        return worker.BuildSlave.attached(self, conn)
 
     def detached(self):
-        buildslave.BuildSlave.detached(self)
+        worker.BuildSlave.detached(self)
         self.detach_d, d = None, self.detach_d
         d.callback(None)
 
@@ -141,7 +141,7 @@ class TestSlaveComm(unittest.TestCase):
     @ivar master: fake build master
     @ivar pbamanger: L{PBManager} instance
     @ivar botmaster: L{BotMaster} instance
-    @ivar buildslave: master-side L{BuildSlave} instance
+    @ivar worker: master-side L{BuildSlave} instance
     @ivar slavebuildslave: slave-side L{FakeSlaveBuildSlave} instance
     @ivar port: TCP port to connect to
     @ivar connector: outbound TCP connection from slave to master
@@ -189,7 +189,7 @@ class TestSlaveComm(unittest.TestCase):
             self.buildslaves.stopService(),
         ]
 
-        # if the buildslave is still attached, wait for it to detach, too
+        # if the worker is still attached, wait for it to detach, too
         if self.buildslave and self.buildslave.detach_d:
             deferreds.append(self.buildslave.detach_d)
 

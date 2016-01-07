@@ -15,8 +15,8 @@
 
 import mock
 
-from buildbot.buildslave.protocols import base
-from buildbot.buildslave.protocols import pb
+from buildbot.worker.protocols import base
+from buildbot.worker.protocols import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
 from twisted.internet import defer

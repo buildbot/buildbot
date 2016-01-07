@@ -66,7 +66,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         @param password: password this machine will supply when
                          it connects
         @param max_builds: maximum number of simultaneous builds that will
-                           be run concurrently on this buildslave (the
+                           be run concurrently on this worker (the
                            default is None for no limit)
         @param properties: properties that will be applied to builds run on
                            this slave
@@ -256,7 +256,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         self.properties.update(properties, "BuildSlave")
         self.properties.setProperty("slavename", name, "BuildSlave")
 
-        # update our records with the buildslave manager
+        # update our records with the worker manager
         if not self.registration:
             self.registration = yield self.master.buildslaves.register(self)
         yield self.registration.update(self, self.master.config)
@@ -304,7 +304,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getTitle()
-        text += ("has noticed that the buildslave named %s went away\n" %
+        text += ("has noticed that the worker named %s went away\n" %
                  self.name)
         text += "\n"
         text += ("It last disconnected at %s (buildmaster-local time)\n" %
@@ -318,7 +318,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         text += " %s\n" % status.getTitleURL()
         text += "\n"
         text += "%s\n" % status.getURLForThing(self.slave_status)
-        subject = "Buildbot: buildslave %s was lost" % (self.name,)
+        subject = "Buildbot: worker %s was lost" % (self.name,)
         return self._mail_missing_message(subject, text)
 
     def updateWorker(self):
@@ -484,9 +484,9 @@ class AbstractBuildSlave(service.BuildbotService, object):
 
     def canStartBuild(self):
         """
-        I am called when a build is requested to see if this buildslave
+        I am called when a build is requested to see if this worker
         can start a build.  This function can be used to limit overall
-        concurrency on the buildslave.
+        concurrency on the worker.
 
         Note for subclassers: if a slave can become willing to start a build
         without any action on that slave (for example, by a resource in use on
@@ -527,7 +527,7 @@ class AbstractBuildSlave(service.BuildbotService, object):
         else:
             # if not, they get a default MailNotifier, which always uses SMTP
             # to localhost and uses a dummy fromaddr of "buildbot".
-            log.msg("buildslave-missing msg using default MailNotifier")
+            log.msg("worker-missing msg using default MailNotifier")
             st = MailNotifier("buildbot")
         # now construct the mail
 
@@ -748,7 +748,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         buildmaster = self.botmaster.master
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getTitle()
-        text += ("has noticed that the latent buildslave named %s \n" %
+        text += ("has noticed that the latent worker named %s \n" %
                  self.name)
         text += "never substantiated after a request\n"
         text += "\n"
@@ -758,7 +758,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         text += "Sincerely,\n"
         text += " The Buildbot\n"
         text += " %s\n" % status.getTitleURL()
-        subject = "Buildbot: buildslave %s never substantiated" % (self.name,)
+        subject = "Buildbot: worker %s never substantiated" % (self.name,)
         return self._mail_missing_message(subject, text)
 
     def canStartBuild(self):

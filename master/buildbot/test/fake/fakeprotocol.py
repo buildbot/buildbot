@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.buildslave.protocols import base
+from buildbot.worker.protocols import base
 from twisted.internet import defer
 
 

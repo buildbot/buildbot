@@ -16,7 +16,7 @@
 import mock
 
 from buildbot import interfaces
-from buildbot.buildslave import manager as bslavemanager
+from buildbot.worker import manager as bslavemanager
 from buildbot.process import botmaster
 from buildbot.test.fake import fakemaster
 from buildbot.util import service
