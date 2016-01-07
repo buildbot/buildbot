@@ -53,18 +53,56 @@ Here is the complete list of changed API:
 
 .. todo::
 
-    This list will be updated along with actual changing of the API.
+    * This list will be updated along with actual changing of the API.
+    * Most of this list can be generated/verified by grepping use of
+      ``worker_transition`` helpers.
 
-================================================================== =====
-Old name                                                           New name
-================================================================== =====
-:py:class:`buildbot.interfaces.IBuildSlave`                        :py:class:`~buildbot.interfaces.IWorker`
------------------------------------------------------------------- -----
-:py:mod:`buildbot.buildslave` module with all contents             :py:mod:`buildbot.worker`
------------------------------------------------------------------- -----
-:py:attr:`buildbot.buildslave.base.AbstractBuildSlave.slavename`   :py:attr:`buildbot.worker.base.AbstractBuildSlave.workername`
------------------------------------------------------------------- -----
-:py:meth:`buildbot.buildslave.base.AbstractBuildSlave.updateSlave` :py:attr:`buildbot.worker.base.AbstractBuildSlave.updateWorker`
------------------------------------------------------------------- -----
-:py:attr:`buildbot.master.BuildMaster.buildslaves`                 :py:attr:`buildbot.worker.base.AbstractBuildSlave.workers`
-================================================================== =====
+.. list-table::
+   :header-rows: 1
+
+   * - Old name
+     - New name
+
+   * - :py:class:`buildbot.interfaces.IBuildSlave`
+     - :py:class:`~buildbot.interfaces.IWorker`
+
+   * - :py:mod:`buildbot.buildslave` module with all contents
+     - :py:mod:`buildbot.worker`
+
+   * - :py:class:`buildbot.buildslave.AbstractBuildSlave`
+       (this is an alias of
+       :py:class:`buildbot.buildslave.base.AbstractBuildSlave`)
+     - :py:class:`buildbot.worker.AbstractWorker`
+
+   * - :py:class:`buildbot.buildslave.base.AbstractBuildSlave`
+     - :py:class:`buildbot.worker.base.AbstractWorker`
+
+   * - :py:attr:`buildbot.buildslave.base.AbstractBuildSlave.slavename`
+     - :py:attr:`buildbot.worker.base.AbstractWorker.workername`
+
+   * - :py:meth:`buildbot.buildslave.base.AbstractBuildSlave.updateSlave`
+     - :py:attr:`buildbot.worker.base.AbstractWorker.updateWorker`
+
+   * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
+     - :py:class:`buildbot.worker.base.AbstractLatentWorker`
+
+
+   * - :py:class:`buildbot.buildslave.BuildSlave`
+       (this is an alias of
+       :py:class:`buildbot.buildslave.base.BuildSlave`)
+     - :py:class:`buildbot.worker.Worker`
+
+   * - :py:class:`buildbot.buildslave.base.BuildSlave`
+     - :py:class:`buildbot.worker.base.Worker`
+
+
+   * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
+       (this is an alias of
+       :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`)
+     - :py:class:`buildbot.worker.AbstractLatentWorker`
+
+   * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
+     - :py:class:`buildbot.worker.base.AbstractLatentWorker`
+
+   * - :py:attr:`buildbot.master.BuildMaster.buildslaves`
+     - :py:attr:`buildbot.worker.base.AbstractWorker.workers`
