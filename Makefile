@@ -1,6 +1,6 @@
 # developer utilities
 
-.PHONY: docs apidocs pylint
+.PHONY: docs apidocs pylint flake8
 
 PIP?=pip
 
@@ -25,6 +25,9 @@ pyflakes:
 # pep8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 pep8:
 	pep8 --config=common/pep8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
+
+flake8:
+	flake8 --config=common/flake8rc master/buildbot slave/buildslave
 
 # rebuild front-end from source
 frontend:
