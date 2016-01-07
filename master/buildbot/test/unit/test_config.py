@@ -20,11 +20,11 @@ import os
 import re
 import textwrap
 
-from buildbot import worker
 from buildbot import config
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import revlinks
+from buildbot import worker
 from buildbot.changes import base as changes_base
 from buildbot.process import factory
 from buildbot.process import properties

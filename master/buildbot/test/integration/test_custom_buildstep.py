@@ -19,17 +19,17 @@ import mock
 from StringIO import StringIO
 
 from buildbot import config
-from buildbot.worker.base import Worker
 from buildbot.process import builder
 from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
-from buildbot.process import slavebuilder
 from buildbot.process import results
+from buildbot.process import slavebuilder
 from buildbot.steps import shell
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
+from buildbot.worker.base import Worker
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor

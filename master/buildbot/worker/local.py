@@ -15,8 +15,8 @@
 
 import os
 
-from buildbot.worker.base import Worker
 from buildbot.config import error
+from buildbot.worker.base import Worker
 from twisted.internet import defer
 
 

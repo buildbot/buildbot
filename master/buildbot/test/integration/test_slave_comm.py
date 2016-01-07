@@ -16,10 +16,9 @@
 import buildbot
 import mock
 
-from buildbot import worker
 from buildbot import config
 from buildbot import pbmanager
-from buildbot.worker import manager as bslavemanager
+from buildbot import worker
 from buildbot.process import botmaster
 from buildbot.process import builder
 from buildbot.process import factory
@@ -27,6 +26,7 @@ from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.decorators import flaky
 from buildbot.util.eventual import eventually
+from buildbot.worker import manager as bslavemanager
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor

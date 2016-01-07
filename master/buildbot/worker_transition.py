@@ -21,8 +21,8 @@ Use of old API generates Python warning which may be logged, ignored or treated
 as an error using Python builtin warnings API.
 """
 
-import warnings
 import functools
+import warnings
 
 __all__ = (
     "DeprecatedWorkerNameError", "define_old_worker_class_alias",

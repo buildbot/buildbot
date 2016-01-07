@@ -17,13 +17,13 @@ import mock
 
 from buildbot import config
 from buildbot import locks
-from buildbot.worker import base
 from buildbot.test.fake import bslavemanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
 from buildbot.test.util import interfaces
+from buildbot.worker import base
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task

@@ -23,7 +23,7 @@ _on_old_name_usage(
     "'buildbot.worker' module instead".format(old=__name__))
 
 from buildbot.buildslave.base import AbstractBuildSlave
-from buildbot.buildslave.base import BuildSlave
 from buildbot.buildslave.base import AbstractLatentBuildSlave
+from buildbot.buildslave.base import BuildSlave
 
 __all__ = ("AbstractBuildSlave", "BuildSlave", "AbstractLatentBuildSlave")

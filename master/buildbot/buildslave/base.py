@@ -23,9 +23,9 @@ _on_old_name_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.base' module instead".format(old=__name__))
 
+from buildbot.worker.base import AbstractLatentWorker as _AbstractLatentWorker
 from buildbot.worker.base import AbstractWorker as _AbstractWorker
 from buildbot.worker.base import Worker as _Worker
-from buildbot.worker.base import AbstractLatentWorker as _AbstractLatentWorker
 
 AbstractBuildSlave = deprecated_worker_class(
     _AbstractWorker, pattern="BuildWorker")

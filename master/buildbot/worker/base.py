@@ -26,8 +26,8 @@ from twisted.python.reflect import namedModule
 from zope.interface import implements
 
 from buildbot import config
-from buildbot.interfaces import IWorker
 from buildbot.interfaces import ILatentBuildSlave
+from buildbot.interfaces import IWorker
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
@@ -36,8 +36,8 @@ from buildbot.status.slave import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import define_old_worker_property
 from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import define_old_worker_property
 
 
 class AbstractWorker(service.BuildbotService, object):

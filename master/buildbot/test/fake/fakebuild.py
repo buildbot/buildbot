@@ -18,11 +18,11 @@ import posixpath
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.worker import base
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.process import slavebuilder
 from buildbot.test.fake import fakemaster
+from buildbot.worker import base
 from twisted.python import components
 
 

@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.worker.protocols import pb as bbpb
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
 from buildbot.util import service
+from buildbot.worker.protocols import pb as bbpb
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.failure import Failure

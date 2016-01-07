@@ -25,9 +25,9 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.worker import AbstractLatentWorker
 from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
 from buildbot.util import json
+from buildbot.worker import AbstractLatentWorker
 
 try:
     import docker

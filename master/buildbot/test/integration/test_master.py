@@ -92,7 +92,6 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 # will help to flush out any bugs that may otherwise be difficult to find.
 
 c = BuildmasterConfig = {}
-from buildbot.worker import Worker
 from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.pb import PBChangeSource
 from buildbot.config import BuilderConfig
@@ -100,6 +99,7 @@ from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.basic import AnyBranchScheduler
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.steps.shell import ShellCommand
+from buildbot.worker import Worker
 c['slaves'] = [Worker("local1", "localpw")]
 c['slavePortnum'] = 0
 c['change_source'] = []
