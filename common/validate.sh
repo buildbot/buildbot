@@ -31,7 +31,7 @@ if $help; then
     echo "USAGE: common/validate.sh [oldrev] [--quick] [--no-js] [--help]"
     echo "  This script will test a set of patches (oldrev..HEAD) for basic acceptability as a patch"
     echo "  Run it in an activated virtualenv with the current Buildbot installed, as well as"
-    echo "      sphinx, pyflakes, mock, and so on"
+    echo "      sphinx, flake8, mock, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
     echo "if --quick is passed validate will skip unit tests and concentrate on coding style"
     echo "if --no-js is passed validate will skip tests that require Node and NPM"
@@ -206,17 +206,17 @@ else
     $pep8_ok || not_ok "pep8 failed"
 fi
 
-status "running pyflakes"
-if [[ -z `which pyflakes` ]]; then
-    warning "pyflakes is not installed"
+status "running flake8"
+if [[ -z `which flake8` ]]; then
+    warning "flake8 is not installed"
 else
-    pyflakes_ok=true
+    flake8_ok=true
     for filename in ${py_files[@]}; do
-        if ! pyflakes "$filename"; then
-            pyflakes_ok=false
+        if ! flake8 --config=common/flake8rc "$filename"; then
+            flake8_ok=false
         fi
     done
-    $pyflakes_ok || not_ok "pyflakes failed"
+    $flake8_ok || not_ok "flake8 failed"
 fi
 
 
