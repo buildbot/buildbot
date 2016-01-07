@@ -231,7 +231,7 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
-        ('buildbot.worker', [
+        ('buildbot.buildslave', [
             ('buildbot.worker.base', ['BuildSlave']),
             ('buildbot.worker.ec2', ['EC2LatentBuildSlave']),
             ('buildbot.worker.libvirt', ['LibVirtSlave']),
