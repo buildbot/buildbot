@@ -232,12 +232,12 @@ setup_args = {
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
         ('buildbot.buildslave', [
-            ('buildbot.worker.base', ['BuildSlave']),
-            ('buildbot.worker.ec2', ['EC2LatentBuildSlave']),
-            ('buildbot.worker.libvirt', ['LibVirtSlave']),
-            ('buildbot.worker.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.worker.docker', ['DockerLatentBuildSlave']),
-            ('buildbot.worker.local', ['LocalBuildSlave']),
+            ('buildbot.buildslave.base', ['BuildSlave']),
+            ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
+            ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
+            ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
+            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave']),
+            ('buildbot.buildslave.local', ['LocalBuildSlave']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
