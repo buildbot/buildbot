@@ -68,6 +68,7 @@ class ClassAlias(unittest.TestCase):
         # warning?
 
 
+# TODO: rename and move this utility class to commons?
 class _TestBase(unittest.TestCase):
 
     @contextlib.contextmanager

@@ -13,13 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+import contextlib
 import mock
 import os
+import warnings
 
 from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
+from buildbot.worker import Worker
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -128,3 +132,48 @@ c['db'] = {
     'db_url' : "sqlite:///state.sqlite",
 }
 """
+
+
+# TODO: rename and move this utility class to commons?
+class _TestBase(unittest.TestCase):
+
+    @contextlib.contextmanager
+    def _assertProducesWarning(self, num_warnings=1):
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            yield
+
+            # Verify some things
+            self.assertEqual(len(w), num_warnings,
+                             msg="Unexpected warnings:\n{0}".format(
+                                 "\n".join(map(str, w))))
+            for warning in w:
+                self.assertTrue(issubclass(warning.category,
+                                           DeprecatedWorkerNameWarning))
+                self.assertIn("deprecated", str(warning.message))
+
+    @contextlib.contextmanager
+    def _assertNotProducesWarning(self):
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            yield
+
+            # Verify some things
+            self.assertEqual(len(w), 0)
+
+
+class PluginsTransition(_TestBase):
+
+    def test_old_api_use(self):
+        with self._assertNotProducesWarning():
+            # ok, no warning
+            from buildbot.plugins import buildslave
+
+        with self._assertProducesWarning():
+            # ok, but with warning
+            w = buildslave.BuildSlave
+            self.assertTrue(issubclass(w, Worker))

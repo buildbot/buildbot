@@ -231,13 +231,13 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
-        ('buildbot.buildslave', [
-            ('buildbot.buildslave.base', ['BuildSlave']),
-            ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
-            ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
-            ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave']),
-            ('buildbot.buildslave.local', ['LocalBuildSlave']),
+        ('buildbot.worker', [
+            ('buildbot.worker.base', ['Worker']),
+            ('buildbot.worker.ec2', ['EC2LatentBuildSlave']),
+            ('buildbot.worker.libvirt', ['LibVirtSlave']),
+            ('buildbot.worker.openstack', ['OpenStackLatentBuildSlave']),
+            ('buildbot.worker.docker', ['DockerLatentBuildSlave']),
+            ('buildbot.worker.local', ['LocalBuildSlave']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),

@@ -18,21 +18,39 @@ Buildbot plugin infrastructure
 """
 
 from buildbot import statistics
-from buildbot.interfaces import IBuildSlave
 from buildbot.interfaces import IBuildStep
 from buildbot.interfaces import IChangeSource
 from buildbot.interfaces import IScheduler
+from buildbot.interfaces import IWorker
 from buildbot.plugins.db import get_plugins
 
 
-__all__ = ['changes', 'schedulers', 'buildslave', 'steps', 'util', 'reporters', 'statistics']
+__all__ = [
+    'changes', 'schedulers', 'steps', 'util', 'reporters', 'statistics',
+    'worker',
+    'buildslave',  # deprecated, use 'worker' instead.
+]
 
 
 # Names here match the names of the corresponding Buildbot module, hence
 # 'changes', 'schedulers', but 'buildslave'
 changes = get_plugins('changes', IChangeSource)
 schedulers = get_plugins('schedulers', IScheduler)
-buildslave = get_plugins('buildslave', IBuildSlave)
 steps = get_plugins('steps', IBuildStep)
 util = get_plugins('util', None)
 reporters = get_plugins('reporters', None)
+
+# For plugins that are not updated to the new worker names, plus fallback of
+# current Buildbot plugins for old configuration files.
+buildslave = get_plugins('buildslave', IWorker)
+# Worker entry point for new/updated plugins.
+worker = get_plugins('worker', IWorker)
+
+# TODO: Proof-of-Concept of adding previously available at buildbot.buildslave
+# entry points default plugins.
+buildslave._tree.add('BuildSlave', worker._tree._children['Worker'])
+buildslave._tree.add('EC2LatentBuildSlave', worker._tree._children['EC2LatentBuildSlave'])
+buildslave._tree.add('LibVirtSlave', worker._tree._children['LibVirtSlave'])
+buildslave._tree.add('OpenStackLatentBuildSlave', worker._tree._children['OpenStackLatentBuildSlave'])
+buildslave._tree.add('DockerLatentBuildSlave', worker._tree._children['DockerLatentBuildSlave'])
+buildslave._tree.add('LocalBuildSlave', worker._tree._children['LocalBuildSlave'])

@@ -19,6 +19,7 @@ from future.utils import itervalues
 
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
+from buildbot.worker_transition import on_deprecated_name_usage
 from pkg_resources import iter_entry_points
 from types import StringTypes
 from zope.interface import Invalid
@@ -29,6 +30,7 @@ _NAMESPACE_BASE = 'buildbot'
 
 
 class _PluginEntry(object):
+
     def __init__(self, group, entry, loader):
         self._group = group
         self._entry = entry
@@ -156,6 +158,7 @@ class _Plugins(object):
     """
     represent plugins within a namespace
     """
+
     def __init__(self, namespace, interface=None, check_extras=True):
         if interface is not None:
             assert interface.isOrExtends(IPlugin)
@@ -240,10 +243,41 @@ class _Plugins(object):
             raise AttributeError(str(err))
 
 
+class _DeprecatedWorkerPlugins(_Plugins):
+    """Plugins for deprecated 'buildbot.buildslave' entry point."""
+
+    def __init__(self, namespace, interface=None, check_extras=True):
+        assert namespace == 'buildslave'
+        _Plugins.__init__(self, namespace, interface=interface,
+                          check_extras=check_extras)
+
+    def __contains__(self, name):
+        on_deprecated_name_usage(
+            "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
+            "use 'buildbot.plugins.worker' instead.")
+
+        return _Plugins.__contains__(self, name)
+
+    def get(self, name):
+        on_deprecated_name_usage(
+            "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
+            "use 'buildbot.plugins.worker' instead.")
+
+        return _Plugins.get(self, name)
+
+    def __getattr__(self, name):
+        on_deprecated_name_usage(
+            "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
+            "use 'buildbot.plugins.worker' instead.")
+
+        return _Plugins.__getattr__(self, name)
+
+
 class _PluginDB(object):
     """
     Plugin infrastructure support for Buildbot
     """
+
     def __init__(self):
         self._namespaces = dict()
 
@@ -257,7 +291,12 @@ class _PluginDB(object):
         tempo = self._namespaces.get(namespace)
 
         if tempo is None:
-            tempo = _Plugins(namespace, interface, check_extras)
+            if namespace == 'buildslave':
+                # Workaround for "slave" -> "worker" transition.
+                tempo = _DeprecatedWorkerPlugins(
+                    namespace, interface, check_extras)
+            else:
+                tempo = _Plugins(namespace, interface, check_extras)
 
             self._namespaces[namespace] = tempo
 
