@@ -13,19 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-import warnings
 import contextlib
+import warnings
 
 from twisted.trial import unittest
 
-from buildbot.worker_transition import _compat_name as compat_name
-from buildbot.worker_transition import define_old_worker_class_alias
-from buildbot.worker_transition import define_old_worker_class
-from buildbot.worker_transition import define_old_worker_property
-from buildbot.worker_transition import define_old_worker_method
-from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import _compat_name as compat_name
+from buildbot.worker_transition import define_old_worker_class
+from buildbot.worker_transition import define_old_worker_class_alias
+from buildbot.worker_transition import define_old_worker_func
+from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import define_old_worker_property
 
 
 class CompatNameGeneration(unittest.TestCase):
