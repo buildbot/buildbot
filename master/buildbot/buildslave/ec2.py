@@ -22,4 +22,6 @@ _on_old_name_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.ec2' module instead".format(old=__name__))
 
-from buildbot.worker.ec2 import *
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
+from buildbot.worker.ec2 import *  # noqa

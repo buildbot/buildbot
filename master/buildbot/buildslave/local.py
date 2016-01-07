@@ -22,4 +22,6 @@ _on_old_name_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.local' module instead".format(old=__name__))
 
-from buildbot.worker.local import *
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
+from buildbot.worker.local import *  # noqa
