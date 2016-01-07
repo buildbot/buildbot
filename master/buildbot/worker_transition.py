@@ -42,6 +42,7 @@ __all__ = (
 #   For example, if I explicitly configure warnings in buildbot.tac template
 #   now, later generated from such template buildbot.tac files will break.
 
+
 def _compat_name(new_name, pattern=None):
     """Returns old API ("slave") name for new name ("worker").
 
