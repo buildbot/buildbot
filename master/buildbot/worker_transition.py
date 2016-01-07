@@ -95,6 +95,8 @@ def _compat_name(new_name, pattern=None):
 # the base class, but by default deprecation warnings are disabled in Python,
 # so by default old-API usage warnings will be ignored - this is not what
 # we want.
+# TODO: Perhaps name it "DeprecatedWorkerNameWarning"? Warnings in the console
+# "DeprecatedWorkerNameError: ..." looks like errors.
 class DeprecatedWorkerNameError(Warning):
     pass
 
