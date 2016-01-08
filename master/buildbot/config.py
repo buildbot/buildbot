@@ -28,6 +28,7 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.worker_transition import on_deprecated_name_usage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -531,20 +532,17 @@ class MasterConfig(util.ComparableMixin):
 
         self.builders = builders
 
-    def load_slaves(self, filename, config_dict):
-        if 'slaves' not in config_dict:
-            return
-        workers = config_dict['slaves']
-
+    @staticmethod
+    def _check_workers(workers, conf_key):
         if not isinstance(workers, (list, tuple)):
-            error("c['slaves'] must be a list")
-            return
+            error("{0} must be a list".format(conf_key))
+            return False
 
         for sl in workers:
             if not interfaces.IWorker.providedBy(sl):
-                msg = "c['slaves'] must be a list of Worker instances"
+                msg = "{0} must be a list of Worker instances".format(conf_key)
                 error(msg)
-                return
+                return False
 
             def validate(workername):
                 if workername in ("debug", "change", "status"):
@@ -556,10 +554,46 @@ class MasterConfig(util.ComparableMixin):
                 if len(workername) > 50:
                     yield "worker name %r is longer than %d characters" % (workername, 50)
 
-            for msg in validate(sl.slavename):
+            errors = list(validate(sl.slavename))
+            for msg in errors:
                 error(msg)
 
-        self.slaves = workers
+            if errors:
+                # TODO: previously these errors were logged, but not condidered
+                # as a reason to not to update list of workers in configuration
+                # instance.
+                return False
+
+        return True
+
+    def load_slaves(self, filename, config_dict):
+        config_valid = True
+
+        deprecated_workers = config_dict.get('slaves')
+        if deprecated_workers is not None:
+            on_deprecated_name_usage(
+                "c['slaves'] key is deprecated, use c['workers'] instead")
+            if not self._check_workers(deprecated_workers, "c['slaves']"):
+                config_valid = False
+
+        workers = config_dict.get('workers')
+        if workers is not None:
+            if not self._check_workers(deprecated_workers, "c['workers']"):
+                config_valid = False
+
+        if not config_valid:
+            return
+        elif deprecated_workers is not None or workers is not None:
+            self.slaves = []
+            if deprecated_workers is not None:
+                self.slaves.extend(deprecated_workers)
+            if workers is not None:
+                self.slaves.extend(workers)
+
+        else:
+            # TODO: If in config has no workers entries, instance workers list
+            # is not being udated. Is this is a correct behavior?
+            pass
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])
