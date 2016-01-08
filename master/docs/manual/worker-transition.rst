@@ -133,3 +133,10 @@ name even if plugin uses old entry points:
     # ThirdPartyWorker can be defined in using `buildbot.buildslave` entry
     # point, this still will work.
     w = worker.ThirdPartyWorker()
+
+``BuildmasterConfig`` changes
+-----------------------------
+
+``c['slaves']`` was replaced with ``c['workers']``.
+Use of ``c['slaves']`` will work, but is considered deprecated, and will be
+removed in the future versions of Buildbot.
