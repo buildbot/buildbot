@@ -534,13 +534,13 @@ class MasterConfig(util.ComparableMixin):
     def load_slaves(self, filename, config_dict):
         if 'slaves' not in config_dict:
             return
-        slaves = config_dict['slaves']
+        workers = config_dict['slaves']
 
-        if not isinstance(slaves, (list, tuple)):
+        if not isinstance(workers, (list, tuple)):
             error("c['slaves'] must be a list")
             return
 
-        for sl in slaves:
+        for sl in workers:
             if not interfaces.IWorker.providedBy(sl):
                 msg = "c['slaves'] must be a list of Worker instances"
                 error(msg)
@@ -559,7 +559,7 @@ class MasterConfig(util.ComparableMixin):
             for msg in validate(sl.slavename):
                 error(msg)
 
-        self.slaves = config_dict['slaves']
+        self.slaves = workers
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])
