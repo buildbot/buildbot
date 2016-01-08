@@ -156,6 +156,7 @@ class Connection(object):
 
 
 class LibVirtSlave(AbstractLatentWorker):
+
     def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
                  **kwargs):
         AbstractLatentWorker.__init__(self, name, password, **kwargs)

@@ -17,10 +17,10 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.worker import docker as dockerbuildslave
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.test.fake import docker
+from buildbot.worker import docker as dockerbuildslave
 from twisted.internet import defer
 
 

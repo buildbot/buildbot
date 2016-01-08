@@ -15,10 +15,10 @@
 
 import mock
 
-from buildbot.worker.protocols import base
-from buildbot.worker.protocols import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
+from buildbot.worker.protocols import base
+from buildbot.worker.protocols import pb
 from twisted.internet import defer
 from twisted.spread import pb as twisted_pb
 from twisted.trial import unittest
