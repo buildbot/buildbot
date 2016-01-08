@@ -285,21 +285,26 @@ class _DeprecatedWorkerPlugins(_Plugins):
     def __contains__(self, name):
         on_deprecated_name_usage(
             "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
-            "use 'buildbot.plugins.worker' instead.")
+            "use 'buildbot.plugins.worker' instead "
+            "(you checked is '{0}' name inside "
+            "'buildbot.plugins.buildslave').".format(name))
 
         return _Plugins.__contains__(self, name)
 
     def get(self, name):
         on_deprecated_name_usage(
             "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
-            "use 'buildbot.plugins.worker' instead.")
+            "use 'buildbot.plugins.worker' instead "
+            "(you requested '{0}' name of "
+            "'buildbot.plugins.buildslave' plugin).".format(name))
 
         return _Plugins.get(self, name)
 
     def __getattr__(self, name):
         on_deprecated_name_usage(
             "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
-            "use 'buildbot.plugins.worker' instead.")
+            "use 'buildbot.plugins.worker' instead "
+            "(you accessed 'buildslave.{0}' name).".format(name))
 
         return _Plugins.__getattr__(self, name)
 
