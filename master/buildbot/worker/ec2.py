@@ -317,7 +317,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
         if instance.state not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
             log.msg('%s %s terminating instance %s' %
-                    (self.__class__.__name__, self.slavename, instance.id))
+                    (self.__class__.__name__, self.workername, instance.id))
         duration = 0
         interval = self._poll_resolution
         if fast:
@@ -331,12 +331,12 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
             if duration % 60 == 0:
                 log.msg(
                     '%s %s has waited %d minutes for instance %s to end' %
-                    (self.__class__.__name__, self.slavename, duration // 60,
+                    (self.__class__.__name__, self.workername, duration // 60,
                      instance.id))
             instance.update()
         log.msg('%s %s instance %s %s '
                 'after about %d minutes %d seconds' %
-                (self.__class__.__name__, self.slavename,
+                (self.__class__.__name__, self.workername,
                  instance.id, goal, duration // 60, duration % 60))
 
     def _submit_request(self):
@@ -360,17 +360,17 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
         if self.current_spot_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.3f exceeds '
                     'configured maximum of %0.3f' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.workername,
                      self.current_spot_price, self.max_spot_price))
             raise LatentBuildSlaveFailedToSubstantiate()
         else:
             if self.retry > 1:
                 log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
-                        (self.__class__.__name__, self.slavename, self.current_spot_price, self.attempt,
+                        (self.__class__.__name__, self.workername, self.current_spot_price, self.attempt,
                          self.retry))
             else:
                 log.msg('%s %s requesting spot instance with price %0.4f' %
-                        (self.__class__.__name__, self.slavename, self.current_spot_price))
+                        (self.__class__.__name__, self.workername, self.current_spot_price))
         reservations = self.conn.request_spot_instances(self.current_spot_price, self.ami,
                                                         key_name=self.keypair_name,
                                                         security_groups=[self.security_name],
@@ -397,7 +397,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
                 if attempt >= self.retry:
                     self.attempt = 0
                     log.msg('%s %s failed to substantiate after %d requests' %
-                            (self.__class__.__name__, self.slavename, self.retry))
+                            (self.__class__.__name__, self.workername, self.retry))
                     raise LatentBuildSlaveFailedToSubstantiate()
         else:
             instance_id, image_id, start_time, success = self._submit_request()
@@ -407,7 +407,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
 
     def _wait_for_instance(self, image):
         log.msg('%s %s waiting for instance %s to start' %
-                (self.__class__.__name__, self.slavename, self.instance.id))
+                (self.__class__.__name__, self.workername, self.instance.id))
         duration = 0
         interval = self._poll_resolution
         while self.instance.state == PENDING:
@@ -415,7 +415,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.slavename, duration // 60,
+                        (self.__class__.__name__, self.workername, duration // 60,
                          self.instance.id))
             self.instance.update()
 
@@ -425,7 +425,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
             seconds = duration % 60
             log.msg('%s %s instance %s started on %s '
                     'in about %d minutes %d seconds (%s)' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.workername,
                      self.instance.id, self.dns, minutes, seconds,
                      self.output.output))
             if self.elastic_ip is not None:
@@ -450,7 +450,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for spot request %s' %
-                        (self.__class__.__name__, self.slavename, duration // 60,
+                        (self.__class__.__name__, self.workername, duration // 60,
                          request.id))
             requests = self.conn.get_all_spot_instance_requests(
                 request_ids=[request.id])
@@ -461,18 +461,18 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
             seconds = duration % 60
             log.msg('%s %s spot request %s fulfilled '
                     'in about %d minutes %d seconds' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.workername,
                      request.id, minutes, seconds))
             return request, True
         elif request_status == PRICE_TOO_LOW:
             request.cancel()
             log.msg('%s %s spot request rejected, spot price too low' %
-                    (self.__class__.__name__, self.slavename))
+                    (self.__class__.__name__, self.workername))
             self.current_spot_price *= self.retry_price_adjustment
             return request, False
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.workername,
                      request.id, request_status))
             raise LatentBuildSlaveFailedToSubstantiate(
                 request.id, request.status)

@@ -44,7 +44,7 @@ class TestLibVirtSlave(unittest.TestCase):
     def test_constructor_minimal(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'path', 'otherpath')
         yield bs._find_existing_deferred
-        self.assertEqual(bs.slavename, 'bot')
+        self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.connection, self.conn)
         self.assertEqual(bs.image, 'path')

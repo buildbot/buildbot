@@ -743,7 +743,7 @@ class MasterConfig(util.ComparableMixin):
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown slaves
-        slavenames = set([s.slavename for s in self.slaves])
+        slavenames = set([s.workername for s in self.slaves])
         seen_names = set()
         seen_builddirs = set()
 
@@ -823,7 +823,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         self.factory = factory
 
         # slavenames can be a single slave name or a list, and should also
-        # include slavename, if given
+        # include workername, if given
         if isinstance(slavenames, str):
             slavenames = [slavenames]
         if slavenames:
@@ -835,10 +835,10 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         if slavename:
             if not isinstance(slavename, str):
-                error("builder '%s': slavename must be a string" % (name,))
+                error("builder '%s': workername must be a string" % (name,))
             slavenames = slavenames + [slavename]
         if not slavenames:
-            error("builder '%s': at least one slavename is required" % (name,))
+            error("builder '%s': at least one workername is required" % (name,))
 
         self.slavenames = slavenames
 

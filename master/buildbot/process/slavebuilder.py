@@ -39,7 +39,7 @@ class AbstractSlaveBuilder(object):
         if self.builder_name:
             r.extend([" builder=", repr(self.builder_name)])
         if self.slave:
-            r.extend([" slave=", repr(self.slave.slavename)])
+            r.extend([" slave=", repr(self.slave.workername)])
         r.append(">")
         return ''.join(r)
 
@@ -99,7 +99,7 @@ class AbstractSlaveBuilder(object):
             self.slave.addSlaveBuilder(self)
         else:
             assert self.slave == slave
-        log.msg("Buildslave %s attached to %s" % (slave.slavename,
+        log.msg("Buildslave %s attached to %s" % (slave.workername,
                                                   self.builder_name))
         d = defer.succeed(None)
 
@@ -160,7 +160,7 @@ class AbstractSlaveBuilder(object):
         event.finish()
 
     def detached(self):
-        log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
+        log.msg("Buildslave %s detached from %s" % (self.slave.workername,
                                                     self.builder_name))
         if self.slave:
             self.slave.removeSlaveBuilder(self)
@@ -221,7 +221,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         self.state = LATENT
         self.setBuilder(builder)
         self.slave.addSlaveBuilder(self)
-        log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
+        log.msg("Latent buildslave %s attached to %s" % (slave.workername,
                                                          self.builder_name))
 
     def prepare(self, builder_status, build):
@@ -242,7 +242,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         @d.addErrback
         def substantiation_failed(f):
             builder_status.addPointEvent(['removing', 'latent',
-                                          self.slave.slavename])
+                                          self.slave.workername])
             self.slave.disconnect()
             # TODO: should failover to a new Build
             return f

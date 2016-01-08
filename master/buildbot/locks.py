@@ -203,7 +203,7 @@ class RealSlaveLock:
         return self.description
 
     def getLock(self, slave):
-        slavename = slave.slavename
+        slavename = slave.workername
         if slavename not in self.locks:
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)
@@ -305,7 +305,7 @@ class SlaveLock(BaseLockId):
 
     Each buildslave will get an independent copy of this semaphore. By
     default each copy will use the same owner count (set with maxCount), but
-    you can provide maxCountForSlave with a dictionary that maps slavename to
+    you can provide maxCountForSlave with a dictionary that maps workername to
     owner count, to allow some slaves more parallelism than others.
 
     """

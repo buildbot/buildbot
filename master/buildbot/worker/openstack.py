@@ -123,7 +123,7 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
         os_client = client.Client(self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
         image_uuid = self._getImage(os_client, self.image)
-        boot_args = [self.slavename, image_uuid, self.flavor]
+        boot_args = [self.workername, image_uuid, self.flavor]
         boot_kwargs = dict(
             meta=self.meta,
             block_device_mapping_v2=self.block_devices,
@@ -131,7 +131,7 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
         instance = os_client.servers.create(*boot_args, **boot_kwargs)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
-                (self.__class__.__name__, self.slavename, instance.id,
+                (self.__class__.__name__, self.workername, instance.id,
                  image_uuid))
         duration = 0
         interval = self._poll_resolution
@@ -141,13 +141,13 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
-                        (self.__class__.__name__, self.slavename, duration // 60,
+                        (self.__class__.__name__, self.workername, duration // 60,
                          instance.id))
             try:
                 inst = os_client.servers.get(instance.id)
             except nce.NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
-                        (self.__class__.__name__, self.slavename,
+                        (self.__class__.__name__, self.workername,
                          instance.id, instance.name))
                 raise LatentBuildSlaveFailedToSubstantiate(
                     instance.id, instance.status)
@@ -156,7 +156,7 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
             seconds = duration % 60
             log.msg('%s %s instance %s (%s) started '
                     'in about %d minutes %d seconds' %
-                    (self.__class__.__name__, self.slavename,
+                    (self.__class__.__name__, self.workername,
                      instance.id, instance.name, minutes, seconds))
             return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
@@ -185,11 +185,11 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
         except nce.NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('%s %s instance %s (%s) already terminated' %
-                    (self.__class__.__name__, self.slavename, instance.id,
+                    (self.__class__.__name__, self.workername, instance.id,
                      instance.name))
             return
         if inst.status not in (DELETED, UNKNOWN):
             inst.delete()
             log.msg('%s %s terminating instance %s (%s)' %
-                    (self.__class__.__name__, self.slavename, instance.id,
+                    (self.__class__.__name__, self.workername, instance.id,
                      instance.name))

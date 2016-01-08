@@ -21,7 +21,7 @@ from twisted.internet import defer
 
 
 class FakeSlave(object):
-    slavename = 'test'
+    workername = 'test'
 
     def __init__(self, master):
         self.master = master

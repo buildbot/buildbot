@@ -141,7 +141,7 @@ class DockerLatentBuildSlave(AbstractLatentWorker):
         if image is not None:
             found = self._image_exists(docker_client, image)
         else:
-            image = '%s_%s_image' % (self.slavename, id(self))
+            image = '%s_%s_image' % (self.workername, id(self))
         if (not found) and (self.dockerfile is not None):
             log.msg("Image '%s' not found, building it from scratch" %
                     image)
@@ -159,7 +159,7 @@ class DockerLatentBuildSlave(AbstractLatentWorker):
         instance = docker_client.create_container(
             image,
             self.command,
-            name='%s_%s' % (self.slavename, id(self)),
+            name='%s_%s' % (self.workername, id(self)),
             volumes=self.volumes,
             environment=self.createEnvironment()
         )

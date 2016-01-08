@@ -31,19 +31,19 @@ class FakeBuildslaveManager(service.AsyncMultiService):
 
         # self.slaves contains a ready Worker instance for each
         # potential buildslave, i.e. all the ones listed in the config file.
-        # If the slave is connected, self.slaves[slavename].slave will
+        # If the slave is connected, self.slaves[workername].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        self.slaves = {}  # maps slavename to Worker
+        self.slaves = {}  # maps workername to Worker
 
     def register(self, buildslave):
-        buildslaveName = buildslave.slavename
+        buildslaveName = buildslave.workername
         reg = FakeBuildslaveRegistration(buildslave)
         self.registrations[buildslaveName] = reg
         return defer.succeed(reg)
 
     def _unregister(self, registration):
-        del self.registrations[registration.buildslave.slavename]
+        del self.registrations[registration.buildslave.workername]
 
     def getBuildslaveByName(self, buildslaveName):
         return self.registrations[buildslaveName].buildslave
@@ -71,6 +71,6 @@ class FakeBuildslaveRegistration(object):
         return defer.succeed(None)
 
     def update(self, slave_config, global_config):
-        if slave_config.slavename not in self.updates:
-            self.updates.append(slave_config.slavename)
+        if slave_config.workername not in self.updates:
+            self.updates.append(slave_config.workername)
         return defer.succeed(None)

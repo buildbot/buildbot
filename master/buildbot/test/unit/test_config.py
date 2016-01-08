@@ -1069,7 +1069,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_builders_unknown_slave(self):
         sl = mock.Mock()
-        sl.slavename = 'xyz'
+        sl.workername = 'xyz'
         self.cfg.slaves = [sl]
 
         b1 = FakeBuilder(slavenames=['xyz', 'abc'], builddir='x', name='b1')
@@ -1099,7 +1099,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_builders(self):
         sl = mock.Mock()
-        sl.slavename = 'a'
+        sl.workername = 'a'
         self.cfg.slaves = [sl]
 
         b1 = FakeBuilder(slavenames=['a'], name='b1', builddir='dir1')
@@ -1199,7 +1199,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_no_slavenames(self):
         self.assertRaisesConfigError(
-            "builder 'a': at least one slavename is required",
+            "builder 'a': at least one workername is required",
             lambda: config.BuilderConfig(
                 name='a', factory=self.factory))
 
@@ -1211,7 +1211,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_bogus_slavename(self):
         self.assertRaisesConfigError(
-            "slavename must be a string",
+            "workername must be a string",
             lambda: config.BuilderConfig(
                 name='a', slavename=1, factory=self.factory))
 

@@ -31,14 +31,14 @@ class BuildslaveRegistration(object):
         self.buildslave = buildslave
 
     def __repr__(self):
-        return "<%s for %r>" % (self.__class__.__name__, self.buildslave.slavename)
+        return "<%s for %r>" % (self.__class__.__name__, self.buildslave.workername)
 
     @defer.inlineCallbacks
     def unregister(self):
         bs = self.buildslave
         # update with portStr=None to remove any registration in place
         yield self.master.buildslaves.pb.updateRegistration(
-            bs.slavename, bs.password, None)
+            bs.workername, bs.password, None)
         yield self.master.buildslaves._unregister(self)
 
     @defer.inlineCallbacks
@@ -47,7 +47,7 @@ class BuildslaveRegistration(object):
         # update the registration in case the port or password has changed.
         if 'pb' in global_config.protocols:
             self.pbReg = yield self.master.buildslaves.pb.updateRegistration(
-                slave_config.slavename, slave_config.password,
+                slave_config.workername, slave_config.password,
                 global_config.protocols['pb']['port'])
 
     def getPBPort(self):
@@ -79,7 +79,7 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
     def slaves(self):
         # self.slaves contains a ready Worker instance for each
         # potential worker, i.e. all the ones listed in the config file.
-        # If the slave is connected, self.slaves[slavename].slave will
+        # If the slave is connected, self.slaves[workername].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
         # slaves attribute is actually just an alias to multiService's namedService
@@ -90,13 +90,13 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
 
     def register(self, buildslave):
         # TODO: doc that reg.update must be called, too
-        buildslaveName = buildslave.slavename
+        buildslaveName = buildslave.workername
         reg = BuildslaveRegistration(self.master, buildslave)
         self.registrations[buildslaveName] = reg
         return defer.succeed(reg)
 
     def _unregister(self, registration):
-        del self.registrations[registration.buildslave.slavename]
+        del self.registrations[registration.buildslave.workername]
 
     @defer.inlineCallbacks
     def newConnection(self, conn, buildslaveName):

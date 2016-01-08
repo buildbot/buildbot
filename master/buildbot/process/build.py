@@ -170,7 +170,7 @@ class Build(properties.PropertiesMixin):
         return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
 
     def getSlaveName(self):
-        return self.slavebuilder.slave.slavename
+        return self.slavebuilder.slave.workername
 
     def setupProperties(self):
         props = interfaces.IProperties(self)
@@ -221,7 +221,7 @@ class Build(properties.PropertiesMixin):
             self.setProperty("builddir", builddir, "slave")
             self.setProperty("workdir", builddir, "slave (deprecated)")
 
-        self.slavename = slavebuilder.slave.slavename
+        self.slavename = slavebuilder.slave.workername
         self.build_status.setSlavename(self.slavename)
 
     @defer.inlineCallbacks

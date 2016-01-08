@@ -53,7 +53,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
     def test_constructor_minimal(self):
         # Minimal set of parameters
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave')
-        self.assertEqual(bs.slavename, 'bot')
+        self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.client_args, {'base_url': 'tcp://1234:2375'})
         self.assertEqual(bs.image, 'slave')
@@ -62,7 +62,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
     def test_constructor_all_docker_parameters(self):
         # Volumes have their own tests
         bs = self.ConcreteBuildSlave('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9', tls=True)
-        self.assertEqual(bs.slavename, 'bot')
+        self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.image, 'slave_img')
         self.assertEqual(bs.command, ['/bin/sh'])

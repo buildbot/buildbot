@@ -127,7 +127,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     @property
     def workername(self):
-        # slavename is now an alias to twisted.Service's name
+        # workername is now an alias to twisted.Service's name
         return self.name
     define_old_worker_property(locals(), "workername")
 
@@ -655,7 +655,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     def failed_to_start(self, instance_id, instance_state):
         log.msg('%s %s failed to start instance %s (%s)' %
-                (self.__class__.__name__, self.slavename,
+                (self.__class__.__name__, self.workername,
                     instance_id, instance_state))
         raise LatentBuildSlaveFailedToSubstantiate(instance_id, instance_state)
 
@@ -782,7 +782,7 @@ class AbstractLatentWorker(AbstractWorker):
                 # this will cause the slave to re-substantiate immediately if
                 # there are pending build requests.
                 d.addCallback(lambda _:
-                              self.botmaster.maybeStartBuildsForSlave(self.slavename))
+                              self.botmaster.maybeStartBuildsForSlave(self.workername))
             else:
                 self._setBuildWaitTimer()
 

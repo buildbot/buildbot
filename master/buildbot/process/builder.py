@@ -39,7 +39,7 @@ def enforceChosenSlave(bldr, slavebuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
         if isinstance(slavename, basestring):
-            return slavename == slavebuilder.slave.slavename
+            return slavename == slavebuilder.slave.workername
 
     return True
 
@@ -124,7 +124,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # drop them.
         new_slavenames = set(builder_config.slavenames)
         self.slaves = [s for s in self.slaves
-                       if s.slave.slavename in new_slavenames]
+                       if s.slave.workername in new_slavenames]
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -193,12 +193,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
         else:
             sb = slavebuilder.LatentSlaveBuilder(slave, self)
             self.builder_status.addPointEvent(
-                ['added', 'latent', slave.slavename])
+                ['added', 'latent', slave.workername])
             self.slaves.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
     def attached(self, slave, commands):
-        """This is invoked by the Worker when the self.slavename bot
+        """This is invoked by the Worker when the self.workername bot
         registers their builder.
 
         @type  slave: L{buildbot.worker.Worker}
@@ -234,7 +234,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return d
 
     def _attached(self, sb):
-        self.builder_status.addPointEvent(['connect', sb.slave.slavename])
+        self.builder_status.addPointEvent(['connect', sb.slave.workername])
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
 
@@ -248,7 +248,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         #       run first, right?)
         log.err(why, 'slave failed to attach')
         self.builder_status.addPointEvent(['failed', 'connect',
-                                           slave.slavename])
+                                           slave.workername])
         # TODO: add an HTMLLogFile of the exception
 
     def detached(self, slave):
@@ -259,7 +259,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         else:
             log.msg("WEIRD: Builder.detached(%s) (%s)"
                     " not in attaching_slaves(%s)"
-                    " or slaves(%s)" % (slave, slave.slavename,
+                    " or slaves(%s)" % (slave, slave.workername,
                                         self.attaching_slaves,
                                         self.slaves))
             return
@@ -274,7 +274,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if sb in self.slaves:
             self.slaves.remove(sb)
 
-        self.builder_status.addPointEvent(['disconnect', slave.slavename])
+        self.builder_status.addPointEvent(['disconnect', slave.workername])
         sb.detached()  # inform the SlaveBuilder that their slave went away
         self.updateBigStatus()
 

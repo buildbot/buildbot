@@ -242,7 +242,7 @@ class Connection(base.Connection, pb.Avatar):
                     break
 
             if d:
-                name = self.buildslave.slavename
+                name = self.buildslave.workername
                 log.msg("Shutting down (old) slave: %s" % name)
                 # The remote shutdown call will not complete successfully since
                 # the buildbot process exits almost immediately after getting

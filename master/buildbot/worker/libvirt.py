@@ -186,7 +186,7 @@ class LibVirtSlave(AbstractLatentWorker):
         domains = yield self.connection.all()
         for d in domains:
             name = yield d.name()
-            if name.startswith(self.slavename):
+            if name.startswith(self.workername):
                 self.domain = d
                 self.substantiated = True
                 break
@@ -252,7 +252,7 @@ class LibVirtSlave(AbstractLatentWorker):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-            log.msg("Cannot start_instance '%s' as already active" % self.slavename)
+            log.msg("Cannot start_instance '%s' as already active" % self.workername)
             defer.returnValue(False)
 
         yield self._prepare_base_image()
@@ -261,12 +261,12 @@ class LibVirtSlave(AbstractLatentWorker):
             if self.xml:
                 self.domain = yield self.connection.create(self.xml)
             else:
-                self.domain = yield self.connection.lookupByName(self.slavename)
+                self.domain = yield self.connection.lookupByName(self.workername)
                 yield self.domain.create()
         except Exception:
             log.err(failure.Failure(),
                     "Cannot start a VM (%s), failing gracefully and triggering"
-                    "a new build check" % self.slavename)
+                    "a new build check" % self.workername)
             self.domain = None
             defer.returnValue(False)
 
@@ -279,7 +279,7 @@ class LibVirtSlave(AbstractLatentWorker):
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
-        log.msg("Attempting to stop '%s'" % self.slavename)
+        log.msg("Attempting to stop '%s'" % self.workername)
         if self.domain is None:
             log.msg("I don't think that domain is even running, aborting")
             return defer.succeed(None)
@@ -288,22 +288,22 @@ class LibVirtSlave(AbstractLatentWorker):
         self.domain = None
 
         if self.graceful_shutdown and not fast:
-            log.msg("Graceful shutdown chosen for %s" % self.slavename)
+            log.msg("Graceful shutdown chosen for %s" % self.workername)
             d = domain.shutdown()
         else:
             d = domain.destroy()
 
         @d.addCallback
         def _disconnect(res):
-            log.msg("VM destroyed (%s): Forcing its connection closed." % self.slavename)
+            log.msg("VM destroyed (%s): Forcing its connection closed." % self.workername)
             return AbstractWorker.disconnect(self)
 
         @d.addBoth
         def _disconnected(res):
-            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.slavename)
+            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.workername)
             if self.base_image:
                 os.remove(self.image)
-            self.botmaster.maybeStartBuildsForSlave(self.slavename)
+            self.botmaster.maybeStartBuildsForSlave(self.workername)
             return res
 
         return d

@@ -280,7 +280,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.bldr.config.canStartBuild = builder.enforceChosenSlave
 
         slave = mock.Mock()
-        slave.slave.slavename = 'slave5'
+        slave.slave.workername = 'slave5'
 
         breq = mock.Mock()
 

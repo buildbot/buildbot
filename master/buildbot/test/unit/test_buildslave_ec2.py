@@ -67,7 +67,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
                                      secret_identifier='privatekey',
                                      ami=amis[0].id
                                      )
-        self.assertEqual(bs.slavename, 'bot1')
+        self.assertEqual(bs.workername, 'bot1')
         self.assertEqual(bs.password, 'sekrit')
         self.assertEqual(bs.instance_type, 'm1.large')
         self.assertEqual(bs.ami, amis[0].id)

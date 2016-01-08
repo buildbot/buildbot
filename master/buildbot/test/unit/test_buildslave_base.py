@@ -37,7 +37,7 @@ class ConcreteWorker(base.AbstractWorker):
 class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_slavename(self):
-        self.failUnless(hasattr(self.sl, 'slavename'))
+        self.failUnless(hasattr(self.sl, 'workername'))
 
     def test_attr_properties(self):
         self.failUnless(hasattr(self.sl, 'properties'))
@@ -148,7 +148,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     def test_constructor_minimal(self):
         bs = ConcreteWorker('bot', 'pass')
-        self.assertEqual(bs.slavename, 'bot')
+        self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.max_builds, None)
         self.assertEqual(bs.notify_on_missing, [])

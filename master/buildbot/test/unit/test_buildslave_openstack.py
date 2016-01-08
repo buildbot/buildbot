@@ -48,7 +48,7 @@ class TestOpenStackBuildSlave(unittest.TestCase):
 
     def test_constructor_minimal(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_image_args)
-        self.assertEqual(bs.slavename, 'bot')
+        self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
         self.assertEqual(bs.image, 'image-uuid')
