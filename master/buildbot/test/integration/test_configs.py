@@ -18,6 +18,8 @@ from buildbot import config
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
 from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.python import util
 from twisted.trial import unittest
@@ -35,27 +37,43 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
 
     def test_sample_config(self):
         filename = util.sibpath(runner.__file__, 'sample.cfg')
-        config.MasterConfig.loadConfig(self.basedir, filename)
-
-    def test_0_7_12_config(self):
-        with open(self.filename, "w") as f:
-            f.write(sample_0_7_12)
-        config.MasterConfig.loadConfig(self.basedir, self.filename)
-
-    def test_0_7_6_config(self):
-        with open(self.filename, "w") as f:
-            f.write(sample_0_7_6)
-        config.MasterConfig.loadConfig(self.basedir, self.filename)
-
-    def test_0_9_0b5_config(self):
-        with open(self.filename, "w") as f:
-            f.write(sample_0_9_0b5)
-        config.MasterConfig.loadConfig(self.basedir, self.filename)
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            config.MasterConfig.loadConfig(self.basedir, filename)
 
     def test_0_9_0b5_api_renamed_config(self):
         with open(self.filename, "w") as f:
             f.write(sample_0_9_0b5_api_renamed)
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
+
+    def test_0_9_0b5_config(self):
+        with open(self.filename, "w") as f:
+            f.write(sample_0_9_0b5)
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
+
+    def test_0_7_12_config(self):
+        with open(self.filename, "w") as f:
+            f.write(sample_0_7_12)
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"'BuildSlave' class is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
+
+    def test_0_7_6_config(self):
+        with open(self.filename, "w") as f:
+            f.write(sample_0_7_6)
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"'BuildSlave' class is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
             config.MasterConfig.loadConfig(self.basedir, self.filename)
 
 
