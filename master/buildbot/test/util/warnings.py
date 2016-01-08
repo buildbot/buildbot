@@ -55,6 +55,7 @@ def assertProducesWarnings(filter_category, num_warnings=None,
 
         if messages_patterns is not None:
             for w, pattern in zip(warns, messages_patterns):
+                # TODO: Maybe don't use regexp, but use simple substring check?
                 assert re.search(pattern, str(w.message)), \
                     "Warning pattern doesn't match. Expected pattern:\n" \
                     "{pattern}\n" \
