@@ -27,7 +27,7 @@ from zope.interface import implements
 
 class FakeBuildSlave(service.BuildbotService):
 
-    implements(interfaces.IBuildSlave)
+    implements(interfaces.IWorker)
 
     reconfig_count = 0
 

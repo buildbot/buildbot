@@ -541,7 +541,7 @@ class MasterConfig(util.ComparableMixin):
             return
 
         for sl in slaves:
-            if not interfaces.IBuildSlave.providedBy(sl):
+            if not interfaces.IWorker.providedBy(sl):
                 msg = "c['slaves'] must be a list of Worker instances"
                 error(msg)
                 return
