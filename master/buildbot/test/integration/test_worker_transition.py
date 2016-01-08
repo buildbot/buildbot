@@ -30,7 +30,105 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 
+# Template for master configuration just before worker renaming.
+sample_0_9_0b5 = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['slaves'] = [buildslave.BuildSlave("example-slave", "pass")]
+
+c['protocols'] = {'pb': {'port': 'tcp:0'}}
+
+c['change_source'] = []
+c['change_source'].append(changes.GitPoller(
+        'git://github.com/buildbot/pyflakes.git',
+        workdir='gitpoller-workdir', branch='master',
+        pollinterval=300))
+
+c['schedulers'] = []
+c['schedulers'].append(schedulers.SingleBranchScheduler(
+                            name="all",
+                            change_filter=util.ChangeFilter(branch='master'),
+                            treeStableTimer=None,
+                            builderNames=["runtests"]))
+c['schedulers'].append(schedulers.ForceScheduler(
+                            name="force",
+                            builderNames=["runtests"]))
+
+factory = util.BuildFactory()
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+
+c['builders'] = []
+c['builders'].append(
+    util.BuilderConfig(name="runtests",
+      slavenames=["example-slave"],
+      factory=factory))
+
+c['status'] = []
+
+c['title'] = "Pyflakes"
+c['titleURL'] = "https://launchpad.net/pyflakes"
+
+c['buildbotURL'] = "http://localhost:8020/"
+
+c['db'] = {
+    'db_url' : "sqlite:///state.sqlite",
+}
+"""
+
+# Template for master configuration just before worker after renaming.
+sample_0_9_0b5_api_renamed = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['slaves'] = [worker.Worker("example-slave", "pass")]
+
+c['protocols'] = {'pb': {'port': 'tcp:0'}}
+
+c['change_source'] = []
+c['change_source'].append(changes.GitPoller(
+        'git://github.com/buildbot/pyflakes.git',
+        workdir='gitpoller-workdir', branch='master',
+        pollinterval=300))
+
+c['schedulers'] = []
+c['schedulers'].append(schedulers.SingleBranchScheduler(
+                            name="all",
+                            change_filter=util.ChangeFilter(branch='master'),
+                            treeStableTimer=None,
+                            builderNames=["runtests"]))
+c['schedulers'].append(schedulers.ForceScheduler(
+                            name="force",
+                            builderNames=["runtests"]))
+
+factory = util.BuildFactory()
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+
+c['builders'] = []
+c['builders'].append(
+    util.BuilderConfig(name="runtests",
+      slavenames=["example-slave"],
+      factory=factory))
+
+c['status'] = []
+
+c['title'] = "Pyflakes"
+c['titleURL'] = "https://launchpad.net/pyflakes"
+
+c['buildbotURL'] = "http://localhost:8020/"
+
+c['db'] = {
+    'db_url' : "sqlite:///state.sqlite",
+}
+"""
+
+
 class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
+    """Test that master can actually run with configuration after renaming."""
 
     def setUp(self):
         self.basedir = os.path.abspath('basdir')
@@ -85,54 +183,10 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         # TODO: check for expected warnings.
         return self._run_master(sample_0_9_0b5)
 
-
-# Template for master configuration just before worker renaming.
-sample_0_9_0b5 = """\
-from buildbot.plugins import *
-
-c = BuildmasterConfig = {}
-
-c['slaves'] = [buildslave.BuildSlave("example-slave", "pass")]
-
-c['protocols'] = {'pb': {'port': 'tcp:0'}}
-
-c['change_source'] = []
-c['change_source'].append(changes.GitPoller(
-        'git://github.com/buildbot/pyflakes.git',
-        workdir='gitpoller-workdir', branch='master',
-        pollinterval=300))
-
-c['schedulers'] = []
-c['schedulers'].append(schedulers.SingleBranchScheduler(
-                            name="all",
-                            change_filter=util.ChangeFilter(branch='master'),
-                            treeStableTimer=None,
-                            builderNames=["runtests"]))
-c['schedulers'].append(schedulers.ForceScheduler(
-                            name="force",
-                            builderNames=["runtests"]))
-
-factory = util.BuildFactory()
-factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
-factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
-
-c['builders'] = []
-c['builders'].append(
-    util.BuilderConfig(name="runtests",
-      slavenames=["example-slave"],
-      factory=factory))
-
-c['status'] = []
-
-c['title'] = "Pyflakes"
-c['titleURL'] = "https://launchpad.net/pyflakes"
-
-c['buildbotURL'] = "http://localhost:8020/"
-
-c['db'] = {
-    'db_url' : "sqlite:///state.sqlite",
-}
-"""
+    def test_config_0_9_0b5_api_renamed(self):
+        # Load configuration and start master.
+        # TODO: check for expected warnings.
+        return self._run_master(sample_0_9_0b5_api_renamed)
 
 
 class PluginsTransition(unittest.TestCase):

@@ -50,6 +50,11 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
             f.write(sample_0_9_0b5)
         config.MasterConfig.loadConfig(self.basedir, self.filename)
 
+    def test_0_9_0b5_api_renamed_config(self):
+        with open(self.filename, "w") as f:
+            f.write(sample_0_9_0b5_api_renamed)
+        config.MasterConfig.loadConfig(self.basedir, self.filename)
+
 
 # sample.cfg from various versions, with comments stripped.  Adjustments made
 # for compatibility are marked with comments
@@ -137,6 +142,57 @@ from buildbot.plugins import *
 c = BuildmasterConfig = {}
 
 c['slaves'] = [buildslave.BuildSlave("example-slave", "pass")]
+
+c['protocols'] = {'pb': {'port': 9989}}
+
+c['change_source'] = []
+c['change_source'].append(changes.GitPoller(
+        'git://github.com/buildbot/pyflakes.git',
+        workdir='gitpoller-workdir', branch='master',
+        pollinterval=300))
+
+c['schedulers'] = []
+c['schedulers'].append(schedulers.SingleBranchScheduler(
+                            name="all",
+                            change_filter=util.ChangeFilter(branch='master'),
+                            treeStableTimer=None,
+                            builderNames=["runtests"]))
+c['schedulers'].append(schedulers.ForceScheduler(
+                            name="force",
+                            builderNames=["runtests"]))
+
+factory = util.BuildFactory()
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+
+c['builders'] = []
+c['builders'].append(
+    util.BuilderConfig(name="runtests",
+      slavenames=["example-slave"],
+      factory=factory))
+
+c['status'] = []
+
+c['title'] = "Pyflakes"
+c['titleURL'] = "https://launchpad.net/pyflakes"
+
+c['buildbotURL'] = "http://localhost:8020/"
+
+c['www'] = dict(port=8020,
+                plugins=dict(waterfall_view={}, console_view={}))
+
+c['db'] = {
+    'db_url' : "sqlite:///state.sqlite",
+}
+"""
+
+# Template for master configuration just before worker after renaming.
+sample_0_9_0b5_api_renamed = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['slaves'] = [worker.Worker("example-slave", "pass")]
 
 c['protocols'] = {'pb': {'port': 9989}}
 
