@@ -138,8 +138,10 @@ class MasterConfig(util.ComparableMixin):
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "services", "slavePortnum", "slaves", "status", "title", "titleURL",
-        "user_managers", "validation", 'www'
+        "schedulers", "services", "slavePortnum", "status", "title", "titleURL",
+        "user_managers", "validation", 'www',
+        "slaves",  # deprecated, "worker" should be used
+        "workers",
     ])
     compare_attrs = list(_known_config_keys)
 

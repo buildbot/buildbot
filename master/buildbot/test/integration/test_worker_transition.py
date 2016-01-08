@@ -84,7 +84,7 @@ from buildbot.plugins import *
 
 c = BuildmasterConfig = {}
 
-c['slaves'] = [worker.Worker("example-worker", "pass")]
+c['workers'] = [worker.Worker("example-worker", "pass")]
 
 c['protocols'] = {'pb': {'port': 'tcp:0'}}
 
