@@ -35,11 +35,11 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
 
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 global_defaults = dict(
     title='Buildbot',
