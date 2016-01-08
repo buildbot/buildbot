@@ -546,15 +546,15 @@ class MasterConfig(util.ComparableMixin):
                 error(msg)
                 return
 
-            def validate(slavename):
-                if slavename in ("debug", "change", "status"):
-                    yield "slave name %r is reserved" % slavename
-                if not util_identifiers.ident_re.match(slavename):
-                    yield "slave name %r is not an identifier" % slavename
-                if not slavename:
-                    yield "slave name %r cannot be an empty string" % slavename
-                if len(slavename) > 50:
-                    yield "slave name %r is longer than %d characters" % (slavename, 50)
+            def validate(workername):
+                if workername in ("debug", "change", "status"):
+                    yield "worker name %r is reserved" % workername
+                if not util_identifiers.ident_re.match(workername):
+                    yield "worker name %r is not an identifier" % workername
+                if not workername:
+                    yield "worker name %r cannot be an empty string" % workername
+                if len(workername) > 50:
+                    yield "worker name %r is longer than %d characters" % (workername, 50)
 
             for msg in validate(sl.slavename):
                 error(msg)
