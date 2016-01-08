@@ -66,6 +66,7 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.interfaces.IBuildSlave`
      - :py:class:`~buildbot.interfaces.IWorker`
 
+
    * - :py:mod:`buildbot.buildslave` module with all contents
      - :py:mod:`buildbot.worker`
 
