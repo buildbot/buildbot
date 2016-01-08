@@ -559,7 +559,7 @@ class MasterConfig(util.ComparableMixin):
                 error(msg)
 
             if errors:
-                # TODO: previously these errors were logged, but not condidered
+                # TODO: previously these errors were logged, but not considered
                 # as a reason to not to update list of workers in configuration
                 # instance.
                 return False
@@ -583,6 +583,7 @@ class MasterConfig(util.ComparableMixin):
 
         if not config_valid:
             return
+
         elif deprecated_workers is not None or workers is not None:
             self.slaves = []
             if deprecated_workers is not None:
@@ -592,7 +593,7 @@ class MasterConfig(util.ComparableMixin):
 
         else:
             # TODO: If in config has no workers entries, instance workers list
-            # is not being udated. Is this is a correct behavior?
+            # is not being updated. Is this is a correct behavior?
             pass
 
     def load_change_sources(self, filename, config_dict):
