@@ -578,7 +578,7 @@ class MasterConfig(util.ComparableMixin):
 
         workers = config_dict.get('workers')
         if workers is not None:
-            if not self._check_workers(deprecated_workers, "c['workers']"):
+            if not self._check_workers(workers, "c['workers']"):
                 config_valid = False
 
         if not config_valid:

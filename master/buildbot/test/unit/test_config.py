@@ -32,10 +32,14 @@ from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
 from buildbot.test.util import dirs
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
+
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 global_defaults = dict(
     title='Buildbot',
@@ -786,6 +790,32 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_slaves(self.filename,
                              dict(slaves=[sl]))
         self.assertResults(slaves=[sl])
+
+    def test_load_workers_old_api(self):
+        w = worker.Worker("name", 'x')
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slaves'\] key is deprecated, "
+                                r"use c\['workers'\] instead"):
+            self.cfg.load_slaves(self.filename, dict(slaves=[w]))
+        self.assertResults(slaves=[w])
+
+    def test_load_workers_new_api(self):
+        w = worker.Worker("name", 'x')
+        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+            self.cfg.load_slaves(self.filename, dict(workers=[w]))
+        self.assertResults(slaves=[w])
+
+    def test_load_workers_old_and_new_api(self):
+        w1 = worker.Worker("name1", 'x')
+        w2 = worker.Worker("name2", 'x')
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slaves'\] key is deprecated, "
+                                r"use c\['workers'\] instead"):
+            self.cfg.load_slaves(self.filename, dict(slaves=[w1],
+                                                     workers=[w2]))
+        self.assertResults(slaves=[w1, w2])
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})
