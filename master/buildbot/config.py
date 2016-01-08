@@ -554,7 +554,7 @@ class MasterConfig(util.ComparableMixin):
                 if len(workername) > 50:
                     yield "worker name %r is longer than %d characters" % (workername, 50)
 
-            errors = list(validate(sl.slavename))
+            errors = list(validate(sl.workername))
             for msg in errors:
                 error(msg)
 
