@@ -55,8 +55,8 @@ def assertProducesWarnings(filter_category, num_warnings=None,
 
         if messages_patterns is not None:
             for w, pattern in zip(warns, messages_patterns):
-                assert re.match(pattern, str(w.message)), \
-                    "Warning pattern doesn't match. Expected:\n" \
+                assert re.search(pattern, str(w.message)), \
+                    "Warning pattern doesn't match. Expected pattern:\n" \
                     "{pattern}\n" \
                     "Received message:\n" \
                     "{message}\n" \
