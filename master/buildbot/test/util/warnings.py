@@ -33,10 +33,12 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     with warnings.catch_warnings(record=True) as warns:
         # Cause all warnings of the provided category to always be
         # triggered.
-        warnings.simplefilter("ignore")
         warnings.simplefilter("always", filter_category)
 
         yield
+
+        # Filter warnings.
+        warns = [w for w in warns if isinstance(w.message, filter_category)]
 
         if num_warnings is not None:
             assert len(warns) == num_warnings, \
