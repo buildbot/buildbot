@@ -63,6 +63,37 @@ class _PluginEntry(object):
         return self._value
 
 
+class _PluginEntryProxy(_PluginEntry):
+    """Proxy for specific entry with custom group name.
+
+    Used to provided access to the same entry from different namespaces.
+    """
+
+    def __init__(self, group, plugin_entry):
+        assert isinstance(plugin_entry, _PluginEntry)
+        self._plugin_entry = plugin_entry
+        self._group = group
+
+    def load(self):
+        self._plugin_entry.load()
+
+    @property
+    def group(self):
+        return self._group
+
+    @property
+    def name(self):
+        return self._plugin_entry.name
+
+    @property
+    def info(self):
+        return self._plugin_entry.info
+
+    @property
+    def value(self):
+        return self._plugin_entry.value
+
+
 class _NSNode(object):
     # pylint: disable=W0212
 
@@ -291,10 +322,64 @@ class _PluginDB(object):
         tempo = self._namespaces.get(namespace)
 
         if tempo is None:
-            if namespace == 'buildslave':
-                # Workaround for "slave" -> "worker" transition.
-                tempo = _DeprecatedWorkerPlugins(
-                    namespace, interface, check_extras)
+            if namespace in ['worker', 'buildslave']:
+                # 'buildbot.worker' and 'buildbot.buildslave' namespaces are
+                # treated in the special way:
+                # 1. 'buildslave' namespace is deprecated and it's usage
+                #    should emit warnings.
+                # 2. Built-in into Buildbot plugins were moved from
+                #    'buildslave' namespace to 'worker' namespace.
+                # 3. Built-in plugins must still be available under old names
+                #    in 'buildslave' namespace.
+                # 4. For convenience of using plugins which API is not yet
+                #    moved from 'buildslave' namespace to 'worker', all
+                #    external plugins that are found under 'buildslave'
+                #    namespace should be available through 'worker' namespace
+                #    too.
+                #
+                # 'worker' and 'buildslave' namespaces are added at the
+                # same time with adding workarounds described above.
+
+                assert 'worker' not in self._namespaces
+                assert 'buildslave' not in self._namespaces
+
+                # Load plugins in deprecated 'buildbot.buildslave' namespace
+                # using wrapper that generates warnings, when namespace
+                # attributes are queried.
+                buildslave_ns = _DeprecatedWorkerPlugins(
+                    'buildslave', interface, check_extras)
+                self._namespaces['buildslave'] = buildslave_ns
+
+                # Load plugins in 'buildbot.worker' namespace.
+                worker_ns = _Plugins('worker', interface, check_extras)
+                self._namespaces['worker'] = worker_ns
+
+                # All plugins that use deprecated 'buildslave' namespace
+                # should be available under 'worker' namespace, so add
+                # fake entries for them.
+                worker_group = '%s.%s' % (_NAMESPACE_BASE, 'worker')
+                for name in buildslave_ns.names:
+                    entry = buildslave_ns._tree._get(name)
+                    assert isinstance(entry, _PluginEntry)
+                    proxy_entry = _PluginEntryProxy(worker_group, entry)
+                    worker_ns._tree.add(name, proxy_entry)
+
+                # Add aliases in deprecated 'buildslave' namespace for
+                # built-in plugins.
+                old_new_names = [
+                    ('BuildSlave', 'Worker'),
+                    ('EC2LatentBuildSlave', 'EC2LatentBuildSlave'),
+                    ('LibVirtSlave', 'LibVirtSlave'),
+                    ('OpenStackLatentBuildSlave', 'OpenStackLatentBuildSlave'),
+                    ('DockerLatentBuildSlave', 'DockerLatentBuildSlave'),
+                    ('LocalBuildSlave', 'LocalBuildSlave'),
+                ]
+                for old_name, new_name in old_new_names:
+                    buildslave_ns._tree.add(
+                        old_name, worker_ns._tree._children[new_name])
+
+                tempo = self._namespaces[namespace]
+
             else:
                 tempo = _Plugins(namespace, interface, check_extras)
 

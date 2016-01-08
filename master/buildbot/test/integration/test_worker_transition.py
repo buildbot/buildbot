@@ -17,12 +17,13 @@ import mock
 import os
 
 import buildbot.worker
+
 from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -139,23 +140,22 @@ class PluginsTransition(unittest.TestCase):
     def test_api_import(self):
         with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
             # Old API end point, no warning.
-            from buildbot.plugins import buildslave as buildslave_ep
+            from buildbot.plugins import buildslave as buildslave_ns
             # New API.
-            from buildbot.plugins import worker as worker_ep
+            from buildbot.plugins import worker as worker_ns
             # New API.
-            self.assertTrue(worker_ep.Worker is buildbot.worker.Worker)
+            self.assertTrue(worker_ns.Worker is buildbot.worker.Worker)
 
-        with assertProducesWarnings(
+        with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                num_warnings=1,
                 message_pattern=r"'buildbot\.plugins\.buildslave' plugins "
                                 "namespace is deprecated"):
             # Old API, with warning
-            self.assertTrue(issubclass(buildslave_ep.BuildSlave,
-                                       buildbot.worker.Worker))
+            self.assertTrue(
+                buildslave_ns.BuildSlave is buildbot.worker.Worker)
 
         # Access of newly named workers through old entry point is an error.
-        self.assertRaises(AttributeError, lambda: buildslave_ep.Worker)
+        self.assertRaises(AttributeError, lambda: buildslave_ns.Worker)
 
         # Access of old-named workers through new API is an error.
-        self.assertRaises(AttributeError, lambda: worker_ep.BuildSlave)
+        self.assertRaises(AttributeError, lambda: worker_ns.BuildSlave)
