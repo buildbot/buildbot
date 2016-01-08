@@ -84,7 +84,7 @@ from buildbot.plugins import *
 
 c = BuildmasterConfig = {}
 
-c['slaves'] = [worker.Worker("example-slave", "pass")]
+c['slaves'] = [worker.Worker("example-worker", "pass")]
 
 c['protocols'] = {'pb': {'port': 'tcp:0'}}
 
@@ -111,7 +111,7 @@ factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
 c['builders'] = []
 c['builders'].append(
     util.BuilderConfig(name="runtests",
-      slavenames=["example-slave"],
+      slavenames=["example-worker"],
       factory=factory))
 
 c['status'] = []
