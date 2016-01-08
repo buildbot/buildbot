@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import contextlib
-import warnings
-
 from twisted.trial import unittest
 
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_class
@@ -68,37 +67,7 @@ class ClassAlias(unittest.TestCase):
         # warning?
 
 
-# TODO: rename and move this utility class to commons?
-class _TestBase(unittest.TestCase):
-
-    @contextlib.contextmanager
-    def _assertProducesWarning(self, num_warnings=1):
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            yield
-
-            # Verify some things
-            self.assertEqual(len(w), num_warnings)
-            for warning in w:
-                self.assertTrue(issubclass(warning.category,
-                                           DeprecatedWorkerNameWarning))
-                self.assertIn("deprecated", str(warning.message))
-
-    @contextlib.contextmanager
-    def _assertNotProducesWarning(self):
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            yield
-
-            # Verify some things
-            self.assertEqual(len(w), 0)
-
-
-class ClassWrapper(_TestBase):
+class ClassWrapper(unittest.TestCase):
 
     def test_class_wrapper(self):
         class Worker(object):
@@ -113,7 +82,7 @@ class ClassWrapper(_TestBase):
         Slave = globals["Slave"]
         self.assertTrue(issubclass(Slave, Worker))
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             # Trigger a warning.
             slave = Slave("arg", a=1, b=2)
 
@@ -139,7 +108,7 @@ class ClassWrapper(_TestBase):
         Slave = globals["Slave"]
         self.assertTrue(issubclass(Slave, Worker))
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             # Trigger a warning.
             slave = Slave("arg", a=1, b=2)
 
@@ -159,7 +128,7 @@ class ClassWrapper(_TestBase):
         self.assertEqual(Slave.__module__, Worker.__module__)
 
 
-class PropertyWrapper(_TestBase):
+class PropertyWrapper(unittest.TestCase):
 
     def test_property_wrapper(self):
         class C(object):
@@ -171,14 +140,14 @@ class PropertyWrapper(_TestBase):
 
         c = C()
 
-        with self._assertNotProducesWarning():
+        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
             self.assertEqual(c.workername, "name")
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.slavename, "name")
 
 
-class MethodWrapper(_TestBase):
+class MethodWrapper(unittest.TestCase):
 
     def test_method_wrapper(self):
         class C(object):
@@ -189,10 +158,10 @@ class MethodWrapper(_TestBase):
 
         c = C()
 
-        with self._assertNotProducesWarning():
+        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
             self.assertEqual(c.updateWorker("test"), "test")
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.updateSlave("test"), "test")
 
     def test_method_meta(self):
@@ -207,7 +176,7 @@ class MethodWrapper(_TestBase):
         self.assertEqual(C.updateSlave.__doc__, C.updateWorker.__doc__)
 
 
-class FunctionWrapper(_TestBase):
+class FunctionWrapper(unittest.TestCase):
 
     def test_function_wrapper(self):
         def updateWorker(res):
@@ -217,10 +186,10 @@ class FunctionWrapper(_TestBase):
 
         self.assertIn("updateSlave", globals)
 
-        with self._assertNotProducesWarning():
+        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
             self.assertEqual(updateWorker("test"), "test")
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(globals["updateSlave"]("test"), "test")
 
     def test_func_meta(self):
@@ -236,7 +205,7 @@ class FunctionWrapper(_TestBase):
                          updateWorker.__doc__)
 
 
-class AttributeMixin(_TestBase):
+class AttributeMixin(unittest.TestCase):
 
     def test_attribute(self):
         class C(WorkerAPICompatMixin):
@@ -248,14 +217,14 @@ class AttributeMixin(_TestBase):
                 self.workernames = ["a", "b", "c"]
                 self._registerOldWorkerAttr("workernames")
 
-        with self._assertNotProducesWarning():
+        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
             c = C()
 
             self.assertEqual(c.workers, [1, 2, 3])
             self.assertEqual(c.workernames, ["a", "b", "c"])
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.buildslaves, [1, 2, 3])
 
-        with self._assertProducesWarning():
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.slavenames, ["a", "b", "c"])

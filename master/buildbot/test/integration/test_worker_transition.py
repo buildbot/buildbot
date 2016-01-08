@@ -13,16 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-import contextlib
 import mock
 import os
-import warnings
 
+import buildbot.worker
 from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
-from buildbot.worker import Worker
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -134,46 +134,28 @@ c['db'] = {
 """
 
 
-# TODO: rename and move this utility class to commons?
-class _TestBase(unittest.TestCase):
+class PluginsTransition(unittest.TestCase):
 
-    @contextlib.contextmanager
-    def _assertProducesWarning(self, num_warnings=1):
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
+    def test_api_import(self):
+        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+            # Old API end point, no warning.
+            from buildbot.plugins import buildslave as buildslave_ep
+            # New API.
+            from buildbot.plugins import worker as worker_ep
+            # New API.
+            self.assertTrue(worker_ep.Worker is buildbot.worker.Worker)
 
-            yield
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                num_warnings=1,
+                message_pattern=r"'buildbot\.plugins\.buildslave' plugins "
+                                "namespace is deprecated"):
+            # Old API, with warning
+            self.assertTrue(issubclass(buildslave_ep.BuildSlave,
+                                       buildbot.worker.Worker))
 
-            # Verify some things
-            self.assertEqual(len(w), num_warnings,
-                             msg="Unexpected warnings:\n{0}".format(
-                                 "\n".join(map(str, w))))
-            for warning in w:
-                self.assertTrue(issubclass(warning.category,
-                                           DeprecatedWorkerNameWarning))
-                self.assertIn("deprecated", str(warning.message))
+        # Access of newly named workers through old entry point is an error.
+        self.assertRaises(AttributeError, lambda: buildslave_ep.Worker)
 
-    @contextlib.contextmanager
-    def _assertNotProducesWarning(self):
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            yield
-
-            # Verify some things
-            self.assertEqual(len(w), 0)
-
-
-class PluginsTransition(_TestBase):
-
-    def test_old_api_use(self):
-        with self._assertNotProducesWarning():
-            # ok, no warning
-            from buildbot.plugins import buildslave
-
-        with self._assertProducesWarning():
-            # ok, but with warning
-            w = buildslave.BuildSlave
-            self.assertTrue(issubclass(w, Worker))
+        # Access of old-named workers through new API is an error.
+        self.assertRaises(AttributeError, lambda: worker_ep.BuildSlave)
