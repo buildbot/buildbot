@@ -24,7 +24,7 @@ Old names fallback settings
 ---------------------------
 
 Use of obsolete names will raise Python warnings with category
-:py:exc:`buildbot.worker_transition.DeprecatedWorkerNameError`.
+:py:exc:`buildbot.worker_transition.DeprecatedWorkerAPIWarning`.
 By default these warnings are printed in the application log.
 This behaviour can be changed by setting appropriate Python warnings settings
 via Python's :py:mod:`warnings` module:
@@ -32,9 +32,9 @@ via Python's :py:mod:`warnings` module:
 .. code-block:: python
 
     import warnings
-    from buildbot.worker_transition import DeprecatedWorkerNameError
+    from buildbot.worker_transition import DeprecatedWorkerAPIWarning
     # Treat old-name usage as errors:
-    warnings.simplefilter("error", DeprecatedWorkerNameError)
+    warnings.simplefilter("error", DeprecatedWorkerAPIWarning)
 
 See Python's :py:mod:`warnings` module documentation for complete list of
 available actions, in particular warnings can be disabled using

@@ -97,21 +97,42 @@ def deprecated_name(new_name, pattern=None):
 # the base class, but by default deprecation warnings are disabled in Python,
 # so by default old-API usage warnings will be ignored - this is not what
 # we want.
-class DeprecatedWorkerNameWarning(Warning):
-    pass
+class DeprecatedWorkerAPIWarning(Warning):
+    """Base class for deprecated API warnings."""
+
+
+class DeprecatedWorkerNameWarning(DeprecatedWorkerAPIWarning):
+    """Warning class for use of deprecated classes, functions, methods
+    and attributes.
+    """
+
+
+# Separate warnings about deprecated modules from other deprecated
+# identifiers.  Deprecated modules are loaded only once and it's hard to
+# predict in tests exact places where warning should be issued (in contrast
+# warnings about other identifiers will be issued every usage).
+class DeprecatedWorkerModuleWarning(DeprecatedWorkerAPIWarning):
+    """Warning class for use of deprecated modules."""
 
 
 def on_deprecated_name_usage(message, stacklevel=None):
-    """Hook that is ran when old API name is used.
-
-    This hook will raise if old name usage is forbidden in the global settings.
-    """
+    """Hook that is ran when old API name is used."""
 
     if stacklevel is None:
         # Warning will refer to the caller of the caller of this function.
         stacklevel = 3
 
     warnings.warn(DeprecatedWorkerNameWarning(message), None, stacklevel)
+
+
+def on_deprecated_module_usage(message, stacklevel=None):
+    """Hook that is ran when old API module is used."""
+
+    if stacklevel is None:
+        # Warning will refer to the caller of the caller of this function.
+        stacklevel = 3
+
+    warnings.warn(DeprecatedWorkerModuleWarning(message), None, stacklevel)
 
 
 def define_old_worker_class_alias(scope, cls, pattern=None):
