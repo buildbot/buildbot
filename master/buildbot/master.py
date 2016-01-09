@@ -35,7 +35,6 @@ import buildbot.pbmanager
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches
-from buildbot.worker import manager as workermanager
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
@@ -56,6 +55,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
+from buildbot.worker import manager as workermanager
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
 
