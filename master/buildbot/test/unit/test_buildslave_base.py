@@ -205,7 +205,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
                                     missing_timeout=121,
                                     properties={'a': 'c'})
 
-        old.updateSlave = mock.Mock(side_effect=lambda: defer.succeed(None))
+        old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
 
         yield self.do_test_reconfigService(old, new)
 
@@ -214,7 +214,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(old.missing_timeout, 121)
         self.assertEqual(old.properties.getProperty('a'), 'c')
         self.assertEqual(old.registration.updates, ['bot'])
-        self.assertTrue(old.updateSlave.called)
+        self.assertTrue(old.updateWorker.called)
 
     @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):

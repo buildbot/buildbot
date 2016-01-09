@@ -269,7 +269,7 @@ class AbstractWorker(service.BuildbotService, object):
         # update the attached slave's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
         # which is why the reconfig_priority is set low in this class.
-        yield self.updateSlave()
+        yield self.updateWorker()
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -387,7 +387,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.messageReceivedFromSlave()
         self.stopMissingTimer()
         self.master.status.slaveConnected(self.name)
-        yield self.updateSlave()
+        yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForSlave(self.name)
 
     def messageReceivedFromSlave(self):
@@ -868,7 +868,7 @@ class AbstractLatentWorker(AbstractWorker):
             res = defer.DeferredList([res, d])
         return res
 
-    def updateSlave(self):
+    def updateWorker(self):
         """Called to add or remove builders after the slave has connected.
 
         Also called after botmaster's builders are initially set.
@@ -878,7 +878,8 @@ class AbstractLatentWorker(AbstractWorker):
         for b in self.botmaster.getBuildersForSlave(self.name):
             if b.name not in self.slavebuilders:
                 b.addLatentSlave(self)
-        return AbstractWorker.updateSlave(self)
+        return AbstractWorker.updateWorker(self)
+    define_old_worker_method(locals(), updateWorker)
 
     def sendBuilderList(self):
         d = AbstractWorker.sendBuilderList(self)

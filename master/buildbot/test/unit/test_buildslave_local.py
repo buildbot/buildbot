@@ -50,7 +50,7 @@ class TestLocalBuildSlave(unittest.TestCase):
                                     workdir=os.path.abspath('custom'),
                                     properties={'a': 'c'})
 
-        old.updateSlave = mock.Mock(side_effect=lambda: defer.succeed(None))
+        old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
         yield old.startService()
         self.assertEqual(old.remote_slave.bot.basedir, os.path.abspath('basedir/slaves/bot'))
 
@@ -61,7 +61,7 @@ class TestLocalBuildSlave(unittest.TestCase):
         self.assertEqual(old.missing_timeout, 121)
         self.assertEqual(old.properties.getProperty('a'), 'c')
         self.assertEqual(old.registration.updates, ['bot'])
-        self.assertTrue(old.updateSlave.called)
+        self.assertTrue(old.updateWorker.called)
         # make sure that we can provide an abosolute path
         self.assertEqual(old.remote_slave.bot.basedir, os.path.abspath('custom'))
 
