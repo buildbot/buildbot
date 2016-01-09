@@ -108,8 +108,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             descriptionSuffix = [codebase]
 
         LoggingBuildStep.__init__(self, description=description,
-            descriptionDone=descriptionDone, descriptionSuffix=descriptionSuffix,
-            **kwargs)
+                                  descriptionDone=descriptionDone, descriptionSuffix=descriptionSuffix,
+                                  **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
