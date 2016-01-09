@@ -24,6 +24,7 @@ from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -192,7 +193,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 class PluginsTransition(unittest.TestCase):
 
     def test_api_import(self):
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             # Old API end point, no warning.
             from buildbot.plugins import buildslave as buildslave_ns
             # New API.

@@ -25,6 +25,7 @@ from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial import unittest
 from zope.interface import implements
@@ -288,7 +289,7 @@ class TestWorkerPluginsTransition(unittest.TestCase):
             self.buildslave_ns = db.get_plugins('buildslave')
 
     def test_new_api(self):
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertTrue(self.worker_ns.Worker is ClassWithInterface)
 
     def test_old_api_access_produces_warning(self):
@@ -302,11 +303,15 @@ class TestWorkerPluginsTransition(unittest.TestCase):
 
     def test_new_api_through_old_namespace(self):
         # Access of newly named workers through old entry point is an error.
-        self.assertRaises(AttributeError, lambda: self.buildslave_ns.Worker)
+        with assertProducesWarning(DeprecatedWorkerNameWarning,
+                                   message_pattern="namespace is deprecated"):
+            self.assertRaises(AttributeError, lambda: self.buildslave_ns.Worker)
 
     def test_old_api_through_new_namespace(self):
         # Access of old-named workers through new API is an error.
-        self.assertRaises(AttributeError, lambda: self.worker_ns.BuildSlave)
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertRaises(AttributeError,
+                              lambda: self.worker_ns.BuildSlave)
 
     def test_old_api_thirdparty(self):
         with assertProducesWarning(
@@ -317,7 +322,7 @@ class TestWorkerPluginsTransition(unittest.TestCase):
             self.assertTrue(
                 self.buildslave_ns.thirdparty is ClassWithInterface)
 
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             # Third party plugins that use old API should work through new API.
             self.assertTrue(
                 self.worker_ns.thirdparty is ClassWithInterface)
@@ -330,22 +335,28 @@ class TestWorkerPluginsTransition(unittest.TestCase):
             self.assertTrue(
                 self.buildslave_ns.deep.thirdparty is ClassWithInterface)
 
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertTrue(
                 self.worker_ns.deep.thirdparty is ClassWithInterface)
 
     def test_new_api_thirdparty(self):
         # Third party plugins that use new API should work only through
         # new API.
-        self.assertRaises(AttributeError,
-                          lambda: self.buildslave_ns.newthirdparty)
-        self.assertTrue(
-            self.worker_ns.newthirdparty is ClassWithInterface)
+        with assertProducesWarning(DeprecatedWorkerNameWarning,
+                                   message_pattern="namespace is deprecated"):
+            self.assertRaises(AttributeError,
+                              lambda: self.buildslave_ns.newthirdparty)
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertTrue(
+                self.worker_ns.newthirdparty is ClassWithInterface)
 
     def test_new_api_thirdparty_deep(self):
         # TODO: Why it's not AttributeError (as in tests above), but
         # PluginDBError?
-        self.assertRaises(PluginDBError,
-                          lambda: self.buildslave_ns.deep.newthirdparty)
-        self.assertTrue(
-            self.worker_ns.deep.newthirdparty is ClassWithInterface)
+        with assertProducesWarning(DeprecatedWorkerNameWarning,
+                                   message_pattern="namespace is deprecated"):
+            self.assertRaises(PluginDBError,
+                              lambda: self.buildslave_ns.deep.newthirdparty)
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertTrue(
+                self.worker_ns.deep.newthirdparty is ClassWithInterface)

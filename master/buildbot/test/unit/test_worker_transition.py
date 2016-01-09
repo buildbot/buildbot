@@ -17,6 +17,7 @@ from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_class
@@ -140,7 +141,7 @@ class PropertyWrapper(unittest.TestCase):
 
         c = C()
 
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(c.workername, "name")
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
@@ -158,7 +159,7 @@ class MethodWrapper(unittest.TestCase):
 
         c = C()
 
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(c.updateWorker("test"), "test")
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
@@ -186,7 +187,7 @@ class FunctionWrapper(unittest.TestCase):
 
         self.assertIn("updateSlave", globals)
 
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(updateWorker("test"), "test")
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
@@ -217,7 +218,7 @@ class AttributeMixin(unittest.TestCase):
                 self.workernames = ["a", "b", "c"]
                 self._registerOldWorkerAttr("workernames")
 
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             c = C()
 
             self.assertEqual(c.workers, [1, 2, 3])

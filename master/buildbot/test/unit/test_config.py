@@ -35,6 +35,7 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -802,7 +803,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_workers_new_api(self):
         w = worker.Worker("name", 'x')
-        with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.cfg.load_slaves(self.filename, dict(workers=[w]))
         self.assertResults(slaves=[w])
 
