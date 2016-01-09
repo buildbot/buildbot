@@ -258,7 +258,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         # update our records with the worker manager
         if not self.registration:
-            self.registration = yield self.master.buildslaves.register(self)
+            self.registration = yield self.master.workers.register(self)
         yield self.registration.update(self, self.master.config)
 
         self.updateLocks()

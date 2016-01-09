@@ -71,7 +71,7 @@ class TestListener(unittest.TestCase):
         mind = mock.Mock()
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        self.master.buildslaves.register(buildslave)
+        self.master.workers.register(buildslave)
         conn = yield listener._getPerspective(mind, buildslave.workername)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)

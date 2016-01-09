@@ -33,7 +33,11 @@ class LocalBuildSlave(BuildSlaveBase):
         conn = Connection(self.parent, self)
         # I don't have a master property, but my parent has.
         master = self.parent.master
-        res = yield master.buildslaves.newConnection(conn, self.name)
+        # TODO: This is a workaround for using worker with "slave"-api with
+        # updated master.  Later buildbot-slave package will be replaced with
+        # buildbot-worker package which will be "slave"-free, and this patch
+        # will not be needed.
+        res = yield master.workers.newConnection(conn, self.name)
         if res:
             yield self.parent.attached(conn)
 

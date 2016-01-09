@@ -58,7 +58,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     @property
     def buildslaves(self):
-        return self.master.buildslaves
+        return self.master.workers
 
     @property
     def basedir(self):

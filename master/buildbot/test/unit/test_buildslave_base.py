@@ -105,11 +105,11 @@ class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
-        self.master.buildslaves.disownServiceParent()
+        self.master.workers.disownServiceParent()
         self.buildslaves = bslavemanager.FakeBuildslaveManager()
         self.buildslaves.setServiceParent(self.master)
-        self.master.buildslaves = self.buildslaves
-        self.sl.setServiceParent(self.master.buildslaves)
+        self.master.workers = self.buildslaves
+        self.sl.setServiceParent(self.master.workers)
         self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
         return self.sl.attached(self.conn)
 
@@ -131,8 +131,8 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
-        self.master.buildslaves.disownServiceParent()
-        self.buildslaves = self.master.buildslaves = bslavemanager.FakeBuildslaveManager()
+        self.master.workers.disownServiceParent()
+        self.buildslaves = self.master.workers = bslavemanager.FakeBuildslaveManager()
         self.buildslaves.setServiceParent(self.master)
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
@@ -228,7 +228,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         old = self.createBuildslave('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
                                            existingRegistration=False)
-        self.assertIn('bot', self.master.buildslaves.registrations)
+        self.assertIn('bot', self.master.workers.registrations)
         self.assertEqual(old.registration.updates, ['bot'])
 
     @defer.inlineCallbacks
@@ -284,7 +284,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_setServiceParent_started(self):
         master = self.master
-        bsmanager = master.buildslaves
+        bsmanager = master.workers
         yield master.startService()
         bs = ConcreteWorker('bot', 'pass')
         bs.setServiceParent(bsmanager)
@@ -299,7 +299,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         http://trac.buildbot.net/ticket/2278
         """
         master = self.master
-        bsmanager = master.buildslaves
+        bsmanager = master.workers
         yield master.startService()
         lock = locks.MasterLock('masterlock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
@@ -311,7 +311,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         http://trac.buildbot.net/ticket/2278
         """
         master = self.master
-        bsmanager = master.buildslaves
+        bsmanager = master.workers
         yield master.startService()
         lock = locks.SlaveLock('lock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])

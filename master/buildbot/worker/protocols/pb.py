@@ -53,7 +53,7 @@ class Listener(base.Listener):
 
     @defer.inlineCallbacks
     def _getPerspective(self, mind, buildslaveName):
-        bslaves = self.master.buildslaves
+        bslaves = self.master.workers
         log.msg("slave '%s' attaching from %s" % (buildslaveName,
                                                   mind.broker.transport.getPeer()))
 

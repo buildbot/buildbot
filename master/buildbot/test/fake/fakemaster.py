@@ -178,8 +178,8 @@ class FakeMaster(service.MasterService):
         self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
-        self.buildslaves = bslavemanager.FakeBuildslaveManager()
-        self.buildslaves.setServiceParent(self)
+        self.workers = bslavemanager.FakeBuildslaveManager()
+        self.workers.setServiceParent(self)
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()
         self.next_objectid = 0

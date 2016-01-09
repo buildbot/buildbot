@@ -37,16 +37,16 @@ class BuildslaveRegistration(object):
     def unregister(self):
         bs = self.buildslave
         # update with portStr=None to remove any registration in place
-        yield self.master.buildslaves.pb.updateRegistration(
+        yield self.master.workers.pb.updateRegistration(
             bs.workername, bs.password, None)
-        yield self.master.buildslaves._unregister(self)
+        yield self.master.workers._unregister(self)
 
     @defer.inlineCallbacks
     def update(self, slave_config, global_config):
         # For most protocols, there's nothing to do, but for PB we must
         # update the registration in case the port or password has changed.
         if 'pb' in global_config.protocols:
-            self.pbReg = yield self.master.buildslaves.pb.updateRegistration(
+            self.pbReg = yield self.master.workers.pb.updateRegistration(
                 slave_config.workername, slave_config.password,
                 global_config.protocols['pb']['port'])
 

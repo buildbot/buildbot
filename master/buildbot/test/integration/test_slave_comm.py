@@ -158,8 +158,8 @@ class TestSlaveComm(unittest.TestCase):
         self.pbmanager.setServiceParent(self.master)
 
         # remove the fakeServiceParent from fake service hierarchy, and replace by a real one
-        yield self.master.buildslaves.disownServiceParent()
-        self.buildslaves = self.master.buildslaves = bslavemanager.BuildslaveManager(self.master)
+        yield self.master.workers.disownServiceParent()
+        self.buildslaves = self.master.workers = bslavemanager.BuildslaveManager(self.master)
         self.buildslaves.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()

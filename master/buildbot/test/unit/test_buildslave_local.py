@@ -28,7 +28,7 @@ class TestLocalBuildSlave(unittest.TestCase):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
-        self.buildslaves = self.master.buildslaves
+        self.buildslaves = self.master.workers
 
     def createBuildslave(self, name='bot', attached=False, configured=True, **kwargs):
         slave = local.LocalBuildSlave(name, **kwargs)
