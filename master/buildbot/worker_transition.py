@@ -115,14 +115,27 @@ class DeprecatedWorkerModuleWarning(DeprecatedWorkerAPIWarning):
     """Warning class for use of deprecated modules."""
 
 
-def on_deprecated_name_usage(message, stacklevel=None):
+def on_deprecated_name_usage(message, stacklevel=None, filename=None,
+                             lineno=None):
     """Hook that is ran when old API name is used."""
 
-    if stacklevel is None:
-        # Warning will refer to the caller of the caller of this function.
-        stacklevel = 3
+    if filename is None:
+        if stacklevel is None:
+            # Warning will refer to the caller of the caller of this function.
+            stacklevel = 3
 
-    warnings.warn(DeprecatedWorkerNameWarning(message), None, stacklevel)
+        warnings.warn(DeprecatedWorkerNameWarning(message), None, stacklevel)
+
+    else:
+        assert stacklevel is None
+
+        if lineno is None:
+            lineno = 0
+
+        warnings.warn_explicit(
+            DeprecatedWorkerNameWarning(message),
+            DeprecatedWorkerNameWarning,
+            filename, lineno)
 
 
 def on_deprecated_module_usage(message, stacklevel=None):
