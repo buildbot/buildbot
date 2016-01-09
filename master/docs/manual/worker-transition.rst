@@ -108,6 +108,10 @@ Here is the complete list of changed API:
    * - :py:attr:`buildbot.master.BuildMaster.buildslaves`
      - :py:attr:`buildbot.worker.base.AbstractWorker.workers`
 
+
+   * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
+     - :py:meth:`~buildbot.config.MasterConfig.load_workers`
+
 Plugins
 -------
 
