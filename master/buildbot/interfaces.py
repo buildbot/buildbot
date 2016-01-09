@@ -25,13 +25,15 @@ Define the interfaces that are implemented by various buildbot classes.
 from zope.interface import Attribute
 from zope.interface import Interface
 
+from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import define_old_worker_class_alias
 
 # exceptions that can be raised while trying to start a build
 
 
-class NoSlaveError(Exception):
+class NoWorkerError(Exception):
     pass
+define_old_worker_class(globals(), NoWorkerError)
 
 
 class BuilderInUseError(Exception):

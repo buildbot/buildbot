@@ -558,7 +558,7 @@ class BuilderControl:
     def ping(self):
         if not self.original.slaves:
             self.original.builder_status.addPointEvent(["ping", "no slave"])
-            return defer.succeed(False)  # interfaces.NoSlaveError
+            return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
         for s in self.original.slaves:
             dl.append(s.ping(self.original.builder_status))
