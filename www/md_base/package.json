@@ -9,6 +9,5 @@
     "minimist": "^1.1.1"
   },
   "name": "md-base",
-  "dependencies": {},
   "description": "md_base"
 }
