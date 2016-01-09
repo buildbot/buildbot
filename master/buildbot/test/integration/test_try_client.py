@@ -339,7 +339,7 @@ def masterConfig():
         def start(self):
             self.finished(results.SUCCESS)
 
-    c['slaves'] = [Worker("local1", "localpw")]
+    c['workers'] = [Worker("local1", "localpw")]
     c['slavePortnum'] = 0
     c['change_source'] = []
     c['schedulers'] = []  # filled in above

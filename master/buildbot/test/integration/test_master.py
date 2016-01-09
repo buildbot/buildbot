@@ -105,7 +105,7 @@ from buildbot.schedulers.basic import AnyBranchScheduler
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.steps.shell import ShellCommand
 from buildbot.worker import Worker
-c['slaves'] = [Worker("local1", "localpw")]
+c['workers'] = [Worker("local1", "localpw")]
 c['slavePortnum'] = 0
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
