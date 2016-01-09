@@ -26,15 +26,19 @@ describe 'Waterfall view controller', ->
     builders = [
         builderid: 1
         name: 'builder1'
+        masterids: [1]
     ,
         builderid: 2
         name: 'builder2'
+        masterids: [1]
     ,
         builderid: 3
         name: 'builder3'
+        masterids: [1]
     ,
         builderid: 4
         name: 'builder4'
+        masterids: [1]
     ]
 
     builds = [
@@ -151,6 +155,8 @@ describe 'Waterfall view controller', ->
         dataService.when('builds', builds)
         spyOn(w, 'render').and.callThrough()
         expect(w.render).not.toHaveBeenCalled()
+        # force load more
+        w.buildLimit = 0
         w.loadMore()
         $timeout.flush()
         expect(w.render).toHaveBeenCalled()

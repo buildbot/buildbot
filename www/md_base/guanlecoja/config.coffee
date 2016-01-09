@@ -72,18 +72,6 @@ config =
             'sortable.js':
                 version: '~1.2.0'
                 files: ['Sortable.js', 'ng-sortable.js']
-            # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
-            # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
-            # reimplement reconnecting ourselves
-            'reconnectingWebsocket':
-                version: 'master'
-                files: ['reconnecting-websocket.js']
-            tabex:
-                version: '*'
-                files: 'dist/tabex.js'
-            dexie:
-                version: '*'
-                files: 'dist/latest/Dexie.js'
 
         testdeps:
             'angular-mocks':

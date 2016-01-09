@@ -26,25 +26,24 @@ class _Overview extends Controller
     constructor: ($scope, dataService) ->
         # TODO: Avoid fetch all the data here after
         # there is a direct API interface
-        data = dataService.open()
-        data.closeOnDestroy($scope)
+        data = dataService.open().closeOnDestroy($scope)
 
-        data.getMasters().then (masters) =>
+        data.getMasters().onChange = (masters) =>
             @masters =
                 active: 0
                 count: masters.length
             for master in masters
                 @masters.active++ if master.active
 
-        data.getBuildslaves().then (slaves) =>
+        data.getBuildslaves().onChange = (slaves) =>
             @slaves =
                 connections: 0
                 count: slaves.length
             for slave in slaves
                 @slaves.connections += slave.connected_to.length
 
-        data.getBuilders().then (builders) =>
+        data.getBuilders().onChange = (builders) =>
             @builders.count = builders.length
 
-        data.getSchedulers().then (schedulers) =>
+        data.getSchedulers().onChange (schedulers) =>
             @schedulers.count = schedulers.length

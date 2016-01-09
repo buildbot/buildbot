@@ -12,7 +12,6 @@ describe 'buildinfo', ->
         webSocketService = $injector.get('webSocketService')
         spyOn(webSocketService, 'getWebSocket').and.returnValue({})
         dataService = $injector.get('dataService')
-        spyOn(dataService, 'startConsuming').and.returnValue($q.resolve())
         scope = $rootScope.$new()
 
     beforeEach inject injected
@@ -67,7 +66,7 @@ describe 'buildinfo', ->
         expect(rawbtn.hasClass('selected')).toBe(true)
         expect(properties.children().eq(1).hasClass('summary')).toBe(false)
         expect(properties.children().eq(1).hasClass('raw')).toBe(true)
-        
+
         summarybtn.triggerHandler('click')
         expect(summarybtn.hasClass('selected')).toBe(true)
         expect(rawbtn.hasClass('selected')).toBe(false)
@@ -118,7 +117,7 @@ describe 'buildinfo', ->
 
         $rootScope.$digest()
         content = properties.children().eq(1).children()
-        
+
         expect(content.length).toBe(4)
         expect(content.eq(0).text()).toBe(mockproperties.revision)
         expect(content.eq(1).text()).toBe(mockproperties.slave)

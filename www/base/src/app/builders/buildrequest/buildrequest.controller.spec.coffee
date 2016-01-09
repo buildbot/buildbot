@@ -29,11 +29,13 @@ describe 'buildrequest controller', ->
         dataService.when('builders/1', [{builderid: 1}])
         dataService.when('buildsets/1', [{buildsetid: 1}])
         controller = createController()
-        $rootScope.$apply()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1)
-        $scope.buildrequest.claimed = true
-        dataService.when('builds', {buildrequestid: 1}, [{buildid: 1}, {buildid: 2}])
-        $rootScope.$apply()
+        $timeout.flush()
+        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1, jasmine.any(Object))
+        dataService.when('builds', {buildrequestid: 1},
+            [{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}])
+        $scope.$apply ->
+            $scope.buildrequest.claimed = true
+        $timeout.flush()
         expect($scope.builds[0]).toBeDefined()
 
     it 'should query for builds again if first query returns 0', ->
@@ -41,15 +43,15 @@ describe 'buildrequest controller', ->
         dataService.when('builders/1', [{builderid: 1}])
         dataService.when('buildsets/1', [{buildsetid: 1}])
         controller = createController()
-        $rootScope.$apply()
-        $scope.buildrequest.claimed = true
         dataService.when('builds', {buildrequestid: 1}, [])
-        $rootScope.$apply()
-        expect($scope.builds.length).toBe(0)
-
-        dataService.when('builds', {buildrequestid: 1}, [{}, {}])
         $timeout.flush()
-        $rootScope.$apply()
+        $scope.$apply ->
+            $scope.buildrequest.claimed = true
+        $timeout.flush()
+        expect($scope.builds.length).toBe(0)
+        # simulate new builds from event stream
+        $scope.builds.from([{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}])
+        $timeout.flush()
         expect($scope.builds.length).toBe(2)
 
     it 'should go to build page if build started', ->
@@ -58,9 +60,9 @@ describe 'buildrequest controller', ->
         dataService.when('buildsets/1', [{buildsetid: 1}])
         $stateParams.redirect_to_build = 1
         controller = createController()
-        $rootScope.$apply()
-        $scope.buildrequest.claimed = true
-        dataService.when('builds', {buildrequestid: 1}, [{buildid: 1, builderid: 3, number: 1}])
         $timeout.flush()
-        $rootScope.$apply()
+        dataService.when('builds', {buildrequestid: 1}, [{buildid: 1, builderid: 3, number: 1, buildrequestid: 1}])
+        $scope.$apply ->
+            $scope.buildrequest.claimed = true
+        $timeout.flush()
         expect(goneto).toEqual(['build', { builder : 3, build : 1 }])

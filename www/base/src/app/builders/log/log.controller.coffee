@@ -1,6 +1,6 @@
 class Log extends Controller
     constructor: ($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService) ->
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         builderid = dataUtilsService.numberOrString($stateParams.builder)
         buildnumber = dataUtilsService.numberOrString($stateParams.build)
         stepnumber = dataUtilsService.numberOrString($stateParams.step)

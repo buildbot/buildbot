@@ -1,6 +1,6 @@
 class Step extends Controller
     constructor: ($log, $scope, $location, dataService, dataUtilsService, $stateParams, glBreadcrumbService, publicFieldsFilter) ->
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         builderid = dataUtilsService.numberOrString($stateParams.builder)
         buildnumber = dataUtilsService.numberOrString($stateParams.build)
         stepnumber = dataUtilsService.numberOrString($stateParams.step)

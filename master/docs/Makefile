@@ -1,6 +1,6 @@
 all: docs.tgz
 
-.PHONY: images images-png images-eps tutorial manual
+.PHONY: images images-png images-eps tutorial manual pipdeps
 
 VERSION := $(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
@@ -10,6 +10,8 @@ TAR_TRANSFORM := $(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--tr
 docs.tgz: clean html singlehtml images-png
 	sed -e 's!href="index.html#!href="#!g' < _build/singlehtml/index.html > _build/html/full.html
 	tar -C _build $(TAR_TRANSFORM) -zcf $@ html
+pipdeps:
+	pip install sphinxcontrib-blockdiag
 
 images:
 	$(MAKE) -C images all
@@ -56,38 +58,38 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html: conf.py
+html: conf.py pipdeps
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-dirhtml: conf.py
+dirhtml: conf.py pipdeps
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
 
-singlehtml: conf.py
+singlehtml: conf.py pipdeps
 	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
 	@echo
 	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
 
-pickle: conf.py
+pickle: conf.py pipdeps
 	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files."
 
-json: conf.py
+json: conf.py pipdeps
 	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
-htmlhelp: conf.py
+htmlhelp: conf.py pipdeps
 	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-qthelp: conf.py
+qthelp: conf.py pipdeps
 	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
@@ -96,7 +98,7 @@ qthelp: conf.py
 	@echo "To view the help file:"
 	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/BuildbotTutorial.qhc"
 
-devhelp: conf.py
+devhelp: conf.py pipdeps
 	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
 	@echo
 	@echo "Build finished."
@@ -105,46 +107,46 @@ devhelp: conf.py
 	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/BuildbotTutorial"
 	@echo "# devhelp"
 
-epub: conf.py
+epub: conf.py pipdeps
 	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
 
-latex: conf.py
+latex: conf.py pipdeps
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
 	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Run \`make' in that directory to run these through (pdf)latex" \
 	      "(use \`make latexpdf' here to do that automatically)."
 
-latexpdf: conf.py
+latexpdf: conf.py pipdeps
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo "Running LaTeX files through pdflatex..."
 	make -C $(BUILDDIR)/latex all-pdf
 	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
 
-text: conf.py
+text: conf.py pipdeps
 	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
 	@echo
 	@echo "Build finished. The text files are in $(BUILDDIR)/text."
 
-man: conf.py
+man: conf.py pipdeps
 	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
 	@echo
 	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
 
-changes: conf.py
+changes: conf.py pipdeps
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
 	@echo
 	@echo "The overview file is in $(BUILDDIR)/changes."
 
-linkcheck: conf.py
+linkcheck: conf.py pipdeps
 	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-doctest: conf.py
+doctest: conf.py pipdeps
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."

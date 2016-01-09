@@ -12,7 +12,6 @@ describe 'builditem', ->
         webSocketService = $injector.get('webSocketService')
         spyOn(webSocketService, 'getWebSocket').and.returnValue({})
         dataService = $injector.get('dataService')
-        spyOn(dataService, 'startConsuming').and.returnValue($q.resolve())
         scope = $rootScope.$new()
 
     beforeEach inject injected

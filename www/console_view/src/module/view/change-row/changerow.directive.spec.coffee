@@ -28,30 +28,6 @@ describe 'Change row directive controller', ->
 
     beforeEach(inject(injected))
 
-    it 'should format the author and email fields correctly if it only contains an email', ->
-        $scope.change =
-            builds: []
-            author: 'asd.oij23@ojnsdf.com'
-        $scope.$digest()
-        expect(controllerData.change.email).toBeDefined()
-        expect(controllerData.change.email).toBe('asd.oij23@ojnsdf.com')
-
-    it 'should format the author and email fields correctly if it contains a name and an email', ->
-        $scope.change =
-            builds: []
-            author: 'Aksdi O. Orgei <gjfkdFj9g@fjsdb.com>'
-        $scope.$digest()
-        expect(controllerData.change.email).toBeDefined()
-        expect(controllerData.change.author).toBe('Aksdi O. Orgei')
-        expect(controllerData.change.email).toBe('gjfkdFj9g@fjsdb.com')
-
-    it 'should not have an email field if it only contains a name', ->
-        $scope.change =
-            builds: []
-            author: 'Okgrea Martl'
-        $scope.$digest()
-        expect(controllerData.change.email).toBeUndefined()
-        expect(controllerData.change.author).toBe('Okgrea Martl')
 
     it 'should create a correct github link', ->
         $scope.change =

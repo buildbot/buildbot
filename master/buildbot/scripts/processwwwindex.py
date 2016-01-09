@@ -22,6 +22,7 @@ from buildbot.util import in_reactor
 from buildbot.util import json
 from buildbot.www.config import IndexResource
 from buildbot.www.service import WWWService
+from buildbot.www import auth
 from twisted.internet import defer
 
 
@@ -58,6 +59,7 @@ def processwwwindex(config):
     fakeconfig['multiMaster'] = master.config.multiMaster
     fakeconfig['versions'] = IndexResource.getEnvironmentVersions()
     fakeconfig['plugins'] = plugins
+    fakeconfig['auth'] = auth.NoAuth().getConfigDict()
     outputstr = ''
     with open(path) as indexfile:
         template = jinja2.Template(indexfile.read())

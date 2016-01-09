@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.3.0"
+ANGULAR_TAG = "~1.4.6"
 module.exports =
 
     ### ###########################################################################################
@@ -14,11 +14,14 @@ module.exports =
     bower:
         testdeps:
             "guanlecoja-ui":
-                version: '~1.0.5'
-                files: 'scripts.js'
+                version: '~1.5.0'
+                files: ['vendors.js', 'scripts.js']
             "angular-mocks":
                 version: ANGULAR_TAG
                 files: "angular-mocks.js"
+            'buildbot-data':
+                version: '~1.0.14'
+                files: 'dist/buildbot-data.js'
 
     karma:
         # we put tests first, so that we have angular, and fake app defined

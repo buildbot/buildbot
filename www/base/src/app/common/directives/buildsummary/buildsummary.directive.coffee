@@ -53,19 +53,20 @@ class _buildsummary extends Controller('common')
         @isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
-            data.getBuilds(buildid).then (builds) ->
-                self.build = build = builds[0]
-                data.getBuilders(build.builderid).then (builders) ->
-                    self.builder = builder = builders[0]
+            data.getBuilds(buildid).onNew = (build) ->
+                self.build = build
+                data.getBuilders(build.builderid).onNew = (builder) ->
+                    self.builder = builder
 
-                build.getSteps().then (steps) ->
-                    self.steps = steps
-                    steps.forEach (step) ->
-                        $scope.$watch (-> step.complete), ->
-                            step.fulldisplay = step.complete == 0 || step.results > 0
-                            if step.complete
-                                step.duration = step.complete_at - step.started_at
-                        step.loadLogs()
+                self.steps = build.getSteps()
+
+                self.steps.onNew = (step) ->
+                    step.loadLogs()
+
+                self.steps.onUpdate = (step) ->
+                    step.fulldisplay = step.complete == 0 || step.results > 0
+                    if step.complete
+                        step.duration = step.complete_at - step.started_at
