@@ -114,13 +114,13 @@ class Model(base.DBConnectorComponent):
                       sa.Column('number', sa.Integer, nullable=False),
                       sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
                       # note that there is 1:N relationship here.
-                      # In case of slave loss, build has results RETRY
+                      # In case of worker loss, build has results RETRY
                       # and buildrequest is unclaimed
                       sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
                                 nullable=False),
-                      # slave which performed this build
+                      # worker which performed this build
                       # TODO: ForeignKey to buildslaves table, named buildslaveid (#3088)
-                      # TODO: keep nullable to support slave-free builds (#3088)
+                      # TODO: keep nullable to support worker-free builds (#3088)
                       sa.Column('buildslaveid', sa.Integer),
                       # master which controlled this build
                       sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),

@@ -164,7 +164,7 @@ class ILatentBuildSlave(IWorker):
                               'substantiated with a real instance.')
 
     def substantiate():
-        """Request that the slave substantiate with a real instance.
+        """Request that the worker substantiate with a real instance.
 
         Returns a deferred that will callback when a real instance has
         attached."""

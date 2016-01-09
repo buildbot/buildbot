@@ -829,7 +829,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
             error("builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
-        # slavenames can be a single slave name or a list, and should also
+        # slavenames can be a single worker name or a list, and should also
         # include workername, if given
         if isinstance(slavenames, str):
             slavenames = [slavenames]

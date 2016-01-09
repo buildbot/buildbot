@@ -38,7 +38,7 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
 
     def deconfigureAllBuidslavesForMaster(self, masterid):
         def thd(conn):
-            # first remove the old configured buildermasterids for this master and slave
+            # first remove the old configured buildermasterids for this master and worker
             # as sqlalchemy does not support delete with join, we need to do that in 2 queries
             cfg_tbl = self.db.model.configured_buildslaves
             bm_tbl = self.db.model.builder_masters

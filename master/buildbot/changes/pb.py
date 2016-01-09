@@ -125,7 +125,7 @@ class PBChangeSource(base.ChangeSource):
         return d
 
     def _calculatePort(self, cfg):
-        # calculate the new port, defaulting to the slave's PB port if
+        # calculate the new port, defaulting to the worker's PB port if
         # none was specified
         port = self.port
         if port is None:
