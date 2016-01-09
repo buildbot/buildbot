@@ -166,7 +166,7 @@ class ILatentWorker(IWorker):
     """A worker that is not always running, but can run when requested.
     """
     substantiated = Attribute('Substantiated',
-                              'Whether the latent build slave is currently '
+                              'Whether the latent worker is currently '
                               'substantiated with a real instance.')
 
     def substantiate():
