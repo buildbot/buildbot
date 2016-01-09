@@ -16,11 +16,11 @@ from future.utils import iteritems
 
 
 from buildbot import util
-from buildbot.worker.protocols import base
 from buildbot.process import metrics
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
+from buildbot.worker.protocols import base
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import log
