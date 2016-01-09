@@ -164,7 +164,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_makeTAC_worker_old_api_setup_present(self):
         create_master.makeTAC(mkconfig(basedir='test'))
         self.assertInTacFile(
-            """warnings.simplefilter("default", DeprecatedWorkerNameWarning)""")
+            """warnings.simplefilter("default", DeprecatedWorkerAPIWarning)""")
         self.assertWasQuiet()
 
     def test_makeTAC_int_log_count(self):
