@@ -84,8 +84,12 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.buildslave.base.AbstractBuildSlave.updateSlave`
      - :py:meth:`buildbot.worker.base.AbstractWorker.updateWorker`
 
+
    * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
      - :py:class:`buildbot.worker.base.AbstractLatentWorker`
+
+   * - :py:meth:`buildbot.buildslave.base.AbstractLatentBuildSlave.updateSlave`
+     - :py:meth:`buildbot.worker.base.AbstractLatentWorker.updateWorker`
 
 
    * - :py:class:`buildbot.buildslave.BuildSlave`
