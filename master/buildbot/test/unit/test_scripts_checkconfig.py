@@ -81,7 +81,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                                   slavename='sl'),
                 ]
                 from buildbot.worker import Worker
-                c['slaves'] = [
+                c['workers'] = [
                     Worker('sl', 'pass'),
                 ]
                 c['slavePortnum'] = 9989
@@ -115,7 +115,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
-                c['slaves'] = []
+                c['workers'] = []
                 c['slavePortnum'] = port
                 """)
         other_files = {'othermodule.py': 'port = 9989'}
@@ -127,7 +127,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
-                c['slaves'] = []
+                c['workers'] = []
                 c['slavePortnum'] = port
                 """)
         other_files = {
