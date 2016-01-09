@@ -157,7 +157,7 @@ define_old_worker_class_alias(globals(), IWorker, pattern="BuildWorker")
 
 class ILatentBuildSlave(IWorker):
 
-    """A build slave that is not always running, but can run when requested.
+    """A worker that is not always running, but can run when requested.
     """
     substantiated = Attribute('Substantiated',
                               'Whether the latent build slave is currently '
@@ -172,14 +172,14 @@ class ILatentBuildSlave(IWorker):
     # there is an insubstantiate too, but that is not used externally ATM.
 
     def buildStarted(sb):
-        """Inform the latent build slave that a build has started.
+        """Inform the latent worker that a build has started.
 
         @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
         build finished.
         """
 
     def buildFinished(sb):
-        """Inform the latent build slave that a build has finished.
+        """Inform the latent worker that a build has finished.
 
         @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
         build finished.
@@ -488,7 +488,7 @@ class IBuildRequestStatus(Interface):
 class ISlaveStatus(Interface):
 
     def getName():
-        """Return the name of the build slave."""
+        """Return the name of the worker."""
 
     def getAdmin():
         """Return a string with the slave admin's contact data."""

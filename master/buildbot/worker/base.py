@@ -48,7 +48,7 @@ class AbstractWorker(service.BuildbotService, object):
     reference to this instance. The BotMaster object is stashed as the
     .botmaster attribute. The BotMaster is also our '.parent' Service.
 
-    I represent a build slave -- a remote machine capable of
+    I represent a worker -- a remote machine capable of
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
 
@@ -628,7 +628,7 @@ class Worker(AbstractWorker):
 
 class AbstractLatentWorker(AbstractWorker):
 
-    """A build slave that will start up a slave instance when needed.
+    """A worker that will start up a slave instance when needed.
 
     To use, subclass and implement start_instance and stop_instance.
 
