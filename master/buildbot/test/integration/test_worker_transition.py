@@ -24,6 +24,7 @@ from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
@@ -140,14 +141,9 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         return self.tearDownDirs()
 
     @defer.inlineCallbacks
-    def _run_master(self, config_str):
-        with open(self.configfile, "w") as f:
-            f.write(config_str)
-
-        # create the master and set its config
+    def _run_master(self, loaded_config):
+        # create the master
         m = BuildMaster(self.basedir, self.configfile)
-        m.config = config.MasterConfig.loadConfig(
-            self.basedir, self.configfile)
 
         # update the DB
         yield m.db.setup(check_version=False)
@@ -161,8 +157,14 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         mock_reactor = mock.Mock(spec=reactor)
         mock_reactor.callWhenRunning = reactor.callWhenRunning
 
-        # start the service
-        yield m.startService(_reactor=mock_reactor)
+        # mock configuration loading
+        @classmethod
+        def loadConfig(cls, basedir, filename):
+            return loaded_config
+
+        with mock.patch('buildbot.config.MasterConfig.loadConfig', loadConfig):
+            # start the service
+            yield m.startService(_reactor=mock_reactor)
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 
@@ -179,15 +181,36 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         # (trial will verify all reactor-based timers have been cleared, etc.)
 
+    def _write_config(self, config_str):
+        with open(self.configfile, "w") as f:
+            f.write(config_str)
+
     def test_config_0_9_0b5(self):
         # Load configuration and start master.
         # TODO: check for expected warnings.
-        return self._run_master(sample_0_9_0b5)
+        self._write_config(sample_0_9_0b5)
+
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
+            loaded_config = config.MasterConfig.loadConfig(
+                self.basedir, self.configfile)
+
+        return self._run_master(loaded_config)
 
     def test_config_0_9_0b5_api_renamed(self):
         # Load configuration and start master.
         # TODO: check for expected warnings.
-        return self._run_master(sample_0_9_0b5_api_renamed)
+
+        self._write_config(sample_0_9_0b5_api_renamed)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            loaded_config = config.MasterConfig.loadConfig(
+                self.basedir, self.configfile)
+
+        return self._run_master(loaded_config)
 
 
 class PluginsTransition(unittest.TestCase):
@@ -210,7 +233,11 @@ class PluginsTransition(unittest.TestCase):
                 buildslave_ns.BuildSlave is buildbot.worker.Worker)
 
         # Access of newly named workers through old entry point is an error.
-        self.assertRaises(AttributeError, lambda: buildslave_ns.Worker)
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"'buildbot\.plugins\.buildslave' plugins "
+                                "namespace is deprecated"):
+            self.assertRaises(AttributeError, lambda: buildslave_ns.Worker)
 
         # Access of old-named workers through new API is an error.
         self.assertRaises(AttributeError, lambda: worker_ns.BuildSlave)
