@@ -575,7 +575,8 @@ class MasterConfig(util.ComparableMixin):
         deprecated_workers = config_dict.get('slaves')
         if deprecated_workers is not None:
             on_deprecated_name_usage(
-                "c['slaves'] key is deprecated, use c['workers'] instead")
+                "c['slaves'] key is deprecated, use c['workers'] instead",
+                filename=filename)
             if not self._check_workers(deprecated_workers, "c['slaves']"):
                 config_valid = False
 
