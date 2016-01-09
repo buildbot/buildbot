@@ -192,7 +192,7 @@ def define_old_worker_class(scope, cls, pattern=None):
     Useful for instantiable classes.
     """
 
-    compat_class = deprecated_worker_class(cls, pattern=None)
+    compat_class = deprecated_worker_class(cls, pattern=pattern)
 
     assert compat_class.__name__ not in scope
     scope[compat_class.__name__] = compat_class

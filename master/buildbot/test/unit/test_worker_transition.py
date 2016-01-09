@@ -90,6 +90,26 @@ class ClassWrapper(unittest.TestCase):
         self.assertEqual(slave.arg, "arg")
         self.assertEqual(slave.kwargs, dict(a=1, b=2))
 
+    def test_class_wrapper_pattern(self):
+        class Worker(object):
+
+            def __init__(self, arg, **kwargs):
+                self.arg = arg
+                self.kwargs = kwargs
+
+        globals = {}
+        define_old_worker_class(globals, Worker, pattern="Buildworker")
+        self.assertIn("Buildslave", globals)
+        Buildslave = globals["Buildslave"]
+        self.assertTrue(issubclass(Buildslave, Worker))
+
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
+            # Trigger a warning.
+            slave = Buildslave("arg", a=1, b=2)
+
+        self.assertEqual(slave.arg, "arg")
+        self.assertEqual(slave.kwargs, dict(a=1, b=2))
+
     def test_class_with_new_wrapper(self):
         class Worker(object):
 
