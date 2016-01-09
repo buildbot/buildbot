@@ -26,7 +26,7 @@ from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.decorators import flaky
 from buildbot.util.eventual import eventually
-from buildbot.worker import manager as bslavemanager
+from buildbot.worker import manager as workermanager
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -159,7 +159,7 @@ class TestSlaveComm(unittest.TestCase):
 
         # remove the fakeServiceParent from fake service hierarchy, and replace by a real one
         yield self.master.workers.disownServiceParent()
-        self.buildslaves = self.master.workers = bslavemanager.BuildslaveManager(self.master)
+        self.buildslaves = self.master.workers = workermanager.BuildslaveManager(self.master)
         self.buildslaves.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()

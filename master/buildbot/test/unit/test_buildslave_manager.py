@@ -19,7 +19,7 @@ from buildbot import interfaces
 from buildbot.process import botmaster
 from buildbot.test.fake import fakemaster
 from buildbot.util import service
-from buildbot.worker import manager as bslavemanager
+from buildbot.worker import manager as workermanager
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
@@ -50,7 +50,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True, wantData=True)
         self.master.mq = self.master.mq
-        self.buildslaves = bslavemanager.BuildslaveManager(self.master)
+        self.buildslaves = workermanager.BuildslaveManager(self.master)
         self.buildslaves.setServiceParent(self.master)
         # slaves expect a botmaster as well as a manager.
         self.master.botmaster.disownServiceParent()
