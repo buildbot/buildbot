@@ -79,6 +79,10 @@ Here is the complete list of changed API:
      - :py:class:`~buildbot.interfaces.LatentWorkerFailedToSubstantiate`
 
 
+   * - :py:class:`buildbot.interfaces.ILatentBuildSlave`
+     - :py:class:`~buildbot.interfaces.ILatentWorker`
+
+
    * - :py:mod:`buildbot.buildslave` module with all contents
      - :py:mod:`buildbot.worker`
 
