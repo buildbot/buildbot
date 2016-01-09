@@ -44,7 +44,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     """This is the master-side representative for a remote buildbot worker.
     There is exactly one for each worker described in the config file (the
-    c['slaves'] list). When buildbots connect in (.attach), they get a
+    c['workers'] list). When buildbots connect in (.attach), they get a
     reference to this instance. The BotMaster object is stashed as the
     .botmaster attribute. The BotMaster is also our '.parent' Service.
 
