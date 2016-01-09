@@ -26,7 +26,7 @@ from twisted.python.reflect import namedModule
 from zope.interface import implements
 
 from buildbot import config
-from buildbot.interfaces import ILatentBuildSlave
+from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import IWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.process import metrics
@@ -636,7 +636,7 @@ class AbstractLatentWorker(AbstractWorker):
     test/test_slaves.py.
     """
 
-    implements(ILatentBuildSlave)
+    implements(ILatentWorker)
 
     substantiated = False
     substantiation_deferred = None

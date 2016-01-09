@@ -186,7 +186,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return None
 
     def addLatentSlave(self, slave):
-        assert interfaces.ILatentBuildSlave.providedBy(slave)
+        assert interfaces.ILatentWorker.providedBy(slave)
         for s in self.slaves:
             if s == slave:
                 break

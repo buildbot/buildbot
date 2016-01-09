@@ -161,7 +161,7 @@ class IWorker(IPlugin):
 define_old_worker_class_alias(globals(), IWorker, pattern="BuildWorker")
 
 
-class ILatentBuildSlave(IWorker):
+class ILatentWorker(IWorker):
 
     """A worker that is not always running, but can run when requested.
     """
@@ -190,6 +190,7 @@ class ILatentBuildSlave(IWorker):
         @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
         build finished.
         """
+define_old_worker_class_alias(globals(), ILatentWorker, pattern="BuildWorker")
 
 
 class IRenderable(Interface):
