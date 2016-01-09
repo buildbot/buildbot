@@ -532,7 +532,7 @@ class IBuilderStatus(Interface):
         (possibly empty) representing the currently active builds."""
 
     def getSlaves():
-        """Return a list of ISlaveStatus objects for the buildslaves that are
+        """Return a list of ISlaveStatus objects for the workers that are
         used by this builder."""
 
     def getPendingBuildRequestStatuses():

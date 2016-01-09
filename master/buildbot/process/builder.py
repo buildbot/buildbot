@@ -65,11 +65,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # old_building holds active builds that were stolen from a predecessor
         self.old_building = weakref.WeakKeyDictionary()
 
-        # buildslaves which have connected but which are not yet available.
+        # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
         self.attaching_slaves = []
 
-        # buildslaves at our disposal. Each SlaveBuilder instance has a
+        # workers at our disposal. Each SlaveBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.slaves = []

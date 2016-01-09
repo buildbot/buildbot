@@ -44,7 +44,7 @@ class FakeUpdates(service.AsyncService):
         self.builderIds = {}  # { name : id }; users can add schedulers here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
-        self.buildslaveIds = {}  # { name : id }; users can add buildslaves here
+        self.buildslaveIds = {}  # { name : id }; users can add workers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
         self.claimedBuildRequests = set([])

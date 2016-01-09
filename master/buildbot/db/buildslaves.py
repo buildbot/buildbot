@@ -157,11 +157,11 @@ class BuildslavesConnectorComponent(base.DBConnectorComponent):
                                  'masterid': row.masterid})
 
             # now go back and get the connection info for the same set of
-            # buildslaves
+            # workers
             j = conn_tbl
             if _name is not None:
                 # note this is not an outer join; if there are unconnected
-                # buildslaves, they were captured in rv above
+                # workers, they were captured in rv above
                 j = j.join(bslave_tbl)
             q = sa.select(
                 [conn_tbl.c.buildslaveid, conn_tbl.c.masterid],
