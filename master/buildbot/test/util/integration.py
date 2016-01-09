@@ -55,7 +55,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
         self.configfile = os.path.join(self.basedir, 'master.cfg')
-        slaveclass = "BuildSlave"
+        slaveclass = "Worker"
         if self.proto == 'pb':
             proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
         elif self.proto == 'null':
@@ -65,10 +65,10 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         # test module. Only the worker config is kept there, as it should not
         # be changed
         open(self.configfile, "w").write(textwrap.dedent("""
-            from buildbot.plugins import buildslave
+            from buildbot.plugins import worker
             from {module} import {configFunc}
             c = BuildmasterConfig = {configFunc}()
-            c['slaves'] = [buildslave.{slaveclass}("local1", "localpw")]
+            c['workers'] = [worker.{slaveclass}("local1", "localpw")]
             c['protocols'] = {proto}
             """).format(module=self.__class__.__module__,
                         configFunc=configFunc,
