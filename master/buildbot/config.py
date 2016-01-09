@@ -28,6 +28,7 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import on_deprecated_name_usage
 from buildbot.www import auth
 from buildbot.www import avatar
@@ -245,7 +246,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
             config.load_builders(filename, config_dict)
-            config.load_slaves(filename, config_dict)
+            config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
             config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
@@ -568,7 +569,7 @@ class MasterConfig(util.ComparableMixin):
 
         return True
 
-    def load_slaves(self, filename, config_dict):
+    def load_workers(self, filename, config_dict):
         config_valid = True
 
         deprecated_workers = config_dict.get('slaves')
@@ -597,6 +598,9 @@ class MasterConfig(util.ComparableMixin):
             # TODO: If in config has no workers entries, instance workers list
             # is not being updated. Is this is a correct behavior?
             pass
+    # TODO: is load_workers method is a private method and doesn't requires
+    # fallback?
+    define_old_worker_method(locals(), load_workers)
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])

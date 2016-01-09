@@ -313,7 +313,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.failUnless(rv.load_caches.called)
         self.failUnless(rv.load_schedulers.called)
         self.failUnless(rv.load_builders.called)
-        self.failUnless(rv.load_slaves.called)
+        self.failUnless(rv.load_workers.called)
         self.failUnless(rv.load_change_sources.called)
         self.failUnless(rv.load_status.called)
         self.failUnless(rv.load_user_managers.called)
@@ -743,53 +743,53 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             1)
 
     def test_load_slaves_defaults(self):
-        self.cfg.load_slaves(self.filename, {})
+        self.cfg.load_workers(self.filename, {})
         self.assertResults(slaves=[])
 
     def test_load_slaves_not_list(self):
-        self.cfg.load_slaves(self.filename,
-                             dict(workers=dict()))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=dict()))
         self.assertConfigError(self.errors, "must be a list")
 
     def test_load_slaves_not_instance(self):
-        self.cfg.load_slaves(self.filename,
-                             dict(workers=[mock.Mock()]))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[mock.Mock()]))
         self.assertConfigError(self.errors, "must be a list of")
 
     def test_load_slaves_reserved_names(self):
         for name in 'debug', 'change', 'status':
-            self.cfg.load_slaves(self.filename,
-                                 dict(workers=[worker.Worker(name, 'x')]))
+            self.cfg.load_workers(self.filename,
+                                  dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is reserved")
             self.errors.errors[:] = []  # clear out the errors
 
     def test_load_slaves_not_identifiers(self):
         for name in (u"123 no initial digits", u"spaces not allowed",
                      u'a/b', u'\N{SNOWMAN}', u"a.b.c.d", u"a-b_c.d9",):
-            self.cfg.load_slaves(self.filename,
-                                 dict(workers=[worker.Worker(name, 'x')]))
+            self.cfg.load_workers(self.filename,
+                                  dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is not an identifier")
             self.errors.errors[:] = []  # clear out the errors
 
     def test_load_slaves_too_long(self):
         name = u"a" * 51
-        self.cfg.load_slaves(self.filename,
-                             dict(workers=[worker.Worker(name, 'x')]))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[worker.Worker(name, 'x')]))
         self.assertConfigError(self.errors, "is longer than")
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_slaves_empty(self):
         name = u""
-        self.cfg.load_slaves(self.filename,
-                             dict(workers=[worker.Worker(name, 'x')]))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[worker.Worker(name, 'x')]))
         self.errors.errors[:] = self.errors.errors[1:2]  # only get necessary error
         self.assertConfigError(self.errors, "cannot be an empty string")
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_slaves(self):
         sl = worker.Worker('foo', 'x')
-        self.cfg.load_slaves(self.filename,
-                             dict(workers=[sl]))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[sl]))
         self.assertResults(slaves=[sl])
 
     def test_load_workers_old_api(self):
@@ -798,13 +798,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 message_pattern=r"c\['slaves'\] key is deprecated, "
                                 r"use c\['workers'\] instead"):
-            self.cfg.load_slaves(self.filename, dict(slaves=[w]))
+            self.cfg.load_workers(self.filename, dict(slaves=[w]))
         self.assertResults(slaves=[w])
 
     def test_load_workers_new_api(self):
         w = worker.Worker("name", 'x')
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.cfg.load_slaves(self.filename, dict(workers=[w]))
+            self.cfg.load_workers(self.filename, dict(workers=[w]))
         self.assertResults(slaves=[w])
 
     def test_load_workers_old_and_new_api(self):
@@ -814,8 +814,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 message_pattern=r"c\['slaves'\] key is deprecated, "
                                 r"use c\['workers'\] instead"):
-            self.cfg.load_slaves(self.filename, dict(slaves=[w1],
-                                                     workers=[w2]))
+            self.cfg.load_workers(self.filename, dict(slaves=[w1],
+                                                      workers=[w2]))
         self.assertResults(slaves=[w1, w2])
 
     def test_load_change_sources_defaults(self):
