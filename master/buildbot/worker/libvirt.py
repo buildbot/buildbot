@@ -179,7 +179,7 @@ class LibVirtSlave(AbstractLatentWorker):
     @defer.inlineCallbacks
     def _find_existing_instance(self):
         """
-        I find existing VMs that are already running that might be orphaned instances of this slave.
+        I find existing VMs that are already running that might be orphaned instances of this worker.
         """
         if not self.connection:
             defer.returnValue(None)
@@ -276,7 +276,7 @@ class LibVirtSlave(AbstractLatentWorker):
     def stop_instance(self, fast=False):
         """
         I attempt to stop a running VM.
-        I make sure any connection to the slave is removed.
+        I make sure any connection to the worker is removed.
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """

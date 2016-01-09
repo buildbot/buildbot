@@ -418,7 +418,7 @@ class StringDownload(_TransferBuildStep):
         self.mode = mode
 
     def start(self):
-        # we use 'downloadFile' remote command on the slave
+        # we use 'downloadFile' remote command on the worker
         self.checkSlaveHasCommand("downloadFile")
 
         # we are currently in the buildmaster's basedir, so any non-absolute

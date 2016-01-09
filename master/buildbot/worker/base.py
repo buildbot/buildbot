@@ -42,8 +42,8 @@ from buildbot.worker_transition import define_old_worker_property
 
 class AbstractWorker(service.BuildbotService, object):
 
-    """This is the master-side representative for a remote buildbot slave.
-    There is exactly one for each slave described in the config file (the
+    """This is the master-side representative for a remote buildbot worker.
+    There is exactly one for each worker described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
     reference to this instance. The BotMaster object is stashed as the
     .botmaster attribute. The BotMaster is also our '.parent' Service.
@@ -69,9 +69,9 @@ class AbstractWorker(service.BuildbotService, object):
                            be run concurrently on this worker (the
                            default is None for no limit)
         @param properties: properties that will be applied to builds run on
-                           this slave
+                           this worker
         @type properties: dictionary
-        @param locks: A list of locks that must be acquired before this slave
+        @param locks: A list of locks that must be acquired before this worker
                       can be used
         @type locks: dictionary
         """
@@ -167,7 +167,7 @@ class AbstractWorker(service.BuildbotService, object):
         """
         I am called when a build is preparing to run. I try to claim all
         the locks that are needed for a build to happen. If I can't, then
-        my caller should give up the build and try to get another slave
+        my caller should give up the build and try to get another worker
         to look at it.
         """
         log.msg("acquireLocks(slave %s, locks %s)" % (self, self.locks))
@@ -188,7 +188,7 @@ class AbstractWorker(service.BuildbotService, object):
             lock.release(self, access)
 
     def _lockReleased(self):
-        """One of the locks for this slave was released; try scheduling
+        """One of the locks for this worker was released; try scheduling
         builds."""
         if not self.botmaster:
             return  # oh well..
@@ -231,7 +231,7 @@ class AbstractWorker(service.BuildbotService, object):
                         properties=None, locks=None, keepalive_interval=3600):
         # Given a Worker config arguments, configure this one identically.
         # Because Worker objects are remotely referenced, we can't replace them
-        # without disconnecting the slave, yet there's no reason to do that.
+        # without disconnecting the worker, yet there's no reason to do that.
 
         assert self.name == name
         self.password = password
@@ -266,7 +266,7 @@ class AbstractWorker(service.BuildbotService, object):
         bids = [b._builderid for b in self.botmaster.getBuildersForSlave(self.name)]
         yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, self.master.masterid, bids)
 
-        # update the attached slave's notion of which builders are attached.
+        # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
         # which is why the reconfig_priority is set low in this class.
         yield self.updateWorker()
@@ -277,7 +277,7 @@ class AbstractWorker(service.BuildbotService, object):
             yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
-        # mark this slave as configured for zero builders in this master
+        # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
 
@@ -322,9 +322,9 @@ class AbstractWorker(service.BuildbotService, object):
         return self._mail_missing_message(subject, text)
 
     def updateWorker(self):
-        """Called to add or remove builders after the slave has connected.
+        """Called to add or remove builders after the worker has connected.
 
-        @return: a Deferred that indicates when an attached slave has
+        @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
         if self.conn:
             return self.sendBuilderList()
@@ -338,12 +338,12 @@ class AbstractWorker(service.BuildbotService, object):
 
     @defer.inlineCallbacks
     def attached(self, conn):
-        """This is called when the slave connects."""
+        """This is called when the worker connects."""
 
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
 
         # now we go through a sequence of calls, gathering information, then
-        # tell the Botmaster that it can finally give this slave to all the
+        # tell the Botmaster that it can finally give this worker to all the
         # Builders that care about it.
 
         # Reset graceful shutdown status
@@ -412,32 +412,32 @@ class AbstractWorker(service.BuildbotService, object):
         )
 
     def disconnect(self):
-        """Forcibly disconnect the slave.
+        """Forcibly disconnect the worker.
 
         This severs the TCP connection and returns a Deferred that will fire
         (with None) when the connection is probably gone.
 
-        If the slave is still alive, they will probably try to reconnect
+        If the worker is still alive, they will probably try to reconnect
         again in a moment.
 
-        This is called in two circumstances. The first is when a slave is
+        This is called in two circumstances. The first is when a worker is
         removed from the config file. In this case, when they try to
-        reconnect, they will be rejected as an unknown slave. The second is
-        when we wind up with two connections for the same slave, in which
+        reconnect, they will be rejected as an unknown worker. The second is
+        when we wind up with two connections for the same worker, in which
         case we disconnect the older connection.
         """
 
         if self.conn is None:
             return defer.succeed(None)
         log.msg("disconnecting old slave %s now" % (self.name,))
-        # When this Deferred fires, we'll be ready to accept the new slave
+        # When this Deferred fires, we'll be ready to accept the new worker
         return self._disconnect(self.conn)
 
     def _disconnect(self, conn):
         # all kinds of teardown will happen as a result of
         # loseConnection(), but it happens after a reactor iteration or
         # two. Hook the actual disconnect so we can know when it is safe
-        # to connect the new slave. We have to wait one additional
+        # to connect the new worker. We have to wait one additional
         # iteration (with callLater(0)) to make sure the *other*
         # notifyOnDisconnect handlers have had a chance to run.
         d = defer.Deferred()
@@ -479,7 +479,7 @@ class AbstractWorker(service.BuildbotService, object):
             pass
 
     def buildFinished(self, sb):
-        """This is called when a build on this slave is finished."""
+        """This is called when a build on this worker is finished."""
         self.botmaster.maybeStartBuildsForSlave(self.name)
 
     def canStartBuild(self):
@@ -488,11 +488,11 @@ class AbstractWorker(service.BuildbotService, object):
         can start a build.  This function can be used to limit overall
         concurrency on the worker.
 
-        Note for subclassers: if a slave can become willing to start a build
-        without any action on that slave (for example, by a resource in use on
-        another slave becoming available), then you must arrange for
+        Note for subclassers: if a worker can become willing to start a build
+        without any action on that worker (for example, by a resource in use on
+        another worker becoming available), then you must arrange for
         L{maybeStartBuildsForSlave} to be called at that time, or builds on
-        this slave will not start.
+        this worker will not start.
         """
 
         if self.slave_status.isPaused():
@@ -548,7 +548,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     @defer.inlineCallbacks
     def shutdown(self):
-        """Shutdown the slave"""
+        """Shutdown the worker"""
         if not self.conn:
             log.msg("no remote; slave is already shut down")
             return
@@ -556,7 +556,7 @@ class AbstractWorker(service.BuildbotService, object):
         yield self.conn.remoteShutdown()
 
     def maybeShutdown(self):
-        """Shut down this slave if it has been asked to shut down gracefully,
+        """Shut down this worker if it has been asked to shut down gracefully,
         and has no active builders."""
         if not self.slave_status.getGraceful():
             return
@@ -574,11 +574,11 @@ class AbstractWorker(service.BuildbotService, object):
             self.botmaster.master.status.slaveUnpaused(self.name)
 
     def pause(self):
-        """Stop running new builds on the slave."""
+        """Stop running new builds on the worker."""
         self.slave_status.setPaused(True)
 
     def unpause(self):
-        """Restart running new builds on the slave."""
+        """Restart running new builds on the worker."""
         self.slave_status.setPaused(False)
         self.botmaster.maybeStartBuildsForSlave(self.name)
 
@@ -618,7 +618,7 @@ class Worker(AbstractWorker):
         self.startMissingTimer()
 
     def buildFinished(self, sb):
-        """This is called when a build on this slave is finished."""
+        """This is called when a build on this worker is finished."""
         AbstractWorker.buildFinished(self, sb)
 
         # If we're gracefully shutting down, and we have no more active
@@ -628,7 +628,7 @@ class Worker(AbstractWorker):
 
 class AbstractLatentWorker(AbstractWorker):
 
-    """A worker that will start up a slave instance when needed.
+    """A worker that will start up a worker instance when needed.
 
     To use, subclass and implement start_instance and stop_instance.
 
@@ -778,8 +778,8 @@ class AbstractLatentWorker(AbstractWorker):
         if not self.building:
             if self.build_wait_timeout == 0:
                 d = self.insubstantiate()
-                # try starting builds for this slave after insubstantiating;
-                # this will cause the slave to re-substantiate immediately if
+                # try starting builds for this worker after insubstantiating;
+                # this will cause the worker to re-substantiate immediately if
                 # there are pending build requests.
                 d.addCallback(lambda _:
                               self.botmaster.maybeStartBuildsForSlave(self.workername))
@@ -816,7 +816,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):
-        # a negative build_wait_timeout means the slave should never be shut
+        # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if self.build_wait_timeout < 0:
             yield AbstractWorker.disconnect(self)
@@ -835,17 +835,17 @@ class AbstractLatentWorker(AbstractWorker):
             log.msg("Substantiation complete, immediately terminating.")
 
         if self.conn is not None:
-            # this could be called when the slave needs to shut down, such as
-            # in BotMaster.removeSlave, *or* when a new slave requests a
-            # connection when we already have a slave. It's not clear what to
+            # this could be called when the worker needs to shut down, such as
+            # in BotMaster.removeSlave, *or* when a new worker requests a
+            # connection when we already have a worker. It's not clear what to
             # do in the second case: this shouldn't happen, and if it
-            # does...if it's a latent slave, shutting down will probably kill
+            # does...if it's a latent worker, shutting down will probably kill
             # something we want...but we can't know what the status is. So,
             # here, we just do what should be appropriate for the first case,
             # and put our heads in the sand for the second, at least for now.
             # The best solution to the odd situation is removing it as a
             # possibility: make the master in charge of connecting to the
-            # slave, rather than vice versa. TODO.
+            # worker, rather than vice versa. TODO.
             yield defer.DeferredList([
                 AbstractWorker.disconnect(self),
                 self.insubstantiate(fast)
@@ -857,7 +857,7 @@ class AbstractLatentWorker(AbstractWorker):
     def disconnect(self):
         # This returns a Deferred but we don't use it
         self._soft_disconnect()
-        # this removes the slave from all builders.  It won't come back
+        # this removes the worker from all builders.  It won't come back
         # without a restart (or maybe a sighup)
         self.botmaster.slaveLost(self)
 
@@ -869,11 +869,11 @@ class AbstractLatentWorker(AbstractWorker):
         return res
 
     def updateWorker(self):
-        """Called to add or remove builders after the slave has connected.
+        """Called to add or remove builders after the worker has connected.
 
         Also called after botmaster's builders are initially set.
 
-        @return: a Deferred that indicates when an attached slave has
+        @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
         for b in self.botmaster.getBuildersForSlave(self.name):
             if b.name not in self.slavebuilders:

@@ -57,7 +57,7 @@ class BuilderMixin(object):
         self.bldr._startBuildFor = _startBuildFor
 
         if patch_random:
-            # patch 'random.choice' to always take the slave that sorts
+            # patch 'random.choice' to always take the worker that sorts
             # last, based on its name
             self.patch(random, "choice",
                        lambda lst: sorted(lst, key=lambda m: m.name)[-1])

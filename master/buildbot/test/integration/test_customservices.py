@@ -18,7 +18,7 @@ from twisted.internet import defer
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
-# This integration test creates a master and slave environment,
+# This integration test creates a master and worker environment,
 # with one builder and a custom step
 # The custom step is using a CustomService, in order to calculate its result
 # we make sure that we can reconfigure the master while build is running

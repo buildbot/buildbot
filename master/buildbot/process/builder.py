@@ -204,18 +204,18 @@ class Builder(util_service.ReconfigurableServiceMixin,
         @type  slave: L{buildbot.worker.Worker}
         @param slave: the Worker that represents the buildslave as a whole
         @type  commands: dict: string -> string, or None
-        @param commands: provides the slave's version of each RemoteCommand
+        @param commands: provides the worker's version of each RemoteCommand
 
         @rtype:  L{twisted.internet.defer.Deferred}
-        @return: a Deferred that fires (with 'self') when the slave-side
+        @return: a Deferred that fires (with 'self') when the worker-side
                  builder is fully attached and ready to accept commands.
         """
         for s in self.attaching_slaves + self.slaves:
             if s.slave == slave:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
-                # list from the slave, and we ask for it each time we add or
-                # remove a builder. So if the slave is hosting builders
+                # list from the worker, and we ask for it each time we add or
+                # remove a builder. So if the worker is hosting builders
                 # A,B,C, and the config file changes A, we'll remove A and
                 # re-add it, triggering two builder-list requests, getting
                 # two redundant calls to attached() for B, and another two
@@ -275,7 +275,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.slaves.remove(sb)
 
         self.builder_status.addPointEvent(['disconnect', slave.workername])
-        sb.detached()  # inform the SlaveBuilder that their slave went away
+        sb.detached()  # inform the SlaveBuilder that their worker went away
         self.updateBigStatus()
 
     def updateBigStatus(self):
@@ -356,13 +356,13 @@ class Builder(util_service.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
-        # ping the slave to make sure they're still there. If they've
+        # ping the worker to make sure they're still there. If they've
         # fallen off the map (due to a NAT timeout or something), this
         # will fail in a couple of minutes, depending upon the TCP
         # timeout.
         #
         # TODO: This can unnecessarily suspend the starting of a build, in
-        # situations where the slave is live but is pushing lots of data to
+        # situations where the worker is live but is pushing lots of data to
         # us in a build.
         log.msg("starting build %s.. pinging the slave %s"
                 % (build, slavebuilder))
@@ -398,7 +398,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # IMPORTANT: no yielding is allowed from here to the startBuild call!
 
-        # it's possible that we lost the slave remote between the ping above
+        # it's possible that we lost the worker remote between the ping above
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
@@ -422,7 +422,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         d = defer.maybeDeferred(build.startBuild,
                                 bs, self.expectations, slavebuilder)
         d.addCallback(lambda _: self.buildFinished(build, slavebuilder))
-        # this shouldn't happen. if it does, the slave will be wedged
+        # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
 
@@ -444,7 +444,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
 
-        # by the time we get here, the Build has already released the slave,
+        # by the time we get here, the Build has already released the worker,
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
@@ -484,7 +484,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def maybeStartBuild(self, slavebuilder, breqs, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
-        # start a set of buildrequests on a slave. Do not call this method
+        # start a set of buildrequests on a worker. Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
         # the other similar methods if more appropriate
 
@@ -495,7 +495,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
-        # If the build fails from here on out (e.g., because a slave has failed),
+        # If the build fails from here on out (e.g., because a worker has failed),
         # it will be handled outside of this function. TODO: test that!
 
         build_started = yield self._startBuildFor(slavebuilder, breqs)

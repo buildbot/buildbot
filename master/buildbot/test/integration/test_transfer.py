@@ -20,7 +20,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
 
-# This integration test creates a master and slave environment
+# This integration test creates a master and worker environment
 # and make sure the transfer steps are working
 
 # When new protocols are added, make sure you update this test to exercice your proto implementation
@@ -50,7 +50,7 @@ class TransferStepsMasterPb(RunMasterBase):
              'dir/file2.txt': 'filecontent2',
              'dir/file3.txt': 'filecontent2'})
 
-        # cleanup our mess (slave is cleaned up by parent class)
+        # cleanup our mess (worker is cleaned up by parent class)
         shutil.rmtree("dir")
         os.unlink("master.txt")
 

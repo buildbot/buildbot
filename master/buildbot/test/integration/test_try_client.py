@@ -42,7 +42,7 @@ def waitFor(fn):
 
 
 class FakeRemoteSlave(pb.Referenceable):
-    # the bare minimum to connect to a master and convince it that the slave is
+    # the bare minimum to connect to a master and convince it that the worker is
     # ready
 
     def __init__(self, port):
@@ -203,7 +203,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                 return True
             yield waitFor(getSchedulerPort)
 
-        # now start the fake slave
+        # now start the fake worker
         if startSlave:
             self.slave = FakeRemoteSlave(self.serverPort)
             yield self.slave.start()

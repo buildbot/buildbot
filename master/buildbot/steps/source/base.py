@@ -71,7 +71,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         The source stamp helps avoid a race condition in which someone
         commits a change after the master has decided to start a build
-        but before the slave finishes checking out the sources. At best
+        but before the worker finishes checking out the sources. At best
         this results in a build which contains more changes than the
         buildmaster thinks it has (possibly resulting in the wrong
         person taking the blame for any problems that result), at worst
@@ -81,7 +81,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         @type logEnviron: boolean
         @param logEnviron: If this option is true (the default), then the
                            step's logfile will describe the environment
-                           variables on the slave. In situations where the
+                           variables on the worker. In situations where the
                            environment is not relevant and is long, it may
                            be easier to set logEnviron=False.
 

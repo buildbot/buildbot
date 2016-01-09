@@ -94,7 +94,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         # _finished is called with an error for unknown commands, errors
         # that occur while the command is starting (including OSErrors in
         # exec()), StaleBroker (when the connection was lost before we
-        # started), and pb.PBConnectionLost (when the slave isn't responding
+        # started), and pb.PBConnectionLost (when the worker isn't responding
         # over this connection, perhaps it had a power failure, or NAT
         # weirdness). If this happens, self.deferred is fired right away.
         d.addErrback(self._finished)
@@ -162,7 +162,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         d = self.conn.remoteInterruptCommand(self.builder_name,
                                              self.commandID, str(why))
-        # the slave may not have remote_interruptCommand
+        # the worker may not have remote_interruptCommand
         d.addErrback(self._interruptFailed)
         return d
 
@@ -174,7 +174,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def remote_update(self, updates):
         """
-        I am called by the slave's L{buildbot.slave.bot.SlaveBuilder} so
+        I am called by the worker's L{buildbot.slave.bot.SlaveBuilder} so
         I can receive updates from the running remote command.
 
         @type  updates: list of [object, int]
@@ -188,7 +188,7 @@ class RemoteCommand(base.RemoteCommandImpl):
                 if self.active and not self.ignore_updates:
                     self.remoteUpdate(update)
             except Exception:
-                # log failure, terminate build, let slave retire the update
+                # log failure, terminate build, let worker retire the update
                 self._finished(Failure())
                 # TODO: what if multiple updates arrive? should
                 # skip the rest but ack them all
@@ -198,7 +198,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
     def remote_complete(self, failure=None):
         """
-        Called by the slave's L{buildbot.slave.bot.SlaveBuilder} to
+        Called by the worker's L{buildbot.slave.bot.SlaveBuilder} to
         notify me the remote command has finished.
 
         @type  failure: L{twisted.python.failure.Failure} or None
@@ -207,7 +207,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         """
         self.buildslave.messageReceivedFromSlave()
         # call the real remoteComplete a moment later, but first return an
-        # acknowledgement so the slave can retire the completion message.
+        # acknowledgement so the worker can retire the completion message.
         if self.active:
             eventually(self._finished, failure)
         return None

@@ -146,7 +146,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_connected_not_configured(self):
         yield self.insertTestData(self.baseRows + [
-            # the slave is connected to this master, but not configured.
+            # the worker is connected to this master, but not configured.
             # weird, but the DB should represent it.
             fakedb.Buildslave(id=32, name='two'),
             fakedb.ConnectedBuildslave(buildslaveid=32, masterid=11),
@@ -160,7 +160,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_multiple_connections(self):
         yield self.insertTestData(self.baseRows + [
-            # the slave is connected to two masters at once.
+            # the worker is connected to two masters at once.
             # weird, but the DB should represent it.
             fakedb.Buildslave(id=32, name='two'),
             fakedb.ConnectedBuildslave(buildslaveid=32, masterid=10),
@@ -526,7 +526,7 @@ class Tests(interfaces.InterfaceTests):
         res = yield self.db.buildslaves.getBuildslaves(masterid=11)
         self.assertEqual(len(res), 2)
 
-        # should remove all slave configured for masterid 11
+        # should remove all worker configured for masterid 11
         yield self.db.buildslaves.deconfigureAllBuidslavesForMaster(masterid=11)
 
         res = yield self.db.buildslaves.getBuildslaves(masterid=11)

@@ -31,7 +31,7 @@ class FakeBuildslaveManager(service.AsyncMultiService):
 
         # self.slaves contains a ready Worker instance for each
         # potential buildslave, i.e. all the ones listed in the config file.
-        # If the slave is connected, self.slaves[workername].slave will
+        # If the worker is connected, self.slaves[workername].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
         self.slaves = {}  # maps workername to Worker

@@ -39,7 +39,7 @@ from buildbot.util.eventual import eventually
 
 class Build(properties.PropertiesMixin):
 
-    """I represent a single build by a single slave. Specialized Builders can
+    """I represent a single build by a single worker. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
 
@@ -259,7 +259,7 @@ class Build(properties.PropertiesMixin):
         self.setupSlaveBuilder(slavebuilder)
         slave.updateSlaveStatus(buildStarted=self)
 
-        # then narrow SlaveLocks down to the right slave
+        # then narrow SlaveLocks down to the right worker
         self.locks = [(l.getLock(self.slavebuilder.slave), a)
                       for l, a in self.locks]
         self.conn = slavebuilder.slave.conn
@@ -461,7 +461,7 @@ class Build(properties.PropertiesMixin):
         return terminate
 
     def lostRemote(self, conn=None):
-        # the slave went away. There are several possible reasons for this,
+        # the worker went away. There are several possible reasons for this,
         # and they aren't necessarily fatal. For now, kill the build, but
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
@@ -484,7 +484,7 @@ class Build(properties.PropertiesMixin):
         # they realized they committed a bug and they don't want to waste
         # the time building something that they know will fail. Another
         # reason might be to abandon a stuck build. We want to mark the
-        # build as failed quickly rather than waiting for the slave's
+        # build as failed quickly rather than waiting for the worker's
         # timeout to kill it on its own.
 
         log.msg(" %s: stopping build: %s %s" % (self, reason, cbParams))

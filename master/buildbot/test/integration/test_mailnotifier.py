@@ -20,7 +20,7 @@ from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
 
 
-# This integration test creates a master and slave environment,
+# This integration test creates a master and worker environment,
 # with one builders and a shellcommand step, and a MailNotifier
 class MailMaster(RunMasterBase):
 

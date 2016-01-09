@@ -62,7 +62,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             proto = '{"null": {}}'
             slaveclass = "LocalBuildSlave"
         # We create a master.cfg, which loads the configuration from the
-        # test module. Only the slave config is kept there, as it should not
+        # test module. Only the worker config is kept there, as it should not
         # be changed
         open(self.configfile, "w").write(textwrap.dedent("""
             from buildbot.plugins import buildslave
@@ -96,10 +96,10 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
                     "startService tried to stop the reactor; check logs")
 
         if self.proto == 'pb':
-            # We find out the slave port automatically
+            # We find out the worker port automatically
             slavePort = list(itervalues(m.pbmanager.dispatchers))[0].port.getHost().port
 
-            # create a slave, and attach it to the master, it will be started, and stopped
+            # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
             s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
         elif self.proto == 'null':

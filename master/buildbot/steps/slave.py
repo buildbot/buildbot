@@ -29,9 +29,9 @@ class SlaveBuildStep(buildstep.BuildStep):
 class SetPropertiesFromEnv(SlaveBuildStep):
 
     """
-    Sets properties from envirionment variables on the slave.
+    Sets properties from envirionment variables on the worker.
 
-    Note this is transfered when the slave first connects
+    Note this is transfered when the worker first connects
     """
     name = 'SetPropertiesFromEnv'
     description = ['Setting']
@@ -72,7 +72,7 @@ class SetPropertiesFromEnv(SlaveBuildStep):
 class FileExists(SlaveBuildStep):
 
     """
-    Check for the existence of a file on the slave.
+    Check for the existence of a file on the worker.
     """
     name = 'FileExists'
     renderables = ['file']
@@ -107,7 +107,7 @@ class FileExists(SlaveBuildStep):
 class CopyDirectory(SlaveBuildStep):
 
     """
-    Copy a directory tree on the slave.
+    Copy a directory tree on the worker.
     """
     name = 'CopyDirectory'
     description = ['Copying']
@@ -166,7 +166,7 @@ class CopyDirectory(SlaveBuildStep):
 class RemoveDirectory(SlaveBuildStep):
 
     """
-    Remove a directory tree on the slave.
+    Remove a directory tree on the worker.
     """
     name = 'RemoveDirectory'
     description = ['Deleting']
@@ -199,7 +199,7 @@ class RemoveDirectory(SlaveBuildStep):
 class MakeDirectory(SlaveBuildStep):
 
     """
-    Create a directory on the slave.
+    Create a directory on the worker.
     """
     name = 'MakeDirectory'
     description = ['Creating']
@@ -256,7 +256,7 @@ class CompositeStepMixin():
         return d
 
     def runRmdir(self, dir, timeout=None, **kwargs):
-        """ remove a directory from the slave """
+        """ remove a directory from the worker """
         cmd_args = {'dir': dir, 'logEnviron': self.logEnviron}
         if timeout:
             cmd_args['timeout'] = timeout

@@ -454,7 +454,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in self.locks]
-        # then narrow SlaveLocks down to the slave that this build is being
+        # then narrow SlaveLocks down to the worker that this build is being
         # run on
         self.locks = [(l.getLock(self.build.slavebuilder.slave), la)
                       for l, la in self.locks]
@@ -527,7 +527,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             # that this should just be exception due to interrupt
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
-            # due to slave lost
+            # due to worker lost
             if self.results != CANCELLED:
                 self.results = EXCEPTION
 

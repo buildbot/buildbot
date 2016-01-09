@@ -164,7 +164,7 @@ class Connection(base.Connection, pb.Avatar):
         self.keepalive_timer = reactor.callLater(self.keepalive_interval,
                                                  self.doKeepalive)
 
-    # methods to send messages to the slave
+    # methods to send messages to the worker
 
     def remotePrint(self, message):
         return self.mind.callRemote('print', message=message)
@@ -225,15 +225,15 @@ class Connection(base.Connection, pb.Avatar):
             @d.addErrback
             def check_connlost(f):
                 f.trap(pb.PBConnectionLost)
-                return True  # the slave is gone, so call it finished
+                return True  # the worker is gone, so call it finished
             return d
 
         if (yield new_way()):
             return  # done!
 
         # Now, the old way. Look for a builder with a remote reference to the
-        # client side slave. If we can find one, then call "shutdown" on the
-        # remote builder, which will cause the slave buildbot process to exit.
+        # client side worker. If we can find one, then call "shutdown" on the
+        # remote builder, which will cause the worker buildbot process to exit.
         def old_way():
             d = None
             for b in itervalues(self.buildslave.slavebuilders):
@@ -248,7 +248,7 @@ class Connection(base.Connection, pb.Avatar):
                 # the buildbot process exits almost immediately after getting
                 # the shutdown request.
                 # Here we look at the reason why the remote call failed, and if
-                # it's because the connection was lost, that means the slave
+                # it's because the connection was lost, that means the worker
                 # shutdown as expected.
 
                 @d.addErrback
@@ -272,7 +272,7 @@ class Connection(base.Connection, pb.Avatar):
         return defer.maybeDeferred(slavebuilder.callRemote, "interruptCommand",
                                    commandId, why)
 
-    # perspective methods called by the slave
+    # perspective methods called by the worker
 
     def perspective_keepalive(self):
         self.buildslave.messageReceivedFromSlave()

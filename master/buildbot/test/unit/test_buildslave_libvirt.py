@@ -158,7 +158,7 @@ class TestLibVirtSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_canStartBuild_domain_and_not_connected(self):
         """
-        If we've found that the VM this slave would instance already exists but hasnt
+        If we've found that the VM this worker would instance already exists but hasnt
         connected then we shouldn't start builds or we'll end up with a dupe.
         """
         bs = yield self.setup_canStartBuild()

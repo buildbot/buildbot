@@ -145,7 +145,7 @@ class SlaveStatus:
             'name': self.getName(),
             'access_uri': self.getAccessURI(),
 
-            # Transient (since it changes when the slave reconnects)
+            # Transient (since it changes when the worker reconnects)
             'host': self.getHost(),
             'admin': self.getAdmin(),
             'version': self.getVersion(),

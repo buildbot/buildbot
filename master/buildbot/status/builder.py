@@ -485,7 +485,7 @@ class BuilderStatus(styles.Versioned):
     def subscribe(self, receiver):
         # will get builderChangedState, buildStarted, buildFinished,
         # requestSubmitted, requestCancelled. Note that a request which is
-        # resubmitted (due to a slave disconnect) will cause requestSubmitted
+        # resubmitted (due to a worker disconnect) will cause requestSubmitted
         # to be invoked multiple times.
         self.watchers.append(receiver)
         self.publishState(receiver)

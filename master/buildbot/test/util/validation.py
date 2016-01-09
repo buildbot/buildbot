@@ -386,7 +386,7 @@ dbdict['builderdict'] = DictValidator(
     tags=ListValidator(StringValidator()),
 )
 
-# slave
+# worker
 
 dbdict['buildslavedict'] = DictValidator(
     id=IntValidator(),

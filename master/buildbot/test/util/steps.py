@@ -135,16 +135,16 @@ class BuildStepMixin(object):
         Set up C{step} for testing.  This begins by using C{step} as a factory
         to create a I{new} step instance, thereby testing that the the factory
         arguments are handled correctly.  It then creates a comfortable
-        environment for the slave to run in, replete with a fake build and a
-        fake slave.
+        environment for the worker to run in, replete with a fake build and a
+        fake worker.
 
         As a convenience, it can set the step's workdir with C{'wkdir'}.
 
-        @param slave_version: slave version to present, as a dictionary mapping
+        @param slave_version: worker version to present, as a dictionary mapping
             command name to version.  A command name of '*' will apply for all
             commands.
 
-        @param slave_env: environment from the slave at slave startup
+        @param slave_env: environment from the worker at worker startup
 
         @param wantData(bool): Set to True to add data API connector to master.
             Default value: True.

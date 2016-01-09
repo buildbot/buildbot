@@ -1383,7 +1383,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
         return None
 
     def getBuildslave(self, buildslaveid=None, name=None, masterid=None, builderid=None):
-        # get the id and the slave
+        # get the id and the worker
         if buildslaveid is None:
             for slave in itervalues(self.buildslaves):
                 if slave['name'] == name:

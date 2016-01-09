@@ -16,11 +16,11 @@
 from twisted.internet import defer
 from twisted.python import log
 
-(ATTACHING,  # slave attached, still checking hostinfo/etc
+(ATTACHING,  # worker attached, still checking hostinfo/etc
  IDLE,  # idle, available for use
  PINGING,  # build about to start, making sure it is still alive
  BUILDING,  # build is running
- LATENT,  # latent slave is not substantiated; similar to idle
+ LATENT,  # latent worker is not substantiated; similar to idle
  SUBSTANTIATING,
  ) = range(6)
 
@@ -49,7 +49,7 @@ class AbstractSlaveBuilder(object):
 
     def getSlaveCommandVersion(self, command, oldversion=None):
         if self.remoteCommands is None:
-            # the slave is 0.5.0 or earlier
+            # the worker is 0.5.0 or earlier
             return oldversion
         return self.remoteCommands.get(command)
 
@@ -62,7 +62,7 @@ class AbstractSlaveBuilder(object):
         if self.slave:
             return self.slave.canStartBuild()
 
-        # no slave? not very available.
+        # no worker? not very available.
         return False
 
     def isBusy(self):
@@ -90,7 +90,7 @@ class AbstractSlaveBuilder(object):
         @param slave: the Worker that represents the buildslave as a
                       whole
         @type  commands: dict: string -> string, or None
-        @param commands: provides the slave's version of each RemoteCommand
+        @param commands: provides the worker's version of each RemoteCommand
         """
         self.state = ATTACHING
         self.remoteCommands = commands  # maps command name to version
@@ -119,7 +119,7 @@ class AbstractSlaveBuilder(object):
         return defer.succeed(True)
 
     def ping(self, status=None):
-        """Ping the slave to make sure it is still there. Returns a Deferred
+        """Ping the worker to make sure it is still there. Returns a Deferred
         that fires with True if it is.
 
         @param status: if you point this at a BuilderStatus, a 'pinging'
@@ -179,7 +179,7 @@ class Ping:
         self.running = True
         log.msg("sending ping")
         self.d = defer.Deferred()
-        # TODO: add a distinct 'ping' command on the slave.. using 'print'
+        # TODO: add a distinct 'ping' command on the worker.. using 'print'
         # for this purpose is kind of silly.
         conn.remotePrint(message="ping").addCallbacks(self._pong,
                                                       self._ping_failed,
@@ -192,7 +192,7 @@ class Ping:
 
     def _ping_failed(self, res, conn):
         log.msg("ping finished: failure")
-        # the slave has some sort of internal error, disconnect them. If we
+        # the worker has some sort of internal error, disconnect them. If we
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
         conn.loseConnection()
@@ -234,7 +234,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
 
         @d.addCallback
         def substantiation_cancelled(res):
-            # if res is False, latent slave cancelled subtantiation
+            # if res is False, latent worker cancelled subtantiation
             if not res:
                 self.state = LATENT
             return res

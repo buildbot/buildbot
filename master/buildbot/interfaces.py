@@ -475,7 +475,7 @@ class IBuildRequestStatus(Interface):
         IBuildStatus object) for each Build that is created to satisfy this
         request. There may be multiple Builds created in an attempt to handle
         the request: they may be interrupted by the user or abandoned due to
-        a lost slave. The last Build (the one which actually gets to run to
+        a lost worker. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):
@@ -491,13 +491,13 @@ class ISlaveStatus(Interface):
         """Return the name of the worker."""
 
     def getAdmin():
-        """Return a string with the slave admin's contact data."""
+        """Return a string with the worker admin's contact data."""
 
     def getHost():
-        """Return a string with the slave host info."""
+        """Return a string with the worker host info."""
 
     def isConnected():
-        """Return True if the slave is currently online, False if not."""
+        """Return True if the worker is currently online, False if not."""
 
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
@@ -950,10 +950,10 @@ class IStatusReceiver(IPlugin):
         """The Builder has been removed."""
 
     def slaveConnected(slaveName):
-        """The slave has connected."""
+        """The worker has connected."""
 
     def slaveDisconnected(slaveName):
-        """The slave has disconnected."""
+        """The worker has disconnected."""
 
     def checkConfig(otherStatusReceivers):
         """Verify that there are no other status receivers which conflict with
@@ -996,9 +996,9 @@ class IBuilderControl(Interface):
         there is nothing to control anymore."""
 
     def ping():
-        """Attempt to contact the slave and see if it is still alive. This
-        returns a Deferred which fires with either True (the slave is still
-        alive) or False (the slave did not respond). As a side effect, adds an
+        """Attempt to contact the worker and see if it is still alive. This
+        returns a Deferred which fires with either True (the worker is still
+        alive) or False (the worker did not respond). As a side effect, adds an
         event to this builder's column in the waterfall display containing the
         results of the ping. Note that this may not fail for a long time, it is
         implemented in terms of the timeout on the underlying TCP connection."""
@@ -1014,7 +1014,7 @@ class IBuildRequestControl(Interface):
         IBuildControl object) for each Build that is created to satisfy this
         request. There may be multiple Builds created in an attempt to handle
         the request: they may be interrupted by the user or abandoned due to
-        a lost slave. The last Build (the one which actually gets to run to
+        a lost worker. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):

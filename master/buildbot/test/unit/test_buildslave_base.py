@@ -245,7 +245,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     # FIXME: Test that reconfig properly deals with
     #   1) locks
-    #   2) telling slave about builder
+    #   2) telling worker about builder
     #   3) missing timer
     # in both the initial config and a reconfiguration.
 
@@ -327,7 +327,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(slave.slave_status.getAccessURI(), None)
         self.assertEqual(slave.slave_status.getVersion(), None)
 
-        # check that a new slave row was added for this buildslave
+        # check that a new worker row was added for this buildslave
         bs = yield self.master.db.buildslaves.getBuildslave(name='bot')
         self.assertEqual(bs['name'], 'bot')
 

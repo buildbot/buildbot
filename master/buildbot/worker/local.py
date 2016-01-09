@@ -26,7 +26,7 @@ class LocalBuildSlave(Worker):
         Worker.checkConfig(self, name, None, **kwargs)
         self.LocalBuildSlaveFactory = None
         try:
-            # importing here to avoid dependency on buildbot slave package
+            # importing here to avoid dependency on buildbot worker package
             from buildslave.bot import LocalBuildSlave as RemoteLocalBuildSlave
             self.LocalBuildSlaveFactory = RemoteLocalBuildSlave
         except ImportError:
@@ -43,7 +43,7 @@ class LocalBuildSlave(Worker):
             os.makedirs(workdir)
 
         if self.remote_slave is None:
-            # create the actual slave as a child service
+            # create the actual worker as a child service
             # we only create at reconfig, to avoid poluting memory in case of reconfig
             self.remote_slave = self.LocalBuildSlaveFactory(name, workdir, usePty)
             yield self.remote_slave.setServiceParent(self)

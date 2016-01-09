@@ -52,7 +52,7 @@ class Connection(object):
     def loseConnection(self):
         raise NotImplementedError
 
-    # methods to send messages to the slave
+    # methods to send messages to the worker
 
     def remotePrint(self, message):
         raise NotImplementedError

@@ -308,10 +308,10 @@ class Monotone(Source):
                                     workdir='.')
             elif stdout.find("too new, cannot use") >= 0 or \
                     stdout.find("database has no tables") >= 0:
-                # The database is of a newer format which the slave's
+                # The database is of a newer format which the worker's
                 # mtn version can not handle. Drop it and pull again
                 # with that monotone version installed on the
-                # slave. Do the same if it's an empty file.
+                # worker. Do the same if it's an empty file.
                 yield self.runRmdir(self.database)
                 db_needs_init = True
             elif stdout.find("not a monotone database") >= 0:

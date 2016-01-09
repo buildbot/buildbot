@@ -300,7 +300,7 @@ class SlaveLock(BaseLockId):
     operations to happen on a single buildslave at the same time.
 
     Use this to protect a resource that is shared among all the builds taking
-    place on each slave, for example to limit CPU or memory load on an
+    place on each worker, for example to limit CPU or memory load on an
     underpowered machine.
 
     Each buildslave will get an independent copy of this semaphore. By

@@ -397,7 +397,7 @@ class Repo(Source):
     def maybeUpdateTarball(self):
         if not self.tarball or self.updateTarballAge is None:
             return
-        # tarball path is absolute, so we cannot use slave's stat command
+        # tarball path is absolute, so we cannot use worker's stat command
         # stat -c%Y gives mtime in second since epoch
         res = yield self._Cmd(["stat", "-c%Y", self.tarball], collectStdout=True, abandonOnFailure=False)
         if not res:

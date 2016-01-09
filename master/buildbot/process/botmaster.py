@@ -268,10 +268,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def maybeStartBuildsForSlave(self, buildslave_name):
         """
-        Call this when something suggests that a particular slave may now be
+        Call this when something suggests that a particular worker may now be
         available to start a build.
 
-        @param buildslave_name: the name of the slave
+        @param buildslave_name: the name of the worker
         """
         builders = self.getBuildersForSlave(buildslave_name)
         self.brd.maybeStartBuildsOn([b.name for b in builders])

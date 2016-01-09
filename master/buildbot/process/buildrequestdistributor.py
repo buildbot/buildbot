@@ -31,7 +31,7 @@ class BuildChooserBase(object):
     #
     # WARNING: This API is experimental and in active development.
     #
-    # This internal object selects a new build+slave pair. It acts as a
+    # This internal object selects a new build+worker pair. It acts as a
     # generator, initializing its state on creation and offering up new
     # pairs until exhaustion. The object can be destroyed at any time
     # (eg, before the list exhausts), and can be "restarted" by abandoning
@@ -139,21 +139,21 @@ class BasicBuildChooser(BuildChooserBase):
     #   * config.nextBuild  (or "pop top" if not set)
     #
     # For N slaves, this will call nextSlave at most N times. If nextSlave
-    # returns a slave that cannot satisfy the build chosen by nextBuild,
-    # it will search for a slave that can satisfy the build. If one is found,
+    # returns a worker that cannot satisfy the build chosen by nextBuild,
+    # it will search for a worker that can satisfy the build. If one is found,
     # the slaves that cannot be used are "recycled" back into a list
     # to be tried, in order, for the next chosen build.
     #
-    # There are two tests performed on the slave:
-    #   * can the slave start a generic build for the Builder?
-    #   * if so, can the slave start the chosen build on the Builder?
+    # There are two tests performed on the worker:
+    #   * can the worker start a generic build for the Builder?
+    #   * if so, can the worker start the chosen build on the Builder?
     # Slaves that cannot meet the first criterion are saved into the
     # self.rejectedSlaves list and will be used as a last resort. An example
-    # of this test is whether the slave can grab the Builder's locks.
+    # of this test is whether the worker can grab the Builder's locks.
     #
     # If all slaves fail the first test, then the algorithm will assign the
     # slaves in the order originally generated. By setting self.rejectedSlaves
-    # to None, the behavior will instead refuse to ever assign to a slave that
+    # to None, the behavior will instead refuse to ever assign to a worker that
     # fails the generic test.
 
     def __init__(self, bldr, master):
@@ -185,7 +185,7 @@ class BasicBuildChooser(BuildChooserBase):
             if not breq:
                 break
 
-            #  2. pick a slave
+            #  2. pick a worker
             slave = yield self._popNextSlave(breq)
             if not slave:
                 break
@@ -199,12 +199,12 @@ class BasicBuildChooser(BuildChooserBase):
                 canStart = yield self.canStartBuild(slave, breq)
                 if canStart:
                     break
-                # try a different slave
+                # try a different worker
                 recycledSlaves.append(slave)
                 slave = yield self._popNextSlave(breq)
 
             # recycle the slaves that we didnt use to the head of the queue
-            # this helps ensure we run 'nextSlave' only once per slave choice
+            # this helps ensure we run 'nextSlave' only once per worker choice
             if recycledSlaves:
                 self._unpopSlaves(recycledSlaves)
 
@@ -256,7 +256,7 @@ class BasicBuildChooser(BuildChooserBase):
                 slave = None
 
             if not slave or slave not in self.slavepool:
-                # bad slave or no slave returned
+                # bad worker or no worker returned
                 break
 
             self.slavepool.remove(slave)
@@ -506,7 +506,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
             buildStarted = yield bldr.maybeStartBuild(slave, breqs)
             if not buildStarted:
                 yield self.master.data.updates.unclaimBuildRequests(brids)
-                # try starting builds again.  If we still have a working slave,
+                # try starting builds again.  If we still have a working worker,
                 # then this may re-claim the same buildrequests
                 self.botmaster.maybeStartBuildsForBuilder(self.name)
 

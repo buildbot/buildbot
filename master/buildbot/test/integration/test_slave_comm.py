@@ -38,14 +38,14 @@ from twisted.trial import unittest
 class FakeSlaveBuilder(pb.Referenceable):
 
     """
-    Fake slave-side SlaveBuilder object
+    Fake worker-side SlaveBuilder object
     """
 
 
 class FakeSlaveBuildSlave(pb.Referenceable):
 
     """
-    Fake slave-side Worker object
+    Fake worker-side Worker object
 
     @ivar master_persp: remote perspective on the master
     """
@@ -142,9 +142,9 @@ class TestSlaveComm(unittest.TestCase):
     @ivar pbamanger: L{PBManager} instance
     @ivar botmaster: L{BotMaster} instance
     @ivar worker: master-side L{Worker} instance
-    @ivar slavebuildslave: slave-side L{FakeSlaveBuildSlave} instance
+    @ivar slavebuildslave: worker-side L{FakeSlaveBuildSlave} instance
     @ivar port: TCP port to connect to
-    @ivar connector: outbound TCP connection from slave to master
+    @ivar connector: outbound TCP connection from worker to master
     """
 
     @defer.inlineCallbacks
@@ -152,7 +152,7 @@ class TestSlaveComm(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self, wantMq=True,
                                              wantData=True, wantDb=True)
 
-        # set the slave port to a loopback address with unspecified
+        # set the worker port to a loopback address with unspecified
         # port
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
         self.pbmanager.setServiceParent(self.master)
@@ -198,7 +198,7 @@ class TestSlaveComm(unittest.TestCase):
     @defer.inlineCallbacks
     def addSlave(self, **kwargs):
         """
-        Create a master-side slave instance and add it to the BotMaster
+        Create a master-side worker instance and add it to the BotMaster
 
         @param **kwargs: arguments to pass to the L{Worker} constructor.
         """
@@ -214,13 +214,13 @@ class TestSlaveComm(unittest.TestCase):
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(new_config)
 
-        # as part of the reconfig, the slave registered with the pbmanager, so
+        # as part of the reconfig, the worker registered with the pbmanager, so
         # get the port it was assigned
         self.port = self.buildslave.registration.getPBPort()
 
     def connectSlave(self, waitForBuilderList=True):
         """
-        Connect a slave the master via PB
+        Connect a worker the master via PB
 
         @param waitForBuilderList: don't return until the setBuilderList has
         been called
@@ -239,7 +239,7 @@ class TestSlaveComm(unittest.TestCase):
         def logged_in(persp):
             slavebuildslave.setMasterPerspective(persp)
 
-            # set up to hear when the slave side disconnects
+            # set up to hear when the worker side disconnects
             slavebuildslave.detach_d = defer.Deferred()
             persp.broker.notifyOnDisconnect(lambda:
                                             slavebuildslave.detach_d.callback(None))
@@ -258,12 +258,12 @@ class TestSlaveComm(unittest.TestCase):
             return d
 
     def slaveSideDisconnect(self, slave):
-        """Disconnect from the slave side"""
+        """Disconnect from the worker side"""
         slave.master_persp.broker.transport.loseConnection()
 
     @defer.inlineCallbacks
     def test_connect_disconnect(self):
-        """Test a single slave connecting and disconnecting."""
+        """Test a single worker connecting and disconnecting."""
         yield self.addSlave()
 
         # connect
@@ -280,10 +280,10 @@ class TestSlaveComm(unittest.TestCase):
     def test_duplicate_slave(self):
         yield self.addSlave()
 
-        # connect first slave
+        # connect first worker
         slave1 = yield self.connectSlave()
 
-        # connect second slave; this should fail
+        # connect second worker; this should fail
         try:
             yield self.connectSlave(waitForBuilderList=False)
             connect_failed = False
@@ -303,17 +303,17 @@ class TestSlaveComm(unittest.TestCase):
     def test_duplicate_slave_old_dead(self):
         yield self.addSlave()
 
-        # connect first slave
+        # connect first worker
         slave1 = yield self.connectSlave()
 
-        # monkeypatch that slave to fail with PBConnectionLost when its
+        # monkeypatch that worker to fail with PBConnectionLost when its
         # remote_print method is called
         def remote_print(message):
             slave1.master_persp.broker.transport.loseConnection()
             raise pb.PBConnectionLost("fake!")
         slave1.remote_print = remote_print
 
-        # connect second slave; this should succeed, and the old slave
+        # connect second worker; this should succeed, and the old worker
         # should be disconnected.
         slave2 = yield self.connectSlave()
 
@@ -322,5 +322,5 @@ class TestSlaveComm(unittest.TestCase):
 
         yield slave1.waitForDetach()
 
-        # flush the exception logged for this on the slave
+        # flush the exception logged for this on the worker
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)

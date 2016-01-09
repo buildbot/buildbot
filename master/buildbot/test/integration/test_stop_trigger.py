@@ -23,7 +23,7 @@ from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.util.integration import RunMasterBase
 
-# This integration test creates a master and slave environment,
+# This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them. the triggered build never ends
 # so that we can reliabily stop it recursively
 
