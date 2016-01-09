@@ -20,7 +20,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import config as bbconfig
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
@@ -161,7 +161,7 @@ class Git(Source):
             gitInstalled = yield self.checkBranchSupport()
 
             if not gitInstalled:
-                raise BuildSlaveTooOldError("git is not installed on slave")
+                raise WorkerTooOldError("git is not installed on slave")
 
             patched = yield self.sourcedirIsPatched()
 

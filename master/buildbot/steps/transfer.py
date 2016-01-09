@@ -17,7 +17,7 @@ import os
 import stat
 
 from buildbot import config
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.buildstep import BuildStep
@@ -126,7 +126,7 @@ class FileUpload(_TransferBuildStep):
         if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
                  "Please upgrade the buildslave." % self.build.slavename)
-            raise BuildSlaveTooOldError(m)
+            raise WorkerTooOldError(m)
 
         # default arguments
         args = {
@@ -301,7 +301,7 @@ class MultipleFileUpload(_TransferBuildStep):
         if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
                  "Please upgrade the buildslave." % self.build.slavename)
-            raise BuildSlaveTooOldError(m)
+            raise WorkerTooOldError(m)
 
         if not sources:
             return self.finished(SKIPPED)

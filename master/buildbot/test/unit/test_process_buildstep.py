@@ -17,7 +17,7 @@ from future.utils import itervalues
 import mock
 
 from buildbot import locks
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -523,7 +523,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
         # make sure appropriate exception is raised
         step = buildstep.BuildStep()
-        self.assertRaisesRegexp(BuildSlaveTooOldError,
+        self.assertRaisesRegexp(WorkerTooOldError,
                                 "slave is too old, does not know about foo",
                                 step.checkSlaveHasCommand, "foo")
 

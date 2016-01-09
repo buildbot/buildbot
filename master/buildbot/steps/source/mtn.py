@@ -20,7 +20,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.results import SUCCESS
@@ -78,7 +78,7 @@ class Monotone(Source):
         try:
             monotoneInstalled = yield self.checkMonotone()
             if not monotoneInstalled:
-                raise BuildSlaveTooOldError("Monotone is not installed on slave")
+                raise WorkerTooOldError("Monotone is not installed on slave")
 
             yield self._checkDb()
             yield self._retryPull()

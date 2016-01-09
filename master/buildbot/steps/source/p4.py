@@ -18,7 +18,7 @@ import re
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
@@ -116,7 +116,7 @@ class P4(Source):
         @d.addCallback
         def checkInstall(p4Installed):
             if not p4Installed:
-                raise BuildSlaveTooOldError("p4 is not installed on slave")
+                raise WorkerTooOldError("p4 is not installed on slave")
             return 0
 
         if self.use_tickets and self.p4passwd:

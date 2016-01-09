@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.remotetransfer import StringFileWriter
@@ -68,7 +68,7 @@ class CVS(Source):
         @d.addCallback
         def checkInstall(cvsInstalled):
             if not cvsInstalled:
-                raise BuildSlaveTooOldError("CVS is not installed on slave")
+                raise WorkerTooOldError("CVS is not installed on slave")
             return 0
         d.addCallback(self.checkLogin)
 

@@ -40,8 +40,10 @@ class BuilderInUseError(Exception):
     pass
 
 
-class BuildSlaveTooOldError(Exception):
+class WorkerTooOldError(Exception):
     pass
+define_old_worker_class(
+    globals(), WorkerTooOldError, pattern="BuildWorker")
 
 
 class LatentBuildSlaveFailedToSubstantiate(Exception):

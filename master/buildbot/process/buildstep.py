@@ -38,7 +38,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
@@ -702,7 +702,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def checkSlaveHasCommand(self, command):
         if not self.slaveVersion(command):
             message = "slave is too old, does not know about %s" % command
-            raise BuildSlaveTooOldError(message)
+            raise WorkerTooOldError(message)
 
     def getSlaveName(self):
         return self.build.getSlaveName()
