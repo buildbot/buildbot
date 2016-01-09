@@ -133,7 +133,7 @@ class MyBuildSlave(worker.Worker):
 class TestSlaveComm(unittest.TestCase):
 
     """
-    Test handling of connections from slaves as integrated with
+    Test handling of connections from workers as integrated with
      - Twisted Spread
      - real TCP connections.
      - PBManager

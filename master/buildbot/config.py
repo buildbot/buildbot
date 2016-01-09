@@ -750,7 +750,7 @@ class MasterConfig(util.ComparableMixin):
 
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
-        # to unknown slaves
+        # to unknown workers
         slavenames = set([s.workername for s in self.slaves])
         seen_names = set()
         seen_builddirs = set()

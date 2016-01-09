@@ -278,7 +278,7 @@ class MasterLock(BaseLockId):
     same time.
 
     Use this to protect a resource that is shared among all builders and all
-    slaves, for example to limit the load on a common SVN repository.
+    workers, for example to limit the load on a common SVN repository.
     """
 
     compare_attrs = ['name', 'maxCount']
@@ -306,7 +306,7 @@ class SlaveLock(BaseLockId):
     Each buildslave will get an independent copy of this semaphore. By
     default each copy will use the same owner count (set with maxCount), but
     you can provide maxCountForSlave with a dictionary that maps workername to
-    owner count, to allow some slaves more parallelism than others.
+    owner count, to allow some workers more parallelism than others.
 
     """
 

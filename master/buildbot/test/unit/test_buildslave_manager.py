@@ -52,7 +52,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.master.mq = self.master.mq
         self.buildslaves = workermanager.BuildslaveManager(self.master)
         self.buildslaves.setServiceParent(self.master)
-        # slaves expect a botmaster as well as a manager.
+        # workers expect a botmaster as well as a manager.
         self.master.botmaster.disownServiceParent()
         self.botmaster = botmaster.BotMaster()
         self.master.botmaster = self.botmaster

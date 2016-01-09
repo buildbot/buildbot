@@ -14,7 +14,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 """
-A LatentSlave that uses EC2 to instantiate the slaves on demand.
+A LatentSlave that uses EC2 to instantiate the workers on demand.
 
 Tested with Python boto 1.5c
 """

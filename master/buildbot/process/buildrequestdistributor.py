@@ -138,10 +138,10 @@ class BasicBuildChooser(BuildChooserBase):
     #   * config.nextSlave  (or random.choice if not set)
     #   * config.nextBuild  (or "pop top" if not set)
     #
-    # For N slaves, this will call nextSlave at most N times. If nextSlave
+    # For N workers, this will call nextSlave at most N times. If nextSlave
     # returns a worker that cannot satisfy the build chosen by nextBuild,
     # it will search for a worker that can satisfy the build. If one is found,
-    # the slaves that cannot be used are "recycled" back into a list
+    # the workers that cannot be used are "recycled" back into a list
     # to be tried, in order, for the next chosen build.
     #
     # There are two tests performed on the worker:
@@ -151,8 +151,8 @@ class BasicBuildChooser(BuildChooserBase):
     # self.rejectedSlaves list and will be used as a last resort. An example
     # of this test is whether the worker can grab the Builder's locks.
     #
-    # If all slaves fail the first test, then the algorithm will assign the
-    # slaves in the order originally generated. By setting self.rejectedSlaves
+    # If all workers fail the first test, then the algorithm will assign the
+    # workers in the order originally generated. By setting self.rejectedSlaves
     # to None, the behavior will instead refuse to ever assign to a worker that
     # fails the generic test.
 
@@ -166,8 +166,8 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.slavepool = self.bldr.getAvailableSlaves()
 
-        # Pick slaves one at a time from the pool, and if the Builder says
-        # they're usable (eg, locks can be satisfied), then prefer those slaves;
+        # Pick workers one at a time from the pool, and if the Builder says
+        # they're usable (eg, locks can be satisfied), then prefer those workers;
         # otherwise they go in the 'last resort' bucket, and we'll use them if
         # we need to. (Setting rejectedSlaves to None disables that feature)
         self.preferredSlaves = []
@@ -203,7 +203,7 @@ class BasicBuildChooser(BuildChooserBase):
                 recycledSlaves.append(slave)
                 slave = yield self._popNextSlave(breq)
 
-            # recycle the slaves that we didnt use to the head of the queue
+            # recycle the workers that we didnt use to the head of the queue
             # this helps ensure we run 'nextSlave' only once per worker choice
             if recycledSlaves:
                 self._unpopSlaves(recycledSlaves)
@@ -243,7 +243,7 @@ class BasicBuildChooser(BuildChooserBase):
 
     @defer.inlineCallbacks
     def _popNextSlave(self, buildrequest):
-        # use 'preferred' slaves first, if we have some ready
+        # use 'preferred' workers first, if we have some ready
         if self.preferredSlaves:
             slave = self.preferredSlaves.pop(0)
             defer.returnValue(slave)
@@ -279,7 +279,7 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(None)
 
     def _unpopSlaves(self, slaves):
-        # push the slaves back to the front
+        # push the workers back to the front
         self.preferredSlaves[:0] = slaves
 
     def canStartBuild(self, slave, breq):

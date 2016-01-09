@@ -136,7 +136,7 @@ class Buildslave(base.ResourceType):
 
     @base.updateMethod
     def deconfigureAllBuidslavesForMaster(self, masterid):
-        # unconfigure all slaves for this master
+        # unconfigure all workers for this master
         return self.master.db.buildslaves.deconfigureAllBuidslavesForMaster(
             masterid=masterid)
 

@@ -54,7 +54,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     implements(IWorker)
 
-    # reconfig slaves after builders
+    # reconfig workers after builders
     reconfig_priority = 64
 
     def checkConfig(self, name, password, max_builds=None,

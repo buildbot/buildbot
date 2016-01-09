@@ -47,7 +47,7 @@ def enforceChosenSlave(bldr, slavebuilder, breq):
 class Builder(util_service.ReconfigurableServiceMixin,
               service.MultiService):
 
-    # reconfigure builders before slaves
+    # reconfigure builders before workers
     reconfig_priority = 196
 
     def __init__(self, name, _addServices=True):

@@ -177,7 +177,7 @@ class Connection(base.Connection, pb.Avatar):
         except pb.NoSuchMethod:
             log.msg("Worker.getSlaveInfo is unavailable - ignoring")
 
-        # newer slaves send all info in one command
+        # newer workers send all info in one command
         if "slave_commands" in info:
             defer.returnValue(info)
         try:

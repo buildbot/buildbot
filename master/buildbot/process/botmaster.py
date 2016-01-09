@@ -28,7 +28,7 @@ from twisted.python import log
 
 class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
-    """This is the master-side service which manages remote buildbot slaves.
+    """This is the master-side service which manages remote buildbot workers.
     It provides them with BuildSlaves, and distributes build requests to
     them."""
 

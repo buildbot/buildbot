@@ -532,7 +532,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.assertEqual(slaves_attempted, ['test-slave3', 'test-slave2', 'test-slave1'])
 
         # we expect brids in order (10-11-12),
-        # with each searched in reverse order of slaves (3-2-1) available (due to nth_slave(-1))
+        # with each searched in reverse order of workers (3-2-1) available (due to nth_slave(-1))
         self.assertEqual(pairs_tested, [
             ('test-slave3', 10),
             ('test-slave2', 10),
@@ -545,7 +545,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_limited_by_canStartBuild_deferreds(self):
         """Another variant that:
          * returns Deferred types,
-         * use 'canStartWithSlavebuilder' to reject one of the slaves
+         * use 'canStartWithSlavebuilder' to reject one of the workers
          * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
 
         self.bldr.config.nextSlave = nth_slave(-1)
