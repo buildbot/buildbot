@@ -21,7 +21,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
 
 try:
@@ -149,7 +149,7 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.workername,
                          instance.id, instance.name))
-                raise LatentBuildSlaveFailedToSubstantiate(
+                raise LatentWorkerFailedToSubstantiate(
                     instance.id, instance.status)
         if inst.status == ACTIVE:
             minutes = duration // 60

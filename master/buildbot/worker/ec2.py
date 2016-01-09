@@ -33,7 +33,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot import config
-from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
 
 PENDING = 'pending'
@@ -362,7 +362,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
                     'configured maximum of %0.3f' %
                     (self.__class__.__name__, self.workername,
                      self.current_spot_price, self.max_spot_price))
-            raise LatentBuildSlaveFailedToSubstantiate()
+            raise LatentWorkerFailedToSubstantiate()
         else:
             if self.retry > 1:
                 log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
@@ -398,11 +398,11 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
                     self.attempt = 0
                     log.msg('%s %s failed to substantiate after %d requests' %
                             (self.__class__.__name__, self.workername, self.retry))
-                    raise LatentBuildSlaveFailedToSubstantiate()
+                    raise LatentWorkerFailedToSubstantiate()
         else:
             instance_id, image_id, start_time, success = self._submit_request()
             if not success:
-                raise LatentBuildSlaveFailedToSubstantiate()
+                raise LatentWorkerFailedToSubstantiate()
         return instance_id, image_id, start_time
 
     def _wait_for_instance(self, image):
@@ -474,5 +474,5 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.workername,
                      request.id, request_status))
-            raise LatentBuildSlaveFailedToSubstantiate(
+            raise LatentWorkerFailedToSubstantiate(
                 request.id, request.status)

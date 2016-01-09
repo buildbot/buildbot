@@ -46,8 +46,10 @@ define_old_worker_class(
     globals(), WorkerTooOldError, pattern="BuildWorker")
 
 
-class LatentBuildSlaveFailedToSubstantiate(Exception):
+class LatentWorkerFailedToSubstantiate(Exception):
     pass
+define_old_worker_class(
+    globals(), LatentWorkerFailedToSubstantiate, pattern="BuildWorker")
 
 
 class IPlugin(Interface):

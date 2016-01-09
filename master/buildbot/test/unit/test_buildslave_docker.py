@@ -104,7 +104,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
     def test_start_instance_image_wrong_version(self):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox:123', ['bin/bash'])
         yield self.assertFailure(bs.start_instance(self.build),
-                                 interfaces.LatentBuildSlaveFailedToSubstantiate)
+                                 interfaces.LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
     def test_start_instance_image_renderable(self):
@@ -117,7 +117,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'])
         try:
             id, name = yield bs.start_instance(self.build)
-        except interfaces.LatentBuildSlaveFailedToSubstantiate:
+        except interfaces.LatentWorkerFailedToSubstantiate:
             pass
 
     @defer.inlineCallbacks
@@ -125,7 +125,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='BUG')
         try:
             id, name = yield bs.start_instance(self.build)
-        except interfaces.LatentBuildSlaveFailedToSubstantiate:
+        except interfaces.LatentWorkerFailedToSubstantiate:
             pass
 
     @defer.inlineCallbacks

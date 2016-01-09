@@ -101,14 +101,14 @@ class TestOpenStackBuildSlave(unittest.TestCase):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
-        self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
+        self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
                           bs._start_instance)
 
     def test_start_instance_fail_to_start(self):
         bs = openstack.OpenStackLatentBuildSlave('bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
-        self.assertRaises(interfaces.LatentBuildSlaveFailedToSubstantiate,
+        self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
                           bs._start_instance)
 
     def test_start_instance_success(self):
