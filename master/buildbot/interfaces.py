@@ -31,6 +31,9 @@ from buildbot.worker_transition import define_old_worker_class_alias
 # exceptions that can be raised while trying to start a build
 
 
+# TODO: Is this exception is used? If it's not, no new name should be defined,
+# and old name should be made obsolete (so it's instantiation will produce
+# error).
 class NoWorkerError(Exception):
     pass
 define_old_worker_class(globals(), NoWorkerError)
