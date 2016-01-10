@@ -129,6 +129,10 @@ Here is the complete list of changed API:
      - :py:attr:`buildbot.worker.base.AbstractWorker.workers`
 
 
+   * - :py:class:`buildbot.buildslave.docker.DockerLatentBuildSlave`
+     - :py:class:`buildbot.worker.docker.DockerLatentWorker`
+
+
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 
