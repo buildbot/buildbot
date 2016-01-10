@@ -109,8 +109,10 @@ class DockerLatentWorker(AbstractLatentWorker):
     def createEnvironment(self):
         result = {
             "BUILDMASTER": self.masterFQDN,
-            "SLAVENAME": self.name,
-            "SLAVEPASS": self.password
+            "SLAVENAME": self.name,      # deprecated, use "WORKERNAME"
+            "SLAVEPASS": self.password,  # deprecated, use "WORKERNAME"
+            "WORKERNAME": self.name,
+            "WORKERPASS": self.password
         }
         if self.registration is not None:
             result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())

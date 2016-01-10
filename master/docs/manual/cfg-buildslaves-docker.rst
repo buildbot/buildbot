@@ -134,10 +134,10 @@ The master setups several environment variables before starting the buildslaves:
 ``BUILDMASTER_PORT``
     The port of the master's slave 'pb' protocol.
 
-``SLAVENAME``
+``WORKERNAME``
     The name the slave should use to connect to master
 
-``SLAVEPASS``
+``WORKERPASS``
     The password the slave should use to connect to master
 
 Master Setup

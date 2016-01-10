@@ -168,3 +168,11 @@ name even if plugin uses old entry points:
 ``c['slaves']`` was replaced with ``c['workers']``.
 Use of ``c['slaves']`` will work, but is considered deprecated, and will be
 removed in the future versions of Buildbot.
+
+Docker latent worker changes
+----------------------------
+
+In addition to class being renamed, environment variables ``SLAVENAME`` and
+``SLAVEPASS`` were renamed to ``WORKERNAME`` and ``WORKERPASS`` accordingly.
+Old environment variable are still available, but are deprecated and will be
+removed in the future.
