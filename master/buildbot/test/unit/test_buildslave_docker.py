@@ -24,7 +24,7 @@ from buildbot.worker import docker as dockerbuildslave
 from twisted.internet import defer
 
 
-class TestDockerLatentBuildSlave(unittest.TestCase):
+class TestDockerLatentWorker(unittest.TestCase):
 
     class ConcreteWorker(dockerbuildslave.DockerLatentWorker):
         pass
