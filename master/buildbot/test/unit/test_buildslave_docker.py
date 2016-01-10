@@ -20,21 +20,21 @@ from buildbot import interfaces
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.test.fake import docker
-from buildbot.worker import docker as dockerbuildslave
+from buildbot.worker import docker as dockerworker
 from twisted.internet import defer
 
 
 class TestDockerLatentWorker(unittest.TestCase):
 
-    class ConcreteWorker(dockerbuildslave.DockerLatentWorker):
+    class ConcreteWorker(dockerworker.DockerLatentWorker):
         pass
 
     def setUp(self):
         self.build = Properties(image="busybox:latest")
-        self.patch(dockerbuildslave, 'client', docker)
+        self.patch(dockerworker, 'client', docker)
 
     def test_constructor_nodocker(self):
-        self.patch(dockerbuildslave, 'client', None)
+        self.patch(dockerworker, 'client', None)
         self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
 
     def test_constructor_noimage_nodockerfile(self):
@@ -139,7 +139,7 @@ class testDockerPyStreamLogs(unittest.TestCase):
 
     def compare(self, result, log):
         self.assertEquals(result,
-                          list(dockerbuildslave.handle_stream_line(log)))
+                          list(dockerworker.handle_stream_line(log)))
 
     def testEmpty(self):
         self.compare([], '{"stream":"\\n"}\r\n')
