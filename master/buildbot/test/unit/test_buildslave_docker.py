@@ -79,7 +79,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
     def test_ro_rw_volume(self):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'],
                                  volumes=['/src/webapp:/opt/webapp:ro',
-                                              '~:/backup:rw'])
+                                          '~:/backup:rw'])
         self.assertEqual(bs.volumes, ['/src/webapp', '~'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
                                     '~': {'bind': '/backup', 'ro': False}})
