@@ -376,7 +376,7 @@ class _PluginDB(object):
                     ('EC2LatentBuildSlave', 'EC2LatentBuildSlave'),
                     ('LibVirtSlave', 'LibVirtSlave'),
                     ('OpenStackLatentBuildSlave', 'OpenStackLatentBuildSlave'),
-                    ('DockerLatentBuildSlave', 'DockerLatentBuildSlave'),
+                    ('DockerLatentBuildSlave', 'DockerLatentWorker'),
                     ('LocalBuildSlave', 'LocalBuildSlave'),
                 ]
                 for old_name, new_name in old_new_names:

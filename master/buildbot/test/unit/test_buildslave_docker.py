@@ -26,7 +26,7 @@ from twisted.internet import defer
 
 class TestDockerLatentBuildSlave(unittest.TestCase):
 
-    class ConcreteBuildSlave(dockerbuildslave.DockerLatentBuildSlave):
+    class ConcreteWorker(dockerbuildslave.DockerLatentWorker):
         pass
 
     def setUp(self):
@@ -35,24 +35,24 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
 
     def test_constructor_nodocker(self):
         self.patch(dockerbuildslave, 'client', None)
-        self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave, 'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
+        self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
 
     def test_constructor_noimage_nodockerfile(self):
-        self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave, 'bot', 'pass', 'http://localhost:2375')
+        self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'http://localhost:2375')
 
     def test_constructor_noimage_dockerfile(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'http://localhost:2375', dockerfile="FROM ubuntu")
+        bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', dockerfile="FROM ubuntu")
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.image, None)
 
     def test_constructor_image_nodockerfile(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'http://localhost:2375', image="myslave")
+        bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', image="myslave")
         self.assertEqual(bs.dockerfile, None)
         self.assertEqual(bs.image, 'myslave')
 
     def test_constructor_minimal(self):
         # Minimal set of parameters
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave')
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave')
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.client_args, {'base_url': 'tcp://1234:2375'})
@@ -61,7 +61,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
 
     def test_constructor_all_docker_parameters(self):
         # Volumes have their own tests
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9', tls=True)
+        bs = self.ConcreteWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'slave_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9', tls=True)
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.image, 'slave_img')
@@ -72,49 +72,49 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
         self.assertEqual(bs.client_args, {'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
 
     def test_volume_no_suffix(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
         self.assertEqual(bs.volumes, ['/src/webapp'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
 
     def test_ro_rw_volume(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'],
-                                     volumes=['/src/webapp:/opt/webapp:ro',
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'],
+                                 volumes=['/src/webapp:/opt/webapp:ro',
                                               '~:/backup:rw'])
         self.assertEqual(bs.volumes, ['/src/webapp', '~'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
                                     '~': {'bind': '/backup', 'ro': False}})
 
     def test_volume_bad_format(self):
-        self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave, 'bot', 'pass', 'http://localhost:2375', image="slave",
+        self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'http://localhost:2375', image="slave",
                           volumes=['abcd=efgh'])
 
     @defer.inlineCallbacks
     def test_start_instance_image_no_version(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox')
 
     @defer.inlineCallbacks
     def test_start_instance_image_right_version(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
     def test_start_instance_image_wrong_version(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'busybox:123', ['bin/bash'])
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:123', ['bin/bash'])
         yield self.assertFailure(bs.start_instance(self.build),
                                  interfaces.LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
     def test_start_instance_image_renderable(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', Property('image'), ['bin/bash'])
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', Property('image'), ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_nodockerfile(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'])
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave', ['bin/bash'])
         try:
             id, name = yield bs.start_instance(self.build)
         except interfaces.LatentWorkerFailedToSubstantiate:
@@ -122,7 +122,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_dockefilefails(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='BUG')
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='BUG')
         try:
             id, name = yield bs.start_instance(self.build)
         except interfaces.LatentWorkerFailedToSubstantiate:
@@ -130,7 +130,7 @@ class TestDockerLatentBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_gooddockerfile(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='FROM debian:wheezy')
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'slave', dockerfile='FROM debian:wheezy')
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'slave')
 

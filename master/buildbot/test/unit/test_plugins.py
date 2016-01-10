@@ -258,7 +258,7 @@ _WORKER_FAKE_ENTRIES = {
         SimpleFakeEntry('EC2LatentBuildSlave', ClassWithInterface),
         SimpleFakeEntry('LibVirtSlave', ClassWithInterface),
         SimpleFakeEntry('OpenStackLatentBuildSlave', ClassWithInterface),
-        SimpleFakeEntry('DockerLatentBuildSlave', ClassWithInterface),
+        SimpleFakeEntry('DockerLatentWorker', ClassWithInterface),
         SimpleFakeEntry('LocalBuildSlave', ClassWithInterface),
         SimpleFakeEntry('LocalBuildSlave', ClassWithInterface),
         SimpleFakeEntry('newthirdparty', ClassWithInterface),

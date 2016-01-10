@@ -16,12 +16,17 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import on_deprecated_module_usage
 
 on_deprecated_module_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.docker' module instead".format(old=__name__))
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.worker.docker import *  # noqa
+from buildbot.worker.docker import DockerLatentWorker as _DockerLatentWorker
+# TODO: Is this private function?
+from buildbot.worker.docker import handle_stream_line
+
+define_old_worker_class(locals(), _DockerLatentWorker, pattern="BuildWorker")
+
+__all__ = ("DockerLatentBuildSlave", "handle_stream_line")

@@ -55,7 +55,7 @@ def handle_stream_line(line):
             yield streamline
 
 
-class DockerLatentBuildSlave(AbstractLatentWorker):
+class DockerLatentWorker(AbstractLatentWorker):
     instance = None
 
     def __init__(self, name, password, docker_host, image=None, command=None,
@@ -65,9 +65,9 @@ class DockerLatentBuildSlave(AbstractLatentWorker):
 
         if not client:
             config.error("The python module 'docker-py' is needed to use a"
-                         " DockerLatentBuildSlave")
+                         " DockerLatentWorker")
         if not image and not dockerfile:
-            config.error("DockerLatentBuildSlave: You need to specify at least"
+            config.error("DockerLatentWorker: You need to specify at least"
                          " an image name, or a dockerfile")
 
         self.volumes = []
