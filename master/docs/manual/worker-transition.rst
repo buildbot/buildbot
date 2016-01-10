@@ -47,7 +47,7 @@ Changed API
 -----------
 
 In general "Slave" and "Buildslave" parts in identifiers was replaced with
-"Worker".
+"Worker", "SlaveBuilder" with "WorkerBuilder".
 
 Here is the complete list of changed API:
 
