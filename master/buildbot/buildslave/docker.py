@@ -29,4 +29,5 @@ from buildbot.worker.docker import handle_stream_line
 
 define_old_worker_class(locals(), _DockerLatentWorker, pattern="BuildWorker")
 
-__all__ = ("DockerLatentBuildSlave", "handle_stream_line")
+# pylint: disable=undefined-all-variable
+__all__ = ("DockerLatentBuildSlave", "handle_stream_line")  # noqa
