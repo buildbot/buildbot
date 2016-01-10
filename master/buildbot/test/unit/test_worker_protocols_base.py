@@ -16,10 +16,10 @@
 
 import mock
 
-from buildbot.worker.protocols import base
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.util import protocols
+from buildbot.worker.protocols import base
 from twisted.trial import unittest
 
 
