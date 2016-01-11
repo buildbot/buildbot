@@ -176,7 +176,8 @@ removed in the future versions of Buildbot.
 Docker latent worker changes
 ----------------------------
 
-In addition to class being renamed, environment variables ``SLAVENAME`` and
-``SLAVEPASS`` were renamed to ``WORKERNAME`` and ``WORKERPASS`` accordingly.
+In addition to class being renamed, environment variables that are set inside
+container ``SLAVENAME`` and ``SLAVEPASS`` were renamed to
+``WORKERNAME`` and ``WORKERPASS`` accordingly.
 Old environment variable are still available, but are deprecated and will be
 removed in the future.
