@@ -54,8 +54,13 @@ Here is the complete list of changed API:
 .. todo::
 
     * This list will be updated along with actual changing of the API.
+
     * Most of this list can be generated/verified by grepping use of
       ``worker_transition`` helpers.
+
+    * Some of attribute/methods that were renamed may be actually private.
+      If they are private, then no fallback should be provided and they
+      change shouldn't be documented.
 
 .. list-table::
    :header-rows: 1
