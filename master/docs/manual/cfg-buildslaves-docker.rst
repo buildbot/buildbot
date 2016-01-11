@@ -2,15 +2,15 @@
     Docker
     Buildslaves; Docker
 
-Docker latent BuildSlave
-========================
+Docker latent worker
+====================
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
-Using the Docker latent BuildSlave, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
-Each image will be discarded once the slave finished processing the build queue (i.e. becomes ``idle``).
+Using the Docker latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
 See :ref:`build_wait_timeout <Common-Latent-Buildslaves-Options>` to change this behavior.
 
-This document will guide you through the setup of such slaves.
+This document will guide you through the setup of such workers.
 
 .. contents::
    :depth: 1
@@ -42,7 +42,7 @@ CoreOS
 ......
 
 CoreOS is targeted at building infrastructure and distributed systems.
-In order to get the latent BuildSlave working with CoreOS, it is necessary to `expose the docker socket`_ outside of the Virtual Machine.
+In order to get the latent worker working with CoreOS, it is necessary to `expose the docker socket`_ outside of the Virtual Machine.
 If you installed it via Vagrant_, it is also necessary to uncomment the following line in your :file:`config.rb` file:
 
 .. code-block:: ruby
@@ -74,10 +74,10 @@ Each time a new build will be requested, the same base image will be used again 
 If you need some persistant storage between builds, you can `use Volumes <setting up volumes>`_.
 
 Each Docker image has a single purpose.
-Our buildslave image will be running a buildbot slave.
+Our worker image will be running a buildbot worker.
 
 Docker uses ``Dockerfile``\s to describe the steps necessary to build an image.
-The following example will build a minimal buildslave.
+The following example will build a minimal worker.
 Don't forget to add your dependencies in there to get a succesfull build !
 
 ..
@@ -93,52 +93,52 @@ Don't forget to add your dependencies in there to get a succesfull build !
        python-pip
     RUN pip install buildbot-slave
     RUN groupadd -r buildbot && useradd -r -g buildbot buildbot
-    RUN mkdir /buildslave && chown buildbot:buildbot /buildslave
+    RUN mkdir /worker && chown buildbot:buildbot /worker
     # Install your build-dependencies here ...
     USER buildbot
-    WORKDIR /buildslave
-    RUN buildslave create-slave . <master-hostname> <slavename> <slavepassword>
+    WORKDIR /worker
+    RUN buildslave create-slave . <master-hostname> <workername> <workerpassword>
     ENTRYPOINT ["/usr/local/bin/buildslave"]
     CMD ["start", "--nodaemon"]
 
-On line 11, the hostname for your master instance, as well as the slave name and password is setup.
+On line 11, the hostname for your master instance, as well as the worker name and password is setup.
 Don't forget to replace those values with some valid ones for your project.
 
-It is a good practice to set the ``ENTRYPOINT`` to the buildslave executable, and the ``CMD`` to ``["start", "--nodaemon"]``.
+It is a good practice to set the ``ENTRYPOINT`` to the worker executable, and the ``CMD`` to ``["start", "--nodaemon"]``.
 This way, no parameter will be required when starting the image.
 
-When your Dockerfile is ready, you can build your first image using the following command (replace *myslavename* with a relevant name for your case):
+When your Dockerfile is ready, you can build your first image using the following command (replace *myworkername* with a relevant name for your case):
 
 .. code-block:: bash
 
-    docker build -t myslavename - < Dockerfile
+    docker build -t myworkername - < Dockerfile
 
-Reuse same image for different slaves
--------------------------------------
+Reuse same image for different workers
+--------------------------------------
 
-Previous simple example hardcodes the slave name into the dockerfile, which will not work if you want to share your docker image between slaves.
+Previous simple example hardcodes the worker name into the dockerfile, which will not work if you want to share your docker image between workers.
 
 You can find in buildbot source code in ``master/contrib/docker`` two example configurations:
 
-``slave``
-    the base buildslave configuration, including a custom buildbot.tac, which takes environment variables into account for setting the correct slave name, and connect to the correct master.
+``worker``
+    the base worker configuration, including a custom buildbot.tac, which takes environment variables into account for setting the correct worker name, and connect to the correct master.
 
-``pythonnode_slave``
-    a slave with python and node installed, which demonstrate how to reuse the base slave to create variations of build environments.
+``pythonnode_worker``
+    a worker with python and node installed, which demonstrate how to reuse the base worker to create variations of build environments.
 
-The master setups several environment variables before starting the buildslaves:
+The master setups several environment variables before starting the workers:
 
 ``BUILDMASTER``
-    The address of the master the slave shall connect to
+    The address of the master the worker shall connect to
 
 ``BUILDMASTER_PORT``
-    The port of the master's slave 'pb' protocol.
+    The port of the master's worker 'pb' protocol.
 
 ``WORKERNAME``
-    The name the slave should use to connect to master
+    The name the worker should use to connect to master
 
 ``WORKERPASS``
-    The password the slave should use to connect to master
+    The password the worker should use to connect to master
 
 Master Setup
 ------------
@@ -146,32 +146,32 @@ Master Setup
 We will rely on docker-py to connect our master with docker.
 Now is the time to install it in your master environment.
 
-Before adding the slave to your master configuration, it is possible to validate the previous steps by starting the newly created image interactively.
+Before adding the worker to your master configuration, it is possible to validate the previous steps by starting the newly created image interactively.
 To do this, enter the following lines in a python prompt where docker-py is installed::
 
     >>> import docker
     >>> docker_socket = 'tcp://localhost:2375'
     >>> client = docker.client.Client(base_url=docker_socket)
-    >>> slave_image = 'my_project_slave'
-    >>> container = client.create_container(slave_image)
+    >>> worker_image = 'my_project_worker'
+    >>> container = client.create_container(worker_image)
     >>> client.start(container['Id'])
     >>> # Optionally examine the logs of the master
     >>> client.stop(container['Id'])
     >>> client.wait(container['Id'])
     0
 
-It is now time to add the new build slave to the master configuration under :bb:cfg:`slaves`.
+It is now time to add the new build worker to the master configuration under :bb:cfg:`slaves`.
 
-The following example will add a Docker latent slave for docker running at the following adress: ``tcp://localhost:2375``, the slave name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_slave``::
+The following example will add a Docker latent worker for docker running at the following adress: ``tcp://localhost:2375``, the worker name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_worker``::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildslave.DockerLatentBuildSlave('docker', 'password',
-                                          docker_host='tcp://localhost:2375',
-                                          image='my_project_slave')
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.DockerLatentWorker('docker', 'password',
+                                  docker_host='tcp://localhost:2375',
+                                  image='my_project_worker')
     ]
 
-In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class:`DockerLatentBuildSlave` will accept the following extra ones:
+In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class:`DockerLatentWorker` will accept the following extra ones:
 
 ``docker_host``
     (mandatory)
@@ -179,7 +179,7 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
 
 ``image``
     (optional if ``dockerfile`` is given)
-    This is the name of the image that will be started by the build master. It should start a buildslave.
+    This is the name of the image that will be started by the build master. It should start a worker.
     This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
     
 ``command``
@@ -209,11 +209,11 @@ In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class
 
 ``followStartupLogs``
     (optional, defaults to false)
-    This transfers docker container's log inside master logs during slave startup (before connection). This can be useful to debug slave startup. e.g network issues, etc.
+    This transfers docker container's log inside master logs during worker startup (before connection). This can be useful to debug worker startup. e.g network issues, etc.
 
 ``masterFQDN``
     (optional, defaults to socket.getfqdn())
-    Address of the master the slave should connect to. Use if you master machine does not have proper fqdn.
+    Address of the master the worker should connect to. Use if you master machine does not have proper fqdn.
     This value is passed to the docker image via environment variable ``BUILDMASTER``
 
 Setting up Volumes
