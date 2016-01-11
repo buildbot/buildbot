@@ -43,6 +43,7 @@ class LocalWorker(Worker, WorkerAPICompatMixin):
         Worker.reconfigService(self, name, None, **kwargs)
         if workdir is None:
             workdir = name
+        # TODO: How to move working directory to the new place?
         workdir = os.path.abspath(os.path.join(self.master.basedir, "slaves", workdir))
         if not os.path.isdir(workdir):
             os.makedirs(workdir)
