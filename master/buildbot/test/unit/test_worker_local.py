@@ -28,31 +28,31 @@ class TestLocalWorker(unittest.TestCase):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
                                              testcase=self)
         self.botmaster = self.master.botmaster
-        self.buildslaves = self.master.workers
+        self.workers = self.master.workers
 
-    def createBuildslave(self, name='bot', attached=False, configured=True, **kwargs):
-        slave = local.LocalWorker(name, **kwargs)
+    def createWorker(self, name='bot', attached=False, configured=True, **kwargs):
+        worker = local.LocalWorker(name, **kwargs)
         if configured:
-            slave.setServiceParent(self.buildslaves)
-        return slave
+            worker.setServiceParent(self.workers)
+        return worker
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
-        old = self.createBuildslave('bot',
-                                    max_builds=2,
-                                    notify_on_missing=['me@me.com'],
-                                    missing_timeout=120,
-                                    properties={'a': 'b'})
-        new = self.createBuildslave('bot', configured=False,
-                                    max_builds=3,
-                                    notify_on_missing=['her@me.com'],
-                                    missing_timeout=121,
-                                    workdir=os.path.abspath('custom'),
-                                    properties={'a': 'c'})
+        old = self.createWorker('bot',
+                                max_builds=2,
+                                notify_on_missing=['me@me.com'],
+                                missing_timeout=120,
+                                properties={'a': 'b'})
+        new = self.createWorker('bot', configured=False,
+                                max_builds=3,
+                                notify_on_missing=['her@me.com'],
+                                missing_timeout=121,
+                                workdir=os.path.abspath('custom'),
+                                properties={'a': 'c'})
 
         old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
         yield old.startService()
-        self.assertEqual(old.remote_slave.bot.basedir, os.path.abspath('basedir/slaves/bot'))
+        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/slaves/bot'))
 
         yield old.reconfigServiceWithSibling(new)
 
@@ -63,15 +63,15 @@ class TestLocalWorker(unittest.TestCase):
         self.assertEqual(old.registration.updates, ['bot'])
         self.assertTrue(old.updateWorker.called)
         # make sure that we can provide an abosolute path
-        self.assertEqual(old.remote_slave.bot.basedir, os.path.abspath('custom'))
+        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('custom'))
 
     @defer.inlineCallbacks
     def test_slaveinfo(self):
-        sl = self.createBuildslave('bot',
-                                   max_builds=2,
-                                   notify_on_missing=['me@me.com'],
-                                   missing_timeout=120,
-                                   properties={'a': 'b'})
+        sl = self.createWorker('bot',
+                               max_builds=2,
+                               notify_on_missing=['me@me.com'],
+                               missing_timeout=120,
+                               properties={'a': 'b'})
         yield sl.startService()
         info = yield sl.conn.remoteGetSlaveInfo()
         self.assertIn("slave_commands", info)
