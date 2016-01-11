@@ -110,7 +110,7 @@ class DockerLatentWorker(AbstractLatentWorker):
         result = {
             "BUILDMASTER": self.masterFQDN,
             "SLAVENAME": self.name,      # deprecated, use "WORKERNAME"
-            "SLAVEPASS": self.password,  # deprecated, use "WORKERNAME"
+            "SLAVEPASS": self.password,  # deprecated, use "WORKERPASS"
             "WORKERNAME": self.name,
             "WORKERPASS": self.password
         }
