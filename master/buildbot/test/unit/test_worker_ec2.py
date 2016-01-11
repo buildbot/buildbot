@@ -41,11 +41,11 @@ if boto is None:
     mock_ec2 = skip_ec2
 
 
-class TestEC2LatentBuildSlave(unittest.TestCase):
+class TestEC2LatentWorker(unittest.TestCase):
     ec2_connection = None
 
     def setUp(self):
-        super(TestEC2LatentBuildSlave, self).setUp()
+        super(TestEC2LatentWorker, self).setUp()
         if boto is None:
             raise unittest.SkipTest("moto not found")
 
@@ -222,7 +222,7 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
     def test_start_spot_instance_retry_low_price(self):
         '''
         This test should attempt to start an instance that will be rejected with
-        price-too-low. At this point, the ec2 buildslave code should increment
+        price-too-low. At this point, the ec2 worker code should increment
         bs.attempt and multiply the price by bs.retry_price_adjustment. This
         should continue for bs.retry iterations or until the spot request is
         accepted.
