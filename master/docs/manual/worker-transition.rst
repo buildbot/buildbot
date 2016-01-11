@@ -133,6 +133,10 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.worker.docker.DockerLatentWorker`
 
 
+   * - :py:class:`buildbot.buildslave.ec2.EC2LatentBuildSlave`
+     - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
+
+
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 

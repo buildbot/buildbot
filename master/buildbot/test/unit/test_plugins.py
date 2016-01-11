@@ -255,7 +255,7 @@ class SimpleFakeEntry(FakeEntry):
 _WORKER_FAKE_ENTRIES = {
     'buildbot.worker': [
         SimpleFakeEntry('Worker', ClassWithInterface),
-        SimpleFakeEntry('EC2LatentBuildSlave', ClassWithInterface),
+        SimpleFakeEntry('EC2LatentWorker', ClassWithInterface),
         SimpleFakeEntry('LibVirtSlave', ClassWithInterface),
         SimpleFakeEntry('OpenStackLatentBuildSlave', ClassWithInterface),
         SimpleFakeEntry('DockerLatentWorker', ClassWithInterface),

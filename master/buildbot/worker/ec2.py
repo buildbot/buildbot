@@ -36,6 +36,15 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
 
+__all__ = (
+    # TODO: Is these constants are part of the public interface?
+    "PENDING", "RUNNING", "SHUTTINGDOWN", "TERMINATED",
+    "SPOT_REQUEST_PENDING_STATES", "FULFILLED",
+    "PRICE_TOO_LOW",
+
+    "EC2LatentWorker"
+)
+
 PENDING = 'pending'
 RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'
@@ -45,7 +54,7 @@ FULFILLED = 'fulfilled'
 PRICE_TOO_LOW = 'price-too-low'
 
 
-class EC2LatentBuildSlave(AbstractLatentWorker):
+class EC2LatentWorker(AbstractLatentWorker):
 
     instance = image = None
     _poll_resolution = 5  # hook point for tests
@@ -63,7 +72,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
 
         if not boto:
             config.error("The python module 'boto' is needed to use a "
-                         "EC2LatentBuildSlave")
+                         "EC2LatentWorker")
 
         if volumes is None:
             volumes = []
@@ -123,7 +132,7 @@ class EC2LatentBuildSlave(AbstractLatentWorker):
                 if os.path.exists(default_path):
                     aws_id_file_path = default_path
             if aws_id_file_path:
-                log.msg('WARNING: EC2LatentBuildSlave is using deprecated '
+                log.msg('WARNING: EC2LatentWorker is using deprecated '
                         'aws_id file')
                 with open(aws_id_file_path, 'r') as aws_file:
                     identifier = aws_file.readline().strip()

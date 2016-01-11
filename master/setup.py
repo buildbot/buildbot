@@ -233,7 +233,7 @@ setup_args = {
         ]),
         ('buildbot.worker', [
             ('buildbot.worker.base', ['Worker']),
-            ('buildbot.worker.ec2', ['EC2LatentBuildSlave']),
+            ('buildbot.worker.ec2', ['EC2LatentWorker']),
             ('buildbot.worker.libvirt', ['LibVirtSlave']),
             ('buildbot.worker.openstack', ['OpenStackLatentBuildSlave']),
             ('buildbot.worker.docker', ['DockerLatentWorker']),

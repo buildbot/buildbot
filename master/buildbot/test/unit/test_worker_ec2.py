@@ -63,11 +63,11 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
     def test_constructor_minimal(self):
         c = self.botoSetup()
         amis = c.get_all_images()
-        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 ami=amis[0].id
+                                 )
         self.assertEqual(bs.workername, 'bot1')
         self.assertEqual(bs.password, 'sekrit')
         self.assertEqual(bs.instance_type, 'm1.large')
@@ -78,23 +78,23 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         c = self.botoSetup()
         amis = c.get_all_images()
         tags = {'foo': 'bar'}
-        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     tags=tags,
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 tags=tags,
+                                 ami=amis[0].id
+                                 )
         self.assertEqual(bs.tags, tags)
 
     @mock_ec2
     def test_start_instance(self):
         c = self.botoSetup()
         amis = c.get_all_images()
-        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 ami=amis[0].id
+                                 )
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('r-'))
@@ -110,12 +110,12 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         c = self.botoSetup()
         amis = c.get_all_images()
         tags = {'foo': 'bar'}
-        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     tags=tags,
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 tags=tags,
+                                 ami=amis[0].id
+                                 )
         id, _, _ = bs._start_instance()
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
@@ -128,13 +128,13 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         c = self.botoSetup()
         amis = c.get_all_images()
         product_description = 'Linux/Unix'
-        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id, spot_instance=True,
-                                     max_spot_price=1.5,
-                                     product_description=product_description
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 ami=amis[0].id, spot_instance=True,
+                                 max_spot_price=1.5,
+                                 product_description=product_description
+                                 )
         instance_id, _, _ = bs._start_instance()
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
@@ -151,13 +151,13 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         amis = c.get_all_images()
         product_description = 'Linux/Unix'
         retry = 3
-        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id, retry=retry,
-                                     spot_instance=True, max_spot_price=1.5,
-                                     product_description=product_description
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 ami=amis[0].id, retry=retry,
+                                 spot_instance=True, max_spot_price=1.5,
+                                 product_description=product_description
+                                 )
         id, _, _ = bs._start_instance()
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
