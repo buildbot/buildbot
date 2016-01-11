@@ -26,9 +26,9 @@ except ImportError:
 if boto is not None:
     from buildbot.worker import ec2
 
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial import unittest
 
 
@@ -252,7 +252,6 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         c.create_image(instance.id, "foo", "bar")
         c.terminate_instances([instance.id])
         return c
-
 
     @mock_ec2
     def test_use_of_default_keypair_security_warning(self):
