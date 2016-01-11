@@ -1,7 +1,7 @@
-# This example docker file show how to customize the base slave docker
+# This example docker file show how to customize the base worker docker image
 # to add build dependencies to build the python+nodejs buildbot_travis package
 
-FROM        slave
+FROM        worker
 MAINTAINER  Buildbot maintainers
 
 # Install required npm packages

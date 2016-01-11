@@ -1,4 +1,4 @@
-# Provides a base Ubuntu (14.04) image with latest buildbot slave installed
+# Provides a base Ubuntu (14.04) image with latest buildbot worker installed
 # (based on twsited dockerfile https://github.com/cyli/docker-twisted)
 
 FROM        ubuntu:14.04
