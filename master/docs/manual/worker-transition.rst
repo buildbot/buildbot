@@ -12,6 +12,10 @@ Transition to "worker" terminology
 
     * Links on this page should be added, e.g. from 0.9.0 changelog.
 
+    * Is all changes are done only for functionality that was in eight branch?
+      If something is introduced in nine branch, it can be safely changed
+      without providing fallback.
+
 Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated
 in favor of "worker"-based terminology.
 
