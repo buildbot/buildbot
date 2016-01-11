@@ -1435,8 +1435,8 @@ a.error,a.error:active,a.error:visited{font-weight:700;color:red}
 a.ignored,a.ignored:active,a.ignored:visited{font-weight:700;text-decoration:none}
 .hidden-result{color:#fff}
 .pos-relative{position:relative}
-.command{display:none}
-.command-text{border:none;background-color:transparent;width:100%;color:#4f5267}
-.collapse:hover,.command-text:hover{cursor:pointer}
+.report-command{display:none}
+.report-command-text{border:none;background-color:transparent;width:100%;color:#4f5267}
+.collapse:hover,.report-command-text:hover{cursor:pointer}
 .row{margin-left:0;margin-right:0}
 .artifact{text-decoration:underline}
