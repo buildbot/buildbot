@@ -44,6 +44,8 @@ class LocalWorker(Worker, WorkerAPICompatMixin):
         if workdir is None:
             workdir = name
         # TODO: How to move working directory to the new place?
+        # Perhaps check if old directory exists, then use it.
+        # If old directory is not exists, then create new directory.
         workdir = os.path.abspath(os.path.join(self.master.basedir, "slaves", workdir))
         if not os.path.isdir(workdir):
             os.makedirs(workdir)
