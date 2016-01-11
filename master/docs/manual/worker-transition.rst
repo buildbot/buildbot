@@ -181,3 +181,10 @@ container ``SLAVENAME`` and ``SLAVEPASS`` were renamed to
 ``WORKERNAME`` and ``WORKERPASS`` accordingly.
 Old environment variable are still available, but are deprecated and will be
 removed in the future.
+
+EC2 latent worker changes
+-------------------------
+
+Use of default values of ``keypair_name`` and ``security_name``
+constructor arguments of :py:class:`buildbot.worker.ec2.EC2LatentWorker`
+is deprecated. Please specify them explicitly.

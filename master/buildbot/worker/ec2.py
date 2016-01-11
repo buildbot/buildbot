@@ -23,6 +23,8 @@ import os
 import re
 import time
 
+from buildbot.worker_transition import on_deprecated_name_usage
+
 try:
     import boto
 except ImportError:
@@ -63,8 +65,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                  valid_ami_owners=None, valid_ami_location_regex=None,
                  elastic_ip=None, identifier=None, secret_identifier=None,
                  aws_id_file_path=None, user_data=None, region=None,
-                 keypair_name='latent_buildbot_slave',
-                 security_name='latent_buildbot_slave',
+                 keypair_name=None,
+                 security_name=None,
                  spot_instance=False, max_spot_price=1.6, volumes=None,
                  placement=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX',
@@ -73,6 +75,19 @@ class EC2LatentWorker(AbstractLatentWorker):
         if not boto:
             config.error("The python module 'boto' is needed to use a "
                          "EC2LatentWorker")
+
+        # TODO: It's not good to change default values, so I suggest to drop
+        # default values completely.
+        if keypair_name is None:
+            on_deprecated_name_usage(
+                "Use of default value of 'keypair_name' of EC2LatentWorker "
+                "constructor is deprecated. Please explicitly specify value")
+            keypair_name = 'latent_buildbot_slave'
+        if security_name is None:
+            on_deprecated_name_usage(
+                "Use of default value of 'security_name' of EC2LatentWorker "
+                "constructor is deprecated. Please explicitly specify value")
+            security_name = 'latent_buildbot_slave'
 
         if volumes is None:
             volumes = []
