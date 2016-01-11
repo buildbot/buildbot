@@ -319,3 +319,30 @@ a.ignored:active {
 .pos-relative {
 	position:relative;
 }
+
+.command {
+    display:none;
+}
+
+.command-text {
+	border: none;
+	background-color: transparent;
+	width: 100%;
+	color: $link-color;
+}
+
+.command-text:hover, .collapse:hover {
+	cursor: pointer;
+}
+
+.row {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.artifact {
+    text-decoration: underline;
+}
+
+
+

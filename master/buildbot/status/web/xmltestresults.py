@@ -100,7 +100,6 @@ class XMLTestResource(HtmlResource):
                 'results': [],
                 'name': "???"}
 
-
     def content(self, req, cxt):
         s = self.step_status
         b = s.getBuild()
@@ -177,7 +176,6 @@ class XMLTestResource(HtmlResource):
 
                 return test_parent, total, time_count
 
-
             # Collect summary information for each test suite
             time_count = 0
             total = 0
@@ -229,10 +227,11 @@ class XMLTestResource(HtmlResource):
 
                 output_tests = classes.values()
 
-            cxt['test_suites'] = output_tests
+            cxt['data'] = {}
+            cxt['data']['test_suites'] = output_tests
 
-            failed = int(0 if ('failures' not in root_dict) else root_dict['failures']) + \
-                     int(0 if ('errors' not in root_dict) else root_dict['errors'])
+            failed = int(0 if ('failures' not in root_dict) else root_dict['failures'])
+            error = int(0 if ('errors' not in root_dict) else root_dict['errors'])
             ignored = int(0 if ('ignored' not in root_dict) else root_dict['ignored'])
             skipped = int(0 if ('skipped' not in root_dict) else root_dict['skipped'])
             inconclusive = int(0 if ('inconclusive' not in root_dict) else root_dict['inconclusive'])
@@ -246,14 +245,15 @@ class XMLTestResource(HtmlResource):
             if success != 0 and total != 0:
                 success_per = (float(success) / float(total)) * 100.0
 
-            cxt['summary'] = {
-                'total': total,
-                'success': success,
+            cxt['data']['summary'] = {
+                'testsCount': total,
+                'successCount': success,
                 'success_rate': success_per,
-                'failed': failed,
-                'ignored': ignored,
-                'skipped': skipped,
-                'inconclusive': inconclusive,
+                'failedCount': failed,
+                'ignoredCount': ignored,
+                'skippedCount': skipped,
+                'errorCount': error,
+                'inconclusiveCount': inconclusive,
                 'time': time_count
             }
         except ElementTree.ParseError as e:

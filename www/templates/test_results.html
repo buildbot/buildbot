@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
+
+{% block submenu %}
+    {{ submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Test Results", selectedProject=selectedproject) }}
+{% endblock %}
+
+{% block extra_script %}
+    <script type="text/javascript">
+        require.deps.push('testResults');
+    </script>
+{% endblock %}
+{% block content %}
+<div class="top left"></div>
+<div class="log-main" data-failed-tests="{{ data.summary.failedCount }}">
+    <div id="dataTablesFilter" class="fl-right top-filter-list">
+        <div id="CheckBoxesList" class="check-boxes-list">
+            <label for="inconclusiveInput">Inconclusive</label>
+            <input checked="checked" type="checkbox" value="Inconclusive" id="inconclusiveInput"/>
+            <label for="skippedInput">Skipped</label>
+            <input type="checkbox" value="Skipped" id="skippedInput"/>
+            <label for="ignoredInput">Ignored</label>
+            <input type="checkbox" value="Ignored" id="ignoredInput"/>
+            <label for="successInput">Success</label>
+            <input type="checkbox" value="Success" id="successInput"/>
+            <label for="failureInput">Failure</label>
+            <input type="checkbox" value="Failure" id="failureInput"/>
+            <label for="errorInput">Error</label>
+            <input type="checkbox" value="Error" id="errorInput"/>
+            <label for="cancelledInput">Failure</label>
+            <input type="checkbox" value="Cancelled" id="cancelledInput"/>
+        </div>
+        <div class="dataTables_filter">
+            <label class="input-label"></label>
+            <input type="text" placeholder="Free text filter" id="filterinput"/>
+        </div>
+        <button class="grey-btn" id="submitFilter">Filter</button>
+        <button class="grey-btn" id="clearFilter">Clear</button>
+    </div>
+</div>
+
+<h1 class="main-head" id=":i18n:Summary">Summary</h1>
+
+<div class="container">
+    <table class="table table-katana" id="summaryTable">
+        <thead>
+        <tr>
+            <th class="txt-align-left first-child">All tests</th>
+            <th class="txt-align-left first-child">Passed</th>
+            <th class="txt-align-left">Failures</th>
+            <th class="txt-align-left">Errors</th>
+            <th class="txt-align-left">Ignored</th>
+            <th class="txt-align-left">Skipped</th>
+            <th class="txt-align-left">Inconclusive</th>
+            <th class="txt-align-left">Success Rate</th>
+            <th class="txt-align-left">Time(s)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if data.summary.failedCount > 0 %}
+            <tr class="Failure">
+                {% else %}
+            <tr class="Pass">
+        {% endif %}
+        <td class="txt-align-left first-child">{{ data.summary.testsCount }}</td>
+        <td class="txt-align-left">{{ data.summary.successCount }}</td>
+        <td class="txt-align-left">{{ data.summary.failedCount }}</td>
+        <td class="txt-align-left">{{ data.summary.errorCount }}</td>
+        <td class="txt-align-left">{{ data.summary.ignoredCount }}</td>
+        <td class="txt-align-left">{{ data.summary.skippedCount }}</td>
+        <td class="txt-align-left">{{ data.summary.inconclusiveCount }}</td>
+        <td class="txt-align-left">{{ '%0.2f' % data.summary.success_rate }} %</td>
+        <td class="txt-align-left" data-time="{{ data.summary.time }}">{{ data.summary.time }}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    {%- block suites -%}
+    {%- endblock -%}
+
+</div>
+
+{% endblock %}

@@ -26,6 +26,7 @@ from buildbot.status.logfile import HTMLLogFile
 from buildbot.status.web.base import IHTMLLog, HtmlResource, getCodebasesArg, ContextMixin, \
     path_to_codebases, path_to_build, path_to_builder, path_to_builders
 from buildbot.status.web.xmltestresults import XMLTestResource
+from buildbot.status.web.jsontestresults import JSONTestResource
 
 
 class ChunkConsumer:
@@ -210,9 +211,12 @@ class LogsResource(HtmlResource):
             if path == log.getName():
                 if log.hasContents():
                     content = log.getText()
-                    if isinstance(log, HTMLLogFile) and ('xml-stylesheet' in content or 'nosetests' in content):
-                        return XMLTestResource(log, self.step_status)
-                    else:
-                        return IHTMLLog(interfaces.IStatusLog(log))
+                    if isinstance(log, HTMLLogFile):
+                        if log.content_type == 'json':
+                            return JSONTestResource(log, self.step_status)
+                        elif log.content_type == 'xml' or ('xml-stylesheet' in content or 'nosetests' in content):
+                            return XMLTestResource(log, self.step_status)
+                        else:
+                            return IHTMLLog(interfaces.IStatusLog(log))
                 return NoResource("Empty Log '%s'" % path)
         return HtmlResource.getChild(self, path, req)

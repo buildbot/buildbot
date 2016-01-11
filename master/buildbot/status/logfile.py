@@ -675,6 +675,9 @@ class HTMLLogFile(styles.Versioned, LogFile):
     def hasContents(self):
         return True
 
+    def set_content_type(self, content_type):
+        self.content_type = content_type
+
     def __getstate__(self):
         d = styles.Versioned.__getstate__(self)
         self.deleteKeys(d)
