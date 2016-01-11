@@ -54,7 +54,7 @@ class WorkerRegistration(object):
         return self.pbReg.getPort()
 
 
-class BuildslaveManager(MeasuredBuildbotServiceManager):
+class WorkerManager(MeasuredBuildbotServiceManager):
 
     name = "BuildslaveManager"
     managed_services_name = "buildslaves"

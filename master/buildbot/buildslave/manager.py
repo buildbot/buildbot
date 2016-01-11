@@ -23,9 +23,10 @@ on_deprecated_module_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.manager' module instead".format(old=__name__))
 
-from buildbot.worker.manager import BuildslaveManager
+from buildbot.worker.manager import WorkerManager as _WorkerManager
 from buildbot.worker.manager import WorkerRegistration as _WorkerRegistration
 
+define_old_worker_class(locals(), _WorkerManager, pattern="Buildworker")
 define_old_worker_class(locals(), _WorkerRegistration, pattern="Buildworker")
 
 # pylint: disable=undefined-all-variable
