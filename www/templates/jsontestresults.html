@@ -9,8 +9,8 @@
                 {% if data.utr_prefix %}
                     <a class="label label-default collapse" data-target="#suiteCommand" href="#">Command to run locally</a>
 
-                    <div id="suiteCommand" class="command">
-                        <input class="command-text" type="text" value="{{ data.utr_prefix }} --suite={{ suite.name }}" onclick="this.select();"
+                    <div id="suiteCommand" class="report-command">
+                        <input class="report-command-text" type="text" value="{{ data.utr_prefix }} --suite={{ suite.name }}" onclick="this.select();"
                                readonly/>
                     </div>
                 {% endif %}
@@ -73,8 +73,8 @@
                             {% if data.utr_prefix %}
                                 <a class="label label-default collapse" data-target="#testCommand{{ i }}">Command to run locally</a>
 
-                                <div id="testCommand{{ i }}" class="command">
-                                    <input class="command-text" type="text" value="{{ data.utr_prefix }} --suite={{ suite.name }} --testfilter=={{ test.name }}" onclick="this.select();" readonly/>
+                                <div id="testCommand{{ i }}" class="report-command">
+                                    <input class="report-command-text" type="text" value="{{ data.utr_prefix }} --suite={{ suite.name }} --testfilter=={{ test.name }}" onclick="this.select();" readonly/>
                                 </div>
                             {% endif %}
 

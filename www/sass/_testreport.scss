@@ -320,18 +320,18 @@ a.ignored:active {
 	position:relative;
 }
 
-.command {
+.report-command {
     display:none;
 }
 
-.command-text {
+.report-command-text {
 	border: none;
 	background-color: transparent;
 	width: 100%;
 	color: $link-color;
 }
 
-.command-text:hover, .collapse:hover {
+.report-command-text:hover, .collapse:hover {
 	cursor: pointer;
 }
 
