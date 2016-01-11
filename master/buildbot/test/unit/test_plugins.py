@@ -260,7 +260,6 @@ _WORKER_FAKE_ENTRIES = {
         SimpleFakeEntry('OpenStackLatentBuildSlave', ClassWithInterface),
         SimpleFakeEntry('DockerLatentWorker', ClassWithInterface),
         SimpleFakeEntry('LocalBuildSlave', ClassWithInterface),
-        SimpleFakeEntry('LocalBuildSlave', ClassWithInterface),
         SimpleFakeEntry('newthirdparty', ClassWithInterface),
         SimpleFakeEntry('deep.newthirdparty', ClassWithInterface),
     ],
