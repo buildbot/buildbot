@@ -23,7 +23,7 @@ class FakeBuildslaveManager(service.AsyncMultiService):
         service.AsyncMultiService.__init__(self)
         self.setName('buildslaves')
 
-        # BuildslaveRegistration instances keyed by buildslave name
+        # WorkerRegistration instances keyed by buildslave name
         self.registrations = {}
 
         # connection objects keyed by buildslave name
@@ -38,7 +38,7 @@ class FakeBuildslaveManager(service.AsyncMultiService):
 
     def register(self, buildslave):
         buildslaveName = buildslave.workername
-        reg = FakeBuildslaveRegistration(buildslave)
+        reg = FakeWorkerRegistration(buildslave)
         self.registrations[buildslaveName] = reg
         return defer.succeed(reg)
 
@@ -58,7 +58,7 @@ class FakeBuildslaveManager(service.AsyncMultiService):
         return defer.succeed(True)
 
 
-class FakeBuildslaveRegistration(object):
+class FakeWorkerRegistration(object):
 
     def __init__(self, buildslave):
         self.updates = []

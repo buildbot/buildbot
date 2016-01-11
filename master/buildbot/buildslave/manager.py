@@ -16,12 +16,17 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import on_deprecated_module_usage
 
 on_deprecated_module_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.manager' module instead".format(old=__name__))
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.worker.manager import *  # noqa
+from buildbot.worker.manager import BuildslaveManager
+from buildbot.worker.manager import WorkerRegistration as _WorkerRegistration
+
+define_old_worker_class(locals(), _WorkerRegistration, pattern="Buildworker")
+
+# pylint: disable=undefined-all-variable
+__all__ = ("BuildslaveRegistration", "BuildslaveManager")  # noqa

@@ -152,6 +152,10 @@ Here is the complete list of changed API:
      - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
 
 
+   * - :py:class:`buildbot.buildslave.manager.BuildslaveRegistration`
+     - :py:class:`buildbot.worker.manager.WorkerRegistration`
+
+
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 

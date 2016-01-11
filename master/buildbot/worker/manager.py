@@ -22,7 +22,7 @@ from twisted.python import log
 from twisted.python.failure import Failure
 
 
-class BuildslaveRegistration(object):
+class WorkerRegistration(object):
 
     __slots__ = ['master', 'buildslave', 'pbReg']
 
@@ -69,7 +69,7 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
         self.pb = bbpb.Listener()
         self.pb.setServiceParent(master)
 
-        # BuildslaveRegistration instances keyed by worker name
+        # WorkerRegistration instances keyed by worker name
         self.registrations = {}
 
         # connection objects keyed by worker name
@@ -91,7 +91,7 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
     def register(self, buildslave):
         # TODO: doc that reg.update must be called, too
         buildslaveName = buildslave.workername
-        reg = BuildslaveRegistration(self.master, buildslave)
+        reg = WorkerRegistration(self.master, buildslave)
         self.registrations[buildslaveName] = reg
         return defer.succeed(reg)
 
