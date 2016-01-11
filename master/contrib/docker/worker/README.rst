@@ -10,10 +10,6 @@ To test this container do following steps.
 
        $ sudo docker build -t worker .
 
-   Where ``MASTER`` is the address of the master accessible from 
-   the container, and ``19989`` is the port at which master is listens
-   for workers.
-
 3. Run worker container. You need to specify how to connect to the master.
 
    If master is run locally with default port configuration you can run 
