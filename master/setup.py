@@ -237,7 +237,7 @@ setup_args = {
             ('buildbot.worker.libvirt', ['LibVirtSlave']),
             ('buildbot.worker.openstack', ['OpenStackLatentBuildSlave']),
             ('buildbot.worker.docker', ['DockerLatentWorker']),
-            ('buildbot.worker.local', ['LocalBuildSlave']),
+            ('buildbot.worker.local', ['LocalWorker']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),

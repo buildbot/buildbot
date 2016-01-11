@@ -20,7 +20,7 @@ from buildbot.worker.base import Worker
 from twisted.internet import defer
 
 
-class LocalBuildSlave(Worker):
+class LocalWorker(Worker):
 
     def checkConfig(self, name, workdir=None, usePty=False, **kwargs):
         Worker.checkConfig(self, name, None, **kwargs)
@@ -30,7 +30,7 @@ class LocalBuildSlave(Worker):
             from buildslave.bot import LocalBuildSlave as RemoteLocalBuildSlave
             self.LocalBuildSlaveFactory = RemoteLocalBuildSlave
         except ImportError:
-            error("LocalBuildSlave needs the buildbot-slave package installed (pip install buildbot-slave)")
+            error("LocalWorker needs the buildbot-slave package installed (pip install buildbot-slave)")
         self.remote_slave = None
 
     @defer.inlineCallbacks

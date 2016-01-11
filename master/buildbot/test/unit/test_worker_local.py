@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class TestLocalBuildSlave(unittest.TestCase):
+class TestLocalWorker(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
@@ -31,7 +31,7 @@ class TestLocalBuildSlave(unittest.TestCase):
         self.buildslaves = self.master.workers
 
     def createBuildslave(self, name='bot', attached=False, configured=True, **kwargs):
-        slave = local.LocalBuildSlave(name, **kwargs)
+        slave = local.LocalWorker(name, **kwargs)
         if configured:
             slave.setServiceParent(self.buildslaves)
         return slave

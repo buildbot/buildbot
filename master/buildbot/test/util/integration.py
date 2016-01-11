@@ -60,7 +60,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
         elif self.proto == 'null':
             proto = '{"null": {}}'
-            slaveclass = "LocalBuildSlave"
+            slaveclass = "LocalWorker"
         # We create a master.cfg, which loads the configuration from the
         # test module. Only the worker config is kept there, as it should not
         # be changed
