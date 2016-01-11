@@ -140,6 +140,12 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.buildslave.local.LocalBuildSlave`
      - :py:class:`buildbot.worker.local.LocalWorker`
 
+   * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.LocalBuildSlaveFactory`
+     - :py:attr:`buildbot.worker.local.LocalWorker.LocalWorkerFactory`
+
+   * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.remote_slave`
+     - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
+
 
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`

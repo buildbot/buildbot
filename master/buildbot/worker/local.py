@@ -17,21 +17,26 @@ import os
 
 from buildbot.config import error
 from buildbot.worker.base import Worker
+from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.internet import defer
 
 
-class LocalWorker(Worker):
+class LocalWorker(Worker, WorkerAPICompatMixin):
 
     def checkConfig(self, name, workdir=None, usePty=False, **kwargs):
         Worker.checkConfig(self, name, None, **kwargs)
-        self.LocalBuildSlaveFactory = None
+        self.LocalWorkerFactory = None
+        # TODO: Is this a public attribute?
+        self._registerOldWorkerAttr("LocalWorkerFactory", pattern="BuildWorker")
         try:
             # importing here to avoid dependency on buildbot worker package
-            from buildslave.bot import LocalBuildSlave as RemoteLocalBuildSlave
-            self.LocalBuildSlaveFactory = RemoteLocalBuildSlave
+            from buildslave.bot import LocalBuildSlave as RemoteLocalWorker
+            self.LocalWorkerFactory = RemoteLocalWorker
         except ImportError:
             error("LocalWorker needs the buildbot-slave package installed (pip install buildbot-slave)")
-        self.remote_slave = None
+        self.remote_worker = None
+        # TODO: Is this a public attribute?
+        self._registerOldWorkerAttr("remote_worker")
 
     @defer.inlineCallbacks
     def reconfigService(self, name, workdir=None, usePty=False, **kwargs):
@@ -42,12 +47,12 @@ class LocalWorker(Worker):
         if not os.path.isdir(workdir):
             os.makedirs(workdir)
 
-        if self.remote_slave is None:
+        if self.remote_worker is None:
             # create the actual worker as a child service
             # we only create at reconfig, to avoid poluting memory in case of reconfig
-            self.remote_slave = self.LocalBuildSlaveFactory(name, workdir, usePty)
-            yield self.remote_slave.setServiceParent(self)
+            self.remote_worker = self.LocalWorkerFactory(name, workdir, usePty)
+            yield self.remote_worker.setServiceParent(self)
         else:
             # The case of a reconfig, we forward the parameters
-            self.remote_slave.bot.basedir = workdir
-            self.remote_slave.usePty = usePty
+            self.remote_worker.bot.basedir = workdir
+            self.remote_worker.usePty = usePty
