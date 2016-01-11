@@ -29,9 +29,10 @@ if boto is not None:
 from twisted.trial import unittest
 
 
-# redefine the mock_ec2 decorator to skip the test if boto isn't installed
+# redefine the mock_ec2 decorator to skip the test if boto or moto
+# isn't installed
 def skip_ec2(f):
-    f.skip = "boto not installed"
+    f.skip = "boto or moto is not installed"
     return f
 if boto is None:
     mock_ec2 = skip_ec2
