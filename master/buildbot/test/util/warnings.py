@@ -67,10 +67,8 @@ def assertProducesWarnings(filter_category, num_warnings=None,
 
 
 @contextlib.contextmanager
-def assertProducesWarning(filter_category, messages_patterns=None,
-                          message_pattern=None):
+def assertProducesWarning(filter_category, message_pattern=None):
     with assertProducesWarnings(filter_category, num_warnings=1,
-                                messages_patterns=messages_patterns,
                                 message_pattern=message_pattern):
         yield
 
