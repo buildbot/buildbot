@@ -156,15 +156,32 @@ Here is the complete list of changed API:
      - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
 
 
+   * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
+     - :py:meth:`~buildbot.config.MasterConfig.load_workers`
+
+
+API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
+
+.. todo::
+
+   This whole section may be removed since it's not important for users
+   upgrading to 0.9.0.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Old name
+     - New name
+
+   * - :py:mod:`buildbot.buildslave.manager`
+     - :py:mod:`buildbot.worker.manager`
+
    * - :py:class:`buildbot.buildslave.manager.BuildslaveRegistration`
      - :py:class:`buildbot.worker.manager.WorkerRegistration`
 
    * - :py:class:`buildbot.buildslave.manager.BuildslaveManager`
      - :py:class:`buildbot.worker.manager.WorkerManager`
 
-
-   * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
-     - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 
 Plugins
 -------
