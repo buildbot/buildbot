@@ -36,8 +36,7 @@ class TestLogsResource(unittest.TestCase):
         log = mock.Mock(HTMLLogFile)
         log.getName = lambda: name
         log.hasContent = lambda: has_content
-        if content_type is not None:
-            log.content_type = content_type
+        log.content_type = content_type
         log.getText = lambda: text
         self.logs.append(log)
 

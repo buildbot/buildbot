@@ -212,12 +212,9 @@ class LogsResource(HtmlResource):
                 if log.hasContents():
                     content = log.getText()
                     if isinstance(log, HTMLLogFile):
-                        if hasattr(log, 'content_type'):
-                            if log.content_type == 'json':
-                                return JSONTestResource(log, self.step_status)
-                            elif log.content_type == 'xml':
-                                return XMLTestResource(log, self.step_status)
-                        elif 'xml-stylesheet' in content or 'nosetests' in content:
+                        if log.content_type == 'json':
+                            return JSONTestResource(log, self.step_status)
+                        elif log.content_type == 'xml' or ('xml-stylesheet' in content or 'nosetests' in content):
                             return XMLTestResource(log, self.step_status)
                         else:
                             return IHTMLLog(interfaces.IStatusLog(log))
