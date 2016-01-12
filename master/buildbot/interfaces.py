@@ -47,14 +47,13 @@ class BuilderInUseError(Exception):
 
 class WorkerTooOldError(Exception):
     pass
-define_old_worker_class(
-    globals(), WorkerTooOldError, pattern="BuildWorker")
+define_old_worker_class(locals(), WorkerTooOldError, pattern="BuildWorker")
 
 
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
 define_old_worker_class(
-    globals(), LatentWorkerFailedToSubstantiate, pattern="BuildWorker")
+    locals(), LatentWorkerFailedToSubstantiate, pattern="BuildWorker")
 
 
 class IPlugin(Interface):
@@ -163,7 +162,7 @@ class ILogObserver(Interface):
 class IWorker(IPlugin):
     # callback methods from the manager
     pass
-define_old_worker_class_alias(globals(), IWorker, pattern="BuildWorker")
+define_old_worker_class_alias(locals(), IWorker, pattern="BuildWorker")
 
 
 class ILatentWorker(IWorker):
@@ -195,7 +194,7 @@ class ILatentWorker(IWorker):
         @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
         build finished.
         """
-define_old_worker_class_alias(globals(), ILatentWorker, pattern="BuildWorker")
+define_old_worker_class_alias(locals(), ILatentWorker, pattern="BuildWorker")
 
 
 class IRenderable(Interface):

@@ -58,35 +58,35 @@ class ClassAlias(unittest.TestCase):
         class IWorker:
             pass
 
-        globals = {}
+        locals = {}
         define_old_worker_class_alias(
-            globals, IWorker, pattern="BuildWorker")
-        self.assertIn("IBuildSlave", globals)
-        self.assertTrue(globals["IBuildSlave"] is IWorker)
+            locals, IWorker, pattern="BuildWorker")
+        self.assertIn("IBuildSlave", locals)
+        self.assertTrue(locals["IBuildSlave"] is IWorker)
 
         # TODO: Is there a way to detect usage of class alias and print
         # warning?
 
     def test_module_reload(self):
         # pylint: disable=function-redefined
-        globals = {}
+        locals = {}
 
         class IWorker:
             pass
 
         define_old_worker_class_alias(
-            globals, IWorker, pattern="BuildWorker")
-        self.assertIn("IBuildSlave", globals)
-        self.assertTrue(globals["IBuildSlave"] is IWorker)
+            locals, IWorker, pattern="BuildWorker")
+        self.assertIn("IBuildSlave", locals)
+        self.assertTrue(locals["IBuildSlave"] is IWorker)
 
         # "Reload" module
         class IWorker:
             pass
 
         define_old_worker_class_alias(
-            globals, IWorker, pattern="BuildWorker")
-        self.assertIn("IBuildSlave", globals)
-        self.assertTrue(globals["IBuildSlave"] is IWorker)
+            locals, IWorker, pattern="BuildWorker")
+        self.assertIn("IBuildSlave", locals)
+        self.assertTrue(locals["IBuildSlave"] is IWorker)
 
 
 class ClassWrapper(unittest.TestCase):
@@ -98,10 +98,10 @@ class ClassWrapper(unittest.TestCase):
                 self.arg = arg
                 self.kwargs = kwargs
 
-        globals = {}
-        define_old_worker_class(globals, Worker)
-        self.assertIn("Slave", globals)
-        Slave = globals["Slave"]
+        locals = {}
+        define_old_worker_class(locals, Worker)
+        self.assertIn("Slave", locals)
+        Slave = locals["Slave"]
         self.assertTrue(issubclass(Slave, Worker))
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
@@ -118,10 +118,10 @@ class ClassWrapper(unittest.TestCase):
                 self.arg = arg
                 self.kwargs = kwargs
 
-        globals = {}
-        define_old_worker_class(globals, Worker, pattern="Buildworker")
-        self.assertIn("Buildslave", globals)
-        Buildslave = globals["Buildslave"]
+        locals = {}
+        define_old_worker_class(locals, Worker, pattern="Buildworker")
+        self.assertIn("Buildslave", locals)
+        Buildslave = locals["Buildslave"]
         self.assertTrue(issubclass(Buildslave, Worker))
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
@@ -144,10 +144,10 @@ class ClassWrapper(unittest.TestCase):
                 instance.new_kwargs = kwargs
                 return instance
 
-        globals = {}
-        define_old_worker_class(globals, Worker)
-        self.assertIn("Slave", globals)
-        Slave = globals["Slave"]
+        locals = {}
+        define_old_worker_class(locals, Worker)
+        self.assertIn("Slave", locals)
+        Slave = locals["Slave"]
         self.assertTrue(issubclass(Slave, Worker))
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
@@ -163,15 +163,15 @@ class ClassWrapper(unittest.TestCase):
         class Worker(object):
             """docstring"""
 
-        globals = {}
-        define_old_worker_class(globals, Worker)
-        Slave = globals["Slave"]
+        locals = {}
+        define_old_worker_class(locals, Worker)
+        Slave = locals["Slave"]
         self.assertEqual(Slave.__doc__, Worker.__doc__)
         self.assertEqual(Slave.__module__, Worker.__module__)
 
     def test_module_reload(self):
         # pylint: disable=function-redefined
-        globals = {}
+        locals = {}
 
         class Worker(object):
 
@@ -179,9 +179,9 @@ class ClassWrapper(unittest.TestCase):
                 self.arg = arg
                 self.kwargs = kwargs
 
-        define_old_worker_class(globals, Worker)
-        self.assertIn("Slave", globals)
-        self.assertTrue(issubclass(globals["Slave"], Worker))
+        define_old_worker_class(locals, Worker)
+        self.assertIn("Slave", locals)
+        self.assertTrue(issubclass(locals["Slave"], Worker))
 
         # "Reload" module
         class Worker(object):
@@ -190,9 +190,9 @@ class ClassWrapper(unittest.TestCase):
                 self.arg = arg
                 self.kwargs = kwargs
 
-        define_old_worker_class(globals, Worker)
-        self.assertIn("Slave", globals)
-        self.assertTrue(issubclass(globals["Slave"], Worker))
+        define_old_worker_class(locals, Worker)
+        self.assertIn("Slave", locals)
+        self.assertTrue(issubclass(locals["Slave"], Worker))
 
 
 class PropertyWrapper(unittest.TestCase):
@@ -248,47 +248,47 @@ class FunctionWrapper(unittest.TestCase):
     def test_function_wrapper(self):
         def updateWorker(res):
             return res
-        globals = {}
-        define_old_worker_func(globals, updateWorker)
+        locals = {}
+        define_old_worker_func(locals, updateWorker)
 
-        self.assertIn("updateSlave", globals)
+        self.assertIn("updateSlave", locals)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(updateWorker("test"), "test")
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
-            self.assertEqual(globals["updateSlave"]("test"), "test")
+            self.assertEqual(locals["updateSlave"]("test"), "test")
 
     def test_func_meta(self):
         def updateWorker(self, res):
             """docstring"""
             return res
-        globals = {}
-        define_old_worker_func(globals, updateWorker)
+        locals = {}
+        define_old_worker_func(locals, updateWorker)
 
-        self.assertEqual(globals["updateSlave"].__module__,
+        self.assertEqual(locals["updateSlave"].__module__,
                          updateWorker.__module__)
-        self.assertEqual(globals["updateSlave"].__doc__,
+        self.assertEqual(locals["updateSlave"].__doc__,
                          updateWorker.__doc__)
 
     def test_module_reload(self):
         # pylint: disable=function-redefined
-        globals = {}
+        locals = {}
 
         def updateWorker(res):
             return res
 
-        define_old_worker_func(globals, updateWorker)
+        define_old_worker_func(locals, updateWorker)
 
-        self.assertIn("updateSlave", globals)
+        self.assertIn("updateSlave", locals)
 
         # "Reload" module
         def updateWorker(res):
             return res
 
-        define_old_worker_func(globals, updateWorker)
+        define_old_worker_func(locals, updateWorker)
 
-        self.assertIn("updateSlave", globals)
+        self.assertIn("updateSlave", locals)
 
 
 class AttributeMixin(unittest.TestCase):
