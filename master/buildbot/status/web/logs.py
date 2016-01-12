@@ -216,7 +216,7 @@ class LogsResource(HtmlResource):
                             return JSONTestResource(log, self.step_status)
                         elif log.content_type == 'xml' or ('xml-stylesheet' in content or 'nosetests' in content):
                             return XMLTestResource(log, self.step_status)
-                        else:
-                            return IHTMLLog(interfaces.IStatusLog(log))
+                    else:
+                        return IHTMLLog(interfaces.IStatusLog(log))
                 return NoResource("Empty Log '%s'" % path)
         return HtmlResource.getChild(self, path, req)
