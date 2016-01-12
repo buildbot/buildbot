@@ -74,7 +74,7 @@ class TestIWorker(unittest.TestCase):
         from buildbot.interfaces import IWorker
         from buildbot.interfaces import IBuildSlave
 
-        self.assertIs(IBuildSlave, IWorker)
+        self.assertTrue(IBuildSlave is IWorker)
 
 
 class ILatentWorker(unittest.TestCase):
@@ -83,4 +83,4 @@ class ILatentWorker(unittest.TestCase):
         from buildbot.interfaces import ILatentWorker
         from buildbot.interfaces import ILatentBuildSlave
 
-        self.assertIs(ILatentBuildSlave, ILatentWorker)
+        self.assertTrue(ILatentBuildSlave is ILatentWorker)
