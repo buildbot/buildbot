@@ -38,7 +38,11 @@ class JSONTestResource(HtmlResource):
         cxt['selectedproject'] = project
 
         try:
+
             json_data = json.loads(self.log.getText())
+
+            if json_data is None:
+                raise ValueError("Json object is None")
 
             cxt['data'] = json_data
 
@@ -61,6 +65,8 @@ class JSONTestResource(HtmlResource):
 
         except ValueError as e:
             log.msg("Error with parsing json: {0}".format(e))
+        except KeyError as e:
+            log.msg("Key error in json: {0}".format(e))
 
         template = req.site.buildbot_service.templates.get_template("jsontestresults.html")
         return template.render(**cxt)

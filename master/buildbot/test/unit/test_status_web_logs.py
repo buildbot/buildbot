@@ -36,7 +36,8 @@ class TestLogsResource(unittest.TestCase):
         log = mock.Mock(HTMLLogFile)
         log.getName = lambda: name
         log.hasContent = lambda: has_content
-        log.content_type = content_type
+        if content_type is not None:
+            log.content_type = content_type
         log.getText = lambda: text
         self.logs.append(log)
 
@@ -51,6 +52,12 @@ class TestLogsResource(unittest.TestCase):
 
     def test_log_resource_xml(self):
         logs_resource = LogsResource(self.setupStatus("test", "", True, "xml"))
+        res = logs_resource.getChild("test", "")
+
+        self.assertIsInstance(res, XMLTestResource)
+
+    def test_log_resource_xml_no_content_type(self):
+        logs_resource = LogsResource(self.setupStatus("test", "nosetests", True))
         res = logs_resource.getChild("test", "")
 
         self.assertIsInstance(res, XMLTestResource)
