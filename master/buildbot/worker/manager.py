@@ -82,7 +82,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         # If the worker is connected, self.slaves[workername].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        # workers attribute is actually just an alias to multiService's namedService
+        # slaves attribute is actually just an alias to multiService's namedService
         return self.namedServices
 
     def getBuildslaveByName(self, buildslaveName):
