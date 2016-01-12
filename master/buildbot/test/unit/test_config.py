@@ -742,28 +742,28 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             len(self.flushWarnings([self.cfg.load_builders])),
             1)
 
-    def test_load_slaves_defaults(self):
+    def test_load_workers_defaults(self):
         self.cfg.load_workers(self.filename, {})
         self.assertResults(workers=[])
 
-    def test_load_slaves_not_list(self):
+    def test_load_workers_not_list(self):
         self.cfg.load_workers(self.filename,
                               dict(workers=dict()))
         self.assertConfigError(self.errors, "must be a list")
 
-    def test_load_slaves_not_instance(self):
+    def test_load_workers_not_instance(self):
         self.cfg.load_workers(self.filename,
                               dict(workers=[mock.Mock()]))
         self.assertConfigError(self.errors, "must be a list of")
 
-    def test_load_slaves_reserved_names(self):
+    def test_load_workers_reserved_names(self):
         for name in 'debug', 'change', 'status':
             self.cfg.load_workers(self.filename,
                                   dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is reserved")
             self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves_not_identifiers(self):
+    def test_load_workers_not_identifiers(self):
         for name in (u"123 no initial digits", u"spaces not allowed",
                      u'a/b', u'\N{SNOWMAN}', u"a.b.c.d", u"a-b_c.d9",):
             self.cfg.load_workers(self.filename,
@@ -771,14 +771,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.assertConfigError(self.errors, "is not an identifier")
             self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves_too_long(self):
+    def test_load_workers_too_long(self):
         name = u"a" * 51
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
         self.assertConfigError(self.errors, "is longer than")
         self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves_empty(self):
+    def test_load_workers_empty(self):
         name = u""
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
@@ -786,7 +786,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors, "cannot be an empty string")
         self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves(self):
+    def test_load_workers(self):
         sl = worker.Worker('foo', 'x')
         self.cfg.load_workers(self.filename,
                               dict(workers=[sl]))
@@ -1046,7 +1046,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_single_master()
         self.assertConfigError(self.errors, "no builders are configured")
 
-    def test_check_single_master_no_slaves(self):
+    def test_check_single_master_no_workers(self):
         self.setup_basic_attrs()
         self.cfg.workers = []
         self.cfg.check_single_master()
@@ -1103,7 +1103,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_locks()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_builders_unknown_slave(self):
+    def test_check_builders_unknown_worker(self):
         sl = mock.Mock()
         sl.workername = 'xyz'
         self.cfg.workers = [sl]
@@ -1176,7 +1176,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_ports()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_ports_protocols_not_set_slaves(self):
+    def test_check_ports_protocols_not_set_workers(self):
         self.cfg.workers = [mock.Mock()]
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
