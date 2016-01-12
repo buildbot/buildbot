@@ -585,6 +585,11 @@ class MasterConfig(util.ComparableMixin):
             if not self._check_workers(workers, "c['workers']"):
                 config_valid = False
 
+        if deprecated_workers is not None and workers is not None:
+            error("Use of c['workers'] and c['slaves'] at the same time is "
+                  "not supported. Use only c['workers'] instead")
+            return
+
         if not config_valid:
             return
 

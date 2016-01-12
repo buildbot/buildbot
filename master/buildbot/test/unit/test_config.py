@@ -816,7 +816,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                 r"use c\['workers'\] instead"):
             self.cfg.load_workers(self.filename, dict(slaves=[w1],
                                                       workers=[w2]))
-        self.assertResults(slaves=[w1, w2])
+
+        self.assertConfigError(
+            self.errors,
+            "Use of c['workers'] and c['slaves'] at the same time "
+            "is not supported")
+        self.errors.errors[:] = []  # clear out the errors
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})
