@@ -18,6 +18,7 @@ import warnings
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.test.util.warnings import ignoreWarning
 from twisted.trial import unittest
 
 
@@ -114,19 +115,21 @@ class TestWarningsFilter(unittest.TestCase):
         with assertNotProducesWarnings(SomeWarning):
             pass
 
-        with assertNotProducesWarnings(SomeWarning):
-            warnings.warn("msg 3", OtherWarning)
+        with ignoreWarning(OtherWarning):
+            with assertNotProducesWarnings(SomeWarning):
+                warnings.warn("msg 3", OtherWarning)
 
     def test_warnigs_filter(self):
-        with assertProducesWarnings(SomeWarning,
-                                    messages_patterns=["1", "2", "3"]):
-            warnings.warn("other", OtherWarning)
-            warnings.warn("log 1 message", SomeWarning)
-            warnings.warn("other", OtherWarning)
-            warnings.warn("log 2 message", SomeWarning)
-            warnings.warn("other", OtherWarning)
-            warnings.warn("log 3 message", SomeWarning)
-            warnings.warn("other", OtherWarning)
+        with ignoreWarning(OtherWarning):
+            with assertProducesWarnings(SomeWarning,
+                                        messages_patterns=["1", "2", "3"]):
+                warnings.warn("other", OtherWarning)
+                warnings.warn("log 1 message", SomeWarning)
+                warnings.warn("other", OtherWarning)
+                warnings.warn("log 2 message", SomeWarning)
+                warnings.warn("other", OtherWarning)
+                warnings.warn("log 3 message", SomeWarning)
+                warnings.warn("other", OtherWarning)
 
     def test_nested_filters(self):
         with assertProducesWarnings(SomeWarning,
@@ -134,4 +137,9 @@ class TestWarningsFilter(unittest.TestCase):
             with assertProducesWarnings(OtherWarning,
                                         messages_patterns=["other 1"]):
                 warnings.warn("other 1", OtherWarning)
+                warnings.warn("some 1", SomeWarning)
+
+    def test_ignore_warnings(self):
+        with assertNotProducesWarnings(SomeWarning):
+            with ignoreWarning(SomeWarning):
                 warnings.warn("some 1", SomeWarning)

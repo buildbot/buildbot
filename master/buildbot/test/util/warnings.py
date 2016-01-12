@@ -21,6 +21,30 @@ import warnings
 
 
 @contextlib.contextmanager
+def _recordWarnings(category, output):
+    assert isinstance(output, list)
+
+    unrelated_warns = []
+    with warnings.catch_warnings(record=True) as all_warns:
+        # Cause all warnings of the provided category to always be
+        # triggered.
+        warnings.simplefilter("always", category)
+
+        yield
+
+        # Filter warnings.
+        for w in all_warns:
+            if isinstance(w.message, category):
+                output.append(w)
+            else:
+                unrelated_warns.append(w)
+
+    # Re-raise unrelated warnings.
+    for w in unrelated_warns:
+        warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+
+
+@contextlib.contextmanager
 def assertProducesWarnings(filter_category, num_warnings=None,
                            messages_patterns=None, message_pattern=None):
     if messages_patterns is not None:
@@ -30,50 +54,34 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     else:
         assert num_warnings is not None or message_pattern is not None
 
-    unrelated_warns = []
-    with warnings.catch_warnings(record=True) as all_warns:
-        # Cause all warnings of the provided category to always be
-        # triggered.
-        warnings.simplefilter("always", filter_category)
-
+    warns = []
+    with _recordWarnings(filter_category, warns):
         yield
 
-        # Filter warnings.
-        warns = []
-        for w in all_warns:
-            if isinstance(w.message, filter_category):
-                warns.append(w)
-            else:
-                unrelated_warns.append(w)
+    if num_warnings is not None:
+        assert len(warns) == num_warnings, \
+            "Number of of occurred warnings is not correct. " \
+            "Expected {num} warnings, received {num_received}:\n" \
+            "{warns}".format(
+                num=num_warnings,
+                num_received=len(warns),
+                warns="\n".join(map(str, warns)))
 
-        if num_warnings is not None:
-            assert len(warns) == num_warnings, \
-                "Number of of occurred warnings is not correct. " \
-                "Expected {num} warnings, received {num_received}:\n" \
-                "{warns}".format(
-                    num=num_warnings,
-                    num_received=len(warns),
-                    warns="\n".join(map(str, warns)))
+    num_warnings = len(warns)
+    if messages_patterns is None and message_pattern is not None:
+        messages_patterns = [message_pattern] * num_warnings
 
-        num_warnings = len(warns)
-        if messages_patterns is None and message_pattern is not None:
-            messages_patterns = [message_pattern] * num_warnings
-
-        if messages_patterns is not None:
-            for w, pattern in zip(warns, messages_patterns):
-                # TODO: Maybe don't use regexp, but use simple substring check?
-                assert re.search(pattern, str(w.message)), \
-                    "Warning pattern doesn't match. Expected pattern:\n" \
-                    "{pattern}\n" \
-                    "Received message:\n" \
-                    "{message}\n" \
-                    "All gathered warnings:\n" \
-                    "{warns}".format(pattern=pattern, message=w.message,
-                                     warns="\n".join(map(str, warns)))
-
-    # Re-raise unrelated warnings.
-    for w in unrelated_warns:
-        warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
+    if messages_patterns is not None:
+        for w, pattern in zip(warns, messages_patterns):
+            # TODO: Maybe don't use regexp, but use simple substring check?
+            assert re.search(pattern, str(w.message)), \
+                "Warning pattern doesn't match. Expected pattern:\n" \
+                "{pattern}\n" \
+                "Received message:\n" \
+                "{message}\n" \
+                "All gathered warnings:\n" \
+                "{warns}".format(pattern=pattern, message=w.message,
+                                 warns="\n".join(map(str, warns)))
 
 
 @contextlib.contextmanager
@@ -86,4 +94,10 @@ def assertProducesWarning(filter_category, message_pattern=None):
 @contextlib.contextmanager
 def assertNotProducesWarnings(filter_category):
     with assertProducesWarnings(filter_category, 0):
+        yield
+
+
+@contextlib.contextmanager
+def ignoreWarning(category):
+    with _recordWarnings(category, []):
         yield
