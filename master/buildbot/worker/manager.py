@@ -57,7 +57,7 @@ class WorkerRegistration(object):
 class WorkerManager(MeasuredBuildbotServiceManager):
 
     name = "WorkerManager"
-    managed_services_name = "buildslaves"
+    managed_services_name = "workers"
 
     config_attr = "slaves"
     PING_TIMEOUT = 10

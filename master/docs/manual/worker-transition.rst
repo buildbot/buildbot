@@ -186,6 +186,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
        mesurement class name changed from ``BuildslaveManager``
      - to ``WorkerManager``
 
+   * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.managed_services_name`
+       metric mesurement managed service name changed from ``buildslaves``
+     - to ``workers``
+
 
 Plugins
 -------
