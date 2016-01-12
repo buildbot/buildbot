@@ -142,10 +142,6 @@ Here is the complete list of changed API:
      - :py:attr:`buildbot.worker.base.AbstractWorker.workers`
 
 
-   * - :py:class:`buildbot.buildslave.docker.DockerLatentBuildSlave`
-     - :py:class:`buildbot.worker.docker.DockerLatentWorker`
-
-
    * - :py:class:`buildbot.buildslave.ec2.EC2LatentBuildSlave`
      - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 
@@ -186,6 +182,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
    * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.managed_services_name`
        metric mesurement managed service name changed from ``buildslaves``
      - to ``workers``
+
+
+   * - :py:class:`buildbot.buildslave.docker.DockerLatentBuildSlave`
+     - :py:class:`buildbot.worker.docker.DockerLatentWorker`
 
 
    * - :py:class:`buildbot.buildslave.local.LocalBuildSlave`
