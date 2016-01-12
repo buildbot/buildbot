@@ -55,7 +55,7 @@ config =
                 version: '0.10.1'
                 files: 'angular-moment.js'
             'buildbot-data':
-                version: '~1.1.0'
+                version: '~1.2.0'
                 files: 'dist/buildbot-data.js'
             lodash:
                 version: '~2.4.1'
@@ -72,18 +72,6 @@ config =
             'sortable.js':
                 version: '~1.2.0'
                 files: ['Sortable.js', 'ng-sortable.js']
-            # here we have the choice: ngSocket: no reconnecting, and not evolving since 10mon
-            # reconnectingWebsocket implements reconnecting with expo backoff, but no good bower taging
-            # reimplement reconnecting ourselves
-            'reconnectingWebsocket':
-                version: 'master'
-                files: ['reconnecting-websocket.js']
-            tabex:
-                version: '*'
-                files: 'dist/tabex.js'
-            dexie:
-                version: '*'
-                files: 'dist/latest/Dexie.js'
 
         testdeps:
             'angular-mocks':
@@ -91,11 +79,6 @@ config =
                 files: 'angular-mocks.js'
 
     buildtasks: ['scripts', 'styles', 'index', 'icons', 'tests', 'generatedfixtures', 'fixtures']
-
-    generatedfixtures: ->
-        gulp.src ''
-            .pipe shell('buildbot dataspec -g window.dataspec -o ' + path.join(config.dir.build,'generatedfixtures.js'))
-
 
 gulp.task 'icons', ->
     gulp.src(['src/icons/*.svg', '!src/icons/iconset.svg'])

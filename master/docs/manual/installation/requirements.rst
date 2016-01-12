@@ -81,9 +81,8 @@ SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
 
 Python-Dateutil: http://labix.org/python-dateutil
 
-  The :bb:sched:`Nightly` scheduler requires Python-Dateutil version 1.5 (the last version to support Python-2.x).
+  Buildbot requires Python-Dateutil in version 1.5 or higher (the last version to support Python-2.x).
   This is a small, pure-python library.
-  Buildbot will function properly without it if the :bb:sched:`Nightly` scheduler is not used.
 
 Autobahn:
 

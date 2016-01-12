@@ -454,7 +454,7 @@ def createJobfile(jobid, branch, baserev, patch_level, patch_body, repository,
         job += ns(branch)
         job += ns(str(baserev))
         job += ns("%d" % patch_level)
-        job += ns(patch_body)
+        job += ns(patch_body or "")
         job += ns(repository)
         job += ns(project)
         if (version >= 3):
@@ -620,6 +620,7 @@ class Try(pb.Referenceable):
         # returns a Deferred that fires when the job has been delivered
         if self.connect == "ssh":
             tryhost = self.getopt("host")
+            tryport = self.getopt("port")
             tryuser = self.getopt("username")
             trydir = self.getopt("jobdir")
             buildbotbin = self.getopt("buildbotbin")
@@ -651,6 +652,9 @@ class Try(pb.Referenceable):
 
             if tryuser:
                 argv += ["-l", tryuser]
+
+            if tryport:
+                argv += ["-p", tryport]
 
             argv += [tryhost, buildbotbin, "tryserver", "--jobdir", trydir]
             pp = RemoteTryPP(self.jobfile)

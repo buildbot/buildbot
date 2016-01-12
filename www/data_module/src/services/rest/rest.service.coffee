@@ -2,7 +2,7 @@ class Rest extends Service
     constructor: ($http, $q, API) ->
         return new class RestService
             execute: (config) ->
-                $q (resolve, reject) =>
+                $q (resolve, reject) ->
                     $http(config)
                     .success (response) ->
                         try
@@ -18,7 +18,7 @@ class Rest extends Service
                     url: @parse(API, url)
                     params: params
                     headers:
-                      'Accept': 'application/json'
+                        'Accept': 'application/json'
 
                 @execute(config)
 

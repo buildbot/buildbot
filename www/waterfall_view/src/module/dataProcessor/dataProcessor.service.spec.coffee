@@ -5,22 +5,28 @@ describe 'Data Processor service', ->
     injected = ($injector) ->
         $rootScope = $injector.get('$rootScope')
         dataProcessorService = $injector.get('dataProcessorService')
+        Collection = $injector.get('Collection')
 
-        builders = [
+        _builders = [
             builderid: 1
             name: 'builder1'
+            masterids: [1]
         ,
             builderid: 2
             name: 'builder2'
+            masterids: [1]
         ,
             builderid: 3
             name: 'builder3'
+            masterids: [1]
         ,
             builderid: 4
             name: 'builder4'
+            masterids: [1]
         ]
-
-        builds = [
+        builders = new Collection("builders", {})
+        builders.from(_builders)
+        _builds = [
             buildid: 1
             builderid: 1
             started_at: 1403059709
@@ -51,6 +57,8 @@ describe 'Data Processor service', ->
             complete_at: 0
             complete: false
         ]
+        builds = new Collection("builds", {})
+        builds.from(_builds)
 
     beforeEach(inject(injected))
 
@@ -98,7 +106,7 @@ describe 'Data Processor service', ->
 
         # If the time between two builds is less than the threshold, they should be in different groups
         for build1, i in builds
-            for build2 in builds[i+1..]
+            for build2 in builds[i + 1..]
                 # If build2 starts earlier than build1, swap them
                 if build2.buildid < build1.buildid
                     [build1, build2] = [build2, build1]

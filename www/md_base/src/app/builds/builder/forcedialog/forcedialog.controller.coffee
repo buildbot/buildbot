@@ -23,7 +23,7 @@ class ForceDialog extends Controller
             @field_errors = null
 
     forceBuild: (param) ->
-        res = @dataService.control 'forceschedulers/force', 'force', param
+        res = @dataService.control 'forceschedulers', 'force', 'force', param
         res.then (=> @forceBuildSuccess()), (data) => @forceBuildFail(data.error)
 
     constructor: (@builder, @scheduler, @dataService, @$mdDialog) ->
