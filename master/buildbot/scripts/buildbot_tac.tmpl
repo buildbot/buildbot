@@ -1,19 +1,14 @@
 import os
 
-# TODO: Maybe include this part only if specific "create-master" flags are set?
-# TODO: Or exclude it when some flag is set?
-# TODO: Newly create buildbot.tac files should either set fallback setting
-# to "error", or pretend that there is no such settings at all (at some point
-# this fallback will be removed anyway).
+# TODO: Add flag to "create-master" that will force "error" or "ignore" below?
 
-# Setup old worker API warnings
-import warnings
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-# Use "error" action to fail on old API usage or "ignore" action to completely
-# ignore old API usage warnings.
-# By default first occurrence of the warning for each location will be
-# displayed.
-warnings.simplefilter("default", DeprecatedWorkerAPIWarning)
+# Uncomment one of the following lines to treat old worker API usage as error.
+# On the other hand, you can set filter to "ignore" to ignore all old
+# worker API usage warnings.
+#import warnings
+#from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+# Use "ignore" filter to ignore all old API usage warnings.
+#warnings.simplefilter("error", DeprecatedWorkerAPIWarning)
 
 from twisted.application import service
 from buildbot.master import BuildMaster
