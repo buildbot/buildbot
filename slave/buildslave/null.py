@@ -22,7 +22,8 @@ class LocalBuildSlave(BuildSlaveBase):
     @defer.inlineCallbacks
     def startService(self):
         # importing here to avoid dependency on buildbot master package
-        from buildbot.buildslave.protocols.null import Connection
+        # requires buildot version >= 0.9.0b5
+        from buildbot.worker.protocols.null import Connection
 
         yield BuildSlaveBase.startService(self)
         # TODO: This is a workaround for using worker with "slave"-api with
