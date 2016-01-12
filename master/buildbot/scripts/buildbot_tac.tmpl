@@ -1,15 +1,5 @@
 import os
 
-# TODO: Add flag to "create-master" that will force "error" or "ignore" below?
-
-# Uncomment one of the following lines to treat old worker API usage as error.
-# On the other hand, you can set filter to "ignore" to ignore all old
-# worker API usage warnings.
-#import warnings
-#from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-# Use "ignore" filter to ignore all old API usage warnings.
-#warnings.simplefilter("error", DeprecatedWorkerAPIWarning)
-
 from twisted.application import service
 from buildbot.master import BuildMaster
 
