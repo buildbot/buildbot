@@ -66,6 +66,10 @@ Here is the complete list of changed API:
       If they are private, then no fallback should be provided and they
       change shouldn't be documented.
 
+    * Thorought tests for old modules imports are not yet written.
+
+    * Tests for old attributes/methods access are written not for all changes.
+
 .. list-table::
    :header-rows: 1
 
