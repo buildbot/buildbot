@@ -37,7 +37,7 @@ except ImportError:
     client = None
 
 
-def handle_stream_line(line):
+def _handle_stream_line(line):
     """\
     Input is the json representation of: {'stream': "Content\ncontent"}
     Output is a generator yield "Content", and then "content"
@@ -147,7 +147,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                     image)
             for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
                                             tag=image):
-                for streamline in handle_stream_line(line):
+                for streamline in _handle_stream_line(line):
                     log.msg(streamline)
 
         if (not self._image_exists(docker_client, image)):
