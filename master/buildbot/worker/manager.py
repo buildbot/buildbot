@@ -56,7 +56,7 @@ class WorkerRegistration(object):
 
 class WorkerManager(MeasuredBuildbotServiceManager):
 
-    name = "BuildslaveManager"
+    name = "WorkerManager"
     managed_services_name = "buildslaves"
 
     config_attr = "slaves"
