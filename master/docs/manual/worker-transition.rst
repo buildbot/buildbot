@@ -146,9 +146,6 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 
 
-   * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
-     - :py:meth:`~buildbot.config.MasterConfig.load_workers`
-
    * - :py:attr:`buildbot.config.MasterConfig.slaves`
      - :py:meth:`~buildbot.config.MasterConfig.workers`
 
@@ -196,6 +193,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
 
    * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.remote_slave`
      - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
+
+
+   * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
+     - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 
 
 Plugins

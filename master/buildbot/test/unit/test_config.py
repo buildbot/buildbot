@@ -1196,17 +1196,6 @@ class MasterConfig_old_worker_api(unittest.TestCase):
     def setUp(self):
         self.cfg = config.MasterConfig()
 
-    def test_load_workers_old_api(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"'load_slaves' method is deprecated, "
-                                r"use 'load_workers' instead"):
-            self.cfg.load_slaves(self.filename, {})
-
-    def test_load_workers_new_api(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.cfg.load_workers(self.filename, {})
-
     def test_worker_old_api(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,

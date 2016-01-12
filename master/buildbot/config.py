@@ -29,7 +29,6 @@ from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import on_deprecated_name_usage
 from buildbot.www import auth
 from buildbot.www import avatar
@@ -601,9 +600,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         else:
             pass
-    # TODO: is load_workers method is a private method and doesn't requires
-    # fallback?
-    define_old_worker_method(locals(), load_workers)
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])
