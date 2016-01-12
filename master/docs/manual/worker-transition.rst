@@ -182,7 +182,7 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
    * - :py:class:`buildbot.buildslave.manager.BuildslaveManager`
      - :py:class:`buildbot.worker.manager.WorkerManager`
 
-   * - :py:class:`buildbot.buildslave.manager.BuildslaveManager`'s metric
+   * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.name` metric
        mesurement class name changed from ``BuildslaveManager``
      - to ``WorkerManager``
 
