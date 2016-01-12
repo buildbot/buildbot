@@ -241,15 +241,3 @@ class PluginsTransition(unittest.TestCase):
 
         # Access of old-named workers through new API is an error.
         self.assertRaises(AttributeError, lambda: worker_ns.BuildSlave)
-
-
-class TestUseOfNoSlaveError(unittest.TestCase):
-
-    def test_use(self):
-        from buildbot.interfaces import NoSlaveError
-
-        with assertProducesWarning(
-                DeprecatedWorkerAPIWarning,
-                message_pattern="'NoSlaveError' class is deprecated"):
-            err = NoSlaveError()
-            assert isinstance(err, NoSlaveError)
