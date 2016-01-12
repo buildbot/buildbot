@@ -14,7 +14,7 @@ Transition to "worker" terminology
 
     * Is all changes are done only for functionality that was in eight branch?
       If something is introduced in nine branch, it can be safely changed
-      without providing fallback.
+      without providing fallback (for example, Docker stuff).
 
 Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated
 in favor of "worker"-based terminology.
