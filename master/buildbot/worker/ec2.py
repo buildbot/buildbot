@@ -76,8 +76,6 @@ class EC2LatentWorker(AbstractLatentWorker):
             config.error("The python module 'boto' is needed to use a "
                          "EC2LatentWorker")
 
-        # TODO: It's not good to change default values, so I suggest to drop
-        # default values completely.
         if keypair_name is None:
             on_deprecated_name_usage(
                 "Use of default value of 'keypair_name' of EC2LatentWorker "
