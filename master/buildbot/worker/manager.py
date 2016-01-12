@@ -59,7 +59,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     name = "WorkerManager"
     managed_services_name = "workers"
 
-    config_attr = "slaves"
+    config_attr = "workers"
     PING_TIMEOUT = 10
     reconfig_priority = 127
 

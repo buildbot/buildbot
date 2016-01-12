@@ -28,6 +28,7 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import on_deprecated_name_usage
 from buildbot.www import auth
@@ -69,7 +70,7 @@ def warnDeprecated(version, msg):
     log.msg("NOTE: [%s and later] %s" % (version, msg))
 
 
-class MasterConfig(util.ComparableMixin):
+class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -116,7 +117,8 @@ class MasterConfig(util.ComparableMixin):
         )
         self.schedulers = {}
         self.builders = []
-        self.slaves = []
+        self.workers = []
+        self._registerOldWorkerAttr("workers")
         self.change_sources = []
         self.status = []
         self.user_managers = []
@@ -594,11 +596,11 @@ class MasterConfig(util.ComparableMixin):
             return
 
         elif deprecated_workers is not None or workers is not None:
-            self.slaves = []
+            self.workers = []
             if deprecated_workers is not None:
-                self.slaves.extend(deprecated_workers)
+                self.workers.extend(deprecated_workers)
             if workers is not None:
-                self.slaves.extend(workers)
+                self.workers.extend(workers)
 
         else:
             # TODO: If in config has no workers entries, instance workers list
@@ -704,8 +706,8 @@ class MasterConfig(util.ComparableMixin):
         if self.multiMaster:
             return
 
-        if not self.slaves:
-            error("no slaves are configured")
+        if not self.workers:
+            error("no workers are configured")
 
         if not self.builders:
             error("no builders are configured")
@@ -756,14 +758,14 @@ class MasterConfig(util.ComparableMixin):
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown workers
-        slavenames = set([s.workername for s in self.slaves])
+        slavenames = set([s.workername for s in self.workers])
         seen_names = set()
         seen_builddirs = set()
 
         for b in self.builders:
             unknowns = set(b.slavenames) - slavenames
             if unknowns:
-                error("builder '%s' uses unknown slaves %s" %
+                error("builder '%s' uses unknown workers %s" %
                       (b.name, ", ".join(repr(u) for u in unknowns)))
             if b.name in seen_names:
                 error("duplicate builder name '%s'" % b.name)
@@ -803,8 +805,8 @@ class MasterConfig(util.ComparableMixin):
 
         if ports:
             return
-        if self.slaves:
-            error("slaves are configured, but c['protocols'] not")
+        if self.workers:
+            error("workers are configured, but c['protocols'] not")
 
 
 class BuilderConfig(util_config.ConfiguredMixin):

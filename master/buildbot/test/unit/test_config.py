@@ -185,7 +185,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             caches=dict(Changes=10, Builds=15),
             schedulers={},
             builders=[],
-            slaves=[],
+            workers=[],
             change_sources=[],
             status=[],
             user_managers=[],
@@ -269,7 +269,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                               lambda: config.MasterConfig.loadConfig(
                                   self.basedir, self.filename))
         self.assertEqual(e.errors, ['oh noes!', 'noes too!',
-                                    'no slaves are configured',
+                                    'no workers are configured',
                                     'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
@@ -744,7 +744,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_slaves_defaults(self):
         self.cfg.load_workers(self.filename, {})
-        self.assertResults(slaves=[])
+        self.assertResults(workers=[])
 
     def test_load_slaves_not_list(self):
         self.cfg.load_workers(self.filename,
@@ -790,7 +790,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         sl = worker.Worker('foo', 'x')
         self.cfg.load_workers(self.filename,
                               dict(workers=[sl]))
-        self.assertResults(slaves=[sl])
+        self.assertResults(workers=[sl])
 
     def test_load_workers_old_api(self):
         w = worker.Worker("name", 'x')
@@ -799,13 +799,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 message_pattern=r"c\['slaves'\] key is deprecated, "
                                 r"use c\['workers'\] instead"):
             self.cfg.load_workers(self.filename, dict(slaves=[w]))
-        self.assertResults(slaves=[w])
+        self.assertResults(workers=[w])
 
     def test_load_workers_new_api(self):
         w = worker.Worker("name", 'x')
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.cfg.load_workers(self.filename, dict(workers=[w]))
-        self.assertResults(slaves=[w])
+        self.assertResults(workers=[w])
 
     def test_load_workers_old_and_new_api(self):
         w1 = worker.Worker("name1", 'x')
@@ -991,7 +991,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2.name = 'b2'
 
         self.cfg.schedulers = dict(sch=sch)
-        self.cfg.slaves = [mock.Mock()]
+        self.cfg.workers = [mock.Mock()]
         self.cfg.builders = [b1, b2]
 
     def setup_builder_locks(self,
@@ -1048,9 +1048,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_single_master_no_slaves(self):
         self.setup_basic_attrs()
-        self.cfg.slaves = []
+        self.cfg.workers = []
         self.cfg.check_single_master()
-        self.assertConfigError(self.errors, "no slaves are configured")
+        self.assertConfigError(self.errors, "no workers are configured")
 
     def test_check_single_master_unsch_builder(self):
         self.setup_basic_attrs()
@@ -1106,14 +1106,14 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
     def test_check_builders_unknown_slave(self):
         sl = mock.Mock()
         sl.workername = 'xyz'
-        self.cfg.slaves = [sl]
+        self.cfg.workers = [sl]
 
         b1 = FakeBuilder(slavenames=['xyz', 'abc'], builddir='x', name='b1')
         self.cfg.builders = [b1]
 
         self.cfg.check_builders()
         self.assertConfigError(self.errors,
-                               "builder 'b1' uses unknown slaves 'abc'")
+                               "builder 'b1' uses unknown workers 'abc'")
 
     def test_check_builders_duplicate_name(self):
         b1 = FakeBuilder(slavenames=[], name='b1', builddir='1')
@@ -1136,7 +1136,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
     def test_check_builders(self):
         sl = mock.Mock()
         sl.workername = 'a'
-        self.cfg.slaves = [sl]
+        self.cfg.workers = [sl]
 
         b1 = FakeBuilder(slavenames=['a'], name='b1', builddir='dir1')
         b2 = FakeBuilder(slavenames=['a'], name='b2', builddir='dir2')
@@ -1177,16 +1177,46 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
     def test_check_ports_protocols_not_set_slaves(self):
-        self.cfg.slaves = [mock.Mock()]
+        self.cfg.workers = [mock.Mock()]
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
-                               "slaves are configured, but c['protocols'] not")
+                               "workers are configured, but c['protocols'] not")
 
     def test_check_ports_protocols_port_duplication(self):
         self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                                "Some of ports in c['protocols'] duplicated")
+
+
+class MasterConfig_old_worker_api(unittest.TestCase):
+
+    filename = "test.cfg"
+
+    def setUp(self):
+        self.cfg = config.MasterConfig()
+
+    def test_load_workers_old_api(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"'load_slaves' method is deprecated, "
+                                r"use 'load_workers' instead"):
+            self.cfg.load_slaves(self.filename, {})
+
+    def test_load_workers_new_api(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.cfg.load_workers(self.filename, {})
+
+    def test_worker_old_api(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"'slaves' attribute is deprecated, "
+                                r"use 'workers' instead"):
+            self.assertEqual(self.cfg.slaves, [])
+
+    def test_workers_new_api(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertEqual(self.cfg.workers, [])
 
 
 class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):

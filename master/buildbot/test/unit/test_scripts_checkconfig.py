@@ -106,7 +106,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig={}
                 """)
         self.do_test_load(config=config,
-                          stderr_re=re.compile('no slaves'))
+                          stderr_re=re.compile('no workers'))
         self.flushLoggedErrors()
 
     def test_success_imports(self):

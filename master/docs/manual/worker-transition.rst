@@ -159,6 +159,9 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 
+   * - :py:attr:`buildbot.config.MasterConfig.slaves`
+     - :py:meth:`~buildbot.config.MasterConfig.workers`
+
 
 API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
 

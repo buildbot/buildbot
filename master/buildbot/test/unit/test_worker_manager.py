@@ -67,14 +67,14 @@ class TestBuildSlaveManager(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_add_remove(self):
         sl = FakeBuildSlave('sl1')
-        self.new_config.slaves = [sl]
+        self.new_config.workers = [sl]
 
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sl.parent, self.buildslaves)
         self.assertEqual(self.buildslaves.slaves, {'sl1': sl})
 
-        self.new_config.slaves = []
+        self.new_config.workers = []
 
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -90,7 +90,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         sl.botmaster = self.master.botmaster
 
         sl_new = FakeBuildSlave('sl1')
-        self.new_config.slaves = [sl_new]
+        self.new_config.workers = [sl_new]
 
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
@@ -103,7 +103,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         sl.setServiceParent(self.buildslaves)
 
         sl_new = FakeBuildSlave2('sl1')
-        self.new_config.slaves = [sl_new]
+        self.new_config.workers = [sl_new]
 
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
