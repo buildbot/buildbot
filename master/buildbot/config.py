@@ -564,9 +564,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 error(msg)
 
             if errors:
-                # TODO: previously these errors were logged, but not considered
-                # as a reason to not to update list of workers in configuration
-                # instance.
                 return False
 
         return True
@@ -603,8 +600,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 self.workers.extend(workers)
 
         else:
-            # TODO: If in config has no workers entries, instance workers list
-            # is not being updated. Is this is a correct behavior?
             pass
     # TODO: is load_workers method is a private method and doesn't requires
     # fallback?
