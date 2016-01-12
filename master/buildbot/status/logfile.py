@@ -687,7 +687,6 @@ class HTMLLogFile(styles.Versioned, LogFile):
         styles.Versioned.__setstate__(self, d)
         self.__dict__ = d
         self.watchers = []
-        self.content_type = ''
         self.finishedWatchers = []
         self.finished = True
 
