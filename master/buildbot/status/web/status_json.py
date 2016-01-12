@@ -1184,6 +1184,7 @@ class GlobalJsonResource(JsonResource):
         for b in self.builders.values():
             current_builds += len(b.builder_status.getCurrentBuilds())
 
+        # TODO: change to get the total instead of all the buildrequests in queue
         queue = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=False)
         total_builds_lastday = yield self.status.getNumberOfBuildsInLastDay()
         result = {"slaves_count": connected_slaves,
