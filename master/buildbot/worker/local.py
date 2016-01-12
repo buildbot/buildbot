@@ -17,17 +17,14 @@ import os
 
 from buildbot.config import error
 from buildbot.worker.base import Worker
-from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.internet import defer
 
 
-class LocalWorker(Worker, WorkerAPICompatMixin):
+class LocalWorker(Worker):
 
     def checkConfig(self, name, workdir=None, usePty=False, **kwargs):
         Worker.checkConfig(self, name, None, **kwargs)
         self.LocalWorkerFactory = None
-        # TODO: Is this a public attribute?
-        self._registerOldWorkerAttr("LocalWorkerFactory", pattern="BuildWorker")
         try:
             # importing here to avoid dependency on buildbot worker package
             from buildslave.bot import LocalBuildSlave as RemoteLocalWorker
@@ -35,8 +32,6 @@ class LocalWorker(Worker, WorkerAPICompatMixin):
         except ImportError:
             error("LocalWorker needs the buildbot-slave package installed (pip install buildbot-slave)")
         self.remote_worker = None
-        # TODO: Is this a public attribute?
-        self._registerOldWorkerAttr("remote_worker")
 
     @defer.inlineCallbacks
     def reconfigService(self, name, workdir=None, usePty=False, **kwargs):

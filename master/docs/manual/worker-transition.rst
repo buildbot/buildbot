@@ -150,16 +150,6 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 
 
-   * - :py:class:`buildbot.buildslave.local.LocalBuildSlave`
-     - :py:class:`buildbot.worker.local.LocalWorker`
-
-   * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.LocalBuildSlaveFactory`
-     - :py:attr:`buildbot.worker.local.LocalWorker.LocalWorkerFactory`
-
-   * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.remote_slave`
-     - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
-
-
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 
@@ -196,6 +186,16 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
    * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.managed_services_name`
        metric mesurement managed service name changed from ``buildslaves``
      - to ``workers``
+
+
+   * - :py:class:`buildbot.buildslave.local.LocalBuildSlave`
+     - :py:class:`buildbot.worker.local.LocalWorker`
+
+   * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.LocalBuildSlaveFactory`
+     - :py:attr:`buildbot.worker.local.LocalWorker.LocalWorkerFactory`
+
+   * - :py:attr:`buildbot.buildslave.local.LocalBuildSlave.remote_slave`
+     - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
 
 
 Plugins
