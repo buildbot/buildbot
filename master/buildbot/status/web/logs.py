@@ -211,11 +211,11 @@ class LogsResource(HtmlResource):
             if path == log.getName():
                 if log.hasContents():
                     content = log.getText()
-                    if isinstance(log, HTMLLogFile):
-                        if log.content_type == 'json':
-                            return JSONTestResource(log, self.step_status)
-                        elif log.content_type == 'xml' or ('xml-stylesheet' in content or 'nosetests' in content):
-                            return XMLTestResource(log, self.step_status)
+                    is_html_log = isinstance(log, HTMLLogFile)
+                    if is_html_log and log.content_type == 'json':
+                        return JSONTestResource(log, self.step_status)
+                    elif is_html_log and (log.content_type == 'xml' or ('xml-stylesheet' in content or 'nosetests' in content)):
+                        return XMLTestResource(log, self.step_status)
                     else:
                         return IHTMLLog(interfaces.IStatusLog(log))
                 return NoResource("Empty Log '%s'" % path)
