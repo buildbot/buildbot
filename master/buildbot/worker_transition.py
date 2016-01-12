@@ -155,7 +155,6 @@ def define_old_worker_class_alias(scope, cls, pattern=None):
 
     compat_name = deprecated_name(cls.__name__, pattern=pattern)
 
-    assert compat_name not in scope
     scope[compat_name] = cls
 
 
@@ -193,8 +192,6 @@ def define_old_worker_class(scope, cls, pattern=None):
     """
 
     compat_class = deprecated_worker_class(cls, pattern=pattern)
-
-    assert compat_class.__name__ not in scope
     scope[compat_class.__name__] = compat_class
 
 
@@ -231,7 +228,6 @@ def define_old_worker_method(scope, method, pattern=None):
 def define_old_worker_func(scope, func, pattern=None):
     """Define old-named function."""
     compat_name = deprecated_name(func.__name__, pattern=pattern)
-    assert compat_name not in scope
 
     def old_func(*args, **kwargs):
         on_deprecated_name_usage(

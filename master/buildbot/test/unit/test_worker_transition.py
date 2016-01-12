@@ -67,6 +67,27 @@ class ClassAlias(unittest.TestCase):
         # TODO: Is there a way to detect usage of class alias and print
         # warning?
 
+    def test_module_reload(self):
+        # pylint: disable=function-redefined
+        globals = {}
+
+        class IWorker:
+            pass
+
+        define_old_worker_class_alias(
+            globals, IWorker, pattern="BuildWorker")
+        self.assertIn("IBuildSlave", globals)
+        self.assertTrue(globals["IBuildSlave"] is IWorker)
+
+        # "Reload" module
+        class IWorker:
+            pass
+
+        define_old_worker_class_alias(
+            globals, IWorker, pattern="BuildWorker")
+        self.assertIn("IBuildSlave", globals)
+        self.assertTrue(globals["IBuildSlave"] is IWorker)
+
 
 class ClassWrapper(unittest.TestCase):
 
@@ -148,6 +169,31 @@ class ClassWrapper(unittest.TestCase):
         self.assertEqual(Slave.__doc__, Worker.__doc__)
         self.assertEqual(Slave.__module__, Worker.__module__)
 
+    def test_module_reload(self):
+        # pylint: disable=function-redefined
+        globals = {}
+
+        class Worker(object):
+
+            def __init__(self, arg, **kwargs):
+                self.arg = arg
+                self.kwargs = kwargs
+
+        define_old_worker_class(globals, Worker)
+        self.assertIn("Slave", globals)
+        self.assertTrue(issubclass(globals["Slave"], Worker))
+
+        # "Reload" module
+        class Worker(object):
+
+            def __init__(self, arg, **kwargs):
+                self.arg = arg
+                self.kwargs = kwargs
+
+        define_old_worker_class(globals, Worker)
+        self.assertIn("Slave", globals)
+        self.assertTrue(issubclass(globals["Slave"], Worker))
+
 
 class PropertyWrapper(unittest.TestCase):
 
@@ -224,6 +270,25 @@ class FunctionWrapper(unittest.TestCase):
                          updateWorker.__module__)
         self.assertEqual(globals["updateSlave"].__doc__,
                          updateWorker.__doc__)
+
+    def test_module_reload(self):
+        # pylint: disable=function-redefined
+        globals = {}
+
+        def updateWorker(res):
+            return res
+
+        define_old_worker_func(globals, updateWorker)
+
+        self.assertIn("updateSlave", globals)
+
+        # "Reload" module
+        def updateWorker(res):
+            return res
+
+        define_old_worker_func(globals, updateWorker)
+
+        self.assertIn("updateSlave", globals)
 
 
 class AttributeMixin(unittest.TestCase):
