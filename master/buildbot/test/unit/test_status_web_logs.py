@@ -55,6 +55,12 @@ class TestLogsResource(unittest.TestCase):
 
         self.assertIsInstance(res, XMLTestResource)
 
+    def test_log_resource_xml_no_content_type(self):
+        logs_resource = LogsResource(self.setupStatus("test", "nosetests", True))
+        res = logs_resource.getChild("test", "")
+
+        self.assertIsInstance(res, XMLTestResource)
+
     def test_log_resource_xml_content(self):
         logs_resource = LogsResource(self.setupStatus("test", "<..><xml-stylesheet..!", True))
         res = logs_resource.getChild("test", "")

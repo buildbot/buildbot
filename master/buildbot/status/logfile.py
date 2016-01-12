@@ -664,7 +664,7 @@ class LogFile:
 
 class HTMLLogFile(styles.Versioned, LogFile):
 
-    persistenceVersion = 1
+    persistenceVersion = 2
     persistenceForgets = ('wasUpgraded', )
 
     def __init__(self, parent, name, logfilename, html):
@@ -698,6 +698,10 @@ class HTMLLogFile(styles.Versioned, LogFile):
                 self.newInstance = htmllog
                 del self.__dict__['html']
                 self.wasUpgraded = True
+
+    def upgradeToVersion2(self):
+        self.content_type = ''
+        self.wasUpgraded = True
 
 
 def _tryremove(filename, timeout, retries):
