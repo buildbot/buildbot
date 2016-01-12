@@ -128,9 +128,9 @@ class TestWarningsFilter(unittest.TestCase):
             warnings.warn("log 3 message", SomeWarning)
             warnings.warn("other", OtherWarning)
 
-    def test_nested_filters_doesnt_work(self):
-        with assertNotProducesWarnings(SomeWarning):
-            # Nesting doesn't work
+    def test_nested_filters(self):
+        with assertProducesWarnings(SomeWarning,
+                                    messages_patterns=["some 1"]):
             with assertProducesWarnings(OtherWarning,
                                         messages_patterns=["other 1"]):
                 warnings.warn("other 1", OtherWarning)

@@ -30,7 +30,8 @@ def assertProducesWarnings(filter_category, num_warnings=None,
     else:
         assert num_warnings is not None or message_pattern is not None
 
-    with warnings.catch_warnings(record=True) as warns:
+    unrelated_warns = []
+    with warnings.catch_warnings(record=True) as all_warns:
         # Cause all warnings of the provided category to always be
         # triggered.
         warnings.simplefilter("always", filter_category)
@@ -38,7 +39,12 @@ def assertProducesWarnings(filter_category, num_warnings=None,
         yield
 
         # Filter warnings.
-        warns = [w for w in warns if isinstance(w.message, filter_category)]
+        warns = []
+        for w in all_warns:
+            if isinstance(w.message, filter_category):
+                warns.append(w)
+            else:
+                unrelated_warns.append(w)
 
         if num_warnings is not None:
             assert len(warns) == num_warnings, \
@@ -64,6 +70,10 @@ def assertProducesWarnings(filter_category, num_warnings=None,
                     "All gathered warnings:\n" \
                     "{warns}".format(pattern=pattern, message=w.message,
                                      warns="\n".join(map(str, warns)))
+
+    # Re-raise unrelated warnings.
+    for w in unrelated_warns:
+        warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)
 
 
 @contextlib.contextmanager
