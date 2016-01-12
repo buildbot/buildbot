@@ -16,7 +16,6 @@
 import mock
 import os
 
-from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
@@ -42,13 +41,6 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
     def do_test_master(self):
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
-        # TODO: What is the reason to load and assign config here?
-        # Config is loaded second time during master service startup (in
-        # second thread) and m.config is being overwritten.
-        # If it's just to fail-early if config is broken, then it shouldn't
-        # be assigned to m.config.
-        m.config = config.MasterConfig.loadConfig(
-            self.basedir, self.configfile)
 
         # update the DB
         yield m.db.setup(check_version=False)
