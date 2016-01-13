@@ -158,10 +158,14 @@ def define_old_worker_class_alias(scope, cls, pattern=None):
     scope[compat_name] = cls
 
 
-def deprecated_worker_class(cls, pattern=None):
+def deprecated_worker_class(cls, pattern=None, name=None):
     assert issubclass(cls, object)
 
-    compat_name = deprecated_name(cls.__name__, pattern=pattern)
+    if name is not None:
+        assert pattern is None
+        compat_name = name
+    else:
+        compat_name = deprecated_name(cls.__name__, pattern=pattern)
 
     def __new__(instance_cls, *args, **kwargs):
         on_deprecated_name_usage(
@@ -185,13 +189,13 @@ def deprecated_worker_class(cls, pattern=None):
     return compat_class
 
 
-def define_old_worker_class(scope, cls, pattern=None):
+def define_old_worker_class(scope, cls, pattern=None, name=None):
     """Define old-named class that inherits new names class.
 
     Useful for instantiable classes.
     """
 
-    compat_class = deprecated_worker_class(cls, pattern=pattern)
+    compat_class = deprecated_worker_class(cls, pattern=pattern, name=name)
     scope[compat_class.__name__] = compat_class
 
 

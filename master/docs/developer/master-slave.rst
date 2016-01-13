@@ -83,7 +83,7 @@ After the initial connection and trading of a mind (Bot) for an avatar
 up the proper slave builders on the slave side.  This method returns a
 reference to each of the new slave-side :class:`~buildslave.bot.SlaveBuilder`
 objects, described below.  Each of these is handed to the corresponding
-master-side :class:`~buildbot.process.slavebuilder.SlaveBuilder` object.
+master-side :class:`~buildbot.process.workerforbuilder.WorkerForBuilder` object.
 
 This immediately calls the remote :meth:`setMaster` method, then the
 :meth:`print` method.
@@ -111,7 +111,7 @@ BuildSlave and Bot objects described above.
 
 On the slave side, builders are represented as instances of the
 :class:`buildslave.bot.SlaveBuilder` class.  On the master side, they are
-represented by the :class:`buildbot.process.slavebuilder.SlaveBuilder` class.
+represented by the :class:`buildbot.process.workerforbuilder.SlaveBuilder` class.
 The identical names are a source of confusion.  The following will refer to
 these as the slave-side and master-side SlaveBuilder classes.  Each object
 keeps a reference to its opposite in ``self.remote``.
@@ -138,8 +138,8 @@ Slave-Side SlaveBuilder Methods
 :meth:`~buildslave.bot.SlaveBuilder.remote_shutdown`
     Shuts down the slave cleanly
 
-Master-side SlaveBuilder Methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Master-side WorkerForBuilder Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The master side does not have any remotely-callable methods.
 

@@ -69,7 +69,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # These are always in the ATTACHING state.
         self.attaching_slaves = []
 
-        # workers at our disposal. Each SlaveBuilder instance has a
+        # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.slaves = []
@@ -191,7 +191,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if s == slave:
                 break
         else:
-            sb = workerforbuilder.LatentSlaveBuilder(slave, self)
+            sb = workerforbuilder.LatentWorkerForBuilder(slave, self)
             self.builder_status.addPointEvent(
                 ['added', 'latent', slave.workername])
             self.slaves.append(sb)
@@ -225,7 +225,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 # just ignore it.
                 return defer.succeed(self)
 
-        sb = workerforbuilder.SlaveBuilder()
+        sb = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self)
         self.attaching_slaves.append(sb)
         d = sb.attached(slave, commands)
@@ -243,7 +243,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return self
 
     def _not_attached(self, why, slave):
-        # already log.err'ed by SlaveBuilder._attachFailure
+        # already log.err'ed by WorkerForBuilder._attachFailure
         # TODO: remove from self.slaves (except that detached() should get
         #       run first, right?)
         log.err(why, 'slave failed to attach')
@@ -275,7 +275,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.slaves.remove(sb)
 
         self.builder_status.addPointEvent(['disconnect', slave.workername])
-        sb.detached()  # inform the SlaveBuilder that their worker went away
+        sb.detached()  # inform the WorkerForBuilder that their worker went away
         self.updateBigStatus()
 
     def updateBigStatus(self):

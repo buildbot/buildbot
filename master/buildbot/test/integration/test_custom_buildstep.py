@@ -183,7 +183,7 @@ class RunSteps(unittest.TestCase):
         self.conn = fakeprotocol.FakeConnection(self.master, self.slave)
         yield self.slave.attached(self.conn)
 
-        sb = self.slavebuilder = workerforbuilder.SlaveBuilder()
+        sb = self.slavebuilder = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self.builder)
         yield sb.attached(self.slave, {})
 

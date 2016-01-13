@@ -292,7 +292,7 @@ class BuildStepMixin(object):
         """
         self.step.build.getSlaveCommandVersion = self._getSlaveCommandVersionWrapper()
 
-        self.conn = mock.Mock(name="SlaveBuilder(connection)")
+        self.conn = mock.Mock(name="WorkerForBuilder(connection)")
         self.step.setupProgress()
         d = self.step.startStep(self.conn)
 

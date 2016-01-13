@@ -184,14 +184,14 @@ class ILatentWorker(IWorker):
     def buildStarted(sb):
         """Inform the latent worker that a build has started.
 
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        @param sb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
         build finished.
         """
 
     def buildFinished(sb):
         """Inform the latent worker that a build has finished.
 
-        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        @param sb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
         build finished.
         """
 define_old_worker_class_alias(locals(), ILatentWorker, pattern="BuildWorker")

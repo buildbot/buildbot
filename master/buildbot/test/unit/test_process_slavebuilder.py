@@ -12,17 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker.base import AbstractWorker
 from twisted.trial.unittest import TestCase
 
-from buildbot.process.workerforbuilder import AbstractSlaveBuilder
+from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestAbstractSlaveBuilder(TestCase):
     """
-    Tests for ``AbstractSlaveBuilder``.
+    Tests for ``AbstractWorkerForBuilder``.
     """
 
     def test_buildStarted_called(self):
@@ -38,7 +40,7 @@ class TestAbstractSlaveBuilder(TestCase):
                 self._buildStartedCalls.append(slavebuilder)
 
         slave = ConcreteWorker("slave", "pass")
-        slavebuilder = AbstractSlaveBuilder()
+        slavebuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
         slavebuilder.slave = slave
@@ -56,10 +58,60 @@ class TestAbstractSlaveBuilder(TestCase):
             pass
 
         slave = ConcreteWorker("slave", "pass")
-        slavebuilder = AbstractSlaveBuilder()
+        slavebuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
         slavebuilder.slave = slave
 
         # The following shouldn't raise an exception.
         slavebuilder.buildStarted()
+
+
+class TestWorkerTransition(TestCase):
+
+    def test_abstract_worker_for_builder(self):
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.process.slavebuilder import AbstractSlaveBuilder
+
+        class WB(AbstractSlaveBuilder):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'AbstractSlaveBuilder' class is deprecated"):
+            w = WB()
+            self.assertIsInstance(w, AbstractWorkerForBuilder)
+
+    def test_worker_for_builder(self):
+        from buildbot.process.workerforbuilder import WorkerForBuilder
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.process.slavebuilder import SlaveBuilder
+
+        class WB(SlaveBuilder):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'SlaveBuilder' class is deprecated"):
+            w = WB()
+            self.assertIsInstance(w, WorkerForBuilder)
+
+    def test_latent_worker_for_builder(self):
+        from buildbot.process.workerforbuilder import LatentWorkerForBuilder
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.process.slavebuilder import LatentSlaveBuilder
+
+        class WB(LatentSlaveBuilder):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'LatentSlaveBuilder' class is deprecated"):
+            w = WB()
+            self.assertIsInstance(w, LatentWorkerForBuilder)

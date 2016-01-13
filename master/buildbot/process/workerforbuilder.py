@@ -25,7 +25,7 @@ from twisted.python import log
  ) = range(6)
 
 
-class AbstractSlaveBuilder(object):
+class AbstractWorkerForBuilder(object):
 
     def __init__(self):
         self.ping_watchers = []
@@ -54,7 +54,7 @@ class AbstractSlaveBuilder(object):
         return self.remoteCommands.get(command)
 
     def isAvailable(self):
-        # if this SlaveBuilder is busy, then it's definitely not available
+        # if this WorkerForBuilder is busy, then it's definitely not available
         if self.isBusy():
             return False
 
@@ -199,24 +199,24 @@ class Ping:
         self.d.callback(False)
 
 
-class SlaveBuilder(AbstractSlaveBuilder):
+class WorkerForBuilder(AbstractWorkerForBuilder):
 
     def __init__(self):
-        AbstractSlaveBuilder.__init__(self)
+        AbstractWorkerForBuilder.__init__(self)
         self.state = ATTACHING
 
     def detached(self):
-        AbstractSlaveBuilder.detached(self)
+        AbstractWorkerForBuilder.detached(self)
         if self.slave:
             self.slave.removeSlaveBuilder(self)
         self.slave = None
         self.state = ATTACHING
 
 
-class LatentSlaveBuilder(AbstractSlaveBuilder):
+class LatentWorkerForBuilder(AbstractWorkerForBuilder):
 
     def __init__(self, slave, builder):
-        AbstractSlaveBuilder.__init__(self)
+        AbstractWorkerForBuilder.__init__(self)
         self.slave = slave
         self.state = LATENT
         self.setBuilder(builder)
@@ -274,16 +274,16 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         return d
 
     def detached(self):
-        AbstractSlaveBuilder.detached(self)
+        AbstractWorkerForBuilder.detached(self)
         self.state = LATENT
 
     def _attachFailure(self, why, where):
         self.state = LATENT
-        return AbstractSlaveBuilder._attachFailure(self, why, where)
+        return AbstractWorkerForBuilder._attachFailure(self, why, where)
 
     def ping(self, status=None):
         if not self.slave.substantiated:
             if status:
                 status.addEvent(["ping", "latent"]).finish()
             return defer.succeed(True)
-        return AbstractSlaveBuilder.ping(self, status)
+        return AbstractWorkerForBuilder.ping(self, status)

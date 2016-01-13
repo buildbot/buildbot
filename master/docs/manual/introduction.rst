@@ -115,8 +115,8 @@ Status plugins
 Each :class:`Builder` is configured with a list of :class:`BuildSlave`\s that it will use for its builds.
 These buildslaves are expected to behave identically: the only reason to use multiple :class:`BuildSlave`\s for a single :class:`Builder` is to provide a measure of load-balancing.
 
-Within a single :class:`BuildSlave`, each :class:`Builder` creates its own :class:`SlaveBuilder` instance.
-These :class:`SlaveBuilder`\s operate independently from each other.
+Within a single :class:`BuildSlave`, each :class:`Builder` creates its own :class:`WorkerForBuilder` instance.
+These :class:`WorkerForBuilder`\s operate independently from each other.
 Each gets its own base directory to work in.
 It is quite common to have many :class:`Builder`\s sharing the same buildslave.
 For example, there might be two buildslaves: one for i386, and a second for PowerPC.
@@ -132,10 +132,10 @@ In this case, the mapping would look like:
 
 and each :class:`BuildSlave` would have two :class:`SlaveBuilders` inside it, one for a full builder, and a second for the source-tarball builder.
 
-Once a :class:`SlaveBuilder` is available, the :class:`Builder` pulls one or more :class:`BuildRequest`\s off its incoming queue.
+Once a :class:`WorkerForBuilder` is available, the :class:`Builder` pulls one or more :class:`BuildRequest`\s off its incoming queue.
 (It may pull more than one if it determines that it can merge the requests together; for example, there may be multiple requests to build the current *HEAD* revision).
 These requests are merged into a single :class:`Build` instance, which includes the :class:`SourceStamp` that describes what exact version of the source code should be used for the build.
-The :class:`Build` is then randomly assigned to a free :class:`SlaveBuilder` and the build begins.
+The :class:`Build` is then randomly assigned to a free :class:`WorkerForBuilder` and the build begins.
 
 The behaviour when :class:`BuildRequest`\s are merged can be customized, :ref:`Collapsing-Build-Requests`.
 

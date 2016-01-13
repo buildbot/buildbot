@@ -38,7 +38,7 @@ from twisted.trial import unittest
 class FakeSlaveBuilder(pb.Referenceable):
 
     """
-    Fake worker-side SlaveBuilder object
+    Fake worker-side WorkerForBuilder object
     """
 
 
