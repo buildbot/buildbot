@@ -173,6 +173,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         return None
 
     def remote_update(self, updates):
+        # TODO: this class is incorrect: buildbot.slave.bot.SlaveBuilder
         """
         I am called by the worker's L{buildbot.slave.bot.SlaveBuilder} so
         I can receive updates from the running remote command.
@@ -197,6 +198,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         return max_updatenum
 
     def remote_complete(self, failure=None):
+        # TODO: this class is incorrect: buildbot.slave.bot.SlaveBuilder
         """
         Called by the worker's L{buildbot.slave.bot.SlaveBuilder} to
         notify me the remote command has finished.
