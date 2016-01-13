@@ -375,7 +375,7 @@ class _PluginDB(object):
                     ('BuildSlave', 'Worker'),
                     ('EC2LatentBuildSlave', 'EC2LatentWorker'),
                     ('LibVirtSlave', 'LibVirtWorker'),
-                    ('OpenStackLatentBuildSlave', 'OpenStackLatentBuildSlave'),
+                    ('OpenStackLatentBuildSlave', 'OpenStackLatentWorker'),
                     ('DockerLatentBuildSlave', 'DockerLatentWorker'),
                     ('LocalBuildSlave', 'LocalWorker'),
                 ]

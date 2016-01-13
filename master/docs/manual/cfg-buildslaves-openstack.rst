@@ -25,14 +25,14 @@ OpenStack supports a large number of image formats.
 OpenStack maintains a short list of prebuilt images; if the desired image is not listed, The `OpenStack Compute Administration Manual <http://docs.openstack.org/trunk/openstack-compute/admin/content/index.html>`_ is a good resource for creating new images.
 You need to configure the image with a buildbot slave to connect to the master on boot.
 
-Configure the Master with an OpenStackLatentBuildSlave
-------------------------------------------------------
+Configure the Master with an OpenStackLatentWorker
+--------------------------------------------------
 
 With the configured image in hand, it is time to configure the buildbot master to create OpenStack instances of it.
 You will need the aforementioned account details.
 These are the same details set in either environment variables or passed as options to an OpenStack client.
 
-:class:`OpenStackLatentBuildSlave` accepts the following arguments:
+:class:`OpenStackLatentWorker` accepts the following arguments:
 
 ``name``
     The buildslave name.
@@ -102,7 +102,7 @@ Here is the simplest example of configuring an OpenStack latent buildslave.
 
     from buildbot.plugins import worker
     c['workers'] = [
-        worker.OpenStackLatentBuildSlave('bot2', 'sekrit',
+        worker.OpenStackLatentWorker('bot2', 'sekrit',
                     flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
@@ -125,7 +125,7 @@ The invocation happens in a separate thread to prevent blocking the build master
         return candidate_images[0]
 
     c['workers'] = [
-        worker.OpenStackLatentBuildSlave('bot2', 'sekrit',
+        worker.OpenStackLatentWorker('bot2', 'sekrit',
                     flavor=1, image=find_image,
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
@@ -141,7 +141,7 @@ When the instance is destroyed, the volume will be terminated as well.
 
     from buildbot.plugins import worker
     c['workers'] = [
-        worker.OpenStackLatentBuildSlave('bot2', 'sekrit',
+        worker.OpenStackLatentWorker('bot2', 'sekrit',
                     flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
@@ -152,6 +152,6 @@ When the instance is destroyed, the volume will be terminated as well.
     ]
 
 
-:class:`OpenStackLatentBuildSlave` supports all other configuration from the standard :class:`BuildSlave`.
+:class:`OpenStackLatentWorker` supports all other configuration from the standard :class:`BuildSlave`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an OpenStack instance to attach before considering the attempt to have failed and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.

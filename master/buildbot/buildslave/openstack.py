@@ -16,12 +16,13 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import on_deprecated_module_usage
 
 on_deprecated_module_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.openstack' module instead".format(old=__name__))
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.worker.openstack import *  # noqa
+from buildbot.worker.openstack import OpenStackLatentWorker as _OpenStackLatentWorker
+
+define_old_worker_class(locals(), _OpenStackLatentWorker, pattern="BuildWorker")

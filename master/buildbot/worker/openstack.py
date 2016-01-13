@@ -39,7 +39,7 @@ DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
 
-class OpenStackLatentBuildSlave(AbstractLatentWorker):
+class OpenStackLatentWorker(AbstractLatentWorker):
 
     instance = None
     _poll_resolution = 5  # hook point for tests
@@ -60,7 +60,7 @@ class OpenStackLatentBuildSlave(AbstractLatentWorker):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
-                         "to use a OpenStackLatentBuildSlave")
+                         "to use a OpenStackLatentWorker")
 
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')

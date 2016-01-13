@@ -130,6 +130,10 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.worker.libvirt.LibVirtWorker`
 
 
+   * - :py:class:`buildbot.buildslave.openstack.OpenStackLatentBuildSlave`
+     - :py:class:`buildbot.worker.openstack.OpenStackLatentWorker`
+
+
    * - :py:attr:`buildbot.config.MasterConfig.slaves`
      - :py:meth:`~buildbot.config.MasterConfig.workers`
 
