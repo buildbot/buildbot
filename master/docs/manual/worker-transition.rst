@@ -68,8 +68,6 @@ Here is the complete list of changed API:
 
     * Thorought tests for old modules imports are not yet written.
 
-    * Tests for old attributes/methods access are written not for all changes.
-
     * Test that module reloading works and doesn't produce more warnings than
       it should.
 
