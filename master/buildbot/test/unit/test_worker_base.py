@@ -514,7 +514,7 @@ class TestWorkerTransition(unittest.TestCase):
         with ignoreWarning(DeprecatedWorkerModuleWarning):
             from buildbot.buildslave import BuildSlave
 
-        class Worker(BuildSlave):
+        class CustomWorker(BuildSlave):
 
             def __init__(self):
                 pass
@@ -522,5 +522,5 @@ class TestWorkerTransition(unittest.TestCase):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
                 message_pattern="'BuildSlave' class is deprecated"):
-            w = Worker()
+            w = CustomWorker()
             self.assertIsInstance(w, Worker)
