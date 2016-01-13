@@ -71,18 +71,23 @@ Here is the complete list of changed API:
     * Test that module reloading works and doesn't produce more warnings than
       it should.
 
+    * Some classes are marked as ``(private?)`` because they are not mentined
+      in the documentation, but in my opinion they most probably used by
+      end users (so they either should be documented, or fallback for them
+      should be removed).
+
 .. list-table::
    :header-rows: 1
 
    * - Old name
      - New name
 
-   * - :py:class:`buildbot.interfaces.IBuildSlave`
+   * - :py:class:`buildbot.interfaces.IBuildSlave` (private?)
      - :py:class:`~buildbot.interfaces.IWorker`
 
 
-   * - :py:class:`buildbot.interfaces.NoSlaveError`
-     - :py:class:`~buildbot.interfaces.NoWorkerError`
+   * - :py:class:`buildbot.interfaces.NoSlaveError` (private?)
+     - left as is, but deprecated (it shouldn't be used at all)
 
 
    * - :py:class:`buildbot.interfaces.BuildSlaveTooOldError`
@@ -90,10 +95,11 @@ Here is the complete list of changed API:
 
 
    * - :py:class:`buildbot.interfaces.LatentBuildSlaveFailedToSubstantiate`
+       (private?)
      - :py:class:`~buildbot.interfaces.LatentWorkerFailedToSubstantiate`
 
 
-   * - :py:class:`buildbot.interfaces.ILatentBuildSlave`
+   * - :py:class:`buildbot.interfaces.ILatentBuildSlave` (private?)
      - :py:class:`~buildbot.interfaces.ILatentWorker`
 
 
@@ -101,19 +107,16 @@ Here is the complete list of changed API:
      - :py:mod:`buildbot.worker`
 
 
-   * - :py:class:`buildbot.buildslave.AbstractBuildSlave`
+   * - :py:class:`buildbot.buildslave.AbstractBuildSlave` (private?)
      - :py:class:`buildbot.worker.AbstractWorker`
 
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename`
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename` (private?)
      - :py:attr:`buildbot.worker.AbstractWorker.workername`
 
 
    * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
      - :py:class:`buildbot.worker.AbstractLatentWorker`
 
-
-   * - :py:class:`buildbot.buildslave.BuildSlave`
-     - :py:class:`buildbot.worker.Worker`
 
    * - :py:class:`buildbot.buildslave.BuildSlave`
      - :py:class:`buildbot.worker.Worker`
