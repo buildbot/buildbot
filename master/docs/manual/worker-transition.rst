@@ -108,15 +108,9 @@ Here is the complete list of changed API:
    * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename`
      - :py:attr:`buildbot.worker.AbstractWorker.workername`
 
-   * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.updateSlave`
-     - :py:meth:`buildbot.worker.AbstractWorker.updateWorker`
-
 
    * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
      - :py:class:`buildbot.worker.AbstractLatentWorker`
-
-   * - :py:meth:`buildbot.buildslave.AbstractLatentBuildSlave.updateSlave`
-     - :py:meth:`buildbot.worker.AbstractLatentWorker.updateWorker`
 
 
    * - :py:class:`buildbot.buildslave.BuildSlave`
@@ -189,12 +183,21 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
      - :py:attr:`buildbot.worker.local.LocalWorker.remote_worker`
 
 
+   * - :py:mod:`buildbot.buildslave.base` module with all contents
+     - :py:mod:`buildbot.worker.base`
+
+
+   * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.updateSlave`
+     - :py:meth:`buildbot.worker.AbstractWorker.updateWorker`
+
+
+   * - :py:meth:`buildbot.buildslave.AbstractLatentBuildSlave.updateSlave`
+     - :py:meth:`buildbot.worker.AbstractLatentWorker.updateWorker`
+
+
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
 
-
-   * - :py:mod:`buildbot.buildslave.base` module with all contents
-     - :py:mod:`buildbot.worker.base`
 
 
 Plugins

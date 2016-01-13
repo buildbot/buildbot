@@ -36,7 +36,6 @@ from buildbot.status.slave import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import define_old_worker_property
 
 
@@ -330,7 +329,6 @@ class AbstractWorker(service.BuildbotService, object):
             return self.sendBuilderList()
         else:
             return defer.succeed(None)
-    define_old_worker_method(locals(), updateWorker)
 
     def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
         # TODO
@@ -879,7 +877,6 @@ class AbstractLatentWorker(AbstractWorker):
             if b.name not in self.slavebuilders:
                 b.addLatentSlave(self)
         return AbstractWorker.updateWorker(self)
-    define_old_worker_method(locals(), updateWorker)
 
     def sendBuilderList(self):
         d = AbstractWorker.sendBuilderList(self)
