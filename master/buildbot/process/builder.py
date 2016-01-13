@@ -19,9 +19,9 @@ import weakref
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.process import buildrequest
-from buildbot.process import slavebuilder
+from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
-from buildbot.process.slavebuilder import BUILDING
+from buildbot.process.workerforbuilder import BUILDING
 from buildbot.status.builder import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
@@ -191,7 +191,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if s == slave:
                 break
         else:
-            sb = slavebuilder.LatentSlaveBuilder(slave, self)
+            sb = workerforbuilder.LatentSlaveBuilder(slave, self)
             self.builder_status.addPointEvent(
                 ['added', 'latent', slave.workername])
             self.slaves.append(sb)
@@ -225,7 +225,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 # just ignore it.
                 return defer.succeed(self)
 
-        sb = slavebuilder.SlaveBuilder()
+        sb = workerforbuilder.SlaveBuilder()
         sb.setBuilder(self)
         self.attaching_slaves.append(sb)
         d = sb.attached(slave, commands)

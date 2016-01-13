@@ -20,7 +20,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process import factory
 from buildbot.process import properties
-from buildbot.process import slavebuilder
+from buildbot.process import workerforbuilder
 from buildbot.test.fake import fakemaster
 from buildbot.worker import base
 from twisted.python import components
@@ -68,7 +68,7 @@ class FakeBuild(properties.PropertiesMixin):
     def __init__(self, props=None, master=None):
         self.build_status = FakeBuildStatus()
         self.builder = fakemaster.FakeBuilderStatus(master)
-        self.slavebuilder = mock.Mock(spec=slavebuilder.SlaveBuilder)
+        self.slavebuilder = mock.Mock(spec=workerforbuilder.SlaveBuilder)
         self.slavebuilder.slave = mock.Mock(spec=base.Worker)
         self.builder.config = config.BuilderConfig(
             name='bldr',

@@ -24,7 +24,7 @@ from buildbot.process import buildrequest
 from buildbot.process import buildstep
 from buildbot.process import factory
 from buildbot.process import results
-from buildbot.process import slavebuilder
+from buildbot.process import workerforbuilder
 from buildbot.steps import shell
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -183,7 +183,7 @@ class RunSteps(unittest.TestCase):
         self.conn = fakeprotocol.FakeConnection(self.master, self.slave)
         yield self.slave.attached(self.conn)
 
-        sb = self.slavebuilder = slavebuilder.SlaveBuilder()
+        sb = self.slavebuilder = workerforbuilder.SlaveBuilder()
         sb.setBuilder(self.builder)
         yield sb.attached(self.slave, {})
 

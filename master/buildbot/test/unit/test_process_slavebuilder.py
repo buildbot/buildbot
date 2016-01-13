@@ -17,7 +17,7 @@
 from buildbot.worker.base import AbstractWorker
 from twisted.trial.unittest import TestCase
 
-from buildbot.process.slavebuilder import AbstractSlaveBuilder
+from buildbot.process.workerforbuilder import AbstractSlaveBuilder
 
 
 class TestAbstractSlaveBuilder(TestCase):
