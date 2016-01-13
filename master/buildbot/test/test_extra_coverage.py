@@ -52,12 +52,3 @@ from buildbot.steps.package.rpm import rpmspec
 modules.extend([rpmbuild, rpmlint, rpmspec])
 from buildbot.util import eventual
 modules.extend([eventual])
-
-# requires libboto
-# import buildbot.ec2buildslave
-
-# requires libvirt
-# import buildbot.libvirtbuildslave
-
-# requires pycrypto
-# import buildbot.manhole
