@@ -200,7 +200,7 @@ class LibVirtWorker(AbstractLatentWorker):
             return False
 
         if self.domain and not self.isConnected():
-            log.msg("Not accepting builds as existing domain but slave not connected")
+            log.msg("Not accepting builds as existing domain but worker not connected")
             return False
 
         return AbstractLatentWorker.canStartBuild(self)
