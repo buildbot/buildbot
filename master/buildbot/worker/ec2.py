@@ -38,15 +38,6 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
 
-__all__ = (
-    # TODO: Is these constants are part of the public interface?
-    "PENDING", "RUNNING", "SHUTTINGDOWN", "TERMINATED",
-    "SPOT_REQUEST_PENDING_STATES", "FULFILLED",
-    "PRICE_TOO_LOW",
-
-    "EC2LatentWorker"
-)
-
 PENDING = 'pending'
 RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'

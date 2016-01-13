@@ -23,9 +23,6 @@ on_deprecated_module_usage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.ec2' module instead".format(old=__name__))
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.worker.ec2 import *  # noqa
+from buildbot.worker.ec2 import EC2LatentWorker as _EC2LatentWorker
 
-define_old_worker_class(locals(), EC2LatentWorker, pattern="BuildWorker")
-del EC2LatentWorker  # noqa
+define_old_worker_class(locals(), _EC2LatentWorker, pattern="BuildWorker")
