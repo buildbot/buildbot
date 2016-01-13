@@ -23,7 +23,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
 from buildbot.test.util import interfaces
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker import base
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -155,6 +161,19 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(bs.missing_timeout, 10 * 60)
         self.assertEqual(bs.properties.getProperty('slavename'), 'bot')
         self.assertEqual(bs.access, [])
+
+    def test_workername_old_api(self):
+        bs = ConcreteWorker('bot', 'pass')
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavename' attribute is deprecated"):
+            old_name = bs.slavename
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            name = bs.workername
+
+        self.assertEqual(name, old_name)
 
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
@@ -452,3 +471,22 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
         yield slave.shutdownRequested()
         self.assertEqual(slave.slave_status.getGraceful(), True)
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_abstract_worker(self):
+        from buildbot.worker import AbstractWorker
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.buildslave import AbstractBuildSlave
+
+        class Worker(AbstractBuildSlave):
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'AbstractBuildSlave' class "
+                                "is deprecated"):
+            w = Worker()
+            self.assertIsInstance(w, AbstractWorker)
