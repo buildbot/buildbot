@@ -17,7 +17,11 @@ import mock
 
 from buildbot import config
 from buildbot.test.fake import libvirt
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker import libvirt as libvirtbuildslave
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import utils
@@ -25,9 +29,10 @@ from twisted.python import failure
 from twisted.trial import unittest
 
 
+
 class TestLibVirtSlave(unittest.TestCase):
 
-    class ConcreteBuildSlave(libvirtbuildslave.LibVirtSlave):
+    class ConcreteBuildSlave(libvirtbuildslave.LibVirtWorker):
         pass
 
     def setUp(self):
@@ -147,7 +152,7 @@ class TestLibVirtSlave(unittest.TestCase):
     @defer.inlineCallbacks
     def test_canStartBuild_notready(self):
         """
-        If a LibVirtSlave hasnt finished scanning for existing VMs then we shouldn't
+        If a LibVirtWorker hasnt finished scanning for existing VMs then we shouldn't
         start builds on it as it might create a 2nd VM when we want to reuse the existing
         one.
         """
@@ -284,3 +289,22 @@ class TestWorkQueue(unittest.TestCase):
             assert flags[2]
 
         return defer.DeferredList([d1, d2, d3], fireOnOneErrback=True)
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_worker(self):
+        from buildbot.worker.libvirt import LibVirtWorker
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.buildslave.libvirt import LibVirtSlave
+
+        class Worker(LibVirtSlave):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'LibVirtSlave' class is deprecated"):
+            w = Worker()
+            self.assertIsInstance(w, LibVirtWorker)

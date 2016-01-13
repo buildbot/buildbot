@@ -374,7 +374,7 @@ class _PluginDB(object):
                 old_new_names = [
                     ('BuildSlave', 'Worker'),
                     ('EC2LatentBuildSlave', 'EC2LatentWorker'),
-                    ('LibVirtSlave', 'LibVirtSlave'),
+                    ('LibVirtSlave', 'LibVirtWorker'),
                     ('OpenStackLatentBuildSlave', 'OpenStackLatentBuildSlave'),
                     ('DockerLatentBuildSlave', 'DockerLatentWorker'),
                     ('LocalBuildSlave', 'LocalWorker'),

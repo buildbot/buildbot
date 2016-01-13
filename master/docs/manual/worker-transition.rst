@@ -126,6 +126,10 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 
 
+   * - :py:class:`buildbot.buildslave.libvirt.LibVirtSlave`
+     - :py:class:`buildbot.worker.libvirt.LibVirtWorker`
+
+
    * - :py:attr:`buildbot.config.MasterConfig.slaves`
      - :py:meth:`~buildbot.config.MasterConfig.workers`
 

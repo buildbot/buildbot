@@ -155,13 +155,13 @@ class Connection(object):
         defer.returnValue(domains)
 
 
-class LibVirtSlave(AbstractLatentWorker):
+class LibVirtWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, connection, hd_image, base_image=None, xml=None,
                  **kwargs):
         AbstractLatentWorker.__init__(self, name, password, **kwargs)
         if not libvirt:
-            config.error("The python module 'libvirt' is needed to use a LibVirtSlave")
+            config.error("The python module 'libvirt' is needed to use a LibVirtWorker")
 
         self.connection = connection
         self.image = hd_image
