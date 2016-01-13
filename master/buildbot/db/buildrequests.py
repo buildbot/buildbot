@@ -839,7 +839,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def cancelResumeBuildRequests(self, brid):
+    def cancelResumeBuildRequest(self, brid, complete_at=None, _reactor=reactor):
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
+            complete_at = _reactor.seconds()
+
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
@@ -856,7 +861,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 if brids:
                     q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(brids)) \
-                        .values(complete=1).values(results=CANCELED)
+                        .values(complete=1) \
+                        .values(complete_at=complete_at) \
+                        .values(results=CANCELED)
 
                     conn.execute(q)
             except:
@@ -868,7 +875,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def cancelBuildRequestsByBuildNumber(self, number, buildername):
+    def cancelBuildRequestsByBuildNumber(self, number, buildername, complete_at=None, _reactor=reactor):
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
+            complete_at = _reactor.seconds()
+
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             builds_tbl = self.db.model.builds
@@ -893,7 +905,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if brids:
                     q = buildrequests_tbl.update()\
                         .where(or_(buildrequests_tbl.c.id.in_(brids), buildrequests_tbl.c.mergebrid.in_(brids))) \
-                        .values(complete=1).values(results=CANCELED)
+                        .values(complete=1) \
+                        .values(complete_at=complete_at) \
+                        .values(results=CANCELED)
 
                     conn.execute(q)
             except Exception:
@@ -906,7 +920,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def updateBuildRequests(self, brids, results=None, complete=None, slavepool=None):
+    def updateBuildRequests(self, brids, results=None, slavepool=None):
         def thd(conn):
 
             transaction = conn.begin()
@@ -929,12 +943,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 if slavepool:
                     q = q.values(slavepool=slavepool)
-
-                if complete:
-                    q = q.values(complete=complete)
-
-                if complete == 0:
-                    q = q.values(complete_at=None)
 
                 res = conn.execute(q)
 

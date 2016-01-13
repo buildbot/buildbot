@@ -21,6 +21,7 @@ from buildbot.db import buildrequests, builds
 from buildbot.test.util import connector_component, db
 from buildbot.test.fake import fakedb
 from buildbot.util import UTC, epoch2datetime
+from buildbot.status.results import RESUME, CANCELED
 
 class TestBuildsetsConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -1125,9 +1126,9 @@ class TestBuildsetsConnectorComponent(
     def test_getBuildRequestInQueue(self):
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1"),
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2"),
-                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=9, complete=0),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=RESUME, complete=0),
                  fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1", results=0, complete=1),
-                 fakedb.BuildRequest(id=5, buildsetid=5, buildername="bldr1", results=9, complete=0, mergebrid=3)]
+                 fakedb.BuildRequest(id=5, buildsetid=5, buildername="bldr1", results=RESUME, complete=0, mergebrid=3)]
 
         breqsclaims = [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1300103810),
                        fakedb.BuildRequestClaim(brid=4, objectid=self.MASTER_ID, claimed_at=1300103810),
@@ -1165,22 +1166,22 @@ class TestBuildsetsConnectorComponent(
                                      priority=100, submitted_at=1449668061),
                  fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1",
                                      priority=20,submitted_at=1449579016,
-                                     results=9, complete=0),
+                                     results=RESUME, complete=0),
                  fakedb.BuildRequest(id=5, buildsetid=5, buildername="bldr1",
                                      priority=75, submitted_at=1450451019,
-                                     results=9, complete=0),
+                                     results=RESUME, complete=0),
                  fakedb.BuildRequest(id=6, buildsetid=6, buildername="bldr3",
                                      priority=100, submitted_at=1446632022,
-                                     results=9, complete=0),
+                                     results=RESUME, complete=0),
                  fakedb.BuildRequest(id=7, buildsetid=7, buildername="bldr3",
                                      priority=100, submitted_at=1446632022,
-                                     results=9, complete=0, mergebrid=7),
+                                     results=RESUME, complete=0, mergebrid=7),
                  fakedb.BuildRequest(id=8, buildsetid=8, buildername="bldr2",
                                      priority=100, submitted_at=1449668061),
                  fakedb.BuildRequest(id=9, buildsetid=9, buildername="bldr1",
                                      priority=100, submitted_at=1449579016),
                  fakedb.BuildRequest(id=10, buildsetid=10, buildername="bldr1",
-                                     priority=100, submitted_at=1449579016, results=9, complete=0)]
+                                     priority=100, submitted_at=1449579016, results=RESUME, complete=0)]
 
         breqsclaims = [fakedb.BuildRequestClaim(brid=8, objectid=self.MASTER_ID, claimed_at=1300103810),
                        fakedb.BuildRequestClaim(brid=4, objectid=self.MASTER_ID, claimed_at=1300103810),
@@ -1234,19 +1235,19 @@ class TestBuildsetsConnectorComponent(
 
 
     def test_getPrioritizedBuildRequestsInResumeQueue(self):
-        expectedBreqs = [self.fakePrioritzedRequest(brid=6, results=9,
+        expectedBreqs = [self.fakePrioritzedRequest(brid=6, results=RESUME,
                                      buildername='bldr3', priority=100,
                                      submitted_at=1446632022,
                                      selected_slave="build-slave-02", slavepool=None),
-                         self.fakePrioritzedRequest(brid=10, results=9,
+                         self.fakePrioritzedRequest(brid=10, results=RESUME,
                                      buildername='bldr1', priority=100,
                                      submitted_at=1449579016,
                                      selected_slave=None, slavepool=None),
-                         self.fakePrioritzedRequest(brid=5, results=9,
+                         self.fakePrioritzedRequest(brid=5, results=RESUME,
                                      buildername='bldr1', priority=75,
                                      submitted_at=1450451019,
                                      selected_slave=None, slavepool=None),
-                         self.fakePrioritzedRequest(brid=4, results=9,
+                         self.fakePrioritzedRequest(brid=4, results=RESUME,
                                      buildername='bldr1', priority=20,
                                      submitted_at=1449579016,
                                      selected_slave=None, slavepool=None)]
@@ -1254,4 +1255,65 @@ class TestBuildsetsConnectorComponent(
         d = self.insertPrioritizedBreqs()
         d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue='resume'))
         d.addCallback(lambda queue: self.assertEqual(queue, expectedBreqs))
+        return d
+
+    def checkCanceledBuildRequests(self, brlist, complete=True, results=CANCELED):
+        self.assertTrue(all([br['complete'] == complete and br['results'] == results
+                             and (br['complete_at'] is not None if complete else br['complete_at'] is None)
+                             for br in brlist]))
+
+    def test_cancelBuildRequestsByBuildNumber(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                     priority=20, submitted_at=1450171024),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                     priority=50, submitted_at=1450171039),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                     priority=100, submitted_at=1449668061, mergebrid=1),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1",
+                                     priority=20,submitted_at=1449579016,
+                                     results=RESUME, complete=0, mergebrid=1),
+                 fakedb.BuildRequest(id=5, buildsetid=5, buildername="bldr1",
+                                     priority=50, submitted_at=1450171039, mergebrid=1),
+                 fakedb.BuildRequest(id=6, buildsetid=6, buildername="bldr1", priority=50,
+                                     submitted_at=1450171039)]
+
+        build = [fakedb.Build(id=50, brid=1, number=5, start_time=1304262222,
+                              finish_time=1452520540, slavename="build-slave-01"),
+                 fakedb.Build(id=51, brid=3, number=5, start_time=1304262222, finish_time=1452520540),
+                 fakedb.Build(id=52, brid=5, number=5, start_time=1304262222, finish_time=1452520540),
+                 fakedb.Build(id=53, brid=1, number=5, start_time=1304262222, slavename="build-slave-02"),
+                 fakedb.Build(id=54, brid=3, number=5, start_time=1304262222),
+                 fakedb.Build(id=55, brid=4, number=5, start_time=1304262222),
+                 fakedb.Build(id=56, brid=5, number=5, start_time=1304262222),
+                 fakedb.Build(id=49, brid=2, number=5, start_time=1304262222),
+                 fakedb.Build(id=57, brid=6, number=6, start_time=1304262222)]
+
+        d = self.insertTestData(breqs + build)
+        d.addCallback(lambda _: self.db.buildrequests.cancelBuildRequestsByBuildNumber(number=5, buildername="bldr1"))
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='bldr1', brids=[1, 3, 4, 5]))
+        d.addCallback(self.checkCanceledBuildRequests)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='bldr1', brids=[6]))
+        d.addCallback(self.checkCanceledBuildRequests, complete=False, results=-1)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='bldr2', brids=[2]))
+        d.addCallback(self.checkCanceledBuildRequests, complete=False, results=-1)
+        return d
+
+    def test_cancelResumeBuildRequests(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                     priority=20, submitted_at=1450171024),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                     priority=50, results=RESUME, submitted_at=1450171039),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                     priority=100, results=RESUME, submitted_at=1449668061, mergebrid=2),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1",
+                                     priority=20,submitted_at=1449579016, results=RESUME)]
+
+        d = self.insertTestData(breqs)
+        d.addCallback(lambda _:  self.db.buildrequests.cancelResumeBuildRequest(brid=2))
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='bldr1', brids=[2, 3]))
+        d.addCallback(self.checkCanceledBuildRequests)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='bldr1', brids=[1]))
+        d.addCallback(self.checkCanceledBuildRequests, complete=False, results=-1)
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='bldr1', brids=[4]))
+        d.addCallback(self.checkCanceledBuildRequests, complete=False, results=RESUME)
         return d

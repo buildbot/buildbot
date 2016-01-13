@@ -250,7 +250,7 @@ class BuildRequest(object):
         # cancel the build anyway
 
         if self.results == RESUME:
-            yield self.master.db.buildrequests.cancelResumeBuildRequests(self.id)
+            yield self.master.db.buildrequests.cancelResumeBuildRequest(self.id)
         else:
             try:
                 yield self.master.db.buildrequests.claimBuildRequests([self.id])
