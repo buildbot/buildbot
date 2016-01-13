@@ -103,30 +103,23 @@ Here is the complete list of changed API:
      - :py:mod:`buildbot.worker`
 
    * - :py:class:`buildbot.buildslave.AbstractBuildSlave`
-       (this is an alias of
-       :py:class:`buildbot.buildslave.base.AbstractBuildSlave`)
      - :py:class:`buildbot.worker.AbstractWorker`
 
-   * - :py:class:`buildbot.buildslave.base.AbstractBuildSlave`
-     - :py:class:`buildbot.worker.base.AbstractWorker`
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename`
+     - :py:attr:`buildbot.worker.AbstractWorker.workername`
 
-   * - :py:attr:`buildbot.buildslave.base.AbstractBuildSlave.slavename`
-     - :py:attr:`buildbot.worker.base.AbstractWorker.workername`
-
-   * - :py:meth:`buildbot.buildslave.base.AbstractBuildSlave.updateSlave`
-     - :py:meth:`buildbot.worker.base.AbstractWorker.updateWorker`
+   * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.updateSlave`
+     - :py:meth:`buildbot.worker.AbstractWorker.updateWorker`
 
 
-   * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
-     - :py:class:`buildbot.worker.base.AbstractLatentWorker`
+   * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
+     - :py:class:`buildbot.worker.AbstractLatentWorker`
 
-   * - :py:meth:`buildbot.buildslave.base.AbstractLatentBuildSlave.updateSlave`
-     - :py:meth:`buildbot.worker.base.AbstractLatentWorker.updateWorker`
+   * - :py:meth:`buildbot.buildslave.AbstractLatentBuildSlave.updateSlave`
+     - :py:meth:`buildbot.worker.AbstractLatentWorker.updateWorker`
 
 
    * - :py:class:`buildbot.buildslave.BuildSlave`
-       (this is an alias of
-       :py:class:`buildbot.buildslave.base.BuildSlave`)
      - :py:class:`buildbot.worker.Worker`
 
    * - :py:class:`buildbot.buildslave.base.BuildSlave`
@@ -134,8 +127,6 @@ Here is the complete list of changed API:
 
 
    * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
-       (this is an alias of
-       :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`)
      - :py:class:`buildbot.worker.AbstractLatentWorker`
 
    * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
@@ -200,6 +191,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
 
    * - :py:meth:`buildbot.config.MasterConfig.load_slaves`
      - :py:meth:`~buildbot.config.MasterConfig.load_workers`
+
+
+   * - :py:mod:`buildbot.buildslave.base` module with all contents
+     - :py:mod:`buildbot.worker.base`
 
 
 Plugins
