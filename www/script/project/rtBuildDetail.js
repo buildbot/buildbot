@@ -16,54 +16,6 @@ define(function (require) {
         noMoreReloads = false,
         debug = qs.parse(location.search).debug === "true";
 
-    var privFunc = {
-        updateArtifacts: function (data) { // for the builddetailpage. Puts the artifacts and testresuts on top
-            var $artifactsJSElem = $("#artifacts-js").empty(),
-                artifactsDict = {},
-                testLogsDict = {},
-                html;
-
-            /*jslint unparam: true*/
-            $.each(data.steps, function (i, obj) {
-                if (obj.urls !== undefined) {
-                    $.each(obj.urls, function (name, url) {
-                        if (typeof url === "string") {
-                            artifactsDict[name] = url;
-                        }
-                    });
-                }
-            });
-
-            $.each(data.logs, function (i, obj) {
-                if (obj.length === 2 && (obj[1].indexOf(".xml") > -1 || obj[1].indexOf(".html") > -1)) {
-                    testLogsDict[obj[0]] = obj[1];
-                }
-            });
-            /*jslint unparam: false*/
-
-            if (artifactsDict === undefined || Object.keys(artifactsDict).length === 0) {
-                $artifactsJSElem.html("No artifacts");
-            } else {
-                html = '<a class="artifact-popup artifacts-js more-info" href="#">Artifacts ({0})&nbsp;</a>'.format(Object.keys(artifactsDict).length);
-                $artifactsJSElem.html(html);
-
-                popups.initArtifacts(artifactsDict, $artifactsJSElem.find(".artifact-popup"));
-            }
-
-            if (Object.keys(testLogsDict).length > 0) {
-                html = '<li>Test Results</li>';
-
-                $.each(testLogsDict, function (url, name) {
-                    html += '<li class="s-logs-js"><a href="{0}">{1}</a></li>'.format(name, url);
-                });
-
-                html = $("<ul/>").addClass("tests-summary-list list-unstyled").html(html);
-
-                $artifactsJSElem.append(html);
-            }
-        }
-    };
-
     rtBuildDetail = {
         init: function () {
             var realtimeFunctions = realtimePages.defaultRealtimeFunctions();
@@ -118,8 +70,7 @@ define(function (require) {
             //Process Page
             rtBuildDetail.processBuildResult(data, buildStartTime, eta, buildFinished);
             rtBuildDetail.processSteps(data);
-
-            privFunc.updateArtifacts(data);
+            rtBuildDetail.processArtifacts(data);
 
             //If build is running
             if (buildEndTime === null) {
@@ -201,6 +152,57 @@ define(function (require) {
             /*jslint unparam: false*/
 
             $stepList.html(html);
+        },
+        processArtifacts: function (data) { // for the builddetailpage. Puts the artifacts and testresuts on top
+            var $artifactsJSElem = $("#artifacts-js").empty(),
+                artifactsDict = {},
+                testLogsDict = {},
+                html;
+
+            /*jslint unparam: true*/
+            $.each(data.steps, function (i, obj) {
+                if (obj.urls !== undefined) {
+                    $.each(obj.urls, function (name, url) {
+                        if (typeof url === "string") {
+                            artifactsDict[name] = url;
+                        }
+                    });
+                }
+            });
+            var reportSource = $.grep(data.logs, function(obj){ return obj[1].indexOf(".json") > -1; });
+            if(!reportSource.length) {
+                reportSource = $.grep(data.logs, function (obj) {
+                    return obj[1].indexOf(".xml") > -1;
+                });
+            }
+            var htmlReport = $.grep(data.logs, function(obj){ return obj[1].indexOf(".html") > -1; });
+
+            $.each(reportSource.concat(htmlReport), function(i, obj){ testLogsDict[obj[0]] = obj[1] ;} );
+
+            /*jslint unparam: false*/
+
+            if (artifactsDict === undefined || Object.keys(artifactsDict).length === 0) {
+                $artifactsJSElem.html("No artifacts");
+            } else {
+                html = '<a class="artifact-popup artifacts-js more-info" href="#">Artifacts ({0})&nbsp;</a>'.format(Object.keys(artifactsDict).length);
+                $artifactsJSElem.html(html);
+
+                popups.initArtifacts(artifactsDict, $artifactsJSElem.find(".artifact-popup"));
+            }
+
+            if (Object.keys(testLogsDict).length > 0) {
+                html = '<li>Test Results</li>';
+
+                $.each(testLogsDict, function (url, name) {
+                    html += '<li class="s-logs-js"><a href="{0}">{1}</a></li>'.format(name, url);
+                });
+
+                html = $("<ul/>").addClass("tests-summary-list list-unstyled").html(html);
+
+                $artifactsJSElem.append(html);
+            }
+
+            return html;
         },
         refreshIfRequired: function (buildFinished) {
             //Deal with page reload
