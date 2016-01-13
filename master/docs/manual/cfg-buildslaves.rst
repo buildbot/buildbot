@@ -29,7 +29,7 @@ Buildslaves with an unrecognized slavename or a non-matching password will be re
 A configuration for two slaves would look like::
 
     from buildbot.plugins import buildslave
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave('bot-solaris', 'solarispasswd'),
         buildslave.BuildSlave('bot-bsd', 'bsdpasswd'),
     ]
@@ -42,7 +42,7 @@ BuildSlave Options
 :class:`BuildSlave` objects can also be created with an optional ``properties`` argument, a dictionary specifying properties that will be available to any builds performed on this slave.
 For example::
 
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave('bot-solaris', 'solarispasswd',
                               properties={ 'os':'solaris' }),
     ]
@@ -51,7 +51,7 @@ For example::
 
 The :class:`BuildSlave` constructor can also take an optional ``max_builds`` parameter to limit the number of builds that it will execute simultaneously::
 
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave("bot-linux", "linuxpassword", max_builds=2)
     ]
 
@@ -63,7 +63,7 @@ These keepalives ensure that traffic is flowing over the underlying TCP connecti
 
 The interval can be modified by specifying the interval in seconds using the ``keepalive_interval`` parameter of BuildSlave::
 
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave('bot-linux', 'linuxpasswd',
                               keepalive_interval=3600)
     ]
@@ -81,7 +81,7 @@ One very common reason for this is when the buildslave process is started once (
 If you'd like to have the administrator of the buildslave (or other people) be notified by email when the buildslave has been missing for too long, just add the ``notify_on_missing=`` argument to the :class:`BuildSlave` definition.
 This value can be a single email address, or a list of addresses::
 
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave('bot-solaris', 'solarispasswd',
                               notify_on_missing="bob@example.com")
     ]
@@ -92,7 +92,7 @@ To change the timeout, use ``missing_timeout=`` and give it a number of seconds 
 
 You can have the buildmaster send email to multiple recipients: just provide a list of addresses instead of a single one::
 
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave('bot-solaris', 'solarispasswd',
                               notify_on_missing=["bob@example.com",
                                                  "alice@example.org"],
@@ -110,7 +110,7 @@ Note that if you want to have a :class:`MailNotifier` for buildslave-missing ema
                             relayhost="smtp.example.org")
     c['status'].append(m)
 
-    c['slaves'] = [
+    c['workers'] = [
             buildslave.BuildSlave('bot-solaris', 'solarispasswd',
                                   notify_on_missing="bob@example.com")
     ]
@@ -132,7 +132,7 @@ You can run as many local slaves as long as your machine CPU and memory is allow
 A configuration for two slaves would look like::
 
     from buildbot.plugins import buildslave
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.LocalBuildSlave('bot1'),
         buildslave.LocalBuildSlave('bot2'),
     ]

@@ -20,7 +20,7 @@ Example:
     c['db_url'] = 'mysql://user@pass:mysqlserver/buildbot'
     dbConfig = util.DbConfig(BuildmasterConfig, basedir)
     slaves = dbConfig.get("slaves")
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.BuildSlave(slave['name'], slave['passwd'],
                               properties=slave.get('properties')),
         for slave in slaves

@@ -73,7 +73,7 @@ That copy will be thrown away every time a build is complete.
 ::
 
     from buildbot.plugins import buildslave, util
-    c['slaves'] = [
+    c['workers'] = [
         buildslave.LibVirtSlave('minion1', 'sekrit',
                                 util.Connection("qemu:///session"),
                                 '/home/buildbot/images/minion1',
