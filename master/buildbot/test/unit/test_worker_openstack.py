@@ -28,7 +28,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class TestOpenStackBuildSlave(unittest.TestCase):
+class TestOpenStackWorker(unittest.TestCase):
     os_auth = dict(
         os_username='user',
         os_password='pass',
