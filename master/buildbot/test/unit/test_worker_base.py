@@ -42,7 +42,7 @@ class ConcreteWorker(base.AbstractWorker):
 
 class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
 
-    def test_attr_slavename(self):
+    def test_attr_workername(self):
         self.failUnless(hasattr(self.sl, 'workername'))
 
     def test_attr_properties(self):
