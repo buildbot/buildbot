@@ -138,7 +138,7 @@ Here is the complete list of changed API:
      - :py:meth:`~buildbot.config.MasterConfig.workers`
 
 
-API changes between 0.9.0b4 and 0.9.0b5 (done without fallback).
+API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
 .. todo::
 
