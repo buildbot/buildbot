@@ -48,10 +48,10 @@ Here are a few additional hints.
 * When an instance of the image starts, it needs to automatically start a buildbot slave that connects to your master (to create a buildbot slave, :ref:`Creating-a-buildslave`; to make a daemon, :ref:`Launching-the-daemons`).
 * You may want to make an instance of the buildbot slave, configure it as a standard buildslave in the master (i.e., not as a latent slave), and test and debug it that way before you turn it into an AMI and convert to a latent slave in the master.
 
-Configure the Master with an EC2LatentBuildSlave
-------------------------------------------------
+Configure the Master with an :class:`~buildbot.worker.ec2.EC2LatentWorker`
+--------------------------------------------------------------------------
 
-Now let's assume you have an AMI that should work with the EC2LatentBuildSlave.
+Now let's assume you have an AMI that should work with the :class:`~buildbot.worker.ec2.EC2LatentWorker`.
 It's now time to set up your buildbot master configuration.
 
 You will need some information from your AWS account: the `Access Key Id` and the `Secret Access Key`.
@@ -63,7 +63,7 @@ If you have not, and someone has given you access to an AMI, these hints may hel
   Make a note of these.
   Later on, we'll call the first one your ``identifier`` and the second one your ``secret_identifier``\.
 
-When creating an EC2LatentBuildSlave in the buildbot master configuration, the first three arguments are required.
+When creating an :class:`~buildbot.worker.ec2.EC2LatentWorker` in the buildbot master configuration, the first three arguments are required.
 The name and password are the first two arguments, and work the same as with normal buildslaves.
 The next argument specifies the type of the EC2 virtual machine (available options as of this writing include ``m1.small``, ``m1.large``, ``m1.xlarge``, ``c1.medium``, and ``c1.xlarge``; see the EC2 documentation for descriptions of these machines).
 
@@ -72,13 +72,13 @@ It specifies all necessary remaining values explicitly in the instantiation.
 
 ::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildlsave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                       ami='ami-12345',
-                                       identifier='publickey',
-                                       secret_identifier='privatekey'
-                                       )
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               ami='ami-12345',
+                               identifier='publickey',
+                               secret_identifier='privatekey'
+                               )
     ]
 
 The ``ami`` argument specifies the AMI that the master should start.
@@ -108,9 +108,9 @@ Then you can instantiate the build slave as follows.
 
 ::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                        ami='ami-12345')
     ]
 
@@ -124,19 +124,19 @@ One available filter is to specify the acceptable AMI owners, by AWS account num
 
 ::
 
-    from buildbot.plugins import buildslave
-    bot1 = buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                          valid_ami_owners=[11111111111,
-                                                            22222222222],
-                                          identifier='publickey',
-                                          secret_identifier='privatekey')
+    from buildbot.plugins import worker
+    bot1 = worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                  valid_ami_owners=[11111111111,
+                                                    22222222222],
+                                  identifier='publickey',
+                                  secret_identifier='privatekey')
 
 The other available filter is to provide a regular expression string that will be matched against each AMI's location (the S3 bucket and manifest name).
 
 ::
 
-    from buildbot.plugins import buildslave
-    bot1 = buildslave.EC2LatentBuildSlave(
+    from buildbot.plugins import worker
+    bot1 = worker.EC2LatentWorker(
             'bot1', 'sekrit', 'm1.large',
             valid_ami_location_regex=r'buildbot\-.*/image.manifest.xml',
             identifier='publickey', secret_identifier='privatekey')
@@ -146,8 +146,8 @@ Only the first group is used; subsequent groups are ignored.
 
 ::
 
-    from buildbot.plugins import buildslave
-    bot1 = buildslave.EC2LatentBuildSlave(
+    from buildbot.plugins import worker
+    bot1 = worker.EC2LatentWorker(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*\-(.*)/image.manifest.xml',
         identifier='publickey', secret_identifier='privatekey')
@@ -157,8 +157,8 @@ This allows 10 to sort after 1, for instance.
 
 ::
 
-    from buildbot.plugins import buildslave
-    bot1 = buildslave.EC2LatentBuildSlave(
+    from buildbot.plugins import worker
+    bot1 = worker.EC2LatentWorker(
             'bot1', 'sekrit', 'm1.large',
             valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
             identifier='publickey', secret_identifier='privatekey')
@@ -169,13 +169,13 @@ To configure, generate a Elastic IP in AWS, and then specify it in your configur
 
 ::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                       'ami-12345',
-                                       identifier='publickey',
-                                       secret_identifier='privatekey',
-                                       elastic_ip='208.77.188.166')
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               'ami-12345',
+                               identifier='publickey',
+                               secret_identifier='privatekey',
+                               elastic_ip='208.77.188.166')
     ]
 
 One other way to configure a slave is by settings AWS tags.
@@ -184,16 +184,16 @@ To get Buildbot to tag the latent slave specify the tag keys and values in your 
 
 ::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                        'ami-12345',
                                        identifier='publickey',
                                        secret_identifier='privatekey',
                                        tags={'SomeTag': 'foo'})
     ]
 
-The :class:`EC2LatentBuildSlave` supports all other configuration from the standard :class:`BuildSlave`.
+The :class:`~buildbot.worker.ec2.EC2LatentWorker` supports all other configuration from the standard :class:`BuildSlave`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an EC2 instance to attach before considering the attempt to have failed, and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.
 
@@ -205,22 +205,22 @@ They both default to ``latent_buildbot_slave``.
 Spot instances
 --------------
 
-If you would prefer to use spot instances for running your builds, you can accomplish that by passing in a True value to the ``spot_instance`` parameter to the EC2LatentBuildSlave constructor.
+If you would prefer to use spot instances for running your builds, you can accomplish that by passing in a True value to the ``spot_instance`` parameter to the :class:`~buildbot.worker.ec2.EC2LatentWorker` constructor.
 Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`` in order to limit your builds' budget consumption.
 
 ::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                       'ami-12345', region='us-west-2',
-                                       identifier='publickey',
-                                       secret_identifier='privatekey',
-                                       elastic_ip='208.77.188.166',
-                                       placement='b', spot_instance=True,
-                                       max_spot_price=0.09,
-                                       price_multiplier=1.15,
-                                       product_description='Linux/UNIX')
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               'ami-12345', region='us-west-2',
+                               identifier='publickey',
+                               secret_identifier='privatekey',
+                               elastic_ip='208.77.188.166',
+                               placement='b', spot_instance=True,
+                               max_spot_price=0.09,
+                               price_multiplier=1.15,
+                               product_description='Linux/UNIX')
     ]
 
 This example would attempt to create a m1.large spot instance in the us-west-2b region costing no more than $0.09/hour.
@@ -235,18 +235,18 @@ If the spot request continues to fail, and the number of attempts exceeds the va
 
 ::
 
-    from buildbot.plugins import buildslave
-    c['slaves'] = [
-        buildslave.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                       'ami-12345', region='us-west-2',
-                                       identifier='publickey',
-                                       secret_identifier='privatekey',
-                                       elastic_ip='208.77.188.166',
-                                       placement='b', spot_instance=True,
-                                       max_spot_price=0.09,
-                                       price_multiplier=1.15,
-                                       retry=3,
-                                       retry_price_adjustment=1.1)
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               'ami-12345', region='us-west-2',
+                               identifier='publickey',
+                               secret_identifier='privatekey',
+                               elastic_ip='208.77.188.166',
+                               placement='b', spot_instance=True,
+                               max_spot_price=0.09,
+                               price_multiplier=1.15,
+                               retry=3,
+                               retry_price_adjustment=1.1)
     ]
 
 In this example, a spot request will be sent with a bid price of 15% above the 24-hour average.

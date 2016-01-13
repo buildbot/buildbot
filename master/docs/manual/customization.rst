@@ -376,7 +376,7 @@ Writing a new latent buildslave should only require subclassing :class:`buildbot
         # Callback value is ignored.
         raise NotImplementedError
 
-See :class:`buildbot.buildslave.ec2.EC2LatentBuildSlave` for an example.
+See :class:`buildbot.worker.ec2.EC2LatentWorker` for an example.
 
 Custom Build Classes
 --------------------

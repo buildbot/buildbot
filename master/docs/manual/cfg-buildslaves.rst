@@ -183,7 +183,7 @@ As of time of writing, Buildbot supports the following latent buildslaves:
 Dangers with Latent Buildslaves
 +++++++++++++++++++++++++++++++
 
-Any latent build slave that interacts with a for-fee service, such as the EC2LatentBuildSlave, brings significant risks.
+Any latent build slave that interacts with a for-fee service, such as the :class:`~buildbot.worker.ec2.EC2LatentWorker`, brings significant risks.
 As already identified, the configuration will need access to account information that, if obtained by a criminal, can be used to charge services to your account.
 Also, bugs in the buildbot software may lead to unnecessary charges.
 In particular, if the master neglects to shut down an instance for some reason, a virtual machine may be running unnecessarily, charging against your account.
