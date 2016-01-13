@@ -202,7 +202,7 @@ def define_old_worker_property(scope, name, pattern=None):
 
     def get(self):
         on_deprecated_name_usage(
-            "'{old}' property is deprecated, use '{new}' instead.".format(
+            "'{old}' attribute is deprecated, use '{new}' instead.".format(
                 new=name, old=compat_name))
         return getattr(self, name)
 
