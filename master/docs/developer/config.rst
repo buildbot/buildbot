@@ -155,7 +155,7 @@ described in :ref:`developer-Reconfiguration`.
         :bb:cfg:`builders`.  Builders specified as dictionaries in the
         configuration file are converted to instances.
 
-    .. py:attribute:: slaves
+    .. py:attribute:: workers
 
         The list of :py:class:`BuildSlave` instances from
         :bb:cfg:`slaves`.
