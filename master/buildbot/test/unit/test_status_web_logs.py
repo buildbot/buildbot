@@ -15,8 +15,9 @@
 from buildbot.status.web.jsontestresults import JSONTestResource
 
 from buildbot.status.buildstep import BuildStepStatus
-from buildbot.status.logfile import HTMLLogFile
+from buildbot.status.logfile import HTMLLogFile, LogFile
 from buildbot.status.web.logs import LogsResource
+from buildbot.status.web.base import IHTMLLog
 
 import mock
 from buildbot.status.web.xmltestresults import XMLTestResource
@@ -25,7 +26,7 @@ from twisted.web.resource import NoResource
 
 
 class TestLogsResource(unittest.TestCase):
-    def setupStatus(self, name=None, text=None, has_content=False, content_type=None):
+    def setupStatus(self, name=None, text=None, has_content=False, content_type=None, html_log=True):
         st = self.build_step_status = mock.Mock(BuildStepStatus)
         self.logs = []
         st.getLogs = lambda: self.logs
@@ -33,7 +34,7 @@ class TestLogsResource(unittest.TestCase):
         if name is None:
             return st
 
-        log = mock.Mock(HTMLLogFile)
+        log = mock.Mock(HTMLLogFile) if html_log else mock.Mock(LogFile)
         log.getName = lambda: name
         log.hasContent = lambda: has_content
         log.content_type = content_type
@@ -84,6 +85,12 @@ class TestLogsResource(unittest.TestCase):
         res = logs_resource.getChild("test1", "")
 
         self.assertIsInstance(res, NoResource)
+
+    def test_log_resource_no_html_log_file(self):
+        logs_resource = LogsResource(self.setupStatus("test", "test content", True, html_log=False))
+        res = logs_resource.getChild("test", "")
+
+        self.assertIsInstance(res, LogFile)
 
     def test_log_resource_no_logs(self):
         logs_resource = LogsResource(self.setupStatus())
