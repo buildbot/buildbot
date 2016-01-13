@@ -358,7 +358,7 @@ Aside from the service methods, the other concerns in the previous section apply
 Writing a New Latent Buildslave Implementation
 ----------------------------------------------
 
-Writing a new latent buildslave should only require subclassing :class:`buildbot.buildslave.AbstractLatentBuildSlave` and implementing :meth:`start_instance` and :meth:`stop_instance`.
+Writing a new latent buildslave should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance`.
 
 ::
 
