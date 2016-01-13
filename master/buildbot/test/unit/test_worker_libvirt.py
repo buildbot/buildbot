@@ -19,7 +19,7 @@ from buildbot import config
 from buildbot.test.fake import libvirt
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import ignoreWarning
-from buildbot.worker import libvirt as libvirtbuildslave
+from buildbot.worker import libvirt as libvirtworker
 from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
@@ -29,25 +29,24 @@ from twisted.python import failure
 from twisted.trial import unittest
 
 
+class TestLibVirtWorker(unittest.TestCase):
 
-class TestLibVirtSlave(unittest.TestCase):
-
-    class ConcreteBuildSlave(libvirtbuildslave.LibVirtWorker):
+    class ConcreteWorker(libvirtworker.LibVirtWorker):
         pass
 
     def setUp(self):
-        self.patch(libvirtbuildslave, "libvirt", libvirt)
-        self.conn = libvirtbuildslave.Connection("test://")
+        self.patch(libvirtworker, "libvirt", libvirt)
+        self.conn = libvirtworker.Connection("test://")
         self.lvconn = self.conn.connection
 
     def test_constructor_nolibvirt(self):
-        self.patch(libvirtbuildslave, "libvirt", None)
-        self.assertRaises(config.ConfigErrors, self.ConcreteBuildSlave,
+        self.patch(libvirtworker, "libvirt", None)
+        self.assertRaises(config.ConfigErrors, self.ConcreteWorker,
                           'bot', 'pass', None, 'path', 'path')
 
     @defer.inlineCallbacks
     def test_constructor_minimal(self):
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'path', 'otherpath')
+        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'path', 'otherpath')
         yield bs._find_existing_deferred
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
@@ -59,7 +58,7 @@ class TestLibVirtSlave(unittest.TestCase):
     def test_find_existing(self):
         d = self.lvconn.fake_add("bot")
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
+        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
 
         self.assertEqual(bs.domain.domain, d)
@@ -70,7 +69,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', None)
+        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', None)
         yield bs._find_existing_deferred
         yield bs._prepare_base_image()
 
@@ -81,7 +80,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
+        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         yield bs._prepare_base_image()
 
@@ -94,7 +93,7 @@ class TestLibVirtSlave(unittest.TestCase):
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
-        bs = self.ConcreteBuildSlave('bot', 'pass', self.conn, 'p', 'o')
+        bs = self.ConcreteWorker('bot', 'pass', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         bs.cheap_copy = False
         yield bs._prepare_base_image()
@@ -104,8 +103,8 @@ class TestLibVirtSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance(self):
-        bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',
-                                     xml='<xml/>')
+        bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o',
+                                 xml='<xml/>')
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
@@ -118,8 +117,8 @@ class TestLibVirtSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_create_fails(self):
-        bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o',
-                                     xml='<xml/>')
+        bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o',
+                                 xml='<xml/>')
 
         prep = mock.Mock()
         prep.side_effect = lambda: defer.succeed(0)
@@ -128,7 +127,7 @@ class TestLibVirtSlave(unittest.TestCase):
         create = mock.Mock()
         create.side_effect = lambda self: defer.fail(
             failure.Failure(RuntimeError('oh noes')))
-        self.patch(libvirtbuildslave.Connection, 'create', create)
+        self.patch(libvirtworker.Connection, 'create', create)
 
         yield bs._find_existing_deferred
         started = yield bs.start_instance(mock.Mock())
@@ -139,7 +138,7 @@ class TestLibVirtSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setup_canStartBuild(self):
-        bs = self.ConcreteBuildSlave('b', 'p', self.conn, 'p', 'o')
+        bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         bs.updateLocks()
         defer.returnValue(bs)
@@ -186,7 +185,7 @@ class TestLibVirtSlave(unittest.TestCase):
 class TestWorkQueue(unittest.TestCase):
 
     def setUp(self):
-        self.queue = libvirtbuildslave.WorkQueue()
+        self.queue = libvirtworker.WorkQueue()
 
     def delayed_success(self):
         def work():
