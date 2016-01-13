@@ -28,10 +28,10 @@ Buildslaves with an unrecognized slavename or a non-matching password will be re
 
 A configuration for two slaves would look like::
 
-    from buildbot.plugins import buildslave
+    from buildbot.plugins import worker
     c['workers'] = [
-        buildslave.BuildSlave('bot-solaris', 'solarispasswd'),
-        buildslave.BuildSlave('bot-bsd', 'bsdpasswd'),
+        worker.BuildSlave('bot-solaris', 'solarispasswd'),
+        worker.BuildSlave('bot-bsd', 'bsdpasswd'),
     ]
 
 BuildSlave Options
@@ -131,10 +131,10 @@ You can run as many local slaves as long as your machine CPU and memory is allow
 
 A configuration for two slaves would look like::
 
-    from buildbot.plugins import buildslave
+    from buildbot.plugins import worker
     c['workers'] = [
-        buildslave.LocalBuildSlave('bot1'),
-        buildslave.LocalBuildSlave('bot2'),
+        worker.LocalBuildSlave('bot1'),
+        worker.LocalBuildSlave('bot2'),
     ]
 
 

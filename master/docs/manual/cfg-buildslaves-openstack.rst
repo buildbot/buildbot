@@ -100,9 +100,9 @@ Here is the simplest example of configuring an OpenStack latent buildslave.
 
 ::
 
-    from buildbot.plugins import buildslave
+    from buildbot.plugins import worker
     c['workers'] = [
-        buildslave.OpenStackLatentBuildSlave('bot2', 'sekrit',
+        worker.OpenStackLatentBuildSlave('bot2', 'sekrit',
                     flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
@@ -115,7 +115,7 @@ The invocation happens in a separate thread to prevent blocking the build master
 
 ::
 
-    from buildbot.plugins import buildslave
+    from buildbot.plugins import worker
 
     def find_image(images):
         # Sort oldest to newest.
@@ -125,7 +125,7 @@ The invocation happens in a separate thread to prevent blocking the build master
         return candidate_images[0]
 
     c['workers'] = [
-        buildslave.OpenStackLatentBuildSlave('bot2', 'sekrit',
+        worker.OpenStackLatentBuildSlave('bot2', 'sekrit',
                     flavor=1, image=find_image,
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',
@@ -139,9 +139,9 @@ When the instance is destroyed, the volume will be terminated as well.
 
 ::
 
-    from buildbot.plugins import buildslave
+    from buildbot.plugins import worker
     c['workers'] = [
-        buildslave.OpenStackLatentBuildSlave('bot2', 'sekrit',
+        worker.OpenStackLatentBuildSlave('bot2', 'sekrit',
                     flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
                     os_username='user', os_password='password',
                     os_tenant_name='tenant',

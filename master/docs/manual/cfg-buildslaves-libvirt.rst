@@ -72,12 +72,12 @@ That copy will be thrown away every time a build is complete.
 
 ::
 
-    from buildbot.plugins import buildslave, util
+    from buildbot.plugins import worker, util
     c['workers'] = [
-        buildslave.LibVirtSlave('minion1', 'sekrit',
-                                util.Connection("qemu:///session"),
-                                '/home/buildbot/images/minion1',
-                                '/home/buildbot/images/base_image')
+        worker.LibVirtSlave('minion1', 'sekrit',
+                            util.Connection("qemu:///session"),
+                            '/home/buildbot/images/minion1',
+                            '/home/buildbot/images/base_image')
     ]
 
 You can use virt-manager to define ``minion1`` with the correct hardware.
