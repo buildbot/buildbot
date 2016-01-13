@@ -49,7 +49,7 @@ The master has a number of useful attributes:
     The botmaster acts as the parent service for a
     :py:class:`buildbot.process.botmaster.BuildRequestDistributor` instance (at
     ``master.botmaster.brd``) as well as all active slaves
-    (:py:class:`buildbot.buildslave.AbstractBuildSlave` instances) and builders
+    (:py:class:`buildbot.worker.AbstractWorker` instances) and builders
     (:py:class:`buildbot.process.builder.Builder` instances).
 
 ``master.scheduler_manager``

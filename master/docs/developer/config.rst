@@ -495,10 +495,10 @@ This method takes care of the basic slave attributes, including changing the PB
 registration if necessary.  Any subclasses that add configuration parameters
 should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and
 update those parameters.  As with Schedulers, because the
-:py:class:`~buildbot.buildslave.AbstractBuildSlave` instance is given directly
+:py:class:`~buildbot.worker.AbstractWorker` instance is given directly
 in the configuration, on reconfig instances must extract the configuration from
 a new instance.  The
-:py:meth:`~buildbot.buildslave.AbstractBuildSlave.findNewSlaveInstance` method
+:py:meth:`~buildbot.worker.AbstractWorker.findNewSlaveInstance` method
 can be used to find the new instance.
 
 User Managers
