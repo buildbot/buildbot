@@ -102,6 +102,7 @@ Here is the complete list of changed API:
    * - :py:mod:`buildbot.buildslave` module with all contents
      - :py:mod:`buildbot.worker`
 
+
    * - :py:class:`buildbot.buildslave.AbstractBuildSlave`
      - :py:class:`buildbot.worker.AbstractWorker`
 
@@ -116,15 +117,8 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.buildslave.BuildSlave`
      - :py:class:`buildbot.worker.Worker`
 
-   * - :py:class:`buildbot.buildslave.base.BuildSlave`
-     - :py:class:`buildbot.worker.base.Worker`
-
-
-   * - :py:class:`buildbot.buildslave.AbstractLatentBuildSlave`
-     - :py:class:`buildbot.worker.AbstractLatentWorker`
-
-   * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
-     - :py:class:`buildbot.worker.base.AbstractLatentWorker`
+   * - :py:class:`buildbot.buildslave.BuildSlave`
+     - :py:class:`buildbot.worker.Worker`
 
 
    * - :py:class:`buildbot.buildslave.ec2.EC2LatentBuildSlave`
