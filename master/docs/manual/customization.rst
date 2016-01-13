@@ -801,7 +801,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
 
     from buildbot.plugins import steps, util
-    from buildbot.interfaces import BuildSlaveTooOldError
+    from buildbot.interfaces import WorkerTooOldError
     import stat
 
     class MyBuildStep(steps.BuildStep):
