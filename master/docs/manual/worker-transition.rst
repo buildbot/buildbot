@@ -126,6 +126,7 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.buildslave.base.AbstractLatentBuildSlave`
      - :py:class:`buildbot.worker.base.AbstractLatentWorker`
 
+
    * - :py:attr:`buildbot.master.BuildMaster.buildslaves`
      - :py:attr:`buildbot.worker.base.AbstractWorker.workers`
 
