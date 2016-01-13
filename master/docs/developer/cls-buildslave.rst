@@ -1,7 +1,7 @@
 Build Slaves
 ============
 
-.. py:module:: buildbot.buildslave.base
+.. py:module:: buildbot.buildslave
 
 The :py:class:`BuildSlave` class represents a buildslave, which may or may not be connected to the master.
 Instances of this class are created directly in the Buildbot configuration file.
