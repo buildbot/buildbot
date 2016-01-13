@@ -498,6 +498,7 @@ class TestWorkerTransition(unittest.TestCase):
             from buildbot.buildslave import AbstractLatentBuildSlave
 
         class Worker(AbstractLatentBuildSlave):
+
             def __init__(self):
                 pass
 
@@ -507,3 +508,19 @@ class TestWorkerTransition(unittest.TestCase):
                                 "is deprecated"):
             w = Worker()
             self.assertIsInstance(w, AbstractLatentWorker)
+
+    def test_worker(self):
+        from buildbot.worker import Worker
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.buildslave import BuildSlave
+
+        class Worker(BuildSlave):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'BuildSlave' class is deprecated"):
+            w = Worker()
+            self.assertIsInstance(w, Worker)
