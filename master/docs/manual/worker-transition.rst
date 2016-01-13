@@ -207,7 +207,7 @@ in the configuration file in the same way, as they were in versions prior
 
 .. code-block:: python
 
-    from buildbot.plugins import buildslave
+    from buildbot.plugins import buildslave  # deprecated, use "worker" instead
     w = buildslave.ThirdPartyWorker()
 
 But also they available using new namespace inside configuration
