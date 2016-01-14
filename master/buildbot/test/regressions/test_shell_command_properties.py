@@ -84,7 +84,7 @@ class TestShellCommandProperties(unittest.TestCase):
         b = f.newBuild([req])
         b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
-        b.slavebuilder = FakeWorkerForBuilder()
+        b.workerforbuilder = FakeWorkerForBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)
@@ -106,7 +106,7 @@ class TestSetProperty(unittest.TestCase):
         b = f.newBuild([req])
         b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
-        b.slavebuilder = FakeWorkerForBuilder()
+        b.workerforbuilder = FakeWorkerForBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)

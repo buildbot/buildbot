@@ -280,9 +280,13 @@ class WorkerAPICompatMixin(object):
             self.__dict__["_compat_attrs_mapping"] = {}
         return self._compat_attrs_mapping
 
-    def _registerOldWorkerAttr(self, attr_name, pattern=None):
+    def _registerOldWorkerAttr(self, attr_name, pattern=None, name=None):
         """Define old-named attribute inside class instance."""
-        compat_name = deprecated_name(attr_name, pattern=pattern)
+        if name is not None:
+            assert pattern is None
+            compat_name = name
+        else:
+            compat_name = deprecated_name(attr_name, pattern=pattern)
         assert compat_name not in self.__dict__
         assert compat_name not in self.__compat_attrs
         self.__compat_attrs[compat_name] = attr_name

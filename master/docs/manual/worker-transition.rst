@@ -156,6 +156,9 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.process.workerforbuilder.LatentWorkerForBuilder`
 
 
+   * - :py:attr:`buildbot.process.build.Build.slavebuilder` (private?)
+     - :py:attr:`~buildbot.process.build.Build.workerforbuilder`
+
 
 API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 

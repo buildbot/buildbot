@@ -32,22 +32,22 @@ class TestAbstractWorkerForBuilder(TestCase):
         """
         If the worker associated to worker builder has a ``buildStarted`` method,
         calling ``buildStarted`` on the worker builder calls the method on the
-        worker with the slavebuilder as an argument.
+        worker with the workerforbuilder as an argument.
         """
         class ConcreteWorker(AbstractWorker):
             _buildStartedCalls = []
 
-            def buildStarted(self, slavebuilder):
-                self._buildStartedCalls.append(slavebuilder)
+            def buildStarted(self, workerforbuilder):
+                self._buildStartedCalls.append(workerforbuilder)
 
         worker = ConcreteWorker("worker", "pass")
-        slavebuilder = AbstractWorkerForBuilder()
+        workerforbuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
-        slavebuilder.worker = worker
-        slavebuilder.buildStarted()
+        workerforbuilder.worker = worker
+        workerforbuilder.buildStarted()
 
-        self.assertEqual(ConcreteWorker._buildStartedCalls, [slavebuilder])
+        self.assertEqual(ConcreteWorker._buildStartedCalls, [workerforbuilder])
 
     def test_buildStarted_missing(self):
         """

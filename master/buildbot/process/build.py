@@ -35,9 +35,10 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import worst_status
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import WorkerAPICompatMixin
 
 
-class Build(properties.PropertiesMixin):
+class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     """I represent a single build by a single worker. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
@@ -167,10 +168,10 @@ class Build(properties.PropertiesMixin):
     useProgress = True
 
     def getSlaveCommandVersion(self, command, oldversion=None):
-        return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
+        return self.workerforbuilder.getSlaveCommandVersion(command, oldversion)
 
     def getSlaveName(self):
-        return self.slavebuilder.worker.workername
+        return self.workerforbuilder.worker.workername
 
     def setupProperties(self):
         props = interfaces.IProperties(self)
@@ -206,7 +207,8 @@ class Build(properties.PropertiesMixin):
         self.builder.setupProperties(props)
 
     def setupSlaveBuilder(self, slavebuilder):
-        self.slavebuilder = slavebuilder
+        self.workerforbuilder = slavebuilder
+        self._registerOldWorkerAttr("workerforbuilder", name="slavebuilder")
 
         self.path_module = slavebuilder.worker.path_module
 
@@ -260,7 +262,7 @@ class Build(properties.PropertiesMixin):
         slave.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right worker
-        self.locks = [(l.getLock(self.slavebuilder.worker), a)
+        self.locks = [(l.getLock(self.workerforbuilder.worker), a)
                       for l, a in self.locks]
         self.conn = slavebuilder.worker.conn
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
@@ -303,7 +305,7 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.finishBuild(self.buildid, self.results)
 
         # mark the build as finished
-        self.slavebuilder.buildFinished()
+        self.workerforbuilder.buildFinished()
         slave.updateSlaveStatus(buildFinished=self)
 
     @staticmethod
@@ -351,7 +353,7 @@ class Build(properties.PropertiesMixin):
         for factory in step_factories:
             step = factory.buildStep()
             step.setBuild(self)
-            step.setBuildSlave(self.slavebuilder.worker)
+            step.setBuildSlave(self.workerforbuilder.worker)
             self.setUniqueStepName(step)
             steps.append(step)
 

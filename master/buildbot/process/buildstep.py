@@ -456,7 +456,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                       for access in self.locks]
         # then narrow SlaveLocks down to the worker that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder.worker), la)
+        self.locks = [(l.getLock(self.build.workerforbuilder.worker), la)
                       for l, la in self.locks]
 
         for l, la in self.locks:

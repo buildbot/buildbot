@@ -344,7 +344,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         try:
             ready = yield slavebuilder.prepare(self.builder_status, build)
         except Exception:
-            log.err(failure.Failure(), 'while preparing slavebuilder:')
+            log.err(failure.Failure(), 'while preparing workerforbuilder:')
             ready = False
 
         # If prepare returns True then it is ready and we start a build
@@ -378,7 +378,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
-        # The buildslave is ready to go. slavebuilder.buildStarted() sets its
+        # The buildslave is ready to go. workerforbuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
         slavebuilder.buildStarted()

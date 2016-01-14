@@ -31,6 +31,10 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import slave
 from buildbot.test.fake.fakebuild import FakeBuildStatus
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
@@ -136,7 +140,7 @@ class TestBuild(unittest.TestCase):
         self.build = Build([r])
         self.build.conn = fakeprotocol.FakeConnection(self.master, self.slave)
 
-        self.slavebuilder = Mock(name='slavebuilder')
+        self.slavebuilder = Mock(name='workerforbuilder')
         self.slavebuilder.worker = self.slave
 
         self.build.setBuilder(self.builder)
@@ -951,7 +955,7 @@ class TestBuildProperties(unittest.TestCase):
         self.master = fakemaster.make_master(wantData=True, testcase=self)
         self.slave = slave.FakeSlave(self.master)
         self.slave.attached(None)
-        self.slavebuilder = Mock(name='slavebuilder')
+        self.slavebuilder = Mock(name='workerforbuilder')
         self.slavebuilder.worker = self.slave
         self.build = Build([r])
         self.build.setStepFactories([])
@@ -991,3 +995,33 @@ class TestBuildProperties(unittest.TestCase):
     def test_render(self):
         self.build.render("xyz")
         self.properties.render.assert_called_with("xyz")
+
+    def test_workerforbuilder_old_api(self):
+        class FakeProperties(Mock):
+            implements(interfaces.IProperties)
+
+        import posixpath
+
+        r = FakeRequest()
+        build = Build([r])
+        build.properties = FakeProperties()
+        build.builder = FakeBuilder(self.master)
+        build.build_status = FakeBuildStatus()
+
+        w = slave.FakeSlave(self.master)
+        w.path_module = posixpath
+        w.properties = FakeProperties()
+
+        workerforbuilder = Mock(name='workerforbuilder')
+
+        build.setupSlaveBuilder(workerforbuilder)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new_workerforbuilder = build.workerforbuilder
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavebuilder' attribute is deprecated"):
+            old_workerforbuilder = build.slavebuilder
+
+        self.assertIdentical(new_workerforbuilder, old_workerforbuilder)
