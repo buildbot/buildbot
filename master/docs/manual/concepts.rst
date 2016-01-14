@@ -374,7 +374,7 @@ A builder also has a :class:`BuildFactory`, which is responsible for creating ne
 Build Slaves
 ------------
 
-Each builder is associated with one of more :class:`BuildSlave`\s.
+Each builder is associated with one of more :class:`Worker`\s.
 A builder which is used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should naturally be associated with a Mac buildslave.
 
 If multiple buildslaves are available for any given builder, you will have some measure of redundancy: in case one slave goes offline, the others can still keep the :class:`Builder` working.

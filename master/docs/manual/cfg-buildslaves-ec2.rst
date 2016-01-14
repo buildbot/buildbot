@@ -193,7 +193,7 @@ To get Buildbot to tag the latent slave specify the tag keys and values in your 
                                        tags={'SomeTag': 'foo'})
     ]
 
-The :class:`~buildbot.worker.ec2.EC2LatentWorker` supports all other configuration from the standard :class:`BuildSlave`.
+The :class:`~buildbot.worker.ec2.EC2LatentWorker` supports all other configuration from the standard :class:`Worker`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an EC2 instance to attach before considering the attempt to have failed, and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.
 

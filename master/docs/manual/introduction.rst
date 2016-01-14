@@ -112,10 +112,10 @@ Builders
 Status plugins
     Which deliver information about the build results through protocols like HTTP, mail, and IRC.
 
-Each :class:`Builder` is configured with a list of :class:`BuildSlave`\s that it will use for its builds.
-These buildslaves are expected to behave identically: the only reason to use multiple :class:`BuildSlave`\s for a single :class:`Builder` is to provide a measure of load-balancing.
+Each :class:`Builder` is configured with a list of :class:`Worker`\s that it will use for its builds.
+These buildslaves are expected to behave identically: the only reason to use multiple :class:`Worker`\s for a single :class:`Builder` is to provide a measure of load-balancing.
 
-Within a single :class:`BuildSlave`, each :class:`Builder` creates its own :class:`WorkerForBuilder` instance.
+Within a single :class:`Worker`, each :class:`Builder` creates its own :class:`WorkerForBuilder` instance.
 These :class:`WorkerForBuilder`\s operate independently from each other.
 Each gets its own base directory to work in.
 It is quite common to have many :class:`Builder`\s sharing the same buildslave.
@@ -130,7 +130,7 @@ In this case, the mapping would look like:
     Builder(full-ppc)   ->  BuildSlaves(slave-ppc)
     Builder(source-tarball) -> BuildSlaves(slave-i386, slave-ppc)
 
-and each :class:`BuildSlave` would have two :class:`SlaveBuilders` inside it, one for a full builder, and a second for the source-tarball builder.
+and each :class:`Worker` would have two :class:`SlaveBuilders` inside it, one for a full builder, and a second for the source-tarball builder.
 
 Once a :class:`WorkerForBuilder` is available, the :class:`Builder` pulls one or more :class:`BuildRequest`\s off its incoming queue.
 (It may pull more than one if it determines that it can merge the requests together; for example, there may be multiple requests to build the current *HEAD* revision).
@@ -160,7 +160,7 @@ The status plugins can also subscribe to hear about new :class:`Build`\s as they
 The :class:`Status` object records the status of old builds on disk in the buildmaster's base directory.
 This allows it to return information about historical builds.
 
-There are also status objects that correspond to :class:`Scheduler`\s and :class:`BuildSlave`\s.
+There are also status objects that correspond to :class:`Scheduler`\s and :class:`Worker`\s.
 These allow status plugins to report information about upcoming builds, and the online/offline status of each buildslave.
 
 .. _Control-Flow:

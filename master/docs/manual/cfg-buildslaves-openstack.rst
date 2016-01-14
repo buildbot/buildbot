@@ -152,6 +152,6 @@ When the instance is destroyed, the volume will be terminated as well.
     ]
 
 
-:class:`OpenStackLatentWorker` supports all other configuration from the standard :class:`BuildSlave`.
+:class:`OpenStackLatentWorker` supports all other configuration from the standard :class:`Worker`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an OpenStack instance to attach before considering the attempt to have failed and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.
