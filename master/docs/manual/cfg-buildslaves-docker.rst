@@ -160,7 +160,7 @@ To do this, enter the following lines in a python prompt where docker-py is inst
     >>> client.wait(container['Id'])
     0
 
-It is now time to add the new build worker to the master configuration under :bb:cfg:`slaves`.
+It is now time to add the new worker to the master configuration under :bb:cfg:`slaves`.
 
 The following example will add a Docker latent worker for docker running at the following adress: ``tcp://localhost:2375``, the worker name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_worker``::
 
