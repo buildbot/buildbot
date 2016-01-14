@@ -183,7 +183,7 @@ class RunSteps(unittest.TestCase):
         self.conn = fakeprotocol.FakeConnection(self.master, self.slave)
         yield self.slave.attached(self.conn)
 
-        sb = self.slavebuilder = workerforbuilder.WorkerForBuilder()
+        sb = self.workerforbuilder = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self.builder)
         yield sb.attached(self.slave, {})
 
@@ -214,7 +214,7 @@ class RunSteps(unittest.TestCase):
 
         # start the builder
         self.failUnless((yield self.builder.maybeStartBuild(
-            self.slavebuilder, [self.buildrequest])))
+            self.workerforbuilder, [self.buildrequest])))
 
         # and wait for completion
         yield bfd

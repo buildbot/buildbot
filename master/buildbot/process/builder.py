@@ -35,11 +35,11 @@ from twisted.python import log
 from zope.interface import implements
 
 
-def enforceChosenSlave(bldr, slavebuilder, breq):
+def enforceChosenSlave(bldr, workerforbuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
         if isinstance(slavename, basestring):
-            return slavename == slavebuilder.worker.workername
+            return slavename == workerforbuilder.worker.workername
 
     return True
 
@@ -295,18 +295,18 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def getAvailableSlaves(self):
         return [sb for sb in self.slaves if sb.isAvailable()]
 
-    def canStartWithSlavebuilder(self, slavebuilder):
+    def canStartWithSlavebuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in self.config.locks]
-        return Build.canStartWithSlavebuilder(locks, slavebuilder)
+        return Build.canStartWithSlavebuilder(locks, workerforbuilder)
 
-    def canStartBuild(self, slavebuilder, breq):
+    def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):
-            return defer.maybeDeferred(self.config.canStartBuild, self, slavebuilder, breq)
+            return defer.maybeDeferred(self.config.canStartBuild, self, workerforbuilder, breq)
         return defer.succeed(True)
 
     @defer.inlineCallbacks
-    def _startBuildFor(self, slavebuilder, buildrequests):
+    def _startBuildFor(self, workerforbuilder, buildrequests):
         # Build a stack of cleanup functions so that, at any point, we can
         # abort this operation and unwind the commitments made so far.
         cleanups = []
@@ -325,11 +325,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
-        log.msg("starting build %s using slave %s" % (build, slavebuilder))
+        log.msg("starting build %s using slave %s" % (build, workerforbuilder))
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(slavebuilder.worker.releaseLocks)
+        cleanups.append(workerforbuilder.worker.releaseLocks)
 
         if len(self.config.env) > 0:
             build.setSlaveEnvironment(self.config.env)
@@ -342,7 +342,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
         try:
-            ready = yield slavebuilder.prepare(self.builder_status, build)
+            ready = yield workerforbuilder.prepare(self.builder_status, build)
         except Exception:
             log.err(failure.Failure(), 'while preparing workerforbuilder:')
             ready = False
@@ -351,7 +351,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # If it returns false then we don't start a new build.
         if not ready:
             log.msg("slave %s can't build %s after all; re-queueing the "
-                    "request" % (build, slavebuilder))
+                    "request" % (build, workerforbuilder))
             run_cleanups()
             defer.returnValue(False)
             return
@@ -365,9 +365,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # situations where the worker is live but is pushing lots of data to
         # us in a build.
         log.msg("starting build %s.. pinging the slave %s"
-                % (build, slavebuilder))
+                % (build, workerforbuilder))
         try:
-            ping_success = yield slavebuilder.ping()
+            ping_success = yield workerforbuilder.ping()
         except Exception:
             log.err(failure.Failure(), 'while pinging slave before build:')
             ping_success = False
@@ -381,12 +381,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # The buildslave is ready to go. workerforbuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
-        slavebuilder.buildStarted()
-        cleanups.append(lambda: slavebuilder.buildFinished())
+        workerforbuilder.buildStarted()
+        cleanups.append(lambda: workerforbuilder.buildFinished())
 
         # tell the remote that it's starting a build, too
         try:
-            yield slavebuilder.worker.conn.remoteStartBuild(build.builder.name)
+            yield workerforbuilder.worker.conn.remoteStartBuild(build.builder.name)
         except Exception:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
@@ -402,7 +402,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.worker.conn:  # TODO: replace with isConnected()
+        if not workerforbuilder.worker.conn:  # TODO: replace with isConnected()
             log.msg("slave disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
@@ -420,8 +420,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # raised by startBuild are treated as deferred errbacks (see
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
-                                bs, self.expectations, slavebuilder)
-        d.addCallback(lambda _: self.buildFinished(build, slavebuilder))
+                                bs, self.expectations, workerforbuilder)
+        d.addCallback(lambda _: self.buildFinished(build, workerforbuilder))
         # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
@@ -482,7 +482,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     # Build Creation
 
     @defer.inlineCallbacks
-    def maybeStartBuild(self, slavebuilder, breqs, _reactor=reactor):
+    def maybeStartBuild(self, workerforbuilder, breqs, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
         # start a set of buildrequests on a worker. Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
@@ -498,7 +498,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # If the build fails from here on out (e.g., because a worker has failed),
         # it will be handled outside of this function. TODO: test that!
 
-        build_started = yield self._startBuildFor(slavebuilder, breqs)
+        build_started = yield self._startBuildFor(workerforbuilder, breqs)
         defer.returnValue(build_started)
 
     # a few utility functions to make the maybeStartBuild a bit shorter and

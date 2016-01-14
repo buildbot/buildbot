@@ -227,11 +227,11 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.build_status.setSlavename(self.slavename)
 
     @defer.inlineCallbacks
-    def startBuild(self, build_status, expectations, slavebuilder):
+    def startBuild(self, build_status, expectations, workerforbuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
-        slave = slavebuilder.worker
+        slave = workerforbuilder.worker
 
         # we are taking responsibility for watching the connection to the
         # remote. This responsibility was held by the Builder until our
@@ -258,13 +258,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # now that we have a build_status, we can set properties
         self.setupProperties()
-        self.setupSlaveBuilder(slavebuilder)
+        self.setupSlaveBuilder(workerforbuilder)
         slave.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right worker
         self.locks = [(l.getLock(self.workerforbuilder.worker), a)
                       for l, a in self.locks]
-        self.conn = slavebuilder.worker.conn
+        self.conn = workerforbuilder.worker.conn
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
@@ -309,9 +309,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         slave.updateSlaveStatus(buildFinished=self)
 
     @staticmethod
-    def canStartWithSlavebuilder(lockList, slavebuilder):
+    def canStartWithSlavebuilder(lockList, workerforbuilder):
         for lock, access in lockList:
-            slave_lock = lock.getLock(slavebuilder.worker)
+            slave_lock = lock.getLock(workerforbuilder.worker)
             if not slave_lock.isAvailable(None, access):
                 return False
         return True
