@@ -376,8 +376,6 @@ class _PluginDB(object):
                     ('EC2LatentBuildSlave', 'EC2LatentWorker'),
                     ('LibVirtSlave', 'LibVirtWorker'),
                     ('OpenStackLatentBuildSlave', 'OpenStackLatentWorker'),
-                    ('DockerLatentBuildSlave', 'DockerLatentWorker'),
-                    ('LocalBuildSlave', 'LocalWorker'),
                 ]
                 for old_name, new_name in old_new_names:
                     buildslave_ns._tree.add(

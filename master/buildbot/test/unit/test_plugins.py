@@ -258,8 +258,6 @@ _WORKER_FAKE_ENTRIES = {
         SimpleFakeEntry('EC2LatentWorker', ClassWithInterface),
         SimpleFakeEntry('LibVirtWorker', ClassWithInterface),
         SimpleFakeEntry('OpenStackLatentWorker', ClassWithInterface),
-        SimpleFakeEntry('DockerLatentWorker', ClassWithInterface),
-        SimpleFakeEntry('LocalWorker', ClassWithInterface),
         SimpleFakeEntry('newthirdparty', ClassWithInterface),
         SimpleFakeEntry('deep.newthirdparty', ClassWithInterface),
     ],
