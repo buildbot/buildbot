@@ -22,11 +22,11 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 
 
-class SlaveBuildStep(buildstep.BuildStep):
+class WorkerBuildStep(buildstep.BuildStep):
     pass
 
 
-class SetPropertiesFromEnv(SlaveBuildStep):
+class SetPropertiesFromEnv(WorkerBuildStep):
 
     """
     Sets properties from envirionment variables on the worker.
@@ -69,7 +69,7 @@ class SetPropertiesFromEnv(SlaveBuildStep):
         self.finished(SUCCESS)
 
 
-class FileExists(SlaveBuildStep):
+class FileExists(WorkerBuildStep):
 
     """
     Check for the existence of a file on the worker.
@@ -104,7 +104,7 @@ class FileExists(SlaveBuildStep):
             self.finished(FAILURE)
 
 
-class CopyDirectory(SlaveBuildStep):
+class CopyDirectory(WorkerBuildStep):
 
     """
     Copy a directory tree on the worker.
@@ -163,7 +163,7 @@ class CopyDirectory(SlaveBuildStep):
         return {u'step': rv}
 
 
-class RemoveDirectory(SlaveBuildStep):
+class RemoveDirectory(WorkerBuildStep):
 
     """
     Remove a directory tree on the worker.
@@ -196,7 +196,7 @@ class RemoveDirectory(SlaveBuildStep):
         self.finished(SUCCESS)
 
 
-class MakeDirectory(SlaveBuildStep):
+class MakeDirectory(WorkerBuildStep):
 
     """
     Create a directory on the worker.

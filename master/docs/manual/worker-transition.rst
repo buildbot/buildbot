@@ -241,6 +241,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
        (Note: this variable is renderable)
      - :py:attr:`buildbot.steps.shell.ShellCommand.workerEnvironment`
 
+
+   * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
+     - :py:class:`buildbot.steps.worker.SlaveBuildStep`
+
 Plugins
 -------
 
