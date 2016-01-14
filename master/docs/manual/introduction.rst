@@ -54,7 +54,7 @@ System Architecture
 
 The Buildbot consists of a single *buildmaster* and one or more *buildslaves*, connected in a star topology.
 The buildmaster makes all decisions about what, when, and how to build.
-It sends commands to be run on the build slaves, which simply execute the commands and return the results.
+It sends commands to be run on the workers, which simply execute the commands and return the results.
 (certain steps involve more local decision making, where the overhead of sending a lot of commands back and forth would be inappropriate, but in general the buildmaster is responsible for everything).
 
 The buildmaster is usually fed :class:`Change`\s by some sort of version control system (:ref:`change-sources`), which may cause builds to be run.

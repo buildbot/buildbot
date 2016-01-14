@@ -167,7 +167,7 @@ It is possible to configure buildbot to have multiple master processes that shar
 This has been well tested using a MySQL database.
 There are several benefits of Multi-master mode:
 
-* You can have large numbers of build slaves handling the same queue of build requests.
+* You can have large numbers of workers handling the same queue of build requests.
   A single master can only handle so many slaves (the number is based on a number of factors including type of builds, number of builds, and master and slave IO and CPU capacity--there is no fixed formula).
   By adding another master which shares the queue of build requests, you can attach more slaves to this additional master, and increase your build throughput.
 * You can shut one master down to do maintenance, and other masters will continue to do builds.

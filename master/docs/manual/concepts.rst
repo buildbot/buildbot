@@ -351,7 +351,7 @@ A merge of buildrequests is performed per codebase, thus on changes having the s
 Builders
 --------
 
-The Buildmaster runs a collection of :class:`Builder`\s, each of which handles a single type of build (e.g. full versus quick), on one or more build slaves.
+The Buildmaster runs a collection of :class:`Builder`\s, each of which handles a single type of build (e.g. full versus quick), on one or more workers.
 :class:`Builder`\s serve as a kind of queue for a particular type of build.
 Each :class:`Builder` gets a separate column in the waterfall display.
 In general, each :class:`Builder` runs independently (although various kinds of interlocks can cause one :class:`Builder` to have an effect on another).
