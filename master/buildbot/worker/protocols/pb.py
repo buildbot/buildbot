@@ -236,7 +236,7 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the worker buildbot process to exit.
         def old_way():
             d = None
-            for b in itervalues(self.buildslave.slavebuilders):
+            for b in itervalues(self.buildslave.workerforbuilders):
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break

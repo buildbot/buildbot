@@ -212,6 +212,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.updateSlave`
      - :py:meth:`buildbot.worker.AbstractWorker.updateWorker`
 
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavebuilders`
+     - :py:attr:`buildbot.worker.AbstractWorker.slavebuilders`
+
 
    * - :py:meth:`buildbot.buildslave.AbstractLatentBuildSlave.updateSlave`
      - :py:meth:`buildbot.worker.AbstractLatentWorker.updateWorker`

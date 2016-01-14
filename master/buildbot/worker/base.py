@@ -90,7 +90,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.slave_status = SlaveStatus(name)
         self.slave_commands = None
-        self.slavebuilders = {}
+        self.workerforbuilders = {}
         self.max_builds = max_builds
         self.access = []
         if locks:
@@ -468,11 +468,11 @@ class AbstractWorker(service.BuildbotService, object):
         self.slave_status.setGraceful(True)
 
     def addSlaveBuilder(self, sb):
-        self.slavebuilders[sb.builder_name] = sb
+        self.workerforbuilders[sb.builder_name] = sb
 
     def removeSlaveBuilder(self, sb):
         try:
-            del self.slavebuilders[sb.builder_name]
+            del self.workerforbuilders[sb.builder_name]
         except KeyError:
             pass
 
@@ -502,7 +502,7 @@ class AbstractWorker(service.BuildbotService, object):
             return False
 
         if self.max_builds:
-            active_builders = [sb for sb in itervalues(self.slavebuilders)
+            active_builders = [sb for sb in itervalues(self.workerforbuilders)
                                if sb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
@@ -558,7 +558,7 @@ class AbstractWorker(service.BuildbotService, object):
         and has no active builders."""
         if not self.slave_status.getGraceful():
             return
-        active_builders = [sb for sb in itervalues(self.slavebuilders)
+        active_builders = [sb for sb in itervalues(self.workerforbuilders)
                            if sb.isBusy()]
         if active_builders:
             return
@@ -874,7 +874,7 @@ class AbstractLatentWorker(AbstractWorker):
         @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
         for b in self.botmaster.getBuildersForSlave(self.name):
-            if b.name not in self.slavebuilders:
+            if b.name not in self.workerforbuilders:
                 b.addLatentSlave(self)
         return AbstractWorker.updateWorker(self)
 
@@ -890,7 +890,7 @@ class AbstractLatentWorker(AbstractWorker):
                 # we're checking on the builder in addition to the
                 # slavebuilders out of a bit of paranoia.
                 b = self.botmaster.builders.get(name)
-                sb = self.slavebuilders.get(name)
+                sb = self.workerforbuilders.get(name)
                 if b and sb:
                     d1 = sb.attached(self, self.slave_commands)
                     dl.append(d1)
