@@ -986,15 +986,8 @@ class SinglePendingBuildsJsonResource(JsonResource):
                 from buildbot.status.web.builder import foundCodebasesInPendingBuild
                 result = yield foundCodebasesInPendingBuild(br, codebases)
 
-
             if result:
-                br.sort_value = yield br.getSubmitTime()
                 pending.append(br)
-
-        def sort_queue(br, otherBR):
-            return br.sort_value - otherBR.sort_value
-
-        pending = sorted(pending, cmp=sort_queue)
 
         #Convert to dictionary
         output = []

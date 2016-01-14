@@ -139,6 +139,11 @@ class BuildRequestStatus:
         else:
             defer.returnValue(-1)
 
+    @defer.inlineCallbacks
+    def getPriority(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.priority)
+
     def getSlaves(self):
         builder = self.status.getBuilder(self.getBuilderName())
         if builder is not None:
@@ -165,7 +170,6 @@ class BuildRequestStatus:
     def asDict_async(self, request=None):
         result = {}
 
-
         ss = yield self.getSourceStamp()
         sources = yield self.getSourceStamps()
         result['brid'] = self.brid
@@ -173,6 +177,7 @@ class BuildRequestStatus:
         result['sources'] = [s.asDict() for s in sources.values()]
         props = yield self.getBuildProperties()
         result['properties'] = props.asList()
+        result['priority'] = yield self.getPriority()
         result['builderName'] = self.getBuilderName()
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
