@@ -107,7 +107,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in lockList]
 
-    def setSlaveEnvironment(self, env):
+    def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
         # e.g., old-style steps (ShellMixin pulls the environment out of the builder directly)
         self.slaveEnvironment = env

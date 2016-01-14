@@ -332,7 +332,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         cleanups.append(workerforbuilder.worker.releaseLocks)
 
         if len(self.config.env) > 0:
-            build.setSlaveEnvironment(self.config.env)
+            build.setWorkerEnvironment(self.config.env)
 
         # append the build to self.building
         self.building.append(build)

@@ -228,6 +228,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
      - :py:attr:`buildbot.master.BuildMaster.workers`
 
 
+   * - :py:meth:`buildbot.process.build.Build.setSlaveEnvironment`
+     - :py:meth:`~buildbot.process.build.Build.setWorkerEnvironment`
+
 Plugins
 -------
 
