@@ -421,7 +421,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[], exp_builds=[])
 
     @defer.inlineCallbacks
-    def test_no_slavebuilders(self):
+    def test_no_workerforbuilders(self):
         rows = [
             fakedb.Builder(id=78, name='bldr'),
             fakedb.BuildRequest(id=11, buildsetid=10, builderid=78),

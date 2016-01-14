@@ -224,8 +224,8 @@ class TestBuild(unittest.TestCase):
     def testBuildcanStartWithSlavebuilder(self):
         b = self.build
 
-        slavebuilder1 = Mock()
-        slavebuilder2 = Mock()
+        workerforbuilder1 = Mock()
+        workerforbuilder2 = Mock()
 
         l = SlaveLock('lock')
         counting_access = l.access('counting')
@@ -233,29 +233,29 @@ class TestBuild(unittest.TestCase):
 
         # no locks, so both these pass (call twice to verify there's no state/memory)
         lock_list = [(real_lock, counting_access)]
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder2))
 
-        slave_lock_1 = real_lock.getLock(slavebuilder1.worker)
-        slave_lock_2 = real_lock.getLock(slavebuilder2.worker)
+        slave_lock_1 = real_lock.getLock(workerforbuilder1.worker)
+        slave_lock_2 = real_lock.getLock(workerforbuilder2.worker)
 
-        # then have slavebuilder2 claim its lock:
-        slave_lock_2.claim(slavebuilder2, counting_access)
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        slave_lock_2.release(slavebuilder2, counting_access)
+        # then have workerforbuilder2 claim its lock:
+        slave_lock_2.claim(workerforbuilder2, counting_access)
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder1))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, workerforbuilder2))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, workerforbuilder2))
+        slave_lock_2.release(workerforbuilder2, counting_access)
 
-        # then have slavebuilder1 claim its lock:
-        slave_lock_1.claim(slavebuilder1, counting_access)
-        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, slavebuilder1))
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, slavebuilder2))
-        slave_lock_1.release(slavebuilder1, counting_access)
+        # then have workerforbuilder1 claim its lock:
+        slave_lock_1.claim(workerforbuilder1, counting_access)
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, workerforbuilder1))
+        self.assertFalse(Build.canStartWithSlavebuilder(lock_list, workerforbuilder1))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder2))
+        self.assertTrue(Build.canStartWithSlavebuilder(lock_list, workerforbuilder2))
+        slave_lock_1.release(workerforbuilder1, counting_access)
 
     def testBuilddirPropType(self):
         import posixpath
