@@ -210,13 +210,13 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # passed in at the Builder level, so if we have any from the builder,
         # apply those and then update with the args from the buildstep
         # (cmd.args)
-        slaveEnv = self.workerEnvironment
-        if slaveEnv:
+        workerEnv = self.workerEnvironment
+        if workerEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            fullSlaveEnv = slaveEnv.copy()
-            fullSlaveEnv.update(cmd.args['env'])
-            cmd.args['env'] = fullSlaveEnv
+            fullWorkerEnv = workerEnv.copy()
+            fullWorkerEnv.update(cmd.args['env'])
+            cmd.args['env'] = fullWorkerEnv
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
