@@ -23,7 +23,7 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial.unittest import TestCase
 
 
-class TestAbstractSlaveBuilder(TestCase):
+class TestAbstractWorkerForBuilder(TestCase):
     """
     Tests for ``AbstractWorkerForBuilder``.
     """
