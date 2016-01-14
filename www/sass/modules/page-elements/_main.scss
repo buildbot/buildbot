@@ -485,9 +485,9 @@ pre.code {
 }
 
 #tags-content {
-    width: 400px;
     margin-right: 20px;
     margin-bottom: 5px;
+	padding: 0;
     .select2-container {
       width: 270px;
     }
@@ -514,14 +514,17 @@ pre.code {
             top: 14px;
             line-height: 12px;
         }
-    }
-    button {
-      vertical-align: top;
-      margin-top: 12px;
-      font-family: katana_icons;
-    }
-    .more-info-box & {
-        height: 32px;
+	}
+	button {
+		vertical-align: top;
+		margin-top: 8px;
+		font-family: katana_icons;
+		min-width: 36px;
+		font-size: 19px;
+		padding: 1px;
+	}
+	.more-info-box & {
+		height: 32px;
     }
     > form {
       display: inline;

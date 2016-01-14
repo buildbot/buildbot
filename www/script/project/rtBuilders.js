@@ -25,7 +25,10 @@ define(function (require) {
         extra_tags = [NO_TAG],
         MAIN_REPO = "unity_branch",
         hideUnstable = false,
-        $searchField;
+        $searchField,
+        maxTagsFilters = 2,
+        tagsFilterNumber = 1,
+        tagsFilters = [];
 
     require('libs/jquery.form');
 
@@ -38,12 +41,44 @@ define(function (require) {
             realtimePages.initRealtime(realtimeFunctions);
 
             $searchField = $(".dataTables_filter>label input");
+            var addTagsFilter = $("#btn-and-tag-select");
+            var orTagsFilter = $("#btn-or-tag-select");
+            orTagsFilter.hide();
+            orTagsFilter.click(function(e){
+                tagsFilters.forEach(function(e){ return e.remove(); })
+                tagsFilterNumber = 1;
+
+                $tagsSelect = $("[id^=tags-select]");
+
+                addTagsFilter.show();
+                orTagsFilter.hide();
+
+                $tbSorter.fnDraw();
+            });
+            addTagsFilter.click(function(event) {
+                var tagsSelect = $('<label><input class="col-md-2" type="hidden" id="tags-select'+tagsFilterNumber+'" placeholder="Filter tags"/></label>');
+                tagsFilters.push(tagsSelect);
+                addTagsFilter.before(tagsSelect);
+                tagsFilterNumber++;
+                tagsSelect.on("change", function change() {
+                    $tbSorter.fnDraw();
+                });
+                $tagsSelect = $("[id^=tags-select]");
+                rtBuilders.updateTagsForSelect2(false);
+                if(maxTagsFilters === tagsFilterNumber){
+                    addTagsFilter.hide();
+                    orTagsFilter.show();
+                }
+                $tbSorter.fnDraw();
+            });
 
             // Listen for history changes
             window.addEventListener('popstate', function (event) {
                 rtBuilders.loadStateFromURL();
             });
-            helpers.tooltip($("[data-title]"));
+        },
+        orCondition: function getFilterCondition(){
+           return tagsFilterNumber === 1;
         },
         realtimeFunctionsProcessBuilders: function (data) {
             if (initializedCodebaseOverview === false) {
@@ -66,30 +101,32 @@ define(function (require) {
             }
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
-        },
-        setupTagsSelector: function setupTagsSelector() {
 
+            //Setup tooltips
+            helpers.tooltip($("[data-title]"));
         },
         updateTagsForSelect2: function updateTagsForSelect2(allowInit) {
             if ($tagsSelect === undefined && allowInit) {
-                $tagsSelect = $("#tags-select");
+                $tagsSelect = $("[id^=tags-select]");
 
                 $tagsSelect.on("change", function change() {
                     $tbSorter.fnDraw();
                 });
             }
 
+            //savedTags : ['ABV, Unstable', 'WIP']
+
             if ($tagsSelect !== undefined) {
-                var str = "";
-                $.each(savedTags, function (i, tag) {
-                    str += tag + ",";
+                $.each(savedTags, function(index, el) {
+                    var ts = $tagsSelect[index];
+                    $(ts).val(el);
                 });
-                $tagsSelect.val(str);
 
                 $tagsSelect.select2({
                     multiple: true,
                     data: rtBuilders.parseTags()
                 });
+
                 $tbSorter.fnDraw();
             }
         },
@@ -134,13 +171,13 @@ define(function (require) {
         },
         getSelectedTags: function getSelectedTags() {
             var selectedTags = [];
-            if ($tagsSelect !== undefined && $tagsSelect.val() !== undefined) {
-                $.each($tagsSelect.val().split(","), function (i, tag) {
-                    if (tag.length) {
-                        selectedTags.push(tag.trim());
-                    }
-                });
-            }
+
+            $.each($tagsSelect, function(index, el) {
+                var tag = $(el).val();
+                if(tag.length){
+                    selectedTags.push(tag.trim());
+                }
+            });
 
             return selectedTags;
         },
@@ -177,12 +214,44 @@ define(function (require) {
                 if ($.inArray(NO_TAG, selectedTags) > -1) {
                     selectedTags.push(branch_type);
                 }
-                $.each(selectedTags, function eachSelectedTag(i, tag) {
-                    if ((tag === NO_TAG && filteredTags.length === 0 && builderTags.some(hasBranch)) || ($.inArray(tag, filteredTags) > -1)) {
-                        result = true;
-                        return false;
-                    }
-                });
+
+                if (!selectedTags.length) {
+                    return result;
+                }
+
+                if (rtBuilders.orCondition()) {
+                    $.each(selectedTags[0].split(','), function eachSelectedTag(i, tag) {
+                            if ((tag === NO_TAG && filteredTags.length === 0 && builderTags.some(hasBranch)) || ($.inArray(tag, filteredTags) > -1)) {
+                                result = true;
+                                return false;
+                            }
+                        }
+                    );
+
+                } else {
+                    $.each(selectedTags, function eachSelectedSetTag(i, tagSet) {
+                        if (! tagSet){
+                            return false;
+                        }
+                        var subTags = tagSet.split(',');
+                        var subResult = true;
+                        $.each(subTags, function eachSelectedTag(i, tag) {
+                            if (tag === NO_TAG && filteredTags.length == 0 && builderTags.some(hasBranch)) {
+                                // Exit early we have found a builder with the branch as a tag
+                                return false;
+                            }
+
+                            else if ($.inArray(tag, filteredTags) === -1) {
+                                subResult = false;
+                                return false;
+                            }
+                        });
+                        if (subResult) {
+                            result = true;
+                            return false;
+                        }
+                    });
+                }
                 return result;
             };
         },
