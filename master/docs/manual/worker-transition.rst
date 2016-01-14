@@ -293,3 +293,11 @@ EC2 latent worker changes
 Use of default values of ``keypair_name`` and ``security_name``
 constructor arguments of :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 is deprecated. Please specify them explicitly.
+
+``steps.slave.SetPropertiesFromEnv`` changes
+--------------------------------------------
+
+In addition to ``buildbot.steps.slave`` module being renamed to
+:py:mod:`buildbot.steps.worker`, default ``source`` value for
+:py:class:`~buildbot.steps.worker.SetPropertiesFromEnv` was changed from
+``"SlaveEnvironment"`` to ``"WorkerEnvironment"``.

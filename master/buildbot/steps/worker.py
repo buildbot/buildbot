@@ -37,7 +37,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
     description = ['Setting']
     descriptionDone = ['Set']
 
-    def __init__(self, variables, source="SlaveEnvironment", **kwargs):
+    def __init__(self, variables, source="WorkerEnvironment", **kwargs):
         buildstep.BuildStep.__init__(self, **kwargs)
         self.variables = variables
         self.source = source
