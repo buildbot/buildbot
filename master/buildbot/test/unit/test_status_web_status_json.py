@@ -498,7 +498,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus.getBuildProperties = lambda: Properties()
             return brstatus
 
-        def getPendingBuildRequestStatuses():
+        def getPendingBuildRequestStatuses(codebases={}):
             requests = [1, 2, 3]
             return [getBuildRequestStatus(id) for id in requests]
 

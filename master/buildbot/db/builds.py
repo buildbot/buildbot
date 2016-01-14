@@ -17,6 +17,7 @@ from twisted.internet import reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 import sqlalchemy as sa
+from buildbot.db.buildrequests import maybeFilterBuildRequestsBySourceStamps
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -214,45 +215,12 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     .where(buildrequests_tbl.c.results.in_(results))\
                     .group_by(buildrequests_tbl.c.id, buildrequests_tbl.c.results)
 
-            if sourcestamps and len(sourcestamps) > 0:
-                # check that sourcestampset match all branches x codebases
-                clauses = []
-                exclude_clauses = []
-                codebases_filter = sourcestamps is not None and len(sourcestamps) > 1 \
-                                   and 'b_codebase' in sourcestamps[0]
-
-                for ss in sourcestamps:
-                    stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
-                        .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
-                        .where(sourcestamps_tbl.c.branch == ss['b_branch'])
-                    if 'b_codebase' in ss:
-                        stmt_include = stmt_include.where(sourcestamps_tbl.c.codebase == ss['b_codebase'])
-
-                    clauses.append(sourcestampsets_tbl.c.id == stmt_include)
-
-                    if codebases_filter:
-                        stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
-                            .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
-                            .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
-                            .where(sourcestamps_tbl.c.branch != ss['b_branch'])
-                        exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
-
-                stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
-                    .where(sa.or_(*clauses))
-
-                stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
-                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
-
-                q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
-
-                if codebases_filter:
-                    stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
-                        .where(sa.or_(*exclude_clauses))
-
-                    stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
-                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
-
-                    q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
+            q = maybeFilterBuildRequestsBySourceStamps(query=q,
+                                                       sourcestamps=sourcestamps,
+                                                       buildrequests_tbl=buildrequests_tbl,
+                                                       buildsets_tbl=buildsets_tbl,
+                                                       sourcestamps_tbl=sourcestamps_tbl,
+                                                       sourcestampsets_tbl=sourcestampsets_tbl)
 
             q = q.distinct(builds_tbl.c.number)\
                 .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)

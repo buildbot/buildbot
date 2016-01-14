@@ -966,26 +966,16 @@ class SinglePendingBuildsJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        builds = yield self.builder.getPendingBuildRequestStatuses()
-
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
 
-        #Filter + add sort info
-        pending = []
-        for br in builds:
-            result = True
-            if len(codebases) > 0:
-                from buildbot.status.web.builder import foundCodebasesInPendingBuild
-                result = yield foundCodebasesInPendingBuild(br, codebases)
-
-            if result:
-                pending.append(br)
+        # Get pending request filtered + sorted
+        builds = yield self.builder.getPendingBuildRequestStatuses(codebases=codebases)
 
         #Convert to dictionary
         output = []
-        for b in pending:
+        for b in builds:
             d = yield b.asDict_async(request)
             output.append(d)
 

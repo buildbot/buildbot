@@ -584,16 +584,6 @@ class StatusResourceSelectedBuilders(HtmlResource, BuildLineMixin):
     def stopselected(self, req):
         return StopAllBuildsActionResource(self.status, 'selected')
 
-@defer.inlineCallbacks
-def foundCodebasesInPendingBuild(pendingbuild, codebases):
-    sources = yield pendingbuild.getSourceStamps()
-    foundcodebases = []
-    for key, ss in sources.iteritems():
-        if key in codebases.keys() and ss.branch in codebases[key]:
-            foundcodebases.append(ss)
-    found = len(foundcodebases) == len(sources)
-    defer.returnValue(found)
-
 
 # /builders
 class BuildersResource(HtmlResource):

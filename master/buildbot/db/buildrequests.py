@@ -52,6 +52,52 @@ def mkdt(epoch):
         return epoch2datetime(epoch)
 
 
+# Utility function that returns the query
+# Adding the filters that excludes requests that doesnt match all the selected codebases
+def maybeFilterBuildRequestsBySourceStamps(query, sourcestamps, buildrequests_tbl,
+                                           buildsets_tbl, sourcestamps_tbl, sourcestampsets_tbl):
+    if sourcestamps:
+        clauses = []
+        exclude_clauses = []
+        codebases_filter = sourcestamps is not None and len(sourcestamps) > 1 \
+                           and ("b_codebase" in sourcestamps[0])
+
+        for ss in sourcestamps:
+            stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                .where(sourcestamps_tbl.c.branch == ss['b_branch'])
+            if 'b_codebase' in ss:
+                stmt_include = stmt_include.where(sourcestamps_tbl.c.codebase == ss['b_codebase'])
+
+            clauses.append(sourcestampsets_tbl.c.id == stmt_include)
+
+            if codebases_filter:
+                stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                    .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
+                    .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                    .where(sourcestamps_tbl.c.branch != ss['b_branch'])
+                exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
+
+        stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
+            .where(sa.or_(*clauses))
+
+        stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
+                .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+
+        query = query.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
+
+        if codebases_filter:
+            stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
+                .where(sa.or_(*exclude_clauses))
+
+            stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
+                .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
+
+            query = query.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
+
+    return query
+
+
 # private decorator to add a _master_objectid keyword argument, querying from
 # the master
 def with_master_objectid(fn):
@@ -182,11 +228,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getBuildRequestInQueue(self, brids=None, buildername=None,
+    def getBuildRequestInQueue(self, brids=None, buildername=None, sourcestamps=None,
                                _master_objectid=None, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
+            sourcestamps_tbl = self.db.model.sourcestamps
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            buildsets_tbl = self.db.model.buildsets
 
             def checkConditions(query):
                 if buildername:
@@ -200,6 +249,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 if sorted:
                     query = query.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
+
+                query = maybeFilterBuildRequestsBySourceStamps(query=query,
+                                                               sourcestamps=sourcestamps,
+                                                               buildrequests_tbl=reqs_tbl,
+                                                               buildsets_tbl=buildsets_tbl,
+                                                               sourcestamps_tbl=sourcestamps_tbl,
+                                                               sourcestampsets_tbl=sourcestampsets_tbl)
 
                 return query
 

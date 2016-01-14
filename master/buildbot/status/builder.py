@@ -369,10 +369,12 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestStatuses(self):
-        db = self.status.master.db
+    def getPendingBuildRequestStatuses(self, codebases={}):
+        sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
 
-        brdicts = yield db.buildrequests.getBuildRequestInQueue(buildername=self.name, sorted=True)
+        brdicts = yield self.master.db.buildrequests.getBuildRequestInQueue(buildername=self.name,
+                                                                            sourcestamps=sourcestamps,
+                                                                            sorted=True)
 
         result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
 

@@ -970,7 +970,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def getPrioritizedBuildRequestsInQueue(self, queue=None):
         return self.getBuildRequests(complete=False, claimed=False)
 
-    def getBuildRequestInQueue(self, buildername, sorted=True):
+    def getBuildRequestInQueue(self, buildername, sourcestamps=None, sorted=True):
         return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
 
     def claimBuildRequests(self, brids, claimed_at=None):
