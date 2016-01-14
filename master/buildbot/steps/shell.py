@@ -137,7 +137,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
-        self.slaveEnvironment = self.build.slaveEnvironment
+        self.slaveEnvironment = self.build.workerEnvironment
 
     def setCommand(self, command):
         self.command = command

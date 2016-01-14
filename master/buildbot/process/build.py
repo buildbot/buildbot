@@ -83,7 +83,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.reason = requests[0].mergeReasons(requests[1:])
 
         self.currentStep = None
-        self.slaveEnvironment = {}
+        self.workerEnvironment = {}
         self.buildid = None
         self.number = None
 
@@ -110,7 +110,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
         # e.g., old-style steps (ShellMixin pulls the environment out of the builder directly)
-        self.slaveEnvironment = env
+        self.workerEnvironment = env
 
     def getSourceStamp(self, codebase=''):
         for source in self.sources:

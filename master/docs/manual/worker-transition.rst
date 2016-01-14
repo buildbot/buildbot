@@ -231,6 +231,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.process.build.Build.setSlaveEnvironment`
      - :py:meth:`~buildbot.process.build.Build.setWorkerEnvironment`
 
+   * - :py:attr:`buildbot.process.build.Build.slaveEnvironment`
+     - :py:attr:`~buildbot.process.build.Build.workerEnvironment`
+
 Plugins
 -------
 

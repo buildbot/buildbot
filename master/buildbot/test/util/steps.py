@@ -178,7 +178,7 @@ class BuildStepMixin(object):
                 return slave_version['*']
             return oldversion
         b.getSlaveCommandVersion = getSlaveVersion
-        b.slaveEnvironment = slave_env.copy()
+        b.workerEnvironment = slave_env.copy()
         step.setBuild(b)
 
         # watch for properties being set
