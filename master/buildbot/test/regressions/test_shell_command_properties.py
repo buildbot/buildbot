@@ -26,7 +26,7 @@ from buildbot.steps.shell import SetPropertyFromCommand
 from buildbot.steps.shell import ShellCommand
 
 
-class FakeSlaveBuilder:
+class FakeWorkerForBuilder:
     worker = None
 
 
@@ -84,7 +84,7 @@ class TestShellCommandProperties(unittest.TestCase):
         b = f.newBuild([req])
         b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
-        b.slavebuilder = FakeSlaveBuilder()
+        b.slavebuilder = FakeWorkerForBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)
@@ -106,7 +106,7 @@ class TestSetProperty(unittest.TestCase):
         b = f.newBuild([req])
         b.master = mock.Mock(name='master')
         b.build_status = FakeBuildStatus()
-        b.slavebuilder = FakeSlaveBuilder()
+        b.slavebuilder = FakeWorkerForBuilder()
 
         # This shouldn't raise an exception
         b.setupBuild(None)
