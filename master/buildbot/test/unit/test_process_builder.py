@@ -102,10 +102,10 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             for (sl, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
-    def setSlaveBuilders(self, slavebuilders):
+    def setSlaveBuilders(self, workerforbuilders):
         """C{slaves} maps name : available"""
         self.bldr.slaves = []
-        for name, avail in iteritems(slavebuilders):
+        for name, avail in iteritems(workerforbuilders):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail

@@ -99,9 +99,9 @@ class TestBRDBase(unittest.TestCase):
             rows.append(fakedb.BuildRequest(id=10 + i, buildsetid=100 + i, builderid=77))
         return rows
 
-    def addSlaves(self, slavebuilders):
+    def addSlaves(self, workerforbuilders):
         """C{slaves} maps name : available"""
-        for name, avail in iteritems(slavebuilders):
+        for name, avail in iteritems(workerforbuilders):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail
