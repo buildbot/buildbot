@@ -84,7 +84,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         'flunkOnFailure',
         'haltOnFailure',
         'remote_kwargs',
-        'slaveEnvironment'
+        'workerEnvironment'
     ]
 
     command = None  # set this to a command, or set in kwargs
@@ -137,7 +137,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
     def setBuild(self, build):
         buildstep.LoggingBuildStep.setBuild(self, build)
         # Set this here, so it gets rendered when we start the step
-        self.slaveEnvironment = self.build.workerEnvironment
+        self.workerEnvironment = self.build.workerEnvironment
 
     def setCommand(self, command):
         self.command = command
@@ -205,12 +205,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
             return None
 
     def setupEnvironment(self, cmd):
-        # merge in anything from slaveEnvironment (which comes from the builder
+        # merge in anything from workerEnvironment (which comes from the builder
         # config) Environment variables passed in by a BuildStep override those
         # passed in at the Builder level, so if we have any from the builder,
         # apply those and then update with the args from the buildstep
         # (cmd.args)
-        slaveEnv = self.slaveEnvironment
+        slaveEnv = self.workerEnvironment
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
