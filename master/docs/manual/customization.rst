@@ -598,7 +598,7 @@ This latter option makes it easy to save the results to a file and run :command:
 Writing Log Files
 ~~~~~~~~~~~~~~~~~
 
-Most commonly, logfiles come from commands run on the build slave.
+Most commonly, logfiles come from commands run on the worker.
 Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method::
 
     @defer.inlineCallbacks

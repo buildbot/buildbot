@@ -168,7 +168,7 @@ Other Buildslave Configuration
 
     The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale settings.
 
-    If you need a different encoding, this can be changed in your build slave's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the BuildSlave constructor.
+    If you need a different encoding, this can be changed in your worker's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the BuildSlave constructor.
 
 .. code-block:: python
 

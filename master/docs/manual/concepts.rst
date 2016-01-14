@@ -94,7 +94,7 @@ Branches are expressed as subdirectories of the main central repository, which m
 Nor does it really have branches.
 In Darcs, each working directory is also a repository, and there are operations to push and pull patches from one of these ``repositories`` to another.
 For the Buildbot's purposes, all you need to do is specify the URL of a repository that you want to build from.
-The build slave will then pull the latest patches from that repository and build them.
+The worker will then pull the latest patches from that repository and build them.
 Multiple branches are implemented by using multiple repositories (possibly living on the same server).
 
 Builders which use Darcs therefore have a static ``repourl`` which specifies the location of the repository.

@@ -17,7 +17,7 @@ Each :class:`BuildFactory` can be created with a list of steps, or the factory c
 The basic behavior for a :class:`BuildStep` is to:
 
 * run for a while, then stop
-* possibly invoke some RemoteCommands on the attached build slave
+* possibly invoke some RemoteCommands on the attached worker
 * possibly produce a set of log files
 * finish with a status described by one of four values defined in :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
 * provide a list of short strings to describe the step

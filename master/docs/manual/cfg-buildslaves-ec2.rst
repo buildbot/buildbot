@@ -104,7 +104,7 @@ The format of the file should be as follows, replacing ``identifier`` and ``secr
     aws_secret_access_key = secret_identifier
 
 If you are using IAM roles, no config file is required.
-Then you can instantiate the build slave as follows.
+Then you can instantiate the worker as follows.
 
 ::
 

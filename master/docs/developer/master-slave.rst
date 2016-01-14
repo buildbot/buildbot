@@ -105,7 +105,7 @@ signalled with a call to a method on the master-side BuildStep object.
 Slave Builders
 --------------
 
-Each build slave has a set of builders which can run on it.  These are
+Each worker has a set of builders which can run on it.  These are
 represented by distinct classes on the master and slave, just like the
 BuildSlave and Bot objects described above.
 
