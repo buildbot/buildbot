@@ -552,9 +552,9 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         slaves_attempted = []
 
-        def _canStartWithSlavebuilder(slavebuilder):
-            slaves_attempted.append(slavebuilder.name)
-            allowed = slavebuilder.name in ['test-slave2', 'test-slave1']
+        def _canStartWithSlavebuilder(workerforbuilder):
+            slaves_attempted.append(workerforbuilder.name)
+            allowed = workerforbuilder.name in ['test-slave2', 'test-slave1']
             return defer.succeed(allowed)   # a deferred here!
         self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
 
@@ -598,9 +598,9 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         slaves_attempted = []
 
-        def _canStartWithSlavebuilder(slavebuilder):
-            slaves_attempted.append(slavebuilder.name)
-            return (slavebuilder.name == 'test-slave3')
+        def _canStartWithSlavebuilder(workerforbuilder):
+            slaves_attempted.append(workerforbuilder.name)
+            return (workerforbuilder.name == 'test-slave3')
         self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
         self.addSlaves({'test-slave1': 0, 'test-slave2': 1, 'test-slave3': 1})
         rows = self.base_rows + [

@@ -51,8 +51,8 @@ class BuilderMixin(object):
         # patch into the _startBuildsFor method
         self.builds_started = []
 
-        def _startBuildFor(slavebuilder, buildrequests):
-            self.builds_started.append((slavebuilder, buildrequests))
+        def _startBuildFor(workerforbuilder, buildrequests):
+            self.builds_started.append((workerforbuilder, buildrequests))
             return defer.succeed(True)
         self.bldr._startBuildFor = _startBuildFor
 
@@ -89,8 +89,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             # patch into the _startBuildsFor method
             self.builds_started = []
 
-            def _startBuildFor(slavebuilder, buildrequests):
-                self.builds_started.append((slavebuilder, buildrequests))
+            def _startBuildFor(workerforbuilder, buildrequests):
+                self.builds_started.append((workerforbuilder, buildrequests))
                 return defer.succeed(startBuildsForSucceeds)
             self.bldr._startBuildFor = _startBuildFor
         return d
@@ -279,29 +279,29 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         self.bldr.config.canStartBuild = builder.enforceChosenSlave
 
-        slavebuilder = mock.Mock()
-        slavebuilder.worker.workername = 'slave5'
+        workerforbuilder = mock.Mock()
+        workerforbuilder.worker.workername = 'slave5'
 
         breq = mock.Mock()
 
         # no buildslave requested
         breq.properties = {}
-        result = yield self.bldr.canStartBuild(slavebuilder, breq)
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
         # buildslave requested as the right one
         breq.properties = {'slavename': 'slave5'}
-        result = yield self.bldr.canStartBuild(slavebuilder, breq)
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
         # buildslave requested as the wrong one
         breq.properties = {'slavename': 'slave4'}
-        result = yield self.bldr.canStartBuild(slavebuilder, breq)
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(False, result)
 
         # buildslave set to non string value gets skipped
         breq.properties = {'slavename': 0}
-        result = yield self.bldr.canStartBuild(slavebuilder, breq)
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
     @defer.inlineCallbacks

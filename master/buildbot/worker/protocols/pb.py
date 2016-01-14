@@ -202,11 +202,11 @@ class Connection(base.Connection, pb.Avatar):
         return d
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
-        slavebuilder = self.builders.get(builderName)
+        workerforbuilder = self.builders.get(builderName)
         remoteCommand = RemoteCommand(remoteCommand)
         args = self.createArgsProxies(args)
-        return slavebuilder.callRemote('startCommand',
-                                       remoteCommand, commandId, commandName, args)
+        return workerforbuilder.callRemote('startCommand',
+                                           remoteCommand, commandId, commandName, args)
 
     @defer.inlineCallbacks
     def remoteShutdown(self):
@@ -264,12 +264,12 @@ class Connection(base.Connection, pb.Avatar):
         yield old_way()
 
     def remoteStartBuild(self, builderName):
-        slavebuilder = self.builders.get(builderName)
-        return slavebuilder.callRemote('startBuild')
+        workerforbuilder = self.builders.get(builderName)
+        return workerforbuilder.callRemote('startBuild')
 
     def remoteInterruptCommand(self, builderName, commandId, why):
-        slavebuilder = self.builders.get(builderName)
-        return defer.maybeDeferred(slavebuilder.callRemote, "interruptCommand",
+        workerforbuilder = self.builders.get(builderName)
+        return defer.maybeDeferred(workerforbuilder.callRemote, "interruptCommand",
                                    commandId, why)
 
     # perspective methods called by the worker

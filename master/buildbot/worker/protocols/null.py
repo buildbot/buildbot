@@ -77,8 +77,8 @@ class Connection(base.Connection):
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         remoteCommand = RemoteCommandProxy(remoteCommand)
         args = self.createArgsProxies(args)
-        slavebuilder = self.buildslave.bot.builders[builderName]
-        return defer.maybeDeferred(slavebuilder.remote_startCommand, remoteCommand,
+        workerforbuilder = self.buildslave.bot.builders[builderName]
+        return defer.maybeDeferred(workerforbuilder.remote_startCommand, remoteCommand,
                                    commandId, commandName, args)
 
     def remoteShutdown(self):
@@ -88,5 +88,5 @@ class Connection(base.Connection):
         return defer.succeed(self.buildslave.bot.builders[builderName].remote_startBuild())
 
     def remoteInterruptCommand(self, builderName, commandId, why):
-        slavebuilder = self.buildslave.bot.builders[builderName]
-        return defer.maybeDeferred(slavebuilder.remote_interruptCommand, commandId, why)
+        workerforbuilder = self.buildslave.bot.builders[builderName]
+        return defer.maybeDeferred(workerforbuilder.remote_interruptCommand, commandId, why)
