@@ -206,24 +206,24 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.builder.setupProperties(props)
 
-    def setupSlaveBuilder(self, slavebuilder):
-        self.workerforbuilder = slavebuilder
+    def setupSlaveBuilder(self, workerforbuilder):
+        self.workerforbuilder = workerforbuilder
         self._registerOldWorkerAttr("workerforbuilder", name="slavebuilder")
 
-        self.path_module = slavebuilder.worker.path_module
+        self.path_module = workerforbuilder.worker.path_module
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        buildslave_properties = slavebuilder.worker.properties
+        buildslave_properties = workerforbuilder.worker.properties
         self.getProperties().updateFromProperties(buildslave_properties)
-        if slavebuilder.worker.slave_basedir:
+        if workerforbuilder.worker.slave_basedir:
             builddir = self.path_module.join(
-                slavebuilder.worker.slave_basedir,
+                workerforbuilder.worker.slave_basedir,
                 self.builder.config.slavebuilddir)
             self.setProperty("builddir", builddir, "slave")
             self.setProperty("workdir", builddir, "slave (deprecated)")
 
-        self.slavename = slavebuilder.worker.workername
+        self.slavename = workerforbuilder.worker.workername
         self.build_status.setSlavename(self.slavename)
 
     @defer.inlineCallbacks

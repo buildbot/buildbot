@@ -59,13 +59,13 @@ class TestAbstractWorkerForBuilder(TestCase):
             pass
 
         worker = ConcreteWorker("worker", "pass")
-        slavebuilder = AbstractWorkerForBuilder()
+        workerforbuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
-        slavebuilder.worker = worker
+        workerforbuilder.worker = worker
 
         # The following shouldn't raise an exception.
-        slavebuilder.buildStarted()
+        workerforbuilder.buildStarted()
 
     def test_worker_old_api(self):
         w = AbstractWorkerForBuilder()

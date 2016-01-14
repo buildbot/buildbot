@@ -500,8 +500,8 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         slaves_attempted = []
 
-        def _canStartWithSlavebuilder(slavebuilder):
-            slaves_attempted.append(slavebuilder.name)
+        def _canStartWithSlavebuilder(workerforbuilder):
+            slaves_attempted.append(workerforbuilder.name)
             return True
         self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
 
