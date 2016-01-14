@@ -141,8 +141,13 @@ Here is the complete list of changed API:
    * - :py:mod:`buildbot.process.slavebuilder`
      - :py:mod:`buildbot.process.workerforbuilder`
 
+
    * - :py:class:`buildbot.process.slavebuilder.AbstractSlaveBuilder`
      - :py:class:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder`
+
+   * - :py:attr:`buildbot.process.slavebuilder.AbstractSlaveBuilder.slave`
+     - :py:attr:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.worker`
+
 
    * - :py:class:`buildbot.process.slavebuilder.SlaveBuilder`
      - :py:class:`buildbot.process.workerforbuilder.WorkerForBuilder`

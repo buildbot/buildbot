@@ -27,7 +27,7 @@ from buildbot.steps.shell import ShellCommand
 
 
 class FakeSlaveBuilder:
-    slave = None
+    worker = None
 
 
 class FakeBuildStatus:

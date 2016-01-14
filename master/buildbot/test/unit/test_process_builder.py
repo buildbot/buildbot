@@ -279,29 +279,29 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         self.bldr.config.canStartBuild = builder.enforceChosenSlave
 
-        slave = mock.Mock()
-        slave.slave.workername = 'slave5'
+        slavebuilder = mock.Mock()
+        slavebuilder.worker.workername = 'slave5'
 
         breq = mock.Mock()
 
         # no buildslave requested
         breq.properties = {}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        result = yield self.bldr.canStartBuild(slavebuilder, breq)
         self.assertIdentical(True, result)
 
         # buildslave requested as the right one
         breq.properties = {'slavename': 'slave5'}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        result = yield self.bldr.canStartBuild(slavebuilder, breq)
         self.assertIdentical(True, result)
 
         # buildslave requested as the wrong one
         breq.properties = {'slavename': 'slave4'}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        result = yield self.bldr.canStartBuild(slavebuilder, breq)
         self.assertIdentical(False, result)
 
         # buildslave set to non string value gets skipped
         breq.properties = {'slavename': 0}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        result = yield self.bldr.canStartBuild(slavebuilder, breq)
         self.assertIdentical(True, result)
 
     @defer.inlineCallbacks

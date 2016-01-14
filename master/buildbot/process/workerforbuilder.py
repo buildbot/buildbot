@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.internet import defer
 from twisted.python import log
 
@@ -25,12 +26,13 @@ from twisted.python import log
  ) = range(6)
 
 
-class AbstractWorkerForBuilder(object):
+class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
 
     def __init__(self):
         self.ping_watchers = []
         self.state = None  # set in subclass
-        self.slave = None
+        self.worker = None
+        self._registerOldWorkerAttr("worker")
         self.builder_name = None
         self.locks = None
 
@@ -38,8 +40,8 @@ class AbstractWorkerForBuilder(object):
         r = ["<", self.__class__.__name__]
         if self.builder_name:
             r.extend([" builder=", repr(self.builder_name)])
-        if self.slave:
-            r.extend([" slave=", repr(self.slave.workername)])
+        if self.worker:
+            r.extend([" worker=", repr(self.worker.workername)])
         r.append(">")
         return ''.join(r)
 
@@ -59,8 +61,8 @@ class AbstractWorkerForBuilder(object):
             return False
 
         # otherwise, check in with the Worker
-        if self.slave:
-            return self.slave.canStartBuild()
+        if self.worker:
+            return self.worker.canStartBuild()
 
         # no worker? not very available.
         return False
@@ -73,7 +75,7 @@ class AbstractWorkerForBuilder(object):
         # AbstractWorker doesn't always have a buildStarted method
         # so only call it if it is available.
         try:
-            slave_buildStarted = self.slave.buildStarted
+            slave_buildStarted = self.worker.buildStarted
         except AttributeError:
             pass
         else:
@@ -81,8 +83,8 @@ class AbstractWorkerForBuilder(object):
 
     def buildFinished(self):
         self.state = IDLE
-        if self.slave:
-            self.slave.buildFinished(self)
+        if self.worker:
+            self.worker.buildFinished(self)
 
     def attached(self, slave, commands):
         """
@@ -94,17 +96,17 @@ class AbstractWorkerForBuilder(object):
         """
         self.state = ATTACHING
         self.remoteCommands = commands  # maps command name to version
-        if self.slave is None:
-            self.slave = slave
-            self.slave.addSlaveBuilder(self)
+        if self.worker is None:
+            self.worker = slave
+            self.worker.addSlaveBuilder(self)
         else:
-            assert self.slave == slave
+            assert self.worker == slave
         log.msg("Buildslave %s attached to %s" % (slave.workername,
                                                   self.builder_name))
         d = defer.succeed(None)
 
         d.addCallback(lambda _:
-                      self.slave.conn.remotePrint(message="attached"))
+                      self.worker.conn.remotePrint(message="attached"))
 
         @d.addCallback
         def setIdle(res):
@@ -114,7 +116,7 @@ class AbstractWorkerForBuilder(object):
         return d
 
     def prepare(self, builder_status, build):
-        if not self.slave or not self.slave.acquireLocks():
+        if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
         return defer.succeed(True)
 
@@ -138,7 +140,7 @@ class AbstractWorkerForBuilder(object):
                 self.ping_watchers.insert(0, d2)
                 # I think it will make the tests run smoother if the status
                 # is updated before the ping completes
-            Ping().ping(self.slave.conn).addCallback(self._pong)
+            Ping().ping(self.worker.conn).addCallback(self._pong)
 
         @d.addCallback
         def reset_state(res):
@@ -160,11 +162,11 @@ class AbstractWorkerForBuilder(object):
         event.finish()
 
     def detached(self):
-        log.msg("Buildslave %s detached from %s" % (self.slave.workername,
+        log.msg("Buildslave %s detached from %s" % (self.worker.workername,
                                                     self.builder_name))
-        if self.slave:
-            self.slave.removeSlaveBuilder(self)
-        self.slave = None
+        if self.worker:
+            self.worker.removeSlaveBuilder(self)
+        self.worker = None
         self.remoteCommands = None
 
 
@@ -207,9 +209,9 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
     def detached(self):
         AbstractWorkerForBuilder.detached(self)
-        if self.slave:
-            self.slave.removeSlaveBuilder(self)
-        self.slave = None
+        if self.worker:
+            self.worker.removeSlaveBuilder(self)
+        self.worker = None
         self.state = ATTACHING
 
 
@@ -217,19 +219,19 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
 
     def __init__(self, slave, builder):
         AbstractWorkerForBuilder.__init__(self)
-        self.slave = slave
+        self.worker = slave
         self.state = LATENT
         self.setBuilder(builder)
-        self.slave.addSlaveBuilder(self)
+        self.worker.addSlaveBuilder(self)
         log.msg("Latent buildslave %s attached to %s" % (slave.workername,
                                                          self.builder_name))
 
     def prepare(self, builder_status, build):
         # If we can't lock, then don't bother trying to substantiate
-        if not self.slave or not self.slave.acquireLocks():
+        if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
 
-        log.msg("substantiating slave %s" % (self,))
+        log.msg("substantiating worker %s" % (self,))
         d = self.substantiate(build)
 
         @d.addCallback
@@ -242,16 +244,16 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         @d.addErrback
         def substantiation_failed(f):
             builder_status.addPointEvent(['removing', 'latent',
-                                          self.slave.workername])
-            self.slave.disconnect()
+                                          self.worker.workername])
+            self.worker.disconnect()
             # TODO: should failover to a new Build
             return f
         return d
 
     def substantiate(self, build):
         self.state = SUBSTANTIATING
-        d = self.slave.substantiate(self, build)
-        if not self.slave.substantiated:
+        d = self.worker.substantiate(self, build)
+        if not self.worker.substantiated:
             event = self.builder.builder_status.addEvent(
                 ["substantiating"])
 
@@ -282,7 +284,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         return AbstractWorkerForBuilder._attachFailure(self, why, where)
 
     def ping(self, status=None):
-        if not self.slave.substantiated:
+        if not self.worker.substantiated:
             if status:
                 status.addEvent(["ping", "latent"]).finish()
             return defer.succeed(True)

@@ -39,7 +39,7 @@ def enforceChosenSlave(bldr, slavebuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
         if isinstance(slavename, basestring):
-            return slavename == slavebuilder.slave.workername
+            return slavename == slavebuilder.worker.workername
 
     return True
 
@@ -123,8 +123,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # if we have any slavebuilders attached which are no longer configured,
         # drop them.
         new_slavenames = set(builder_config.slavenames)
-        self.slaves = [s for s in self.slaves
-                       if s.slave.workername in new_slavenames]
+        self.slaves = [w for w in self.slaves
+                       if w.worker.workername in new_slavenames]
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -210,8 +210,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         @return: a Deferred that fires (with 'self') when the worker-side
                  builder is fully attached and ready to accept commands.
         """
-        for s in self.attaching_slaves + self.slaves:
-            if s.slave == slave:
+        for w in self.attaching_slaves + self.slaves:
+            if w.worker == slave:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
                 # list from the worker, and we ask for it each time we add or
@@ -234,7 +234,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return d
 
     def _attached(self, sb):
-        self.builder_status.addPointEvent(['connect', sb.slave.workername])
+        self.builder_status.addPointEvent(['connect', sb.worker.workername])
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
 
@@ -254,7 +254,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def detached(self, slave):
         """This is called when the connection to the bot is lost."""
         for sb in self.attaching_slaves + self.slaves:
-            if sb.slave == slave:
+            if sb.worker == slave:
                 break
         else:
             log.msg("WEIRD: Builder.detached(%s) (%s)"
@@ -329,7 +329,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(slavebuilder.slave.releaseLocks)
+        cleanups.append(slavebuilder.worker.releaseLocks)
 
         if len(self.config.env) > 0:
             build.setSlaveEnvironment(self.config.env)
@@ -386,7 +386,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # tell the remote that it's starting a build, too
         try:
-            yield slavebuilder.slave.conn.remoteStartBuild(build.builder.name)
+            yield slavebuilder.worker.conn.remoteStartBuild(build.builder.name)
         except Exception:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
@@ -402,7 +402,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.slave.conn:  # TODO: replace with isConnected()
+        if not slavebuilder.worker.conn:  # TODO: replace with isConnected()
             log.msg("slave disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
@@ -464,8 +464,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
 
-        if sb.slave:
-            sb.slave.releaseLocks()
+        if sb.worker:
+            sb.worker.releaseLocks()
 
         self.updateBigStatus()
 

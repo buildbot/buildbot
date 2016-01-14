@@ -12,14 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker.base import AbstractWorker
-from twisted.trial.unittest import TestCase
-
-from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+from twisted.trial.unittest import TestCase
 
 
 class TestAbstractSlaveBuilder(TestCase):
@@ -29,9 +30,9 @@ class TestAbstractSlaveBuilder(TestCase):
 
     def test_buildStarted_called(self):
         """
-        If the slave associated to slave builder has a ``buildStarted`` method,
-        calling ``buildStarted`` on the slave builder calls the method on the
-        slave with the slavebuilder as an argument.
+        If the worker associated to worker builder has a ``buildStarted`` method,
+        calling ``buildStarted`` on the worker builder calls the method on the
+        worker with the slavebuilder as an argument.
         """
         class ConcreteWorker(AbstractWorker):
             _buildStartedCalls = []
@@ -39,32 +40,45 @@ class TestAbstractSlaveBuilder(TestCase):
             def buildStarted(self, slavebuilder):
                 self._buildStartedCalls.append(slavebuilder)
 
-        slave = ConcreteWorker("slave", "pass")
+        slave = ConcreteWorker("worker", "pass")
         slavebuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
-        slavebuilder.slave = slave
+        slavebuilder.worker = slave
         slavebuilder.buildStarted()
 
         self.assertEqual(ConcreteWorker._buildStartedCalls, [slavebuilder])
 
     def test_buildStarted_missing(self):
         """
-        If the slave associated to slave builder doesn not have a
-        ``buildStarted`` method, calling ``buildStarted`` on the slave builder
+        If the worker associated to worker builder doesn not have a
+        ``buildStarted`` method, calling ``buildStarted`` on the worker builder
         doesn't raise an exception.
         """
         class ConcreteWorker(AbstractWorker):
             pass
 
-        slave = ConcreteWorker("slave", "pass")
+        slave = ConcreteWorker("worker", "pass")
         slavebuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
-        slavebuilder.slave = slave
+        slavebuilder.worker = slave
 
         # The following shouldn't raise an exception.
         slavebuilder.buildStarted()
+
+    def test_worker_old_api(self):
+        w = AbstractWorkerForBuilder()
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new_worker = w.worker
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slave' attribute is deprecated"):
+            old_worker = w.slave
+
+        self.assertTrue(new_worker is old_worker)
 
 
 class TestWorkerTransition(TestCase):

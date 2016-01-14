@@ -170,7 +170,7 @@ class Build(properties.PropertiesMixin):
         return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
 
     def getSlaveName(self):
-        return self.slavebuilder.slave.workername
+        return self.slavebuilder.worker.workername
 
     def setupProperties(self):
         props = interfaces.IProperties(self)
@@ -208,20 +208,20 @@ class Build(properties.PropertiesMixin):
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
 
-        self.path_module = slavebuilder.slave.path_module
+        self.path_module = slavebuilder.worker.path_module
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        buildslave_properties = slavebuilder.slave.properties
+        buildslave_properties = slavebuilder.worker.properties
         self.getProperties().updateFromProperties(buildslave_properties)
-        if slavebuilder.slave.slave_basedir:
+        if slavebuilder.worker.slave_basedir:
             builddir = self.path_module.join(
-                slavebuilder.slave.slave_basedir,
+                slavebuilder.worker.slave_basedir,
                 self.builder.config.slavebuilddir)
             self.setProperty("builddir", builddir, "slave")
             self.setProperty("workdir", builddir, "slave (deprecated)")
 
-        self.slavename = slavebuilder.slave.workername
+        self.slavename = slavebuilder.worker.workername
         self.build_status.setSlavename(self.slavename)
 
     @defer.inlineCallbacks
@@ -229,7 +229,7 @@ class Build(properties.PropertiesMixin):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
-        slave = slavebuilder.slave
+        slave = slavebuilder.worker
 
         # we are taking responsibility for watching the connection to the
         # remote. This responsibility was held by the Builder until our
@@ -260,9 +260,9 @@ class Build(properties.PropertiesMixin):
         slave.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right worker
-        self.locks = [(l.getLock(self.slavebuilder.slave), a)
+        self.locks = [(l.getLock(self.slavebuilder.worker), a)
                       for l, a in self.locks]
-        self.conn = slavebuilder.slave.conn
+        self.conn = slavebuilder.worker.conn
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
@@ -309,7 +309,7 @@ class Build(properties.PropertiesMixin):
     @staticmethod
     def canStartWithSlavebuilder(lockList, slavebuilder):
         for lock, access in lockList:
-            slave_lock = lock.getLock(slavebuilder.slave)
+            slave_lock = lock.getLock(slavebuilder.worker)
             if not slave_lock.isAvailable(None, access):
                 return False
         return True
@@ -351,7 +351,7 @@ class Build(properties.PropertiesMixin):
         for factory in step_factories:
             step = factory.buildStep()
             step.setBuild(self)
-            step.setBuildSlave(self.slavebuilder.slave)
+            step.setBuildSlave(self.slavebuilder.worker)
             self.setUniqueStepName(step)
             steps.append(step)
 
