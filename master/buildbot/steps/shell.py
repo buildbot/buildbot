@@ -25,7 +25,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.steps.slave import CompositeStepMixin
+from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list

@@ -21,7 +21,7 @@ from buildbot.process import properties
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.steps import slave
+from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps
 from twisted.internet import defer
@@ -37,7 +37,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_simple(self):
-        self.setupStep(slave.SetPropertiesFromEnv(
+        self.setupStep(worker.SetPropertiesFromEnv(
             variables=["one", "two", "three", "five", "six"],
             source="me"))
         self.buildslave.slave_environ = {"one": "1", "two": None, "six": "6", "FIVE": "555"}
@@ -58,7 +58,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_case_folding(self):
-        self.setupStep(slave.SetPropertiesFromEnv(
+        self.setupStep(worker.SetPropertiesFromEnv(
             variables=["eNv"], source="me"))
         self.buildslave.slave_environ = {"ENV": 'EE'}
         self.buildslave.slave_system = 'win32'
@@ -79,7 +79,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_found(self):
-        self.setupStep(slave.FileExists(file="x"))
+        self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
             Expect('stat', {'file': 'x'})
             + Expect.update('stat', [stat.S_IFREG, 99, 99])
@@ -89,7 +89,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_not_found(self):
-        self.setupStep(slave.FileExists(file="x"))
+        self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
             Expect('stat', {'file': 'x'})
             + Expect.update('stat', [0, 99, 99])
@@ -100,7 +100,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_failure(self):
-        self.setupStep(slave.FileExists(file="x"))
+        self.setupStep(worker.FileExists(file="x"))
         self.expectCommands(
             Expect('stat', {'file': 'x'})
             + 1
@@ -110,7 +110,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_render(self):
-        self.setupStep(slave.FileExists(file=properties.Property("x")))
+        self.setupStep(worker.FileExists(file=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
             Expect('stat', {'file': 'XXX'})
@@ -122,7 +122,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_old_version(self):
-        self.setupStep(slave.FileExists(file="x"),
+        self.setupStep(worker.FileExists(file="x"),
                        slave_version=dict())
         self.expectOutcome(result=EXCEPTION,
                            state_string="finished (exception)")
@@ -139,7 +139,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_success(self):
-        self.setupStep(slave.CopyDirectory(src="s", dest="d"))
+        self.setupStep(worker.CopyDirectory(src="s", dest="d"))
         self.expectCommands(
             Expect('cpdir', {'fromdir': 's', 'todir': 'd'})
             + 0
@@ -148,7 +148,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_timeout(self):
-        self.setupStep(slave.CopyDirectory(src="s", dest="d", timeout=300))
+        self.setupStep(worker.CopyDirectory(src="s", dest="d", timeout=300))
         self.expectCommands(
             Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'timeout': 300})
             + 0
@@ -157,7 +157,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_maxTime(self):
-        self.setupStep(slave.CopyDirectory(src="s", dest="d", maxTime=10))
+        self.setupStep(worker.CopyDirectory(src="s", dest="d", maxTime=10))
         self.expectCommands(
             Expect('cpdir', {'fromdir': 's', 'todir': 'd', 'maxTime': 10})
             + 0
@@ -166,7 +166,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_failure(self):
-        self.setupStep(slave.CopyDirectory(src="s", dest="d"))
+        self.setupStep(worker.CopyDirectory(src="s", dest="d"))
         self.expectCommands(
             Expect('cpdir', {'fromdir': 's', 'todir': 'd'})
             + 1
@@ -176,7 +176,7 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_render(self):
-        self.setupStep(slave.CopyDirectory(src=properties.Property("x"), dest=properties.Property("y")))
+        self.setupStep(worker.CopyDirectory(src=properties.Property("x"), dest=properties.Property("y")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.properties.setProperty('y', 'YYY', 'here')
         self.expectCommands(
@@ -196,7 +196,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_success(self):
-        self.setupStep(slave.RemoveDirectory(dir="d"))
+        self.setupStep(worker.RemoveDirectory(dir="d"))
         self.expectCommands(
             Expect('rmdir', {'dir': 'd'})
             + 0
@@ -206,7 +206,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_failure(self):
-        self.setupStep(slave.RemoveDirectory(dir="d"))
+        self.setupStep(worker.RemoveDirectory(dir="d"))
         self.expectCommands(
             Expect('rmdir', {'dir': 'd'})
             + 1
@@ -216,7 +216,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_render(self):
-        self.setupStep(slave.RemoveDirectory(dir=properties.Property("x")))
+        self.setupStep(worker.RemoveDirectory(dir=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
             Expect('rmdir', {'dir': 'XXX'})
@@ -236,7 +236,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_success(self):
-        self.setupStep(slave.MakeDirectory(dir="d"))
+        self.setupStep(worker.MakeDirectory(dir="d"))
         self.expectCommands(
             Expect('mkdir', {'dir': 'd'})
             + 0
@@ -245,7 +245,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_failure(self):
-        self.setupStep(slave.MakeDirectory(dir="d"))
+        self.setupStep(worker.MakeDirectory(dir="d"))
         self.expectCommands(
             Expect('mkdir', {'dir': 'd'})
             + 1
@@ -254,7 +254,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_render(self):
-        self.setupStep(slave.MakeDirectory(dir=properties.Property("x")))
+        self.setupStep(worker.MakeDirectory(dir=properties.Property("x")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.expectCommands(
             Expect('mkdir', {'dir': 'XXX'})
@@ -264,7 +264,7 @@ class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class CompositeUser(buildstep.LoggingBuildStep, slave.CompositeStepMixin):
+class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
 
     def __init__(self, payload):
         self.payload = payload

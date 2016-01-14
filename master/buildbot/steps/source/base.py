@@ -20,7 +20,7 @@ from buildbot.process import remotetransfer
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
-from buildbot.steps.slave import CompositeStepMixin
+from buildbot.steps.worker import CompositeStepMixin
 from twisted.python import log
 
 
