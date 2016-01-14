@@ -122,7 +122,7 @@ BuildStep
 
     .. py:method:: setBuildSlave(build)
 
-        :param build: the :class:`~buildbot.buildslave.BuildSlave` instance on which this step will run.
+        :param build: the :class:`~buildbot.worker.Worker` instance on which this step will run.
 
         Similarly, this method is called with the build slave that will run this step.
         The default implementation sets the :attr:`buildslave` attribute.

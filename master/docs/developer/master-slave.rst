@@ -23,7 +23,7 @@ On the master side, the realm is implemented by
 avatar requests.  There are special cases for ``change``, ``debug``, and
 ``statusClient``, which are not discussed here.  For all other usernames,
 the botmaster is consulted, and if a slave with that name is configured, its
-:class:`buildbot.buildslave.BuildSlave` instance is returned as the perspective.
+:class:`buildbot.worker.Worker` instance is returned as the perspective.
 
 Build Slaves
 ------------
@@ -72,7 +72,7 @@ BuildSlave methods
 
 The master-side object has the following method:
 
-:meth:`~buildbot.buildslave.BuildSlave.perspective_keepalive`
+:meth:`~buildbot.worker.Worker.perspective_keepalive`
     Does nothing - used to keep traffic flowing over the TCP connection
 
 Setup
