@@ -1,7 +1,7 @@
 .. -*- rst -*-
 .. _Buildslaves:
 
-.. bb:cfg:: slaves
+.. bb:cfg:: workers
 
 Workers
 -------

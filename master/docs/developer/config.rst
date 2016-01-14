@@ -158,7 +158,7 @@ described in :ref:`developer-Reconfiguration`.
     .. py:attribute:: workers
 
         The list of :py:class:`Worker` instances from
-        :bb:cfg:`slaves`.
+        :bb:cfg:`workers`.
 
     .. py:attribute:: change_sources
 

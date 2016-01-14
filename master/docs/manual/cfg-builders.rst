@@ -31,7 +31,7 @@ However there is a much simpler way to use it, so in the configuration file, its
 
 ``slavenames``
     These arguments specify the buildslave or buildslaves that will be used by this Builder.
-    All slaves names must appear in the :bb:cfg:`slaves` configuration parameter.
+    All slaves names must appear in the :bb:cfg:`workers` configuration parameter.
     Each buildslave can accommodate multiple builders.
     The ``slavenames`` parameter can be a list of names, while ``slavename`` can specify only one slave.
 
