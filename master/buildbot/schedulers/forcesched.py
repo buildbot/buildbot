@@ -348,13 +348,13 @@ class BuildslaveChoiceParameter(ChoiceStringParameter):
     def getChoices(self, master, scheduler, buildername):
         if buildername is None:
             # this is the "Force All Builds" page
-            slavenames = master.status.getSlaveNames()
+            workernames = master.status.getSlaveNames()
         else:
             builderStatus = master.status.getBuilder(buildername)
-            slavenames = [slave.getName() for slave in builderStatus.getSlaves()]
-        slavenames.sort()
-        slavenames.insert(0, self.anySentinel)
-        return slavenames
+            workernames = [slave.getName() for slave in builderStatus.getSlaves()]
+        workernames.sort()
+        workernames.insert(0, self.anySentinel)
+        return workernames
 
 
 class NestedParameter(BaseParameter):

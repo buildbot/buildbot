@@ -749,12 +749,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown workers
-        slavenames = set([s.workername for s in self.workers])
+        workernames = set([s.workername for s in self.workers])
         seen_names = set()
         seen_builddirs = set()
 
         for b in self.builders:
-            unknowns = set(b.slavenames) - slavenames
+            unknowns = set(b.slavenames) - workernames
             if unknowns:
                 error("builder '%s' uses unknown workers %s" %
                       (b.name, ", ".join(repr(u) for u in unknowns)))

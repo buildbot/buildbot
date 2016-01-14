@@ -122,9 +122,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # if we have any slavebuilders attached which are no longer configured,
         # drop them.
-        new_slavenames = set(builder_config.slavenames)
+        new_workernames = set(builder_config.slavenames)
         self.slaves = [w for w in self.slaves
-                       if w.worker.workername in new_slavenames]
+                       if w.worker.workername in new_workernames]
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
