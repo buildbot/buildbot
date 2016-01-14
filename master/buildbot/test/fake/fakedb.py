@@ -1377,29 +1377,29 @@ class FakeBuildslavesComponent(FakeDBComponent):
         return defer.succeed(id)
 
     def _getBuildslaveByName(self, name):
-        for slave in itervalues(self.buildslaves):
-            if slave['name'] == name:
-                return slave
+        for worker in itervalues(self.buildslaves):
+            if worker['name'] == name:
+                return worker
         return None
 
     def getBuildslave(self, buildslaveid=None, name=None, masterid=None, builderid=None):
         # get the id and the worker
         if buildslaveid is None:
-            for slave in itervalues(self.buildslaves):
-                if slave['name'] == name:
-                    buildslaveid = slave['id']
+            for worker in itervalues(self.buildslaves):
+                if worker['name'] == name:
+                    buildslaveid = worker['id']
                     break
             else:
-                slave = None
+                worker = None
         else:
-            slave = self.buildslaves.get(buildslaveid)
+            worker = self.buildslaves.get(buildslaveid)
 
-        if not slave:
+        if not worker:
             return defer.succeed(None)
 
         # now get the connection status per builder_master, filtered
         # by builderid and masterid
-        return defer.succeed(self._mkdict(slave, builderid, masterid))
+        return defer.succeed(self._mkdict(worker, builderid, masterid))
 
     def getBuildslaves(self, masterid=None, builderid=None):
         if masterid is not None or builderid is not None:
