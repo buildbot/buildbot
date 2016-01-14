@@ -17,7 +17,7 @@ BuildslaveRegistration
     .. py:method:: update(slave_config, global_config)
 
         :param slave_config: new BuildSlave instance
-        :type slave_config: :class:`~buildbot.buildslave.base.BuildSlave`
+        :type slave_config: :class:`~buildbot.worker.Worker`
         :param global_config: Buildbot config
         :type global_config: :class:`~buildbot.config.MasterConfig`
 
@@ -36,7 +36,7 @@ BuildslaveManager
     .. py:method:: register(buildslave)
 
         :param slave_config: new BuildSlave instance
-        :type slave_config: :class:`~buildbot.buildslave.base.BuildSlave`
+        :type slave_config: :class:`~buildbot.worker.Worker`
         :returns: :class:`~buildbot.buildslave.manager.BuildslaveRegistration`
 
         Creates :class:`~buildbot.buildslave.manager.BuildslaveRegistration`
