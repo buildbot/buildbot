@@ -43,8 +43,8 @@ BuildSlave Options
 For example::
 
     c['workers'] = [
-        buildslave.BuildSlave('bot-solaris', 'solarispasswd',
-                              properties={ 'os':'solaris' }),
+        worker.Worker('bot-solaris', 'solarispasswd',
+                      properties={ 'os':'solaris' }),
     ]
 
 .. index:: Build Slaves; limiting concurrency
@@ -52,7 +52,7 @@ For example::
 The :class:`BuildSlave` constructor can also take an optional ``max_builds`` parameter to limit the number of builds that it will execute simultaneously::
 
     c['workers'] = [
-        buildslave.BuildSlave("bot-linux", "linuxpassword", max_builds=2)
+        worker.Worker("bot-linux", "linuxpassword", max_builds=2)
     ]
 
 Master-Slave TCP Keepalive
@@ -64,8 +64,8 @@ These keepalives ensure that traffic is flowing over the underlying TCP connecti
 The interval can be modified by specifying the interval in seconds using the ``keepalive_interval`` parameter of BuildSlave::
 
     c['workers'] = [
-        buildslave.BuildSlave('bot-linux', 'linuxpasswd',
-                              keepalive_interval=3600)
+        worker.Worker('bot-linux', 'linuxpasswd',
+                      keepalive_interval=3600)
     ]
 
 The interval can be set to ``None`` to disable this functionality altogether.
@@ -82,8 +82,8 @@ If you'd like to have the administrator of the buildslave (or other people) be n
 This value can be a single email address, or a list of addresses::
 
     c['workers'] = [
-        buildslave.BuildSlave('bot-solaris', 'solarispasswd',
-                              notify_on_missing="bob@example.com")
+        worker.Worker('bot-solaris', 'solarispasswd',
+                      notify_on_missing="bob@example.com")
     ]
 
 By default, this will send email when the buildslave has been disconnected for more than one hour.
@@ -93,10 +93,10 @@ To change the timeout, use ``missing_timeout=`` and give it a number of seconds 
 You can have the buildmaster send email to multiple recipients: just provide a list of addresses instead of a single one::
 
     c['workers'] = [
-        buildslave.BuildSlave('bot-solaris', 'solarispasswd',
-                              notify_on_missing=["bob@example.com",
-                                                 "alice@example.org"],
-                              missing_timeout=300) # notify after 5 minutes
+        worker.Worker('bot-solaris', 'solarispasswd',
+                      notify_on_missing=["bob@example.com",
+                                         "alice@example.org"],
+                      missing_timeout=300)  # notify after 5 minutes
     ]
 
 The email sent this way will use a :class:`MailNotifier` (see :bb:reporter:`MailNotifier`) status target, if one is configured.
@@ -125,7 +125,7 @@ For smaller setups, you may want to just run the slaves on the same machine as t
 To simplify the maintainance, you may even want to run them in the same process.
 
 This is what LocalBuildSlave is for.
-Instead of configuring a ``buildslave.BuildSlave``, you have to configure a ``buildslave.LocalBuildSlave``.
+Instead of configuring a ``worker.Worker``, you have to configure a ``buildslave.LocalBuildSlave``.
 As the slave is running on the same process, password is not necessary.
 You can run as many local slaves as long as your machine CPU and memory is allowing.
 
