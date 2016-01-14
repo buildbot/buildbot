@@ -40,11 +40,11 @@ class TestAbstractWorkerForBuilder(TestCase):
             def buildStarted(self, slavebuilder):
                 self._buildStartedCalls.append(slavebuilder)
 
-        slave = ConcreteWorker("worker", "pass")
+        worker = ConcreteWorker("worker", "pass")
         slavebuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
-        slavebuilder.worker = slave
+        slavebuilder.worker = worker
         slavebuilder.buildStarted()
 
         self.assertEqual(ConcreteWorker._buildStartedCalls, [slavebuilder])
@@ -58,11 +58,11 @@ class TestAbstractWorkerForBuilder(TestCase):
         class ConcreteWorker(AbstractWorker):
             pass
 
-        slave = ConcreteWorker("worker", "pass")
+        worker = ConcreteWorker("worker", "pass")
         slavebuilder = AbstractWorkerForBuilder()
         # FIXME: This should call attached, instead of setting the attribute
         # directly
-        slavebuilder.worker = slave
+        slavebuilder.worker = worker
 
         # The following shouldn't raise an exception.
         slavebuilder.buildStarted()
