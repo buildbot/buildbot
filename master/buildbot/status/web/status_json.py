@@ -934,16 +934,10 @@ class QueueJsonResource(JsonResource):
 
         #Convert to dictionary
         output = []
-        defers = []
         for br_dict in unclaimed_brq:
             br = BuildRequestStatus(br_dict['buildername'], br_dict['brid'], self.status)
-            d = br.asDict_async()
-            defers.append(d)
-
-        #Call the yield after to run async calls
-        for d in defers:
-            r = yield d
-            output.append(r)
+            brstatus_dict = yield br.asDict_async()
+            output.append(brstatus_dict)
 
         defer.returnValue(output)
 
