@@ -105,13 +105,13 @@ If no :class:`MailNotifier` is configured on this buildmaster, the buildslave-mi
 
 Note that if you want to have a :class:`MailNotifier` for buildslave-missing emails but not for regular build emails, just create one with ``builders=[]``, as follows::
 
-    from buildbot.plugins import status, buildslave
+    from buildbot.plugins import status, worker
     m = status.MailNotifier(fromaddr="buildbot@localhost", builders=[],
                             relayhost="smtp.example.org")
     c['status'].append(m)
 
     c['workers'] = [
-            buildslave.BuildSlave('bot-solaris', 'solarispasswd',
+            worker.BuildSlave('bot-solaris', 'solarispasswd',
                                   notify_on_missing="bob@example.com")
     ]
 
