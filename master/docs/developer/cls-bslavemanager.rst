@@ -33,10 +33,10 @@ BuildslaveManager
 
     Handle BuildSlave registrations for mulitple protocols
 
-    .. py:method:: register(buildslave)
+    .. py:method:: register(worker)
 
-        :param slave_config: new BuildSlave instance
-        :type slave_config: :class:`~buildbot.worker.Worker`
+        :param worker: new Worker instance
+        :type worker: :class:`~buildbot.worker.Worker`
         :returns: :class:`~buildbot.buildslave.manager.BuildslaveRegistration`
 
         Creates :class:`~buildbot.buildslave.manager.BuildslaveRegistration`
