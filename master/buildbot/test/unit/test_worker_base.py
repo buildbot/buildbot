@@ -21,7 +21,7 @@ from buildbot.test.fake import bslavemanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
-from buildbot.test.fake import slave
+from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
@@ -124,7 +124,7 @@ class FakeBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self)
-        self.sl = slave.FakeSlave(self.master)
+        self.sl = worker.FakeSlave(self.master)
 
     def callAttached(self):
         self.conn = fakeprotocol.FakeConnection(self.master, self.sl)

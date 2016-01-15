@@ -29,7 +29,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
-from buildbot.test.fake import slave
+from buildbot.test.fake import worker
 from buildbot.test.fake.fakebuild import FakeBuildStatus
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
@@ -134,7 +134,7 @@ class TestBuild(unittest.TestCase):
         self.request = r
         self.master = fakemaster.make_master(wantData=True, testcase=self)
 
-        self.slave = slave.FakeSlave(self.master)
+        self.slave = worker.FakeSlave(self.master)
         self.slave.attached(None)
         self.builder = FakeBuilder(self.master)
         self.build = Build([r])
@@ -953,7 +953,7 @@ class TestBuildProperties(unittest.TestCase):
         r.sources[0].changes = [FakeChange()]
         r.sources[0].revision = "12345"
         self.master = fakemaster.make_master(wantData=True, testcase=self)
-        self.slave = slave.FakeSlave(self.master)
+        self.slave = worker.FakeSlave(self.master)
         self.slave.attached(None)
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.slave
@@ -1008,7 +1008,7 @@ class TestBuildProperties(unittest.TestCase):
         build.builder = FakeBuilder(self.master)
         build.build_status = FakeBuildStatus()
 
-        w = slave.FakeSlave(self.master)
+        w = worker.FakeSlave(self.master)
         w.path_module = posixpath
         w.properties = FakeProperties()
 

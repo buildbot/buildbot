@@ -29,7 +29,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import remotecommand as fakeremotecommand
-from buildbot.test.fake import slave
+from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
@@ -154,7 +154,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_runCommand(self):
         bs = buildstep.BuildStep()
-        bs.buildslave = slave.FakeSlave(master=None)  # master is not used here
+        bs.buildslave = worker.FakeSlave(master=None)  # master is not used here
         bs.remote = 'dummy'
         bs.build = fakebuild.FakeBuild()
         bs.build.builder.name = 'fake'

@@ -28,7 +28,7 @@ from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
-from buildbot.test.fake import slave
+from buildbot.test.fake import worker
 from twisted.internet import defer
 from twisted.internet import task
 
@@ -190,7 +190,7 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.buildslave = step.buildslave = slave.FakeSlave(self.master)
+        self.buildslave = step.buildslave = worker.FakeSlave(self.master)
 
         # step overrides
 
