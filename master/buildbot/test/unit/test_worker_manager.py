@@ -72,7 +72,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         self.assertIdentical(sl.parent, self.buildslaves)
-        self.assertEqual(self.buildslaves.slaves, {'sl1': sl})
+        self.assertEqual(self.buildslaves.workers, {'sl1': sl})
 
         self.new_config.workers = []
 
@@ -95,7 +95,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sl was not replaced..
-        self.assertIdentical(self.buildslaves.slaves['sl1'], sl)
+        self.assertIdentical(self.buildslaves.workers['sl1'], sl)
 
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_class_changes(self):
@@ -108,4 +108,4 @@ class TestBuildSlaveManager(unittest.TestCase):
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
 
         # sl *was* replaced (different class)
-        self.assertIdentical(self.buildslaves.slaves['sl1'], sl_new)
+        self.assertIdentical(self.buildslaves.workers['sl1'], sl_new)

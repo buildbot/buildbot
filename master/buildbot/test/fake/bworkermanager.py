@@ -29,12 +29,12 @@ class FakeWorkerManager(service.AsyncMultiService):
         # connection objects keyed by buildslave name
         self.connections = {}
 
-        # self.slaves contains a ready Worker instance for each
+        # self.workers contains a ready Worker instance for each
         # potential buildslave, i.e. all the ones listed in the config file.
-        # If the worker is connected, self.slaves[workername].slave will
+        # If the worker is connected, self.workers[workername].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        self.slaves = {}  # maps workername to Worker
+        self.workers = {}  # maps workername to Worker
 
     def register(self, buildslave):
         buildslaveName = buildslave.workername

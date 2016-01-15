@@ -76,13 +76,13 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         self.connections = {}
 
     @property
-    def slaves(self):
-        # self.slaves contains a ready Worker instance for each
+    def workers(self):
+        # self.workers contains a ready Worker instance for each
         # potential worker, i.e. all the ones listed in the config file.
-        # If the worker is connected, self.slaves[workername].slave will
+        # If the worker is connected, self.workers[workername].slave will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        # slaves attribute is actually just an alias to multiService's namedService
+        # workers attribute is actually just an alias to multiService's namedService
         return self.namedServices
 
     def getBuildslaveByName(self, buildslaveName):
