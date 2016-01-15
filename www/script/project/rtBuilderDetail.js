@@ -122,7 +122,7 @@ define(function (require) {
 
             options.aoColumns = [
                 {"mData": null, "sWidth": "4%", "sTitle": "", bSortable: false},
-                {"mData": null, "sWidth": "21%", "sTitle": "", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Priority", bSortable: false},
                 {"mData": null, "sWidth": "21%", "sTitle": "When"},
                 {"mData": null, "sWidth": "21%", "sTitle": "Waiting"},
                 {"mData": null, "sWidth": "27%", "sTitle": "Branch"},
@@ -136,22 +136,14 @@ define(function (require) {
                     "mRender": function (data, type, full) {
                         // If the build result is not resume then we are in the normal queue and not the
                         // resume queue
-                        return hb.partials.cells["cells:pendingIcons"]({initial_queue: data.results !== 9});
+                        return helpers.getPendingIcons(hb, data);
                     }
                 },
                 {
                     "aTargets": [1],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
-                        var priority = data.priority;
-                        if (full.properties !== undefined) {
-                            $.each(full.properties, function (i, prop) {
-                                if (prop[0] === "selected_slave") {
-                                    priority += "<br/>" + prop[1];
-                                }
-                            });
-                        }
-                        return priority;
+                        return helpers.getPriorityData(data, full);
                     }
                 },
                 {

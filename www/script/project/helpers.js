@@ -649,6 +649,22 @@ define(function (require) {
               $.cookie('exthistorylist', cookie, {expires: 10000000000, path: "/"});
             }
           }              
+        },
+
+        getPendingIcons: function (hb, data) {
+            return hb.partials.cells["cells:pendingIcons"]({initial_queue: data.results !== 9});
+        },
+
+        getPriorityData: function (data, full){
+            var priority = data.priority;
+            if (full.properties !== undefined) {
+                $.each(full.properties, function (i, prop) {
+                    if (prop[0] === "selected_slave") {
+                        priority += "<br/>" + prop[1];
+                    }
+                });
+            }
+            return priority;
         }
       };
 
