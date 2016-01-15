@@ -40,7 +40,7 @@ class ConcreteWorker(base.AbstractWorker):
     pass
 
 
-class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
+class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_workername(self):
         self.failUnless(hasattr(self.sl, 'workername'))
@@ -104,7 +104,7 @@ class BuildSlaveInterfaceTests(interfaces.InterfaceTests):
             pass
 
 
-class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
+class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
         self.sl = ConcreteWorker('sl', 'pa')
@@ -120,7 +120,7 @@ class RealBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
         return self.sl.attached(self.conn)
 
 
-class FakeBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
+class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self)
@@ -131,7 +131,7 @@ class FakeBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
         return self.sl.attached(self.conn)
 
 
-class TestAbstractBuildSlave(unittest.TestCase):
+class TestAbstractWorker(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,
@@ -144,13 +144,13 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
-    def createBuildslave(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
-        slave = ConcreteWorker(name, password, **kwargs)
+    def createWorker(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
+        worker = ConcreteWorker(name, password, **kwargs)
         if configured:
-            slave.setServiceParent(self.buildslaves)
+            worker.setServiceParent(self.buildslaves)
         if attached:
-            slave.conn = fakeprotocol.FakeConnection(self.master, slave)
-        return slave
+            worker.conn = fakeprotocol.FakeConnection(self.master, worker)
+        return worker
 
     def test_constructor_minimal(self):
         bs = ConcreteWorker('bot', 'pass')
@@ -213,16 +213,16 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
-        old = self.createBuildslave('bot', 'pass',
-                                    max_builds=2,
-                                    notify_on_missing=['me@me.com'],
-                                    missing_timeout=120,
-                                    properties={'a': 'b'})
-        new = self.createBuildslave('bot', 'pass', configured=False,
-                                    max_builds=3,
-                                    notify_on_missing=['her@me.com'],
-                                    missing_timeout=121,
-                                    properties={'a': 'c'})
+        old = self.createWorker('bot', 'pass',
+                                max_builds=2,
+                                notify_on_missing=['me@me.com'],
+                                missing_timeout=120,
+                                properties={'a': 'b'})
+        new = self.createWorker('bot', 'pass', configured=False,
+                                max_builds=3,
+                                notify_on_missing=['her@me.com'],
+                                missing_timeout=121,
+                                properties={'a': 'c'})
 
         old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
 
@@ -237,14 +237,14 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):
-        old = self.createBuildslave(name="bot", password="pass")
+        old = self.createWorker(name="bot", password="pass")
 
         yield self.do_test_reconfigService(old, old)
         self.assertTrue(old.properties.getProperty('slavename'), 'bot')
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
-        old = self.createBuildslave('bot', 'pass')
+        old = self.createWorker('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
                                            existingRegistration=False)
         self.assertIn('bot', self.master.workers.registrations)
@@ -252,15 +252,15 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_stopService(self):
-        slave = self.createBuildslave()
-        yield slave.startService()
+        worker = self.createWorker()
+        yield worker.startService()
 
-        reg = slave.registration
+        reg = worker.registration
 
-        yield slave.stopService()
+        yield worker.stopService()
 
         self.assertTrue(reg.unregistered)
-        self.assertEqual(slave.registration, None)
+        self.assertEqual(worker.registration, None)
 
     # FIXME: Test that reconfig properly deals with
     #   1) locks
@@ -338,15 +338,15 @@ class TestAbstractBuildSlave(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_startService_getSlaveInfo_empty(self):
-        slave = self.createBuildslave()
-        yield slave.startService()
+        worker = self.createWorker()
+        yield worker.startService()
 
-        self.assertEqual(slave.worker_status.getAdmin(), None)
-        self.assertEqual(slave.worker_status.getHost(), None)
-        self.assertEqual(slave.worker_status.getAccessURI(), None)
-        self.assertEqual(slave.worker_status.getVersion(), None)
+        self.assertEqual(worker.worker_status.getAdmin(), None)
+        self.assertEqual(worker.worker_status.getHost(), None)
+        self.assertEqual(worker.worker_status.getAccessURI(), None)
+        self.assertEqual(worker.worker_status.getVersion(), None)
 
-        # check that a new worker row was added for this buildslave
+        # check that a new worker row was added for this worker
         bs = yield self.master.db.buildslaves.getBuildslave(name='bot')
         self.assertEqual(bs['name'], 'bot')
 
@@ -360,25 +360,25 @@ class TestAbstractBuildSlave(unittest.TestCase):
                 'version': 'TheVersion'
             })
         ])
-        slave = self.createBuildslave()
+        worker = self.createWorker()
 
-        yield slave.startService()
+        yield worker.startService()
 
-        self.assertEqual(slave.buildslaveid, 9292)
-        self.assertEqual(slave.worker_status.getAdmin(), 'TheAdmin')
-        self.assertEqual(slave.worker_status.getHost(), 'TheHost')
-        self.assertEqual(slave.worker_status.getAccessURI(), 'TheURI')
-        self.assertEqual(slave.worker_status.getVersion(), 'TheVersion')
+        self.assertEqual(worker.buildslaveid, 9292)
+        self.assertEqual(worker.worker_status.getAdmin(), 'TheAdmin')
+        self.assertEqual(worker.worker_status.getHost(), 'TheHost')
+        self.assertEqual(worker.worker_status.getAccessURI(), 'TheURI')
+        self.assertEqual(worker.worker_status.getVersion(), 'TheVersion')
 
     @defer.inlineCallbacks
     def test_attached_remoteGetSlaveInfo(self):
-        slave = self.createBuildslave()
-        yield slave.startService()
+        worker = self.createWorker()
+        yield worker.startService()
 
         ENVIRON = {}
         COMMANDS = {'cmd1': '1', 'cmd2': '1'}
 
-        conn = fakeprotocol.FakeConnection(slave.master, slave)
+        conn = fakeprotocol.FakeConnection(worker.master, worker)
         conn.info = {
             'admin': 'TheAdmin',
             'host': 'TheHost',
@@ -389,26 +389,26 @@ class TestAbstractBuildSlave(unittest.TestCase):
             'version': 'version',
             'slave_commands': COMMANDS,
         }
-        yield slave.attached(conn)
+        yield worker.attached(conn)
 
         # check the values get set right
-        self.assertEqual(slave.worker_status.getAdmin(), "TheAdmin")
-        self.assertEqual(slave.worker_status.getHost(), "TheHost")
-        self.assertEqual(slave.worker_status.getAccessURI(), "TheURI")
-        self.assertEqual(slave.slave_environ, ENVIRON)
-        self.assertEqual(slave.slave_basedir, 'TheBaseDir')
-        self.assertEqual(slave.slave_system, 'TheSlaveSystem')
-        self.assertEqual(slave.slave_commands, COMMANDS)
+        self.assertEqual(worker.worker_status.getAdmin(), "TheAdmin")
+        self.assertEqual(worker.worker_status.getHost(), "TheHost")
+        self.assertEqual(worker.worker_status.getAccessURI(), "TheURI")
+        self.assertEqual(worker.slave_environ, ENVIRON)
+        self.assertEqual(worker.slave_basedir, 'TheBaseDir')
+        self.assertEqual(worker.slave_system, 'TheSlaveSystem')
+        self.assertEqual(worker.slave_commands, COMMANDS)
 
     @defer.inlineCallbacks
     def test_attached_callsMaybeStartBuildsForSlave(self):
-        slave = self.createBuildslave()
-        yield slave.startService()
-        yield slave.reconfigServiceWithSibling(slave)
+        worker = self.createWorker()
+        yield worker.startService()
+        yield worker.reconfigServiceWithSibling(worker)
 
-        conn = fakeprotocol.FakeConnection(slave.master, slave)
+        conn = fakeprotocol.FakeConnection(worker.master, worker)
         conn.info = {}
-        yield slave.attached(conn)
+        yield worker.attached(conn)
 
         self.assertEqual(self.botmaster.buildsStartedForSlaves, ["bot"])
 
@@ -423,54 +423,54 @@ class TestAbstractBuildSlave(unittest.TestCase):
                 'version': 'WrongVersion'
             })
         ])
-        slave = self.createBuildslave()
-        yield slave.startService()
+        worker = self.createWorker()
+        yield worker.startService()
 
-        conn = fakeprotocol.FakeConnection(slave.master, slave)
+        conn = fakeprotocol.FakeConnection(worker.master, worker)
         conn.info = {
             'admin': 'TheAdmin',
             'host': 'TheHost',
             'access_uri': 'TheURI',
             'version': 'TheVersion',
         }
-        yield slave.attached(conn)
+        yield worker.attached(conn)
 
-        self.assertEqual(slave.worker_status.getAdmin(), 'TheAdmin')
-        self.assertEqual(slave.worker_status.getHost(), 'TheHost')
-        self.assertEqual(slave.worker_status.getAccessURI(), 'TheURI')
-        self.assertEqual(slave.worker_status.getVersion(), 'TheVersion')
+        self.assertEqual(worker.worker_status.getAdmin(), 'TheAdmin')
+        self.assertEqual(worker.worker_status.getHost(), 'TheHost')
+        self.assertEqual(worker.worker_status.getAccessURI(), 'TheURI')
+        self.assertEqual(worker.worker_status.getVersion(), 'TheVersion')
 
         # and the db is updated too:
-        buildslave = yield self.master.db.buildslaves.getBuildslave(name="bot")
+        db_worker = yield self.master.db.buildslaves.getBuildslave(name="bot")
 
-        self.assertEqual(buildslave['slaveinfo']['admin'], 'TheAdmin')
-        self.assertEqual(buildslave['slaveinfo']['host'], 'TheHost')
-        self.assertEqual(buildslave['slaveinfo']['access_uri'], 'TheURI')
-        self.assertEqual(buildslave['slaveinfo']['version'], 'TheVersion')
+        self.assertEqual(db_worker['slaveinfo']['admin'], 'TheAdmin')
+        self.assertEqual(db_worker['slaveinfo']['host'], 'TheHost')
+        self.assertEqual(db_worker['slaveinfo']['access_uri'], 'TheURI')
+        self.assertEqual(db_worker['slaveinfo']['version'], 'TheVersion')
 
     @defer.inlineCallbacks
     def test_slave_shutdown(self):
-        slave = self.createBuildslave(attached=True)
-        yield slave.startService()
+        worker = self.createWorker(attached=True)
+        yield worker.startService()
 
-        yield slave.shutdown()
-        self.assertEqual(slave.conn.remoteCalls, [('remoteSetBuilderList', []), ('remoteShutdown',)])
+        yield worker.shutdown()
+        self.assertEqual(worker.conn.remoteCalls, [('remoteSetBuilderList', []), ('remoteShutdown',)])
 
     @defer.inlineCallbacks
     def test_slave_shutdown_not_connected(self):
-        slave = self.createBuildslave(attached=False)
-        yield slave.startService()
+        worker = self.createWorker(attached=False)
+        yield worker.startService()
 
         # No exceptions should be raised here
-        yield slave.shutdown()
+        yield worker.shutdown()
 
     @defer.inlineCallbacks
     def test_shutdownRequested(self):
-        slave = self.createBuildslave(attached=False)
-        yield slave.startService()
+        worker = self.createWorker(attached=False)
+        yield worker.startService()
 
-        yield slave.shutdownRequested()
-        self.assertEqual(slave.worker_status.getGraceful(), True)
+        yield worker.shutdownRequested()
+        self.assertEqual(worker.worker_status.getGraceful(), True)
 
 
 class TestWorkerTransition(unittest.TestCase):
