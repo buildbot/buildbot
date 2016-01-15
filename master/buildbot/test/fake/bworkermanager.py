@@ -17,7 +17,7 @@ from buildbot.util import service
 from twisted.internet import defer
 
 
-class FakeBuildslaveManager(service.AsyncMultiService):
+class FakeWorkerManager(service.AsyncMultiService):
 
     def __init__(self):
         service.AsyncMultiService.__init__(self)

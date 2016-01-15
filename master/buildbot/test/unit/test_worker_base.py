@@ -112,7 +112,7 @@ class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         self.master.workers.disownServiceParent()
-        self.buildslaves = bworkermanager.FakeBuildslaveManager()
+        self.buildslaves = bworkermanager.FakeWorkerManager()
         self.buildslaves.setServiceParent(self.master)
         self.master.workers = self.buildslaves
         self.sl.setServiceParent(self.master.workers)
@@ -138,7 +138,7 @@ class TestAbstractWorker(unittest.TestCase):
                                              testcase=self)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
-        self.buildslaves = self.master.workers = bworkermanager.FakeBuildslaveManager()
+        self.buildslaves = self.master.workers = bworkermanager.FakeWorkerManager()
         self.buildslaves.setServiceParent(self.master)
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
