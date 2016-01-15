@@ -121,11 +121,12 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                {"mData": null, "sWidth": "4%", "sTitle": ""},
-                {"mData": null, "sWidth": "27%", "sTitle": "Requested at"},
-                {"mData": null, "sWidth": "27%", "sTitle": "Waiting"},
+                {"mData": null, "sWidth": "4%", "sTitle": "", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "When"},
+                {"mData": null, "sWidth": "21%", "sTitle": "Waiting"},
                 {"mData": null, "sWidth": "27%", "sTitle": "Branch"},
-                {"mData": null, "sWidth": "15%", "sTitle": "Select all"}
+                {"mData": null, "sWidth": "6%", "sTitle": ""}
             ];
 
             options.aoColumnDefs = [
@@ -142,11 +143,26 @@ define(function (require) {
                     "aTargets": [1],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
-                        return extendMoment.getDateFormatted(full.submittedAt);
+                        var priority = data.priority;
+                        if (full.properties !== undefined) {
+                            $.each(full.properties, function (i, prop) {
+                                if (prop[0] === "selected_slave") {
+                                    priority += "<br/>" + prop[1];
+                                }
+                            });
+                        }
+                        return priority;
                     }
                 },
                 {
                     "aTargets": [2],
+                    "sClass": "txt-align-left",
+                    "mRender": function (data, type, full) {
+                        return extendMoment.getDateFormatted(full.submittedAt);
+                    }
+                },
+                {
+                    "aTargets": [3],
                     "sClass": "txt-align-left",
                     "mRender": function () {
                         return hbBuilderDetail({pendingBuildWait: true});
@@ -155,9 +171,9 @@ define(function (require) {
                         timeElements.addElapsedElem($(nTd).find('.waiting-time-js'), oData.submittedAt);
                     }
                 },
-                rtTable.cell.revision(3, "sources", helpers.urlHasCodebases()),
+                rtTable.cell.revision(4, "sources", helpers.urlHasCodebases()),
                 {
-                    "aTargets": [4],
+                    "aTargets": [5],
                     "sClass": "txt-align-right",
                     "mRender": function (data, type, full) {
                         return hbBuilderDetail({removeBuildSelector: true, data: full});
