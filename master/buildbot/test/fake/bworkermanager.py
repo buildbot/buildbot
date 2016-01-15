@@ -21,32 +21,32 @@ class FakeWorkerManager(service.AsyncMultiService):
 
     def __init__(self):
         service.AsyncMultiService.__init__(self)
-        self.setName('buildslaves')
+        self.setName('workers')
 
-        # WorkerRegistration instances keyed by buildslave name
+        # WorkerRegistration instances keyed by worker name
         self.registrations = {}
 
-        # connection objects keyed by buildslave name
+        # connection objects keyed by worker name
         self.connections = {}
 
         # self.workers contains a ready Worker instance for each
-        # potential buildslave, i.e. all the ones listed in the config file.
-        # If the worker is connected, self.workers[workername].slave will
+        # potential worker, i.e. all the ones listed in the config file.
+        # If the worker is connected, self.workers[workername].worker will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
         self.workers = {}  # maps workername to Worker
 
-    def register(self, buildslave):
-        workerName = buildslave.workername
-        reg = FakeWorkerRegistration(buildslave)
+    def register(self, worker):
+        workerName = worker.workername
+        reg = FakeWorkerRegistration(worker)
         self.registrations[workerName] = reg
         return defer.succeed(reg)
 
     def _unregister(self, registration):
-        del self.registrations[registration.buildslave.workername]
+        del self.registrations[registration.worker.workername]
 
     def getWorkerByName(self, workerName):
-        return self.registrations[workerName].buildslave
+        return self.registrations[workerName].worker
 
     def newConnection(self, conn, workerName):
         assert workerName not in self.connections
@@ -60,10 +60,10 @@ class FakeWorkerManager(service.AsyncMultiService):
 
 class FakeWorkerRegistration(object):
 
-    def __init__(self, buildslave):
+    def __init__(self, worker):
         self.updates = []
         self.unregistered = False
-        self.buildslave = buildslave
+        self.worker = worker
 
     def unregister(self):
         assert not self.unregistered, "called twice"
