@@ -25,14 +25,14 @@ from twisted.trial import unittest
 from zope.interface import implements
 
 
-class FakeBuildSlave(service.BuildbotService):
+class FakeWorker(service.BuildbotService):
 
     implements(interfaces.IWorker)
 
     reconfig_count = 0
 
-    def __init__(self, slavename):
-        service.BuildbotService.__init__(self, name=slavename)
+    def __init__(self, workername):
+        service.BuildbotService.__init__(self, name=workername)
 
     def reconfigService(self):
         self.reconfig_count += 1
@@ -40,7 +40,7 @@ class FakeBuildSlave(service.BuildbotService):
         return defer.succeed(None)
 
 
-class FakeBuildSlave2(FakeBuildSlave):
+class FakeWorker2(FakeWorker):
     pass
 
 
@@ -50,8 +50,8 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True, wantData=True)
         self.master.mq = self.master.mq
-        self.buildslaves = workermanager.WorkerManager(self.master)
-        self.buildslaves.setServiceParent(self.master)
+        self.workers = workermanager.WorkerManager(self.master)
+        self.workers.setServiceParent(self.master)
         # workers expect a botmaster as well as a manager.
         self.master.botmaster.disownServiceParent()
         self.botmaster = botmaster.BotMaster()
@@ -59,53 +59,53 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.master.botmaster.setServiceParent(self.master)
 
         self.new_config = mock.Mock()
-        self.buildslaves.startService()
+        self.workers.startService()
 
     def tearDown(self):
-        return self.buildslaves.stopService()
+        return self.workers.stopService()
 
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_add_remove(self):
-        sl = FakeBuildSlave('sl1')
-        self.new_config.workers = [sl]
+        worker = FakeWorker('worker1')
+        self.new_config.workers = [worker]
 
-        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
+        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
-        self.assertIdentical(sl.parent, self.buildslaves)
-        self.assertEqual(self.buildslaves.workers, {'sl1': sl})
+        self.assertIdentical(worker.parent, self.workers)
+        self.assertEqual(self.workers.workers, {'worker1': worker})
 
         self.new_config.workers = []
 
-        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
+        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
-        self.assertIdentical(sl.parent, None)
-        self.assertIdentical(sl.master, None)
+        self.assertIdentical(worker.parent, None)
+        self.assertIdentical(worker.master, None)
 
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_reconfig(self):
-        sl = FakeBuildSlave('sl1')
-        sl.setServiceParent(self.buildslaves)
-        sl.parent = self.master
-        sl.manager = self.buildslaves
-        sl.botmaster = self.master.botmaster
+        worker = FakeWorker('worker1')
+        worker.setServiceParent(self.workers)
+        worker.parent = self.master
+        worker.manager = self.workers
+        worker.botmaster = self.master.botmaster
 
-        sl_new = FakeBuildSlave('sl1')
-        self.new_config.workers = [sl_new]
+        worker_new = FakeWorker('worker1')
+        self.new_config.workers = [worker_new]
 
-        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
+        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
-        # sl was not replaced..
-        self.assertIdentical(self.buildslaves.workers['sl1'], sl)
+        # worker was not replaced..
+        self.assertIdentical(self.workers.workers['worker1'], worker)
 
     @defer.inlineCallbacks
     def test_reconfigServiceSlaves_class_changes(self):
-        sl = FakeBuildSlave('sl1')
-        sl.setServiceParent(self.buildslaves)
+        worker = FakeWorker('worker1')
+        worker.setServiceParent(self.workers)
 
-        sl_new = FakeBuildSlave2('sl1')
-        self.new_config.workers = [sl_new]
+        worker_new = FakeWorker2('worker1')
+        self.new_config.workers = [worker_new]
 
-        yield self.buildslaves.reconfigServiceWithBuildbotConfig(self.new_config)
+        yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
-        # sl *was* replaced (different class)
-        self.assertIdentical(self.buildslaves.workers['sl1'], sl_new)
+        # worker *was* replaced (different class)
+        self.assertIdentical(self.workers.workers['worker1'], worker_new)
