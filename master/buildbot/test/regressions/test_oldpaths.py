@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.test.util.warnings import ignoreWarning
 from buildbot.util import pickle
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from twisted.trial import unittest
 
 
@@ -123,7 +125,8 @@ class OldImportPaths(unittest.TestCase):
         assert BuildSetStatus
 
     def test_status_builder_SlaveStatus(self):
-        from buildbot.status.builder import SlaveStatus
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.status.builder import SlaveStatus
         assert SlaveStatus
 
     def test_status_builder_Status(self):

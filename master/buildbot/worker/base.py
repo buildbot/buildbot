@@ -32,7 +32,7 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.reporters.mail import MailNotifier
-from buildbot.status.worker import SlaveStatus
+from buildbot.status.worker import WorkerStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
@@ -88,7 +88,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.manager = None
         self.buildslaveid = None
 
-        self.slave_status = SlaveStatus(name)
+        self.slave_status = WorkerStatus(name)
         self.slave_commands = None
         self.workerforbuilders = {}
         self.max_builds = max_builds

@@ -16,6 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import on_deprecated_module_usage
 
 on_deprecated_module_usage(
@@ -26,3 +27,6 @@ on_deprecated_module_usage(
 # pylint: disable=wildcard-import
 # pylint: disable=unused-wildcard-import
 from buildbot.status.worker import *  # noqa
+
+define_old_worker_class(locals(), WorkerStatus)
+del WorkerStatus  # noqa
