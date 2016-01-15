@@ -364,7 +364,7 @@ class IStatus(Interface):
         """Return a list of buildslave names, suitable for passing to
         getSlave()."""
     def getSlave(name):
-        """Return the ISlaveStatus object for a given named buildslave."""
+        """Return the IWorkerStatus object for a given named buildslave."""
 
     def getBuildSets():
         """
@@ -496,7 +496,7 @@ class IBuildRequestStatus(Interface):
         Deferred."""
 
 
-class ISlaveStatus(Interface):
+class IWorkerStatus(Interface):
 
     def getName():
         """Return the name of the worker."""
@@ -513,6 +513,7 @@ class ISlaveStatus(Interface):
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
         recent message was received from the buildslave."""
+define_old_worker_class_alias(locals(), IWorkerStatus)
 
 
 class ISchedulerStatus(Interface):
@@ -543,7 +544,7 @@ class IBuilderStatus(Interface):
         (possibly empty) representing the currently active builds."""
 
     def getSlaves():
-        """Return a list of ISlaveStatus objects for the workers that are
+        """Return a list of IWorkerStatus objects for the workers that are
         used by this builder."""
 
     def getPendingBuildRequestStatuses():

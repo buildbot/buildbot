@@ -103,6 +103,10 @@ Here is the complete list of changed API:
      - :py:class:`~buildbot.interfaces.ILatentWorker`
 
 
+   * - :py:class:`buildbot.interfaces.ISlaveStatus` (private?)
+     - :py:class:`~buildbot.interfaces.IWorkerStatus`
+
+
    * - :py:mod:`buildbot.buildslave` module with all contents
      - :py:mod:`buildbot.worker`
 

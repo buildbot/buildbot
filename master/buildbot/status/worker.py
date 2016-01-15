@@ -22,7 +22,7 @@ from zope.interface import implements
 
 
 class SlaveStatus:
-    implements(interfaces.ISlaveStatus)
+    implements(interfaces.IWorkerStatus)
 
     admin = None
     host = None

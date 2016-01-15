@@ -84,3 +84,12 @@ class ILatentWorker(unittest.TestCase):
         from buildbot.interfaces import ILatentBuildSlave
 
         self.assertTrue(ILatentBuildSlave is ILatentWorker)
+
+
+class TestIWorkerStatus(unittest.TestCase):
+
+    def test_use(self):
+        from buildbot.interfaces import IWorkerStatus
+        from buildbot.interfaces import ISlaveStatus
+
+        self.assertTrue(IWorkerStatus is ISlaveStatus)

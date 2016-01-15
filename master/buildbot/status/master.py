@@ -189,8 +189,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 urlquote(step.getName(), safe=''))
         # IBuildSetStatus
         # IBuildRequestStatus
-        # ISlaveStatus
-        if interfaces.ISlaveStatus.providedBy(thing):
+        # IWorkerStatus
+        if interfaces.IWorkerStatus.providedBy(thing):
             slave = thing
             return prefix + "#buildslaves/%s" % (
                 urlquote(slave.getName(), safe=''),
