@@ -63,7 +63,7 @@ class Listener(base.Listener):
         except Exception:
             log.err("Can't set TcpKeepAlive")
 
-        buildslave = bslaves.getBuildslaveByName(workerName)
+        buildslave = bslaves.getWorkerByName(workerName)
         conn = Connection(self.master, buildslave, mind)
 
         # inform the manager, logging any problems in the deferred

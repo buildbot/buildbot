@@ -45,7 +45,7 @@ class FakeWorkerManager(service.AsyncMultiService):
     def _unregister(self, registration):
         del self.registrations[registration.buildslave.workername]
 
-    def getBuildslaveByName(self, workerName):
+    def getWorkerByName(self, workerName):
         return self.registrations[workerName].buildslave
 
     def newConnection(self, conn, workerName):

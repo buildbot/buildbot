@@ -85,7 +85,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         # workers attribute is actually just an alias to multiService's namedService
         return self.namedServices
 
-    def getBuildslaveByName(self, workerName):
+    def getWorkerByName(self, workerName):
         return self.registrations[workerName].worker
 
     def register(self, worker):

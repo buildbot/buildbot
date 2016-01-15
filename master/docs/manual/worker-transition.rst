@@ -211,6 +211,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.slaves`
      - :py:attr:`buildbot.worker.manager.WorkerManager.workers`
 
+   * - :py:meth:`buildbot.buildslave.manager.BuildslaveManager.getBuildslaveByName`
+     - :py:meth:`buildbot.worker.manager.WorkerManager.getWorkerByName`
+
 
    * - :py:class:`buildbot.buildslave.docker.DockerLatentBuildSlave`
      - :py:class:`buildbot.worker.docker.DockerLatentWorker`
