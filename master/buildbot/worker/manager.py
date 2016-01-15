@@ -24,18 +24,18 @@ from twisted.python.failure import Failure
 
 class WorkerRegistration(object):
 
-    __slots__ = ['master', 'buildslave', 'pbReg']
+    __slots__ = ['master', 'worker', 'pbReg']
 
-    def __init__(self, master, buildslave):
+    def __init__(self, master, worker):
         self.master = master
-        self.buildslave = buildslave
+        self.worker = worker
 
     def __repr__(self):
-        return "<%s for %r>" % (self.__class__.__name__, self.buildslave.workername)
+        return "<%s for %r>" % (self.__class__.__name__, self.worker.workername)
 
     @defer.inlineCallbacks
     def unregister(self):
-        bs = self.buildslave
+        bs = self.worker
         # update with portStr=None to remove any registration in place
         yield self.master.workers.pb.updateRegistration(
             bs.workername, bs.password, None)
@@ -86,17 +86,17 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         return self.namedServices
 
     def getBuildslaveByName(self, buildslaveName):
-        return self.registrations[buildslaveName].buildslave
+        return self.registrations[buildslaveName].worker
 
-    def register(self, buildslave):
+    def register(self, worker):
         # TODO: doc that reg.update must be called, too
-        buildslaveName = buildslave.workername
-        reg = WorkerRegistration(self.master, buildslave)
+        buildslaveName = worker.workername
+        reg = WorkerRegistration(self.master, worker)
         self.registrations[buildslaveName] = reg
         return defer.succeed(reg)
 
     def _unregister(self, registration):
-        del self.registrations[registration.buildslave.workername]
+        del self.registrations[registration.worker.workername]
 
     @defer.inlineCallbacks
     def newConnection(self, conn, buildslaveName):

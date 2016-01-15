@@ -194,6 +194,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:class:`buildbot.buildslave.manager.BuildslaveRegistration`
      - :py:class:`buildbot.worker.manager.WorkerRegistration`
 
+   * - :py:class:`buildbot.buildslave.manager.BuildslaveRegistration.buildslave`
+     - :py:class:`buildbot.worker.manager.WorkerRegistration.worker`
+
    * - :py:class:`buildbot.buildslave.manager.BuildslaveManager`
      - :py:class:`buildbot.worker.manager.WorkerManager`
 
@@ -207,6 +210,7 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
    * - :py:class:`buildbot.buildslave.manager.BuildslaveManager.slaves`
      - :py:class:`buildbot.worker.manager.WorkerManager.workers`
+
 
    * - :py:class:`buildbot.buildslave.docker.DockerLatentBuildSlave`
      - :py:class:`buildbot.worker.docker.DockerLatentWorker`
