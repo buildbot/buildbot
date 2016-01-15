@@ -33,7 +33,7 @@ The master has a number of useful attributes:
     connections to appropriate components based on the supplied username.
 
 ``master.buildslaves``
-    A :py:class:`buildbot.buildslave.manager.BuildslaveManager` instance that
+    A :py:class:`buildbot.worker.manager.WorkerManager` instance that
     provides wrapper around multiple master-slave protocols(e.g. PB) to unify
     calls for them from higher level code 
 
