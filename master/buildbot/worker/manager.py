@@ -110,24 +110,24 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                 # if we get here then old connection is still alive, and new
                 # should be rejected
                 defer.returnValue(
-                    Failure(RuntimeError("rejecting duplicate slave"))
+                    Failure(RuntimeError("rejecting duplicate worker"))
                 )
             except defer.CancelledError:
                 old_conn.loseConnection()
-                log.msg("Connected slave '%s' ping timed out after %d seconds"
+                log.msg("Connected worker '%s' ping timed out after %d seconds"
                         % (workerName, self.PING_TIMEOUT))
             except Exception as e:
                 old_conn.loseConnection()
-                log.msg("Got error while trying to ping connected slave %s:"
+                log.msg("Got error while trying to ping connected worker %s:"
                         "%s" % (workerName, e))
             log.msg("Old connection for '%s' was lost, accepting new" % workerName)
 
         try:
             yield conn.remotePrint(message="attached")
             info = yield conn.remoteGetSlaveInfo()
-            log.msg("Got slaveinfo from '%s'" % workerName)
+            log.msg("Got workerinfo from '%s'" % workerName)
         except Exception as e:
-            log.msg("Failed to communicate with slave '%s'\n"
+            log.msg("Failed to communicate with worker '%s'\n"
                     "%s" % (workerName, e))
             defer.returnValue(False)
 
