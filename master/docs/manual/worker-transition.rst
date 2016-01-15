@@ -163,6 +163,10 @@ Here is the complete list of changed API:
    * - :py:mod:`buildbot.steps.slave`
      - :py:mod:`buildbot.steps.worker`
 
+
+   * - :py:mod:`buildbot.status.slave`
+     - :py:mod:`buildbot.status.worker`
+
 API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
 .. todo::

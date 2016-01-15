@@ -32,7 +32,7 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.reporters.mail import MailNotifier
-from buildbot.status.slave import SlaveStatus
+from buildbot.status.worker import SlaveStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
