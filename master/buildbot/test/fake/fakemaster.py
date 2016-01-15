@@ -20,7 +20,7 @@ import weakref
 from buildbot import config
 from buildbot import interfaces
 from buildbot.status import build
-from buildbot.test.fake import bslavemanager
+from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
@@ -178,7 +178,7 @@ class FakeMaster(service.MasterService):
         self.status.setServiceParent(self)
         self.name = 'fake:/master'
         self.masterid = master_id
-        self.workers = bslavemanager.FakeBuildslaveManager()
+        self.workers = bworkermanager.FakeBuildslaveManager()
         self.workers.setServiceParent(self)
         self.log_rotation = FakeLogRotation()
         self.db = mock.Mock()

@@ -17,7 +17,7 @@ import mock
 
 from buildbot import config
 from buildbot import locks
-from buildbot.test.fake import bslavemanager
+from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
@@ -112,7 +112,7 @@ class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         self.master.workers.disownServiceParent()
-        self.buildslaves = bslavemanager.FakeBuildslaveManager()
+        self.buildslaves = bworkermanager.FakeBuildslaveManager()
         self.buildslaves.setServiceParent(self.master)
         self.master.workers = self.buildslaves
         self.sl.setServiceParent(self.master.workers)
@@ -138,7 +138,7 @@ class TestAbstractWorker(unittest.TestCase):
                                              testcase=self)
         self.botmaster = self.master.botmaster
         self.master.workers.disownServiceParent()
-        self.buildslaves = self.master.workers = bslavemanager.FakeBuildslaveManager()
+        self.buildslaves = self.master.workers = bworkermanager.FakeBuildslaveManager()
         self.buildslaves.setServiceParent(self.master)
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
@@ -205,7 +205,7 @@ class TestAbstractWorker(unittest.TestCase):
     def do_test_reconfigService(self, old, new, existingRegistration=True):
         old.parent = self.master
         if existingRegistration:
-            old.registration = bslavemanager.FakeWorkerRegistration(old)
+            old.registration = bworkermanager.FakeWorkerRegistration(old)
         old.missing_timer = mock.Mock(name='missing_timer')
         yield old.startService()
 
