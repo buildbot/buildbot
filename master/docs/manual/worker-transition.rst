@@ -319,3 +319,9 @@ In addition to ``buildbot.steps.slave`` module being renamed to
 :py:mod:`buildbot.steps.worker`, default ``source`` value for
 :py:class:`~buildbot.steps.worker.SetPropertiesFromEnv` was changed from
 ``"SlaveEnvironment"`` to ``"WorkerEnvironment"``.
+
+Local worker changes
+--------------------
+
+Working directory for local workers were changed from
+``master-basedir/slaves/name`` to ``master-basedir/workers/name``.

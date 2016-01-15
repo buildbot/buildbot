@@ -52,7 +52,7 @@ class TestLocalWorker(unittest.TestCase):
 
         old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
         yield old.startService()
-        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/slaves/bot'))
+        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
 
         yield old.reconfigServiceWithSibling(new)
 
