@@ -14,10 +14,10 @@ BuildslaveRegistration
 
         Remove registartion for `buildslave`
 
-    .. py:method:: update(slave_config, global_config)
+    .. py:method:: update(worker_config, global_config)
 
-        :param slave_config: new BuildSlave instance
-        :type slave_config: :class:`~buildbot.worker.Worker`
+        :param worker_config: new BuildSlave instance
+        :type worker_config: :class:`~buildbot.worker.Worker`
         :param global_config: Buildbot config
         :type global_config: :class:`~buildbot.config.MasterConfig`
 
