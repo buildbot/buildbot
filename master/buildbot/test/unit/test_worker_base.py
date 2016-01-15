@@ -124,7 +124,7 @@ class FakeBuildSlaveItfc(unittest.TestCase, BuildSlaveInterfaceTests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self)
-        self.sl = worker.FakeSlave(self.master)
+        self.sl = worker.FakeWorker(self.master)
 
     def callAttached(self):
         self.conn = fakeprotocol.FakeConnection(self.master, self.sl)

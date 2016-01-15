@@ -20,7 +20,7 @@ from buildbot.test.fake import fakeprotocol
 from twisted.internet import defer
 
 
-class FakeSlave(object):
+class FakeWorker(object):
     workername = 'test'
 
     def __init__(self, master):

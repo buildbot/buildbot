@@ -154,7 +154,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_runCommand(self):
         bs = buildstep.BuildStep()
-        bs.buildslave = worker.FakeSlave(master=None)  # master is not used here
+        bs.buildslave = worker.FakeWorker(master=None)  # master is not used here
         bs.remote = 'dummy'
         bs.build = fakebuild.FakeBuild()
         bs.build.builder.name = 'fake'

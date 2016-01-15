@@ -134,7 +134,7 @@ class TestBuild(unittest.TestCase):
         self.request = r
         self.master = fakemaster.make_master(wantData=True, testcase=self)
 
-        self.slave = worker.FakeSlave(self.master)
+        self.slave = worker.FakeWorker(self.master)
         self.slave.attached(None)
         self.builder = FakeBuilder(self.master)
         self.build = Build([r])
@@ -953,7 +953,7 @@ class TestBuildProperties(unittest.TestCase):
         r.sources[0].changes = [FakeChange()]
         r.sources[0].revision = "12345"
         self.master = fakemaster.make_master(wantData=True, testcase=self)
-        self.slave = worker.FakeSlave(self.master)
+        self.slave = worker.FakeWorker(self.master)
         self.slave.attached(None)
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.slave
@@ -1008,7 +1008,7 @@ class TestBuildProperties(unittest.TestCase):
         build.builder = FakeBuilder(self.master)
         build.build_status = FakeBuildStatus()
 
-        w = worker.FakeSlave(self.master)
+        w = worker.FakeWorker(self.master)
         w.path_module = posixpath
         w.properties = FakeProperties()
 

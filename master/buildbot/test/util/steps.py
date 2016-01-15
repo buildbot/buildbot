@@ -190,7 +190,7 @@ class BuildStepMixin(object):
 
         # step.buildslave
 
-        self.buildslave = step.buildslave = worker.FakeSlave(self.master)
+        self.buildslave = step.buildslave = worker.FakeWorker(self.master)
 
         # step overrides
 
