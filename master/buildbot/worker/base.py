@@ -88,7 +88,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.manager = None
         self.buildslaveid = None
 
-        self.slave_status = WorkerStatus(name)
+        self.worker_status = WorkerStatus(name)
         self.slave_commands = None
         self.workerforbuilders = {}
         self.max_builds = max_builds
@@ -197,10 +197,10 @@ class AbstractWorker(service.BuildbotService, object):
         if not info:
             return
 
-        self.slave_status.setAdmin(info.get("admin"))
-        self.slave_status.setHost(info.get("host"))
-        self.slave_status.setAccessURI(info.get("access_uri", None))
-        self.slave_status.setVersion(info.get("version", "(unknown)"))
+        self.worker_status.setAdmin(info.get("admin"))
+        self.worker_status.setHost(info.get("host"))
+        self.worker_status.setAccessURI(info.get("access_uri", None))
+        self.worker_status.setVersion(info.get("version", "(unknown)"))
 
     @defer.inlineCallbacks
     def _getSlaveInfo(self):
@@ -310,13 +310,13 @@ class AbstractWorker(service.BuildbotService, object):
                  time.ctime(time.time() - self.missing_timeout))  # approx
         text += "\n"
         text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
-        text += "was '%s'.\n" % self.slave_status.getAdmin()
+        text += "was '%s'.\n" % self.worker_status.getAdmin()
         text += "\n"
         text += "Sincerely,\n"
         text += " The Buildbot\n"
         text += " %s\n" % status.getTitleURL()
         text += "\n"
-        text += "%s\n" % status.getURLForThing(self.slave_status)
+        text += "%s\n" % status.getURLForThing(self.worker_status)
         subject = "Buildbot: worker %s was lost" % (self.name,)
         return self._mail_missing_message(subject, text)
 
@@ -345,14 +345,14 @@ class AbstractWorker(service.BuildbotService, object):
         # Builders that care about it.
 
         # Reset graceful shutdown status
-        self.slave_status.setGraceful(False)
+        self.worker_status.setGraceful(False)
         # We want to know when the graceful shutdown flag changes
-        self.slave_status.addGracefulWatcher(self._gracefulChanged)
+        self.worker_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
         self._old_builder_list = None  # clear builder list before proceed
-        self.slave_status.addPauseWatcher(self._pauseChanged)
+        self.worker_status.addPauseWatcher(self._pauseChanged)
 
-        self.slave_status.setConnected(True)
+        self.worker_status.setConnected(True)
 
         self._applySlaveInfo(conn.info)
         self.slave_commands = conn.info.get("slave_commands", {})
@@ -391,16 +391,16 @@ class AbstractWorker(service.BuildbotService, object):
     def messageReceivedFromSlave(self):
         now = time.time()
         self.lastMessageReceived = now
-        self.slave_status.setLastMessageReceived(now)
+        self.worker_status.setLastMessageReceived(now)
 
     @defer.inlineCallbacks
     def detached(self):
         metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", -1)
         self.conn = None
         self._old_builder_list = []
-        self.slave_status.removeGracefulWatcher(self._gracefulChanged)
-        self.slave_status.removePauseWatcher(self._pauseChanged)
-        self.slave_status.setConnected(False)
+        self.worker_status.removeGracefulWatcher(self._gracefulChanged)
+        self.worker_status.removePauseWatcher(self._pauseChanged)
+        self.worker_status.setConnected(False)
         log.msg("Worker.detached(%s)" % (self.name,))
         self.master.status.slaveDisconnected(self.name)
         self.releaseLocks()
@@ -465,7 +465,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     def shutdownRequested(self):
         log.msg("slave %s wants to shut down" % (self.name,))
-        self.slave_status.setGraceful(True)
+        self.worker_status.setGraceful(True)
 
     def addSlaveBuilder(self, sb):
         self.workerforbuilders[sb.builder_name] = sb
@@ -493,12 +493,12 @@ class AbstractWorker(service.BuildbotService, object):
         this worker will not start.
         """
 
-        if self.slave_status.isPaused():
+        if self.worker_status.isPaused():
             return False
 
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
-        if self.slave_status.getGraceful():
+        if self.worker_status.getGraceful():
             return False
 
         if self.max_builds:
@@ -556,7 +556,7 @@ class AbstractWorker(service.BuildbotService, object):
     def maybeShutdown(self):
         """Shut down this worker if it has been asked to shut down gracefully,
         and has no active builders."""
-        if not self.slave_status.getGraceful():
+        if not self.worker_status.getGraceful():
             return
         active_builders = [sb for sb in itervalues(self.workerforbuilders)
                            if sb.isBusy()]
@@ -573,15 +573,15 @@ class AbstractWorker(service.BuildbotService, object):
 
     def pause(self):
         """Stop running new builds on the worker."""
-        self.slave_status.setPaused(True)
+        self.worker_status.setPaused(True)
 
     def unpause(self):
         """Restart running new builds on the worker."""
-        self.slave_status.setPaused(False)
+        self.worker_status.setPaused(False)
         self.botmaster.maybeStartBuildsForSlave(self.name)
 
     def isPaused(self):
-        return self.slave_status.isPaused()
+        return self.worker_status.isPaused()
 
 
 class Worker(AbstractWorker):

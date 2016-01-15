@@ -341,10 +341,10 @@ class TestAbstractBuildSlave(unittest.TestCase):
         slave = self.createBuildslave()
         yield slave.startService()
 
-        self.assertEqual(slave.slave_status.getAdmin(), None)
-        self.assertEqual(slave.slave_status.getHost(), None)
-        self.assertEqual(slave.slave_status.getAccessURI(), None)
-        self.assertEqual(slave.slave_status.getVersion(), None)
+        self.assertEqual(slave.worker_status.getAdmin(), None)
+        self.assertEqual(slave.worker_status.getHost(), None)
+        self.assertEqual(slave.worker_status.getAccessURI(), None)
+        self.assertEqual(slave.worker_status.getVersion(), None)
 
         # check that a new worker row was added for this buildslave
         bs = yield self.master.db.buildslaves.getBuildslave(name='bot')
@@ -365,10 +365,10 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         self.assertEqual(slave.buildslaveid, 9292)
-        self.assertEqual(slave.slave_status.getAdmin(), 'TheAdmin')
-        self.assertEqual(slave.slave_status.getHost(), 'TheHost')
-        self.assertEqual(slave.slave_status.getAccessURI(), 'TheURI')
-        self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
+        self.assertEqual(slave.worker_status.getAdmin(), 'TheAdmin')
+        self.assertEqual(slave.worker_status.getHost(), 'TheHost')
+        self.assertEqual(slave.worker_status.getAccessURI(), 'TheURI')
+        self.assertEqual(slave.worker_status.getVersion(), 'TheVersion')
 
     @defer.inlineCallbacks
     def test_attached_remoteGetSlaveInfo(self):
@@ -392,9 +392,9 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.attached(conn)
 
         # check the values get set right
-        self.assertEqual(slave.slave_status.getAdmin(), "TheAdmin")
-        self.assertEqual(slave.slave_status.getHost(), "TheHost")
-        self.assertEqual(slave.slave_status.getAccessURI(), "TheURI")
+        self.assertEqual(slave.worker_status.getAdmin(), "TheAdmin")
+        self.assertEqual(slave.worker_status.getHost(), "TheHost")
+        self.assertEqual(slave.worker_status.getAccessURI(), "TheURI")
         self.assertEqual(slave.slave_environ, ENVIRON)
         self.assertEqual(slave.slave_basedir, 'TheBaseDir')
         self.assertEqual(slave.slave_system, 'TheSlaveSystem')
@@ -435,10 +435,10 @@ class TestAbstractBuildSlave(unittest.TestCase):
         }
         yield slave.attached(conn)
 
-        self.assertEqual(slave.slave_status.getAdmin(), 'TheAdmin')
-        self.assertEqual(slave.slave_status.getHost(), 'TheHost')
-        self.assertEqual(slave.slave_status.getAccessURI(), 'TheURI')
-        self.assertEqual(slave.slave_status.getVersion(), 'TheVersion')
+        self.assertEqual(slave.worker_status.getAdmin(), 'TheAdmin')
+        self.assertEqual(slave.worker_status.getHost(), 'TheHost')
+        self.assertEqual(slave.worker_status.getAccessURI(), 'TheURI')
+        self.assertEqual(slave.worker_status.getVersion(), 'TheVersion')
 
         # and the db is updated too:
         buildslave = yield self.master.db.buildslaves.getBuildslave(name="bot")
@@ -470,7 +470,7 @@ class TestAbstractBuildSlave(unittest.TestCase):
         yield slave.startService()
 
         yield slave.shutdownRequested()
-        self.assertEqual(slave.slave_status.getGraceful(), True)
+        self.assertEqual(slave.worker_status.getGraceful(), True)
 
 
 class TestWorkerTransition(unittest.TestCase):
