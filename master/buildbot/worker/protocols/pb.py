@@ -52,9 +52,9 @@ class Listener(base.Listener):
                 defer.returnValue(reg)
 
     @defer.inlineCallbacks
-    def _getPerspective(self, mind, buildslaveName):
+    def _getPerspective(self, mind, workerName):
         bslaves = self.master.workers
-        log.msg("slave '%s' attaching from %s" % (buildslaveName,
+        log.msg("slave '%s' attaching from %s" % (workerName,
                                                   mind.broker.transport.getPeer()))
 
         # try to use TCP keepalives
@@ -63,11 +63,11 @@ class Listener(base.Listener):
         except Exception:
             log.err("Can't set TcpKeepAlive")
 
-        buildslave = bslaves.getBuildslaveByName(buildslaveName)
+        buildslave = bslaves.getBuildslaveByName(workerName)
         conn = Connection(self.master, buildslave, mind)
 
         # inform the manager, logging any problems in the deferred
-        accepted = yield bslaves.newConnection(conn, buildslaveName)
+        accepted = yield bslaves.newConnection(conn, workerName)
 
         # return the Connection as the perspective
         if accepted:

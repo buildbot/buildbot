@@ -85,25 +85,25 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         # workers attribute is actually just an alias to multiService's namedService
         return self.namedServices
 
-    def getBuildslaveByName(self, buildslaveName):
-        return self.registrations[buildslaveName].worker
+    def getBuildslaveByName(self, workerName):
+        return self.registrations[workerName].worker
 
     def register(self, worker):
         # TODO: doc that reg.update must be called, too
-        buildslaveName = worker.workername
+        workerName = worker.workername
         reg = WorkerRegistration(self.master, worker)
-        self.registrations[buildslaveName] = reg
+        self.registrations[workerName] = reg
         return defer.succeed(reg)
 
     def _unregister(self, registration):
         del self.registrations[registration.worker.workername]
 
     @defer.inlineCallbacks
-    def newConnection(self, conn, buildslaveName):
-        if buildslaveName in self.connections:
+    def newConnection(self, conn, workerName):
+        if workerName in self.connections:
             log.msg("Got duplication connection from '%s'"
-                    " starting arbitration procedure" % buildslaveName)
-            old_conn = self.connections[buildslaveName]
+                    " starting arbitration procedure" % workerName)
+            old_conn = self.connections[workerName]
             try:
                 yield misc.cancelAfter(self.PING_TIMEOUT,
                                        old_conn.remotePrint("master got a duplicate connection"))
@@ -115,27 +115,27 @@ class WorkerManager(MeasuredBuildbotServiceManager):
             except defer.CancelledError:
                 old_conn.loseConnection()
                 log.msg("Connected slave '%s' ping timed out after %d seconds"
-                        % (buildslaveName, self.PING_TIMEOUT))
+                        % (workerName, self.PING_TIMEOUT))
             except Exception as e:
                 old_conn.loseConnection()
                 log.msg("Got error while trying to ping connected slave %s:"
-                        "%s" % (buildslaveName, e))
-            log.msg("Old connection for '%s' was lost, accepting new" % buildslaveName)
+                        "%s" % (workerName, e))
+            log.msg("Old connection for '%s' was lost, accepting new" % workerName)
 
         try:
             yield conn.remotePrint(message="attached")
             info = yield conn.remoteGetSlaveInfo()
-            log.msg("Got slaveinfo from '%s'" % buildslaveName)
+            log.msg("Got slaveinfo from '%s'" % workerName)
         except Exception as e:
             log.msg("Failed to communicate with slave '%s'\n"
-                    "%s" % (buildslaveName, e))
+                    "%s" % (workerName, e))
             defer.returnValue(False)
 
         conn.info = info
-        self.connections[buildslaveName] = conn
+        self.connections[workerName] = conn
 
         def remove():
-            del self.connections[buildslaveName]
+            del self.connections[workerName]
         conn.notifyOnDisconnect(remove)
 
         # accept the connection
