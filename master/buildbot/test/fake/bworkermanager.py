@@ -70,7 +70,7 @@ class FakeWorkerRegistration(object):
         self.unregistered = True
         return defer.succeed(None)
 
-    def update(self, slave_config, global_config):
-        if slave_config.workername not in self.updates:
-            self.updates.append(slave_config.workername)
+    def update(self, worker_config, global_config):
+        if worker_config.workername not in self.updates:
+            self.updates.append(worker_config.workername)
         return defer.succeed(None)

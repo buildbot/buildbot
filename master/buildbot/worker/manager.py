@@ -42,12 +42,12 @@ class WorkerRegistration(object):
         yield self.master.workers._unregister(self)
 
     @defer.inlineCallbacks
-    def update(self, slave_config, global_config):
+    def update(self, worker_config, global_config):
         # For most protocols, there's nothing to do, but for PB we must
         # update the registration in case the port or password has changed.
         if 'pb' in global_config.protocols:
             self.pbReg = yield self.master.workers.pb.updateRegistration(
-                slave_config.workername, slave_config.password,
+                worker_config.workername, worker_config.password,
                 global_config.protocols['pb']['port'])
 
     def getPBPort(self):

@@ -329,3 +329,8 @@ Local worker changes
 
 Working directory for local workers were changed from
 ``master-basedir/slaves/name`` to ``master-basedir/workers/name``.
+
+Worker Manager changes
+----------------------
+
+``slave_config`` function argument was renamed to ``worker_config``.
