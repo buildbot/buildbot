@@ -208,8 +208,8 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
        metric mesurement managed service name changed from ``buildslaves``
      - to ``workers``
 
-   * - :py:class:`buildbot.buildslave.manager.BuildslaveManager.slaves`
-     - :py:class:`buildbot.worker.manager.WorkerManager.workers`
+   * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.slaves`
+     - :py:attr:`buildbot.worker.manager.WorkerManager.workers`
 
 
    * - :py:class:`buildbot.buildslave.docker.DockerLatentBuildSlave`
