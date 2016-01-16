@@ -209,7 +209,7 @@ class TestSlaveComm(unittest.TestCase):
         new_config.protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
         new_config.workers = [self.buildslave]
         new_config.builders = [config.BuilderConfig(name='bldr',
-                                                    slavename='testslave', factory=factory.BuildFactory())]
+                                                    workername='testslave', factory=factory.BuildFactory())]
 
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
         yield self.buildslaves.reconfigServiceWithBuildbotConfig(new_config)

@@ -802,17 +802,24 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
 class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
-    def __init__(self, name=None, slavename=None, workernames=None,
+    def __init__(self, name=None, workername=None, workernames=None,
                  builddir=None, slavebuilddir=None, factory=None,
                  tags=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
                  canStartBuild=None,
 
+                 slavename=None,  # deprecated, use `workername` instead
                  slavenames=None,  # deprecated, use `workernames` instead
                  ):
 
         # Deprecated API support.
+        if slavename is not None:
+            on_deprecated_name_usage(
+                "'slavename' keyword argument is deprecated, "
+                "use 'workername' instead")
+            assert workername is None
+            workername = slavename
         if slavenames is not None:
             on_deprecated_name_usage(
                 "'slavenames' keyword argument is deprecated, "
@@ -850,10 +857,10 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         else:
             workernames = []
 
-        if slavename:
-            if not isinstance(slavename, str):
+        if workername:
+            if not isinstance(workername, str):
                 error("builder '%s': workername must be a string" % (name,))
-            workernames = workernames + [slavename]
+            workernames = workernames + [workername]
         if not workernames:
             error("builder '%s': at least one workername is required" % (name,))
 

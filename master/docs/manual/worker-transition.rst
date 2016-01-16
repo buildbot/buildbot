@@ -143,6 +143,11 @@ Here is the complete list of changed API:
 
 
    * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+       ``slavename`` was renamed to
+
+     - ``workername``
+
+   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
        ``slavenames`` was renamed to
 
      - ``workernames``

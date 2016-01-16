@@ -40,7 +40,7 @@ class BuilderMixin(object):
                     **config_kwargs):
         """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
-        config_args = dict(name=name, slavename="slv", builddir="bdir",
+        config_args = dict(name=name, workername="slv", builddir="bdir",
                            slavebuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
@@ -408,7 +408,7 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
-        config_args = dict(name='bldr', slavename="slv", builddir="bdir",
+        config_args = dict(name='bldr', workername="slv", builddir="bdir",
                            slavebuilddir="sbdir", factory=self.factory,
                            description='Noe', tags=['NewTag'])
         new_builder_config = config.BuilderConfig(**config_args)

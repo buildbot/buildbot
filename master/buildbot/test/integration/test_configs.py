@@ -64,6 +64,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
                     r"'BuildSlave' class is deprecated",
+                    r"'slavename' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
             config.MasterConfig.loadConfig(self.basedir, self.filename)
 
@@ -74,6 +75,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
                     r"'BuildSlave' class is deprecated",
+                    r"'slavename' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
             config.MasterConfig.loadConfig(self.basedir, self.filename)
 

@@ -146,7 +146,7 @@ class TestBotMaster(unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfigServiceBuilders_add_remove(self):
         bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(),
-                                  slavename='f')
+                                  workername='f')
         self.new_config.builders = [bc]
 
         yield self.botmaster.reconfigServiceBuilders(self.new_config)

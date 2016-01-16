@@ -721,20 +721,20 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
-                                    factory=factory.BuildFactory(), slavename='x')
+                                    factory=factory.BuildFactory(), workername='x')
         self.cfg.load_builders(self.filename,
                                dict(builders=[bldr]))
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x')
+        bldr = dict(name='x', factory=factory.BuildFactory(), workername='x')
         self.cfg.load_builders(self.filename,
                                dict(builders=[bldr]))
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
     def test_load_builders_abs_builddir(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
+        bldr = dict(name='x', factory=factory.BuildFactory(), workername='x',
                     builddir=os.path.abspath('.'))
         self.cfg.load_builders(self.filename,
                                dict(builders=[bldr]))
@@ -1268,7 +1268,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertRaisesConfigError(
             "workername must be a string",
             lambda: config.BuilderConfig(
-                name='a', slavename=1, factory=self.factory))
+                name='a', workername=1, factory=self.factory))
 
     def test_bogus_category(self):
         self.assertRaisesConfigError(
@@ -1321,7 +1321,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_defaults(self):
         cfg = config.BuilderConfig(
-            name='a b c', slavename='a', factory=self.factory)
+            name='a b c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
                               name='a b c',
@@ -1338,14 +1338,14 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_unicode_name(self):
         cfg = config.BuilderConfig(
-            name=u'a \N{SNOWMAN} c', slavename='a', factory=self.factory)
+            name=u'a \N{SNOWMAN} c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
                               name=u'a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(
-            name='b', slavename='s1', workernames='s2', builddir='bd',
+            name='b', workername='s1', workernames='s2', builddir='bd',
             slavebuilddir='sbd', factory=self.factory, category='c',
             nextSlave=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
@@ -1367,7 +1367,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         ns = lambda: 'ns'
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
-            name='b', slavename='s1', workernames='s2', builddir='bd',
+            name='b', workername='s1', workernames='s2', builddir='bd',
             slavebuilddir='sbd', factory=self.factory, tags=['c'],
             nextSlave=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
@@ -1390,7 +1390,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_getConfigDict_collapseRequests(self):
         for cr in (False, lambda a, b, c: False):
             cfg = config.BuilderConfig(name='b', collapseRequests=cr,
-                                       factory=self.factory, slavename='s1')
+                                       factory=self.factory, workername='s1')
             self.assertEqual(cfg.getConfigDict(), {'builddir': 'b',
                                                    'collapseRequests': cr,
                                                    'name': 'b',
@@ -1398,6 +1398,29 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                    'factory': self.factory,
                                                    'workernames': ['s1'],
                                                    })
+
+    def test_init_workername_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workername_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavename' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', slavename='a', factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workername_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', 'a', factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
 
     def test_init_workernames_new_api_no_warns(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
@@ -1424,7 +1447,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_workernames_old_api(self):
         cfg = config.BuilderConfig(
-            name='a b c', slavename='a', factory=self.factory)
+            name='a b c', workername='a', factory=self.factory)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             names_new = cfg.workernames

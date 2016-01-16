@@ -168,7 +168,7 @@ class RunSteps(unittest.TestCase):
         self.factory = factory.BuildFactory()  # will have steps added later
         new_config = config.MasterConfig()
         new_config.builders.append(
-            config.BuilderConfig(name='test', slavename='testsl',
+            config.BuilderConfig(name='test', workername='testsl',
                                  factory=self.factory))
         yield self.builder.reconfigServiceWithBuildbotConfig(new_config)
 
