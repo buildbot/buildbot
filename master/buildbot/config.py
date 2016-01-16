@@ -542,8 +542,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error("{0} must be a list".format(conf_key))
             return False
 
-        for sl in workers:
-            if not interfaces.IWorker.providedBy(sl):
+        for worker in workers:
+            if not interfaces.IWorker.providedBy(worker):
                 msg = "{0} must be a list of Worker instances".format(conf_key)
                 error(msg)
                 return False
@@ -558,7 +558,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 if len(workername) > 50:
                     yield "worker name %r is longer than %d characters" % (workername, 50)
 
-            errors = list(validate(sl.workername))
+            errors = list(validate(worker.workername))
             for msg in errors:
                 error(msg)
 

@@ -1405,9 +1405,9 @@ class FakeBuildslavesComponent(FakeDBComponent):
         if masterid is not None or builderid is not None:
             builder_masters = self.db.builders.builder_masters
             slaves = []
-            for sl in itervalues(self.buildslaves):
+            for worker in itervalues(self.buildslaves):
                 configured = [cfg for cfg in self.configured.itervalues()
-                              if cfg['buildslaveid'] == sl['id']]
+                              if cfg['buildslaveid'] == worker['id']]
                 pairs = [builder_masters[cfg['buildermasterid']]
                          for cfg in configured]
                 if builderid is not None and masterid is not None:
@@ -1419,13 +1419,13 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 if masterid is not None:
                     if not any((masterid == p[1]) for p in pairs):
                         continue
-                slaves.append(sl)
+                slaves.append(worker)
         else:
             slaves = list(itervalues(self.buildslaves))
 
         return defer.succeed([
-            self._mkdict(sl, builderid, masterid)
-            for sl in slaves])
+            self._mkdict(worker, builderid, masterid)
+            for worker in slaves])
 
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         slave = self.buildslaves.get(buildslaveid)
