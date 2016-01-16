@@ -1,0 +1,40 @@
+#%RAML 1.0 DataType
+properties:
+  buildid:
+    description: ''
+    type: integer
+  complete:
+    description: ''
+    type: boolean
+  complete_at?:
+    description: ''
+    type: date
+  hidden:
+    description: ''
+    type: boolean
+  name:
+    description: ''
+    type: identifier
+  number:
+    description: ''
+    type: integer
+  results?:
+    description: ''
+    type: integer
+  started_at?:
+    description: ''
+    type: date
+  state_string:
+    description: ''
+    type: string
+  stepid:
+    description: ''
+    type: integer
+  urls[]:
+    description: ''
+    type:
+      properties:
+        name: string
+        url: string
+      type: object
+type: object

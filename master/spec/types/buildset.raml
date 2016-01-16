@@ -1,0 +1,33 @@
+#%RAML 1.0 DataType
+properties:
+  bsid:
+    description: ''
+    type: integer
+  complete:
+    description: ''
+    type: boolean
+  complete_at?:
+    description: ''
+    type: integer
+  external_idstring?:
+    description: ''
+    type: string
+  parent_buildid?:
+    description: ''
+    type: integer
+  parent_relationship?:
+    description: ''
+    type: string
+  reason:
+    description: ''
+    type: string
+  results?:
+    description: ''
+    type: integer
+  sourcestamps[]:
+    description: ''
+    type: sourcestamp
+  submitted_at:
+    description: ''
+    type: integer
+type: object

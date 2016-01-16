@@ -1,0 +1,390 @@
+#%RAML 1.0
+title: Buildbot Web API
+version: v1
+mediaType: application/json
+traits:
+    bbget:
+      responses:
+          200:
+            body:
+              application/json:
+                type: responseObjects.libraries.types.<<bbtype>>
+          404:
+            body:
+              text/plain:
+                example: "not found"
+    bbpost:
+      body:
+        type: <<reqtype>>
+      responses:
+          200:
+            body:
+              application/json:
+                type: <<resptype>>
+          404:
+            body:
+              text/plain:
+                example: "not found"
+types:
+    build: !include types/build.raml
+    builder: !include types/builder.raml
+    buildrequest: !include types/buildrequest.raml
+    buildset: !include types/buildset.raml
+    buildslave: !include types/buildslave.raml
+    change: !include types/change.raml
+    changesource: !include types/changesource.raml
+    forcescheduler: !include types/forcescheduler.raml
+    identifier: !include types/identifier.raml
+    log: !include types/log.raml
+    logchunk: !include types/logchunk.raml
+    master: !include types/master.raml
+    rootlink: !include types/rootlink.raml
+    scheduler: !include types/scheduler.raml
+    sourcedproperties: !include types/sourcedproperties.raml
+    sourcestamp: !include types/sourcestamp.raml
+    spec: !include types/spec.raml
+    step: !include types/step.raml
+/:
+  get:
+    is:
+    - bbget: {bbtype: rootlink}
+/application.spec:
+  get:
+    is:
+    - bbget: {bbtype: spec}
+/builders:
+  /:builderid:
+    /forceschedulers:
+      get:
+        is:
+        - bbget: {bbtype: forcescheduler}
+  /n:builderid:
+    /buildrequests:
+      get:
+        is:
+        - bbget: {bbtype: buildrequest}
+    /builds:
+      /n:build_number:
+        /steps:
+          /i:step_name:
+            /logs:
+              /i:log_slug:
+                /contents:
+                  get:
+                    is:
+                    - bbget: {bbtype: logchunk}
+                /raw:
+                  get:
+                    is:
+                    - bbget: {bbtype: logchunk}
+                get:
+                  is:
+                  - bbget: {bbtype: log}
+              get:
+                is:
+                - bbget: {bbtype: log}
+            get:
+              is:
+              - bbget: {bbtype: step}
+          /n:step_number:
+            /logs:
+              /i:log_slug:
+                /contents:
+                  get:
+                    is:
+                    - bbget: {bbtype: logchunk}
+                /raw:
+                  get:
+                    is:
+                    - bbget: {bbtype: logchunk}
+                get:
+                  is:
+                  - bbget: {bbtype: log}
+              get:
+                is:
+                - bbget: {bbtype: log}
+            get:
+              is:
+              - bbget: {bbtype: step}
+          get:
+            is:
+            - bbget: {bbtype: step}
+      /n:number:
+        get:
+          is:
+          - bbget: {bbtype: build}
+        post:
+          is:
+          - bbpost: {reqtype: tbd, resptype: tbd}
+      get:
+        is:
+        - bbget: {bbtype: build}
+    /buildslaves:
+      /i:name:
+        get:
+          is:
+          - bbget: {bbtype: buildslave}
+      /n:buildslaveid:
+        get:
+          is:
+          - bbget: {bbtype: buildslave}
+      get:
+        is:
+        - bbget: {bbtype: buildslave}
+    /masters:
+      /n:masterid:
+        get:
+          is:
+          - bbget: {bbtype: master}
+      get:
+        is:
+        - bbget: {bbtype: master}
+    get:
+      is:
+      - bbget: {bbtype: builder}
+  get:
+    is:
+    - bbget: {bbtype: builder}
+/buildrequests:
+  /n:buildrequestid:
+    /builds:
+      get:
+        is:
+        - bbget: {bbtype: build}
+    get:
+      is:
+      - bbget: {bbtype: buildrequest}
+    post:
+      is:
+      - bbpost: {reqtype: tbd, resptype: tbd}
+  get:
+    is:
+    - bbget: {bbtype: buildrequest}
+/builds:
+  /n:buildid:
+    /changes:
+      get:
+        is:
+        - bbget: {bbtype: change}
+    /properties:
+      get:
+        is:
+        - bbget: {bbtype: sourcedproperties}
+    /steps:
+      /i:step_name:
+        /logs:
+          /i:log_slug:
+            /contents:
+              get:
+                is:
+                - bbget: {bbtype: logchunk}
+            /raw:
+              get:
+                is:
+                - bbget: {bbtype: logchunk}
+            get:
+              is:
+              - bbget: {bbtype: log}
+          get:
+            is:
+            - bbget: {bbtype: log}
+        get:
+          is:
+          - bbget: {bbtype: step}
+      /n:step_number:
+        /logs:
+          /i:log_slug:
+            /contents:
+              get:
+                is:
+                - bbget: {bbtype: logchunk}
+            /raw:
+              get:
+                is:
+                - bbget: {bbtype: logchunk}
+            get:
+              is:
+              - bbget: {bbtype: log}
+          get:
+            is:
+            - bbget: {bbtype: log}
+        get:
+          is:
+          - bbget: {bbtype: step}
+      get:
+        is:
+        - bbget: {bbtype: step}
+    get:
+      is:
+      - bbget: {bbtype: build}
+    post:
+      is:
+      - bbpost: {reqtype: tbd, resptype: tbd}
+  get:
+    is:
+    - bbget: {bbtype: build}
+/buildsets:
+  /n:bsid:
+    /properties:
+      get:
+        is:
+        - bbget: {bbtype: sourcedproperties}
+    get:
+      is:
+      - bbget: {bbtype: buildset}
+  get:
+    is:
+    - bbget: {bbtype: buildset}
+/buildslaves:
+  /i:name:
+    get:
+      is:
+      - bbget: {bbtype: buildslave}
+  /n:buildslaveid:
+    /builds:
+      get:
+        is:
+        - bbget: {bbtype: build}
+    get:
+      is:
+      - bbget: {bbtype: buildslave}
+  get:
+    is:
+    - bbget: {bbtype: buildslave}
+/changes:
+  /n:changeid:
+    get:
+      is:
+      - bbget: {bbtype: change}
+  get:
+    is:
+    - bbget: {bbtype: change}
+/changesources:
+  /n:changesourceid:
+    get:
+      is:
+      - bbget: {bbtype: changesource}
+  get:
+    is:
+    - bbget: {bbtype: changesource}
+/forceschedulers:
+  /i:schedulername:
+    get:
+      is:
+      - bbget: {bbtype: forcescheduler}
+    post:
+      is:
+      - bbpost: {reqtype: tbd, resptype: tbd}
+  get:
+    is:
+    - bbget: {bbtype: forcescheduler}
+/logs:
+  /n:logid:
+    /contents:
+      get:
+        is:
+        - bbget: {bbtype: logchunk}
+    /raw:
+      get:
+        is:
+        - bbget: {bbtype: logchunk}
+    get:
+      is:
+      - bbget: {bbtype: log}
+/masters:
+  /n:masterid:
+    /builders:
+      /n:builderid:
+        /buildslaves:
+          /i:name:
+            get:
+              is:
+              - bbget: {bbtype: buildslave}
+          /n:buildslaveid:
+            get:
+              is:
+              - bbget: {bbtype: buildslave}
+          get:
+            is:
+            - bbget: {bbtype: buildslave}
+        get:
+          is:
+          - bbget: {bbtype: builder}
+      get:
+        is:
+        - bbget: {bbtype: builder}
+    /buildslaves:
+      /i:name:
+        get:
+          is:
+          - bbget: {bbtype: buildslave}
+      /n:buildslaveid:
+        get:
+          is:
+          - bbget: {bbtype: buildslave}
+      get:
+        is:
+        - bbget: {bbtype: buildslave}
+    /changesources:
+      /n:changesourceid:
+        get:
+          is:
+          - bbget: {bbtype: changesource}
+      get:
+        is:
+        - bbget: {bbtype: changesource}
+    /schedulers:
+      /n:schedulerid:
+        get:
+          is:
+          - bbget: {bbtype: scheduler}
+      get:
+        is:
+        - bbget: {bbtype: scheduler}
+    get:
+      is:
+      - bbget: {bbtype: master}
+  get:
+    is:
+    - bbget: {bbtype: master}
+/schedulers:
+  /n:schedulerid:
+    get:
+      is:
+      - bbget: {bbtype: scheduler}
+  get:
+    is:
+    - bbget: {bbtype: scheduler}
+/sourcestamps:
+  /n:ssid:
+    /changes:
+      get:
+        is:
+        - bbget: {bbtype: change}
+    get:
+      is:
+      - bbget: {bbtype: sourcestamp}
+  get:
+    is:
+    - bbget: {bbtype: sourcestamp}
+/steps:
+  /n:stepid:
+    /logs:
+      /i:log_slug:
+        /contents:
+          get:
+            is:
+            - bbget: {bbtype: logchunk}
+        /raw:
+          get:
+            is:
+            - bbget: {bbtype: logchunk}
+        get:
+          is:
+          - bbget: {bbtype: log}
+      get:
+        is:
+        - bbget: {bbtype: log}
+    get:
+      is:
+      - bbget: {bbtype: step}

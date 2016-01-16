@@ -1,0 +1,48 @@
+#%RAML 1.0 DataType
+properties:
+  author:
+    description: ''
+    type: string
+  branch?:
+    description: ''
+    type: string
+  category?:
+    description: ''
+    type: string
+  changeid:
+    description: ''
+    type: integer
+  codebase:
+    description: ''
+    type: string
+  comments:
+    description: ''
+    type: string
+  files[]:
+    description: ''
+    type: string
+  parent_changeids[]:
+    description: ''
+    type: integer
+  project:
+    description: ''
+    type: string
+  properties:
+    description: ''
+    type: sourcedproperties
+  repository:
+    description: ''
+    type: string
+  revision?:
+    description: ''
+    type: string
+  revlink?:
+    description: ''
+    type: string
+  sourcestamp:
+    description: ''
+    type: sourcestamp
+  when_timestamp:
+    description: ''
+    type: integer
+type: object

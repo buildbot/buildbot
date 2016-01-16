@@ -1,0 +1,25 @@
+#%RAML 1.0 DataType
+properties:
+  buildslaveid:
+    description: ''
+    type: integer
+  configured_on[]:
+    description: ''
+    type:
+      properties:
+        builderid: integer
+        masterid: integer
+      type: object
+  connected_to[]:
+    description: ''
+    type:
+      properties:
+        masterid: integer
+      type: object
+  name:
+    description: ''
+    type: string
+  slaveinfo:
+    description: ''
+    type: object
+type: object
