@@ -27,13 +27,13 @@ However there is a much simpler way to use it, so in the configuration file, its
 ``name``
     This specifies the Builder's name, which is used in status reports.
 
-``slavename``
+``workername``
 
-``slavenames``
+``workernames``
     These arguments specify the buildslave or buildslaves that will be used by this Builder.
     All slaves names must appear in the :bb:cfg:`workers` configuration parameter.
     Each buildslave can accommodate multiple builders.
-    The ``slavenames`` parameter can be a list of names, while ``slavename`` can specify only one slave.
+    The ``workernames`` parameter can be a list of names, while ``workername`` can specify only one slave.
 
 ``factory``
     This is a :class:`buildbot.process.factory.BuildFactory` instance which controls how the build is performed by defining the steps in the build.

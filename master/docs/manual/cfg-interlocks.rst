@@ -102,16 +102,16 @@ To illustrate use of locks, a few examples.
     f.addStep(steps.ShellCommand(command="make test",
                                  locks=[db_lock.access('exclusive')]))
 
-    b1 = {'name': 'full1', 'slavename': 'fast',  'builddir': 'f1', 'factory': f,
+    b1 = {'name': 'full1', 'workername': 'fast',  'builddir': 'f1', 'factory': f,
            'locks': [build_lock.access('counting')] }
 
-    b2 = {'name': 'full2', 'slavename': 'new',   'builddir': 'f2', 'factory': f,
+    b2 = {'name': 'full2', 'workername': 'new',   'builddir': 'f2', 'factory': f,
            'locks': [build_lock.access('counting')] }
 
-    b3 = {'name': 'full3', 'slavename': 'old',   'builddir': 'f3', 'factory': f,
+    b3 = {'name': 'full3', 'workername': 'old',   'builddir': 'f3', 'factory': f,
            'locks': [build_lock.access('counting')] }
 
-    b4 = {'name': 'full4', 'slavename': 'other', 'builddir': 'f4', 'factory': f,
+    b4 = {'name': 'full4', 'workername': 'other', 'builddir': 'f4', 'factory': f,
            'locks': [build_lock.access('counting')] }
 
     c['builders'] = [b1, b2, b3, b4]

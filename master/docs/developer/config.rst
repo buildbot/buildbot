@@ -216,10 +216,10 @@ Builder Configuration
 
         The builder's factory.
 
-    .. py:attribute:: slavenames
+    .. py:attribute:: workernames
 
-        The builder's slave names (a list, regardless of whether the names were
-        specified with ``slavename`` or ``slavenames``).
+        The builder's worker names (a list, regardless of whether the names were
+        specified with ``workername`` or ``workernames``).
 
     .. py:attribute:: builddir
 

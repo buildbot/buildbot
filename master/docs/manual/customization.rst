@@ -420,7 +420,7 @@ Here is an example how you can achieve workdir-per-repo::
         build_factory.addStep(Git(mode="update"))
         # ...
         builders.append ({'name': 'mybuilder',
-                          'slavename': 'myslave',
+                          'workername': 'myslave',
                           'builddir': 'mybuilder',
                           'factory': build_factory})
 
