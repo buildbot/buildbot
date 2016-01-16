@@ -114,7 +114,7 @@ f1.addStep(ShellCommand(command='echo hi'))
 c['builders'] = []
 c['builders'].append(
     BuilderConfig(name="testy",
-                  slavenames=["local1"],
+                  workernames=["local1"],
                   factory=f1))
 c['status'] = []
 c['title'] = "test"

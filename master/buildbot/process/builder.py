@@ -117,12 +117,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setTags(builder_config.tags)
-        self.builder_status.setSlavenames(self.config.slavenames)
+        self.builder_status.setSlavenames(self.config.workernames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 
-        # if we have any slavebuilders attached which are no longer configured,
+        # if we have any workers attached which are no longer configured,
         # drop them.
-        new_workernames = set(builder_config.slavenames)
+        new_workernames = set(builder_config.workernames)
         self.slaves = [w for w in self.slaves
                        if w.worker.workername in new_workernames]
 

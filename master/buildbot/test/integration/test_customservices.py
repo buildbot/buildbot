@@ -101,7 +101,7 @@ def masterConfig():
     f.addStep(MyShellCommand(command='echo hei'))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f)]
 
     c['services'] = [MyService(num_reconfig=num_reconfig)]

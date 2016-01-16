@@ -35,7 +35,7 @@ For example, a build factory which consists of an SVN checkout followed by a ``m
 This factory would then be attached to one builder (or several, if desired)::
 
     c['builders'].append(
-        BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f))
+        BuilderConfig(name='quick', workernames=['bot1', 'bot2'], factory=f))
 
 It is also possible to pass a list of steps into the :class:`BuildFactory` when it is created.
 Using :meth:`addStep` is usually simpler, but there are cases where it is more convenient to create the list of steps ahead of time, perhaps using some Python tricks to generate the steps.

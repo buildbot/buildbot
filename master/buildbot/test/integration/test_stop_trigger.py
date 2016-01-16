@@ -47,11 +47,11 @@ def setupTriggerConfiguration(triggeredFactory, nextBuild=None):
     f.addStep(steps.ShellCommand(command='echo world'))
 
     mainBuilder = BuilderConfig(name="main",
-                                slavenames=["local1"],
+                                workernames=["local1"],
                                 factory=f)
 
     triggeredBuilderKwargs = {'name': "triggered",
-                              'slavenames': ["local1"],
+                              'workernames': ["local1"],
                               'factory': triggeredFactory}
 
     if nextBuild is not None:

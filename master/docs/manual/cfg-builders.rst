@@ -18,8 +18,8 @@ However there is a much simpler way to use it, so in the configuration file, its
 
     from buildbot.plugins import util
     c['builders'] = [
-        util.BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f_quick),
-        util.BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
+        util.BuilderConfig(name='quick', workernames=['bot1', 'bot2'], factory=f_quick),
+        util.BuilderConfig(name='thorough', workername='bot1', factory=f_thorough),
     ]
 
 ``BuilderConfig`` takes the following keyword arguments:
@@ -99,7 +99,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
         c['builders'] = [
           BuilderConfig(name='test', factory=f,
-                slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
+                workernames=['slave1', 'slave2', 'slave3', 'slave4'],
                 env={'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}),
         ]
 
@@ -166,5 +166,5 @@ Such a function can be provided to the BuilderConfig as follows::
     c['builders'] = [
         BuilderConfig(name='test', factory=f,
             nextBuild=pickNextBuild,
-            slavenames=['slave1', 'slave2', 'slave3', 'slave4']),
+            workernames=['slave1', 'slave2', 'slave3', 'slave4']),
     ]

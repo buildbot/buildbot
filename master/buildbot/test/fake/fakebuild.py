@@ -72,7 +72,7 @@ class FakeBuild(properties.PropertiesMixin):
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
         self.builder.config = config.BuilderConfig(
             name='bldr',
-            slavenames=['a'],
+            workernames=['a'],
             factory=factory.BuildFactory())
         self.path_module = posixpath
         self.buildid = 92

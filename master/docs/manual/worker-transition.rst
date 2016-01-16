@@ -142,6 +142,15 @@ Here is the complete list of changed API:
      - :py:attr:`~buildbot.config.MasterConfig.workers`
 
 
+   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+       ``slavenames`` was renamed to
+
+     - ``workernames``
+
+   * - :py:attr:`buildbot.config.BuilderConfig.slavenames`
+     - :py:attr:`~buildbot.config.BuilderConfig.workernames`
+
+
    * - :py:mod:`buildbot.process.slavebuilder`
      - :py:mod:`buildbot.process.workerforbuilder`
 
@@ -276,6 +285,9 @@ Other changes:
 * ``buildslaveName`` functions argument name renamed to ``workerName``.
 
 * ``s`` and ``sl`` loops variables were renamed to ``worker`` or ``w``.
+
+* In :py:meth:`buildbot.config.BuilderConfig.getConfigDict` result
+  ``'slavenames'`` key changed to ``workernames``.
 
 
 Plugins

@@ -754,7 +754,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         seen_builddirs = set()
 
         for b in self.builders:
-            unknowns = set(b.slavenames) - workernames
+            unknowns = set(b.workernames) - workernames
             if unknowns:
                 error("builder '%s' uses unknown workers %s" %
                       (b.name, ", ".join(repr(u) for u in unknowns)))
@@ -800,14 +800,25 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error("workers are configured, but c['protocols'] not")
 
 
-class BuilderConfig(util_config.ConfiguredMixin):
+class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
-    def __init__(self, name=None, slavename=None, slavenames=None,
+    def __init__(self, name=None, slavename=None, workernames=None,
                  builddir=None, slavebuilddir=None, factory=None,
                  tags=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None):
+                 canStartBuild=None,
+
+                 slavenames=None,  # deprecated, use `workernames` instead
+                 ):
+
+        # Deprecated API support.
+        if slavenames is not None:
+            on_deprecated_name_usage(
+                "'slavenames' keyword argument is deprecated, "
+                "use 'workernames' instead")
+            assert workernames is None
+            workernames = slavenames
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -828,25 +839,26 @@ class BuilderConfig(util_config.ConfiguredMixin):
             error("builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
-        # slavenames can be a single worker name or a list, and should also
+        # workernames can be a single worker name or a list, and should also
         # include workername, if given
-        if isinstance(slavenames, str):
-            slavenames = [slavenames]
-        if slavenames:
-            if not isinstance(slavenames, list):
-                error("builder '%s': slavenames must be a list or a string" %
+        if isinstance(workernames, str):
+            workernames = [workernames]
+        if workernames:
+            if not isinstance(workernames, list):
+                error("builder '%s': workernames must be a list or a string" %
                       (name,))
         else:
-            slavenames = []
+            workernames = []
 
         if slavename:
             if not isinstance(slavename, str):
                 error("builder '%s': workername must be a string" % (name,))
-            slavenames = slavenames + [slavename]
-        if not slavenames:
+            workernames = workernames + [slavename]
+        if not workernames:
             error("builder '%s': at least one workername is required" % (name,))
 
-        self.slavenames = slavenames
+        self.workernames = workernames
+        self._registerOldWorkerAttr("workernames")
 
         # builddir defaults to name
         if builddir is None:
@@ -910,7 +922,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # constructor!
         rv = {
             'name': self.name,
-            'slavenames': self.slavenames,
+            'workernames': self.workernames,
             'factory': self.factory,
             'builddir': self.builddir,
             'slavebuilddir': self.slavebuilddir,

@@ -29,7 +29,7 @@ For example, the following will generate a builder for each of a range of suppor
         c['builders'].append(util.BuilderConfig(
                 name="test-%s" % python,
                 factory=f,
-                slavenames=pytest_slaves))
+                workernames=pytest_slaves))
 
 .. _Collapse-Request-Functions:
 

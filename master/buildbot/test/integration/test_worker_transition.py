@@ -113,7 +113,7 @@ factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
 c['builders'] = []
 c['builders'].append(
     util.BuilderConfig(name="runtests",
-      slavenames=["example-worker"],
+      workernames=["example-worker"],
       factory=factory))
 
 c['status'] = []
@@ -194,6 +194,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
                     r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
+                    r"'slavenames' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
             loaded_config = config.MasterConfig.loadConfig(
                 self.basedir, self.configfile)

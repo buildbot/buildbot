@@ -80,7 +80,7 @@ def masterConfig():
     f.addStep(steps.DirectoryUpload(slavesrc="dir", masterdest="dir"))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f)
     ]
     return c

@@ -991,7 +991,7 @@ For example, a particular daily scheduler could be configured on multiple master
         f.addStep(MyShellCommand(command='echo hei'))
         c['builders'] = [
             BuilderConfig(name="testy",
-                          slavenames=["local1"],
+                          workernames=["local1"],
                           factory=f)]
 
         c['services'] = [

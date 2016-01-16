@@ -307,7 +307,7 @@ class SimpleConfig(dict):
 
         self['builders'].append(
             BuilderConfig(name=buildername,
-                          slavenames=self._os2slaves[sos],
+                          workernames=self._os2slaves[sos],
                           factory=factory,
                           category=category))
 

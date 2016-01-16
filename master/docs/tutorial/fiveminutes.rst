@@ -109,7 +109,7 @@ A step can be a shell command object, or a dedicated object that checks out the 
 
     # finally, declare the list of builders. In this case, we only have one builder
     c['builders'] = [
-        util.BuilderConfig(name="simplebuild", slavenames=['slave1', 'slave2', 'slave3'], factory=f_simplebuild)
+        util.BuilderConfig(name="simplebuild", workernames=['slave1', 'slave2', 'slave3'], factory=f_simplebuild)
     ]
 
 So our builder is called ``simplebuild`` and can run on either of ``slave1``, ``slave2`` and ``slave3``.

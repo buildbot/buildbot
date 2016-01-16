@@ -116,13 +116,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def slaveLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_slaves", -1)
         for name, b in iteritems(self.builders):
-            if bot.workername in b.config.slavenames:
+            if bot.workername in b.config.workernames:
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForSlave()')
     def getBuildersForSlave(self, slavename):
         return [b for b in itervalues(self.builders)
-                if slavename in b.config.slavenames]
+                if slavename in b.config.workernames]
 
     def getBuildernames(self):
         return self.builderNames

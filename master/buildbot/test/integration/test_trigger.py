@@ -88,9 +88,9 @@ def masterConfig():
     f2.addStep(steps.ShellCommand(command='echo ola'))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f),
         BuilderConfig(name="build",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f2)]
     return c

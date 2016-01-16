@@ -347,7 +347,7 @@ def masterConfig():
     f1.addStep(MyBuildStep(name='one'))
     f1.addStep(MyBuildStep(name='two'))
     c['builders'] = [
-        BuilderConfig(name="a", slavenames=["local1"], factory=f1),
+        BuilderConfig(name="a", workernames=["local1"], factory=f1),
     ]
     c['status'] = []
     c['title'] = "test"

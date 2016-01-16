@@ -52,6 +52,6 @@ def masterConfig():
     f.addStep(steps.ShellCommand(command='echo hello'))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f)]
     return c
