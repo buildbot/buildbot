@@ -187,8 +187,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def addLatentSlave(self, slave):
         assert interfaces.ILatentWorker.providedBy(slave)
-        for s in self.slaves:
-            if s == slave:
+        for w in self.slaves:
+            if w == slave:
                 break
         else:
             sb = workerforbuilder.LatentWorkerForBuilder(slave, self)
@@ -560,8 +560,8 @@ class BuilderControl:
             self.original.builder_status.addPointEvent(["ping", "no slave"])
             return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
-        for s in self.original.slaves:
-            dl.append(s.ping(self.original.builder_status))
+        for w in self.original.slaves:
+            dl.append(w.ping(self.original.builder_status))
         d = defer.DeferredList(dl)
         d.addCallback(self._gatherPingResults)
         return d

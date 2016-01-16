@@ -275,6 +275,8 @@ Other changes:
 
 * ``buildslaveName`` functions argument name renamed to ``workerName``.
 
+* ``s`` and ``sl`` loops variables were renamed to ``worker`` or ``w``.
+
 
 Plugins
 -------
