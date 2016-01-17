@@ -117,16 +117,16 @@ class BuildStepMixin(object):
         del remotecommand.FakeRemoteCommand.testcase
 
     # utilities
-    def _getSlaveCommandVersionWrapper(self):
-        originalGetSlaveCommandVersion = self.step.build.getWorkerCommandVersion
+    def _getWorkerCommandVersionWrapper(self):
+        originalGetWorkerCommandVersion = self.step.build.getWorkerCommandVersion
 
-        def getSlaveCommandVersion(cmd, oldversion):
+        def getWorkerCommandVersion(cmd, oldversion):
             if cmd == 'shell':
                 if hasattr(self, 'slaveShellCommandVersion'):
                     return self.slaveShellCommandVersion
-            return originalGetSlaveCommandVersion(cmd, oldversion)
+            return originalGetWorkerCommandVersion(cmd, oldversion)
 
-        return getSlaveCommandVersion
+        return getWorkerCommandVersion
 
     def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
                   buildFiles=[], wantDefaultWorkdir=True, wantData=True,
@@ -290,7 +290,7 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
-        self.step.build.getWorkerCommandVersion = self._getSlaveCommandVersionWrapper()
+        self.step.build.getWorkerCommandVersion = self._getWorkerCommandVersionWrapper()
 
         self.conn = mock.Mock(name="WorkerForBuilder(connection)")
         self.step.setupProgress()
