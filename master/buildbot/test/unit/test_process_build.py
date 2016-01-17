@@ -1029,3 +1029,37 @@ class TestBuildProperties(unittest.TestCase):
 
         self.assertEqual(old, 'worker name')
         self.assertIdentical(new, old)
+
+    def test_slavename_old_api(self):
+        class FakeProperties(Mock):
+            implements(interfaces.IProperties)
+
+        import posixpath
+
+        r = FakeRequest()
+        build = Build([r])
+        build.properties = FakeProperties()
+        build.builder = FakeBuilder(self.master)
+        build.build_status = FakeBuildStatus()
+
+        w = worker.FakeWorker(self.master)
+        w.path_module = posixpath
+        w.properties = FakeProperties()
+        w.workername = 'worker name'
+        w.slave_basedir = None
+
+        workerforbuilder = Mock(name='workerforbuilder')
+        workerforbuilder.worker = w
+
+        build.setupSlaveBuilder(workerforbuilder)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = build.workername
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavename' attribute is deprecated"):
+            old = build.slavename
+
+        self.assertEqual(old, 'worker name')
+        self.assertIdentical(new, old)

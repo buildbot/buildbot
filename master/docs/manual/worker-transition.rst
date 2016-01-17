@@ -193,6 +193,9 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.process.build.Build.getSlaveName`
      - :py:meth:`~buildbot.process.build.Build.getWorkerName`
 
+   * - :py:meth:`buildbot.process.build.Build.slavename`
+     - :py:meth:`~buildbot.process.build.Build.workername`
+
 
    * - :py:mod:`buildbot.steps.slave`
      - :py:mod:`buildbot.steps.worker`

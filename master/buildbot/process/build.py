@@ -224,8 +224,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             self.setProperty("builddir", builddir, "slave")
             self.setProperty("workdir", builddir, "slave (deprecated)")
 
-        self.slavename = workerforbuilder.worker.workername
-        self.build_status.setSlavename(self.slavename)
+        self.workername = workerforbuilder.worker.workername
+        self._registerOldWorkerAttr("workername")
+        self.build_status.setSlavename(self.workername)
 
     @defer.inlineCallbacks
     def startBuild(self, build_status, expectations, workerforbuilder):
