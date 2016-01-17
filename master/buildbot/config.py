@@ -368,6 +368,10 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         # saved for backward compatability
         if 'slavePortnum' in config_dict:
+            on_deprecated_name_usage(
+                "c['slavePortnum'] key is deprecated, use "
+                "c['protocols']['pb']['port'] instead",
+                filename=filename)
             slavePortnum = config_dict.get('slavePortnum')
             if isinstance(slavePortnum, int):
                 slavePortnum = "tcp:%d" % slavePortnum

@@ -312,6 +312,8 @@ Other changes:
   ``'slavebuilddir'`` key changed to ``workerbuilddir``;
   ``'nextSlave'`` key changed to ``nextWorker``.
 
+* Configuration key ``c['slavePortnum']`` is deprecated in favor of
+  ``c['protocols']['pb']['port']``.
 
 Plugins
 -------
