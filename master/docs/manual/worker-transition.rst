@@ -304,6 +304,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.process.build.Build.getSlaveCommandVersion`
      - :py:meth:`~buildbot.process.build.Build.getWorkerCommandVersion`
 
+   * - :py:meth:`buildbot.process.build.Build.setupSlaveBuilder`
+     - :py:meth:`~buildbot.process.build.Build.setupWorkerForBuilder`
+
 
    * - :py:attr:`buildbot.steps.shell.ShellCommand.slaveEnvironment`
        (Note: this variable is renderable)

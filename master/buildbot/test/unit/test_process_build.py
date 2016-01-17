@@ -269,7 +269,7 @@ class TestBuild(unittest.TestCase):
         b.getProperties = Mock()
         b.setProperty = Mock()
 
-        b.setupSlaveBuilder(self.workerforbuilder)
+        b.setupWorkerForBuilder(self.workerforbuilder)
 
         expected_path = '/srv/buildbot/slave/test'
 
@@ -1017,7 +1017,7 @@ class TestBuildProperties(unittest.TestCase):
         workerforbuilder = Mock(name='workerforbuilder')
         workerforbuilder.worker = w
 
-        build.setupSlaveBuilder(workerforbuilder)
+        build.setupWorkerForBuilder(workerforbuilder)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             new = build.getWorkerName()
@@ -1051,7 +1051,7 @@ class TestBuildProperties(unittest.TestCase):
         workerforbuilder = Mock(name='workerforbuilder')
         workerforbuilder.worker = w
 
-        build.setupSlaveBuilder(workerforbuilder)
+        build.setupWorkerForBuilder(workerforbuilder)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             new = build.workername

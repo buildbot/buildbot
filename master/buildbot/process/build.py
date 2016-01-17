@@ -208,7 +208,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.builder.setupProperties(props)
 
-    def setupSlaveBuilder(self, workerforbuilder):
+    def setupWorkerForBuilder(self, workerforbuilder):
         self.workerforbuilder = workerforbuilder
 
         self.path_module = workerforbuilder.worker.path_module
@@ -260,7 +260,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # now that we have a build_status, we can set properties
         self.setupProperties()
-        self.setupSlaveBuilder(workerforbuilder)
+        self.setupWorkerForBuilder(workerforbuilder)
         slave.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right worker
