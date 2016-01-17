@@ -126,7 +126,7 @@ class TestBRDBase(unittest.TestCase):
             reactor.callLater(0, d.callback, True)
             return d
         bldr.maybeStartBuild = maybeStartBuild
-        bldr.canStartWithSlavebuilder = lambda _: True
+        bldr.canStartWithWorkerForBuilder = lambda _: True
         bldr.getCollapseRequestsFn = lambda: False
 
         bldr.slaves = []
@@ -500,10 +500,10 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         slaves_attempted = []
 
-        def _canStartWithSlavebuilder(workerforbuilder):
+        def _canStartWithWorkerForBuilder(workerforbuilder):
             slaves_attempted.append(workerforbuilder.name)
             return True
-        self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
+        self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
 
         pairs_tested = []
 
@@ -545,18 +545,18 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_limited_by_canStartBuild_deferreds(self):
         """Another variant that:
          * returns Deferred types,
-         * use 'canStartWithSlavebuilder' to reject one of the workers
+         * use 'canStartWithWorkerForBuilder' to reject one of the workers
          * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
 
         self.bldr.config.nextWorker = nth_slave(-1)
 
         slaves_attempted = []
 
-        def _canStartWithSlavebuilder(workerforbuilder):
+        def _canStartWithWorkerForBuilder(workerforbuilder):
             slaves_attempted.append(workerforbuilder.name)
             allowed = workerforbuilder.name in ['test-slave2', 'test-slave1']
             return defer.succeed(allowed)   # a deferred here!
-        self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
+        self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
 
         pairs_tested = []
 
@@ -593,15 +593,15 @@ class TestMaybeStartBuilds(TestBRDBase):
             ('test-slave2', 12)])
 
     @defer.inlineCallbacks
-    def test_limited_by_canStartWithSlavebuilder(self):
+    def test_limited_by_canStartWithWorkerForBuilder(self):
         self.bldr.config.nextWorker = nth_slave(-1)
 
         slaves_attempted = []
 
-        def _canStartWithSlavebuilder(workerforbuilder):
+        def _canStartWithWorkerForBuilder(workerforbuilder):
             slaves_attempted.append(workerforbuilder.name)
             return (workerforbuilder.name == 'test-slave3')
-        self.bldr.canStartWithSlavebuilder = _canStartWithSlavebuilder
+        self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
         self.addSlaves({'test-slave1': 0, 'test-slave2': 1, 'test-slave3': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,

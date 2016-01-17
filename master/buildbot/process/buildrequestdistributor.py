@@ -261,7 +261,7 @@ class BasicBuildChooser(BuildChooserBase):
 
             self.slavepool.remove(slave)
 
-            canStart = yield self.bldr.canStartWithSlavebuilder(slave)
+            canStart = yield self.bldr.canStartWithWorkerForBuilder(slave)
             if canStart:
                 defer.returnValue(slave)
                 return

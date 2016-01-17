@@ -295,7 +295,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def getAvailableSlaves(self):
         return [sb for sb in self.slaves if sb.isAvailable()]
 
-    def canStartWithSlavebuilder(self, workerforbuilder):
+    def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in self.config.locks]
         return Build.canStartWithSlavebuilder(locks, workerforbuilder)
