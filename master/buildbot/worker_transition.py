@@ -249,7 +249,10 @@ class WorkerAPICompatMixin(object):
 
     def __getattr__(self, name):
         if name not in self.__compat_attrs:
-            raise AttributeError()
+            raise AttributeError(
+                "'{class_name}' object has no attribute '{attr_name}'".format(
+                    class_name=self.__class__.__name__,
+                    attr_name=name))
 
         new_name = self.__compat_attrs[name]
 

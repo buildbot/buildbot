@@ -314,3 +314,14 @@ class AttributeMixin(unittest.TestCase):
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.slavenames, ["a", "b", "c"])
+
+    def test_attribute_error(self):
+        class C(WorkerAPICompatMixin):
+            pass
+
+        c = C()
+
+        self.assertRaisesRegexp(
+            AttributeError,
+            "'C' object has no attribute 'abc'",
+            lambda: c.abc)
