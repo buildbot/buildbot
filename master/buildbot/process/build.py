@@ -36,6 +36,7 @@ from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import worst_status
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import define_old_worker_method
 
 
 class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
@@ -170,8 +171,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def getSlaveCommandVersion(self, command, oldversion=None):
         return self.workerforbuilder.getSlaveCommandVersion(command, oldversion)
 
-    def getSlaveName(self):
+    def getWorkerName(self):
         return self.workerforbuilder.worker.workername
+    define_old_worker_method(locals(), getWorkerName)
 
     def setupProperties(self):
         props = interfaces.IProperties(self)

@@ -190,6 +190,9 @@ Here is the complete list of changed API:
      - :py:class:`buildbot.process.workerforbuilder.LatentWorkerForBuilder`
 
 
+   * - :py:meth:`buildbot.process.build.Build.getSlaveName`
+     - :py:meth:`~buildbot.process.build.Build.getWorkerName`
+
    * - :py:attr:`buildbot.process.build.Build.slavebuilder` (private?)
      - :py:attr:`~buildbot.process.build.Build.workerforbuilder`
 
