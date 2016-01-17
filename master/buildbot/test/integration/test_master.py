@@ -98,7 +98,7 @@ from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.steps.shell import ShellCommand
 from buildbot.worker import Worker
 c['workers'] = [Worker("local1", "localpw")]
-c['slavePortnum'] = 0
+c['protocols'] = {'pb': {'port': 'tcp:0'}}
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []

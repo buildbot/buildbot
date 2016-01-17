@@ -399,8 +399,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors, "c['protocols'] must be dict")
 
     def test_load_global_when_slavePortnum_and_protocols_set(self):
-        self.cfg.load_global(self.filename,
-                             dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
+            self.cfg.load_global(self.filename,
+                                 dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
         self.assertConfigError(self.errors,
                                "Both c['slavePortnum'] and c['protocols']['pb']['port']"
                                " defined, recommended to remove slavePortnum and leave"
@@ -518,12 +521,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_global_slavePortnum_int(self):
-        self.do_test_load_global(dict(slavePortnum=123),
-                                 protocols={'pb': {'port': 'tcp:123'}})
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
+            self.do_test_load_global(dict(slavePortnum=123),
+                                     protocols={'pb': {'port': 'tcp:123'}})
 
     def test_load_global_slavePortnum_str(self):
-        self.do_test_load_global(dict(slavePortnum='udp:123'),
-                                 protocols={'pb': {'port': 'udp:123'}})
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
+            self.do_test_load_global(dict(slavePortnum='udp:123'),
+                                     protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_protocols_str(self):
         self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),

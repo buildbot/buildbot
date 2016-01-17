@@ -78,13 +78,13 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 from buildbot.process.factory import BuildFactory
                 c['builders'] = [
                     BuilderConfig('testbuilder', factory=BuildFactory(),
-                                  slavename='sl'),
+                                  workername='worker'),
                 ]
                 from buildbot.worker import Worker
                 c['workers'] = [
-                    Worker('sl', 'pass'),
+                    Worker('worker', 'pass'),
                 ]
-                c['slavePortnum'] = 9989
+                c['protocols'] = {'pb': {'port': 9989}}
                 """)
         self.do_test_load(config=config,
                           stdout_re=re.compile('Config file is good!'))
@@ -116,7 +116,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c['schedulers'] = []
                 c['builders'] = []
                 c['workers'] = []
-                c['slavePortnum'] = port
+                c['protocols'] = {'pb': {'port': port}}
                 """)
         other_files = {'othermodule.py': 'port = 9989'}
         self.do_test_load(config=config, other_files=other_files)
@@ -128,7 +128,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c['schedulers'] = []
                 c['builders'] = []
                 c['workers'] = []
-                c['slavePortnum'] = port
+                c['protocols'] = {'pb': {'port': 9989}}
                 """)
         other_files = {
             ('otherpackage', '__init__.py'): '',

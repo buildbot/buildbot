@@ -340,7 +340,7 @@ def masterConfig():
             self.finished(results.SUCCESS)
 
     c['workers'] = [Worker("local1", "localpw")]
-    c['slavePortnum'] = 0
+    c['protocols'] = {'pb': {'port': 'tcp:0'}}
     c['change_source'] = []
     c['schedulers'] = []  # filled in above
     f1 = BuildFactory()
