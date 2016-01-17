@@ -335,6 +335,9 @@ Other changes:
 * Configuration key ``c['slavePortnum']`` is deprecated in favor of
   ``c['protocols']['pb']['port']``.
 
+* Definitely privately used "slave"-named variables and attributes were
+  renamed, including tests modules, classes and methods.
+
 Plugins
 -------
 
