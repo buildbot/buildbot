@@ -373,11 +373,11 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 "c['slavePortnum'] key is deprecated, use "
                 "c['protocols']['pb']['port'] instead",
                 filename=filename)
-            slavePortnum = config_dict.get('slavePortnum')
-            if isinstance(slavePortnum, int):
-                slavePortnum = "tcp:%d" % slavePortnum
+            port = config_dict.get('slavePortnum')
+            if isinstance(port, int):
+                port = "tcp:%d" % port
             pb_options = self.protocols.get('pb', {})
-            pb_options['port'] = slavePortnum
+            pb_options['port'] = port
             self.protocols['pb'] = pb_options
 
         if 'multiMaster' in config_dict:
