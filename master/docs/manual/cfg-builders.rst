@@ -47,11 +47,11 @@ Other optional keys may be set on each ``BuilderConfig``:
     If not set, this parameter defaults to the builder name, with some characters escaped.
     Each builder must have a unique build directory.
 
-``slavebuilddir``
+``workerbuilddir``
     Specifies the name of a subdirectory (under the slave's configured base directory) in which everything related to this builder will be placed on the buildslave.
     This is where checkouts, compiles, and tests are run.
     If not set, defaults to ``builddir``.
-    If a slave is connected to multiple builders that share the same ``slavebuilddir``, make sure the slave is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
+    If a slave is connected to multiple builders that share the same ``workerbuilddir``, make sure the slave is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
 
 ``tags``
     If provided, this is a list of strings that identifies tags for the builder.

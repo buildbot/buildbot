@@ -225,9 +225,9 @@ Builder Configuration
 
         The builder's builddir.
 
-    .. py:attribute:: slavebuilddir
+    .. py:attribute:: workerbuilddir
 
-        The builder's slave-side builddir.
+        The builder's worker-side builddir.
 
     .. py:attribute:: category
 

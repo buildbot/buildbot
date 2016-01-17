@@ -219,7 +219,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if workerforbuilder.worker.slave_basedir:
             builddir = self.path_module.join(
                 workerforbuilder.worker.slave_basedir,
-                self.builder.config.slavebuilddir)
+                self.builder.config.workerbuilddir)
             self.setProperty("builddir", builddir, "slave")
             self.setProperty("workdir", builddir, "slave (deprecated)")
 

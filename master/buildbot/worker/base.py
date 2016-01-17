@@ -451,7 +451,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.name)
-        blist = [(b.name, b.config.slavebuilddir) for b in our_builders]
+        blist = [(b.name, b.config.workerbuilddir) for b in our_builders]
         if blist == self._old_builder_list:
             return defer.succeed(None)
 

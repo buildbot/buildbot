@@ -1327,7 +1327,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               name='a b c',
                               workernames=['a'],
                               builddir='a_b_c',
-                              slavebuilddir='a_b_c',
+                              workerbuilddir='a_b_c',
                               tags=[],
                               nextSlave=None,
                               locks=[],
@@ -1346,7 +1346,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            slavebuilddir='sbd', factory=self.factory, category='c',
+            workerbuilddir='sbd', factory=self.factory, category='c',
             nextSlave=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1355,7 +1355,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               name='b',
                               workernames=['s2', 's1'],
                               builddir='bd',
-                              slavebuilddir='sbd',
+                              workerbuilddir='sbd',
                               tags=['c'],
                               locks=['l'],
                               env={'x': 10},
@@ -1368,7 +1368,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            slavebuilddir='sbd', factory=self.factory, tags=['c'],
+            workerbuilddir='sbd', factory=self.factory, tags=['c'],
             nextSlave=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1383,7 +1383,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'nextBuild': nb,
                                                'nextSlave': ns,
                                                'properties': {'y': 20},
-                                               'slavebuilddir': 'sbd',
+                                               'workerbuilddir': 'sbd',
                                                'workernames': ['s2', 's1'],
                                                })
 
@@ -1394,7 +1394,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             self.assertEqual(cfg.getConfigDict(), {'builddir': 'b',
                                                    'collapseRequests': cr,
                                                    'name': 'b',
-                                                   'slavebuilddir': 'b',
+                                                   'workerbuilddir': 'b',
                                                    'factory': self.factory,
                                                    'workernames': ['s1'],
                                                    })
@@ -1459,6 +1459,47 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(names_old, ['a'])
         self.assertIdentical(names_new, names_old)
+
+    def test_init_workerbuilddir_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                workerbuilddir="dir")
+
+        self.assertEqual(cfg.workerbuilddir, 'dir')
+
+    def test_init_workerbuilddir_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavebuilddir' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                slavebuilddir='dir')
+
+        self.assertEqual(cfg.workerbuilddir, 'dir')
+
+    def test_init_workerbuilddir_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', 'a', None, None, 'dir', factory=self.factory)
+
+        self.assertEqual(cfg.workerbuilddir, 'dir')
+
+    def test_workerbuilddir_old_api(self):
+        cfg = config.BuilderConfig(
+            name='a b c', workername='a', factory=self.factory,
+            workerbuilddir='dir')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = cfg.workerbuilddir
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavebuilddir' attribute is deprecated"):
+            old = cfg.slavebuilddir
+
+        self.assertEqual(old, 'dir')
+        self.assertIdentical(new, old)
 
 
 class FakeService(service.ReconfigurableServiceMixin,

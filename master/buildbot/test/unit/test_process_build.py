@@ -99,7 +99,7 @@ class FakeBuilder:
 
     def __init__(self, master):
         self.config = Mock()
-        self.config.slavebuilddir = 'sbd'
+        self.config.workerbuilddir = 'sbd'
         self.name = 'fred'
         self.master = master
         self.botmaster = master.botmaster
@@ -263,7 +263,7 @@ class TestBuild(unittest.TestCase):
         b = self.build
 
         b.build_status = Mock()
-        b.builder.config.slavebuilddir = 'test'
+        b.builder.config.workerbuilddir = 'test'
         self.workerforbuilder.worker.slave_basedir = "/srv/buildbot/slave"
         self.workerforbuilder.worker.path_module = posixpath
         b.getProperties = Mock()

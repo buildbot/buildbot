@@ -531,7 +531,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
                 warnings.warn("Absolute path '%s' for builder may cause "
-                              "mayhem.  Perhaps you meant to specify slavebuilddir "
+                              "mayhem.  Perhaps you meant to specify workerbuilddir "
                               "instead.")
 
         self.builders = builders
@@ -803,7 +803,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
     def __init__(self, name=None, workername=None, workernames=None,
-                 builddir=None, slavebuilddir=None, factory=None,
+                 builddir=None, workerbuilddir=None, factory=None,
                  tags=None, category=None,
                  nextSlave=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
@@ -811,6 +811,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
                  slavename=None,  # deprecated, use `workername` instead
                  slavenames=None,  # deprecated, use `workernames` instead
+                 slavebuilddir=None,  # deprecated, use `workerbuilddir` instead
                  ):
 
         # Deprecated API support.
@@ -826,6 +827,12 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                 "use 'workernames' instead")
             assert workernames is None
             workernames = slavenames
+        if slavebuilddir is not None:
+            on_deprecated_name_usage(
+                "'slavebuilddir' keyword argument is deprecated, "
+                "use 'workerbuilddir' instead")
+            assert workerbuilddir is None
+            workerbuilddir = slavebuilddir
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -872,10 +879,11 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             builddir = safeTranslate(name)
         self.builddir = builddir
 
-        # slavebuilddir defaults to builddir
-        if slavebuilddir is None:
-            slavebuilddir = builddir
-        self.slavebuilddir = slavebuilddir
+        # workerbuilddir defaults to builddir
+        if workerbuilddir is None:
+            workerbuilddir = builddir
+        self.workerbuilddir = workerbuilddir
+        self._registerOldWorkerAttr("workerbuilddir")
 
         # remainder are optional
 
@@ -932,7 +940,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             'workernames': self.workernames,
             'factory': self.factory,
             'builddir': self.builddir,
-            'slavebuilddir': self.slavebuilddir,
+            'workerbuilddir': self.workerbuilddir,
         }
         if self.tags:
             rv['tags'] = self.tags
