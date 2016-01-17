@@ -210,7 +210,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     def setupSlaveBuilder(self, workerforbuilder):
         self.workerforbuilder = workerforbuilder
-        self._registerOldWorkerAttr("workerforbuilder", name="slavebuilder")
 
         self.path_module = workerforbuilder.worker.path_module
 

@@ -996,36 +996,6 @@ class TestBuildProperties(unittest.TestCase):
         self.build.render("xyz")
         self.properties.render.assert_called_with("xyz")
 
-    def test_workerforbuilder_old_api(self):
-        class FakeProperties(Mock):
-            implements(interfaces.IProperties)
-
-        import posixpath
-
-        r = FakeRequest()
-        build = Build([r])
-        build.properties = FakeProperties()
-        build.builder = FakeBuilder(self.master)
-        build.build_status = FakeBuildStatus()
-
-        w = worker.FakeWorker(self.master)
-        w.path_module = posixpath
-        w.properties = FakeProperties()
-
-        workerforbuilder = Mock(name='workerforbuilder')
-
-        build.setupSlaveBuilder(workerforbuilder)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new_workerforbuilder = build.workerforbuilder
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavebuilder' attribute is deprecated"):
-            old_workerforbuilder = build.slavebuilder
-
-        self.assertIdentical(new_workerforbuilder, old_workerforbuilder)
-
     def test_get_slave_name_old_api(self):
         class FakeProperties(Mock):
             implements(interfaces.IProperties)

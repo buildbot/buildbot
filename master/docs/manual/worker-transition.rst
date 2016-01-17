@@ -193,9 +193,6 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.process.build.Build.getSlaveName`
      - :py:meth:`~buildbot.process.build.Build.getWorkerName`
 
-   * - :py:attr:`buildbot.process.build.Build.slavebuilder` (private?)
-     - :py:attr:`~buildbot.process.build.Build.workerforbuilder`
-
 
    * - :py:mod:`buildbot.steps.slave`
      - :py:mod:`buildbot.steps.worker`
@@ -292,11 +289,15 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
      - :py:attr:`buildbot.master.BuildMaster.workers`
 
 
+   * - :py:attr:`buildbot.process.build.Build.slavebuilder`
+     - :py:attr:`~buildbot.process.build.Build.workerforbuilder`
+
    * - :py:meth:`buildbot.process.build.Build.setSlaveEnvironment`
      - :py:meth:`~buildbot.process.build.Build.setWorkerEnvironment`
 
    * - :py:attr:`buildbot.process.build.Build.slaveEnvironment`
      - :py:attr:`~buildbot.process.build.Build.workerEnvironment`
+
 
    * - :py:attr:`buildbot.steps.shell.ShellCommand.slaveEnvironment`
        (Note: this variable is renderable)
