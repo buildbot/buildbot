@@ -689,10 +689,10 @@ class BuildStep(results.ResultComputingConfigMixin,
     # utility methods that BuildSteps may find useful
 
     def slaveVersion(self, command, oldversion=None):
-        return self.build.getSlaveCommandVersion(command, oldversion)
+        return self.build.getWorkerCommandVersion(command, oldversion)
 
     def slaveVersionIsOlderThan(self, command, minversion):
-        sv = self.build.getSlaveCommandVersion(command, None)
+        sv = self.build.getWorkerCommandVersion(command, None)
         if sv is None:
             return True
         if map(int, sv.split(".")) < map(int, minversion.split(".")):

@@ -636,7 +636,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='incremental'))
-        self.step.build.getSlaveCommandVersion = lambda cmd, oldversion: "2.15"
+        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1401,7 +1401,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='incremental'))
-        self.step.build.getSlaveCommandVersion = lambda cmd, oldversion: "2.15"
+        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])

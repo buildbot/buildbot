@@ -118,7 +118,7 @@ class BuildStepMixin(object):
 
     # utilities
     def _getSlaveCommandVersionWrapper(self):
-        originalGetSlaveCommandVersion = self.step.build.getSlaveCommandVersion
+        originalGetSlaveCommandVersion = self.step.build.getWorkerCommandVersion
 
         def getSlaveCommandVersion(cmd, oldversion):
             if cmd == 'shell':
@@ -177,7 +177,7 @@ class BuildStepMixin(object):
             if '*' in slave_version:
                 return slave_version['*']
             return oldversion
-        b.getSlaveCommandVersion = getSlaveVersion
+        b.getWorkerCommandVersion = getSlaveVersion
         b.workerEnvironment = slave_env.copy()
         step.setBuild(b)
 
@@ -290,7 +290,7 @@ class BuildStepMixin(object):
 
         @returns: Deferred
         """
-        self.step.build.getSlaveCommandVersion = self._getSlaveCommandVersionWrapper()
+        self.step.build.getWorkerCommandVersion = self._getSlaveCommandVersionWrapper()
 
         self.conn = mock.Mock(name="WorkerForBuilder(connection)")
         self.step.setupProgress()

@@ -168,7 +168,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     useProgress = True
 
-    def getSlaveCommandVersion(self, command, oldversion=None):
+    def getWorkerCommandVersion(self, command, oldversion=None):
         return self.workerforbuilder.getSlaveCommandVersion(command, oldversion)
 
     def getWorkerName(self):

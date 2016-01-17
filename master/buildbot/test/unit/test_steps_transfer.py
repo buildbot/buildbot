@@ -553,6 +553,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
 
 class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
+
     def setUp(self):
         return self.setUpBuildStep()
 
@@ -609,7 +610,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         props = Properties()
         props.setProperty('key1', 'value1', 'test')
         s.build.getProperties.return_value = props
-        s.build.getSlaveCommandVersion.return_value = 1
+        s.build.getWorkerCommandVersion.return_value = 1
         ss = Mock()
         ss.asDict.return_value = dict(revision="12345")
         s.build.getSourceStamp.return_value = ss
