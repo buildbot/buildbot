@@ -6,7 +6,7 @@ Transition to "worker" terminology
     * ReStructured text formatting should be reviewed in scope of using
       Buildbot-specific directives.
 
-    * This page may be splitted in parts or merged with other pages.
+    * This page may be split in parts or merged with other pages.
 
     * This page should be placed in a proper place in the TOC.
 
