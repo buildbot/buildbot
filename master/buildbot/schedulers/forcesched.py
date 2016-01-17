@@ -25,6 +25,7 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import config
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot.worker_transition import define_old_worker_class
 
 
 class ValidationError(ValueError):
@@ -320,7 +321,7 @@ class InheritBuildParameter(ChoiceStringParameter):
         changes.extend(b.changes)
 
 
-class BuildslaveChoiceParameter(ChoiceStringParameter):
+class WorkerChoiceParameter(ChoiceStringParameter):
 
     """A parameter that lets the buildslave name be explicitly chosen.
 
@@ -355,6 +356,7 @@ class BuildslaveChoiceParameter(ChoiceStringParameter):
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames
+define_old_worker_class(locals(), WorkerChoiceParameter, pattern="Buildworker")
 
 
 class NestedParameter(BaseParameter):

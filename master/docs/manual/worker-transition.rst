@@ -205,6 +205,9 @@ Here is the complete list of changed API:
      - :py:mod:`buildbot.status.worker.WorkerStatus`
        (this class is now new-style Python class)
 
+   * - :py:class:`buildbot.schedulers.forcesched.BuildslaveChoiceParameter`
+     - :py:class:`~buildbot.schedulers.forcesched.WorkerChoiceParameter`
+
 API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
 .. todo::
@@ -340,6 +343,9 @@ name even if plugin uses old entry points:
     # ThirdPartyWorker can be defined in using `buildbot.buildslave` entry
     # point, this still will work.
     w = worker.ThirdPartyWorker()
+
+``buildbot.plugins.util.BuildslaveChoiceParameter`` is deprecated in favor of
+``WorkerChoiceParameter``.
 
 ``BuildmasterConfig`` changes
 -----------------------------

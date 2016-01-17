@@ -324,10 +324,14 @@ setup_args = {
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
-                'BuildslaveChoiceParameter', 'ChoiceStringParameter',
+                'ChoiceStringParameter',
                 'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
-                'StringParameter', 'TextParameter', 'UserNameParameter']),
+                'StringParameter', 'TextParameter', 'UserNameParameter',
+                'WorkerChoiceParameter',
+                # deprecated, use WorkerChoiceParameter
+                'BuildslaveChoiceParameter',
+                ]),
             ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),

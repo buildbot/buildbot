@@ -1119,10 +1119,10 @@ Example::
                 required = True),
                 ])
 
-.. bb:sched:: BuildslaveChoiceParameter
+.. bb:sched:: WorkerChoiceParameter
 
-BuildslaveChoiceParameter
-#########################
+WorkerChoiceParameter
+#####################
 
 This parameter allows a scheduler to require that a build is assigned to the chosen buildslave.
 The choice is assigned to the `slavename` property for the build.
@@ -1136,7 +1136,7 @@ Example::
     ForceScheduler(
         # ...
         properties=[
-            BuildslaveChoiceParameter(),
+            WorkerChoiceParameter(),
         ]
     )
 
