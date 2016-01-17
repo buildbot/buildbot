@@ -314,6 +314,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
      - :py:class:`buildbot.steps.worker.SlaveBuildStep`
 
 
+   * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.getSlaveCommandVersion`
+     - :py:meth:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.getWorkerCommandVersion`
+
+
 Other changes:
 
 * ``buildslaveName`` functions argument name renamed to ``workerName``.

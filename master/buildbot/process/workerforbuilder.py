@@ -49,7 +49,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         self.builder = b
         self.builder_name = b.name
 
-    def getSlaveCommandVersion(self, command, oldversion=None):
+    def getWorkerCommandVersion(self, command, oldversion=None):
         if self.remoteCommands is None:
             # the worker is 0.5.0 or earlier
             return oldversion
