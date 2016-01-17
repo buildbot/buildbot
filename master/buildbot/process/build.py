@@ -311,7 +311,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         slave.updateSlaveStatus(buildFinished=self)
 
     @staticmethod
-    def canStartWithSlavebuilder(lockList, workerforbuilder):
+    def canStartWithWorkerForBuilder(lockList, workerforbuilder):
         for lock, access in lockList:
             slave_lock = lock.getLock(workerforbuilder.worker)
             if not slave_lock.isAvailable(None, access):

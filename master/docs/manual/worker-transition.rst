@@ -307,6 +307,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.process.build.Build.setupSlaveBuilder`
      - :py:meth:`~buildbot.process.build.Build.setupWorkerForBuilder`
 
+   * - :py:meth:`buildbot.process.builder.Build.canStartWithSlavebuilder`
+     - :py:meth:`~buildbot.process.builder.Build.canStartWithWorkerForBuilder`
+
 
    * - :py:meth:`buildbot.process.builder.Builder.canStartWithSlavebuilder`
      - :py:meth:`~buildbot.process.builder.Builder.canStartWithWorkerForBuilder`

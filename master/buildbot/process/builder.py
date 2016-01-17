@@ -298,7 +298,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in self.config.locks]
-        return Build.canStartWithSlavebuilder(locks, workerforbuilder)
+        return Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
 
     def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):
