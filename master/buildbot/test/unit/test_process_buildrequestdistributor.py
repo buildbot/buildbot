@@ -132,7 +132,7 @@ class TestBRDBase(unittest.TestCase):
         bldr.slaves = []
         bldr.getAvailableSlaves = lambda: [s for s in bldr.slaves if s.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
-        bldr.config.nextSlave = None
+        bldr.config.nextWorker = None
         bldr.config.nextBuild = None
 
         def canStartBuild(*args):
@@ -496,7 +496,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         """Set the 'canStartBuild' value in the config to something
         that limits the possible options."""
 
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
 
         slaves_attempted = []
 
@@ -548,7 +548,7 @@ class TestMaybeStartBuilds(TestBRDBase):
          * use 'canStartWithSlavebuilder' to reject one of the workers
          * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
 
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
 
         slaves_attempted = []
 
@@ -594,7 +594,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_limited_by_canStartWithSlavebuilder(self):
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
 
         slaves_attempted = []
 
@@ -616,7 +616,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_unlimited(self):
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
@@ -630,7 +630,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_bldr_maybeStartBuild_fails_always(self):
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
         # the builder fails to start the build; we'll see that the build
         # was requested, but the brids will get reclaimed
 
@@ -652,7 +652,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_bldr_maybeStartBuild_fails_once(self):
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
         # the builder fails to start the build; we'll see that the build
         # was requested, but the brids will get reclaimed
 
@@ -685,7 +685,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_limited_by_requests(self):
-        self.bldr.config.nextSlave = nth_slave(1)
+        self.bldr.config.nextWorker = nth_slave(1)
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -695,7 +695,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_nextSlave_None(self):
-        self.bldr.config.nextSlave = lambda _1, _2: defer.succeed(None)
+        self.bldr.config.nextWorker = lambda _1, _2: defer.succeed(None)
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -705,7 +705,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_nextSlave_bogus(self):
-        self.bldr.config.nextSlave = lambda _1, _2: defer.succeed(mock.Mock())
+        self.bldr.config.nextWorker = lambda _1, _2: defer.succeed(mock.Mock())
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -717,7 +717,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_nextSlave_fails(self):
         def nextSlaveRaises(*args):
             raise RuntimeError("xx")
-        self.bldr.config.nextSlave = nextSlaveRaises
+        self.bldr.config.nextWorker = nextSlaveRaises
         self.addSlaves({'test-slave1': 1, 'test-slave2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -762,7 +762,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     # check concurrency edge cases
     @defer.inlineCallbacks
     def test_claim_race(self):
-        self.bldr.config.nextSlave = nth_slave(0)
+        self.bldr.config.nextWorker = nth_slave(0)
         # fake a race condition on the buildrequests table
         old_claimBuildRequests = self.master.db.buildrequests.claimBuildRequests
 
@@ -792,7 +792,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def do_test_nextSlave(self, nextSlave, exp_choice=None):
         rows = self.make_slaves(4)
 
-        self.bldr.config.nextSlave = nextSlave
+        self.bldr.config.nextWorker = nextSlave
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
         ]
@@ -848,7 +848,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def do_test_nextBuild(self, nextBuild, exp_choice=None):
-        self.bldr.config.nextSlave = nth_slave(-1)
+        self.bldr.config.nextWorker = nth_slave(-1)
         self.bldr.config.nextBuild = nextBuild
 
         rows = self.make_slaves(4)

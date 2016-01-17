@@ -805,13 +805,14 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
     def __init__(self, name=None, workername=None, workernames=None,
                  builddir=None, workerbuilddir=None, factory=None,
                  tags=None, category=None,
-                 nextSlave=None, nextBuild=None, locks=None, env=None,
+                 nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
                  canStartBuild=None,
 
                  slavename=None,  # deprecated, use `workername` instead
                  slavenames=None,  # deprecated, use `workernames` instead
                  slavebuilddir=None,  # deprecated, use `workerbuilddir` instead
+                 nextSlave=None,  # deprecated, use `nextWorker` instead
                  ):
 
         # Deprecated API support.
@@ -833,6 +834,12 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                 "use 'workerbuilddir' instead")
             assert workerbuilddir is None
             workerbuilddir = slavebuilddir
+        if nextSlave is not None:
+            on_deprecated_name_usage(
+                "'nextSlave' keyword argument is deprecated, "
+                "use 'workerbuilddir' instead")
+            assert workerbuilddir is None
+            nextWorker = nextSlave
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -908,14 +915,15 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
         self.tags = tags
 
-        self.nextSlave = nextSlave
-        if nextSlave and not callable(nextSlave):
-            error('nextSlave must be a callable')
-            # Keeping support of the previous nextSlave API
-        if nextSlave and (nextSlave.func_code.co_argcount == 2 or
-                          (isinstance(nextSlave, MethodType) and
-                           nextSlave.func_code.co_argcount == 3)):
-            self.nextSlave = lambda x, y, z: nextSlave(x, y)  # pragma: no cover
+        self.nextWorker = nextWorker
+        self._registerOldWorkerAttr("nextWorker")
+        if nextWorker and not callable(nextWorker):
+            error('nextWorker must be a callable')
+            # Keeping support of the previous nextWorker API
+        if nextWorker and (nextWorker.func_code.co_argcount == 2 or
+                           (isinstance(nextWorker, MethodType) and
+                            nextWorker.func_code.co_argcount == 3)):
+            self.nextWorker = lambda x, y, z: nextWorker(x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
@@ -944,8 +952,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         }
         if self.tags:
             rv['tags'] = self.tags
-        if self.nextSlave:
-            rv['nextSlave'] = self.nextSlave
+        if self.nextWorker:
+            rv['nextWorker'] = self.nextWorker
         if self.nextBuild:
             rv['nextBuild'] = self.nextBuild
         if self.locks:

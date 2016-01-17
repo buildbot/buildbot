@@ -157,11 +157,19 @@ Here is the complete list of changed API:
 
      - ``workerbuilddir``
 
+   * - :py:attr:`buildbot.config.BuilderConfig` constructor keyword argument
+       ``nextSlave`` was renamed to
+
+     - ``nextWorker``
+
    * - :py:attr:`buildbot.config.BuilderConfig.slavenames`
      - :py:attr:`~buildbot.config.BuilderConfig.workernames`
 
    * - :py:attr:`buildbot.config.BuilderConfig.slavebuilddir`
      - :py:attr:`~buildbot.config.BuilderConfig.workerbuilddir`
+
+   * - :py:attr:`buildbot.config.BuilderConfig.nextSlave`
+     - :py:attr:`~buildbot.config.BuilderConfig.nextWorker`
 
 
    * - :py:mod:`buildbot.process.slavebuilder`
@@ -301,7 +309,8 @@ Other changes:
 
 * In :py:meth:`buildbot.config.BuilderConfig.getConfigDict` result
   ``'slavenames'`` key changed to ``workernames``;
-  ``'slavebuilddir'`` key changed to ``workerbuilddir``.
+  ``'slavebuilddir'`` key changed to ``workerbuilddir``;
+  ``'nextSlave'`` key changed to ``nextWorker``.
 
 
 Plugins

@@ -233,9 +233,9 @@ Builder Configuration
 
         The builder's category.
 
-    .. py:attribute:: nextSlave
+    .. py:attribute:: nextWorker
 
-        The builder's nextSlave callable.
+        The builder's nextWorker callable.
 
     .. py:attribute:: nextBuild
 

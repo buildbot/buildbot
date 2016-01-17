@@ -135,10 +135,10 @@ class BuildChooserBase(object):
 
 class BasicBuildChooser(BuildChooserBase):
     # BasicBuildChooser generates build pairs via the configuration points:
-    #   * config.nextSlave  (or random.choice if not set)
+    #   * config.nextWorker  (or random.choice if not set)
     #   * config.nextBuild  (or "pop top" if not set)
     #
-    # For N workers, this will call nextSlave at most N times. If nextSlave
+    # For N workers, this will call nextWorker at most N times. If nextSlave
     # returns a worker that cannot satisfy the build chosen by nextBuild,
     # it will search for a worker that can satisfy the build. If one is found,
     # the workers that cannot be used are "recycled" back into a list
@@ -159,7 +159,7 @@ class BasicBuildChooser(BuildChooserBase):
     def __init__(self, bldr, master):
         BuildChooserBase.__init__(self, bldr, master)
 
-        self.nextSlave = self.bldr.config.nextSlave
+        self.nextSlave = self.bldr.config.nextWorker
         if not self.nextSlave:
             self.nextSlave = lambda _, slaves, __: random.choice(
                 slaves) if slaves else None
@@ -204,7 +204,7 @@ class BasicBuildChooser(BuildChooserBase):
                 slave = yield self._popNextSlave(breq)
 
             # recycle the workers that we didnt use to the head of the queue
-            # this helps ensure we run 'nextSlave' only once per worker choice
+            # this helps ensure we run 'nextWorker' only once per worker choice
             if recycledSlaves:
                 self._unpopSlaves(recycledSlaves)
 

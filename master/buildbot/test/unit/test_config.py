@@ -1295,10 +1295,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                          category='def',
                                          name='a', workernames=['a'], factory=self.factory))
 
-    def test_inv_nextSlave(self):
+    def test_inv_nextWorker(self):
         self.assertRaisesConfigError(
-            "nextSlave must be a callable",
-            lambda: config.BuilderConfig(nextSlave="foo",
+            "nextWorker must be a callable",
+            lambda: config.BuilderConfig(nextWorker="foo",
                                          name="a", workernames=['a'], factory=self.factory))
 
     def test_inv_nextBuild(self):
@@ -1329,7 +1329,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               builddir='a_b_c',
                               workerbuilddir='a_b_c',
                               tags=[],
-                              nextSlave=None,
+                              nextWorker=None,
                               locks=[],
                               env={},
                               properties={},
@@ -1347,7 +1347,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
             workerbuilddir='sbd', factory=self.factory, category='c',
-            nextSlave=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
+            nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
         self.assertIdentical(cfg.factory, self.factory)
@@ -1369,7 +1369,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
             workerbuilddir='sbd', factory=self.factory, tags=['c'],
-            nextSlave=ns, nextBuild=nb, locks=['l'],
+            nextWorker=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
@@ -1381,7 +1381,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'collapseRequests': 'cr',
                                                'name': 'b',
                                                'nextBuild': nb,
-                                               'nextSlave': ns,
+                                               'nextWorker': ns,
                                                'properties': {'y': 20},
                                                'workerbuilddir': 'sbd',
                                                'workernames': ['s2', 's1'],
@@ -1485,21 +1485,50 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_workerbuilddir_old_api(self):
+    def test_next_worker_old_api(self):
+        f = lambda: None
         cfg = config.BuilderConfig(
             name='a b c', workername='a', factory=self.factory,
-            workerbuilddir='dir')
+            nextWorker=f)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = cfg.workerbuilddir
+            new = cfg.nextWorker
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'slavebuilddir' attribute is deprecated"):
-            old = cfg.slavebuilddir
+                message_pattern="'nextSlave' attribute is deprecated"):
+            old = cfg.nextSlave
 
-        self.assertEqual(old, 'dir')
+        self.assertIdentical(old, f)
         self.assertIdentical(new, old)
+
+    def test_init_next_worker_new_api_no_warns(self):
+        f = lambda: None
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                nextWorker=f)
+
+        self.assertEqual(cfg.nextWorker, f)
+
+    def test_init_next_worker_old_api_warns(self):
+        f = lambda: None
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'nextSlave' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                nextSlave=f)
+
+        self.assertEqual(cfg.nextWorker, f)
+
+    def test_init_next_worker_positional(self):
+        f = lambda: None
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', 'a', None, None, None, self.factory, None, None, f)
+
+        self.assertEqual(cfg.nextWorker, f)
 
 
 class FakeService(service.ReconfigurableServiceMixin,
