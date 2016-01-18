@@ -83,6 +83,10 @@ create a "guanlecoja/config.coffee" with the configuration variables:
                     files: "angular-mocks.js"
     module.exports = config
 
+Please look at the default config option to see how guanlecoja is configured by default.
+
+https://github.com/buildbot/guanlecoja/blob/master/defaultconfig.coffee
+
 #### config details:
 
 * `name`: name of the module. If it is not app, then the views will have their own namespace "{name}/views/{viewname}"
@@ -134,7 +138,7 @@ create a "guanlecoja/config.coffee" with the configuration variables:
 
 2 gulp targets are created:
 
-* ``gulp dev``: Use this for development. It will use require.js to load all the modules separatly. It will compile your coffeescript on the fly as you save them. This task only ends when you hit CTRL-C.
+* ``gulp dev``: Use this for development. It will use require.js to load all the modules separately. It will compile your coffeescript on the fly as you save them. This task only ends when you hit CTRL-C.
 
 * ``gulp prod``: Use this for production. It will generate a ready for prod build of your application, with all the javascript concatenated and minified.
 
@@ -145,6 +149,37 @@ In some environments where it is hard to install phantomjs, or setup xvfb (old s
 ```
 gulp prod --notests
 ```
+
+### Testing with Karma
+
+Testing with karma is completely integrated in gulp with guanlecoja.
+You shouldn't need to understand or configure karma, it should work out of the box using convention over configuration principles.
+
+Tests are found automatically using `the files.tests` configuration, which usually maps to tests/** and src/**/*.spec.coffee.
+So you should place your test framework code in tests/*, and your spec files aside from the actual tested code:
+
+    \
+    |- tests/
+    |       |- backend_mock.service.coffee
+    |- src/
+    |      |services/
+    |              |- my.service.coffee
+    |              |- my.service.spec.coffee
+    |- src/
+    |     |pages/
+    |           | home/
+    |                  |- home.controller.coffee
+    |                  |- home.controller.spec.coffee
+    |                  |- home.tpl.jade
+
+The test scripts are all concatenated into a tests.js script, along with the dependencies defined in `bower.testdeps` and karma will run that script after the other normal scripts.
+
+You can configure the order the scripts are loaded using configuration:
+
+    karma.files: ['generatedfixtures.js', 'fixtures.js', "tests.js", "scripts.js"]
+
+In this example, we are loading scripts.js last. This is useful when testing libraries, where scripts.js does not contain the necessary (e.g angular.js) dependencies.
+In that case, we rather include the dependenciesin tests.js, and thus need to run it first in the karma environment.
 
 ### Debugging via sourcemaps.
 
@@ -182,6 +217,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.5.4: add more documentation on the testing methodology
 * 0.5.3: fix problem with generated packages does not work with symlink
 * 0.5.2: travis test against node 5.
 * 0.5.1: mark it does not support npm>3. Peer dependencies were removed, and directories are flatten. Need more time to fix it correctly
