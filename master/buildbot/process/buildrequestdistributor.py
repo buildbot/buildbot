@@ -38,11 +38,12 @@ class BuildChooserBase(object):
     # an old instance and creating a new one.
     #
     # The entry point is:
-    #    * bc.chooseNextBuild() - get the next (slave, [breqs]) or (None, None)
+    #    * bc.chooseNextBuild() - get the next (worker, [breqs]) or
+    #      (None, None)
     #
     # The default implementation of this class implements a default
     # chooseNextBuild() that delegates out to two other functions:
-    #   * bc.popNextBuild() - get the next (slave, breq) pair
+    #   * bc.popNextBuild() - get the next (worker, breq) pair
 
     def __init__(self, bldr, master):
         self.bldr = bldr
@@ -52,18 +53,18 @@ class BuildChooserBase(object):
 
     @defer.inlineCallbacks
     def chooseNextBuild(self):
-        # Return the next build, as a (slave, [breqs]) pair
+        # Return the next build, as a (worker, [breqs]) pair
 
-        slave, breq = yield self.popNextBuild()
-        if not slave or not breq:
+        worker, breq = yield self.popNextBuild()
+        if not worker or not breq:
             defer.returnValue((None, None))
             return
 
-        defer.returnValue((slave, [breq]))
+        defer.returnValue((worker, [breq]))
 
     # Must be implemented by subclass
     def popNextBuild(self):
-        # Pick the next (slave, breq) pair; note this is pre-merge, so
+        # Pick the next (worker, breq) pair; note this is pre-merge, so
         # it's just one breq
         raise NotImplementedError("Subclasses must implement this!")
 
@@ -147,7 +148,7 @@ class BasicBuildChooser(BuildChooserBase):
     # There are two tests performed on the worker:
     #   * can the worker start a generic build for the Builder?
     #   * if so, can the worker start the chosen build on the Builder?
-    # Slaves that cannot meet the first criterion are saved into the
+    # Workers that cannot meet the first criterion are saved into the
     # self.rejectedWorkers list and will be used as a last resort. An example
     # of this test is whether the worker can grab the Builder's locks.
     #
@@ -186,31 +187,31 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
             #  2. pick a worker
-            slave = yield self._popNextWorker(breq)
-            if not slave:
+            worker = yield self._popNextWorker(breq)
+            if not worker:
                 break
 
             # either satisfy this build or we leave it for another day
             self._removeBuildRequest(breq)
 
-            #  3. make sure slave+ is usable for the breq
-            recycledSlaves = []
-            while slave:
-                canStart = yield self.canStartBuild(slave, breq)
+            #  3. make sure worker+ is usable for the breq
+            recycledWorkers = []
+            while worker:
+                canStart = yield self.canStartBuild(worker, breq)
                 if canStart:
                     break
                 # try a different worker
-                recycledSlaves.append(slave)
-                slave = yield self._popNextWorker(breq)
+                recycledWorkers.append(worker)
+                worker = yield self._popNextWorker(breq)
 
             # recycle the workers that we didnt use to the head of the queue
             # this helps ensure we run 'nextWorker' only once per worker choice
-            if recycledSlaves:
-                self._unpopSlaves(recycledSlaves)
+            if recycledWorkers:
+                self._unpopWorkers(recycledWorkers)
 
             #  4. done? otherwise we will try another build
-            if slave:
-                nextBuild = (slave, breq)
+            if worker:
+                nextBuild = (worker, breq)
                 break
 
         defer.returnValue(nextBuild)
@@ -245,45 +246,45 @@ class BasicBuildChooser(BuildChooserBase):
     def _popNextWorker(self, buildrequest):
         # use 'preferred' workers first, if we have some ready
         if self.preferredWorkers:
-            slave = self.preferredWorkers.pop(0)
-            defer.returnValue(slave)
+            worker = self.preferredWorkers.pop(0)
+            defer.returnValue(worker)
             return
 
         while self.workerpool:
             try:
-                slave = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
+                worker = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
             except Exception:
-                slave = None
+                worker = None
 
-            if not slave or slave not in self.workerpool:
+            if not worker or worker not in self.workerpool:
                 # bad worker or no worker returned
                 break
 
-            self.workerpool.remove(slave)
+            self.workerpool.remove(worker)
 
-            canStart = yield self.bldr.canStartWithWorkerForBuilder(slave)
+            canStart = yield self.bldr.canStartWithWorkerForBuilder(worker)
             if canStart:
-                defer.returnValue(slave)
+                defer.returnValue(worker)
                 return
 
             # save as a last resort, just in case we need them later
             if self.rejectedWorkers is not None:
-                self.rejectedWorkers.append(slave)
+                self.rejectedWorkers.append(worker)
 
         # if we chewed through them all, use as last resort:
         if self.rejectedWorkers:
-            slave = self.rejectedWorkers.pop(0)
-            defer.returnValue(slave)
+            worker = self.rejectedWorkers.pop(0)
+            defer.returnValue(worker)
             return
 
         defer.returnValue(None)
 
-    def _unpopSlaves(self, slaves):
+    def _unpopWorkers(self, workers):
         # push the workers back to the front
-        self.preferredWorkers[:0] = slaves
+        self.preferredWorkers[:0] = workers
 
-    def canStartBuild(self, slave, breq):
-        return self.bldr.canStartBuild(slave, breq)
+    def canStartBuild(self, worker, breq):
+        return self.bldr.canStartBuild(worker, breq)
 
 
 class BuildRequestDistributor(service.AsyncMultiService):
@@ -489,8 +490,8 @@ class BuildRequestDistributor(service.AsyncMultiService):
         bc = self.createBuildChooser(bldr, self.master)
 
         while True:
-            slave, breqs = yield bc.chooseNextBuild()
-            if not slave or not breqs:
+            worker, breqs = yield bc.chooseNextBuild()
+            if not worker or not breqs:
                 break
 
             # claim brid's
@@ -503,7 +504,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
-            buildStarted = yield bldr.maybeStartBuild(slave, breqs)
+            buildStarted = yield bldr.maybeStartBuild(worker, breqs)
             if not buildStarted:
                 yield self.master.data.updates.unclaimBuildRequests(brids)
                 # try starting builds again.  If we still have a working worker,
