@@ -40,11 +40,11 @@ def nth_slave(n):
 
 class SkipSlavesThatCantGetLock(buildrequestdistributor.BasicBuildChooser):
 
-    """This class disables the 'rejectedSlaves' feature"""
+    """This class disables the 'rejectedWorkers' feature"""
 
     def __init__(self, *args, **kwargs):
         buildrequestdistributor.BasicBuildChooser.__init__(self, *args, **kwargs)
-        self.rejectedSlaves = None  # disable this feature
+        self.rejectedWorkers = None  # disable this feature
 
 
 class TestBRDBase(unittest.TestCase):
@@ -546,7 +546,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         """Another variant that:
          * returns Deferred types,
          * use 'canStartWithWorkerForBuilder' to reject one of the workers
-         * patch using SkipSlavesThatCantGetLock to disable the 'rejectedSlaves' feature"""
+         * patch using SkipSlavesThatCantGetLock to disable the 'rejectedWorkers' feature"""
 
         self.bldr.config.nextWorker = nth_slave(-1)
 

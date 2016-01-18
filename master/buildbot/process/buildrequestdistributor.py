@@ -148,11 +148,11 @@ class BasicBuildChooser(BuildChooserBase):
     #   * can the worker start a generic build for the Builder?
     #   * if so, can the worker start the chosen build on the Builder?
     # Slaves that cannot meet the first criterion are saved into the
-    # self.rejectedSlaves list and will be used as a last resort. An example
+    # self.rejectedWorkers list and will be used as a last resort. An example
     # of this test is whether the worker can grab the Builder's locks.
     #
     # If all workers fail the first test, then the algorithm will assign the
-    # workers in the order originally generated. By setting self.rejectedSlaves
+    # workers in the order originally generated. By setting self.rejectedWorkers
     # to None, the behavior will instead refuse to ever assign to a worker that
     # fails the generic test.
 
@@ -164,14 +164,14 @@ class BasicBuildChooser(BuildChooserBase):
             self.nextWorker = lambda _, workers, __: random.choice(
                 workers) if workers else None
 
-        self.slavepool = self.bldr.getAvailableWorkers()
+        self.workerpool = self.bldr.getAvailableWorkers()
 
         # Pick workers one at a time from the pool, and if the Builder says
         # they're usable (eg, locks can be satisfied), then prefer those workers;
         # otherwise they go in the 'last resort' bucket, and we'll use them if
-        # we need to. (Setting rejectedSlaves to None disables that feature)
-        self.preferredSlaves = []
-        self.rejectedSlaves = []
+        # we need to. (Setting rejectedWorkers to None disables that feature)
+        self.preferredWorkers = []
+        self.rejectedWorkers = []
 
         self.nextBuild = self.bldr.config.nextBuild
 
@@ -244,22 +244,22 @@ class BasicBuildChooser(BuildChooserBase):
     @defer.inlineCallbacks
     def _popNextWorker(self, buildrequest):
         # use 'preferred' workers first, if we have some ready
-        if self.preferredSlaves:
-            slave = self.preferredSlaves.pop(0)
+        if self.preferredWorkers:
+            slave = self.preferredWorkers.pop(0)
             defer.returnValue(slave)
             return
 
-        while self.slavepool:
+        while self.workerpool:
             try:
-                slave = yield self.nextWorker(self.bldr, self.slavepool, buildrequest)
+                slave = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
             except Exception:
                 slave = None
 
-            if not slave or slave not in self.slavepool:
+            if not slave or slave not in self.workerpool:
                 # bad worker or no worker returned
                 break
 
-            self.slavepool.remove(slave)
+            self.workerpool.remove(slave)
 
             canStart = yield self.bldr.canStartWithWorkerForBuilder(slave)
             if canStart:
@@ -267,12 +267,12 @@ class BasicBuildChooser(BuildChooserBase):
                 return
 
             # save as a last resort, just in case we need them later
-            if self.rejectedSlaves is not None:
-                self.rejectedSlaves.append(slave)
+            if self.rejectedWorkers is not None:
+                self.rejectedWorkers.append(slave)
 
         # if we chewed through them all, use as last resort:
-        if self.rejectedSlaves:
-            slave = self.rejectedSlaves.pop(0)
+        if self.rejectedWorkers:
+            slave = self.rejectedWorkers.pop(0)
             defer.returnValue(slave)
             return
 
@@ -280,7 +280,7 @@ class BasicBuildChooser(BuildChooserBase):
 
     def _unpopSlaves(self, slaves):
         # push the workers back to the front
-        self.preferredSlaves[:0] = slaves
+        self.preferredWorkers[:0] = slaves
 
     def canStartBuild(self, slave, breq):
         return self.bldr.canStartBuild(slave, breq)

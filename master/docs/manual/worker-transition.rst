@@ -338,6 +338,15 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:attr:`buildbot.process.buildrequestdistributor.BasicBuildChooser.nextSlave`
      - :py:attr:`~buildbot.process.buildrequestdistributor.BasicBuildChooser.nextWorker`
 
+   * - :py:attr:`buildbot.process.buildrequestdistributor.BasicBuildChooser.slavepool`
+     - :py:attr:`~buildbot.process.buildrequestdistributor.BasicBuildChooser.workerpool`
+
+   * - :py:attr:`buildbot.process.buildrequestdistributor.BasicBuildChooser.preferredSlaves`
+     - :py:attr:`~buildbot.process.buildrequestdistributor.BasicBuildChooser.preferredWorkers`
+
+   * - :py:attr:`buildbot.process.buildrequestdistributor.BasicBuildChooser.rejectedSlaves`
+     - :py:attr:`~buildbot.process.buildrequestdistributor.BasicBuildChooser.rejectedSlaves`
+
 
    * - :py:attr:`buildbot.steps.shell.ShellCommand.slaveEnvironment`
        (Note: this variable is renderable)
