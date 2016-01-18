@@ -294,7 +294,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         except Exception:
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
-    def getAvailableSlaves(self):
+    def getAvailableWorkers(self):
         return [sb for sb in self.workers if sb.isAvailable()]
 
     def canStartWithWorkerForBuilder(self, workerforbuilder):

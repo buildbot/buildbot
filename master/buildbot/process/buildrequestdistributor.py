@@ -164,7 +164,7 @@ class BasicBuildChooser(BuildChooserBase):
             self.nextSlave = lambda _, slaves, __: random.choice(
                 slaves) if slaves else None
 
-        self.slavepool = self.bldr.getAvailableSlaves()
+        self.slavepool = self.bldr.getAvailableWorkers()
 
         # Pick workers one at a time from the pool, and if the Builder says
         # they're usable (eg, locks can be satisfied), then prefer those workers;

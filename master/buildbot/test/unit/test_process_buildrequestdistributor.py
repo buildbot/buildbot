@@ -130,7 +130,7 @@ class TestBRDBase(unittest.TestCase):
         bldr.getCollapseRequestsFn = lambda: False
 
         bldr.slaves = []
-        bldr.getAvailableSlaves = lambda: [s for s in bldr.slaves if s.isAvailable()]
+        bldr.getAvailableWorkers = lambda: [s for s in bldr.slaves if s.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
         bldr.config.nextWorker = None
         bldr.config.nextBuild = None
