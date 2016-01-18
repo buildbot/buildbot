@@ -38,9 +38,9 @@ from zope.interface import implements
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'slavename' in breq.properties:
-        slavename = breq.properties['slavename']
-        if isinstance(slavename, basestring):
-            return slavename == workerforbuilder.worker.workername
+        workername = breq.properties['slavename']
+        if isinstance(workername, basestring):
+            return workername == workerforbuilder.worker.workername
 
     return True
 define_old_worker_func(locals(), enforceChosenWorker)
@@ -187,24 +187,24 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 return b
         return None
 
-    def addLatentWorker(self, slave):
-        assert interfaces.ILatentWorker.providedBy(slave)
+    def addLatentWorker(self, worker):
+        assert interfaces.ILatentWorker.providedBy(worker)
         for w in self.workers:
-            if w == slave:
+            if w == worker:
                 break
         else:
-            sb = workerforbuilder.LatentWorkerForBuilder(slave, self)
+            sb = workerforbuilder.LatentWorkerForBuilder(worker, self)
             self.builder_status.addPointEvent(
-                ['added', 'latent', slave.workername])
+                ['added', 'latent', worker.workername])
             self.workers.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
-    def attached(self, slave, commands):
+    def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
         registers their builder.
 
-        @type  slave: L{buildbot.worker.Worker}
-        @param slave: the Worker that represents the buildslave as a whole
+        @type  worker: L{buildbot.worker.Worker}
+        @param worker: the Worker that represents the worker as a whole
         @type  commands: dict: string -> string, or None
         @param commands: provides the worker's version of each RemoteCommand
 
@@ -213,7 +213,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                  builder is fully attached and ready to accept commands.
         """
         for w in self.attaching_workers + self.workers:
-            if w.worker == slave:
+            if w.worker == worker:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
                 # list from the worker, and we ask for it each time we add or
@@ -230,9 +230,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
         sb = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self)
         self.attaching_workers.append(sb)
-        d = sb.attached(slave, commands)
+        d = sb.attached(worker, commands)
         d.addCallback(self._attached)
-        d.addErrback(self._not_attached, slave)
+        d.addErrback(self._not_attached, worker)
         return d
 
     def _attached(self, sb):
@@ -244,40 +244,40 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         return self
 
-    def _not_attached(self, why, slave):
+    def _not_attached(self, why, worker):
         # already log.err'ed by WorkerForBuilder._attachFailure
         # TODO: remove from self.workers (except that detached() should get
         #       run first, right?)
-        log.err(why, 'slave failed to attach')
+        log.err(why, 'worker failed to attach')
         self.builder_status.addPointEvent(['failed', 'connect',
-                                           slave.workername])
+                                           worker.workername])
         # TODO: add an HTMLLogFile of the exception
 
-    def detached(self, slave):
+    def detached(self, worker):
         """This is called when the connection to the bot is lost."""
-        for sb in self.attaching_workers + self.workers:
-            if sb.worker == slave:
+        for wfb in self.attaching_workers + self.workers:
+            if wfb.worker == worker:
                 break
         else:
             log.msg("WEIRD: Builder.detached(%s) (%s)"
                     " not in attaching_workers(%s)"
-                    " or slaves(%s)" % (slave, slave.workername,
-                                        self.attaching_workers,
-                                        self.workers))
+                    " or workers(%s)" % (worker, worker.workername,
+                                         self.attaching_workers,
+                                         self.workers))
             return
-        if sb.state == BUILDING:
+        if wfb.state == BUILDING:
             # the Build's .lostRemote method (invoked by a notifyOnDisconnect
             # handler) will cause the Build to be stopped, probably right
             # after the notifyOnDisconnect that invoked us finishes running.
             pass
 
-        if sb in self.attaching_workers:
-            self.attaching_workers.remove(sb)
-        if sb in self.workers:
-            self.workers.remove(sb)
+        if wfb in self.attaching_workers:
+            self.attaching_workers.remove(wfb)
+        if wfb in self.workers:
+            self.workers.remove(wfb)
 
-        self.builder_status.addPointEvent(['disconnect', slave.workername])
-        sb.detached()  # inform the WorkerForBuilder that their worker went away
+        self.builder_status.addPointEvent(['disconnect', worker.workername])
+        wfb.detached()  # inform the WorkerForBuilder that their worker went away
         self.updateBigStatus()
 
     def updateBigStatus(self):
@@ -295,7 +295,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
     def getAvailableWorkers(self):
-        return [sb for sb in self.workers if sb.isAvailable()]
+        return [wfb for wfb in self.workers if wfb.isAvailable()]
 
     def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
@@ -327,7 +327,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
-        log.msg("starting build %s using slave %s" % (build, workerforbuilder))
+        log.msg("starting build %s using worker %s" % (build, workerforbuilder))
 
         # set up locks
         build.setLocks(self.config.locks)
@@ -352,7 +352,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # If prepare returns True then it is ready and we start a build
         # If it returns false then we don't start a new build.
         if not ready:
-            log.msg("slave %s can't build %s after all; re-queueing the "
+            log.msg("worker %s can't build %s after all; re-queueing the "
                     "request" % (build, workerforbuilder))
             run_cleanups()
             defer.returnValue(False)
@@ -366,21 +366,21 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # TODO: This can unnecessarily suspend the starting of a build, in
         # situations where the worker is live but is pushing lots of data to
         # us in a build.
-        log.msg("starting build %s.. pinging the slave %s"
+        log.msg("starting build %s.. pinging the worker %s"
                 % (build, workerforbuilder))
         try:
             ping_success = yield workerforbuilder.ping()
         except Exception:
-            log.err(failure.Failure(), 'while pinging slave before build:')
+            log.err(failure.Failure(), 'while pinging worker before build:')
             ping_success = False
 
         if not ping_success:
-            log.msg("slave ping failed; re-queueing the request")
+            log.msg("worker ping failed; re-queueing the request")
             run_cleanups()
             defer.returnValue(False)
             return
 
-        # The buildslave is ready to go. workerforbuilder.buildStarted() sets its
+        # The worker is ready to go. workerforbuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
         workerforbuilder.buildStarted()
@@ -405,7 +405,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
         if not workerforbuilder.worker.conn:  # TODO: replace with isConnected()
-            log.msg("slave disappeared before build could start")
+            log.msg("worker disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
             return
@@ -441,7 +441,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                                   self.config.properties[propertyname],
                                   "Builder")
 
-    def buildFinished(self, build, sb):
+    def buildFinished(self, build, wfb):
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
@@ -466,8 +466,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
 
-        if sb.worker:
-            sb.worker.releaseLocks()
+        if wfb.worker:
+            wfb.worker.releaseLocks()
 
         self.updateBigStatus()
 
