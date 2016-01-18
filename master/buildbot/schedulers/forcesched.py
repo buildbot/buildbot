@@ -323,13 +323,13 @@ class InheritBuildParameter(ChoiceStringParameter):
 
 class WorkerChoiceParameter(ChoiceStringParameter):
 
-    """A parameter that lets the buildslave name be explicitly chosen.
+    """A parameter that lets the worker name be explicitly chosen.
 
     This parameter works in conjunction with 'buildbot.process.builder.enforceChosenWorker',
     which should be added as the 'canStartBuild' parameter to the Builder.
 
     The "anySentinel" parameter represents the sentinel value to specify that
-    there is no buildslave preference.
+    there is no worker preference.
     """
     anySentinel = '-any-'
     label = 'Worker'
@@ -340,8 +340,8 @@ class WorkerChoiceParameter(ChoiceStringParameter):
         ChoiceStringParameter.__init__(self, name, **kwargs)
 
     def updateFromKwargs(self, kwargs, **unused):
-        slavename = self.getFromKwargs(kwargs)
-        if slavename == self.anySentinel:
+        workername = self.getFromKwargs(kwargs)
+        if workername == self.anySentinel:
             # no preference, so dont set a parameter at all
             return
         ChoiceStringParameter.updateFromKwargs(self, kwargs=kwargs, **unused)
