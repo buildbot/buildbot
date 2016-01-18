@@ -154,8 +154,8 @@ module.exports =  (gulp) ->
     gulp.task 'scripts', false, ->
         if coverage and config.coffee_coverage
             return gulp.src script_sources
-                .pipe(catch_errors(ngClassify(config.ngclassify(config))))
-                .pipe gulp.dest path.join(config.dir.coverage, "src")
+                .pipe(catch_errors(gif("*.coffee", ngClassify(config.ngclassify(config)))))
+                .pipe gulp.dest path.join(config.dir.coverage, config.dir.src)
 
         gulp.src script_sources
             .pipe gif(dev or config.sourcemaps, sourcemaps.init())
@@ -301,7 +301,8 @@ module.exports =  (gulp) ->
             karmaconf.preprocessors = {
                 "**/#{config.output_scripts}": ['sourcemap']
                 "**/#{config.output_tests}": ['sourcemap']
-                '**/*.coffee': ['coffee', 'coverage']
+                "**/#{config.dir.src}/**/*.coffee": ['coffee', 'coverage']
+                "**/#{config.dir.src}/**/*.js": ['coverage']
             }
             for r in karmaconf.coverageReporter.reporters
                 if r.dir == "coverage"

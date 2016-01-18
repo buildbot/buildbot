@@ -214,15 +214,8 @@ If you really care about developing on a remote machine, you can always forward 
 
 Code Coverage is a technique that tells you how much of your code is run during the unit tests. Achieving coverage of 100% is a good metric to tell the quality of you unit tests, and that the code does not have a corner case typo.
 
-``gulp --coverage`` enables code coverage report using ibrik coffeescript coverage annotation engine.
+``gulp --coverage`` enables code coverage report using coffeescript coverage annotation engine.
 This will create a ``coverage`` directory with the report inside it.
-
-#### Caveats:
-
-Ibrik uses the coffeescript-redux compiler, which understands slightly different coffeescript. most notable known issues are:
-
-* It does not supports CS1.7 (e.g. parenthese-less call chaining)
-* class without constructor will fail due to a bug in Ibrik: https://github.com/Constellation/ibrik/issues/21
 
 ### Examples
 
@@ -232,6 +225,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.6.0: Support sass. Better coffeescript coverage, by bumping karma-coverage version
 * 0.5.5: update dependencies for npm 3
 * 0.5.4: add more documentation on the testing methodology
 * 0.5.3: fix problem with generated packages does not work with symlink
