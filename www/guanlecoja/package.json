@@ -82,7 +82,9 @@
     "karma-coverage": "^0.5.1",
     "karma-jasmine": "~0.3.6",
     "karma-phantomjs-launcher": "~0.2.1",
-    "karma-sourcemap-loader": "^0.3.5"
+    "karma-sourcemap-loader": "^0.3.5",
+    "jasmine-core": "^2.4.1",
+    "phantomjs": "^1.9.19"
   },
   "main": "./main",
   "bin": {},

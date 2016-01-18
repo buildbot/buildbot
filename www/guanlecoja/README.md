@@ -133,6 +133,7 @@ https://github.com/buildbot/guanlecoja/blob/master/defaultconfig.coffee
 * `generatedfixtures`(function): customizing endpoint for generating the fixtures
 * `ngclassify`(function): customizing endpoint for ngClassify, directly passed to gulp-ngclassify
 * `karma`(object): customized options for karma. See karma documentation for more information.
+* `devserver.port`: the port used for the developement server
 
 ### Usage
 
@@ -141,6 +142,10 @@ https://github.com/buildbot/guanlecoja/blob/master/defaultconfig.coffee
 * ``gulp dev``: Use this for development. It will use require.js to load all the modules separately. It will compile your coffeescript on the fly as you save them. This task only ends when you hit CTRL-C.
 
 * ``gulp prod``: Use this for production. It will generate a ready for prod build of your application, with all the javascript concatenated and minified.
+
+### NPM 3
+
+Guanlecoja supports npm3 in experimental mode. Please report issues if you have a problem.
 
 #### --notests
 
@@ -179,7 +184,17 @@ You can configure the order the scripts are loaded using configuration:
     karma.files: ['generatedfixtures.js', 'fixtures.js', "tests.js", "scripts.js"]
 
 In this example, we are loading scripts.js last. This is useful when testing libraries, where scripts.js does not contain the necessary (e.g angular.js) dependencies.
-In that case, we rather include the dependenciesin tests.js, and thus need to run it first in the karma environment.
+In that case, we rather include the dependencies in tests.js, and thus need to run it first in the karma environment.
+
+### Developement server
+
+For standalone UI, development server is given as a simple helper.
+Just setup the parameter `devserver.port: 8080`, and use the `server` gulp task:
+
+    # gulp dev server
+    [...]
+
+The `dir.build` will then be exposed to http://localhost:8080/
 
 ### Debugging via sourcemaps.
 
