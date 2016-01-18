@@ -197,6 +197,10 @@ Here is the complete list of changed API:
      - :py:meth:`~buildbot.process.build.Build.workername`
 
 
+   * - :py:func:`buildbot.process.builder.enforceChosenSlave`
+     - :py:func:`~buildbot.process.builder.enforceChosenWorker`
+
+
    * - :py:mod:`buildbot.steps.slave`
      - :py:mod:`buildbot.steps.worker`
 
@@ -373,6 +377,9 @@ name even if plugin uses old entry points:
 
 ``buildbot.plugins.util.BuildslaveChoiceParameter`` is deprecated in favor of
 ``WorkerChoiceParameter``.
+
+``buildbot.plugins.util.enforceChosenSlave`` is deprecated in favor of
+``enforceChosenWorker``.
 
 ``BuildmasterConfig`` changes
 -----------------------------

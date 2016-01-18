@@ -26,6 +26,7 @@ from buildbot.status.builder import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
+from buildbot.worker_transition import define_old_worker_func
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
@@ -35,13 +36,14 @@ from twisted.python import log
 from zope.interface import implements
 
 
-def enforceChosenSlave(bldr, workerforbuilder, breq):
+def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
         if isinstance(slavename, basestring):
             return slavename == workerforbuilder.worker.workername
 
     return True
+define_old_worker_func(locals(), enforceChosenWorker)
 
 
 class Builder(util_service.ReconfigurableServiceMixin,

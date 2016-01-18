@@ -325,7 +325,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
 
     """A parameter that lets the buildslave name be explicitly chosen.
 
-    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenSlave',
+    This parameter works in conjunction with 'buildbot.process.builder.enforceChosenWorker',
     which should be added as the 'canStartBuild' parameter to the Builder.
 
     The "anySentinel" parameter represents the sentinel value to specify that

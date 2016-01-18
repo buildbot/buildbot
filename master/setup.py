@@ -311,7 +311,11 @@ setup_args = {
             ('buildbot.locks', ['MasterLock', 'SlaveLock']),
             ('buildbot.manhole', [
                 'AuthorizedKeysManhole', 'PasswordManhole', 'TelnetManhole']),
-            ('buildbot.process.builder', ['enforceChosenSlave']),
+            ('buildbot.process.builder', [
+                'enforceChosenWorker',
+                # deprecated, use enforceChosenWorker
+                'enforceChosenSlave',
+            ]),
             ('buildbot.process.factory', [
                 'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),

@@ -22,7 +22,9 @@ from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -273,11 +275,11 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
 
     @defer.inlineCallbacks
-    def test_enforceChosenSlave(self):
-        """enforceChosenSlave rejects and accepts builds"""
+    def test_enforceChosenWorker(self):
+        """enforceChosenWorker rejects and accepts builds"""
         yield self.makeBuilder()
 
-        self.bldr.config.canStartBuild = builder.enforceChosenSlave
+        self.bldr.config.canStartBuild = builder.enforceChosenWorker
 
         workerforbuilder = mock.Mock()
         workerforbuilder.worker.workername = 'slave5'
@@ -322,6 +324,16 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         builderid = yield self.bldr.getBuilderId()
         self.assertEqual(builderid, 13)
         fbi.assert_not_called()
+
+    def test_enforceChosenWorker_old_api(self):
+        from buildbot.process.builder import enforceChosenSlave
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'enforceChosenSlave' function is deprecated"):
+            breq = mock.Mock()
+            breq.properties = {}
+            enforceChosenSlave(mock.Mock(), mock.Mock(), breq)
 
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):
