@@ -232,6 +232,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.5.5: update dependencies for npm 3
 * 0.5.4: add more documentation on the testing methodology
 * 0.5.3: fix problem with generated packages does not work with symlink
 * 0.5.2: travis test against node 5.

@@ -68,9 +68,7 @@
     "lodash": "^3.10.0",
     "mime": "^1.2.11",
     "body-parser": "~1.13.3",
-    "run-sequence": "~1.1.2",
-    "phantomjs": "*",
-    "jasmine-core": "*"
+    "run-sequence": "~1.1.2"
   },
   "dependencies": {
     "coffee-script": "~1.10.0",
@@ -92,7 +90,7 @@
     "node": "~4.4.0",
     "npm": "<3.0.0"
   },
-  "version": "0.5.4",
+  "version": "0.5.5",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}
