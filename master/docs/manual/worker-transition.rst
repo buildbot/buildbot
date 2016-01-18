@@ -331,6 +331,14 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
      - :py:meth:`~buildbot.process.builder.Builder.getAvailableWorkers`
 
 
+   * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.getSlaveCommandVersion`
+     - :py:meth:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.getWorkerCommandVersion`
+
+
+   * - :py:attr:`buildbot.process.buildrequestdistributor.BasicBuildChooser.nextSlave`
+     - :py:attr:`~buildbot.process.buildrequestdistributor.BasicBuildChooser.nextWorker`
+
+
    * - :py:attr:`buildbot.steps.shell.ShellCommand.slaveEnvironment`
        (Note: this variable is renderable)
      - :py:attr:`buildbot.steps.shell.ShellCommand.workerEnvironment`
@@ -339,9 +347,6 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
      - :py:class:`buildbot.steps.worker.SlaveBuildStep`
 
-
-   * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.getSlaveCommandVersion`
-     - :py:meth:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.getWorkerCommandVersion`
 
 
 Other changes:

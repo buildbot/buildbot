@@ -138,7 +138,7 @@ class BasicBuildChooser(BuildChooserBase):
     #   * config.nextWorker  (or random.choice if not set)
     #   * config.nextBuild  (or "pop top" if not set)
     #
-    # For N workers, this will call nextWorker at most N times. If nextSlave
+    # For N workers, this will call nextWorker at most N times. If nextWorker
     # returns a worker that cannot satisfy the build chosen by nextBuild,
     # it will search for a worker that can satisfy the build. If one is found,
     # the workers that cannot be used are "recycled" back into a list
@@ -159,9 +159,9 @@ class BasicBuildChooser(BuildChooserBase):
     def __init__(self, bldr, master):
         BuildChooserBase.__init__(self, bldr, master)
 
-        self.nextSlave = self.bldr.config.nextWorker
-        if not self.nextSlave:
-            self.nextSlave = lambda _, slaves, __: random.choice(
+        self.nextWorker = self.bldr.config.nextWorker
+        if not self.nextWorker:
+            self.nextWorker = lambda _, slaves, __: random.choice(
                 slaves) if slaves else None
 
         self.slavepool = self.bldr.getAvailableWorkers()
@@ -251,7 +251,7 @@ class BasicBuildChooser(BuildChooserBase):
 
         while self.slavepool:
             try:
-                slave = yield self.nextSlave(self.bldr, self.slavepool, buildrequest)
+                slave = yield self.nextWorker(self.bldr, self.slavepool, buildrequest)
             except Exception:
                 slave = None
 

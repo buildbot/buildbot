@@ -787,7 +787,7 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[11], exp_builds=[('test-slave1', [11])])
 
-    # nextSlave
+    # nextWorker
     @defer.inlineCallbacks
     def do_test_nextSlave(self, nextSlave, exp_choice=None):
         rows = self.make_slaves(4)
