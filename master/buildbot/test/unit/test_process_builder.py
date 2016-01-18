@@ -98,20 +98,20 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         return d
 
     def assertBuildsStarted(self, exp):
-        # munge builds_started into a list of (slave, [brids])
+        # munge builds_started into a list of (worker, [brids])
         builds_started = [
             (sl.name, [br.id for br in buildreqs])
             for (sl, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
-    def setSlaveBuilders(self, workerforbuilders):
-        """C{slaves} maps name : available"""
+    def setWorkerForBuilders(self, workerforbuilders):
+        """C{workerforbuilders} maps name : available"""
         self.bldr.workers = []
         for name, avail in iteritems(workerforbuilders):
-            sb = mock.Mock(spec=['isAvailable'], name=name)
-            sb.name = name
-            sb.isAvailable.return_value = avail
-            self.bldr.workers.append(sb)
+            wfb = mock.Mock(spec=['isAvailable'], name=name)
+            wfb.name = name
+            wfb.isAvailable.return_value = avail
+            self.bldr.workers.append(wfb)
 
     # services
 
@@ -129,32 +129,32 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     # maybeStartBuild
     def _makeMocks(self):
-        slave = mock.Mock()
-        slave.name = 'slave'
+        worker = mock.Mock()
+        worker.name = 'worker'
         buildrequest = mock.Mock()
         buildrequest.id = 10
         buildrequests = [buildrequest]
-        return slave, buildrequests
+        return worker, buildrequests
 
     @defer.inlineCallbacks
     def test_maybeStartBuild(self):
         yield self.makeBuilder()
 
-        slave, buildrequests = self._makeMocks()
+        worker, buildrequests = self._makeMocks()
 
-        started = yield self.bldr.maybeStartBuild(slave, buildrequests)
+        started = yield self.bldr.maybeStartBuild(worker, buildrequests)
         self.assertEqual(started, True)
-        self.assertBuildsStarted([('slave', [10])])
+        self.assertBuildsStarted([('worker', [10])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_failsToStart(self):
         yield self.makeBuilder(startBuildsForSucceeds=False)
 
-        slave, buildrequests = self._makeMocks()
+        worker, buildrequests = self._makeMocks()
 
-        started = yield self.bldr.maybeStartBuild(slave, buildrequests)
+        started = yield self.bldr.maybeStartBuild(worker, buildrequests)
         self.assertEqual(started, False)
-        self.assertBuildsStarted([('slave', [10])])
+        self.assertBuildsStarted([('worker', [10])])
 
     @defer.inlineCallbacks
     def do_test_getCollapseRequestsFn(self, builder_param=None,
@@ -236,43 +236,43 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         # by default, it returns True
-        startable = yield self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
 
-        startable = yield self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, True)
 
         # set a configurable one
         record = []
 
-        def canStartBuild(bldr, slave, breq):
-            record.append((bldr, slave, breq))
-            return (slave, breq) == ('slave', 100)
+        def canStartBuild(bldr, worker, breq):
+            record.append((bldr, worker, breq))
+            return (worker, breq) == ('worker', 100)
         self.bldr.config.canStartBuild = canStartBuild
 
-        startable = yield self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'slave', 100)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100)])
 
-        startable = yield self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
         # set a configurable one to return Deferred
         record = []
 
-        def canStartBuild_deferred(bldr, slave, breq):
-            record.append((bldr, slave, breq))
-            return defer.succeed((slave, breq) == ('slave', 100))
+        def canStartBuild_deferred(bldr, worker, breq):
+            record.append((bldr, worker, breq))
+            return defer.succeed((worker, breq) == ('worker', 100))
         self.bldr.config.canStartBuild = canStartBuild_deferred
 
-        startable = yield self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'slave', 100)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100)])
 
-        startable = yield self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
     @defer.inlineCallbacks
     def test_enforceChosenWorker(self):
@@ -282,26 +282,26 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.bldr.config.canStartBuild = builder.enforceChosenWorker
 
         workerforbuilder = mock.Mock()
-        workerforbuilder.worker.workername = 'slave5'
+        workerforbuilder.worker.workername = 'worker5'
 
         breq = mock.Mock()
 
-        # no buildslave requested
+        # no worker requested
         breq.properties = {}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
-        # buildslave requested as the right one
-        breq.properties = {'slavename': 'slave5'}
+        # worker requested as the right one
+        breq.properties = {'slavename': 'worker5'}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
-        # buildslave requested as the wrong one
+        # worker requested as the wrong one
         breq.properties = {'slavename': 'slave4'}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(False, result)
 
-        # buildslave set to non string value gets skipped
+        # worker set to non string value gets skipped
         breq.properties = {'slavename': 0}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
