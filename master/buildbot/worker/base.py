@@ -875,7 +875,7 @@ class AbstractLatentWorker(AbstractWorker):
         accepted the new builders and/or released the old ones."""
         for b in self.botmaster.getBuildersForSlave(self.name):
             if b.name not in self.workerforbuilders:
-                b.addLatentSlave(self)
+                b.addLatentWorker(self)
         return AbstractWorker.updateWorker(self)
 
     def sendBuilderList(self):

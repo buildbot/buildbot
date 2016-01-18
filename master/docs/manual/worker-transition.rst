@@ -324,6 +324,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:attr:`buildbot.process.builder.Builder.slaves`
      - :py:attr:`~buildbot.process.builder.Builder.workers`
 
+   * - :py:meth:`buildbot.process.builder.Builder.addLatentSlave`
+     - :py:meth:`~buildbot.process.builder.Builder.addLatentWorker`
+
 
    * - :py:attr:`buildbot.steps.shell.ShellCommand.slaveEnvironment`
        (Note: this variable is renderable)
