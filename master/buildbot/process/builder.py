@@ -246,7 +246,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def _not_attached(self, why, slave):
         # already log.err'ed by WorkerForBuilder._attachFailure
-        # TODO: remove from self.slaves (except that detached() should get
+        # TODO: remove from self.workers (except that detached() should get
         #       run first, right?)
         log.err(why, 'slave failed to attach')
         self.builder_status.addPointEvent(['failed', 'connect',
@@ -558,11 +558,11 @@ class BuilderControl:
         return self.original.getBuild(number)
 
     def ping(self):
-        if not self.original.slaves:
+        if not self.original.workers:
             self.original.builder_status.addPointEvent(["ping", "no slave"])
             return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
-        for w in self.original.slaves:
+        for w in self.original.workers:
             dl.append(w.ping(self.original.builder_status))
         d = defer.DeferredList(dl)
         d.addCallback(self._gatherPingResults)

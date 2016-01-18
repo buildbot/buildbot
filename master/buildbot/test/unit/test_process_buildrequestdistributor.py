@@ -106,7 +106,7 @@ class TestBRDBase(unittest.TestCase):
             sb.name = name
             sb.isAvailable.return_value = avail
             for bldr in self.builders.values():
-                bldr.slaves.append(sb)
+                bldr.workers.append(sb)
 
     @defer.inlineCallbacks
     def createBuilder(self, name, builderid=None):
@@ -129,8 +129,8 @@ class TestBRDBase(unittest.TestCase):
         bldr.canStartWithWorkerForBuilder = lambda _: True
         bldr.getCollapseRequestsFn = lambda: False
 
-        bldr.slaves = []
-        bldr.getAvailableWorkers = lambda: [s for s in bldr.slaves if s.isAvailable()]
+        bldr.workers = []
+        bldr.getAvailableWorkers = lambda: [s for s in bldr.workers if s.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
         bldr.config.nextWorker = None
         bldr.config.nextBuild = None
