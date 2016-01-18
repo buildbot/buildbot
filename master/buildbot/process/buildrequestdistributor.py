@@ -161,8 +161,8 @@ class BasicBuildChooser(BuildChooserBase):
 
         self.nextWorker = self.bldr.config.nextWorker
         if not self.nextWorker:
-            self.nextWorker = lambda _, slaves, __: random.choice(
-                slaves) if slaves else None
+            self.nextWorker = lambda _, workers, __: random.choice(
+                workers) if workers else None
 
         self.slavepool = self.bldr.getAvailableWorkers()
 
@@ -186,7 +186,7 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
             #  2. pick a worker
-            slave = yield self._popNextSlave(breq)
+            slave = yield self._popNextWorker(breq)
             if not slave:
                 break
 
@@ -201,7 +201,7 @@ class BasicBuildChooser(BuildChooserBase):
                     break
                 # try a different worker
                 recycledSlaves.append(slave)
-                slave = yield self._popNextSlave(breq)
+                slave = yield self._popNextWorker(breq)
 
             # recycle the workers that we didnt use to the head of the queue
             # this helps ensure we run 'nextWorker' only once per worker choice
@@ -242,7 +242,7 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
-    def _popNextSlave(self, buildrequest):
+    def _popNextWorker(self, buildrequest):
         # use 'preferred' workers first, if we have some ready
         if self.preferredSlaves:
             slave = self.preferredSlaves.pop(0)
