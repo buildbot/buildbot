@@ -205,10 +205,10 @@ Here is the complete list of changed API:
      - :py:mod:`buildbot.steps.worker`
 
 
-   * - :py:mod:`buildbot.status.slave`
+   * - :py:mod:`buildbot.status.slave` (private/deprecated?)
      - :py:mod:`buildbot.status.worker`
 
-   * - :py:mod:`buildbot.status.slave.SlaveStatus`
+   * - :py:mod:`buildbot.status.slave.SlaveStatus` (private/deprecated?)
      - :py:mod:`buildbot.status.worker.WorkerStatus`
        (this class is now new-style Python class)
 
