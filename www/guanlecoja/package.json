@@ -74,6 +74,7 @@
     "gulp-ng-classify": "~4.0.0",
     "gulp-util": "~3.0.6",
     "karma": "~0.13.9",
+    "karma-coffee-preprocessor": "~0.3.0",
     "karma-coverage": "^0.5.1",
     "karma-jasmine": "~0.3.6",
     "karma-phantomjs-launcher": "~0.2.1",

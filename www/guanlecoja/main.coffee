@@ -299,9 +299,9 @@ module.exports =  (gulp) ->
         if coverage
             karmaconf.reporters.push("coverage")
             karmaconf.preprocessors = {
-                "**/#{config.output_scripts}": ['sourcemap', 'coverage']
+                "**/#{config.output_scripts}": ['sourcemap']
                 "**/#{config.output_tests}": ['sourcemap']
-                '**/*.coffee': ['coverage']
+                '**/*.coffee': ['coffee', 'coverage']
             }
             for r in karmaconf.coverageReporter.reporters
                 if r.dir == "coverage"
