@@ -380,6 +380,10 @@ Other changes:
   (previously ``BuildslaveChoiceParameter``) label was changed from
   ``Build slave`` to ``Worker``.
 
+* ``buildbot.plugins.util.WorkerChoiceParameter``
+  (previously ``BuildslaveChoiceParameter``) default name was changed from
+  ``slavename`` to ``workername``.
+
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
 

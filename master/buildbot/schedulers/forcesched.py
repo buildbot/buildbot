@@ -336,7 +336,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
     required = False
     strict = False
 
-    def __init__(self, name='slavename', **kwargs):
+    def __init__(self, name='workername', **kwargs):
         ChoiceStringParameter.__init__(self, name, **kwargs)
 
     def updateFromKwargs(self, kwargs, **unused):
