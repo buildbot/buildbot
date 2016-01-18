@@ -1,5 +1,4 @@
 [flake8]
-# Copy of pep8rc
 
 show-source = yes
 statistics = yes

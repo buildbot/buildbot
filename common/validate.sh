@@ -169,12 +169,12 @@ $RES || warning "some import fixes failed -- not enforcing for now"
 status "running autopep8"
 if [[ -z `which autopep8` ]]; then
     warning "autopep8 is not installed"
-elif [[ ! -f common/pep8rc ]]; then
-    warning "common/pep8rc not found"
+elif [[ ! -f common/flake8rc ]]; then
+    warning "common/flake8rc not found"
 else
     changes_made=false
     for filename in ${py_files[@]}; do
-        LINEWIDTH=$(grep -E "max-line-length" common/pep8rc | sed 's/ //g' | cut -d'=' -f 2)
+        LINEWIDTH=$(grep -E "max-line-length" common/flake8rc | sed 's/ //g' | cut -d'=' -f 2)
         # even if we dont enforce errors, if they can be fixed automatically, thats better..
         IGNORES=E123,E501,W6
         # ignore is not None for SQLAlchemy code..
@@ -189,21 +189,6 @@ else
     if ${changes_made}; then
         not_ok "autopep8 made changes"
     fi
-fi
-
-status "running pep8"
-if [[ -z `which pep8` ]]; then
-    warning "pep8 is not installed"
-elif [[ ! -f common/pep8rc ]]; then
-    warning "common/pep8rc not found"
-else
-    pep8_ok=true
-    for filename in ${py_files[@]}; do
-        if ! pep8 --config=common/pep8rc "$filename"; then
-            pep8_ok=false
-        fi
-    done
-    $pep8_ok || not_ok "pep8 failed"
 fi
 
 status "running flake8"
