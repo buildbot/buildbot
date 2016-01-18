@@ -376,6 +376,10 @@ Other changes:
 * :py:meth:`buildbot.process.builder.BuilderControl.ping` now generates
   ``["ping", "no worker"]`` event, instead of ``["ping", "no slave"]``.
 
+* ``buildbot.plugins.util.WorkerChoiceParameter``
+  (previously ``BuildslaveChoiceParameter``) label was changed from
+  ``Build slave`` to ``Worker``.
+
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
 

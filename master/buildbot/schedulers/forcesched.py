@@ -332,7 +332,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
     there is no buildslave preference.
     """
     anySentinel = '-any-'
-    label = 'Build slave'
+    label = 'Worker'
     required = False
     strict = False
 
