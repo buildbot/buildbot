@@ -69,7 +69,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
-        self.attaching_slaves = []
+        self.attaching_workers = []
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
@@ -212,7 +212,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         @return: a Deferred that fires (with 'self') when the worker-side
                  builder is fully attached and ready to accept commands.
         """
-        for w in self.attaching_slaves + self.slaves:
+        for w in self.attaching_workers + self.slaves:
             if w.worker == slave:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
@@ -229,7 +229,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         sb = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self)
-        self.attaching_slaves.append(sb)
+        self.attaching_workers.append(sb)
         d = sb.attached(slave, commands)
         d.addCallback(self._attached)
         d.addErrback(self._not_attached, slave)
@@ -237,7 +237,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def _attached(self, sb):
         self.builder_status.addPointEvent(['connect', sb.worker.workername])
-        self.attaching_slaves.remove(sb)
+        self.attaching_workers.remove(sb)
         self.slaves.append(sb)
 
         self.updateBigStatus()
@@ -255,14 +255,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def detached(self, slave):
         """This is called when the connection to the bot is lost."""
-        for sb in self.attaching_slaves + self.slaves:
+        for sb in self.attaching_workers + self.slaves:
             if sb.worker == slave:
                 break
         else:
             log.msg("WEIRD: Builder.detached(%s) (%s)"
-                    " not in attaching_slaves(%s)"
+                    " not in attaching_workers(%s)"
                     " or slaves(%s)" % (slave, slave.workername,
-                                        self.attaching_slaves,
+                                        self.attaching_workers,
                                         self.slaves))
             return
         if sb.state == BUILDING:
@@ -271,8 +271,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # after the notifyOnDisconnect that invoked us finishes running.
             pass
 
-        if sb in self.attaching_slaves:
-            self.attaching_slaves.remove(sb)
+        if sb in self.attaching_workers:
+            self.attaching_workers.remove(sb)
         if sb in self.slaves:
             self.slaves.remove(sb)
 
