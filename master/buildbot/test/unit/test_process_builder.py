@@ -106,12 +106,12 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     def setSlaveBuilders(self, workerforbuilders):
         """C{slaves} maps name : available"""
-        self.bldr.slaves = []
+        self.bldr.workers = []
         for name, avail in iteritems(workerforbuilders):
             sb = mock.Mock(spec=['isAvailable'], name=name)
             sb.name = name
             sb.isAvailable.return_value = avail
-            self.bldr.slaves.append(sb)
+            self.bldr.workers.append(sb)
 
     # services
 
@@ -120,7 +120,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         # this will cause an exception if maybeStartBuild tries to start
-        self.bldr.slaves = None
+        self.bldr.workers = None
 
         # so we just hope this does not fail
         yield self.bldr.stopService()

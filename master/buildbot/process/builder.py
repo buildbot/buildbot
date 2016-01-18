@@ -74,7 +74,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
-        self.slaves = []
+        self.workers = []
 
         self.config = None
         self.builder_status = None
@@ -125,8 +125,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # if we have any workers attached which are no longer configured,
         # drop them.
         new_workernames = set(builder_config.workernames)
-        self.slaves = [w for w in self.slaves
-                       if w.worker.workername in new_workernames]
+        self.workers = [w for w in self.workers
+                        if w.worker.workername in new_workernames]
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -189,14 +189,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def addLatentSlave(self, slave):
         assert interfaces.ILatentWorker.providedBy(slave)
-        for w in self.slaves:
+        for w in self.workers:
             if w == slave:
                 break
         else:
             sb = workerforbuilder.LatentWorkerForBuilder(slave, self)
             self.builder_status.addPointEvent(
                 ['added', 'latent', slave.workername])
-            self.slaves.append(sb)
+            self.workers.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
 
     def attached(self, slave, commands):
@@ -212,7 +212,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         @return: a Deferred that fires (with 'self') when the worker-side
                  builder is fully attached and ready to accept commands.
         """
-        for w in self.attaching_workers + self.slaves:
+        for w in self.attaching_workers + self.workers:
             if w.worker == slave:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
@@ -238,7 +238,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def _attached(self, sb):
         self.builder_status.addPointEvent(['connect', sb.worker.workername])
         self.attaching_workers.remove(sb)
-        self.slaves.append(sb)
+        self.workers.append(sb)
 
         self.updateBigStatus()
 
@@ -255,7 +255,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def detached(self, slave):
         """This is called when the connection to the bot is lost."""
-        for sb in self.attaching_workers + self.slaves:
+        for sb in self.attaching_workers + self.workers:
             if sb.worker == slave:
                 break
         else:
@@ -263,7 +263,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                     " not in attaching_workers(%s)"
                     " or slaves(%s)" % (slave, slave.workername,
                                         self.attaching_workers,
-                                        self.slaves))
+                                        self.workers))
             return
         if sb.state == BUILDING:
             # the Build's .lostRemote method (invoked by a notifyOnDisconnect
@@ -273,8 +273,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         if sb in self.attaching_workers:
             self.attaching_workers.remove(sb)
-        if sb in self.slaves:
-            self.slaves.remove(sb)
+        if sb in self.workers:
+            self.workers.remove(sb)
 
         self.builder_status.addPointEvent(['disconnect', slave.workername])
         sb.detached()  # inform the WorkerForBuilder that their worker went away
@@ -285,7 +285,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # Catch exceptions here, since this is called in a LoopingCall.
             if not self.builder_status:
                 return
-            if not self.slaves:
+            if not self.workers:
                 self.builder_status.setBigState("offline")
             elif self.building or self.old_building:
                 self.builder_status.setBigState("building")
@@ -295,7 +295,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
     def getAvailableSlaves(self):
-        return [sb for sb in self.slaves if sb.isAvailable()]
+        return [sb for sb in self.workers if sb.isAvailable()]
 
     def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
