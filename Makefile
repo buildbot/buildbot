@@ -18,16 +18,9 @@ pylint:
 	$(MAKE) -C slave pylint; slave_res=$$?; \
 	if [ $$master_res != 0 ] || [ $$slave_res != 0 ]; then exit 1; fi
 
-# pyflakes the whole sourcecode (validate.sh will do that as well, but only process the modified files)
-pyflakes:
-	pyflakes master/buildbot slave/buildslave
-
-# pep8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
-pep8:
-	pep8 --config=common/pep8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
-
+# flake8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 flake8:
-	flake8 --config=common/flake8rc master/buildbot slave/buildslave
+	flake8 --config=common/flake8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
 
 # rebuild front-end from source
 frontend:
