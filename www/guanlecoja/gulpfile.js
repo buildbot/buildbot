@@ -5,7 +5,6 @@ coffee = require('gulp-coffee'),
 browserify = require('gulp-browserify'),
 rename = require('gulp-rename'),
 gutil = require('gulp-util'),
-uglify = require('gulp-uglify'),
 replace = require('gulp-replace');
 
 gulp.task('scripts', function(){
@@ -36,7 +35,6 @@ gulp.task('vendors', function(){
 	.pipe(replace(/require\(".\/streams"\)\(iconv\);/, ''))
 	.pipe(replace(/require\(".\/extend-node"\)\(iconv\);/, ''))
     .pipe(rename('vendors.js'))
-//    .pipe(uglify())
 	.pipe(gulp.dest('.'));
 });
 

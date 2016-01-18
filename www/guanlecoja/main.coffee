@@ -11,6 +11,8 @@ path = require 'path'
 # karma does not work with browserify
 karma = require 'karma'
 
+# sass uses native code, and cannot be browserified
+sass = require('gulp-sass')
 
 # utilities
 path = vendors.path
@@ -234,9 +236,10 @@ module.exports =  (gulp) ->
 
     # a task to compile less files
     gulp.task 'styles', false, ->
-        gulp.src config.files.less
+        gulp.src config.files.less.concat(config.files.sass)
             .pipe cached('styles')
-            .pipe catch_errors(less())
+            .pipe(catch_errors(gif("*.less", less())))
+            .pipe(catch_errors(gif("*.scss", sass())))
             .pipe remember('styles')
             .pipe concat(config.output_styles)
             .pipe gif(prod, cssmin())
@@ -276,6 +279,7 @@ module.exports =  (gulp) ->
         gulp.watch(config.files.templates, ["templates"])
         gulp.watch(config.files.tests, ["tests"])
         gulp.watch(config.files.less, ["styles"])
+        gulp.watch(config.files.sass, ["styles"])
         gulp.watch(config.files.index, ["index"])
         null
 

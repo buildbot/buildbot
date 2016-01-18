@@ -58,10 +58,13 @@ module.exports =
         index: [
             'src/app/index.jade'
         ]
-
         # Less stylesheets
         less: [
             'src/**/*.less'
+        ]
+        # sass stylesheets
+        sass: [
+            'src/**/*.scss'
         ]
 
         # Images
@@ -131,13 +134,13 @@ module.exports =
         browsers: ['PhantomJS'],
         files: ["scripts.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
         logLevel: "LOG_DEBUG",
-
-        plugins: [
-          'karma-jasmine'
-          'karma-phantomjs-launcher'
-          'karma-sourcemap-loader'
-          'karma-coverage'
-        ],
+        # plugins is automatically detected with recent karma
+#        plugins: [
+#          'karma-jasmine'
+#          'karma-phantomjs-launcher'
+#          'karma-sourcemap-loader'
+#          'karma-coverage'
+#        ],
         preprocessors: {
           '**/scripts.js': ['sourcemap']
           '**/tests.js': ['sourcemap']

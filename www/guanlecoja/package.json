@@ -34,6 +34,7 @@
     "gulp": "~3.9.0"
   },
   "devDependencies": {
+    "body-parser": "~1.13.3",
     "bower": "~1.5.2",
     "coffeeify": "^1.0.0",
     "connect": "~3.4.0",
@@ -57,32 +58,29 @@
     "gulp-remember": "~0.3.0",
     "gulp-rename": "~1.2.0",
     "gulp-replace": "^0.5.4",
-    "gulp-sourcemaps": "~1.5.2",
+    "gulp-sourcemaps": "~1.6.0",
     "gulp-uglify": "~1.4.0",
     "gulp-wrap": "0.8.0",
     "lazypipe": "^1.0.1",
-    "lodash": "~3.10.1",
-    "minimist": "~1.2.0",
-    "rimraf": "~2.4.3",
-    "serve-static": "~1.10.0",
     "lodash": "^3.10.0",
     "mime": "^1.2.11",
-    "body-parser": "~1.13.3",
-    "run-sequence": "~1.1.2"
+    "minimist": "~1.2.0",
+    "rimraf": "~2.4.3",
+    "run-sequence": "~1.1.2",
+    "serve-static": "~1.10.0"
   },
   "dependencies": {
     "coffee-script": "~1.10.0",
-
     "gulp-ng-classify": "~4.0.0",
     "gulp-util": "~3.0.6",
-
     "karma": "~0.13.9",
     "karma-coverage": "^0.5.1",
     "karma-jasmine": "~0.3.6",
     "karma-phantomjs-launcher": "~0.2.1",
     "karma-sourcemap-loader": "^0.3.5",
     "jasmine-core": "^2.4.1",
-    "phantomjs": "^1.9.19"
+    "phantomjs": "^1.9.19",
+    "gulp-sass": "^2.1.1"
   },
   "main": "./main",
   "bin": {},
