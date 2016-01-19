@@ -41,7 +41,7 @@ define(function (require) {
             realtimePages.initRealtime(realtimeFunctions);
 
             $searchField = $(".dataTables_filter>label input");
-            var addTagsFilter = $("#btn-and-tag-select");
+            var andTagsFilter = $("#btn-and-tag-select");
             var orTagsFilter = $("#btn-or-tag-select");
             orTagsFilter.hide();
             orTagsFilter.click(function(e){
@@ -50,15 +50,15 @@ define(function (require) {
 
                 $tagsSelect = $("[id^=tags-select]");
 
-                addTagsFilter.show();
+                andTagsFilter.show();
                 orTagsFilter.hide();
 
                 $tbSorter.fnDraw();
             });
-            addTagsFilter.click(function(event) {
+            andTagsFilter.click(function(event) {
                 var tagsSelect = $('<label><input class="col-md-2" type="hidden" id="tags-select'+tagsFilterNumber+'" placeholder="Filter tags"/></label>');
                 tagsFilters.push(tagsSelect);
-                addTagsFilter.before(tagsSelect);
+                andTagsFilter.before(tagsSelect);
                 tagsFilterNumber++;
                 tagsSelect.on("change", function change() {
                     $tbSorter.fnDraw();
@@ -66,7 +66,7 @@ define(function (require) {
                 $tagsSelect = $("[id^=tags-select]");
                 rtBuilders.updateTagsForSelect2(false);
                 if(maxTagsFilters === tagsFilterNumber){
-                    addTagsFilter.hide();
+                    andTagsFilter.hide();
                     orTagsFilter.show();
                 }
                 $tbSorter.fnDraw();
