@@ -356,18 +356,15 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
 Other changes:
 
-* ``buildslaveName`` functions argument name renamed to ``workerName``.
+* Functions argument ``buildslaveName`` renamed to ``workerName``.
 
 * ``s`` and ``sl`` loops variables were renamed to ``worker`` or ``w``;
   ``sb`` to ``wfb``.
 
 * In :py:meth:`buildbot.config.BuilderConfig.getConfigDict` result
-  ``'slavenames'`` key changed to ``workernames``;
-  ``'slavebuilddir'`` key changed to ``workerbuilddir``;
-  ``'nextSlave'`` key changed to ``nextWorker``.
-
-* Configuration key ``c['slavePortnum']`` is deprecated in favor of
-  ``c['protocols']['pb']['port']``.
+  ``'slavenames'`` key changed to ``'workernames'``;
+  ``'slavebuilddir'`` key changed to ``'workerbuilddir'``;
+  ``'nextSlave'`` key changed to ``'nextWorker'``.
 
 * :py:meth:`buildbot.process.builder.BuilderControl.ping` now generates
   ``["ping", "no worker"]`` event, instead of ``["ping", "no slave"]``.
@@ -409,18 +406,24 @@ name even if plugin uses old entry points:
     # point, this still will work.
     w = worker.ThirdPartyWorker()
 
-``buildbot.plugins.util.BuildslaveChoiceParameter`` is deprecated in favor of
-``WorkerChoiceParameter``.
+Other changes:
 
-``buildbot.plugins.util.enforceChosenSlave`` is deprecated in favor of
-``enforceChosenWorker``.
+* ``buildbot.plugins.util.BuildslaveChoiceParameter`` is deprecated in favor of
+  ``WorkerChoiceParameter``.
+
+* ``buildbot.plugins.util.enforceChosenSlave`` is deprecated in favor of
+  ``enforceChosenWorker``.
 
 ``BuildmasterConfig`` changes
 -----------------------------
 
-``c['slaves']`` was replaced with ``c['workers']``.
-Use of ``c['slaves']`` will work, but is considered deprecated, and will be
-removed in the future versions of Buildbot.
+* ``c['slaves']`` was replaced with ``c['workers']``.
+  Use of ``c['slaves']`` will work, but is considered deprecated, and will be
+  removed in the future versions of Buildbot.
+
+* Configuration key ``c['slavePortnum']`` is deprecated in favor of
+  ``c['protocols']['pb']['port']``.
+
 
 Docker latent worker changes
 ----------------------------
