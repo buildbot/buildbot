@@ -2,6 +2,9 @@
     <div class="row">
         <div class="col-md-12" id="tags-content">
             <label><input class="col-md-2" type="hidden" id="tags-select" placeholder="Filter tags"/></label>
+
+            <button id="btn-and-tag-select" class="tooltip btn btn-default btn-filter" type="SUBMIT" data-title="Enable AND filtering. By toogling this option you will get two filter boxes with the OR condition between them and AND condition inside for selected tags.">&</button>
+            <button id="btn-or-tag-select" class="tooltip btn btn-default btn-filter" type="SUBMIT" data-title="Enable OR filtering.">|</button>
             <button id="btn-unstable" class="tooltip btn btn-danger" type="SUBMIT" data-title="Toggle visibility of Unstable/WIP builds, while the button is red you will see Unstable/WIP builds."></button>
             {{#if ../compareURL}}
                 <form method="POST" action="{{../compareURL}}">
