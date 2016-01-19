@@ -201,10 +201,6 @@ Here is the complete list of changed API:
      - :py:func:`~buildbot.process.builder.enforceChosenWorker`
 
 
-   * - :py:mod:`buildbot.steps.slave`
-     - :py:mod:`buildbot.steps.worker`
-
-
    * - :py:mod:`buildbot.status.slave` (private/deprecated?)
      - :py:mod:`buildbot.status.worker`
 
