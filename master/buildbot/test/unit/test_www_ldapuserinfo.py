@@ -89,7 +89,7 @@ class LdapUserInfo(unittest.TestCase):
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertSearchCalledWith([
             (('accbase', 'accpattern',
-              ['accountEmail', 'accountFullName', 'dn', 'myfield']), {}),
+              ['accountEmail', 'accountFullName', 'myfield']), {}),
             (('groupbase', 'groupMemberPattern', ['groupName']), {}),
         ])
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
