@@ -245,13 +245,13 @@ class Contact(service.AsyncService):
 
     @defer.inlineCallbacks
     def getOnlineBuilders(self):
-        all_buildslaves = yield self.master.data.get(('buildslaves',))
+        all_workers = yield self.master.data.get(('buildslaves',))
         online_builderids = set()
-        for buildslave in all_buildslaves:
-            connected = buildslave['connected_to']
+        for worker in all_workers:
+            connected = worker['connected_to']
             if not connected:
                 continue
-            builders = buildslave['configured_on']
+            builders = worker['configured_on']
             builderids = [builder['builderid'] for builder in builders]
             online_builderids.update(builderids)
         defer.returnValue(list(online_builderids))
