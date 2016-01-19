@@ -126,6 +126,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             getLoginURL = mock.Mock(side_effect=lambda x: defer.succeed("://"))
             verifyCode = mock.Mock(
                 side_effect=lambda code: defer.succeed({"username": "bar"}))
+            userInfoProvider = None
 
         rsrc = self.githubAuth.getLoginResource()
         rsrc.auth = fakeAuth()
