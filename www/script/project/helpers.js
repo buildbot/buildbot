@@ -208,6 +208,10 @@ define(function (require) {
                 $("#preloader").preloader("showPreloader");
                 str = str + '&ajax=true';
 
+                if ($('#pending_url').val() !== undefined) {
+                    str = str + '&pending_url=' + $('#pending_url').val();
+                }
+
                 $.ajax({
                     type: "POST",
                     url: updateUrl,
