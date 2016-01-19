@@ -325,3 +325,44 @@ class AttributeMixin(unittest.TestCase):
             AttributeError,
             "'C' object has no attribute 'abc'",
             lambda: c.abc)
+
+    def test_static_attribute(self):
+        class C(WorkerAPICompatMixin):
+            value = 1
+
+        c = C()
+
+        self.assertEqual(c.value, 1)
+
+    def test_properties(self):
+        class C(WorkerAPICompatMixin):
+
+            def __init__(self):
+                self._value = 1
+
+            @property
+            def value(self):
+                return self._value
+
+            @value.setter
+            def value(self, value):
+                self._value = value
+
+            @value.deleter
+            def value(self):
+                del self._value
+
+        c = C()
+
+        self.assertEqual(c._value, 1)
+        self.assertEqual(c.value, 1)
+
+        c.value = 2
+
+        self.assertEqual(c._value, 2)
+        self.assertEqual(c.value, 2)
+
+        del c.value
+
+        self.assertFalse(hasattr(c, "_value"))
+        self.assertFalse(hasattr(c, "value"))

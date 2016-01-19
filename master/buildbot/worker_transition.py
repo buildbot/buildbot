@@ -272,7 +272,7 @@ class WorkerAPICompatMixin(object):
                     new=new_name, old=name))
             return setattr(self, new_name, value)
         else:
-            self.__dict__[name] = value
+            object.__setattr__(self, name, value)
 
     @property
     def __compat_attrs(self):
