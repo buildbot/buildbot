@@ -294,7 +294,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
     build = None
-    buildslave = None
     step_status = None
     progress = None
     logEncoding = None
@@ -305,6 +304,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     _run_finished_hook = lambda self: None  # for tests
 
     def __init__(self, **kwargs):
+        self.buildslave = None
+
         for p in self.__class__.parms:
             if p in kwargs:
                 setattr(self, p, kwargs.pop(p))
