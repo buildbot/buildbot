@@ -1,15 +1,18 @@
 #! /bin/bash
 TEST='buildbot.test buildslave.test'
 
-# some colors
-# plain
-_ESC=$'\e'
-GREEN="$_ESC[0;32m"
-MAGENTA="$_ESC[0;35m"
-RED="$_ESC[0;31m"
-LTCYAN="$_ESC[1;36m"
-YELLOW="$_ESC[1;33m"
-NORM="$_ESC[0;0m"
+# if stdout is a terminal define some colors
+# validate.sh can be run as hook from GUI git clients, such as git-gui
+if test -t 1; then
+    # plain
+    _ESC=$'\e'
+    GREEN="$_ESC[0;32m"
+    MAGENTA="$_ESC[0;35m"
+    RED="$_ESC[0;31m"
+    LTCYAN="$_ESC[1;36m"
+    YELLOW="$_ESC[1;33m"
+    NORM="$_ESC[0;0m"
+fi
 
 ## parse options
 
