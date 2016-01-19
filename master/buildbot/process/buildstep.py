@@ -15,6 +15,8 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
+from buildbot.worker_transition import WorkerAPICompatMixin
+
 try:
     import cStringIO as StringIO
     assert StringIO
@@ -238,7 +240,8 @@ class BuildStepStatus(object):
 
 
 class BuildStep(results.ResultComputingConfigMixin,
-                properties.PropertiesMixin):
+                properties.PropertiesMixin,
+                WorkerAPICompatMixin):
 
     implements(interfaces.IBuildStep)
 
@@ -304,7 +307,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     _run_finished_hook = lambda self: None  # for tests
 
     def __init__(self, **kwargs):
-        self.buildslave = None
+        self.worker = None
+        self._registerOldWorkerAttr("worker", pattern="buildworker")
 
         for p in self.__class__.parms:
             if p in kwargs:
@@ -343,8 +347,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.build = build
         self.master = self.build.master
 
-    def setBuildSlave(self, buildslave):
-        self.buildslave = buildslave
+    def setBuildSlave(self, worker):
+        self.worker = worker
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
@@ -799,7 +803,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def runCommand(self, command):
         self.cmd = command
-        command.buildslave = self.buildslave
+        command.buildslave = self.worker
         try:
             res = yield command.run(self, self.remote, self.build.builder.name)
         finally:

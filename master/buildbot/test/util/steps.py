@@ -97,7 +97,7 @@ class BuildStepMixin(object):
     @ivar step: the step under test
     @ivar build: the fake build containing the step
     @ivar progress: mock progress object
-    @ivar buildslave: mock buildslave object
+    @ivar worker: mock worker object
     @ivar properties: build properties (L{Properties} instance)
     """
 
@@ -188,9 +188,9 @@ class BuildStepMixin(object):
 
         step.progress = mock.Mock(name="progress")
 
-        # step.buildslave
+        # step.worker
 
-        self.buildslave = step.buildslave = worker.FakeWorker(self.master)
+        self.worker = step.worker = worker.FakeWorker(self.master)
 
         # step overrides
 

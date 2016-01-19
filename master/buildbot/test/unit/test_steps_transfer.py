@@ -516,7 +516,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
     def testBasic(self):
         self.setupStep(transfer.StringDownload("Hello World", "hello.txt"))
 
-        self.step.buildslave = Mock()
+        self.step.worker = Mock()
         self.step.remote = Mock()
 
         # A place to store what gets read
@@ -564,7 +564,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
         msg = dict(message="Hello World")
         self.setupStep(transfer.JSONStringDownload(msg, "hello.json"))
 
-        self.step.buildslave = Mock()
+        self.step.worker = Mock()
         self.step.remote = Mock()
 
         # A place to store what gets read
@@ -615,7 +615,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         ss.asDict.return_value = dict(revision="12345")
         s.build.getSourceStamp.return_value = ss
 
-        s.buildslave = Mock()
+        s.worker = Mock()
         s.remote = Mock()
 
         s.start()

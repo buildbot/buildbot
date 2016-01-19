@@ -35,7 +35,11 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.test.util import steps
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
@@ -154,7 +158,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_runCommand(self):
         bs = buildstep.BuildStep()
-        bs.buildslave = worker.FakeWorker(master=None)  # master is not used here
+        bs.worker = worker.FakeWorker(master=None)  # master is not used here
         bs.remote = 'dummy'
         bs.build = fakebuild.FakeBuild()
         bs.build.builder.name = 'fake'
@@ -500,7 +504,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st.description = 'fooing'
         self.checkSummary(st.getResultSummary(), u'fooing (failure)')
 
-    # Test calling checkSlaveHasCommand() when buildslave have support for
+    # Test calling checkSlaveHasCommand() when worker have support for
     # requested remote command.
     def testcheckSlaveHasCommandGood(self):
         # patch BuildStep.slaveVersion() to return success
@@ -513,7 +517,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         # make sure slaveVersion() was called with correct arguments
         mockedSlaveVersion.assert_called_once_with("foo")
 
-    # Test calling checkSlaveHasCommand() when buildslave is to old to support
+    # Test calling checkSlaveHasCommand() when worker is to old to support
     # requested remote command.
     def testcheckSlaveHasCommandTooOld(self):
         # patch BuildStep.slaveVersion() to return error
@@ -576,7 +580,7 @@ class InterfaceTests(interfaces.InterfaceTests):
             'warnOnFailure',
             'alwaysRun',
             'build',
-            'buildslave',
+            'worker',
             'step_status',
             'progress',
             'stopped',
@@ -590,7 +594,7 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_setBuildSlave(self):
         @self.assertArgSpecMatches(self.step.setBuildSlave)
-        def setBuildSlave(self, buildslave):
+        def setBuildSlave(self, worker):
             pass
 
     def test_signature_setupProgress(self):
@@ -1034,3 +1038,23 @@ class TestShellMixin(steps.BuildStepMixin,
     def test_getResultSummary(self):
         self.setupStep(SimpleShellCommand(command=['a', ['b', 'c']]))
         self.assertEqual(self.step.getResultSummary(), {u'step': u"'a b ...'"})
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_worker_old_api(self):
+        bs = buildstep.BuildStep()
+
+        worker = mock.Mock()
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            bs.setBuildSlave(worker)
+
+            new = bs.worker
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'buildslave' attribute is deprecated"):
+            old = bs.buildslave
+
+        self.assertIdentical(new, worker)
+        self.assertIdentical(old, new)

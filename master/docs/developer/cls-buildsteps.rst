@@ -125,9 +125,9 @@ BuildStep
         :param build: the :class:`~buildbot.worker.Worker` instance on which this step will run.
 
         Similarly, this method is called with the worker that will run this step.
-        The default implementation sets the :attr:`buildslave` attribute.
+        The default implementation sets the :attr:`worker` attribute.
 
-    .. py:attribute:: buildslave
+    .. py:attribute:: worker
 
         The worker that will run this step.
 
@@ -366,7 +366,7 @@ BuildStep
 
         :returns: string
 
-        Get the name of the buildslave assigned to this step.
+        Get the name of the worker assigned to this step.
 
     Most steps exist to run commands.
     While the details of exactly how those commands are constructed are left to subclasses, the execution of those commands comes down to this method:
@@ -376,7 +376,7 @@ BuildStep
         :param command: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
         :returns: Deferred
 
-        This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.remotecommand.RemoteCommand.run`.
+        This method connects the given command to the step's worker and runs it, returning the Deferred from :meth:`~buildbot.process.remotecommand.RemoteCommand.run`.
 
     The :class:`BuildStep` class provides methods to add log data to the step.
     Subclasses provide a great deal of user-configurable functionality on top of these methods.

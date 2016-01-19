@@ -47,10 +47,10 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         # a case-sensitive dictionary in slave_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
         # variable names to uppercase to duplicate the case-insensitivity.
-        fold_to_uppercase = (self.buildslave.slave_system == 'win32')
+        fold_to_uppercase = (self.worker.slave_system == 'win32')
 
         properties = self.build.getProperties()
-        environ = self.buildslave.slave_environ
+        environ = self.worker.slave_environ
         variables = self.variables
         log = []
         if isinstance(variables, str):

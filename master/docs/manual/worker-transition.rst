@@ -211,6 +211,11 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.schedulers.forcesched.BuildslaveChoiceParameter`
      - :py:class:`~buildbot.schedulers.forcesched.WorkerChoiceParameter`
 
+
+   * - :py:attr:`buildbot.process.buildstep.BuildStep.buildslave`
+     - :py:attr:`buildbot.process.buildstep.BuildStep.worker`
+       (also it was moved from class static attribute to instance attribute)
+
 API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
 .. todo::
@@ -351,7 +356,6 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
    * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
      - :py:class:`buildbot.steps.worker.SlaveBuildStep`
-
 
 
 Other changes:
