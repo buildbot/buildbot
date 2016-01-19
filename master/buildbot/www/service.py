@@ -36,6 +36,14 @@ from twisted.web import server
 from zope.interface import implements
 
 
+# todo: need to store session infos in the db for multimaster
+# rough examination, it looks complicated, as all the session APIs are sync
+class BuildbotSession(server.Session):
+    # default session timeout is 15min, which is very short for our usage.
+    # put it to one week
+    sessionTimeout = 7*24*60
+
+
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     name = 'www'
 
@@ -198,9 +206,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             httplog = os.path.abspath(os.path.join(self.master.basedir, new_config.www['logfileName']))
         self.site = RotateLogSite(root, logPath=httplog)
 
-        # todo: need to store session infos in the db for multimaster
-        # rough examination, it looks complicated, as all the session APIs are sync
-        self.site.sessionFactory = server.Session
+        self.site.sessionFactory = BuildbotSession
 
         # convert this to a tuple so it can't be appended anymore (in
         # case some dynamically created resources try to get reconfigs)
