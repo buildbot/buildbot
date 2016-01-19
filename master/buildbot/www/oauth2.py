@@ -47,6 +47,9 @@ class OAuth2LoginResource(auth.LoginResource):
             raise resource.Redirect(url)
         else:
             details = yield self.auth.verifyCode(code)
+            if self.auth.userInfoProvider is not None:
+                infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
+                details.update(infos)
             request.getSession().user_info = details
             state = request.args.get("state", [""])[0]
             print repr(state)

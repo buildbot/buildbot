@@ -74,16 +74,20 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             infos = {'username': username}
             pattern = self.accountPattern % dict(username=username)
             res = self.search(c, self.accountBase, pattern,
-                              attributes=[self.accountEmail, self.accountFullName, 'dn']
+                              attributes=[self.accountEmail, self.accountFullName]
                               + self.accountExtraFields)
             if len(res) != 1:
                 raise KeyError("ldap search \"%s\" returned %d results" % (pattern, len(res)))
             dn, ldap_infos = res[0]['dn'], res[0]['raw_attributes']
-            infos['full_name'] = ldap_infos[self.accountFullName]
-            infos['email'] = ldap_infos[self.accountEmail]
+            def getLdapInfo(x):
+                if isinstance(x, list):
+                    return x[0]
+                return x
+            infos['full_name'] = getLdapInfo(ldap_infos[self.accountFullName])
+            infos['email'] = getLdapInfo(ldap_infos[self.accountEmail])
             for f in self.accountExtraFields:
                 if f in ldap_infos:
-                    infos[f] = ldap_infos[f]
+                    infos[f] = getLdapInfo(ldap_infos[f])
             # needs double quoting of backslashing
             pattern = self.groupMemberPattern % dict(dn=dn)
             res = self.search(c, self.groupBase, pattern,

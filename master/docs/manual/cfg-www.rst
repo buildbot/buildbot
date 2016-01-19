@@ -276,6 +276,9 @@ This is useful both for authentication (to fetch more data about the logged-in u
 This extra information is provided by, appropriately enough, user info providers.
 These can be passed to :py:class:`~buildbot.www.auth.RemoteUserAuth` and as an element of ``avatar_methods``.
 
+This can also be passed to oauth2 authentication plugins.
+In this case the username provided by oauth2 will be used, and all other informations will be taken from ldap (Full Name, email, and groups):
+
 Currently only one provider is available:
 
 .. py:class:: buildbot.ldapuserinfos.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
@@ -331,6 +334,15 @@ Currently only one provider is available:
             .. code-block:: bash
 
                 pip install python3-ldap
+
+        In the case of oauth2 authentications, you have to pass the userInfoProvider as keyword argument::
+
+                from buildbot.plugins import util
+                userInfoProvider = util.LdapUserInfo(...)
+                c['www'] = {
+                    # ...
+                    'auth': util.GoogleAuth("clientid", "clientsecret", userInfoProvider=userInfoProvider),
+                }
 
 
 
