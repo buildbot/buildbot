@@ -360,7 +360,7 @@ class IStatus(Interface):
         """Return the IBuilderStatus object for a given named Builder. Raises
         KeyError if there is no Builder by that name."""
 
-    def getSlaveNames():
+    def getWorkerNames():
         """Return a list of buildslave names, suitable for passing to
         getSlave()."""
     def getSlave(name):

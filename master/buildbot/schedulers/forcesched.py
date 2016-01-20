@@ -349,7 +349,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
     def getChoices(self, master, scheduler, buildername):
         if buildername is None:
             # this is the "Force All Builds" page
-            workernames = master.status.getSlaveNames()
+            workernames = master.status.getWorkerNames()
         else:
             builderStatus = master.status.getBuilder(buildername)
             workernames = [worker.getName() for worker in builderStatus.getSlaves()]

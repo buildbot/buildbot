@@ -73,7 +73,7 @@ class FakeStatus(service.BuildbotService):
     def getBuilderNames(self):
         return []
 
-    def getSlaveNames(self):
+    def getWorkerNames(self):
         return []
 
     def workerConnected(self, name):

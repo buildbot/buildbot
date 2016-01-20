@@ -242,7 +242,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         """
         return self.botmaster.builders[name].builder_status
 
-    def getSlaveNames(self):
+    def getWorkerNames(self):
         return list(iteritems(self.buildslaves.slaves))
 
     def getSlave(self, slavename):

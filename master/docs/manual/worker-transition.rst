@@ -398,6 +398,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.status.base.StatusReceiverBase.slaveUnpaused`
      - :py:meth:`buildbot.status.base.StatusReceiverBase.workerUnpaused`
 
+   * - :py:meth:`buildbot.interfaces.IStatus.getSlaveNames`
+       with all implementations
+     - :py:meth:`buildbot.interfaces.IStatus.getWorkerNames`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
