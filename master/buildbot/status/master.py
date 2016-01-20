@@ -393,7 +393,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if hasattr(t, 'builderRemoved'):
                 t.builderRemoved(name)
 
-    def slaveConnected(self, name):
+    def workerConnected(self, name):
         for t in self.watchers:
             if hasattr(t, 'workerConnected'):
                 t.workerConnected(name)

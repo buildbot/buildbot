@@ -76,7 +76,7 @@ class FakeStatus(service.BuildbotService):
     def getSlaveNames(self):
         return []
 
-    def slaveConnected(self, name):
+    def workerConnected(self, name):
         pass
 
     def build_started(self, brid, buildername, build_status):

@@ -384,7 +384,7 @@ class AbstractWorker(service.BuildbotService, object):
         log.msg("bot attached")
         self.messageReceivedFromSlave()
         self.stopMissingTimer()
-        self.master.status.slaveConnected(self.name)
+        self.master.status.workerConnected(self.name)
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForSlave(self.name)
 
