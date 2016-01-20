@@ -21,7 +21,7 @@ from buildbot.util.eventual import eventually
 from zope.interface import implements
 
 
-class WorkerStatus(object):
+class WorkerStatus:
     implements(interfaces.IWorkerStatus)
 
     admin = None

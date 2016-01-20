@@ -371,7 +371,6 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
    * - :py:class:`buildbot.status.slave.SlaveStatus`
      - :py:class:`buildbot.status.worker.WorkerStatus`
-       (this class is now new-style Python class)
 
 Other changes:
 
