@@ -341,7 +341,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         pending_json = SinglePendingBuildsJsonResource(self.status, self.builder_status)
         pending_dict = yield pending_json.asDict(req)
         pending_url = self.status.getBuildbotURL() + path_to_json_pending(req, self.builder_status.name)
-        cxt['pending_url'] = pending_url
         cxt['instant_json']['pending_builds'] = {"url": pending_url,
                                                  "data": json.dumps(pending_dict, separators=(',', ':')),
                                                  "waitForPush": self.status.master.config.autobahn_push,

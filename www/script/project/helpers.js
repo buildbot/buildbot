@@ -188,6 +188,9 @@ define(function (require) {
             });
 
         },
+        getInstantJSON: function () {
+            return window.instantJSON;
+        },
         selectBuildsAction: function ($table, dontUpdate, updateUrl, parameters, updateFunc) { // check all in tables and perform remove action
 
             if ($table === undefined) {
@@ -208,8 +211,9 @@ define(function (require) {
                 $("#preloader").preloader("showPreloader");
                 str = str + '&ajax=true';
 
-                if ($('#pending_url').val() !== undefined) {
-                    str = str + '&pending_url=' + $('#pending_url').val();
+                var json = helpers.getInstantJSON();
+                if (json !== undefined && json.pending_builds && json.pending_builds.url) {
+                    str = str + '&pending_builds_url=' + json.pending_builds.url;
                 }
 
                 $.ajax({
