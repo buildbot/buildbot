@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.test.util.warnings import ignoreWarning
 from buildbot.util import pickle
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from twisted.trial import unittest
 
 

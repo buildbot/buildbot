@@ -3,8 +3,6 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.status import master
-from buildbot.status import worker
-from buildbot.worker_transition import deprecated_worker_class
 
 # styles.Versioned requires this, as it keys the version numbers on the fully
 # qualified class name; see master/buildbot/test/regressions/test_unpickling.py
