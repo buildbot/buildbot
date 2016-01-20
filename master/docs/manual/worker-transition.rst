@@ -409,6 +409,18 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        with all implementations
      - :py:meth:`buildbot.interfaces.IStatus.getWorker`
 
+
+   * - :py:meth:`buildbot.interfaces.IBuildStatus.getSlavename`
+       with all implementations
+     - :py:meth:`buildbot.interfaces.IBuildStatus.getWorkername`
+
+   * - :py:meth:`buildbot.status.build.BuildStatus.setSlavename`
+     - :py:meth:`buildbot.status.build.BuildStatus.setWorkername`
+
+   * - :py:attr:`buildbot.status.build.BuildStatus.slavename`
+     - :py:attr:`buildbot.status.build.BuildStatus.workername`
+       (also it was moved from class static attribute to instance attribute)
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
@@ -449,6 +461,9 @@ Other changes:
 
   - instead of ``slaveUnpaused`` with data ``slavename=...`` now generated
     ``workerUnpaused`` event with data ``workername=...``;
+
+* :py:meth:`buildbot.status.build.BuildStatus.asDict` returns worker name under
+  ``'worker'`` key, instead of ``'slave'`` key.
 
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.

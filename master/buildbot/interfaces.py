@@ -741,8 +741,8 @@ class IBuildStatus(Interface):
     # Once you know the build has finished, the following methods are legal.
     # Before ths build has finished, they all return None.
 
-    def getSlavename():
-        """Return the name of the buildslave which handled this build."""
+    def getWorkername():
+        """Return the name of the worker which handled this build."""
 
     def getText():
         """Returns a list of strings to describe the build. These are

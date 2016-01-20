@@ -156,7 +156,7 @@ Another example of a function delivering a customized html email containing the 
         text = list()
         text.append(u'<h4>Build status: %s</h4>' % result.upper())
         text.append(u'<table cellspacing="10"><tr>')
-        text.append(u"<td>Buildslave for this Build:</td><td><b>%s</b></td></tr>" % build.getSlavename())
+        text.append(u"<td>Buildslave for this Build:</td><td><b>%s</b></td></tr>" % build.getWorkername())
         if master_status.getURLForThing(build):
             text.append(u'<tr><td>Complete logs for all build steps:</td><td><a href="%s">%s</a></td></tr>'
                         % (master_status.getURLForThing(build),

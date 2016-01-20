@@ -34,7 +34,7 @@ class FakeBuildStatus(properties.PropertiesMixin, object):
     def getInterestedUsers(self):
         return []
 
-    def setSlavename(self, _):
+    def setWorkername(self, _):
         pass
 
     def setSourceStamps(self, _):

@@ -226,7 +226,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.workername = workerforbuilder.worker.workername
         self._registerOldWorkerAttr("workername")
-        self.build_status.setSlavename(self.workername)
+        self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks
     def startBuild(self, build_status, expectations, workerforbuilder):
