@@ -84,7 +84,7 @@ class FileExists(WorkerBuildStep):
         self.file = file
 
     def start(self):
-        self.checkSlaveHasCommand('stat')
+        self.checkWorkerHasCommand('stat')
         cmd = remotecommand.RemoteCommand('stat', {'file': self.file})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -126,7 +126,7 @@ class CopyDirectory(WorkerBuildStep):
         self.maxTime = maxTime
 
     def start(self):
-        self.checkSlaveHasCommand('cpdir')
+        self.checkWorkerHasCommand('cpdir')
 
         args = {'fromdir': self.src, 'todir': self.dest}
         if self.timeout:
@@ -182,7 +182,7 @@ class RemoveDirectory(WorkerBuildStep):
         self.dir = dir
 
     def start(self):
-        self.checkSlaveHasCommand('rmdir')
+        self.checkWorkerHasCommand('rmdir')
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -215,7 +215,7 @@ class MakeDirectory(WorkerBuildStep):
         self.dir = dir
 
     def start(self):
-        self.checkSlaveHasCommand('mkdir')
+        self.checkWorkerHasCommand('mkdir')
         cmd = remotecommand.RemoteCommand('mkdir', {'dir': self.dir})
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
@@ -288,7 +288,7 @@ class CompositeStepMixin():
                                      evaluateCommand=commandComplete)
 
     def getFileContentFromSlave(self, filename, abandonOnFailure=False):
-        self.checkSlaveHasCommand("uploadFile")
+        self.checkWorkerHasCommand("uploadFile")
         fileWriter = remotetransfer.StringFileWriter()
         # default arguments
         args = {

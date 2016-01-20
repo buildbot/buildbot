@@ -504,22 +504,22 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st.description = 'fooing'
         self.checkSummary(st.getResultSummary(), u'fooing (failure)')
 
-    # Test calling checkSlaveHasCommand() when worker have support for
+    # Test calling checkWorkerHasCommand() when worker have support for
     # requested remote command.
-    def testcheckSlaveHasCommandGood(self):
+    def testcheckWorkerHasCommandGood(self):
         # patch BuildStep.workerVersion() to return success
         mockedWorkerVersion = mock.Mock()
         self.patch(buildstep.BuildStep, "workerVersion", mockedWorkerVersion)
 
         # check that no exceptions are raised
-        buildstep.BuildStep().checkSlaveHasCommand("foo")
+        buildstep.BuildStep().checkWorkerHasCommand("foo")
 
         # make sure workerVersion() was called with correct arguments
         mockedWorkerVersion.assert_called_once_with("foo")
 
-    # Test calling checkSlaveHasCommand() when worker is to old to support
+    # Test calling checkWorkerHasCommand() when worker is to old to support
     # requested remote command.
-    def testcheckSlaveHasCommandTooOld(self):
+    def testcheckWorkerHasCommandTooOld(self):
         # patch BuildStep.workerVersion() to return error
         self.patch(buildstep.BuildStep,
                    "workerVersion",
@@ -529,7 +529,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step = buildstep.BuildStep()
         self.assertRaisesRegexp(WorkerTooOldError,
                                 "slave is too old, does not know about foo",
-                                step.checkSlaveHasCommand, "foo")
+                                step.checkWorkerHasCommand, "foo")
 
 
 class TestLoggingBuildStep(unittest.TestCase):
@@ -1104,3 +1104,16 @@ class TestWorkerTransition(unittest.TestCase):
             older = bs.slaveVersionIsOlderThan(None, "0.5")
 
         self.assertFalse(older)
+
+    def test_checkWorkerHasCommand_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerCommandVersion = mock.Mock()
+        bs.build.getWorkerCommandVersion.return_value = None
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'checkSlaveHasCommand' method is deprecated"):
+            self.assertRaises(WorkerTooOldError,
+                              lambda: bs.checkSlaveHasCommand("foo"))

@@ -707,10 +707,11 @@ class BuildStep(results.ResultComputingConfigMixin,
         return False
     define_old_worker_method(locals(), workerVersionIsOlderThan)
 
-    def checkSlaveHasCommand(self, command):
+    def checkWorkerHasCommand(self, command):
         if not self.workerVersion(command):
             message = "slave is too old, does not know about %s" % command
             raise WorkerTooOldError(message)
+    define_old_worker_method(locals(), checkWorkerHasCommand)
 
     def getSlaveName(self):
         return self.build.getWorkerName()
