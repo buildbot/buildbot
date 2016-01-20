@@ -812,8 +812,8 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
         def start(self):
             # make sure the slave knows about stat
-            slavever = (self.slaveVersion('stat'),
-                        self.slaveVersion('glob'))
+            slavever = (self.workerVersion('stat'),
+                        self.workerVersion('glob'))
             if not all(slavever):
                 raise BuildSlaveToOldError('need stat and glob')
 

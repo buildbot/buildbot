@@ -330,7 +330,7 @@ BuildStep
     The following methods are provided as utilities to subclasses.
     These methods should only be invoked after the step is started.
 
-    .. py:method:: slaveVersion(command, oldversion=None)
+    .. py:method:: workerVersion(command, oldversion=None)
 
         :param command: command to examine
         :type command: string
@@ -339,11 +339,11 @@ BuildStep
 
         Fetch the version of the named command, as specified on the slave.
         In practice, all commands on a slave have the same version, but passing ``command`` is still useful to ensure that the command is implemented on the slave.
-        If the command is not implemented on the slave, :meth:`slaveVersion` will return ``None``.
+        If the command is not implemented on the slave, :meth:`workerVersion` will return ``None``.
 
         Versions take the form ``x.y`` where ``x`` and ``y`` are integers, and are compared as expected for version numbers.
 
-        Buildbot versions older than 0.5.0 did not support version queries; in this case, :meth:`slaveVersion` will return ``oldVersion``.
+        Buildbot versions older than 0.5.0 did not support version queries; in this case, :meth:`workerVersion` will return ``oldVersion``.
         Since such ancient versions of Buildbot are no longer in use, this functionality is largely vestigial.
 
     .. py:method:: slaveVersionIsOlderThan(command, minversion)

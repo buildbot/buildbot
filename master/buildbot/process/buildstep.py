@@ -694,8 +694,9 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     # utility methods that BuildSteps may find useful
 
-    def slaveVersion(self, command, oldversion=None):
+    def workerVersion(self, command, oldversion=None):
         return self.build.getWorkerCommandVersion(command, oldversion)
+    define_old_worker_method(locals(), workerVersion)
 
     def slaveVersionIsOlderThan(self, command, minversion):
         sv = self.build.getWorkerCommandVersion(command, None)
@@ -706,7 +707,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         return False
 
     def checkSlaveHasCommand(self, command):
-        if not self.slaveVersion(command):
+        if not self.workerVersion(command):
             message = "slave is too old, does not know about %s" % command
             raise WorkerTooOldError(message)
 

@@ -219,6 +219,9 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.process.buildstep.BuildStep.setBuildSlave`
      - :py:meth:`buildbot.process.buildstep.BuildStep.setWorker`
 
+   * - :py:meth:`buildbot.process.buildstep.BuildStep.slaveVersion`
+     - :py:meth:`buildbot.process.buildstep.BuildStep.workerVersion`
+
 API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
 
 .. todo::

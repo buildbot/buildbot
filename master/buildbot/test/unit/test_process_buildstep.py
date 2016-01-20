@@ -507,22 +507,22 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     # Test calling checkSlaveHasCommand() when worker have support for
     # requested remote command.
     def testcheckSlaveHasCommandGood(self):
-        # patch BuildStep.slaveVersion() to return success
-        mockedSlaveVersion = mock.Mock()
-        self.patch(buildstep.BuildStep, "slaveVersion", mockedSlaveVersion)
+        # patch BuildStep.workerVersion() to return success
+        mockedWorkerVersion = mock.Mock()
+        self.patch(buildstep.BuildStep, "workerVersion", mockedWorkerVersion)
 
         # check that no exceptions are raised
         buildstep.BuildStep().checkSlaveHasCommand("foo")
 
-        # make sure slaveVersion() was called with correct arguments
-        mockedSlaveVersion.assert_called_once_with("foo")
+        # make sure workerVersion() was called with correct arguments
+        mockedWorkerVersion.assert_called_once_with("foo")
 
     # Test calling checkSlaveHasCommand() when worker is to old to support
     # requested remote command.
     def testcheckSlaveHasCommandTooOld(self):
-        # patch BuildStep.slaveVersion() to return error
+        # patch BuildStep.workerVersion() to return error
         self.patch(buildstep.BuildStep,
-                   "slaveVersion",
+                   "workerVersion",
                    mock.Mock(return_value=None))
 
         # make sure appropriate exception is raised
@@ -642,9 +642,9 @@ class InterfaceTests(interfaces.InterfaceTests):
         def setProgress(self, metric, value):
             pass
 
-    def test_signature_slaveVersion(self):
-        @self.assertArgSpecMatches(self.step.slaveVersion)
-        def slaveVersion(self, command, oldversion=None):
+    def test_signature_workerVersion(self):
+        @self.assertArgSpecMatches(self.step.workerVersion)
+        def workerVersion(self, command, oldversion=None):
             pass
 
     def test_signature_slaveVersionIsOlderThan(self):
@@ -1069,3 +1069,17 @@ class TestWorkerTransition(unittest.TestCase):
             bs.setBuildSlave(worker)
 
         self.assertIdentical(bs.worker, worker)
+
+    def test_worker_version_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerCommandVersion = mock.Mock()
+        bs.build.getWorkerCommandVersion.return_value = "ver"
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaveVersion' method is deprecated"):
+            ver = bs.slaveVersion(None)
+
+        self.assertEqual(ver, "ver")

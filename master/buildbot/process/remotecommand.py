@@ -386,7 +386,7 @@ class RemoteShellCommand(RemoteCommand):
         if self.remote_command == "shell":
             # non-ShellCommand slavecommands are responsible for doing this
             # fixup themselves
-            if self.step.slaveVersion("shell", "old") == "old":
+            if self.step.workerVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
             if self.step.slaveVersionIsOlderThan("shell", "2.16"):
                 self.args.pop('sigtermTime', None)
