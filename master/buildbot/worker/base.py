@@ -567,9 +567,9 @@ class AbstractWorker(service.BuildbotService, object):
 
     def _pauseChanged(self, paused):
         if paused is True:
-            self.botmaster.master.status.slavePaused(self.name)
+            self.botmaster.master.status.workerPaused(self.name)
         else:
-            self.botmaster.master.status.slaveUnpaused(self.name)
+            self.botmaster.master.status.workerUnpaused(self.name)
 
     def pause(self):
         """Stop running new builds on the worker."""

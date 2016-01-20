@@ -85,10 +85,10 @@ class StatusReceiverBase:
     def workerDisconnected(self, workerName):
         pass
 
-    def slavePaused(self, name):
+    def workerPaused(self, name):
         pass
 
-    def slaveUnpaused(self, name):
+    def workerUnpaused(self, name):
         pass
 
     def checkConfig(self, otherStatusReceivers):

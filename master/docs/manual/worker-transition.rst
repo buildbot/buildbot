@@ -386,6 +386,18 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.status.master.Status.slaveDisconnected`
      - :py:meth:`buildbot.status.master.Status.workerDisconnected`
 
+   * - :py:meth:`buildbot.status.master.Status.slavePaused`
+     - :py:meth:`buildbot.status.master.Status.workerPaused`
+
+   * - :py:meth:`buildbot.status.master.Status.slaveUnpaused`
+     - :py:meth:`buildbot.status.master.Status.workerUnpaused`
+
+   * - :py:meth:`buildbot.status.base.StatusReceiverBase.slavePaused`
+     - :py:meth:`buildbot.status.base.StatusReceiverBase.workerPaused`
+
+   * - :py:meth:`buildbot.status.base.StatusReceiverBase.slaveUnpaused`
+     - :py:meth:`buildbot.status.base.StatusReceiverBase.workerUnpaused`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
