@@ -1,0 +1,77 @@
+Release Notes for Buildbot 0.9.0b5
+==================================
+
+
+The following are the release notes for Buildbot 0.9.0b5
+This version was released on January 20, 2016.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+Master
+------
+
+Features
+~~~~~~~~
+
+* Builders ui page has improved tag filtering capabilities
+* Home page enhanced with the list of recent builds sorted by builder
+* :bb:reporter:`IRC` reporter has been partially ported to work on data api.
+
+Fixes
+~~~~~
+
+* better stability and reliability in the UI thanks to switch to buildbot data-module
+* fix irc
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* properties object is now directly present in build, and not in build_status.
+  This should not change much unless you try to access your properties via step.build.build_status.
+  Remember that with PropertiesMixin, you can access properties via getProperties on the steps, and on the builds objects.
+
+* :ref:`WWW-data-module` is now integrated, which sets a definitive API for accessing buildbot data in angularJS UI.
+
+
+Slave
+-----
+
+Features
+~~~~~~~~
+
+* The :class:`DockerLatentBuildSlave` image attribute is now renderable (can take properties in account).
+
+* The :class:`DockerLatentBuildSlave` sets environment variables describing how to connect to the master.
+  Example dockerfiles can be found in ``master/contrib/docker``.
+
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0b4..v0.9.0b5
+
+Older Versions
+--------------
+
+Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
+Newer versions are also available here:
+
+.. toctree::
+    :maxdepth: 1
+
+    0.9.0b4
+    0.9.0b3
+    0.9.0b2
+    0.9.0b1
+    0.8.12
+    0.8.10
+    0.8.9
+    0.8.8
+    0.8.7
+    0.8.6
+
+Note that Buildbot-0.8.11 was never released.
