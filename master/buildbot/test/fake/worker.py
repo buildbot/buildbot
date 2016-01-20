@@ -39,7 +39,7 @@ class FakeWorker(object):
         pass
 
     def attached(self, conn):
-        self.slave_system = 'posix'
+        self.worker_system = 'posix'
         self.path_module = os.path
         self.buildslaveid = 1234
         self.worker_basedir = '/sl'

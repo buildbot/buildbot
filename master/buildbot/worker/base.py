@@ -358,7 +358,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_commands = conn.info.get("slave_commands", {})
         self.worker_environ = conn.info.get("environ", {})
         self.worker_basedir = conn.info.get("basedir", None)
-        self.slave_system = conn.info.get("system", None)
+        self.worker_system = conn.info.get("system", None)
 
         self.conn.notifyOnDisconnect(self.detached)
 
@@ -375,7 +375,7 @@ class AbstractWorker(service.BuildbotService, object):
             slaveinfo=slaveinfo
         )
 
-        if self.slave_system == "nt":
+        if self.worker_system == "nt":
             self.path_module = namedModule("ntpath")
         else:
             # most everything accepts / as separator, so posix should be a

@@ -61,7 +61,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_attr_slave_system(self):
         yield self.callAttached()
-        self.failUnless(hasattr(self.sl, 'slave_system'))
+        self.failUnless(hasattr(self.sl, 'worker_system'))
 
     def test_signature_acquireLocks(self):
         @self.assertArgSpecMatches(self.sl.acquireLocks)
@@ -397,7 +397,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getAccessURI(), "TheURI")
         self.assertEqual(worker.worker_environ, ENVIRON)
         self.assertEqual(worker.worker_basedir, 'TheBaseDir')
-        self.assertEqual(worker.slave_system, 'TheSlaveSystem')
+        self.assertEqual(worker.worker_system, 'TheSlaveSystem')
         self.assertEqual(worker.worker_commands, COMMANDS)
 
     @defer.inlineCallbacks
