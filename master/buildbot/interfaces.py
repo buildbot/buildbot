@@ -543,7 +543,7 @@ class IBuilderStatus(Interface):
         'idle', or 'building'. 'builds' is a list of IBuildStatus objects
         (possibly empty) representing the currently active builds."""
 
-    def getSlaves():
+    def getWorkers():
         """Return a list of IWorkerStatus objects for the workers that are
         used by this builder."""
 

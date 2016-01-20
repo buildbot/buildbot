@@ -299,7 +299,7 @@ class BuilderStatus(styles.Versioned):
     def getState(self):
         return (self.currentBigState, self.currentBuilds)
 
-    def getSlaves(self):
+    def getWorkers(self):
         return [self.status.getWorker(name) for name in self.slavenames]
 
     def getPendingBuildRequestStatuses(self):

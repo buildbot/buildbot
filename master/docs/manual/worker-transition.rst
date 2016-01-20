@@ -421,6 +421,11 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
      - :py:attr:`buildbot.status.build.BuildStatus.workername`
        (also it was moved from class static attribute to instance attribute)
 
+
+   * - :py:meth:`buildbot.interfaces.IBuilderStatus.getSlaves`
+       with all implementations
+     - :py:meth:`buildbot.interfaces.IBuilderStatus.getWorkers`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.

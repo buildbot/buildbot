@@ -352,7 +352,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
             workernames = master.status.getWorkerNames()
         else:
             builderStatus = master.status.getBuilder(buildername)
-            workernames = [worker.getName() for worker in builderStatus.getSlaves()]
+            workernames = [worker.getName() for worker in builderStatus.getWorkers()]
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames
