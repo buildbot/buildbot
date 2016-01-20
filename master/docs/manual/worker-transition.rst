@@ -224,7 +224,7 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.process.buildstep.BuildStep.getSlaveName`
      - :py:meth:`buildbot.process.buildstep.BuildStep.getWorkerName`
 
-API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
+API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::
 
