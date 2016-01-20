@@ -243,10 +243,10 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.botmaster.builders[name].builder_status
 
     def getWorkerNames(self):
-        return list(iteritems(self.workers.slaves))
+        return list(iteritems(self.workers.workers))
 
     def getWorker(self, workername):
-        return self.workers.slaves[workername].slave_status
+        return self.workers.workers[workername].slave_status
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
