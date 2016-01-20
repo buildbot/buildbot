@@ -392,6 +392,9 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
    * - :py:meth:`buildbot.status.master.Status.slaveUnpaused`
      - :py:meth:`buildbot.status.master.Status.workerUnpaused`
 
+   * - :py:attr:`buildbot.status.master.Status.buildslaves`
+     - :py:attr:`buildbot.status.master.Status.workers`
+
    * - :py:meth:`buildbot.status.base.StatusReceiverBase.slavePaused`
      - :py:meth:`buildbot.status.base.StatusReceiverBase.workerPaused`
 

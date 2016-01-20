@@ -57,7 +57,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.master.botmaster
 
     @property
-    def buildslaves(self):
+    def workers(self):
         return self.master.workers
 
     @property
@@ -243,10 +243,10 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.botmaster.builders[name].builder_status
 
     def getWorkerNames(self):
-        return list(iteritems(self.buildslaves.slaves))
+        return list(iteritems(self.workers.slaves))
 
     def getWorker(self, slavename):
-        return self.buildslaves.slaves[slavename].slave_status
+        return self.workers.slaves[slavename].slave_status
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
