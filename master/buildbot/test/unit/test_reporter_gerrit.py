@@ -157,7 +157,7 @@ class TestGerritStatusPush(unittest.TestCase):
                            num_lines=7),
                 fakedb.LogChunk(logid=60 + i, first_line=0, last_line=1, compressed=0,
                                 content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
-                fakedb.BuildProperty(buildid=20 + i, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=20 + i, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),
             ])
             for k, v in iteritems(self.TEST_PROPS):

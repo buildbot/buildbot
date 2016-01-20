@@ -661,7 +661,7 @@ The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ cl
 
     from buildbot.plugins import steps, util
     factory.addStep(steps.P4(p4port=p4port,
-                             p4client=util.WithProperties('%(P4USER)s-%(slavename)s-%(buildername)s'),
+                             p4client=util.WithProperties('%(P4USER)s-%(workername)s-%(buildername)s'),
                              p4user=p4user,
                              p4base='//depot',
                              p4viewspec=p4viewspec,
@@ -2208,7 +2208,7 @@ It is usually called with the ``value`` argument being specifed as a :ref:`Inter
 
     from buildbot.plugins import steps, util
     f.addStep(steps.SetProperty(property="SomeProperty",
-        value=util.Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+        value=util.Interpolate("sch=%(prop:scheduler)s, slave=%(prop:workername)s")))
 
 .. bb:step:: SetPropertyFromCommand
 
@@ -2644,6 +2644,6 @@ Example::
                          data = {
                             'builder': util.Property('buildername'),
                             'buildnumber': util.Property('buildnumber'),
-                            'slavename': util.Property('slavename'),
+                            'workername': util.Property('workername'),
                             'revision': util.Property('got_revision')
                          }))

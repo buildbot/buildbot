@@ -67,7 +67,7 @@ class TestDataUtils(unittest.TestCase):
         ])
         for _id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
                 fakedb.Step(id=100 + _id, buildid=_id, name="step1"),
                 fakedb.Step(id=200 + _id, buildid=_id, name="step2"),
@@ -95,7 +95,7 @@ class TestDataUtils(unittest.TestCase):
         build2 = res['builds'][1]
         buildset = res['buildset']
         self.assertEqual(build1['properties'], {u'reason': (u'because', u'fakedb'),
-                                                u'slavename': (u'sl', u'fakedb')})
+                                                u'workername': (u'sl', u'fakedb')})
         self.assertEqual(len(build1['steps']), 2)
         self.assertEqual(build1['buildid'], 20)
         self.assertEqual(build2['buildid'], 21)

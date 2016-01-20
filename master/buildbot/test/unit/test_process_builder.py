@@ -292,17 +292,17 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertIdentical(True, result)
 
         # worker requested as the right one
-        breq.properties = {'slavename': 'worker5'}
+        breq.properties = {'workername': 'worker5'}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
         # worker requested as the wrong one
-        breq.properties = {'slavename': 'slave4'}
+        breq.properties = {'workername': 'slave4'}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(False, result)
 
         # worker set to non string value gets skipped
-        breq.properties = {'slavename': 0}
+        breq.properties = {'workername': 0}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 

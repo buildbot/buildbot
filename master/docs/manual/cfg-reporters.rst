@@ -417,7 +417,7 @@ Mapping of property names to (values, source)
     ``build['properties']``
 
 Slave name
-    ``build['properties']['slavename']``
+    ``build['properties']['workername']``
 
 Build reason (from a forced build)
     ``build['properties']['reason']``

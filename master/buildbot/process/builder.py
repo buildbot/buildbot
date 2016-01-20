@@ -37,8 +37,8 @@ from zope.interface import implements
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
-    if 'slavename' in breq.properties:
-        workername = breq.properties['slavename']
+    if 'workername' in breq.properties:
+        workername = breq.properties['workername']
         if isinstance(workername, basestring):
             return workername == workerforbuilder.worker.workername
 

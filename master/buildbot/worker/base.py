@@ -99,7 +99,8 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.properties = Properties()
         self.properties.update(properties, "Worker")
-        self.properties.setProperty("slavename", name, "Worker")
+        self.properties.setProperty("slavename", name, "Worker (deprecated)")
+        self.properties.setProperty("workername", name, "Worker")
 
         self.lastMessageReceived = 0
 
@@ -254,6 +255,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.properties = Properties()
         self.properties.update(properties, "Worker")
         self.properties.setProperty("slavename", name, "Worker")
+        self.properties.setProperty("workername", name, "Worker (deprecated)")
 
         # update our records with the worker manager
         if not self.registration:

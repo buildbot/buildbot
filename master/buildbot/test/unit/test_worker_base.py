@@ -159,7 +159,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.max_builds, None)
         self.assertEqual(bs.notify_on_missing, [])
         self.assertEqual(bs.missing_timeout, 10 * 60)
-        self.assertEqual(bs.properties.getProperty('slavename'), 'bot')
+        self.assertEqual(bs.properties.getProperty('workername'), 'bot')
         self.assertEqual(bs.access, [])
 
     def test_workername_old_api(self):
@@ -240,7 +240,7 @@ class TestAbstractWorker(unittest.TestCase):
         old = self.createWorker(name="bot", password="pass")
 
         yield self.do_test_reconfigService(old, old)
-        self.assertTrue(old.properties.getProperty('slavename'), 'bot')
+        self.assertTrue(old.properties.getProperty('workername'), 'bot')
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):

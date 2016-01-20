@@ -74,7 +74,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ])
         for _id in (20,):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
             ])
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,

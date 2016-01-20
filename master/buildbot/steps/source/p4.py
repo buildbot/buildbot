@@ -54,7 +54,7 @@ class P4(Source):
                  p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=(), p4line_end='local',
                  p4viewspec=None, p4viewspec_suffix='...',
-                 p4client=Interpolate('buildbot_%(prop:slavename)s_%(prop:buildername)s'),
+                 p4client=Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s'),
                  p4client_spec_options='allwrite rmdir',
                  p4extra_args=None,
                  p4bin='p4',

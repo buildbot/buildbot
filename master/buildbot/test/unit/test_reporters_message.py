@@ -53,7 +53,7 @@ class TestMessage(unittest.TestCase):
         ])
         for _id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
             ])
 
