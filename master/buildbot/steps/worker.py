@@ -44,13 +44,13 @@ class SetPropertiesFromEnv(WorkerBuildStep):
 
     def start(self):
         # on Windows, environment variables are case-insensitive, but we have
-        # a case-sensitive dictionary in slave_environ.  Fortunately, that
+        # a case-sensitive dictionary in worker_environ.  Fortunately, that
         # dictionary is also folded to uppercase, so we can simply fold the
         # variable names to uppercase to duplicate the case-insensitivity.
         fold_to_uppercase = (self.worker.slave_system == 'win32')
 
         properties = self.build.getProperties()
-        environ = self.worker.slave_environ
+        environ = self.worker.worker_environ
         variables = self.variables
         log = []
         if isinstance(variables, str):

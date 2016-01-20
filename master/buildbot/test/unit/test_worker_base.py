@@ -395,7 +395,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getAdmin(), "TheAdmin")
         self.assertEqual(worker.worker_status.getHost(), "TheHost")
         self.assertEqual(worker.worker_status.getAccessURI(), "TheURI")
-        self.assertEqual(worker.slave_environ, ENVIRON)
+        self.assertEqual(worker.worker_environ, ENVIRON)
         self.assertEqual(worker.slave_basedir, 'TheBaseDir')
         self.assertEqual(worker.slave_system, 'TheSlaveSystem')
         self.assertEqual(worker.worker_commands, COMMANDS)
