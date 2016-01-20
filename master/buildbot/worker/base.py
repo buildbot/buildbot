@@ -402,7 +402,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_status.removePauseWatcher(self._pauseChanged)
         self.worker_status.setConnected(False)
         log.msg("Worker.detached(%s)" % (self.name,))
-        self.master.status.slaveDisconnected(self.name)
+        self.master.status.workerDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.buildslaveDisconnected(
             buildslaveid=self.buildslaveid,
