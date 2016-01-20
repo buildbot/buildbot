@@ -355,7 +355,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         for factory in step_factories:
             step = factory.buildStep()
             step.setBuild(self)
-            step.setBuildSlave(self.workerforbuilder.worker)
+            step.setWorker(self.workerforbuilder.worker)
             self.setUniqueStepName(step)
             steps.append(step)
 

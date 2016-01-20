@@ -592,9 +592,9 @@ class InterfaceTests(interfaces.InterfaceTests):
         def setBuild(self, build):
             pass
 
-    def test_signature_setBuildSlave(self):
-        @self.assertArgSpecMatches(self.step.setBuildSlave)
-        def setBuildSlave(self, worker):
+    def test_signature_setWorker(self):
+        @self.assertArgSpecMatches(self.step.setWorker)
+        def setWorker(self, worker):
             pass
 
     def test_signature_setupProgress(self):
@@ -1047,7 +1047,7 @@ class TestWorkerTransition(unittest.TestCase):
 
         worker = mock.Mock()
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            bs.setBuildSlave(worker)
+            bs.setWorker(worker)
 
             new = bs.worker
 
@@ -1058,3 +1058,14 @@ class TestWorkerTransition(unittest.TestCase):
 
         self.assertIdentical(new, worker)
         self.assertIdentical(old, new)
+
+    def test_set_worker_old_api(self):
+        bs = buildstep.BuildStep()
+
+        worker = mock.Mock()
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'setBuildSlave' method is deprecated"):
+            bs.setBuildSlave(worker)
+
+        self.assertIdentical(bs.worker, worker)

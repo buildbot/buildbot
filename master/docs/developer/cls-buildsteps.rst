@@ -120,7 +120,7 @@ BuildStep
 
         The build object controlling this step.
 
-    .. py:method:: setBuildSlave(build)
+    .. py:method:: setWorker(build)
 
         :param build: the :class:`~buildbot.worker.Worker` instance on which this step will run.
 

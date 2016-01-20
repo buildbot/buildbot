@@ -15,8 +15,6 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from buildbot.worker_transition import WorkerAPICompatMixin
-
 try:
     import cStringIO as StringIO
     assert StringIO
@@ -57,6 +55,8 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import worst_status
 from buildbot.util import debounce
 from buildbot.util import flatten
+from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import define_old_worker_method
 
 
 class BuildStepFailed(Exception):
@@ -347,8 +347,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.build = build
         self.master = self.build.master
 
-    def setBuildSlave(self, worker):
+    def setWorker(self, worker):
         self.worker = worker
+    define_old_worker_method(locals(), setWorker, pattern="BuildWorker")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
