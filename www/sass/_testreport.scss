@@ -107,13 +107,12 @@
         word-wrap: break-word;
     }
     tr td:first-child .failure-detail-txt {
-        padding-top: 10px;
+        margin-top: 15px;
         padding-left: 15px;
         font-family: "Courier New";
         overflow: auto;
         white-space: pre;
-        max-height: 130px;
-        position: absolute;
+        max-height: 150px;
         width: 1445px;
     }
 }
@@ -183,7 +182,7 @@ span.uncovered {
 	}
 span.ignored {background: #ffff00;}
 	 
-.Failure {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
+.Failed {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
  
 .failure-detail-cont {
 	vertical-align:top;
@@ -192,7 +191,7 @@ span.ignored {background: #ffff00;}
 	}
 }
 
-.Pass {
+.Passed, .Success {
 	 border-top: 1px solid #FFFFFF;
 	 background-color: #DDE6D6;
 }
@@ -228,7 +227,7 @@ $color-blind-ignored: #008EE6;
 		background-color: $color-blind-ignored;
 		color:#fff;
 	}
-	.Pass {
+	.Passed, .Success {
 		background-color: $color-blind-success;
 	}
 	.Skipped {

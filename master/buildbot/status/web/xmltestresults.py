@@ -34,7 +34,7 @@ class XMLTestResource(HtmlResource):
     def test_result_to_status(self, test, xml_type):
         if xml_type is NUNIT:
             if test['executed'].lower() == "true" and ('success' in test and test['success'].lower() == "true"):
-                return ("passed", "Pass")
+                return ("passed", "Passed")
             if test['executed'].lower() == "true" and ('result' in test and test['result'].lower() == "inconclusive"):
                 return "inconclusive", "Inconclusive"
             elif ('ignored' in test and test['ignored'].lower() == "true") \
@@ -43,15 +43,15 @@ class XMLTestResource(HtmlResource):
             elif test['executed'].lower() == "false":
                 return "skipped", "Skipped"
             else:
-                return "failed", "Failure"
+                return "failed", "Failed"
         elif xml_type is NOSE:
             if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("error"):
-                return "failed", "Failure"
-            return "passed", "Pass"
+                return "failed", "Failed"
+            return "passed", "Passed"
         elif xml_type is JUNIT:
             if test.has_key("testcase") and len(test["testcase"]) > 0 and test["testcase"][0].has_key("failure"):
-                return "failed", "Failure"
-            return "passed", "Pass"
+                return "failed", "Failed"
+            return "passed", "Passed"
 
     def test_result_xml_to_dict(self, test, xml_type):
         result = {'result': self.test_result_to_status(test, xml_type)[1]}
@@ -247,7 +247,7 @@ class XMLTestResource(HtmlResource):
 
             cxt['data']['summary'] = {
                 'testsCount': total,
-                'successCount': success,
+                'passedCount': success,
                 'success_rate': success_per,
                 'failedCount': failed,
                 'ignoredCount': ignored,
@@ -256,6 +256,14 @@ class XMLTestResource(HtmlResource):
                 'inconclusiveCount': inconclusive,
                 'time': time_count
             }
+            cxt['data']['filters'] = {
+                'Failed': True,
+                'Passed': False,
+                'Ignored': False,
+                'Inconclusive': False,
+                'Skipped': False
+            }
+
         except ElementTree.ParseError as e:
             log.msg("Error with parsing XML: {0}".format(e))
 

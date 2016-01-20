@@ -53,12 +53,22 @@ class JSONTestResource(HtmlResource):
                     success_per = (float(success_count) / float(total_count)) * 100.0
                     json_data['summary']['success_rate'] = success_per
 
+            json_data['filters'] = {
+                'Inconclusive': True,
+                'Skipped': False,
+                'Ignored': False,
+                'Success': False,
+                'Failed': True,
+                'Error': True,
+                'Cancelled': True
+            }
+
             cxt['results'] = {
                 0: 'Inconclusive',
                 2: 'Skipped',
                 3: 'Ignored',
                 4: 'Success',
-                5: 'Failure',
+                5: 'Failed',
                 6: 'Error',
                 7: 'Cancelled'
             }
