@@ -362,7 +362,7 @@ BuildStep
 
         This method raise :py:class:`~buildbot.interfaces.WorkerTooOldError` if ``command`` is not implemented on the slave
 
-    .. py:method:: getSlaveName()
+    .. py:method:: getWorkerName()
 
         :returns: string
 

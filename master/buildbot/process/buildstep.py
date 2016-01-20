@@ -713,8 +713,9 @@ class BuildStep(results.ResultComputingConfigMixin,
             raise WorkerTooOldError(message)
     define_old_worker_method(locals(), checkWorkerHasCommand)
 
-    def getSlaveName(self):
+    def getWorkerName(self):
         return self.build.getWorkerName()
+    define_old_worker_method(locals(), getWorkerName)
 
     def addLog(self, name, type='s', logEncoding=None):
         d = self.master.data.updates.addLog(self.stepid,

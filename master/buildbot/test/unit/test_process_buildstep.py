@@ -652,9 +652,9 @@ class InterfaceTests(interfaces.InterfaceTests):
         def workerVersionIsOlderThan(self, command, minversion):
             pass
 
-    def test_signature_getSlaveName(self):
-        @self.assertArgSpecMatches(self.step.getSlaveName)
-        def getSlaveName(self):
+    def test_signature_getWorkerName(self):
+        @self.assertArgSpecMatches(self.step.getWorkerName)
+        def getWorkerName(self):
             pass
 
     def test_signature_runCommand(self):
@@ -1117,3 +1117,17 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="'checkSlaveHasCommand' method is deprecated"):
             self.assertRaises(WorkerTooOldError,
                               lambda: bs.checkSlaveHasCommand("foo"))
+
+    def test_getWorkerName_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerName = mock.Mock()
+        bs.build.getWorkerName.return_value = "worker name"
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'getSlaveName' method is deprecated"):
+            name = bs.getSlaveName()
+
+        self.assertEqual(name, "worker name")
