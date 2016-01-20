@@ -191,9 +191,9 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # IBuildRequestStatus
         # IWorkerStatus
         if interfaces.IWorkerStatus.providedBy(thing):
-            slave = thing
+            worker = thing
             return prefix + "#buildslaves/%s" % (
-                urlquote(slave.getName(), safe=''),
+                urlquote(worker.getName(), safe=''),
             )
 
         # IStatusEvent
@@ -245,8 +245,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getWorkerNames(self):
         return list(iteritems(self.workers.slaves))
 
-    def getWorker(self, slavename):
-        return self.workers.slaves[slavename].slave_status
+    def getWorker(self, workername):
+        return self.workers.slaves[workername].slave_status
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
