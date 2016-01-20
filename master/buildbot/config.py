@@ -257,7 +257,13 @@ class MasterConfig(object):
 
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')
+
         copy_str_param('buildbotURL')
+
+        # Make sure that buildbotURL ends with a forward slash
+        if not self.buildbotURL.endswith('/'):
+            self.buildbotURL += '/'
+
         copy_str_param('realTimeServer')
         copy_str_param('analytics_code')
 
