@@ -129,7 +129,7 @@ class FakeBuilderStatus(object):
     def matchesAnyTag(self, tags):
         return set(self._tags) & set(tags)
 
-    def setSlavenames(self, names):
+    def setWorkernames(self, names):
         pass
 
     def setCacheSize(self, size):

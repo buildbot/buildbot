@@ -426,6 +426,12 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        with all implementations
      - :py:meth:`buildbot.interfaces.IBuilderStatus.getWorkers`
 
+   * - :py:attr:`buildbot.status.builder.BuilderStatus.slavenames`
+     - :py:attr:`buildbot.status.builder.BuilderStatus.workernames`
+
+   * - :py:meth:`buildbot.status.builder.BuilderStatus.setSlavenames`
+     - :py:meth:`buildbot.status.builder.BuilderStatus.setWorkernames`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
@@ -469,6 +475,9 @@ Other changes:
 
 * :py:meth:`buildbot.status.build.BuildStatus.asDict` returns worker name under
   ``'worker'`` key, instead of ``'slave'`` key.
+
+* :py:meth:`buildbot.status.builder.BuilderStatus.asDict` returns worker
+  names under ``'workers'`` key, instead of ``'slaves'`` key.
 
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
