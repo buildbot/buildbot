@@ -300,7 +300,7 @@ class BuilderStatus(styles.Versioned):
         return (self.currentBigState, self.currentBuilds)
 
     def getSlaves(self):
-        return [self.status.getSlave(name) for name in self.slavenames]
+        return [self.status.getWorker(name) for name in self.slavenames]
 
     def getPendingBuildRequestStatuses(self):
         # just assert 0 here. According to dustin the whole class will go away soon.

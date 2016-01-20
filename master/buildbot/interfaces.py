@@ -361,10 +361,10 @@ class IStatus(Interface):
         KeyError if there is no Builder by that name."""
 
     def getWorkerNames():
-        """Return a list of buildslave names, suitable for passing to
-        getSlave()."""
-    def getSlave(name):
-        """Return the IWorkerStatus object for a given named buildslave."""
+        """Return a list of worker names, suitable for passing to
+        getWorker()."""
+    def getWorker(name):
+        """Return the IWorkerStatus object for a given named worker."""
 
     def getBuildSets():
         """

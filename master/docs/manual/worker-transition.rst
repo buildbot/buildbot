@@ -402,6 +402,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
        with all implementations
      - :py:meth:`buildbot.interfaces.IStatus.getWorkerNames`
 
+   * - :py:meth:`buildbot.interfaces.IStatus.getSlave`
+       with all implementations
+     - :py:meth:`buildbot.interfaces.IStatus.getWorker`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
