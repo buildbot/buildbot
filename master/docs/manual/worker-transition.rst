@@ -432,6 +432,10 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:meth:`buildbot.status.builder.BuilderStatus.setSlavenames`
      - :py:meth:`buildbot.status.builder.BuilderStatus.setWorkernames`
 
+
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_commands`
+     - :py:attr:`buildbot.worker.AbstractWorker.worker_commands`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.

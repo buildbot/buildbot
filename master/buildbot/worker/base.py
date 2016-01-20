@@ -89,7 +89,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.buildslaveid = None
 
         self.worker_status = WorkerStatus(name)
-        self.slave_commands = None
+        self.worker_commands = None
         self.workerforbuilders = {}
         self.max_builds = max_builds
         self.access = []
@@ -355,7 +355,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_status.setConnected(True)
 
         self._applySlaveInfo(conn.info)
-        self.slave_commands = conn.info.get("slave_commands", {})
+        self.worker_commands = conn.info.get("slave_commands", {})
         self.slave_environ = conn.info.get("environ", {})
         self.slave_basedir = conn.info.get("basedir", None)
         self.slave_system = conn.info.get("system", None)
@@ -598,7 +598,7 @@ class Worker(AbstractWorker):
                 # use get() since we might have changed our mind since then
                 b = self.botmaster.builders.get(name)
                 if b:
-                    d1 = b.attached(self, self.slave_commands)
+                    d1 = b.attached(self, self.worker_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
 
@@ -892,7 +892,7 @@ class AbstractLatentWorker(AbstractWorker):
                 b = self.botmaster.builders.get(name)
                 sb = self.workerforbuilders.get(name)
                 if b and sb:
-                    d1 = sb.attached(self, self.slave_commands)
+                    d1 = sb.attached(self, self.worker_commands)
                     dl.append(d1)
             return defer.DeferredList(dl)
 

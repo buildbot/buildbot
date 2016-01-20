@@ -398,7 +398,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.slave_environ, ENVIRON)
         self.assertEqual(worker.slave_basedir, 'TheBaseDir')
         self.assertEqual(worker.slave_system, 'TheSlaveSystem')
-        self.assertEqual(worker.slave_commands, COMMANDS)
+        self.assertEqual(worker.worker_commands, COMMANDS)
 
     @defer.inlineCallbacks
     def test_attached_callsMaybeStartBuildsForSlave(self):
