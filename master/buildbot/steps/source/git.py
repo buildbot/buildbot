@@ -352,7 +352,7 @@ class Git(Source):
             # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
             # killing.  This should be safe.
             if self.workerVersionIsOlderThan("shell", "2.15"):
-                log.msg("NOTE: slave does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
+                log.msg("NOTE: worker does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
             else:
                 interruptSignal = 'TERM'
 

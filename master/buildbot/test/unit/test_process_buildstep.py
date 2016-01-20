@@ -1021,8 +1021,8 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('stdio').header,
-                         u'NOTE: slave does not allow master to override usePTY\n'
-                         'NOTE: slave does not allow master to specify interruptSignal\n')
+                         u'NOTE: worker does not allow master to override usePTY\n'
+                         'NOTE: worker does not allow master to specify interruptSignal\n')
 
     @defer.inlineCallbacks
     def test_description(self):

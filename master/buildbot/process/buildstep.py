@@ -1129,14 +1129,14 @@ class ShellMixin(object):
             if self.workerVersionIsOlderThan("shell", "2.7"):
                 if stdio is not None:
                     yield stdio.addHeader(
-                        "NOTE: slave does not allow master to override usePTY\n")
+                        "NOTE: worker does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
         if kwargs["interruptSignal"] and self.workerVersionIsOlderThan("shell", "2.15"):
             if stdio is not None:
                 yield stdio.addHeader(
-                    "NOTE: slave does not allow master to specify interruptSignal\n")
+                    "NOTE: worker does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
 
         # lazylogfiles are handled below
