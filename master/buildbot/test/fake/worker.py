@@ -27,7 +27,7 @@ class FakeWorker(object):
         self.master = master
         self.conn = fakeprotocol.FakeConnection(master, self)
         self.properties = properties.Properties()
-        self.buildslaveid = 383
+        self.workerid = 383
 
     def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
         pass
@@ -41,7 +41,7 @@ class FakeWorker(object):
     def attached(self, conn):
         self.worker_system = 'posix'
         self.path_module = os.path
-        self.buildslaveid = 1234
+        self.workerid = 1234
         self.worker_basedir = '/sl'
         return defer.succeed(None)
 

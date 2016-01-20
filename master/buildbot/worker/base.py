@@ -86,7 +86,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         # these are set when the service is started
         self.manager = None
-        self.buildslaveid = None
+        self.workerid = None
 
         self.worker_status = WorkerStatus(name)
         self.worker_commands = None
@@ -205,7 +205,7 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def _getSlaveInfo(self):
         buildslave = yield self.master.data.get(
-            ('buildslaves', self.buildslaveid))
+            ('buildslaves', self.workerid))
         self._applySlaveInfo(buildslave['slaveinfo'])
 
     def setServiceParent(self, parent):
@@ -218,7 +218,7 @@ class AbstractWorker(service.BuildbotService, object):
     def startService(self):
         self.updateLocks()
         self.startMissingTimer()
-        self.buildslaveid = yield self.master.data.updates.findBuildslaveId(
+        self.workerid = yield self.master.data.updates.findBuildslaveId(
             self.name)
 
         yield self._getSlaveInfo()
@@ -263,7 +263,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.updateLocks()
 
         bids = [b._builderid for b in self.botmaster.getBuildersForSlave(self.name)]
-        yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, self.master.masterid, bids)
+        yield self.master.data.updates.buildslaveConfigured(self.workerid, self.master.masterid, bids)
 
         # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
@@ -277,7 +277,7 @@ class AbstractWorker(service.BuildbotService, object):
             self.registration = None
         self.stopMissingTimer()
         # mark this worker as configured for zero builders in this master
-        yield self.master.data.updates.buildslaveConfigured(self.buildslaveid, self.master.masterid, [])
+        yield self.master.data.updates.buildslaveConfigured(self.workerid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
 
     def startMissingTimer(self):
@@ -370,7 +370,7 @@ class AbstractWorker(service.BuildbotService, object):
         }
 
         yield self.master.data.updates.buildslaveConnected(
-            buildslaveid=self.buildslaveid,
+            buildslaveid=self.workerid,
             masterid=self.master.masterid,
             slaveinfo=slaveinfo
         )
@@ -405,7 +405,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.master.status.workerDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.buildslaveDisconnected(
-            buildslaveid=self.buildslaveid,
+            buildslaveid=self.workerid,
             masterid=self.master.masterid,
         )
 

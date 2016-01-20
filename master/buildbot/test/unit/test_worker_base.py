@@ -364,7 +364,7 @@ class TestAbstractWorker(unittest.TestCase):
 
         yield worker.startService()
 
-        self.assertEqual(worker.buildslaveid, 9292)
+        self.assertEqual(worker.workerid, 9292)
         self.assertEqual(worker.worker_status.getAdmin(), 'TheAdmin')
         self.assertEqual(worker.worker_status.getHost(), 'TheHost')
         self.assertEqual(worker.worker_status.getAccessURI(), 'TheURI')

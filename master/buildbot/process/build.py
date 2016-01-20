@@ -250,7 +250,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             yield self.master.data.updates.addBuild(
                 builderid=(yield self.builder.getBuilderId()),
                 buildrequestid=brid,
-                buildslaveid=worker.buildslaveid)
+                buildslaveid=worker.workerid)
 
         self.stopBuildConsumer = yield self.master.mq.startConsuming(self.stopBuild,
                                                                      ("control", "builds",
