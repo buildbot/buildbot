@@ -479,6 +479,10 @@ Other changes:
 * :py:meth:`buildbot.status.builder.BuilderStatus.asDict` returns worker
   names under ``'workers'`` key, instead of ``'slaves'`` key.
 
+* ``builddir`` property source changed from ``"slave"`` to ``"worker"``;
+  ``workdir`` property source from ``"slave (deprecated)"`` to
+  ``"worker (deprecated)"``.
+
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
 
