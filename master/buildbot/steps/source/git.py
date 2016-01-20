@@ -343,7 +343,7 @@ class Git(Source):
         # If we send a SIGKILL, git is prone to leaving around stale lockfiles.
         # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down gracefully
         # before getting terminated
-        if not self.slaveVersionIsOlderThan("shell", "2.16"):
+        if not self.workerVersionIsOlderThan("shell", "2.16"):
             # git should shut-down quickly on SIGTERM.  If it doesn't don't let it
             # stick around for too long because this is on top of any timeout
             # we have hit.
@@ -351,7 +351,7 @@ class Git(Source):
         else:
             # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
             # killing.  This should be safe.
-            if self.slaveVersionIsOlderThan("shell", "2.15"):
+            if self.workerVersionIsOlderThan("shell", "2.15"):
                 log.msg("NOTE: slave does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
             else:
                 interruptSignal = 'TERM'
@@ -588,7 +588,7 @@ class Git(Source):
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
-        if self.slaveVersionIsOlderThan('listdir', '2.16'):
+        if self.workerVersionIsOlderThan('listdir', '2.16'):
             git_path = self.build.path_module.join(self.workdir, '.git')
             exists = yield self.pathExists(git_path)
 

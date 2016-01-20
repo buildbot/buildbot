@@ -647,9 +647,9 @@ class InterfaceTests(interfaces.InterfaceTests):
         def workerVersion(self, command, oldversion=None):
             pass
 
-    def test_signature_slaveVersionIsOlderThan(self):
-        @self.assertArgSpecMatches(self.step.slaveVersionIsOlderThan)
-        def slaveVersionIsOlderThan(self, command, minversion):
+    def test_signature_workerVersionIsOlderThan(self):
+        @self.assertArgSpecMatches(self.step.workerVersionIsOlderThan)
+        def workerVersionIsOlderThan(self, command, minversion):
             pass
 
     def test_signature_getSlaveName(self):
@@ -1083,3 +1083,24 @@ class TestWorkerTransition(unittest.TestCase):
             ver = bs.slaveVersion(None)
 
         self.assertEqual(ver, "ver")
+
+    def test_workerVersionIsOlderThan_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerCommandVersion = mock.Mock()
+        bs.build.getWorkerCommandVersion.return_value = "1.0"
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaveVersionIsOlderThan' method is deprecated"):
+            older = bs.slaveVersionIsOlderThan(None, "2.0")
+
+        self.assertTrue(older)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaveVersionIsOlderThan' method is deprecated"):
+            older = bs.slaveVersionIsOlderThan(None, "0.5")
+
+        self.assertFalse(older)

@@ -123,7 +123,7 @@ class FileUpload(_TransferBuildStep):
         # we use maxsize to limit the amount of data on both sides
         fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
 
-        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
+        if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
                  "Please upgrade the buildslave." % self.build.slavename)
             raise WorkerTooOldError(m)
@@ -298,7 +298,7 @@ class MultipleFileUpload(_TransferBuildStep):
         masterdest = os.path.expanduser(self.masterdest)
         sources = self.slavesrcs
 
-        if self.keepstamp and self.slaveVersionIsOlderThan("uploadFile", "2.13"):
+        if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
                  "Please upgrade the buildslave." % self.build.slavename)
             raise WorkerTooOldError(m)

@@ -119,8 +119,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownSourceStep()
 
-    def patch_slaveVersionIsOlderThan(self, result):
-        self.patch(svn.SVN, 'slaveVersionIsOlderThan', lambda x, y, z: result)
+    def patch_workerVersionIsOlderThan(self, result):
+        self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
         self.assertRaises(config.ConfigErrors, lambda:
@@ -1053,7 +1053,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
-        self.patch_slaveVersionIsOlderThan(True)
+        self.patch_workerVersionIsOlderThan(True)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])
@@ -1104,7 +1104,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='full', method='clean'))
 
-        self.patch_slaveVersionIsOlderThan(False)
+        self.patch_workerVersionIsOlderThan(False)
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['svn', '--version'])

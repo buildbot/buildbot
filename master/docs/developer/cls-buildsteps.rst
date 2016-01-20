@@ -346,7 +346,7 @@ BuildStep
         Buildbot versions older than 0.5.0 did not support version queries; in this case, :meth:`workerVersion` will return ``oldVersion``.
         Since such ancient versions of Buildbot are no longer in use, this functionality is largely vestigial.
 
-    .. py:method:: slaveVersionIsOlderThan(command, minversion)
+    .. py:method:: workerVersionIsOlderThan(command, minversion)
 
         :param command: command to examine
         :type command: string

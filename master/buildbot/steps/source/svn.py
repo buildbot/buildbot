@@ -78,7 +78,7 @@ class SVN(Source):
 
         # if the version is new enough, and the password is set, then obfuscate it
         if self.password is not None:
-            if not self.slaveVersionIsOlderThan('shell', '2.16'):
+            if not self.workerVersionIsOlderThan('shell', '2.16'):
                 self.password = ('obfuscated', self.password, 'XXXXXX')
             else:
                 log.msg("Slave does not understand obfuscation; "
@@ -349,7 +349,7 @@ class SVN(Source):
             if len(files) == 0:
                 d = defer.succeed(0)
             else:
-                if self.slaveVersionIsOlderThan('rmdir', '2.14'):
+                if self.workerVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
                     d = self.runRmdir(files, abandonOnFailure=False)

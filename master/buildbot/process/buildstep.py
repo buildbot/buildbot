@@ -698,13 +698,14 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.build.getWorkerCommandVersion(command, oldversion)
     define_old_worker_method(locals(), workerVersion)
 
-    def slaveVersionIsOlderThan(self, command, minversion):
+    def workerVersionIsOlderThan(self, command, minversion):
         sv = self.build.getWorkerCommandVersion(command, None)
         if sv is None:
             return True
         if map(int, sv.split(".")) < map(int, minversion.split(".")):
             return True
         return False
+    define_old_worker_method(locals(), workerVersionIsOlderThan)
 
     def checkSlaveHasCommand(self, command):
         if not self.workerVersion(command):
@@ -1123,14 +1124,14 @@ class ShellMixin(object):
 
         # check for the usePTY flag
         if kwargs['usePTY'] != 'slave-config':
-            if self.slaveVersionIsOlderThan("shell", "2.7"):
+            if self.workerVersionIsOlderThan("shell", "2.7"):
                 if stdio is not None:
                     yield stdio.addHeader(
                         "NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
-        if kwargs["interruptSignal"] and self.slaveVersionIsOlderThan("shell", "2.15"):
+        if kwargs["interruptSignal"] and self.workerVersionIsOlderThan("shell", "2.15"):
             if stdio is not None:
                 yield stdio.addHeader(
                     "NOTE: slave does not allow master to specify interruptSignal\n")

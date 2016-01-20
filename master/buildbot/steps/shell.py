@@ -229,12 +229,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check for the usePTY flag
         if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
-            if self.slaveVersionIsOlderThan("svn", "2.7"):
+            if self.workerVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
-        if "interruptSignal" in kwargs and self.slaveVersionIsOlderThan("shell", "2.15"):
+        if "interruptSignal" in kwargs and self.workerVersionIsOlderThan("shell", "2.15"):
             warnings.append("NOTE: slave does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
 

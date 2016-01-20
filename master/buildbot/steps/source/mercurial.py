@@ -312,7 +312,7 @@ class Mercurial(Source):
             if len(files) == 0:
                 d = defer.succeed(0)
             else:
-                if self.slaveVersionIsOlderThan('rmdir', '2.14'):
+                if self.workerVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
                     cmd = remotecommand.RemoteCommand('rmdir', {'dir': files,
