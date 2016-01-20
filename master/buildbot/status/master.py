@@ -400,8 +400,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def slaveDisconnected(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveDisconnected'):
-                t.slaveDisconnected(name)
+            if hasattr(t, 'workerDisconnected'):
+                t.workerDisconnected(name)
 
     def slavePaused(self, name):
         for t in self.watchers:

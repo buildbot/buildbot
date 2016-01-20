@@ -82,7 +82,7 @@ class StatusReceiverBase:
     def workerConnected(self, slaveName):
         pass
 
-    def slaveDisconnected(self, slaveName):
+    def workerDisconnected(self, slaveName):
         pass
 
     def slavePaused(self, name):

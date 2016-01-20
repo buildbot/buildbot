@@ -964,7 +964,7 @@ class IStatusReceiver(IPlugin):
     def workerConnected(slaveName):
         """The worker has connected."""
 
-    def slaveDisconnected(slaveName):
+    def workerDisconnected(slaveName):
         """The worker has disconnected."""
 
     def checkConfig(otherStatusReceivers):

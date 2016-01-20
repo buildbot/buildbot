@@ -376,6 +376,10 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
        with all implementations
      - :py:meth:`buildbot.interfaces.IStatusReceiver.workerConnected`
 
+   * - :py:meth:`buildbot.interfaces.IStatusReceiver.slaveDisconnected`
+       with all implementations
+     - :py:meth:`buildbot.interfaces.IStatusReceiver.workerDisconnected`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
