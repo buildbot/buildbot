@@ -397,7 +397,7 @@ Other changes:
 
 * ``buildbot.status.builder.SlaveStatus`` fallback was removed.
   ``SlaveStatus`` was moved to ``buildbot.status.builder.slave`` previously,
-   and now it's :py:class:`buildbot.status.worker.WorkerStatus`.
+  and now it's :py:class:`buildbot.status.worker.WorkerStatus`.
 
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
