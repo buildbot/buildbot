@@ -961,7 +961,7 @@ class IStatusReceiver(IPlugin):
     def builderRemoved(builderName):
         """The Builder has been removed."""
 
-    def slaveConnected(slaveName):
+    def workerConnected(slaveName):
         """The worker has connected."""
 
     def slaveDisconnected(slaveName):

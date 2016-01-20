@@ -79,7 +79,7 @@ class StatusReceiverBase:
     def builderRemoved(self, builderName):
         pass
 
-    def slaveConnected(self, slaveName):
+    def workerConnected(self, slaveName):
         pass
 
     def slaveDisconnected(self, slaveName):

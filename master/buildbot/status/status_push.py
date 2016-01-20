@@ -351,7 +351,7 @@ class StatusPush(StatusReceiverMultiService):
         d = self.push('changeAdded', change=change)
         d.addErrback(log.err, 'while pushing status message')
 
-    def slaveConnected(self, slavename):
+    def workerConnected(self, slavename):
         d = self.push('slaveConnected', slave=self.status.getSlave(slavename))
         d.addErrback(log.err, 'while pushing status message')
 

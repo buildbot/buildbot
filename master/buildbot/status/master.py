@@ -395,8 +395,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def slaveConnected(self, name):
         for t in self.watchers:
-            if hasattr(t, 'slaveConnected'):
-                t.slaveConnected(name)
+            if hasattr(t, 'workerConnected'):
+                t.workerConnected(name)
 
     def slaveDisconnected(self, name):
         for t in self.watchers:
