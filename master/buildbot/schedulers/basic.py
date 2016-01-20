@@ -35,8 +35,14 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     """
 
-    compare_attrs = ['treeStableTimer', 'change_filter', 'fileIsImportant',
-                     'onlyImportant', 'reason', 'coolDownTimer']
+    compare_attrs = [
+        'change_filter',
+        'coolDownTimer',
+        'fileIsImportant',
+        'onlyImportant',
+        'reason',
+        'treeStableTimer',
+    ]
 
     _reactor = reactor  # for tests
 
@@ -140,9 +146,9 @@ class BaseBasicScheduler(base.BaseScheduler):
             if not important:
                 defer.returnValue(None)
             # otherwise, we'll build it right away
-            yield self.addBuildsetForChanges(reason=self.reason,
-                                             changeids=[change.number])
-            defer.returnValue(None)
+            ret = yield self.addBuildsetForChanges(reason=self.reason,
+                                                   changeids=[change.number])
+            defer.returnValue(ret)
 
         timer_name = self.getTimerNameForChange(change)
 
