@@ -407,6 +407,20 @@ Other changes:
   ``SlaveStatus`` was moved to ``buildbot.status.builder.slave`` previously,
   and now it's :py:class:`buildbot.status.worker.WorkerStatus`.
 
+* :py:mod:`buildbot.status.status_push.StatusPush` events generation changed:
+
+  - instead of ``slaveConnected`` with data ``slave=...`` now generated
+    ``workerConnected`` event with data ``worker=...``;
+
+  - instead of ``slaveDisconnected`` with data ``slavename=...`` now generated
+    ``workerDisconnected`` with data ``workername=...``;
+
+  - instead of ``slavePaused`` with data ``slavename=...`` now generated
+    ``workerPaused`` event with data ``workername=...``;
+
+  - instead of ``slaveUnpaused`` with data ``slavename=...`` now generated
+    ``workerUnpaused`` event with data ``workername=...``;
+
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
 
