@@ -395,7 +395,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(titleURL='hi'), titleURL='hi')
 
     def test_load_global_buildbotURL(self):
-        self.do_test_load_global(dict(buildbotURL='hey'), buildbotURL='hey')
+        # Make sure that buildbotURL always ends with a forward slash
+        self.do_test_load_global(dict(buildbotURL='hey'), buildbotURL='hey/')
+
+        # Don't change anything if the loaded value already ends with slash
+        self.do_test_load_global(dict(buildbotURL='ho/'), buildbotURL='ho/')
 
     def test_load_global_changeHorizon(self):
         self.do_test_load_global(dict(changeHorizon=10), changeHorizon=10)
