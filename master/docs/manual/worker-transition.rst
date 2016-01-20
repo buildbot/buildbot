@@ -439,6 +439,9 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_environ`
      - :py:attr:`buildbot.worker.AbstractWorker.worker_environ`
 
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_basedir`
+     - :py:attr:`buildbot.worker.AbstractWorker.worker_basedir`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.

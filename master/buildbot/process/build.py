@@ -217,9 +217,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # object that came from the config, and get its properties
         worker_properties = workerforbuilder.worker.properties
         self.getProperties().updateFromProperties(worker_properties)
-        if workerforbuilder.worker.slave_basedir:
+        if workerforbuilder.worker.worker_basedir:
             builddir = self.path_module.join(
-                workerforbuilder.worker.slave_basedir,
+                workerforbuilder.worker.worker_basedir,
                 self.builder.config.workerbuilddir)
             self.setProperty("builddir", builddir, "worker")
             self.setProperty("workdir", builddir, "worker (deprecated)")

@@ -264,7 +264,7 @@ class TestBuild(unittest.TestCase):
 
         b.build_status = Mock()
         b.builder.config.workerbuilddir = 'test'
-        self.workerforbuilder.worker.slave_basedir = "/srv/buildbot/slave"
+        self.workerforbuilder.worker.worker_basedir = "/srv/buildbot/slave"
         self.workerforbuilder.worker.path_module = posixpath
         b.getProperties = Mock()
         b.setProperty = Mock()
@@ -1012,7 +1012,7 @@ class TestBuildProperties(unittest.TestCase):
         w.path_module = posixpath
         w.properties = FakeProperties()
         w.workername = 'worker name'
-        w.slave_basedir = None
+        w.worker_basedir = None
 
         workerforbuilder = Mock(name='workerforbuilder')
         workerforbuilder.worker = w
@@ -1046,7 +1046,7 @@ class TestBuildProperties(unittest.TestCase):
         w.path_module = posixpath
         w.properties = FakeProperties()
         w.workername = 'worker name'
-        w.slave_basedir = None
+        w.worker_basedir = None
 
         workerforbuilder = Mock(name='workerforbuilder')
         workerforbuilder.worker = w

@@ -42,7 +42,7 @@ class FakeWorker(object):
         self.slave_system = 'posix'
         self.path_module = os.path
         self.buildslaveid = 1234
-        self.slave_basedir = '/sl'
+        self.worker_basedir = '/sl'
         return defer.succeed(None)
 
     def detached(self):

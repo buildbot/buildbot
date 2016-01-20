@@ -51,7 +51,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_attr_slave_basedir(self):
         yield self.callAttached()
-        self.assertIsInstance(self.sl.slave_basedir, str)
+        self.assertIsInstance(self.sl.worker_basedir, str)
 
     @defer.inlineCallbacks
     def test_attr_path_module(self):
@@ -396,7 +396,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getHost(), "TheHost")
         self.assertEqual(worker.worker_status.getAccessURI(), "TheURI")
         self.assertEqual(worker.worker_environ, ENVIRON)
-        self.assertEqual(worker.slave_basedir, 'TheBaseDir')
+        self.assertEqual(worker.worker_basedir, 'TheBaseDir')
         self.assertEqual(worker.slave_system, 'TheSlaveSystem')
         self.assertEqual(worker.worker_commands, COMMANDS)
 
