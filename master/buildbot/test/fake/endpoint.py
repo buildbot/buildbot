@@ -24,7 +24,7 @@ from twisted.internet import defer
 testData = {
     13: {'id': 13, 'info': 'ok', 'success': True, 'tags': []},
     14: {'id': 14, 'info': 'failed', 'success': False, 'tags': []},
-    15: {'id': 15, 'info': 'warned', 'success': True, 'tags': ['a', 'b',]},
+    15: {'id': 15, 'info': 'warned', 'success': True, 'tags': ['a', 'b', ]},
     16: {'id': 16, 'info': 'skipped', 'success': True, 'tags': ['a']},
     17: {'id': 17, 'info': 'ignored', 'success': True, 'tags': []},
     18: {'id': 18, 'info': 'unexp', 'success': False, 'tags': []},
