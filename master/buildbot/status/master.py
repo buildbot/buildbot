@@ -246,7 +246,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return list(iteritems(self.workers.workers))
 
     def getWorker(self, workername):
-        return self.workers.workers[workername].slave_status
+        return self.workers.workers[workername].worker_status
 
     def getBuildSets(self):
         d = self.master.db.buildsets.getBuildsets(complete=False)
