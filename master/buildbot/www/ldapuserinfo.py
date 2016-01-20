@@ -54,15 +54,15 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         self.accountExtraFields = accountExtraFields
 
     def connectLdap(self):
-            server = urlparse(self.uri)
-            netloc = server.netloc.split(":")
-            # define the server and the connection
-            s = ldap3.Server(netloc[0], port=int(netloc[1]), use_ssl=server.scheme == 'ldaps',
-                             get_info=ldap3.GET_ALL_INFO)
-            c = ldap3.Connection(s, auto_bind=True, client_strategy=ldap3.STRATEGY_SYNC,
-                                 user=self.bindUser, password=self.bindPw,
-                                 authentication=ldap3.AUTH_SIMPLE)
-            return c
+        server = urlparse(self.uri)
+        netloc = server.netloc.split(":")
+        # define the server and the connection
+        s = ldap3.Server(netloc[0], port=int(netloc[1]), use_ssl=server.scheme == 'ldaps',
+                         get_info=ldap3.GET_ALL_INFO)
+        c = ldap3.Connection(s, auto_bind=True, client_strategy=ldap3.STRATEGY_SYNC,
+                             user=self.bindUser, password=self.bindPw,
+                             authentication=ldap3.AUTH_SIMPLE)
+        return c
 
     def search(self, c, base, filterstr='f', attributes=None):
         c.search(base, filterstr, ldap3.SEARCH_SCOPE_WHOLE_SUBTREE, attributes=attributes)
@@ -79,6 +79,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             if len(res) != 1:
                 raise KeyError("ldap search \"%s\" returned %d results" % (pattern, len(res)))
             dn, ldap_infos = res[0]['dn'], res[0]['raw_attributes']
+
             def getLdapInfo(x):
                 if isinstance(x, list):
                     return x[0]

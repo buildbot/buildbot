@@ -41,7 +41,7 @@ from zope.interface import implements
 class BuildbotSession(server.Session):
     # default session timeout is 15min, which is very short for our usage.
     # put it to one week
-    sessionTimeout = 7*24*60
+    sessionTimeout = 7 * 24 * 60
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):

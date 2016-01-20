@@ -55,7 +55,7 @@ class OAuth2LoginResource(auth.LoginResource):
             print repr(state)
             if state:
                 for redirect in parse_qs(state).get('redirect', []):
-                    raise resource.Redirect(self.auth.homeUri+"#"+redirect)
+                    raise resource.Redirect(self.auth.homeUri + "#" + redirect)
             raise resource.Redirect(self.auth.homeUri)
 
 
