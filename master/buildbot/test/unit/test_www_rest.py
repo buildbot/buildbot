@@ -415,6 +415,14 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
                                   total=5)
 
     @defer.inlineCallbacks
+    def test_api_collection_list_filter(self):
+        yield self.render_resource(self.rsrc, '/test?tags__contains=a')
+        self.assertRestCollection(typeName='tests',
+                                  items=[v for v in itervalues(endpoint.testData)
+                                         if 'a' in v['tags']],
+                                  total=2)
+
+    @defer.inlineCallbacks
     def test_api_collection_operator_filter(self):
         yield self.render_resource(self.rsrc, '/test?info__lt=skipped')
         self.assertRestCollection(typeName='tests',
