@@ -961,10 +961,10 @@ class IStatusReceiver(IPlugin):
     def builderRemoved(builderName):
         """The Builder has been removed."""
 
-    def workerConnected(slaveName):
+    def workerConnected(workerName):
         """The worker has connected."""
 
-    def workerDisconnected(slaveName):
+    def workerDisconnected(workerName):
         """The worker has disconnected."""
 
     def checkConfig(otherStatusReceivers):
