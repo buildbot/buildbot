@@ -13,9 +13,6 @@ build.BuildStatus.__module__ = 'buildbot.status.builder'
 # add all of these classes to builder; this is a form of late binding to allow
 # circular module references among the status modules
 builder.BuildSetStatus = buildset.BuildSetStatus
-# TODO: technically builder.SlaveStatus will be different from
-# buildbot.state.slave.SlaveStatus
-builder.SlaveStatus = deprecated_worker_class(worker.WorkerStatus)
 builder.Status = master.Status
 builder.BuildStatus = build.BuildStatus
 builder.BuildRequestStatus = buildrequest.BuildRequestStatus

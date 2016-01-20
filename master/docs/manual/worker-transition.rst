@@ -201,13 +201,6 @@ Here is the complete list of changed API:
      - :py:func:`~buildbot.process.builder.enforceChosenWorker`
 
 
-   * - :py:mod:`buildbot.status.slave` (private/deprecated?)
-     - :py:mod:`buildbot.status.worker`
-
-   * - :py:mod:`buildbot.status.slave.SlaveStatus` (private/deprecated?)
-     - :py:mod:`buildbot.status.worker.WorkerStatus`
-       (this class is now new-style Python class)
-
    * - :py:class:`buildbot.schedulers.forcesched.BuildslaveChoiceParameter`
      - :py:class:`~buildbot.schedulers.forcesched.WorkerChoiceParameter`
 
@@ -373,6 +366,13 @@ API changes between 0.9.0b4 and 0.9.0b5 (done without providing fallback).
      - :py:class:`buildbot.steps.worker.SlaveBuildStep`
 
 
+   * - :py:mod:`buildbot.status.slave`
+     - :py:mod:`buildbot.status.worker`
+
+   * - :py:mod:`buildbot.status.slave.SlaveStatus`
+     - :py:mod:`buildbot.status.worker.WorkerStatus`
+       (this class is now new-style Python class)
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
@@ -395,6 +395,10 @@ Other changes:
 * ``buildbot.plugins.util.WorkerChoiceParameter``
   (previously ``BuildslaveChoiceParameter``) default name was changed from
   ``slavename`` to ``workername``.
+
+* ``buildbot.status.builder.SlaveStatus`` fallback was removed.
+  ``SlaveStatus`` was moved to ``buildbot.status.builder.slave`` previously,
+   and now it's :py:class:`buildbot.status.worker.WorkerStatus`.
 
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
