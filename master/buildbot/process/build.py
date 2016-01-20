@@ -215,8 +215,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        buildslave_properties = workerforbuilder.worker.properties
-        self.getProperties().updateFromProperties(buildslave_properties)
+        worker_properties = workerforbuilder.worker.properties
+        self.getProperties().updateFromProperties(worker_properties)
         if workerforbuilder.worker.slave_basedir:
             builddir = self.path_module.join(
                 workerforbuilder.worker.slave_basedir,
@@ -233,7 +233,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
-        slave = workerforbuilder.worker
+        worker = workerforbuilder.worker
 
         # we are taking responsibility for watching the connection to the
         # remote. This responsibility was held by the Builder until our
@@ -250,7 +250,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             yield self.master.data.updates.addBuild(
                 builderid=(yield self.builder.getBuilderId()),
                 buildrequestid=brid,
-                buildslaveid=slave.buildslaveid)
+                buildslaveid=worker.buildslaveid)
 
         self.stopBuildConsumer = yield self.master.mq.startConsuming(self.stopBuild,
                                                                      ("control", "builds",
@@ -261,7 +261,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupWorkerForBuilder(workerforbuilder)
-        slave.updateSlaveStatus(buildStarted=self)
+        worker.updateSlaveStatus(buildStarted=self)
 
         # then narrow SlaveLocks down to the right worker
         self.locks = [(l.getLock(self.workerforbuilder.worker), a)
@@ -308,13 +308,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # mark the build as finished
         self.workerforbuilder.buildFinished()
-        slave.updateSlaveStatus(buildFinished=self)
+        worker.updateSlaveStatus(buildFinished=self)
 
     @staticmethod
     def canStartWithWorkerForBuilder(lockList, workerforbuilder):
         for lock, access in lockList:
-            slave_lock = lock.getLock(workerforbuilder.worker)
-            if not slave_lock.isAvailable(None, access):
+            worker_lock = lock.getLock(workerforbuilder.worker)
+            if not worker_lock.isAvailable(None, access):
                 return False
         return True
 
