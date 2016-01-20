@@ -528,7 +528,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         # make sure appropriate exception is raised
         step = buildstep.BuildStep()
         self.assertRaisesRegexp(WorkerTooOldError,
-                                "slave is too old, does not know about foo",
+                                "worker is too old, does not know about foo",
                                 step.checkWorkerHasCommand, "foo")
 
 

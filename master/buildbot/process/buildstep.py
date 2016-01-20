@@ -709,7 +709,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def checkWorkerHasCommand(self, command):
         if not self.workerVersion(command):
-            message = "slave is too old, does not know about %s" % command
+            message = "worker is too old, does not know about %s" % command
             raise WorkerTooOldError(message)
     define_old_worker_method(locals(), checkWorkerHasCommand)
 
