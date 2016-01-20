@@ -98,8 +98,8 @@ class AbstractWorker(service.BuildbotService, object):
         self.lock_subscriptions = []
 
         self.properties = Properties()
-        self.properties.update(properties, "BuildSlave")
-        self.properties.setProperty("slavename", name, "BuildSlave")
+        self.properties.update(properties, "Worker")
+        self.properties.setProperty("slavename", name, "Worker")
 
         self.lastMessageReceived = 0
 
@@ -252,8 +252,8 @@ class AbstractWorker(service.BuildbotService, object):
         if properties is None:
             properties = {}
         self.properties = Properties()
-        self.properties.update(properties, "BuildSlave")
-        self.properties.setProperty("slavename", name, "BuildSlave")
+        self.properties.update(properties, "Worker")
+        self.properties.setProperty("slavename", name, "Worker")
 
         # update our records with the worker manager
         if not self.registration:

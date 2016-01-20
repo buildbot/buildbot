@@ -499,6 +499,10 @@ Other changes:
   ``workdir`` property source from ``"slave (deprecated)"`` to
   ``"worker (deprecated)"``.
 
+* :py:class:`buildbot.worker.AbstractWorker`
+  (previously ``buildbot.buildslave.AbstractBuildSlave``) properties source
+  were changed from ``"BuildSlave"`` to ``"Worker"``.
+
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
 
