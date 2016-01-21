@@ -120,9 +120,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForWorker()')
-    def getBuildersForSlave(self, slavename):
+    def getBuildersForWorker(self, workername):
         return [b for b in itervalues(self.builders)
-                if slavename in b.config.workernames]
+                if workername in b.config.workernames]
 
     def getBuildernames(self):
         return self.builderNames
@@ -273,7 +273,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         @param buildslave_name: the name of the worker
         """
-        builders = self.getBuildersForSlave(buildslave_name)
+        builders = self.getBuildersForWorker(buildslave_name)
         self.brd.maybeStartBuildsOn([b.name for b in builders])
 
     def maybeStartBuildsForAllBuilders(self):

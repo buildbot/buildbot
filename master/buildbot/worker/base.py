@@ -264,7 +264,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.updateLocks()
 
-        bids = [b._builderid for b in self.botmaster.getBuildersForSlave(self.name)]
+        bids = [b._builderid for b in self.botmaster.getBuildersForWorker(self.name)]
         yield self.master.data.updates.buildslaveConfigured(self.workerid, self.master.masterid, bids)
 
         # update the attached worker's notion of which builders are attached.
@@ -452,7 +452,7 @@ class AbstractWorker(service.BuildbotService, object):
         return d
 
     def sendBuilderList(self):
-        our_builders = self.botmaster.getBuildersForSlave(self.name)
+        our_builders = self.botmaster.getBuildersForWorker(self.name)
         blist = [(b.name, b.config.workerbuilddir) for b in our_builders]
         if blist == self._old_builder_list:
             return defer.succeed(None)
@@ -875,7 +875,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         @return: a Deferred that indicates when an attached worker has
         accepted the new builders and/or released the old ones."""
-        for b in self.botmaster.getBuildersForSlave(self.name):
+        for b in self.botmaster.getBuildersForWorker(self.name):
             if b.name not in self.workerforbuilders:
                 b.addLatentWorker(self)
         return AbstractWorker.updateWorker(self)

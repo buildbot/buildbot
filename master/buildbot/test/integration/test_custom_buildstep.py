@@ -177,7 +177,7 @@ class RunSteps(unittest.TestCase):
         self.slave.parent = mock.Mock()
         self.slave.master.botmaster = mock.Mock()
         self.slave.botmaster.maybeStartBuildsForSlave = lambda sl: None
-        self.slave.botmaster.getBuildersForSlave = lambda sl: []
+        self.slave.botmaster.getBuildersForWorker = lambda w: []
         self.slave.parent = self.master
         self.slave.startService()
         self.conn = fakeprotocol.FakeConnection(self.master, self.slave)

@@ -37,8 +37,8 @@ class FakeBotMaster(service.AsyncMultiService):
     def getLockFromLockAccess(self, access):
         return self.getLockByID(access.lockid)
 
-    def getBuildersForSlave(self, slavename):
-        return self.builders.get(slavename, [])
+    def getBuildersForWorker(self, workername):
+        return self.builders.get(workername, [])
 
     def maybeStartBuildsForSlave(self, slavename):
         self.buildsStartedForSlaves.append(slavename)
