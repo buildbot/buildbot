@@ -78,7 +78,7 @@ class Monotone(Source):
         try:
             monotoneInstalled = yield self.checkMonotone()
             if not monotoneInstalled:
-                raise WorkerTooOldError("Monotone is not installed on slave")
+                raise WorkerTooOldError("Monotone is not installed on worker")
 
             yield self._checkDb()
             yield self._retryPull()

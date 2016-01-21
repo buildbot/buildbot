@@ -68,7 +68,7 @@ class CVS(Source):
         @d.addCallback
         def checkInstall(cvsInstalled):
             if not cvsInstalled:
-                raise WorkerTooOldError("CVS is not installed on slave")
+                raise WorkerTooOldError("CVS is not installed on worker")
             return 0
         d.addCallback(self.checkLogin)
 

@@ -161,7 +161,7 @@ class Git(Source):
             gitInstalled = yield self.checkBranchSupport()
 
             if not gitInstalled:
-                raise WorkerTooOldError("git is not installed on slave")
+                raise WorkerTooOldError("git is not installed on worker")
 
             patched = yield self.sourcedirIsPatched()
 

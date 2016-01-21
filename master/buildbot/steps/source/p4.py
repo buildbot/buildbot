@@ -116,7 +116,7 @@ class P4(Source):
         @d.addCallback
         def checkInstall(p4Installed):
             if not p4Installed:
-                raise WorkerTooOldError("p4 is not installed on slave")
+                raise WorkerTooOldError("p4 is not installed on worker")
             return 0
 
         if self.use_tickets and self.p4passwd:

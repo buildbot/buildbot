@@ -102,7 +102,7 @@ class Mercurial(Source):
         def checkInstall(hgInstalled):
             if not hgInstalled:
                 raise WorkerTooOldError(
-                    "Mercurial is not installed on slave")
+                    "Mercurial is not installed on worker")
             return 0
 
         d.addCallback(lambda _: self.sourcedirIsPatched())

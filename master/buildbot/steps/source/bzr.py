@@ -72,7 +72,7 @@ class Bzr(Source):
         @d.addCallback
         def checkInstall(bzrInstalled):
             if not bzrInstalled:
-                raise WorkerTooOldError("bzr is not installed on slave")
+                raise WorkerTooOldError("bzr is not installed on worker")
             return 0
 
         d.addCallback(lambda _: self.sourcedirIsPatched())

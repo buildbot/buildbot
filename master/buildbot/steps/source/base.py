@@ -26,7 +26,7 @@ from twisted.python import log
 
 class Source(LoggingBuildStep, CompositeStepMixin):
 
-    """This is a base class to generate a source tree in the buildslave.
+    """This is a base class to generate a source tree in the worker.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
     startVC(). The class as a whole builds up the self.args dictionary, then

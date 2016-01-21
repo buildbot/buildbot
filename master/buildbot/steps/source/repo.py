@@ -52,7 +52,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
          can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
          or several instances of "proj number/patch" (simpler version)
          This feature allows integrator to build with several pending interdependant changes.
-         returns list of repo downloads sent to the buildslave
+         returns list of repo downloads sent to the worker
          """
         if s is None:
             return []

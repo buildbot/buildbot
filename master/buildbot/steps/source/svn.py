@@ -81,7 +81,7 @@ class SVN(Source):
             if not self.workerVersionIsOlderThan('shell', '2.16'):
                 self.password = ('obfuscated', self.password, 'XXXXXX')
             else:
-                log.msg("Slave does not understand obfuscation; "
+                log.msg("Worker does not understand obfuscation; "
                         "svn password will be logged")
 
         d = self.checkSvn()
@@ -89,7 +89,7 @@ class SVN(Source):
         @d.addCallback
         def checkInstall(svnInstalled):
             if not svnInstalled:
-                raise buildstep.BuildStepFailed("SVN is not installed on slave")
+                raise buildstep.BuildStepFailed("SVN is not installed on worker")
             return 0
 
         d.addCallback(lambda _: self.sourcedirIsPatched())

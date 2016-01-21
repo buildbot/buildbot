@@ -73,7 +73,7 @@ class Darcs(Source):
         @d.addCallback
         def checkInstall(darcsInstalled):
             if not darcsInstalled:
-                raise WorkerTooOldError("Darcs is not installed on slave")
+                raise WorkerTooOldError("Darcs is not installed on worker")
             return 0
         d.addCallback(lambda _: self.sourcedirIsPatched())
 

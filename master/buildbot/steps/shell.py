@@ -43,7 +43,7 @@ del _hush_pyflakes
 
 class ShellCommand(buildstep.LoggingBuildStep):
 
-    """I run a single shell command on the buildslave. I return FAILURE if
+    """I run a single shell command on the worker. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method, or customize
     decodeRC argument
