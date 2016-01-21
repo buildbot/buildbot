@@ -214,11 +214,16 @@ def define_old_worker_property(scope, name, pattern=None):
     scope[compat_name] = property(get)
 
 
-def define_old_worker_method(scope, method, pattern=None):
+def define_old_worker_method(scope, method, pattern=None, name=None):
     """Define old-named method inside class."""
     method_name = method.__name__
 
-    compat_name = deprecated_name(method_name, pattern=pattern)
+    if name is not None:
+        assert pattern is None
+        compat_name = name
+    else:
+        compat_name = deprecated_name(method_name, pattern=pattern)
+
     assert compat_name not in scope
 
     def old_method(self, *args, **kwargs):

@@ -26,7 +26,9 @@ from buildbot.status.builder import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
+from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_func
+from buildbot.worker_transition import define_old_worker_method
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
@@ -47,7 +49,8 @@ define_old_worker_func(locals(), enforceChosenWorker)
 
 
 class Builder(util_service.ReconfigurableServiceMixin,
-              service.MultiService):
+              service.MultiService,
+              WorkerAPICompatMixin):
 
     # reconfigure builders before workers
     reconfig_priority = 196
@@ -70,11 +73,13 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
         self.attaching_workers = []
+        self._registerOldWorkerAttr("attaching_workers")
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.workers = []
+        self._registerOldWorkerAttr("workers")
 
         self.config = None
         self.builder_status = None
@@ -198,6 +203,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 ['added', 'latent', worker.workername])
             self.workers.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
+    define_old_worker_method(locals(), addLatentWorker)
 
     def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
@@ -296,11 +302,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
+    define_old_worker_method(locals(), getAvailableWorkers)
 
     def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in self.config.locks]
         return Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
+    define_old_worker_method(locals(), canStartWithWorkerForBuilder,
+                             name="canStartWithSlavebuilder")
 
     def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):

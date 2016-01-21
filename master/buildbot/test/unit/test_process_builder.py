@@ -22,8 +22,10 @@ from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -334,6 +336,74 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             breq = mock.Mock()
             breq.properties = {}
             enforceChosenSlave(mock.Mock(), mock.Mock(), breq)
+
+    def test_attaching_workers_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = bldr.attaching_workers
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'attaching_slaves' attribute is deprecated"):
+            old = bldr.attaching_slaves
+
+        self.assertIdentical(new, old)
+
+    def test_workers_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = bldr.workers
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaves' attribute is deprecated"):
+            old = bldr.slaves
+
+        self.assertIdentical(new, old)
+
+    def test_canStartWithWorkerForBuilder_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+        bldr.config = mock.Mock()
+        bldr.config.locks = []
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'canStartWithSlavebuilder' method is deprecated"):
+            with mock.patch(
+                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
+                    mock.Mock(return_value='dummy')):
+                dummy = bldr.canStartWithSlavebuilder(mock.Mock())
+                self.assertEqual(dummy, 'dummy')
+
+    def test_addLatentWorker_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'addLatentSlave' method is deprecated"):
+            method = mock.Mock(return_value='dummy')
+            with mock.patch(
+                    'buildbot.process.builder.Builder.addLatentWorker',
+                    method):
+                dummy = bldr.addLatentSlave(mock.Mock())
+                self.assertEqual(dummy, 'dummy')
+                self.assertTrue(method.called)
+
+    def test_getAvailableWorkers_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'getAvailableSlaves' method is deprecated"):
+            method = mock.Mock(return_value='dummy')
+            with mock.patch(
+                    'buildbot.process.builder.Builder.getAvailableWorkers',
+                    method):
+                dummy = bldr.getAvailableSlaves(mock.Mock())
+                self.assertEqual(dummy, 'dummy')
+                self.assertTrue(method.called)
 
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):

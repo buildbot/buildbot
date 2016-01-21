@@ -201,6 +201,22 @@ Here is the complete list of changed API:
      - :py:func:`~buildbot.process.builder.enforceChosenWorker`
 
 
+   * - :py:meth:`buildbot.process.builder.Builder.canStartWithSlavebuilder`
+     - :py:meth:`~buildbot.process.builder.Builder.canStartWithWorkerForBuilder`
+
+   * - :py:attr:`buildbot.process.builder.Builder.attaching_slaves`
+     - :py:attr:`~buildbot.process.builder.Builder.attaching_workers`
+
+   * - :py:attr:`buildbot.process.builder.Builder.slaves`
+     - :py:attr:`~buildbot.process.builder.Builder.workers`
+
+   * - :py:meth:`buildbot.process.builder.Builder.addLatentSlave`
+     - :py:meth:`~buildbot.process.builder.Builder.addLatentWorker`
+
+   * - :py:meth:`buildbot.process.builder.Builder.getAvailableSlaves`
+     - :py:meth:`~buildbot.process.builder.Builder.getAvailableWorkers`
+
+
    * - :py:class:`buildbot.schedulers.forcesched.BuildslaveChoiceParameter`
      - :py:class:`~buildbot.schedulers.forcesched.WorkerChoiceParameter`
 
@@ -328,22 +344,6 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
    * - :py:meth:`buildbot.process.builder.Build.canStartWithSlavebuilder`
      - :py:meth:`~buildbot.process.builder.Build.canStartWithWorkerForBuilder`
-
-
-   * - :py:meth:`buildbot.process.builder.Builder.canStartWithSlavebuilder`
-     - :py:meth:`~buildbot.process.builder.Builder.canStartWithWorkerForBuilder`
-
-   * - :py:attr:`buildbot.process.builder.Builder.attaching_slaves`
-     - :py:attr:`~buildbot.process.builder.Builder.attaching_workers`
-
-   * - :py:attr:`buildbot.process.builder.Builder.slaves`
-     - :py:attr:`~buildbot.process.builder.Builder.workers`
-
-   * - :py:meth:`buildbot.process.builder.Builder.addLatentSlave`
-     - :py:meth:`~buildbot.process.builder.Builder.addLatentWorker`
-
-   * - :py:meth:`buildbot.process.builder.Builder.getAvailableSlaves`
-     - :py:meth:`~buildbot.process.builder.Builder.getAvailableWorkers`
 
 
    * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.getSlaveCommandVersion`
