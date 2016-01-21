@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
@@ -241,6 +243,23 @@ class MethodWrapper(unittest.TestCase):
 
         self.assertEqual(C.updateSlave.__module__, C.updateWorker.__module__)
         self.assertEqual(C.updateSlave.__doc__, C.updateWorker.__doc__)
+
+    def test_method_mocking(self):
+        class C(object):
+
+            def updateWorker(self, res):
+                return res
+            define_old_worker_method(locals(), updateWorker)
+
+        c = C()
+
+        c.updateWorker = mock.Mock(return_value="mocked")
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertEqual(c.updateWorker("test"), "mocked")
+
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
+            self.assertEqual(c.updateSlave("test"), "mocked")
 
 
 class FunctionWrapper(unittest.TestCase):
