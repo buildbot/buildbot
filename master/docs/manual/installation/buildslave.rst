@@ -172,9 +172,9 @@ Other Buildslave Configuration
 
 .. code-block:: python
 
-    s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-                   keepalive, usepty, umask=umask, maxdelay=maxdelay,
-                   unicode_encoding='utf-8', allow_shutdown='signal')
+    s = Worker(buildmaster_host, port, workername, passwd, basedir,
+               keepalive, usepty, umask=umask, maxdelay=maxdelay,
+               unicode_encoding='utf-8', allow_shutdown='signal')
 
 .. _Upgrading-an-Existing-Buildslave:
 
