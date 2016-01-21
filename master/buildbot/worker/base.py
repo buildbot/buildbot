@@ -469,16 +469,16 @@ class AbstractWorker(service.BuildbotService, object):
         log.msg("worker %s wants to shut down" % (self.name,))
         self.worker_status.setGraceful(True)
 
-    def addSlaveBuilder(self, sb):
-        self.workerforbuilders[sb.builder_name] = sb
+    def addWorkerForBuilder(self, wfb):
+        self.workerforbuilders[wfb.builder_name] = wfb
 
-    def removeSlaveBuilder(self, sb):
+    def removeWorkerForBuilder(self, wfb):
         try:
-            del self.workerforbuilders[sb.builder_name]
+            del self.workerforbuilders[wfb.builder_name]
         except KeyError:
             pass
 
-    def buildFinished(self, sb):
+    def buildFinished(self, wfb):
         """This is called when a build on this worker is finished."""
         self.botmaster.maybeStartBuildsForWorker(self.name)
 

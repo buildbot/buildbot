@@ -48,13 +48,13 @@ class FakeWorker(object):
     def detached(self):
         pass
 
-    def addSlaveBuilder(self, sb):
+    def addWorkerForBuilder(self, wfb):
         pass
 
-    def removeSlaveBuilder(self, sb):
+    def removeWorkerForBuilder(self, wfb):
         pass
 
-    def buildFinished(self, sb):
+    def buildFinished(self, wfb):
         pass
 
     def canStartBuild(self):

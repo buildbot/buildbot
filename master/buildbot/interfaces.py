@@ -188,10 +188,10 @@ class ILatentWorker(IWorker):
         build finished.
         """
 
-    def buildFinished(sb):
+    def buildFinished(wfb):
         """Inform the latent worker that a build has finished.
 
-        @param sb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
+        @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
 define_old_worker_class_alias(locals(), ILatentWorker, pattern="BuildWorker")

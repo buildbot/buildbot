@@ -353,6 +353,7 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        method positional argument ``slave`` was renamed
      - ``worker``
 
+
    * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_commands`
      - :py:attr:`buildbot.worker.AbstractWorker.worker_commands`
 
@@ -367,6 +368,12 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
    * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.buildslaveid`
      - :py:attr:`buildbot.worker.AbstractWorker.workerid`
+
+   * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.addSlaveBuilder`
+     - :py:meth:`buildbot.worker.AbstractWorker.addWorkerForBuilder`
+
+   * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.removeSlaveBuilder`
+     - :py:meth:`buildbot.worker.AbstractWorker.removeWorkerForBuilder`
 
 
    * - :py:meth:`buildbot.process.slavebuilder.LatentSlaveBuilder`

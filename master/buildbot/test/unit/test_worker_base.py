@@ -83,19 +83,19 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
         def detached(self):
             pass
 
-    def test_signature_addSlaveBuilder(self):
-        @self.assertArgSpecMatches(self.sl.addSlaveBuilder)
-        def addSlaveBuilder(self, sb):
+    def test_signature_addWorkerForBuilder(self):
+        @self.assertArgSpecMatches(self.sl.addWorkerForBuilder)
+        def addWorkerForBuilder(self, wfb):
             pass
 
-    def test_signature_removeSlaveBuilder(self):
-        @self.assertArgSpecMatches(self.sl.removeSlaveBuilder)
-        def removeSlaveBuilder(self, sb):
+    def test_signature_removeWorkerForBuilder(self):
+        @self.assertArgSpecMatches(self.sl.removeWorkerForBuilder)
+        def removeWorkerForBuilder(self, wfb):
             pass
 
     def test_signature_buildFinished(self):
         @self.assertArgSpecMatches(self.sl.buildFinished)
-        def buildFinished(self, sb):
+        def buildFinished(self, wfb):
             pass
 
     def test_signature_canStartBuild(self):

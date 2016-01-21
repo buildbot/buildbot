@@ -97,7 +97,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         self.remoteCommands = commands  # maps command name to version
         if self.worker is None:
             self.worker = worker
-            self.worker.addSlaveBuilder(self)
+            self.worker.addWorkerForBuilder(self)
         else:
             assert self.worker == worker
         log.msg("Worker %s attached to %s" % (worker.workername,
@@ -164,7 +164,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         log.msg("Worker %s detached from %s" % (self.worker.workername,
                                                 self.builder_name))
         if self.worker:
-            self.worker.removeSlaveBuilder(self)
+            self.worker.removeWorkerForBuilder(self)
         self.worker = None
         self.remoteCommands = None
 
@@ -209,7 +209,7 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
     def detached(self):
         AbstractWorkerForBuilder.detached(self)
         if self.worker:
-            self.worker.removeSlaveBuilder(self)
+            self.worker.removeWorkerForBuilder(self)
         self.worker = None
         self.state = ATTACHING
 
@@ -221,7 +221,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.worker = worker
         self.state = LATENT
         self.setBuilder(builder)
-        self.worker.addSlaveBuilder(self)
+        self.worker.addWorkerForBuilder(self)
         log.msg("Latent worker %s attached to %s" % (worker.workername,
                                                      self.builder_name))
 
