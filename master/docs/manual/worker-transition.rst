@@ -608,3 +608,5 @@ Metrics
 
 * ``BotMaster.attached_slaves`` event was renamed to
   ``BotMaster.attached_workers``.
+
+* ``BotMaster.slaveLost()`` event was renamed to ``BotMaster.workerLost()``.

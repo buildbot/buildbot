@@ -112,7 +112,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         log.msg("Cancelling clean shutdown")
         self.shuttingDown = False
 
-    @metrics.countMethod('BotMaster.slaveLost()')
+    @metrics.countMethod('BotMaster.workerLost()')
     def slaveLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
         for name, b in iteritems(self.builders):
