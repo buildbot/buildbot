@@ -299,7 +299,7 @@ class AttachedSlavesWatcher(object):
 
     def run(self):
         # Check if 'BotMaster.attached_slaves' equals
-        # 'AbstractBuildSlave.attached_slaves'
+        # 'AbstractWorker.attached_workers'
         h = self.metrics.getHandler(MetricCountEvent)
         if not h:
             log.msg("Couldn't get MetricCountEvent handler")
@@ -308,7 +308,7 @@ class AttachedSlavesWatcher(object):
                                  level=ALARM_WARN)
             return
         botmaster_count = h.get('BotMaster.attached_slaves')
-        buildslave_count = h.get('AbstractBuildSlave.attached_slaves')
+        buildslave_count = h.get('AbstractWorker.attached_workers')
 
         # We let these be off by one since they're counted at slightly
         # different times

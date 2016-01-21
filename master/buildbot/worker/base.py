@@ -340,7 +340,7 @@ class AbstractWorker(service.BuildbotService, object):
     def attached(self, conn):
         """This is called when the worker connects."""
 
-        metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", 1)
+        metrics.MetricCountEvent.log("AbstractWorker.attached_workers", 1)
 
         # now we go through a sequence of calls, gathering information, then
         # tell the Botmaster that it can finally give this worker to all the
@@ -397,7 +397,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     @defer.inlineCallbacks
     def detached(self):
-        metrics.MetricCountEvent.log("AbstractBuildSlave.attached_slaves", -1)
+        metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
         self.conn = None
         self._old_builder_list = []
         self.worker_status.removeGracefulWatcher(self._gracefulChanged)

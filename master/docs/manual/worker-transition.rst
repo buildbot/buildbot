@@ -602,3 +602,6 @@ Metrics
   (previously ``buildbot.buildslave.manager.BuildslaveManager.managed_services_name`)
   metric mesurement managed service name changed from ``buildslaves`` to
   ``workers``
+
+* ``AbstractBuildSlave.attached_slaves`` event was renamed to
+  ``AbstractWorker.attached_workers``.
