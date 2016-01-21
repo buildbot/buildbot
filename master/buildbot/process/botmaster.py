@@ -113,7 +113,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.shuttingDown = False
 
     @metrics.countMethod('BotMaster.workerLost()')
-    def slaveLost(self, bot):
+    def workerLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
         for name, b in iteritems(self.builders):
             if bot.workername in b.config.workernames:

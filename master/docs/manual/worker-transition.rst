@@ -443,6 +443,10 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.buildslaveid`
      - :py:attr:`buildbot.worker.AbstractWorker.workerid`
 
+
+   * - :py:meth:`buildbot.process.botmaster.BotMaster.slaveLost`
+     - :py:meth:`buildbot.process.botmaster.BotMaster.workerLost`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.

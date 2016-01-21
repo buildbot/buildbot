@@ -614,7 +614,7 @@ class Worker(AbstractWorker):
 
     def detached(self):
         AbstractWorker.detached(self)
-        self.botmaster.slaveLost(self)
+        self.botmaster.workerLost(self)
         self.startMissingTimer()
 
     def buildFinished(self, sb):
@@ -859,7 +859,7 @@ class AbstractLatentWorker(AbstractWorker):
         self._soft_disconnect()
         # this removes the worker from all builders.  It won't come back
         # without a restart (or maybe a sighup)
-        self.botmaster.slaveLost(self)
+        self.botmaster.workerLost(self)
 
     def stopService(self):
         res = defer.maybeDeferred(AbstractWorker.stopService, self)

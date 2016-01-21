@@ -43,5 +43,5 @@ class FakeBotMaster(service.AsyncMultiService):
     def maybeStartBuildsForSlave(self, slavename):
         self.buildsStartedForSlaves.append(slavename)
 
-    def slaveLost(self, slave):
+    def workerLost(self, bot):
         pass
