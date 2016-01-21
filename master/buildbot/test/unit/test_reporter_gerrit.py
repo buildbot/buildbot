@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.reporters.gerrit import GERRIT_LABEL_REVIEWED
 from buildbot.reporters.gerrit import GERRIT_LABEL_VERIFIED
@@ -21,9 +24,6 @@ from buildbot.reporters.gerrit import GerritStatusPush
 from buildbot.reporters.gerrit import defaultReviewCB
 from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
-from buildbot.process.results import FAILURE
-from buildbot.process.results import RETRY
-from buildbot.process.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from mock import Mock

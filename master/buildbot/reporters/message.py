@@ -1,13 +1,13 @@
 import jinja2
 import os
 
-from buildbot.reporters import utils
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
+from buildbot.reporters import utils
 
 
 class MessageFormatter(object):
