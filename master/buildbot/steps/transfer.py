@@ -125,7 +125,7 @@ class FileUpload(_TransferBuildStep):
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
-                 "Please upgrade the buildslave." % self.build.slavename)
+                 "Please upgrade the buildslave." % self.build.workername)
             raise WorkerTooOldError(m)
 
         # default arguments
@@ -300,7 +300,7 @@ class MultipleFileUpload(_TransferBuildStep):
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This buildslave (%s) does not support preserving timestamps. "
-                 "Please upgrade the buildslave." % self.build.slavename)
+                 "Please upgrade the buildslave." % self.build.workername)
             raise WorkerTooOldError(m)
 
         if not sources:
