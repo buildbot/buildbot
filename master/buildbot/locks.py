@@ -19,6 +19,7 @@ from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_class
+from buildbot.worker_transition import on_deprecated_name_usage
 from twisted.internet import defer
 from twisted.python import log
 
@@ -316,12 +317,22 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
     compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
     lockClass = RealWorkerLock
 
-    def __init__(self, name, maxCount=1, maxCountForSlave=None):
+    def __init__(self, name, maxCount=1, maxCountForWorker=None,
+                 maxCountForSlave=None  # deprecated, use `maxCountForWorker` instead
+                 ):
+        # Deprecated API support.
+        if maxCountForSlave is not None:
+            on_deprecated_name_usage(
+                "'maxCountForSlave' keyword argument is deprecated, "
+                "use 'maxCountForWorker' instead")
+            assert maxCountForWorker is None
+            maxCountForWorker = maxCountForSlave
+
         self.name = name
         self.maxCount = maxCount
-        if maxCountForSlave is None:
-            maxCountForSlave = {}
-        self.maxCountForWorker = maxCountForSlave
+        if maxCountForWorker is None:
+            maxCountForWorker = {}
+        self.maxCountForWorker = maxCountForWorker
         self._registerOldWorkerAttr("maxCountForWorker")
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples

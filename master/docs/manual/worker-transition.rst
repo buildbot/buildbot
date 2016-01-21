@@ -231,6 +231,10 @@ Here is the complete list of changed API:
    * - :py:attr:`buildbot.locks.SlaveLock.maxCountForSlave`
      - :py:attr:`buildbot.locks.WorkerLock.maxCountForWorker`
 
+   * - :py:class:`buildbot.locks.SlaveLock` constructor argument
+       ``maxCountForSlave`` was renamed
+     - ``maxCountForWorker``
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

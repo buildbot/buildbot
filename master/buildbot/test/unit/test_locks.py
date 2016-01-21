@@ -49,3 +49,19 @@ class TestWorkerTransition(unittest.TestCase):
             old = l.maxCountForSlave
 
         self.assertIdentical(new, old)
+
+    def test_init_maxCountForWorker_old_api_no_warns(self):
+        counts = {'w1': 10, 'w2': 20}
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            lock = WorkerLock("name", maxCount=1, maxCountForWorker=counts)
+
+        self.assertEqual(lock.maxCountForWorker, counts)
+
+    def test_init_maxCountForWorker_old_api_warns(self):
+        counts = {'w1': 10, 'w2': 20}
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'maxCountForSlave' keyword argument is deprecated"):
+            lock = WorkerLock("name", maxCount=1, maxCountForSlave=counts)
+
+        self.assertEqual(lock.maxCountForWorker, counts)
