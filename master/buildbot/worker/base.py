@@ -192,7 +192,7 @@ class AbstractWorker(service.BuildbotService, object):
         builds."""
         if not self.botmaster:
             return  # oh well..
-        self.botmaster.maybeStartBuildsForSlave(self.name)
+        self.botmaster.maybeStartBuildsForWorker(self.name)
 
     def _applySlaveInfo(self, info):
         if not info:
@@ -388,7 +388,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.stopMissingTimer()
         self.master.status.workerConnected(self.name)
         yield self.updateWorker()
-        yield self.botmaster.maybeStartBuildsForSlave(self.name)
+        yield self.botmaster.maybeStartBuildsForWorker(self.name)
 
     def messageReceivedFromSlave(self):
         now = time.time()
@@ -480,7 +480,7 @@ class AbstractWorker(service.BuildbotService, object):
 
     def buildFinished(self, sb):
         """This is called when a build on this worker is finished."""
-        self.botmaster.maybeStartBuildsForSlave(self.name)
+        self.botmaster.maybeStartBuildsForWorker(self.name)
 
     def canStartBuild(self):
         """
@@ -491,7 +491,7 @@ class AbstractWorker(service.BuildbotService, object):
         Note for subclassers: if a worker can become willing to start a build
         without any action on that worker (for example, by a resource in use on
         another worker becoming available), then you must arrange for
-        L{maybeStartBuildsForSlave} to be called at that time, or builds on
+        L{maybeStartBuildsForWorker} to be called at that time, or builds on
         this worker will not start.
         """
 
@@ -580,7 +580,7 @@ class AbstractWorker(service.BuildbotService, object):
     def unpause(self):
         """Restart running new builds on the worker."""
         self.worker_status.setPaused(False)
-        self.botmaster.maybeStartBuildsForSlave(self.name)
+        self.botmaster.maybeStartBuildsForWorker(self.name)
 
     def isPaused(self):
         return self.worker_status.isPaused()
@@ -782,7 +782,7 @@ class AbstractLatentWorker(AbstractWorker):
                 # this will cause the worker to re-substantiate immediately if
                 # there are pending build requests.
                 d.addCallback(lambda _:
-                              self.botmaster.maybeStartBuildsForSlave(self.workername))
+                              self.botmaster.maybeStartBuildsForWorker(self.workername))
             else:
                 self._setBuildWaitTimer()
 
@@ -812,7 +812,7 @@ class AbstractLatentWorker(AbstractWorker):
         self.building.clear()  # just to be sure
         yield d
         self.insubstantiating = False
-        self.botmaster.maybeStartBuildsForSlave(self.name)
+        self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):

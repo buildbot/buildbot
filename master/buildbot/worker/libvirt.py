@@ -304,7 +304,7 @@ class LibVirtWorker(AbstractLatentWorker):
             log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.workername)
             if self.base_image:
                 os.remove(self.image)
-            self.botmaster.maybeStartBuildsForSlave(self.workername)
+            self.botmaster.maybeStartBuildsForWorker(self.workername)
             return res
 
         return d

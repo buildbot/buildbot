@@ -40,8 +40,8 @@ class FakeBotMaster(service.AsyncMultiService):
     def getBuildersForWorker(self, workername):
         return self.builders.get(workername, [])
 
-    def maybeStartBuildsForSlave(self, slavename):
-        self.buildsStartedForSlaves.append(slavename)
+    def maybeStartBuildsForWorker(self, workername):
+        self.buildsStartedForSlaves.append(workername)
 
     def workerLost(self, bot):
         pass

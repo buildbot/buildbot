@@ -172,7 +172,7 @@ class TestBotMaster(unittest.TestCase):
 
         brd.maybeStartBuildsOn.assert_called_once_with(['frank'])
 
-    def test_maybeStartBuildsForSlave(self):
+    def test_maybeStartBuildsForWorker(self):
         brd = self.botmaster.brd = mock.Mock()
         b1 = mock.Mock(name='frank')
         b1.name = 'frank'
@@ -180,7 +180,7 @@ class TestBotMaster(unittest.TestCase):
         b2.name = 'larry'
         self.botmaster.getBuildersForWorker = mock.Mock(return_value=[b1, b2])
 
-        self.botmaster.maybeStartBuildsForSlave('centos')
+        self.botmaster.maybeStartBuildsForWorker('centos')
 
         self.botmaster.getBuildersForWorker.assert_called_once_with('centos')
         brd.maybeStartBuildsOn.assert_called_once_with(['frank', 'larry'])
