@@ -75,11 +75,11 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         # AbstractWorker doesn't always have a buildStarted method
         # so only call it if it is available.
         try:
-            slave_buildStarted = self.worker.buildStarted
+            worker_buildStarted = self.worker.buildStarted
         except AttributeError:
             pass
         else:
-            slave_buildStarted(self)
+            worker_buildStarted(self)
 
     def buildFinished(self):
         self.state = IDLE
@@ -89,8 +89,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
     def attached(self, slave, commands):
         """
         @type  slave: L{buildbot.worker.Worker}
-        @param slave: the Worker that represents the buildslave as a
-                      whole
+        @param slave: the Worker that represents the worker as a whole
         @type  commands: dict: string -> string, or None
         @param commands: provides the worker's version of each RemoteCommand
         """
@@ -101,8 +100,8 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
             self.worker.addSlaveBuilder(self)
         else:
             assert self.worker == slave
-        log.msg("Buildslave %s attached to %s" % (slave.workername,
-                                                  self.builder_name))
+        log.msg("Worker %s attached to %s" % (slave.workername,
+                                              self.builder_name))
         d = defer.succeed(None)
 
         d.addCallback(lambda _:
@@ -162,8 +161,8 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         event.finish()
 
     def detached(self):
-        log.msg("Buildslave %s detached from %s" % (self.worker.workername,
-                                                    self.builder_name))
+        log.msg("Worker %s detached from %s" % (self.worker.workername,
+                                                self.builder_name))
         if self.worker:
             self.worker.removeSlaveBuilder(self)
         self.worker = None
@@ -223,8 +222,8 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         self.state = LATENT
         self.setBuilder(builder)
         self.worker.addSlaveBuilder(self)
-        log.msg("Latent buildslave %s attached to %s" % (slave.workername,
-                                                         self.builder_name))
+        log.msg("Latent worker %s attached to %s" % (slave.workername,
+                                                     self.builder_name))
 
     def prepare(self, builder_status, build):
         # If we can't lock, then don't bother trying to substantiate
