@@ -625,6 +625,9 @@ Properties
 Metrics
 -------
 
+* :py:class:`buildbot.process.metrics.AttachedSlavesWatcher` was renamed to
+  :py:class:`buildbot.process.metrics.AttachedWorkersWatcher`.
+
 * :py:attr:`buildbot.worker.manager.WorkerManager.name`
   (previously ``buildbot.buildslave.manager.BuildslaveManager.name``) metric
   mesurement class name changed from ``BuildslaveManager`` to ``WorkerManager``
@@ -653,3 +656,6 @@ Renamed events:
 
    * - ``BotMaster.getBuildersForSlave()``
      - ``BotMaster.getBuildersForWorker()``
+
+   * - ``AttachedSlavesWatcher``
+     - ``AttachedWorkersWatcher``

@@ -292,7 +292,7 @@ class MetricAlarmHandler(MetricHandler):
         return dict(alarms=retval)
 
 
-class AttachedSlavesWatcher(object):
+class AttachedWorkersWatcher(object):
 
     def __init__(self, metrics):
         self.metrics = metrics
@@ -303,7 +303,7 @@ class AttachedSlavesWatcher(object):
         h = self.metrics.getHandler(MetricCountEvent)
         if not h:
             log.msg("Couldn't get MetricCountEvent handler")
-            MetricAlarmEvent.log('AttachedSlavesWatcher',
+            MetricAlarmEvent.log('AttachedWorkersWatcher',
                                  msg="Coudln't get MetricCountEvent handler",
                                  level=ALARM_WARN)
             return
@@ -393,7 +393,7 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
         self.registerHandler(MetricAlarmEvent, MetricAlarmHandler(self))
 
         self.getHandler(MetricCountEvent).addWatcher(
-            AttachedSlavesWatcher(self))
+            AttachedWorkersWatcher(self))
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # first, enable or disable
