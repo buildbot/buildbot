@@ -190,7 +190,7 @@ class RealMasterLock(BaseLock):
         return self
 
 
-class RealSlaveLock:
+class RealWorkerLock:
 
     def __init__(self, lockid):
         self.name = lockid.name
@@ -313,7 +313,7 @@ class WorkerLock(BaseLockId):
     """
 
     compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
-    lockClass = RealSlaveLock
+    lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForSlave=None):
         self.name = name

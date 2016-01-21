@@ -238,7 +238,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.
         @param lockid: a locks.MasterLock or locks.WorkerLock instance
-        @return: a locks.RealMasterLock or locks.RealSlaveLock instance
+        @return: a locks.RealMasterLock or locks.RealWorkerLock instance
         """
         assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
         if lockid not in self.locks:

@@ -456,6 +456,10 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:meth:`buildbot.process.botmaster.BotMaster.maybeStartBuildsForSlave`
      - :py:meth:`buildbot.process.botmaster.BotMaster.maybeStartBuildsForWorker`
 
+
+   * - :py:class:`buildbot.locks.RealSlaveLock`
+     - :py:class:`buildbot.locks.RealWorkerLock`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
