@@ -17,6 +17,7 @@
 from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_class
 from twisted.internet import defer
 from twisted.python import log
@@ -195,7 +196,7 @@ class RealWorkerLock:
     def __init__(self, lockid):
         self.name = lockid.name
         self.maxCount = lockid.maxCount
-        self.maxCountForSlave = lockid.maxCountForSlave
+        self.maxCountForSlave = lockid.maxCountForWorker
         self.description = "<WorkerLock(%s, %s, %s)>" % (self.name,
                                                          self.maxCount,
                                                          self.maxCountForSlave)
@@ -291,7 +292,7 @@ class MasterLock(BaseLockId):
         self.maxCount = maxCount
 
 
-class WorkerLock(BaseLockId):
+class WorkerLock(BaseLockId, WorkerAPICompatMixin):
 
     """I am a semaphore that limits simultaneous actions on each buildslave.
 
@@ -307,7 +308,7 @@ class WorkerLock(BaseLockId):
 
     Each buildslave will get an independent copy of this semaphore. By
     default each copy will use the same owner count (set with maxCount), but
-    you can provide maxCountForSlave with a dictionary that maps workername to
+    you can provide maxCountForWorker with a dictionary that maps workername to
     owner count, to allow some workers more parallelism than others.
 
     """
@@ -320,8 +321,9 @@ class WorkerLock(BaseLockId):
         self.maxCount = maxCount
         if maxCountForSlave is None:
             maxCountForSlave = {}
-        self.maxCountForSlave = maxCountForSlave
+        self.maxCountForWorker = maxCountForSlave
+        self._registerOldWorkerAttr("maxCountForWorker")
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForSlaveList = tuple(sorted(self.maxCountForSlave.items()))
+        self._maxCountForSlaveList = tuple(sorted(self.maxCountForWorker.items()))
 define_old_worker_class(locals(), WorkerLock)

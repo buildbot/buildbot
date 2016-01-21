@@ -13,7 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.locks import WorkerLock
+from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial import unittest
 
@@ -21,7 +24,7 @@ from twisted.trial import unittest
 class TestWorkerTransition(unittest.TestCase):
 
     def test_worker_status(self):
-        from buildbot.locks import WorkerLock, SlaveLock
+        from buildbot.locks import SlaveLock
 
         class WL(SlaveLock):
 
@@ -33,3 +36,16 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="'SlaveLock' class is deprecated"):
             l = WL()
             self.assertIsInstance(l, WorkerLock)
+
+    def test_maxCountForWorker_old_api(self):
+        l = WorkerLock("lock")
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = l.maxCountForWorker
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'maxCountForSlave' attribute is deprecated"):
+            old = l.maxCountForSlave
+
+        self.assertIdentical(new, old)

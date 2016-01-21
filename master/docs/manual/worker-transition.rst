@@ -224,8 +224,12 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.process.buildstep.BuildStep.getSlaveName`
      - :py:meth:`buildbot.process.buildstep.BuildStep.getWorkerName`
 
+
    * - :py:class:`buildbot.locks.SlaveLock`
      - :py:class:`buildbot.locks.WorkerLock`
+
+   * - :py:attr:`buildbot.locks.SlaveLock.maxCountForSlave`
+     - :py:attr:`buildbot.locks.WorkerLock.maxCountForWorker`
 
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
