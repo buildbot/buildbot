@@ -364,7 +364,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.conn.notifyOnDisconnect(self.detached)
 
-        slaveinfo = {
+        workerinfo = {
             'admin': conn.info.get('admin'),
             'host': conn.info.get('host'),
             'access_uri': conn.info.get('access_uri'),
@@ -374,7 +374,7 @@ class AbstractWorker(service.BuildbotService, object):
         yield self.master.data.updates.buildslaveConnected(
             buildslaveid=self.workerid,
             masterid=self.master.masterid,
-            slaveinfo=slaveinfo
+            slaveinfo=workerinfo
         )
 
         if self.worker_system == "nt":
