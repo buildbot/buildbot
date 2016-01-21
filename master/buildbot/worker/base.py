@@ -170,9 +170,9 @@ class AbstractWorker(service.BuildbotService, object):
         my caller should give up the build and try to get another worker
         to look at it.
         """
-        log.msg("acquireLocks(slave %s, locks %s)" % (self, self.locks))
+        log.msg("acquireLocks(worker %s, locks %s)" % (self, self.locks))
         if not self.locksAvailable():
-            log.msg("slave %s can't lock, giving up" % (self, ))
+            log.msg("worker %s can't lock, giving up" % (self, ))
             return False
         # all locks are available, claim them all
         for lock, access in self.locks:
@@ -311,7 +311,7 @@ class AbstractWorker(service.BuildbotService, object):
         text += ("It last disconnected at %s (buildmaster-local time)\n" %
                  time.ctime(time.time() - self.missing_timeout))  # approx
         text += "\n"
-        text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
+        text += "The admin on record (as reported by WORKER:info/admin)\n"
         text += "was '%s'.\n" % self.worker_status.getAdmin()
         text += "\n"
         text += "Sincerely,\n"
@@ -429,7 +429,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         if self.conn is None:
             return defer.succeed(None)
-        log.msg("disconnecting old slave %s now" % (self.name,))
+        log.msg("disconnecting old worker %s now" % (self.name,))
         # When this Deferred fires, we'll be ready to accept the new worker
         return self._disconnect(self.conn)
 
@@ -447,7 +447,7 @@ class AbstractWorker(service.BuildbotService, object):
             eventually(d.callback, None)
         conn.notifyOnDisconnect(_disconnected)
         conn.loseConnection()
-        log.msg("waiting for slave to finish disconnecting")
+        log.msg("waiting for worker to finish disconnecting")
 
         return d
 
@@ -466,7 +466,7 @@ class AbstractWorker(service.BuildbotService, object):
         return d
 
     def shutdownRequested(self):
-        log.msg("slave %s wants to shut down" % (self.name,))
+        log.msg("worker %s wants to shut down" % (self.name,))
         self.worker_status.setGraceful(True)
 
     def addSlaveBuilder(self, sb):
@@ -550,7 +550,7 @@ class AbstractWorker(service.BuildbotService, object):
     def shutdown(self):
         """Shutdown the worker"""
         if not self.conn:
-            log.msg("no remote; slave is already shut down")
+            log.msg("no remote; worker is already shut down")
             return
 
         yield self.conn.remoteShutdown()
@@ -565,7 +565,7 @@ class AbstractWorker(service.BuildbotService, object):
         if active_builders:
             return
         d = self.shutdown()
-        d.addErrback(log.err, 'error while shutting down slave')
+        d.addErrback(log.err, 'error while shutting down worker')
 
     def _pauseChanged(self, paused):
         if paused is True:
@@ -699,7 +699,7 @@ class AbstractLatentWorker(AbstractWorker):
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
             if not result:
-                log.msg("Slave '%s' does not want to substantiate at this time" % (self.name,))
+                log.msg("Worker '%s' does not want to substantiate at this time" % (self.name,))
                 d = self.substantiation_deferred
                 self.substantiation_deferred = None
                 d.callback(False)
@@ -719,7 +719,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     def attached(self, bot):
         if self.substantiation_deferred is None and self.build_wait_timeout >= 0:
-            msg = 'Slave %s received connection while not trying to ' \
+            msg = 'Worker %s received connection while not trying to ' \
                 'substantiate.  Disconnecting.' % (self.name,)
             log.msg(msg)
             self._disconnect(bot)
@@ -828,7 +828,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         if self.substantiation_deferred is not None:
             log.msg("Weird: Got request to stop before started. Allowing "
-                    "slave to start cleanly to avoid inconsistent state")
+                    "worker to start cleanly to avoid inconsistent state")
             yield self.substantiation_deferred
             self.substantiation_deferred = None
             self.substantiation_build = None
@@ -890,7 +890,7 @@ class AbstractLatentWorker(AbstractWorker):
             for name in slist:
                 # use get() since we might have changed our mind since then.
                 # we're checking on the builder in addition to the
-                # slavebuilders out of a bit of paranoia.
+                # workers out of a bit of paranoia.
                 b = self.botmaster.builders.get(name)
                 sb = self.workerforbuilders.get(name)
                 if b and sb:
@@ -917,7 +917,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         @d.addCallback
         def _substantiated(res):
-            log.msg(r"Slave %s substantiated \o/" % (self.name,))
+            log.msg(r"Worker %s substantiated \o/" % (self.name,))
             self.substantiated = True
             if not self.substantiation_deferred:
                 log.msg("No substantiation deferred for %s" % (self.name,))
