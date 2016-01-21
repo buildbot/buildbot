@@ -495,21 +495,6 @@ Other changes:
 * :py:meth:`buildbot.status.builder.BuilderStatus.asDict` returns worker
   names under ``'workers'`` key, instead of ``'slaves'`` key.
 
-* ``builddir`` property source changed from ``"slave"`` to ``"worker"``;
-  ``workdir`` property source from ``"slave (deprecated)"`` to
-  ``"worker (deprecated)"``.
-
-* ``slavename`` property is deprecated in favor of ``workername`` property.
-  Render of deprecated property will produce warning.
-
-  :py:class:`buildbot.worker.AbstractWorker`
-  (previously ``buildbot.buildslave.AbstractBuildSlave``) ``slavename``
-  property source were changed from ``BuildSlave`` to
-  ``Worker (deprecated)``
-
-  :py:class:`~buildbot.worker.AbstractWorker` now sets ``workername``
-  property with source ``Worker`` which should be used.
-
 * Definitely privately used "slave"-named variables and attributes were
   renamed, including tests modules, classes and methods.
 
@@ -592,3 +577,21 @@ Worker Manager changes
 ----------------------
 
 ``slave_config`` function argument was renamed to ``worker_config``.
+
+Properties
+----------
+
+* ``builddir`` property source changed from ``"slave"`` to ``"worker"``;
+  ``workdir`` property source from ``"slave (deprecated)"`` to
+  ``"worker (deprecated)"``.
+
+* ``slavename`` property is deprecated in favor of ``workername`` property.
+  Render of deprecated property will produce warning.
+
+  :py:class:`buildbot.worker.AbstractWorker`
+  (previously ``buildbot.buildslave.AbstractBuildSlave``) ``slavename``
+  property source were changed from ``BuildSlave`` to
+  ``Worker (deprecated)``
+
+  :py:class:`~buildbot.worker.AbstractWorker` now sets ``workername``
+  property with source ``Worker`` which should be used.
