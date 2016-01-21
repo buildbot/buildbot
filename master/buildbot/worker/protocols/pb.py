@@ -53,9 +53,9 @@ class Listener(base.Listener):
 
     @defer.inlineCallbacks
     def _getPerspective(self, mind, workerName):
-        bslaves = self.master.workers
-        log.msg("slave '%s' attaching from %s" % (workerName,
-                                                  mind.broker.transport.getPeer()))
+        workers = self.master.workers
+        log.msg("worker '%s' attaching from %s" % (workerName,
+                                                   mind.broker.transport.getPeer()))
 
         # try to use TCP keepalives
         try:
@@ -63,18 +63,18 @@ class Listener(base.Listener):
         except Exception:
             log.err("Can't set TcpKeepAlive")
 
-        buildslave = bslaves.getWorkerByName(workerName)
-        conn = Connection(self.master, buildslave, mind)
+        worker = workers.getWorkerByName(workerName)
+        conn = Connection(self.master, worker, mind)
 
         # inform the manager, logging any problems in the deferred
-        accepted = yield bslaves.newConnection(conn, workerName)
+        accepted = yield workers.newConnection(conn, workerName)
 
         # return the Connection as the perspective
         if accepted:
             defer.returnValue(conn)
         else:
             # TODO: return something more useful
-            raise RuntimeError("rejecting duplicate slave")
+            raise RuntimeError("rejecting duplicate worker")
 
 
 class ReferenceableProxy(pb.Referenceable):
@@ -243,7 +243,7 @@ class Connection(base.Connection, pb.Avatar):
 
             if d:
                 name = self.buildslave.workername
-                log.msg("Shutting down (old) slave: %s" % name)
+                log.msg("Shutting down (old) worker: %s" % name)
                 # The remote shutdown call will not complete successfully since
                 # the buildbot process exits almost immediately after getting
                 # the shutdown request.
@@ -259,7 +259,7 @@ class Connection(base.Connection, pb.Avatar):
                         log.err("Unexpected error when trying to shutdown %s"
                                 % name)
                 return d
-            log.err("Couldn't find remote builder to shut down slave")
+            log.err("Couldn't find remote builder to shut down worker")
             return defer.succeed(None)
         yield old_way()
 
