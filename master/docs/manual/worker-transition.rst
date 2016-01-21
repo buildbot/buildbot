@@ -630,11 +630,11 @@ Metrics
 
 * :py:attr:`buildbot.worker.manager.WorkerManager.name`
   (previously ``buildbot.buildslave.manager.BuildslaveManager.name``) metric
-  mesurement class name changed from ``BuildslaveManager`` to ``WorkerManager``
+  measurement class name changed from ``BuildslaveManager`` to ``WorkerManager``
 
 * :py:attr:`buildbot.worker.manager.WorkerManager.managed_services_name`
   (previously ``buildbot.buildslave.manager.BuildslaveManager.managed_services_name`)
-  metric mesurement managed service name changed from ``buildslaves`` to
+  metric measurement managed service name changed from ``buildslaves`` to
   ``workers``
 
 Renamed events:
