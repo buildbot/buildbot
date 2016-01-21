@@ -15,13 +15,14 @@
 
 import mock
 import os
-from twisted.web.server import Site
-from twisted.web.resource import Resource
-from twisted.internet import reactor
 import webbrowser
+
+from buildbot.util import json
+from twisted.internet import reactor
 from twisted.internet import threads
 from twisted.python import failure
-from buildbot.util import json
+from twisted.web.resource import Resource
+from twisted.web.server import Site
 
 try:
     import requests
@@ -36,6 +37,7 @@ from twisted.trial import unittest
 
 
 class FakeResponse(object):
+
     def __init__(self, _json):
         self.json = lambda: _json
         self.content = json.dumps(_json)
@@ -209,10 +211,11 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
                 return "<html><script>setTimeout(close,1000)</script><body>WORKED: %s</body></html>" % (info)
 
         class MySite(Site):
+
             def makeSession(self):
-                    uid = self._mkuid()
-                    session = self.sessions[uid] = self.sessionFactory(self, uid)
-                    return session
+                uid = self._mkuid()
+                session = self.sessions[uid] = self.sessionFactory(self, uid)
+                return session
         root = Resource()
         root.putChild("", HomePage())
         auth = Resource()
