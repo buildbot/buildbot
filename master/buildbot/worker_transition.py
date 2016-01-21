@@ -115,6 +115,7 @@ class DeprecatedWorkerModuleWarning(DeprecatedWorkerAPIWarning):
     """Warning class for use of deprecated modules."""
 
 
+# TODO: make stacklevel relative to caller function
 def on_deprecated_name_usage(message, stacklevel=None, filename=None,
                              lineno=None):
     """Hook that is ran when old API name is used."""
