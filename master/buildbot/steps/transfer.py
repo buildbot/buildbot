@@ -124,8 +124,8 @@ class FileUpload(_TransferBuildStep):
         fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
-            m = ("This buildslave (%s) does not support preserving timestamps. "
-                 "Please upgrade the buildslave." % self.build.workername)
+            m = ("This worker (%s) does not support preserving timestamps. "
+                 "Please upgrade the worker." % self.build.workername)
             raise WorkerTooOldError(m)
 
         # default arguments
@@ -174,7 +174,7 @@ class DirectoryUpload(_TransferBuildStep):
         # properly. TODO: maybe pass the master's basedir all the way down
         # into the BuildStep so we can do this better.
         masterdest = os.path.expanduser(masterdest)
-        log.msg("DirectoryUpload started, from slave %r to master %r"
+        log.msg("DirectoryUpload started, from worker %r to master %r"
                 % (source, masterdest))
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
@@ -299,8 +299,8 @@ class MultipleFileUpload(_TransferBuildStep):
         sources = self.slavesrcs
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
-            m = ("This buildslave (%s) does not support preserving timestamps. "
-                 "Please upgrade the buildslave." % self.build.workername)
+            m = ("This worker (%s) does not support preserving timestamps. "
+                 "Please upgrade the worker." % self.build.workername)
             raise WorkerTooOldError(m)
 
         if not sources:
@@ -323,7 +323,7 @@ class MultipleFileUpload(_TransferBuildStep):
             d.addCallback(lambda _: result)
             return d
 
-        log.msg("MultipleFileUpload started, from slave %r to master %r"
+        log.msg("MultipleFileUpload started, from worker %r to master %r"
                 % (sources, masterdest))
 
         nsrcs = len(sources)
@@ -363,7 +363,7 @@ class FileDownload(_TransferBuildStep):
         # paths will be interpreted relative to that
         source = os.path.expanduser(self.mastersrc)
         slavedest = self.slavedest
-        log.msg("FileDownload started, from master %r to slave %r" %
+        log.msg("FileDownload started, from master %r to worker %r" %
                 (source, slavedest))
 
         self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
@@ -424,7 +424,7 @@ class StringDownload(_TransferBuildStep):
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
         slavedest = self.slavedest
-        log.msg("StringDownload started, from master to slave %r" % slavedest)
+        log.msg("StringDownload started, from master to worker %r" % slavedest)
 
         self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
 
