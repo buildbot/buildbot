@@ -512,7 +512,7 @@ class IWorkerStatus(Interface):
 
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
-        recent message was received from the buildslave."""
+        recent message was received from the worker."""
 define_old_worker_class_alias(locals(), IWorkerStatus)
 
 
@@ -787,7 +787,7 @@ class IStatusEvent(Interface):
     def getTimes():
         """Returns a tuple of (start, end) like IBuildStepStatus, but end==0
         indicates that this is a 'point event', which has no duration.
-        SlaveConnect/Disconnect are point events. Ping is not: it starts
+        WorkerConnect/Disconnect are point events. Ping is not: it starts
         when requested and ends when the response (positive or negative) is
         returned"""
 
