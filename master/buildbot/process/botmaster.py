@@ -119,7 +119,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             if bot.workername in b.config.workernames:
                 b.detached(bot)
 
-    @metrics.countMethod('BotMaster.getBuildersForSlave()')
+    @metrics.countMethod('BotMaster.getBuildersForWorker()')
     def getBuildersForSlave(self, slavename):
         return [b for b in itervalues(self.builders)
                 if slavename in b.config.workernames]

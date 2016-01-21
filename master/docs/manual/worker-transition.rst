@@ -619,3 +619,6 @@ Renamed events:
 
    * - ``BotMaster.slaveLost()``
      - ``BotMaster.workerLost()``
+
+   * - ``BotMaster.getBuildersForSlave()``
+     - ``BotMaster.getBuildersForWorker()``
