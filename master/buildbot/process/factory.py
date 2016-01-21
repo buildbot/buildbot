@@ -109,7 +109,7 @@ class GNUAutoconf(BuildFactory):
         if reconf is True:
             reconf = ["autoreconf", "-si"]
         if reconf is not None:
-            self.addStep(ShellCommand(name="autoreconf", command=reconf))
+            self.addStep(ShellCommand(name="autoreconf", command=reconf, env=configureEnv))
 
         if configure is not None:
             # we either need to wind up with a string (which will be
@@ -126,11 +126,11 @@ class GNUAutoconf(BuildFactory):
                 command = configure + configureFlags
             self.addStep(Configure(command=command, env=configureEnv))
         if compile is not None:
-            self.addStep(Compile(command=compile))
+            self.addStep(Compile(command=compile, env=configureEnv))
         if test is not None:
-            self.addStep(Test(command=test))
+            self.addStep(Test(command=test, env=configureEnv))
         if distcheck is not None:
-            self.addStep(Test(command=distcheck))
+            self.addStep(Test(command=distcheck, env=configureEnv))
 
 
 class CPAN(BuildFactory):
