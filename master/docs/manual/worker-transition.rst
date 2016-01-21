@@ -603,10 +603,19 @@ Metrics
   metric mesurement managed service name changed from ``buildslaves`` to
   ``workers``
 
-* ``AbstractBuildSlave.attached_slaves`` event was renamed to
-  ``AbstractWorker.attached_workers``.
+Renamed events:
 
-* ``BotMaster.attached_slaves`` event was renamed to
-  ``BotMaster.attached_workers``.
+.. list-table::
+   :header-rows: 1
 
-* ``BotMaster.slaveLost()`` event was renamed to ``BotMaster.workerLost()``.
+   * - Old name
+     - New name
+
+   * - ``AbstractBuildSlave.attached_slaves``
+     - ``AbstractWorker.attached_workers``
+
+   * - ``BotMaster.attached_slaves``
+     - ``BotMaster.attached_workers``
+
+   * - ``BotMaster.slaveLost()``
+     - ``BotMaster.workerLost()``
