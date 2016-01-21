@@ -121,12 +121,12 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                {"mData": null, "sWidth": "5%", "sTitle": "", bSortable: false},
-                {"mData": null, "sWidth": "10%", "sTitle": "Priority", bSortable: false},
-                {"mData": null, "sWidth": "21%", "sTitle": "When"},
+                {"mData": null, "sWidth": "4%", "sTitle": "", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Priority", bSortable: false},
+                {"mData": null, "sWidth": "17%", "sTitle": "When"},
                 {"mData": null, "sWidth": "21%", "sTitle": "Waiting"},
-                {"mData": null, "sWidth": "23%", "sTitle": "Branch"},
-                {"mData": "brid", "sWidth": "22%"}
+                {"mData": null, "sWidth": "21%", "sTitle": "Branch"},
+                {"mData": "brid", "sWidth": "17%"}
             ];
 
             options.aoColumnDefs = [

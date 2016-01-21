@@ -35,7 +35,7 @@ define(function (require) {
 
             options.aoColumns = [
                 { "mData": null, "sWidth": "4%", bSortable: false },
-                { "mData": null, "sWidth": "7%", bSortable: false },
+                { "mData": null, "sWidth": "10%", bSortable: false },
                 { "mData": "builderFriendlyName", "sWidth": "28%" },
                 { "mData": "sources", "sWidth": "10%" },
                 { "mData": "reason", "sWidth": "30%" },
