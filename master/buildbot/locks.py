@@ -197,10 +197,10 @@ class RealWorkerLock:
     def __init__(self, lockid):
         self.name = lockid.name
         self.maxCount = lockid.maxCount
-        self.maxCountForSlave = lockid.maxCountForWorker
+        self.maxCountForWorker = lockid.maxCountForWorker
         self.description = "<WorkerLock(%s, %s, %s)>" % (self.name,
                                                          self.maxCount,
-                                                         self.maxCountForSlave)
+                                                         self.maxCountForWorker)
         self.locks = {}
 
     def __repr__(self):
@@ -209,8 +209,8 @@ class RealWorkerLock:
     def getLock(self, worker):
         workername = worker.workername
         if workername not in self.locks:
-            maxCount = self.maxCountForSlave.get(workername,
-                                                 self.maxCount)
+            maxCount = self.maxCountForWorker.get(workername,
+                                                  self.maxCount)
             lock = self.locks[workername] = BaseLock(self.name, maxCount)
             desc = "<WorkerLock(%s, %s)[%s] %d>" % (self.name, maxCount,
                                                     workername, id(lock))

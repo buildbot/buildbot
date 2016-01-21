@@ -468,6 +468,9 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:class:`buildbot.locks.RealSlaveLock`
      - :py:class:`buildbot.locks.RealWorkerLock`
 
+   * - :py:attr:`buildbot.locks.RealSlaveLock.maxCountForSlave`
+     - :py:attr:`buildbot.locks.RealWorkerLock.maxCountForWorker`
+
 Other changes:
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
