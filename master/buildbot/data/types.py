@@ -169,6 +169,11 @@ class List(Type):
             for msg in self.of.validate("%s[%d]" % (name, idx), elt):
                 yield msg
 
+    def valueFromString(self, arg):
+        # valueFromString is used to process URL args, which come one at
+        # a time, so we defer to the `of`
+        return self.of.valueFromString(arg)
+
     def getSpec(self):
         return dict(type=self.name,
                     of=self.of.getSpec())

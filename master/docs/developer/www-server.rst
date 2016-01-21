@@ -145,7 +145,7 @@ For example, ``http://build.example.org/api/v2/scheduler?name=smoketest`` select
 Filters can use any of the operators listed below, with query parameters of the form ``{field}__{operator}={value}``.
 
 ``eq``
-    equality, or with the same parameter appearing multiple times, set membership
+    equality, or with the same parameter appearing multiple times, equality with one of the given values (so `foo__eq=x&foo__eq=y` would match resources where foo is `x` or `y`)
 ``ne``
     inequality, or set exclusion
 ``lt``
@@ -156,6 +156,8 @@ Filters can use any of the operators listed below, with query parameters of the 
     select resources where the field's value is greater than ``{value}``
 ``ge``
     select resources where the field's value is greater than or equal to ``{value}``
+``contains``
+    select resources where the field's value contains ``{value}``
 
 For example:
 

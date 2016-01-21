@@ -7,7 +7,7 @@ Release Notes for Buildbot |version|
     changes can be given a subsection of their own.
 
 ..
-    NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b{1,2}
+    NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b{1,2,3,4,5}
     into one single set of notes.  Also, link prominently to the migration guide.
 
 The following are the release notes for Buildbot |version|
@@ -20,8 +20,6 @@ Master
 Features
 ~~~~~~~~
 
-* Builders ui page has improved tag filtering capabilities
-
 Fixes
 ~~~~~
 
@@ -31,20 +29,11 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* properties object is now directly present in build, and not in build_status.
-  This should not change much unless you try to access your properties via step.build.build_status.
-  Remember that with PropertiesMixin, you can access properties via getProperties on the steps, and on the builds objects.
-
 Slave
 -----
 
 Features
 ~~~~~~~~
-
-* The :class:`DockerLatentWorker` image attribute is now renderable (can take properties in account).
-
-* The :class:`DockerLatentWorker` sets environment variables describing how to connect to the master.
-  Example dockerfiles can be found in ``master/contrib/docker``.
 
 Fixes
 ~~~~~
@@ -59,7 +48,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0b4..master
+   git log v0.9.0b5..master
 
 Older Versions
 --------------
@@ -70,6 +59,8 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.9.0b6
+    0.9.0b5
     0.9.0b4
     0.9.0b3
     0.9.0b2
