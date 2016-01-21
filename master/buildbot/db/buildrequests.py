@@ -295,7 +295,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getPrioritizedBuildRequestsInQueue(self, queue=None, _master_objectid=None):
+    def getPrioritizedBuildRequestsInQueue(self, queue, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -327,10 +327,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 .where(reqs_tbl.c.results == RESUME) \
                 .where(reqs_tbl.c.mergebrid == None)
 
-            if queue is None:
-                buildersqueue = pending.alias('pending').select().union_all(resumebuilds.alias('resume').select())
-
-            elif queue == 'unclaimed':
+            if queue == 'unclaimed':
                 buildersqueue = pending
 
             elif queue == 'resume':
