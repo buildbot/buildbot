@@ -141,7 +141,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 .. index:: Buildstep Parameter; locks
 
 ``locks``
-    a list of ``Locks`` (instances of :class:`buildbot.locks.SlaveLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
+    a list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
     Alternatively this could be a renderable that returns this list during build execution.
     This lets you defer picking the locks to acquire until the build step is about to start running.
     The ``Locks`` will be released when the step is complete.

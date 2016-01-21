@@ -460,7 +460,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in self.locks]
-        # then narrow SlaveLocks down to the worker that this build is being
+        # then narrow WorkerLocks down to the worker that this build is being
         # run on
         self.locks = [(l.getLock(self.build.workerforbuilder.worker), la)
                       for l, la in self.locks]

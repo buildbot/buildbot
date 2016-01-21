@@ -30,7 +30,7 @@ class FakeBotMaster(service.AsyncMultiService):
             self.locks[lockid] = lockid.lockClass(lockid)
         # if the master.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and SlaveLock (marker) instances
+        # that this requires that MasterLock and WorkerLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 

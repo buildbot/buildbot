@@ -17,8 +17,10 @@
 from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import define_old_worker_class
 from twisted.internet import defer
 from twisted.python import log
+
 
 if False:  # for debugging
     debuglog = log.msg
@@ -194,9 +196,9 @@ class RealSlaveLock:
         self.name = lockid.name
         self.maxCount = lockid.maxCount
         self.maxCountForSlave = lockid.maxCountForSlave
-        self.description = "<SlaveLock(%s, %s, %s)>" % (self.name,
-                                                        self.maxCount,
-                                                        self.maxCountForSlave)
+        self.description = "<WorkerLock(%s, %s, %s)>" % (self.name,
+                                                         self.maxCount,
+                                                         self.maxCountForSlave)
         self.locks = {}
 
     def __repr__(self):
@@ -208,8 +210,8 @@ class RealSlaveLock:
             maxCount = self.maxCountForSlave.get(slavename,
                                                  self.maxCount)
             lock = self.locks[slavename] = BaseLock(self.name, maxCount)
-            desc = "<SlaveLock(%s, %s)[%s] %d>" % (self.name, maxCount,
-                                                   slavename, id(lock))
+            desc = "<WorkerLock(%s, %s)[%s] %d>" % (self.name, maxCount,
+                                                    slavename, id(lock))
             lock.description = desc
             self.locks[slavename] = lock
         return self.locks[slavename]
@@ -220,7 +222,7 @@ class LockAccess(util.ComparableMixin):
     """ I am an object representing a way to access a lock.
 
     @param lockid: LockId instance that should be accessed.
-    @type  lockid: A MasterLock or SlaveLock instance.
+    @type  lockid: A MasterLock or WorkerLock instance.
 
     @param mode: Mode of accessing the lock.
     @type  mode: A string, either 'counting' or 'exclusive'.
@@ -235,7 +237,7 @@ class LockAccess(util.ComparableMixin):
         if not _skipChecks:
             # these checks fail with mock < 0.8.0 when lockid is a Mock
             # TODO: remove this in Buildbot-0.9.0+
-            assert isinstance(lockid, (MasterLock, SlaveLock))
+            assert isinstance(lockid, (MasterLock, WorkerLock))
             assert mode in ['counting', 'exclusive']
 
 
@@ -244,7 +246,7 @@ class BaseLockId(util.ComparableMixin):
     """ Abstract base class for LockId classes.
 
     Sets up the 'access()' function for the LockId's available to the user
-    (MasterLock and SlaveLock classes).
+    (MasterLock and WorkerLock classes).
     Derived classes should add
     - Comparison with the L{util.ComparableMixin} via the L{compare_attrs}
       class variable.
@@ -264,7 +266,7 @@ class BaseLockId(util.ComparableMixin):
         return self.access('counting')
 
 
-# master.cfg should only reference the following MasterLock and SlaveLock
+# master.cfg should only reference the following MasterLock and WorkerLock
 # classes. They are identifiers that will be turned into real Locks later,
 # via the BotMaster.getLockByID method.
 class MasterLock(BaseLockId):
@@ -289,7 +291,7 @@ class MasterLock(BaseLockId):
         self.maxCount = maxCount
 
 
-class SlaveLock(BaseLockId):
+class WorkerLock(BaseLockId):
 
     """I am a semaphore that limits simultaneous actions on each buildslave.
 
@@ -322,3 +324,4 @@ class SlaveLock(BaseLockId):
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
         self._maxCountForSlaveList = tuple(sorted(self.maxCountForSlave.items()))
+define_old_worker_class(locals(), WorkerLock)

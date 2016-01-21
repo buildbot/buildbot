@@ -332,7 +332,7 @@ class TestAbstractWorker(unittest.TestCase):
         master = self.master
         bsmanager = master.workers
         yield master.startService()
-        lock = locks.SlaveLock('lock')
+        lock = locks.WorkerLock('lock')
         bs = ConcreteWorker('bot', 'pass', locks=[lock.access("counting")])
         bs.setServiceParent(bsmanager)
 

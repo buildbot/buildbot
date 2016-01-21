@@ -16,7 +16,7 @@
 import operator
 
 from buildbot import interfaces
-from buildbot.locks import SlaveLock
+from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import LoggingBuildStep
@@ -227,7 +227,7 @@ class TestBuild(unittest.TestCase):
         workerforbuilder1 = Mock()
         workerforbuilder2 = Mock()
 
-        l = SlaveLock('lock')
+        l = WorkerLock('lock')
         counting_access = l.access('counting')
         real_lock = b.builder.botmaster.getLockByID(l)
 
@@ -281,7 +281,7 @@ class TestBuild(unittest.TestCase):
     def testBuildLocksAcquired(self):
         b = self.build
 
-        l = SlaveLock('lock')
+        l = WorkerLock('lock')
         claimCount = [0]
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
@@ -322,7 +322,7 @@ class TestBuild(unittest.TestCase):
         eSlavebuilder.worker = self.slave
         cSlavebuilder.worker = self.slave
 
-        l = SlaveLock('lock', 2)
+        l = WorkerLock('lock', 2)
         claimLog = []
         realLock = self.master.botmaster.getLockByID(l).getLock(self.slave)
 
@@ -362,7 +362,7 @@ class TestBuild(unittest.TestCase):
     def testBuildWaitingForLocks(self):
         b = self.build
 
-        l = SlaveLock('lock')
+        l = WorkerLock('lock')
         claimCount = [0]
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
@@ -394,7 +394,7 @@ class TestBuild(unittest.TestCase):
     def testStopBuildWaitingForLocks(self):
         b = self.build
 
-        l = SlaveLock('lock')
+        l = WorkerLock('lock')
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l) \
@@ -426,7 +426,7 @@ class TestBuild(unittest.TestCase):
     def testStopBuildWaitingForLocks_lostRemote(self):
         b = self.build
 
-        l = SlaveLock('lock')
+        l = WorkerLock('lock')
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l) \
@@ -460,7 +460,7 @@ class TestBuild(unittest.TestCase):
     def testStopBuildWaitingForStepLocks(self):
         b = self.build
 
-        l = SlaveLock('lock')
+        l = WorkerLock('lock')
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l) \

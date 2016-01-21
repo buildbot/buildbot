@@ -308,7 +308,12 @@ setup_args = {
                 ('svn.split_file_branches', 'split_file_branches'),
                 ('svn.split_file_alwaystrunk', 'split_file_alwaystrunk')]),
             ('buildbot.config', ['BuilderConfig']),
-            ('buildbot.locks', ['MasterLock', 'SlaveLock']),
+            ('buildbot.locks', [
+                'MasterLock',
+                'WorkerLock',
+                # deprecated, use WorkerLock
+                'SlaveLock'
+            ]),
             ('buildbot.manhole', [
                 'AuthorizedKeysManhole', 'PasswordManhole', 'TelnetManhole']),
             ('buildbot.process.builder', [

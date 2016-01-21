@@ -125,7 +125,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock1 = mock.Mock(spec=locks.MasterLock)
         lock1.name = "masterlock"
 
-        lock2 = mock.Mock(spec=locks.SlaveLock)
+        lock2 = mock.Mock(spec=locks.WorkerLock)
         lock2.name = "slavelock"
 
         renderedLocks = [False]
@@ -148,7 +148,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock1 = mock.Mock(spec=locks.MasterLock)
         lock1.name = "masterlock"
 
-        lock2 = mock.Mock(spec=locks.SlaveLock)
+        lock2 = mock.Mock(spec=locks.WorkerLock)
         lock2.name = "slavelock"
 
         self.setupStep(self.FakeBuildStep(locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))

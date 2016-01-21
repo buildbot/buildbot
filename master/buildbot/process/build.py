@@ -263,7 +263,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.setupWorkerForBuilder(workerforbuilder)
         worker.updateWorkerStatus(buildStarted=self)
 
-        # then narrow SlaveLocks down to the right worker
+        # then narrow WorkerLocks down to the right worker
         self.locks = [(l.getLock(self.workerforbuilder.worker), a)
                       for l, a in self.locks]
         self.conn = workerforbuilder.worker.conn

@@ -224,6 +224,9 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.process.buildstep.BuildStep.getSlaveName`
      - :py:meth:`buildbot.process.buildstep.BuildStep.getWorkerName`
 
+   * - :py:class:`buildbot.locks.SlaveLock`
+     - :py:class:`buildbot.locks.WorkerLock`
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::
@@ -536,6 +539,9 @@ Other changes:
 
 * ``buildbot.plugins.util.enforceChosenSlave`` is deprecated in favor of
   ``enforceChosenWorker``.
+
+* ``buildbot.plugins.util.SlaveLock`` is deprecated in favor of
+  ``WorkerLock``.
 
 ``BuildmasterConfig`` changes
 -----------------------------

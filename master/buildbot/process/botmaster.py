@@ -237,15 +237,15 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.
-        @param lockid: a locks.MasterLock or locks.SlaveLock instance
+        @param lockid: a locks.MasterLock or locks.WorkerLock instance
         @return: a locks.RealMasterLock or locks.RealSlaveLock instance
         """
-        assert isinstance(lockid, (locks.MasterLock, locks.SlaveLock))
+        assert isinstance(lockid, (locks.MasterLock, locks.WorkerLock))
         if lockid not in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         # if the master.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and SlaveLock (marker) instances
+        # that this requires that MasterLock and WorkerLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
