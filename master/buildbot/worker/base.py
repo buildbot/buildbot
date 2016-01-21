@@ -194,7 +194,7 @@ class AbstractWorker(service.BuildbotService, object):
             return  # oh well..
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
-    def _applySlaveInfo(self, info):
+    def _applyWorkerInfo(self, info):
         if not info:
             return
 
@@ -204,10 +204,10 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_status.setVersion(info.get("version", "(unknown)"))
 
     @defer.inlineCallbacks
-    def _getSlaveInfo(self):
-        buildslave = yield self.master.data.get(
+    def _getWorkerInfo(self):
+        worker = yield self.master.data.get(
             ('buildslaves', self.workerid))
-        self._applySlaveInfo(buildslave['slaveinfo'])
+        self._applyWorkerInfo(worker['slaveinfo'])
 
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
@@ -222,7 +222,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.workerid = yield self.master.data.updates.findBuildslaveId(
             self.name)
 
-        yield self._getSlaveInfo()
+        yield self._getWorkerInfo()
         yield service.BuildbotService.startService(self)
 
     @defer.inlineCallbacks
@@ -356,7 +356,7 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.worker_status.setConnected(True)
 
-        self._applySlaveInfo(conn.info)
+        self._applyWorkerInfo(conn.info)
         self.worker_commands = conn.info.get("slave_commands", {})
         self.worker_environ = conn.info.get("environ", {})
         self.worker_basedir = conn.info.get("basedir", None)
