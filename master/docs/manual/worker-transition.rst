@@ -353,6 +353,21 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        method positional argument ``slave`` was renamed
      - ``worker``
 
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_commands`
+     - :py:attr:`buildbot.worker.AbstractWorker.worker_commands`
+
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_environ`
+     - :py:attr:`buildbot.worker.AbstractWorker.worker_environ`
+
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_basedir`
+     - :py:attr:`buildbot.worker.AbstractWorker.worker_basedir`
+
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_system`
+     - :py:attr:`buildbot.worker.AbstractWorker.worker_system`
+
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.buildslaveid`
+     - :py:attr:`buildbot.worker.AbstractWorker.workerid`
+
 
    * - :py:meth:`buildbot.process.slavebuilder.LatentSlaveBuilder`
        constructor positional argument ``slave`` was renamed
@@ -446,22 +461,6 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
    * - :py:meth:`buildbot.status.builder.BuilderStatus.setSlavenames`
      - :py:meth:`buildbot.status.builder.BuilderStatus.setWorkernames`
-
-
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_commands`
-     - :py:attr:`buildbot.worker.AbstractWorker.worker_commands`
-
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_environ`
-     - :py:attr:`buildbot.worker.AbstractWorker.worker_environ`
-
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_basedir`
-     - :py:attr:`buildbot.worker.AbstractWorker.worker_basedir`
-
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slave_system`
-     - :py:attr:`buildbot.worker.AbstractWorker.worker_system`
-
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.buildslaveid`
-     - :py:attr:`buildbot.worker.AbstractWorker.workerid`
 
 
    * - :py:meth:`buildbot.process.botmaster.BotMaster.slaveLost`
