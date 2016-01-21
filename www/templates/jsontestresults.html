@@ -1,17 +1,16 @@
 {% extends "test_results.html" %}
 
 {% block suites %}
-
+   <div class="content container">
     {% for suite in data.suites %}
         {% if suite.summary.result %}
             <div class="row">
-                <h2>Suite type: {{ suite.name }}</h2>
-                {% if data.utr_prefix %}
+                <h4>Suite type: {{ suite.name }}</h4>
+                {% if data.utrPrefix %}
                     <a class="label label-default collapse" data-target="#suiteCommand" href="#">Command to run locally</a>
 
                     <div id="suiteCommand" class="report-command">
-                        <input class="report-command-text" type="text" value="{{ data.utr_prefix }} --suite={{ suite.name }}" onclick="this.select();"
-                               readonly/>
+                        <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }}" onclick="this.select();" readonly/>
                     </div>
                 {% endif %}
             </div>
@@ -23,15 +22,14 @@
 
         {% if suite.artifacts %}
             <div class="row" id="suite_artifacts">
-                <h2>Suite Artifacts:</h2>
+                <h4>Suite Artifacts:</h4>
 
                 <div class="clearfix"></div>
                 {% for artifact in suite.artifacts %}
                     <div class="artifact">
-                        <a target="_blank" href="{{ artifact }}">{{ artifact }}</a>
+                        <a target="_blank" href="{{ urljoin(path_to_artifacts, artifact) }}">{{ artifact }}</a>
                     </div>
                 {% endfor %}
-            </div>
             </div>
         {% endif %}
         <div class="table-holder">
@@ -78,6 +76,17 @@
                                 </div>
                             {% endif %}
 
+                            {% if test.artifacts %}
+                                <div class="test-image-list">
+                                    {% for image in test.artifacts %}
+                                        <div class="test-image">
+                                            <div class="test-image-title">{{ image }}</div>
+                                            <img src="{{ urljoin(path_to_artifacts, image) }}" alt="Description"/>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
                             {% if test.message %}
                                 <div><b>Message:</b></div>
                                 <div class="formatted_text">{{ test.message }}</div>
@@ -95,12 +104,12 @@
                         {% if test.time %}
                             <td data-time="{{ test.time }}">{{ test.time }}</td>
                         {% else %}
-                            <td>N/A</td> ̰                                      ̰
+                            <td>N/A</td>
                         {% endif %}
                         <td class="txt-align-left first-child ">
                             {% for artifact in test.artifacts %}
                                 <div class="artifact">
-                                    <a target="_blank" href="{{ artifact }}">{{ artifact }}</a>
+                                    <a target="_blank" href="{{ urljoin(path_to_artifacts, artifact) }}">{{ artifact }}</a>
                                 </div>
                             {% endfor %}
                         </td>
@@ -128,8 +137,7 @@
             <a class="back-top-top" href="#top">Back to top</a>
         </div>
 
-        </div>
-
     {% endfor %}
 
+</div>
 {% endblock %}
