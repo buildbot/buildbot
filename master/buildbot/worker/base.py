@@ -384,13 +384,13 @@ class AbstractWorker(service.BuildbotService, object):
             # reasonable fallback
             self.path_module = namedModule("posixpath")
         log.msg("bot attached")
-        self.messageReceivedFromSlave()
+        self.messageReceivedFromWorker()
         self.stopMissingTimer()
         self.master.status.workerConnected(self.name)
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
 
-    def messageReceivedFromSlave(self):
+    def messageReceivedFromWorker(self):
         now = time.time()
         self.lastMessageReceived = now
         self.worker_status.setLastMessageReceived(now)

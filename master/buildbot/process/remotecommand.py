@@ -181,7 +181,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         @type  updates: list of [object, int]
         @param updates: list of updates from the remote command
         """
-        self.buildslave.messageReceivedFromSlave()
+        self.buildslave.messageReceivedFromWorker()
         max_updatenum = 0
         for (update, num) in updates:
             # log.msg("update[%d]:" % num)
@@ -207,7 +207,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         @rtype: None
         """
-        self.buildslave.messageReceivedFromSlave()
+        self.buildslave.messageReceivedFromWorker()
         # call the real remoteComplete a moment later, but first return an
         # acknowledgement so the worker can retire the completion message.
         if self.active:

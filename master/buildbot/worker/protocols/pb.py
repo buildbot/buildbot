@@ -275,8 +275,8 @@ class Connection(base.Connection, pb.Avatar):
     # perspective methods called by the worker
 
     def perspective_keepalive(self):
-        self.buildslave.messageReceivedFromSlave()
+        self.buildslave.messageReceivedFromWorker()
 
     def perspective_shutdown(self):
-        self.buildslave.messageReceivedFromSlave()
+        self.buildslave.messageReceivedFromWorker()
         self.buildslave.shutdownRequested()

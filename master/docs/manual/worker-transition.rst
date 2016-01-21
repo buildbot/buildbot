@@ -375,6 +375,9 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.removeSlaveBuilder`
      - :py:meth:`buildbot.worker.AbstractWorker.removeWorkerForBuilder`
 
+   * - :py:meth:`buildbot.buildslave.AbstractBuildSlave.messageReceivedFromSlave`
+     - :py:meth:`buildbot.worker.AbstractWorker.messageReceivedFromWorker`
+
 
    * - :py:meth:`buildbot.process.slavebuilder.LatentSlaveBuilder`
        constructor positional argument ``slave`` was renamed
