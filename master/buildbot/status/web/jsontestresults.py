@@ -24,7 +24,7 @@ class JSONTestResource(HtmlResource):
         self.log = log
         self.step_status = step_status
 
-    def get_reported_artifact(self, build):
+    def get_artifacts_path(self, build):
         artifacts = build.artifacts.values() if build.artifacts else []
         if len(artifacts) > 0:
             path = [value for value in artifacts if value.lower().endswith('reportedartifacts/')]
@@ -44,7 +44,7 @@ class JSONTestResource(HtmlResource):
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_build'] = path_to_build(req, b)
         cxt['build_number'] = b.getNumber()
-        cxt['path_to_artifacts'] = self.get_reported_artifact(b)
+        cxt['path_to_artifacts'] = self.get_artifacts_path(b)
         cxt['urljoin'] = urljoin
         cxt['selectedproject'] = project
 
