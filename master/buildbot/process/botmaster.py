@@ -50,8 +50,6 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.shuttingDown = False
 
-        self.lastSlavePortnum = None
-
         # subscription to new build requests
         self.buildrequest_consumer = None
 
