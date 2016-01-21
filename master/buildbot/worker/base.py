@@ -835,17 +835,6 @@ class AbstractLatentWorker(AbstractWorker):
             log.msg("Substantiation complete, immediately terminating.")
 
         if self.conn is not None:
-            # this could be called when the worker needs to shut down, such as
-            # in BotMaster.removeSlave, *or* when a new worker requests a
-            # connection when we already have a worker. It's not clear what to
-            # do in the second case: this shouldn't happen, and if it
-            # does...if it's a latent worker, shutting down will probably kill
-            # something we want...but we can't know what the status is. So,
-            # here, we just do what should be appropriate for the first case,
-            # and put our heads in the sand for the second, at least for now.
-            # The best solution to the odd situation is removing it as a
-            # possibility: make the master in charge of connecting to the
-            # worker, rather than vice versa. TODO.
             yield defer.DeferredList([
                 AbstractWorker.disconnect(self),
                 self.insubstantiate(fast)

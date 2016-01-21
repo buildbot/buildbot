@@ -1014,9 +1014,6 @@ class IBuilderControl(Interface):
         event to this builder's column in the waterfall display containing the
         results of the ping. Note that this may not fail for a long time, it is
         implemented in terms of the timeout on the underlying TCP connection."""
-        # TODO: this ought to live in ISlaveControl, maybe with disconnect()
-        # or something. However the event that is emitted is most useful in
-        # the Builder column, so it kinda fits here too.
 
 
 class IBuildRequestControl(Interface):
