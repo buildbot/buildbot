@@ -659,3 +659,6 @@ Renamed events:
 
    * - ``AttachedSlavesWatcher``
      - ``AttachedWorkersWatcher``
+
+   * - ``attached_slaves``
+     - ``attached_workers``

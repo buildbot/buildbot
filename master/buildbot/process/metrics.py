@@ -308,17 +308,17 @@ class AttachedWorkersWatcher(object):
                                  level=ALARM_WARN)
             return
         botmaster_count = h.get('BotMaster.attached_workers')
-        buildslave_count = h.get('AbstractWorker.attached_workers')
+        worker_count = h.get('AbstractWorker.attached_workers')
 
         # We let these be off by one since they're counted at slightly
         # different times
-        if abs(botmaster_count - buildslave_count) > 1:
+        if abs(botmaster_count - worker_count) > 1:
             level = ALARM_WARN
         else:
             level = ALARM_OK
 
-        MetricAlarmEvent.log('attached_slaves',
-                             msg='%s %s' % (botmaster_count, buildslave_count),
+        MetricAlarmEvent.log('attached_workers',
+                             msg='%s %s' % (botmaster_count, worker_count),
                              level=level)
 
 
