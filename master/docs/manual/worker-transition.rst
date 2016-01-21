@@ -605,3 +605,6 @@ Metrics
 
 * ``AbstractBuildSlave.attached_slaves`` event was renamed to
   ``AbstractWorker.attached_workers``.
+
+* ``BotMaster.attached_slaves`` event was renamed to
+  ``BotMaster.attached_workers``.
