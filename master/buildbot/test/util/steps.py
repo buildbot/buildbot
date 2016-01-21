@@ -121,9 +121,6 @@ class BuildStepMixin(object):
         originalGetWorkerCommandVersion = self.step.build.getWorkerCommandVersion
 
         def getWorkerCommandVersion(cmd, oldversion):
-            if cmd == 'shell':
-                if hasattr(self, 'slaveShellCommandVersion'):
-                    return self.slaveShellCommandVersion
             return originalGetWorkerCommandVersion(cmd, oldversion)
 
         return getWorkerCommandVersion
