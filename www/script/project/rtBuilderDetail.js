@@ -121,18 +121,18 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                {"mData": null, "sWidth": "4%", "sTitle": "", bSortable: false},
-                {"mData": null, "sWidth": "21%", "sTitle": "Priority", bSortable: false},
+                {"mData": null, "sWidth": "5%", "sTitle": "", bSortable: false},
+                {"mData": null, "sWidth": "10%", "sTitle": "Priority", bSortable: false},
                 {"mData": null, "sWidth": "21%", "sTitle": "When"},
                 {"mData": null, "sWidth": "21%", "sTitle": "Waiting"},
-                {"mData": null, "sWidth": "27%", "sTitle": "Branch"},
-                {"mData": null, "sWidth": "6%", "sTitle": ""}
+                {"mData": null, "sWidth": "23%", "sTitle": "Branch"},
+                {"mData": "brid", "sWidth": "22%"}
             ];
 
             options.aoColumnDefs = [
                 {
                     "aTargets": [0],
-                    "sClass": "txt-align-left",
+                    "sClass": "txt-align-center",
                     "mRender": function (data, type, full) {
                         // If the build result is not resume then we are in the normal queue and not the
                         // resume queue
@@ -141,7 +141,7 @@ define(function (require) {
                 },
                 {
                     "aTargets": [1],
-                    "sClass": "txt-align-left",
+                    "sClass": "txt-align-center",
                     "mRender": function (data, type, full) {
                         return helpers.getPriorityData(data, full);
                     }
@@ -169,6 +169,13 @@ define(function (require) {
                     "sClass": "txt-align-right",
                     "mRender": function (data, type, full) {
                         return hbBuilderDetail({removeBuildSelector: true, data: full});
+                    }
+                },
+                {
+                    "aTargets": [ 6 ],
+                    "sClass": "select-input",
+                    "mRender": function (data, type, full) {
+                        return hbBuilderDetail({input: 'true', brid: full.brid});
                     }
                 }
             ];

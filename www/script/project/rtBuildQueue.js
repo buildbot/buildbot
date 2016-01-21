@@ -35,10 +35,10 @@ define(function (require) {
 
             options.aoColumns = [
                 { "mData": null, "sWidth": "4%", bSortable: false },
-                { "mData": null, "sWidth": "16%", bSortable: false },
+                { "mData": null, "sWidth": "7%", bSortable: false },
                 { "mData": "builderFriendlyName", "sWidth": "28%" },
                 { "mData": "sources", "sWidth": "10%" },
-                { "mData": "reason", "sWidth": "21%" },
+                { "mData": "reason", "sWidth": "30%" },
                 { "mData": "slaves", "sWidth": "10%" },
                 { "mData": "brid", "sWidth": "6%" }
             ];
@@ -46,7 +46,7 @@ define(function (require) {
             options.aoColumnDefs = [
                 {
                     "aTargets": [0],
-                    "sClass": "txt-align-left",
+                    "sClass": "txt-align-center",
                     "mRender": function (data, type, full) {
                         // If the build result is not resume then we are in the normal queue and not the
                         // resume queue
@@ -55,7 +55,7 @@ define(function (require) {
                 },
                 {
                     "aTargets": [1],
-                    "sClass": "txt-align-left",
+                    "sClass": "txt-align-center",
                     "mRender": function (data, type, full) {
                         return helpers.getPriorityData(data, full);
                     }
