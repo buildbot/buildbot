@@ -249,14 +249,6 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:class:`buildbot.buildslave.manager.BuildslaveManager`
      - :py:class:`buildbot.worker.manager.WorkerManager`
 
-   * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.name` metric
-       mesurement class name changed from ``BuildslaveManager``
-     - to ``WorkerManager``
-
-   * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.managed_services_name`
-       metric mesurement managed service name changed from ``buildslaves``
-     - to ``workers``
-
    * - :py:attr:`buildbot.buildslave.manager.BuildslaveManager.slaves`
      - :py:attr:`buildbot.worker.manager.WorkerManager.workers`
 
@@ -598,3 +590,15 @@ Properties
 
   :py:class:`~buildbot.worker.AbstractWorker` now sets ``workername``
   property with source ``Worker`` which should be used.
+
+Metrics
+-------
+
+* :py:attr:`buildbot.worker.manager.WorkerManager.name`
+  (previously ``buildbot.buildslave.manager.BuildslaveManager.name``) metric
+  mesurement class name changed from ``BuildslaveManager`` to ``WorkerManager``
+
+* :py:attr:`buildbot.worker.manager.WorkerManager.managed_services_name`
+  (previously ``buildbot.buildslave.manager.BuildslaveManager.managed_services_name`)
+  metric mesurement managed service name changed from ``buildslaves`` to
+  ``workers``
