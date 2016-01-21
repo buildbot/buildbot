@@ -188,7 +188,7 @@ class RealMasterLock(BaseLock):
         BaseLock.__init__(self, lockid.name, lockid.maxCount)
         self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
 
-    def getLock(self, slave):
+    def getLock(self, worker):
         return self
 
 
@@ -206,17 +206,17 @@ class RealWorkerLock:
     def __repr__(self):
         return self.description
 
-    def getLock(self, slave):
-        slavename = slave.workername
-        if slavename not in self.locks:
-            maxCount = self.maxCountForSlave.get(slavename,
+    def getLock(self, worker):
+        workername = worker.workername
+        if workername not in self.locks:
+            maxCount = self.maxCountForSlave.get(workername,
                                                  self.maxCount)
-            lock = self.locks[slavename] = BaseLock(self.name, maxCount)
+            lock = self.locks[workername] = BaseLock(self.name, maxCount)
             desc = "<WorkerLock(%s, %s)[%s] %d>" % (self.name, maxCount,
-                                                    slavename, id(lock))
+                                                    workername, id(lock))
             lock.description = desc
-            self.locks[slavename] = lock
-        return self.locks[slavename]
+            self.locks[workername] = lock
+        return self.locks[workername]
 
 
 class LockAccess(util.ComparableMixin):
@@ -295,26 +295,26 @@ class MasterLock(BaseLockId):
 
 class WorkerLock(BaseLockId, WorkerAPICompatMixin):
 
-    """I am a semaphore that limits simultaneous actions on each buildslave.
+    """I am a semaphore that limits simultaneous actions on each worker.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.
     Only a limited number of such builds or steps will be able to run
-    simultaneously on any given buildslave. By default this number is one,
+    simultaneously on any given worker. By default this number is one,
     but my maxCount parameter can be raised to allow two or three or more
-    operations to happen on a single buildslave at the same time.
+    operations to happen on a single worker at the same time.
 
     Use this to protect a resource that is shared among all the builds taking
     place on each worker, for example to limit CPU or memory load on an
     underpowered machine.
 
-    Each buildslave will get an independent copy of this semaphore. By
+    Each worker will get an independent copy of this semaphore. By
     default each copy will use the same owner count (set with maxCount), but
     you can provide maxCountForWorker with a dictionary that maps workername to
     owner count, to allow some workers more parallelism than others.
 
     """
 
-    compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
+    compare_attrs = ['name', 'maxCount', '_maxCountForWorkerList']
     lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForWorker=None,
@@ -336,5 +336,5 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
         self._registerOldWorkerAttr("maxCountForWorker")
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForSlaveList = tuple(sorted(self.maxCountForWorker.items()))
+        self._maxCountForWorkerList = tuple(sorted(self.maxCountForWorker.items()))
 define_old_worker_class(locals(), WorkerLock)
