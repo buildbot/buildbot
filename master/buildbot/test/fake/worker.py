@@ -29,7 +29,7 @@ class FakeWorker(object):
         self.properties = properties.Properties()
         self.workerid = 383
 
-    def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
+    def updateWorkerStatus(self, buildStarted=None, buildFinished=None):
         pass
 
     def acquireLocks(self):

@@ -332,7 +332,7 @@ class AbstractWorker(service.BuildbotService, object):
         else:
             return defer.succeed(None)
 
-    def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
+    def updateWorkerStatus(self, buildStarted=None, buildFinished=None):
         # TODO
         pass
 
