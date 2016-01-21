@@ -86,21 +86,21 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         if self.worker:
             self.worker.buildFinished(self)
 
-    def attached(self, slave, commands):
+    def attached(self, worker, commands):
         """
-        @type  slave: L{buildbot.worker.Worker}
-        @param slave: the Worker that represents the worker as a whole
+        @type  worker: L{buildbot.worker.Worker}
+        @param worker: the Worker that represents the worker as a whole
         @type  commands: dict: string -> string, or None
         @param commands: provides the worker's version of each RemoteCommand
         """
         self.state = ATTACHING
         self.remoteCommands = commands  # maps command name to version
         if self.worker is None:
-            self.worker = slave
+            self.worker = worker
             self.worker.addSlaveBuilder(self)
         else:
-            assert self.worker == slave
-        log.msg("Worker %s attached to %s" % (slave.workername,
+            assert self.worker == worker
+        log.msg("Worker %s attached to %s" % (worker.workername,
                                               self.builder_name))
         d = defer.succeed(None)
 
