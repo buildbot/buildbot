@@ -349,8 +349,13 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.getSlaveCommandVersion`
      - :py:meth:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.getWorkerCommandVersion`
 
-   * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.attached` method positional argument
-       ``slave`` was renamed
+   * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.attached`
+       method positional argument ``slave`` was renamed
+     - ``worker``
+
+
+   * - :py:meth:`buildbot.process.slavebuilder.LatentSlaveBuilder`
+       constructor positional argument ``slave`` was renamed
      - ``worker``
 
 

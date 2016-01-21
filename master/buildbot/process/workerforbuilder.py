@@ -216,13 +216,13 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
 class LatentWorkerForBuilder(AbstractWorkerForBuilder):
 
-    def __init__(self, slave, builder):
+    def __init__(self, worker, builder):
         AbstractWorkerForBuilder.__init__(self)
-        self.worker = slave
+        self.worker = worker
         self.state = LATENT
         self.setBuilder(builder)
         self.worker.addSlaveBuilder(self)
-        log.msg("Latent worker %s attached to %s" % (slave.workername,
+        log.msg("Latent worker %s attached to %s" % (worker.workername,
                                                      self.builder_name))
 
     def prepare(self, builder_status, build):
