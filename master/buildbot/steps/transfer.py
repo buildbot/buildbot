@@ -159,18 +159,34 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class DirectoryUpload(_TransferBuildStep):
+class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     name = 'upload'
 
-    renderables = ['slavesrc', 'masterdest', 'url']
+    renderables = ['workersrc', 'masterdest', 'url']
 
-    def __init__(self, slavesrc, masterdest,
+    def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
-                 compress=None, url=None, **buildstep_kwargs):
+                 compress=None, url=None,
+                 slavesrc=None,  # deprecated, use `workersrc` instead
+                 **buildstep_kwargs
+                 ):
+        # Deprecated API support.
+        if slavesrc is not None:
+            on_deprecated_name_usage(
+                "'slavesrc' keyword argument is deprecated, "
+                "use 'workersrc' instead")
+            assert workersrc is None
+            workersrc = slavesrc
+
+        # Emulate that first two arguments are positional.
+        if workersrc is None or masterdest is None:
+            raise TypeError("__init__() takes at least 3 arguments")
+
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.slavesrc = slavesrc
+        self.workersrc = workersrc
+        self._registerOldWorkerAttr("workersrc")
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -183,7 +199,7 @@ class DirectoryUpload(_TransferBuildStep):
     def start(self):
         self.checkWorkerHasCommand("uploadDirectory")
 
-        source = self.slavesrc
+        source = self.workersrc
         masterdest = self.masterdest
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded

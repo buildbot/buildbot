@@ -260,6 +260,15 @@ Here is the complete list of changed API:
 
      - ``workersrc``
 
+
+   * - :py:attr:`buildbot.steps.transfer.DirectoryUpload.slavesrc`
+     - :py:attr:`~buildbot.steps.transfer.DirectoryUpload.workersrc`
+
+   * - :py:class:`buildbot.steps.transfer.DirectoryUpload`
+       constructor argument ``slavesrc`` was renamed to
+
+     - ``workersrc``
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::
