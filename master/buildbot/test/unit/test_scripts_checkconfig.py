@@ -101,7 +101,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                               'No module named test_scripts_checkconfig_does_not_exist'))
         self.flushLoggedErrors()
 
-    def test_failure_no_slaves(self):
+    def test_failure_no_workers(self):
         config = textwrap.dedent("""\
                 BuildmasterConfig={}
                 """)

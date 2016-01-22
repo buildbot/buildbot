@@ -126,7 +126,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock1.name = "masterlock"
 
         lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "slavelock"
+        lock2.name = "workerlock"
 
         renderedLocks = [False]
 
@@ -149,7 +149,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock1.name = "masterlock"
 
         lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "slavelock"
+        lock2.name = "workerlock"
 
         self.setupStep(self.FakeBuildStep(locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
         self.expectOutcome(result=SUCCESS)
@@ -1010,7 +1010,7 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_old_slave(self):
+    def test_example_old_worker(self):
         self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
                        slave_version={'*': "1.1"}, wantDefaultWorkdir=False)
         self.expectCommands(

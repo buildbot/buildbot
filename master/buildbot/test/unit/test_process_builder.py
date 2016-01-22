@@ -299,7 +299,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertIdentical(True, result)
 
         # worker requested as the wrong one
-        breq.properties = {'workername': 'slave4'}
+        breq.properties = {'workername': 'worker4'}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(False, result)
 
