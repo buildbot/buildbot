@@ -301,11 +301,14 @@ class UploadArtifact(ShellCommand):
             master = self.build.builder.botmaster.parent
             reuse = yield master.db.buildrequests.updateMergedBuildRequest(self.build.requests)
 
-        artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir,
-                                      br.id, FormatDatetime(mkdt(br.submittedAt)))
+        artifactPath  = "%s_%s_%s" % (self.build.builder.config.builddir, br.id, FormatDatetime(mkdt(br.submittedAt)))
+
+        artifactServerPath = self.build.getProperty("artifactServerPath", None)
+        if artifactServerPath is None:
+            self.build.setProperty("artifactServerPath", self.artifactServerURL + "/" + artifactPath, "UploadArtifact")
+
         if (self.artifactDirectory):
             artifactPath += "/%s" % self.artifactDirectory
-
 
         remotelocation = getRemoteLocation(self.artifactServer, self.artifactServerDir, artifactPath, self.artifact)
 
