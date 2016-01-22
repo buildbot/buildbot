@@ -129,7 +129,7 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         # properly. TODO: maybe pass the master's basedir all the way down
         # into the BuildStep so we can do this better.
         masterdest = os.path.expanduser(masterdest)
-        log.msg("FileUpload started, from slave %r to master %r"
+        log.msg("FileUpload started, from worker %r to master %r"
                 % (source, masterdest))
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
