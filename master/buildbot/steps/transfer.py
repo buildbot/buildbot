@@ -457,19 +457,33 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class StringDownload(_TransferBuildStep):
+class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
     name = 'string_download'
 
-    renderables = ['slavedest', 's']
+    renderables = ['workerdest', 's']
 
-    def __init__(self, s, slavedest,
+    def __init__(self, s, workerdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
+                 slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
+        # Deprecated API support.
+        if slavedest is not None:
+            on_deprecated_name_usage(
+                "'slavedest' keyword argument is deprecated, "
+                "use 'workerdest' instead")
+            assert workerdest is None
+            workerdest = slavedest
+
+        # Emulate that first two arguments are positional.
+        if workerdest is None:
+            raise TypeError("__init__() takes at least 3 arguments")
+
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.s = s
-        self.slavedest = slavedest
+        self.workerdest = workerdest
+        self._registerOldWorkerAttr("workerdest")
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -484,17 +498,17 @@ class StringDownload(_TransferBuildStep):
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        slavedest = self.slavedest
-        log.msg("StringDownload started, from master to worker %r" % slavedest)
+        workerdest = self.workerdest
+        log.msg("StringDownload started, from master to worker %r" % workerdest)
 
-        self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
+        self.descriptionDone = "downloading to %s" % os.path.basename(workerdest)
 
         # setup structures for reading the file
         fileReader = remotetransfer.StringFileReader(self.s)
 
         # default arguments
         args = {
-            'slavedest': slavedest,
+            'slavedest': workerdest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
@@ -507,26 +521,54 @@ class StringDownload(_TransferBuildStep):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class JSONStringDownload(StringDownload):
+class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
 
     name = "json_download"
 
-    def __init__(self, o, slavedest, **buildstep_kwargs):
+    def __init__(self, o, workerdest=None,
+                 slavedest=None,  # deprecated, use `workerdest` instead
+                 **buildstep_kwargs):
+                # Deprecated API support.
+        if slavedest is not None:
+            on_deprecated_name_usage(
+                "'slavedest' keyword argument is deprecated, "
+                "use 'workerdest' instead")
+            assert workerdest is None
+            workerdest = slavedest
+
+        # Emulate that first two arguments are positional.
+        if workerdest is None:
+            raise TypeError("__init__() takes at least 3 arguments")
+
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
         s = json.dumps(o)
-        StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
+        StringDownload.__init__(self, s=s, workerdest=workerdest, **buildstep_kwargs)
 
 
-class JSONPropertiesDownload(StringDownload):
+class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
 
     name = "json_properties_download"
 
-    def __init__(self, slavedest, **buildstep_kwargs):
+    def __init__(self, workerdest=None,
+                 slavedest=None,  # deprecated, use `workerdest` instead
+                 **buildstep_kwargs):
+        # Deprecated API support.
+        if slavedest is not None:
+            on_deprecated_name_usage(
+                "'slavedest' keyword argument is deprecated, "
+                "use 'workerdest' instead")
+            assert workerdest is None
+            workerdest = slavedest
+
+        # Emulate that first two arguments are positional.
+        if workerdest is None:
+            raise TypeError("__init__() takes at least 2 arguments")
+
         self.super_class = StringDownload
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
-        StringDownload.__init__(self, s=None, slavedest=slavedest, **buildstep_kwargs)
+        StringDownload.__init__(self, s=None, workerdest=workerdest, **buildstep_kwargs)
 
     def start(self):
         properties = self.build.getProperties()

@@ -287,6 +287,33 @@ Here is the complete list of changed API:
 
      - ``workerdest``
 
+
+   * - :py:attr:`buildbot.steps.transfer.StringDownload.slavedest`
+     - :py:attr:`~buildbot.steps.transfer.StringDownload.workerdest`
+
+   * - :py:class:`buildbot.steps.transfer.StringDownload`
+       constructor argument ``slavedest`` was renamed to
+
+     - ``workerdest``
+
+
+   * - :py:attr:`buildbot.steps.transfer.JSONStringDownload.slavedest`
+     - :py:attr:`~buildbot.steps.transfer.JSONStringDownload.workerdest`
+
+   * - :py:class:`buildbot.steps.transfer.JSONStringDownload`
+       constructor argument ``slavedest`` was renamed to
+
+     - ``workerdest``
+
+
+   * - :py:attr:`buildbot.steps.transfer.JSONPropertiesDownload.slavedest`
+     - :py:attr:`~buildbot.steps.transfer.JSONPropertiesDownload.workerdest`
+
+   * - :py:class:`buildbot.steps.transfer.JSONPropertiesDownload`
+       constructor argument ``slavedest`` was renamed to
+
+     - ``workerdest``
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

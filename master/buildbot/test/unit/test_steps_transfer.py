@@ -712,6 +712,43 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE, state_string="downloading to hello.txt (failure)")
         return self.runStep()
 
+    def test_workerdest_old_api(self):
+        step = transfer.StringDownload('srcfile', workerdest='dstfile')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = step.workerdest
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' attribute is deprecated"):
+            old = step.slavedest
+
+        self.assertIdentical(new, old)
+
+    def test_init_workerdest_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.StringDownload('srcfile', workerdest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' keyword argument is deprecated"):
+            step = transfer.StringDownload('srcfile', slavedest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.StringDownload('srcfile', 'dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.StringDownload())
+        self.assertRaises(TypeError, lambda: transfer.StringDownload('srcfile'))
+
 
 class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
@@ -762,6 +799,43 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE, state_string="downloading to hello.json (failure)")
         return self.runStep()
 
+    def test_workerdest_old_api(self):
+        step = transfer.JSONStringDownload('srcfile', workerdest='dstfile')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = step.workerdest
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' attribute is deprecated"):
+            old = step.slavedest
+
+        self.assertIdentical(new, old)
+
+    def test_init_workerdest_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.JSONStringDownload('srcfile', workerdest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' keyword argument is deprecated"):
+            step = transfer.JSONStringDownload('srcfile', slavedest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.JSONStringDownload('srcfile', 'dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.JSONStringDownload())
+        self.assertRaises(TypeError, lambda: transfer.JSONStringDownload('srcfile'))
+
 
 class TestJSONPropertiesDownload(unittest.TestCase):
 
@@ -794,3 +868,39 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 break
         else:
             self.assert_(False, "No downloadFile command found")
+
+    def test_workerdest_old_api(self):
+        step = transfer.JSONPropertiesDownload(workerdest='dstfile')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = step.workerdest
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' attribute is deprecated"):
+            old = step.slavedest
+
+        self.assertIdentical(new, old)
+
+    def test_init_workerdest_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.JSONPropertiesDownload(workerdest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' keyword argument is deprecated"):
+            step = transfer.JSONPropertiesDownload(slavedest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.JSONPropertiesDownload('dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.JSONPropertiesDownload())
