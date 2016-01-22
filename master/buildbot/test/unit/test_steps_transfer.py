@@ -35,7 +35,11 @@ from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import json
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 from cStringIO import StringIO
 
@@ -222,6 +226,19 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
                 len(self.flushLoggedErrors(RuntimeError)), 1)
 
         return d
+
+    def test_workersrc_old_api(self):
+        step = transfer.FileUpload(slavesrc='srcfile', masterdest='dstfile')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = step.workersrc
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavesrc' attribute is deprecated"):
+            old = step.slavesrc
+
+        self.assertIdentical(new, old)
 
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):

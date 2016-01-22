@@ -26,6 +26,7 @@ from buildbot.process.buildstep import SKIPPED
 from buildbot.process.buildstep import SUCCESS
 from buildbot.util import json
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.internet import defer
 from twisted.python import log
 
@@ -80,11 +81,11 @@ class _TransferBuildStep(BuildStep):
             return d
 
 
-class FileUpload(_TransferBuildStep):
+class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     name = 'upload'
 
-    renderables = ['slavesrc', 'masterdest', 'url']
+    renderables = ['workersrc', 'masterdest', 'url']
 
     def __init__(self, slavesrc, masterdest,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
@@ -92,7 +93,8 @@ class FileUpload(_TransferBuildStep):
                  **buildstep_kwargs):
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.slavesrc = slavesrc
+        self.workersrc = slavesrc
+        self._registerOldWorkerAttr("workersrc")
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -106,7 +108,7 @@ class FileUpload(_TransferBuildStep):
     def start(self):
         self.checkWorkerHasCommand("uploadFile")
 
-        source = self.slavesrc
+        source = self.workersrc
         masterdest = self.masterdest
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
