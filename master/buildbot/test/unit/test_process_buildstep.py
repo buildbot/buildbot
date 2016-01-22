@@ -1012,7 +1012,7 @@ class TestShellMixin(steps.BuildStepMixin,
     @defer.inlineCallbacks
     def test_example_old_worker(self):
         self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
-                       slave_version={'*': "1.1"}, wantDefaultWorkdir=False)
+                       worker_version={'*': "1.1"}, wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'])
             # note missing parameters

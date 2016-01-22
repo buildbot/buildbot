@@ -125,7 +125,7 @@ class BuildStepMixin(object):
 
         return getWorkerCommandVersion
 
-    def setupStep(self, step, slave_version={'*': "99.99"}, slave_env={},
+    def setupStep(self, step, worker_version={'*': "99.99"}, slave_env={},
                   buildFiles=[], wantDefaultWorkdir=True, wantData=True,
                   wantDb=False, wantMq=False):
         """
@@ -137,7 +137,7 @@ class BuildStepMixin(object):
 
         As a convenience, it can set the step's workdir with C{'wkdir'}.
 
-        @param slave_version: worker version to present, as a dictionary mapping
+        @param worker_version: worker version to present, as a dictionary mapping
             command name to version.  A command name of '*' will apply for all
             commands.
 
@@ -169,10 +169,10 @@ class BuildStepMixin(object):
         b.master = self.master
 
         def getSlaveVersion(cmd, oldversion):
-            if cmd in slave_version:
-                return slave_version[cmd]
-            if '*' in slave_version:
-                return slave_version['*']
+            if cmd in worker_version:
+                return worker_version[cmd]
+            if '*' in worker_version:
+                return worker_version['*']
             return oldversion
         b.getWorkerCommandVersion = getSlaveVersion
         b.workerEnvironment = slave_env.copy()

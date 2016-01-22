@@ -129,7 +129,7 @@ class TestFileExists(steps.BuildStepMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_old_version(self):
         self.setupStep(worker.FileExists(file="x"),
-                       slave_version=dict())
+                       worker_version=dict())
         self.expectOutcome(result=EXCEPTION,
                            state_string="finished (exception)")
         yield self.runStep()
