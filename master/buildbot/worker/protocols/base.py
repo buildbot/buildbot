@@ -27,7 +27,7 @@ class Connection(object):
 
     def __init__(self, master, worker):
         self.master = master
-        self.buildslave = worker
+        self.worker = worker
         name = worker.workername
         self._disconnectSubs = subscription.SubscriptionPoint(
             "disconnections from %s" % name)

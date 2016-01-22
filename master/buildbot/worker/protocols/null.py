@@ -66,27 +66,27 @@ class Connection(base.Connection):
     proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
 
     def remotePrint(self, message):
-        return defer.maybeDeferred(self.buildslave.bot.remote_print, message)
+        return defer.maybeDeferred(self.worker.bot.remote_print, message)
 
     def remoteGetSlaveInfo(self):
-        return defer.maybeDeferred(self.buildslave.bot.remote_getSlaveInfo)
+        return defer.maybeDeferred(self.worker.bot.remote_getSlaveInfo)
 
     def remoteSetBuilderList(self, builders):
-        return defer.maybeDeferred(self.buildslave.bot.remote_setBuilderList, builders)
+        return defer.maybeDeferred(self.worker.bot.remote_setBuilderList, builders)
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         remoteCommand = RemoteCommandProxy(remoteCommand)
         args = self.createArgsProxies(args)
-        workerforbuilder = self.buildslave.bot.builders[builderName]
+        workerforbuilder = self.worker.bot.builders[builderName]
         return defer.maybeDeferred(workerforbuilder.remote_startCommand, remoteCommand,
                                    commandId, commandName, args)
 
     def remoteShutdown(self):
-        return defer.maybeDeferred(self.buildslave.stopService)
+        return defer.maybeDeferred(self.worker.stopService)
 
     def remoteStartBuild(self, builderName):
-        return defer.succeed(self.buildslave.bot.builders[builderName].remote_startBuild())
+        return defer.succeed(self.worker.bot.builders[builderName].remote_startBuild())
 
     def remoteInterruptCommand(self, builderName, commandId, why):
-        workerforbuilder = self.buildslave.bot.builders[builderName]
+        workerforbuilder = self.worker.bot.builders[builderName]
         return defer.maybeDeferred(workerforbuilder.remote_interruptCommand, commandId, why)

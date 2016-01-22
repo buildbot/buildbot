@@ -98,7 +98,7 @@ class TestConnection(unittest.TestCase):
 
         self.assertEqual(conn.mind, self.mind)
         self.assertEqual(conn.master, self.master)
-        self.assertEqual(conn.buildslave, self.buildslave)
+        self.assertEqual(conn.worker, self.buildslave)
 
     @defer.inlineCallbacks
     def test_attached(self):
@@ -237,11 +237,11 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
         conn.perspective_shutdown()
 
-        conn.buildslave.shutdownRequested.assert_called_with()
-        conn.buildslave.messageReceivedFromWorker.assert_called_with()
+        conn.worker.shutdownRequested.assert_called_with()
+        conn.worker.messageReceivedFromWorker.assert_called_with()
 
     def test_perspective_keepalive(self):
         conn = pb.Connection(self.master, self.buildslave, self.mind)
         conn.perspective_keepalive()
 
-        conn.buildslave.messageReceivedFromWorker.assert_called_with()
+        conn.worker.messageReceivedFromWorker.assert_called_with()

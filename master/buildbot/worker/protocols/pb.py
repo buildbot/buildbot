@@ -118,7 +118,7 @@ class Connection(base.Connection, pb.Avatar):
         self.startKeepaliveTimer()
         # pbmanager calls perspective.attached; pass this along to the
         # worker
-        yield self.buildslave.attached(self)
+        yield self.worker.attached(self)
         # and then return a reference to the avatar
         defer.returnValue(self)
 
@@ -236,13 +236,13 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the worker buildbot process to exit.
         def old_way():
             d = None
-            for b in itervalues(self.buildslave.workerforbuilders):
+            for b in itervalues(self.worker.workerforbuilders):
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break
 
             if d:
-                name = self.buildslave.workername
+                name = self.worker.workername
                 log.msg("Shutting down (old) worker: %s" % name)
                 # The remote shutdown call will not complete successfully since
                 # the buildbot process exits almost immediately after getting
@@ -275,8 +275,8 @@ class Connection(base.Connection, pb.Avatar):
     # perspective methods called by the worker
 
     def perspective_keepalive(self):
-        self.buildslave.messageReceivedFromWorker()
+        self.worker.messageReceivedFromWorker()
 
     def perspective_shutdown(self):
-        self.buildslave.messageReceivedFromWorker()
-        self.buildslave.shutdownRequested()
+        self.worker.messageReceivedFromWorker()
+        self.worker.shutdownRequested()

@@ -49,7 +49,7 @@ class TestConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
 
     def test_constructor(self):
         self.assertEqual(self.conn.master, self.master)
-        self.assertEqual(self.conn.buildslave, self.buildslave)
+        self.assertEqual(self.conn.worker, self.buildslave)
 
     def test_notify(self):
         cb = mock.Mock()

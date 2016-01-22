@@ -560,6 +560,9 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        constructor positional argument ``buildslave`` was renamed
      - ``worker``
 
+   * - :py:attr:`buildbot.protocols.base.Connection.buidslave`
+     - :py:attr:`buildbot.protocols.base.Connection.worker`
+
 
    * - :py:class:`buildbot.protocols.pb.Connection`
        constructor positional argument ``buildslave`` was renamed
