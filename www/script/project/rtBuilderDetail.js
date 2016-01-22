@@ -123,9 +123,9 @@ define(function (require) {
             options.aoColumns = [
                 {"mData": null, "sWidth": "4%", "sTitle": "", bSortable: false},
                 {"mData": null, "sWidth": "21%", "sTitle": "Priority", bSortable: false},
-                {"mData": null, "sWidth": "17%", "sTitle": "When"},
-                {"mData": null, "sWidth": "21%", "sTitle": "Waiting"},
-                {"mData": null, "sWidth": "21%", "sTitle": "Branch"},
+                {"mData": null, "sWidth": "17%", "sTitle": "When", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Waiting", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Branch", bSortable: false},
                 {"mData": "brid", "sWidth": "17%"}
             ];
 

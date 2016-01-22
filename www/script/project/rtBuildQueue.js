@@ -36,11 +36,11 @@ define(function (require) {
             options.aoColumns = [
                 { "mData": null, "sWidth": "4%", bSortable: false },
                 { "mData": null, "sWidth": "10%", bSortable: false },
-                { "mData": "builderFriendlyName", "sWidth": "28%" },
-                { "mData": "sources", "sWidth": "10%" },
-                { "mData": "reason", "sWidth": "30%" },
-                { "mData": "slaves", "sWidth": "10%" },
-                { "mData": "brid", "sWidth": "6%" }
+                { "mData": "builderFriendlyName", "sWidth": "28%", bSortable: false},
+                { "mData": "sources", "sWidth": "10%", bSortable: false },
+                { "mData": "reason", "sWidth": "30%", bSortable: false },
+                { "mData": "slaves", "sWidth": "10%", bSortable: false },
+                { "mData": "brid", "sWidth": "6%", bSortable: false }
             ];
 
             options.aoColumnDefs = [
