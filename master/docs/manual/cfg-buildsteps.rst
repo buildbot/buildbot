@@ -1978,11 +1978,11 @@ For example, let's assume that some step requires a configuration file that, for
     from buildbot.plugins import steps
 
     f.addStep(steps.FileDownload(mastersrc="~/todays_build_config.txt",
-                                 slavedest="build_config.txt"))
+                                 workerdest="build_config.txt"))
     f.addStep(steps.ShellCommand(command=["make", "config"]))
 
-Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``slavedest=`` argument is relative to the builder's working directory.
-If the buildslave is running in :file:`~buildslave`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildslave/tests-i386/build`, and a ``slavedest=`` of :file:`foo/bar.html` will get put in :file:`~buildslave/tests-i386/build/foo/bar.html`.
+Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``workerdest=`` argument is relative to the builder's working directory.
+If the buildslave is running in :file:`~buildslave`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildslave/tests-i386/build`, and a ``workerdest=`` of :file:`foo/bar.html` will get put in :file:`~buildslave/tests-i386/build/foo/bar.html`.
 Both of these commands will create any missing intervening directories.
 
 Other Parameters
@@ -2104,7 +2104,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
     from buildbot.plugins import steps, util
     f.addStep(steps.StringDownload(util.Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
-            slavedest="buildid.txt"))
+            workerdest="buildid.txt"))
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument, ``s``, representing the string to download instead of a ``mastersrc`` argument.
 
@@ -2112,7 +2112,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
     from buildbot.plugins import steps
     buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
-    f.addStep(steps.JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
+    f.addStep(steps.JSONStringDownload(buildinfo, workerdest="buildinfo.json"))
 
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON serializable, and transfers that as a JSON-encoded string to the slave.
 
@@ -2121,7 +2121,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 ::
 
     from buildbot.plugins import steps
-    f.addStep(steps.JSONPropertiesDownload(slavedest="build-properties.json"))
+    f.addStep(steps.JSONPropertiesDownload(workerdest="build-properties.json"))
 
 :bb:step:`JSONPropertiesDownload` transfers a json-encoded string that represents a dictionary where properties maps to a dictionary of build property ``name`` to property ``value``; and ``sourcestamp`` represents the build's sourcestamp.
 
