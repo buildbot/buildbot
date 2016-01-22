@@ -394,7 +394,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testEmpty(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=[], masterdest=self.destdir))
+            transfer.MultipleFileUpload(workersrcs=[], masterdest=self.destdir))
 
         self.expectCommands()
 
@@ -404,7 +404,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testFile(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=["srcfile"], masterdest=self.destdir))
+            transfer.MultipleFileUpload(workersrcs=["srcfile"], masterdest=self.destdir))
 
         self.expectCommands(
             Expect('stat', dict(file="srcfile",
@@ -424,7 +424,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testDirectory(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=["srcdir"], masterdest=self.destdir))
+            transfer.MultipleFileUpload(workersrcs=["srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
             Expect('stat', dict(file="srcdir",
@@ -444,7 +444,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testMultiple(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir))
+            transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
             Expect('stat', dict(file="srcfile",
@@ -475,7 +475,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testFailure(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir))
+            transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
         self.expectCommands(
             Expect('stat', dict(file="srcfile",
@@ -495,7 +495,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testException(self):
         self.setupStep(
-            transfer.MultipleFileUpload(slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir))
+            transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
 
         behavior = UploadError(uploadString("Hello world!"))
 
@@ -528,7 +528,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             allUploadsDone = Mock(return_value=None)
 
         step = CustomStep(
-            slavesrcs=["srcfile", "srcdir"], masterdest=self.destdir)
+            workersrcs=["srcfile", "srcdir"], masterdest=self.destdir)
         self.setupStep(step)
 
         self.expectCommands(
@@ -571,6 +571,43 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             return res
 
         return d
+
+    def test_workersrcs_old_api(self):
+        step = transfer.MultipleFileUpload(workersrcs=['srcfile'], masterdest='dstfile')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = step.workersrcs
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavesrcs' attribute is deprecated"):
+            old = step.slavesrcs
+
+        self.assertIdentical(new, old)
+
+    def test_init_workersrcs_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.MultipleFileUpload(workersrcs=['srcfile'], masterdest='dstfile')
+
+        self.assertEqual(step.workersrcs, ['srcfile'])
+
+    def test_init_workersrcs_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavesrcs' keyword argument is deprecated"):
+            step = transfer.MultipleFileUpload(slavesrcs=['srcfile'], masterdest='dstfile')
+
+        self.assertEqual(step.workersrcs, ['srcfile'])
+
+    def test_init_workersrcs_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.MultipleFileUpload(['srcfile'], 'dstfile')
+
+        self.assertEqual(step.workersrcs, ['srcfile'])
+
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.MultipleFileUpload())
+        self.assertRaises(TypeError, lambda: transfer.MultipleFileUpload(['srcfile']))
 
 
 class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):

@@ -231,18 +231,33 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class MultipleFileUpload(_TransferBuildStep):
+class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     name = 'upload'
 
-    renderables = ['slavesrcs', 'masterdest', 'url']
+    renderables = ['workersrcs', 'masterdest', 'url']
 
-    def __init__(self, slavesrcs, masterdest,
+    def __init__(self, workersrcs=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
-                 mode=None, compress=None, keepstamp=False, url=None, **buildstep_kwargs):
+                 mode=None, compress=None, keepstamp=False, url=None,
+                 slavesrcs=None,  # deprecated, use `workersrcs` instead
+                 **buildstep_kwargs):
+        # Deprecated API support.
+        if slavesrcs is not None:
+            on_deprecated_name_usage(
+                "'slavesrcs' keyword argument is deprecated, "
+                "use 'workersrcs' instead")
+            assert workersrcs is None
+            workersrcs = slavesrcs
+
+        # Emulate that first two arguments are positional.
+        if workersrcs is None or masterdest is None:
+            raise TypeError("__init__() takes at least 3 arguments")
+
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.slavesrcs = slavesrcs
+        self.workersrcs = workersrcs
+        self._registerOldWorkerAttr("workersrcs")
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -328,7 +343,7 @@ class MultipleFileUpload(_TransferBuildStep):
         self.checkWorkerHasCommand("stat")
 
         masterdest = os.path.expanduser(self.masterdest)
-        sources = self.slavesrcs
+        sources = self.workersrcs
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This worker (%s) does not support preserving timestamps. "
