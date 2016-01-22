@@ -168,24 +168,24 @@ class RunSteps(unittest.TestCase):
         self.factory = factory.BuildFactory()  # will have steps added later
         new_config = config.MasterConfig()
         new_config.builders.append(
-            config.BuilderConfig(name='test', workername='testsl',
+            config.BuilderConfig(name='test', workername='testworker',
                                  factory=self.factory))
         yield self.builder.reconfigServiceWithBuildbotConfig(new_config)
 
-        self.slave = Worker('bsl', 'pass')
-        self.slave.sendBuilderList = lambda: defer.succeed(None)
-        self.slave.parent = mock.Mock()
-        self.slave.master.botmaster = mock.Mock()
-        self.slave.botmaster.maybeStartBuildsForWorker = lambda w: None
-        self.slave.botmaster.getBuildersForWorker = lambda w: []
-        self.slave.parent = self.master
-        self.slave.startService()
-        self.conn = fakeprotocol.FakeConnection(self.master, self.slave)
-        yield self.slave.attached(self.conn)
+        self.worker = Worker('worker', 'pass')
+        self.worker.sendBuilderList = lambda: defer.succeed(None)
+        self.worker.parent = mock.Mock()
+        self.worker.master.botmaster = mock.Mock()
+        self.worker.botmaster.maybeStartBuildsForWorker = lambda w: None
+        self.worker.botmaster.getBuildersForWorker = lambda w: []
+        self.worker.parent = self.master
+        self.worker.startService()
+        self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
+        yield self.worker.attached(self.conn)
 
         sb = self.workerforbuilder = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self.builder)
-        yield sb.attached(self.slave, {})
+        yield sb.attached(self.worker, {})
 
         # add the buildset/request
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(
