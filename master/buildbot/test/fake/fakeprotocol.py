@@ -37,8 +37,8 @@ class FakeConnection(base.Connection):
         self.remoteCalls.append(('remotePrint', message))
         return defer.succeed(None)
 
-    def remoteGetSlaveInfo(self):
-        self.remoteCalls.append(('remoteGetSlaveInfo',))
+    def remoteGetWorkerInfo(self):
+        self.remoteCalls.append(('remoteGetWorkerInfo',))
         return defer.succeed(self.slaveInfo)
 
     def remoteSetBuilderList(self, builders):

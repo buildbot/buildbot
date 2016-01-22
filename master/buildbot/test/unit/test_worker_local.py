@@ -73,5 +73,5 @@ class TestLocalWorker(unittest.TestCase):
                                missing_timeout=120,
                                properties={'a': 'b'})
         yield sl.startService()
-        info = yield sl.conn.remoteGetSlaveInfo()
+        info = yield sl.conn.remoteGetWorkerInfo()
         self.assertIn("slave_commands", info)

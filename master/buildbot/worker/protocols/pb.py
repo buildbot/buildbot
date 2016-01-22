@@ -170,7 +170,7 @@ class Connection(base.Connection, pb.Avatar):
         return self.mind.callRemote('print', message=message)
 
     @defer.inlineCallbacks
-    def remoteGetSlaveInfo(self):
+    def remoteGetWorkerInfo(self):
         info = {}
         try:
             info = yield self.mind.callRemote('getSlaveInfo')

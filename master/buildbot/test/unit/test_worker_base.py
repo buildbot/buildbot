@@ -371,7 +371,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getVersion(), 'TheVersion')
 
     @defer.inlineCallbacks
-    def test_attached_remoteGetSlaveInfo(self):
+    def test_attached_remoteGetWorkerInfo(self):
         worker = self.createWorker()
         yield worker.startService()
 

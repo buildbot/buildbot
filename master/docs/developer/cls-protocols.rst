@@ -53,7 +53,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
         Print message to slave log file
 
-    .. py:method:: remoteGetSlaveInfo()
+    .. py:method:: remoteGetWorkerInfo()
 
         :returns: Deferred
 

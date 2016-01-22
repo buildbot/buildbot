@@ -68,7 +68,7 @@ class Connection(base.Connection):
     def remotePrint(self, message):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)
 
-    def remoteGetSlaveInfo(self):
+    def remoteGetWorkerInfo(self):
         return defer.maybeDeferred(self.worker.bot.remote_getSlaveInfo)
 
     def remoteSetBuilderList(self, builders):
