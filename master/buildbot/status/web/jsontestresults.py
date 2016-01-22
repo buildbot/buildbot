@@ -37,7 +37,7 @@ class JSONTestResource(HtmlResource):
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_build'] = path_to_build(req, b)
         cxt['build_number'] = b.getNumber()
-        cxt['path_to_artifacts'] = b.getProperty("artifactServerPath", None)
+        cxt['path_to_artifacts'] = b.getProperty("artifactServerPath", "")
         cxt['selectedproject'] = project
 
         try:
