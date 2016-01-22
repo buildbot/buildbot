@@ -1189,21 +1189,21 @@ class TestBuildsetsConnectorComponent(
                                                          revision='b%d' % id,
                                                          codebase='2',
                                                          sourcestampsetid=id,
-                                                         branch='staging',
+                                                         branch='5.2/staging',
                                                          repository='w'))
             ssid+=2
 
         d = self.insertTestData(breqs + breqsclaims + breqs_sourcestamps)
         return d
 
-    def test_getBuildRequestInQueueCodebasesFound(self):
+    def test_getBuildRequestInQueueCodebasesFound(self, filter = None):
         expectedBreqs = [self.fakeRequest(brid=8, bsid=8, results=BEGINNING, priority=30, submitted_at=1450171024),
                          self.fakeRequest(brid=1, bsid=1, results=BEGINNING, priority=20, submitted_at=1450171024),
                          self.fakeRequest(brid=3, bsid=3, results=RESUME, priority=100, submitted_at=1449668061),
                          self.fakeRequest(brid=7, bsid=7, results=RESUME, priority=50, submitted_at=1449579016)]
 
         sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'},
-                               {'b_codebase': '2', 'b_branch': 'staging'}]
+                               {'b_codebase': '2', 'b_branch': '5.2/staging'}] if filter is None else filter
 
         def checkResults(buildqueue):
             self.assertEquals(buildqueue, expectedBreqs)
@@ -1213,6 +1213,22 @@ class TestBuildsetsConnectorComponent(
                                                                             sourcestamps=sourcestamps_filter,
                                                                             sorted=True))
         d.addCallback(checkResults)
+        return d
+
+    def test_getBuildRequestInQueueCodebasesNotFound(self):
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'},
+                               {'b_codebase': '2', 'b_branch': 'staging'}]
+
+        d = self.insertBuildRequestsInQueue()
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestInQueue(buildername="bldr1",
+                                                                            sourcestamps=sourcestamps_filter,
+                                                                            sorted=True))
+        d.addCallback(lambda res: self.assertEquals(res, []))
+        return d
+
+    def test_getBuildRequestInQueueSingleCodebaseFilter(self):
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'}]
+        d =  self.test_getBuildRequestInQueueCodebasesFound(filter=sourcestamps_filter)
         return d
 
     def insertPrioritizedBreqs(self):
