@@ -1748,7 +1748,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             svn.SVN(repourl='http://svn.local/app/trunk',
                     mode='incremental', username='user',

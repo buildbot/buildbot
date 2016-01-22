@@ -44,7 +44,7 @@ class FakeWorker2(FakeWorker):
     pass
 
 
-class TestBuildSlaveManager(unittest.TestCase):
+class TestWorkerManager(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -65,7 +65,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         return self.workers.stopService()
 
     @defer.inlineCallbacks
-    def test_reconfigServiceSlaves_add_remove(self):
+    def test_reconfigServiceWorkers_add_remove(self):
         worker = FakeWorker('worker1')
         self.new_config.workers = [worker]
 
@@ -82,7 +82,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.assertIdentical(worker.master, None)
 
     @defer.inlineCallbacks
-    def test_reconfigServiceSlaves_reconfig(self):
+    def test_reconfigServiceWorkers_reconfig(self):
         worker = FakeWorker('worker1')
         worker.setServiceParent(self.workers)
         worker.parent = self.master
@@ -98,7 +98,7 @@ class TestBuildSlaveManager(unittest.TestCase):
         self.assertIdentical(self.workers.workers['worker1'], worker)
 
     @defer.inlineCallbacks
-    def test_reconfigServiceSlaves_class_changes(self):
+    def test_reconfigServiceWorkers_class_changes(self):
         worker = FakeWorker('worker1')
         worker.setServiceParent(self.workers)
 
