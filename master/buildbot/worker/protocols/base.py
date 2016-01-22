@@ -25,10 +25,10 @@ class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 class Connection(object):
     proxies = {}
 
-    def __init__(self, master, buildslave):
+    def __init__(self, master, worker):
         self.master = master
-        self.buildslave = buildslave
-        name = buildslave.workername
+        self.buildslave = worker
+        name = worker.workername
         self._disconnectSubs = subscription.SubscriptionPoint(
             "disconnections from %s" % name)
 

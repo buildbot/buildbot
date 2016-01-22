@@ -107,8 +107,8 @@ class Connection(base.Connection, pb.Avatar):
     keepalive_interval = 3600
     info = None
 
-    def __init__(self, master, buildslave, mind):
-        base.Connection.__init__(self, master, buildslave)
+    def __init__(self, master, worker, mind):
+        base.Connection.__init__(self, master, worker)
         self.mind = mind
 
     # methods called by the PBManager
