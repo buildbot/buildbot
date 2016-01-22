@@ -617,7 +617,9 @@ define(function (require) {
                 var el = ext_history_list[i];
                 var codebasesHtml = $("<div class='row branch-list'/>");
                 $.each(el.codebases, function(i, val) {
-                    $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>"+i.slice(0, -"_branch".length) +": </strong>"+val+"</span></div>").appendTo(codebasesHtml);
+                    if(val) {
+                        $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>" + i.slice(0, -"_branch".length) + ": </strong>" + val + "</span></div>").appendTo(codebasesHtml);
+                    }
                 });
                 
                 var html = "<div class='row'><div class='col-md-8'><a class='builder-link' href='" + el.url + "'>" + unescape(el.proj) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";
