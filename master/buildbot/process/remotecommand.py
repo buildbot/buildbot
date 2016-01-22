@@ -154,7 +154,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
             log.msg(" but our .conn went away")
             return defer.succeed(None)
         if isinstance(why, Failure) and why.check(error.ConnectionLost):
-            log.msg("RemoteCommand.disconnect: lost slave")
+            log.msg("RemoteCommand.disconnect: lost worker")
             self.conn = None
             self._finished(why)
             return defer.succeed(None)
@@ -386,7 +386,7 @@ class RemoteShellCommand(RemoteCommand):
     def _start(self):
         self.args['command'] = self.command
         if self.remote_command == "shell":
-            # non-ShellCommand slavecommands are responsible for doing this
+            # non-ShellCommand worker commands are responsible for doing this
             # fixup themselves
             if self.step.workerVersion("shell", "old") == "old":
                 self.args['dir'] = self.args['workdir']
