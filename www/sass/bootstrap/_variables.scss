@@ -24,7 +24,6 @@ $brand-warning:         #f0ad4e !default;
 $brand-danger:          #d9534f !default;
 $brand-katana:          #386b6d !default;
 
-
 //== Scaffolding
 //
 // ## Settings for some of the most global styles.
@@ -770,6 +769,8 @@ $breadcrumb-active-color:       $gray-light !default;
 //** Textual separator for between breadcrumb elements
 $breadcrumb-separator:          "/" !default;
 
+$breadcrumb-background-top:  #869e9c !default;
+$breadcrumb-background-bottom:  #b9c9ca !default;
 
 //== Carousel
 //
