@@ -25,11 +25,13 @@ class JSONTestResource(HtmlResource):
         self.step_status = step_status
 
     def get_artifacts_path(self, build):
-        artifacts = build.artifacts.values() if build.artifacts else []
+        path = ''
+        artifacts = build.properties.properties['artifactServerPath'] if 'artifactServerPath' in build.properties.properties else []
         if len(artifacts) > 0:
-            path = [value for value in artifacts if value.lower().endswith('reportedartifacts/')]
-            return path[0] if len(path) > 0 else ''
-        return ''
+            path = artifacts[0]
+            if not path.endswith("/"):
+                path += "/"
+        return path
 
     def content(self, req, cxt):
         s = self.step_status
@@ -45,7 +47,6 @@ class JSONTestResource(HtmlResource):
         cxt['path_to_build'] = path_to_build(req, b)
         cxt['build_number'] = b.getNumber()
         cxt['path_to_artifacts'] = self.get_artifacts_path(b)
-        cxt['urljoin'] = urljoin
         cxt['selectedproject'] = project
 
         try:
