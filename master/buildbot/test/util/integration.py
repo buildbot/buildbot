@@ -55,12 +55,12 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
         self.configfile = os.path.join(self.basedir, 'master.cfg')
-        slaveclass = "Worker"
+        workerclass = "Worker"
         if self.proto == 'pb':
             proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
         elif self.proto == 'null':
             proto = '{"null": {}}'
-            slaveclass = "LocalWorker"
+            workerclass = "LocalWorker"
         # We create a master.cfg, which loads the configuration from the
         # test module. Only the worker config is kept there, as it should not
         # be changed
@@ -68,12 +68,12 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             from buildbot.plugins import worker
             from {module} import {configFunc}
             c = BuildmasterConfig = {configFunc}()
-            c['workers'] = [worker.{slaveclass}("local1", "localpw")]
+            c['workers'] = [worker.{workerclass}("local1", "localpw")]
             c['protocols'] = {proto}
             """).format(module=self.__class__.__module__,
                         configFunc=configFunc,
                         proto=proto,
-                        slaveclass=slaveclass))
+                        workerclass=workerclass))
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         self.master = m
@@ -97,15 +97,15 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
         if self.proto == 'pb':
             # We find out the worker port automatically
-            slavePort = list(itervalues(m.pbmanager.dispatchers))[0].port.getHost().port
+            workerPort = list(itervalues(m.pbmanager.dispatchers))[0].port.getHost().port
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
-            s = BuildSlave("127.0.0.1", slavePort, "local1", "localpw", self.basedir, False, False)
+            w = BuildSlave("127.0.0.1", workerPort, "local1", "localpw", self.basedir, False, False)
         elif self.proto == 'null':
-            s = None
-        if s is not None:
-            s.setServiceParent(m)
+            w = None
+        if w is not None:
+            w.setServiceParent(m)
 
     def setUp(self):
         if self.testCasesHandleTheirSetup:
