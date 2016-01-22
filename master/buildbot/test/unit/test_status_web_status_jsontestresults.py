@@ -30,6 +30,7 @@ class TestJSONTestResource(unittest.TestCase):
 
         build_status = mock.Mock(BuildStatus)
         build_status.getNumber = lambda: 1
+
         builder_status = mock.Mock(BuilderStatus)
         builder_status.getFriendlyName = lambda: "BuilderStatusFriendlyName"
         builder_status.getName = lambda: "BuilderStatusName"
@@ -43,7 +44,7 @@ class TestJSONTestResource(unittest.TestCase):
                 2: 'Skipped',
                 3: 'Ignored',
                 4: 'Success',
-                5: 'Failure',
+                5: 'Failed',
                 6: 'Error',
                 7: 'Cancelled'
             }
