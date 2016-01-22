@@ -125,7 +125,7 @@ class BuildStepMixin(object):
 
         return getWorkerCommandVersion
 
-    def setupStep(self, step, worker_version={'*': "99.99"}, slave_env={},
+    def setupStep(self, step, worker_version={'*': "99.99"}, worker_env={},
                   buildFiles=[], wantDefaultWorkdir=True, wantData=True,
                   wantDb=False, wantMq=False):
         """
@@ -141,7 +141,7 @@ class BuildStepMixin(object):
             command name to version.  A command name of '*' will apply for all
             commands.
 
-        @param slave_env: environment from the worker at worker startup
+        @param worker_env: environment from the worker at worker startup
 
         @param wantData(bool): Set to True to add data API connector to master.
             Default value: True.
@@ -175,7 +175,7 @@ class BuildStepMixin(object):
                 return worker_version['*']
             return oldversion
         b.getWorkerCommandVersion = getSlaveVersion
-        b.workerEnvironment = slave_env.copy()
+        b.workerEnvironment = worker_env.copy()
         step.setBuild(b)
 
         # watch for properties being set
