@@ -2050,7 +2050,7 @@ This parameter should either be a list, or something that can be rendered as a l
 
     f.addStep(steps.ShellCommand(command=["make", "test"]))
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.MultipleFileUpload(slavesrcs=["docs", "test-results.html"],
+    f.addStep(steps.MultipleFileUpload(workersrcs=["docs", "test-results.html"],
                                        masterdest="~/public_html",
                                        url="~buildbot"))
 
