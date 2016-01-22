@@ -260,6 +260,10 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         self.assertEqual(step.workersrc, 'srcfile')
 
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.FileUpload())
+        self.assertRaises(TypeError, lambda: transfer.FileUpload('src'))
+
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
 
@@ -367,6 +371,10 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
             step = transfer.DirectoryUpload('srcfile', 'dstfile')
 
         self.assertEqual(step.workersrc, 'srcfile')
+
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.DirectoryUpload())
+        self.assertRaises(TypeError, lambda: transfer.DirectoryUpload('src'))
 
 
 class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
