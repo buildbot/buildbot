@@ -35,14 +35,14 @@ from twisted.spread import pb
 from twisted.trial import unittest
 
 
-class FakeSlaveBuilder(pb.Referenceable):
+class FakeWorkerForBuilder(pb.Referenceable):
 
     """
     Fake worker-side WorkerForBuilder object
     """
 
 
-class FakeSlaveBuildSlave(pb.Referenceable):
+class FakeWorkerWorker(pb.Referenceable):
 
     """
     Fake worker-side Worker object
@@ -80,7 +80,7 @@ class FakeSlaveBuildSlave(pb.Referenceable):
         persp.broker.notifyOnDisconnect(fire_deferreds)
 
     def remote_print(self, message):
-        log.msg("SLAVE-SIDE: remote_print(%r)" % (message,))
+        log.msg("WORKER-SIDE: remote_print(%r)" % (message,))
 
     def remote_getSlaveInfo(self):
         return {'info': 'here'}
@@ -93,7 +93,7 @@ class FakeSlaveBuildSlave(pb.Referenceable):
 
     def remote_setBuilderList(self, builder_info):
         builder_names = [n for n, dir in builder_info]
-        slbuilders = [FakeSlaveBuilder() for n in builder_names]
+        slbuilders = [FakeWorkerForBuilder() for n in builder_names]
         eventually(self.callWhenBuilderListSet)
         return dict(zip(builder_names, slbuilders))
 
@@ -104,11 +104,11 @@ class FakeBuilder(builder.Builder):
         builder.Builder.__init__(self, name)
         self.builder_status = mock.Mock()
 
-    def attached(self, slave, commands):
+    def attached(self, worker, commands):
         assert commands == {'x': 1}
         return defer.succeed(None)
 
-    def detached(self, slave):
+    def detached(self, worker):
         pass
 
     def getOldestRequestTime(self):
@@ -118,7 +118,7 @@ class FakeBuilder(builder.Builder):
         return defer.succeed(None)
 
 
-class MyBuildSlave(worker.Worker):
+class MyWorker(worker.Worker):
 
     def attached(self, conn):
         self.detach_d = defer.Deferred()
@@ -130,7 +130,7 @@ class MyBuildSlave(worker.Worker):
         d.callback(None)
 
 
-class TestSlaveComm(unittest.TestCase):
+class TestWorkerComm(unittest.TestCase):
 
     """
     Test handling of connections from workers as integrated with
@@ -142,7 +142,7 @@ class TestSlaveComm(unittest.TestCase):
     @ivar pbamanger: L{PBManager} instance
     @ivar botmaster: L{BotMaster} instance
     @ivar worker: master-side L{Worker} instance
-    @ivar slavebuildslave: worker-side L{FakeSlaveBuildSlave} instance
+    @ivar workerworker: worker-side L{FakeWorkerWorker} instance
     @ivar port: TCP port to connect to
     @ivar connector: outbound TCP connection from worker to master
     """
@@ -159,8 +159,8 @@ class TestSlaveComm(unittest.TestCase):
 
         # remove the fakeServiceParent from fake service hierarchy, and replace by a real one
         yield self.master.workers.disownServiceParent()
-        self.buildslaves = self.master.workers = workermanager.WorkerManager(self.master)
-        self.buildslaves.setServiceParent(self.master)
+        self.workers = self.master.workers = workermanager.WorkerManager(self.master)
+        self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()
         self.botmaster.setServiceParent(self.master)
@@ -171,9 +171,9 @@ class TestSlaveComm(unittest.TestCase):
         self.master.data.updates.buildslaveConfigured = lambda *a, **k: None
         yield self.master.startService()
 
-        self.buildslave = None
+        self.buildworker = None
         self.port = None
-        self.slavebuildslave = None
+        self.workerworker = None
         self.connector = None
         self._detach_deferreds = []
 
@@ -186,66 +186,66 @@ class TestSlaveComm(unittest.TestCase):
         deferreds = self._detach_deferreds + [
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
-            self.buildslaves.stopService(),
+            self.workers.stopService(),
         ]
 
         # if the worker is still attached, wait for it to detach, too
-        if self.buildslave and self.buildslave.detach_d:
-            deferreds.append(self.buildslave.detach_d)
+        if self.buildworker and self.buildworker.detach_d:
+            deferreds.append(self.buildworker.detach_d)
 
         return defer.gatherResults(deferreds)
 
     @defer.inlineCallbacks
-    def addSlave(self, **kwargs):
+    def addWorker(self, **kwargs):
         """
         Create a master-side worker instance and add it to the BotMaster
 
         @param **kwargs: arguments to pass to the L{Worker} constructor.
         """
-        self.buildslave = MyBuildSlave("testslave", "pw", **kwargs)
+        self.buildworker = MyWorker("testworker", "pw", **kwargs)
 
         # reconfig the master to get it set up
         new_config = self.master.config
         new_config.protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
-        new_config.workers = [self.buildslave]
+        new_config.workers = [self.buildworker]
         new_config.builders = [config.BuilderConfig(name='bldr',
-                                                    workername='testslave', factory=factory.BuildFactory())]
+                                                    workername='testworker', factory=factory.BuildFactory())]
 
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
-        yield self.buildslaves.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.workers.reconfigServiceWithBuildbotConfig(new_config)
 
         # as part of the reconfig, the worker registered with the pbmanager, so
         # get the port it was assigned
-        self.port = self.buildslave.registration.getPBPort()
+        self.port = self.buildworker.registration.getPBPort()
 
-    def connectSlave(self, waitForBuilderList=True):
+    def connectWorker(self, waitForBuilderList=True):
         """
         Connect a worker the master via PB
 
         @param waitForBuilderList: don't return until the setBuilderList has
         been called
-        @returns: L{FakeSlaveBuildSlave} and a Deferred that will fire when it
+        @returns: L{FakeWorkerWorker} and a Deferred that will fire when it
         is detached; via deferred
         """
         factory = pb.PBClientFactory()
-        creds = credentials.UsernamePassword("testslave", "pw")
+        creds = credentials.UsernamePassword("testworker", "pw")
         setBuilderList_d = defer.Deferred()
-        slavebuildslave = FakeSlaveBuildSlave(
+        workerworker = FakeWorkerWorker(
             lambda: setBuilderList_d.callback(None))
 
-        login_d = factory.login(creds, slavebuildslave)
+        login_d = factory.login(creds, workerworker)
 
         @login_d.addCallback
         def logged_in(persp):
-            slavebuildslave.setMasterPerspective(persp)
+            workerworker.setMasterPerspective(persp)
 
             # set up to hear when the worker side disconnects
-            slavebuildslave.detach_d = defer.Deferred()
+            workerworker.detach_d = defer.Deferred()
             persp.broker.notifyOnDisconnect(lambda:
-                                            slavebuildslave.detach_d.callback(None))
-            self._detach_deferreds.append(slavebuildslave.detach_d)
+                                            workerworker.detach_d.callback(None))
+            self._detach_deferreds.append(workerworker.detach_d)
 
-            return slavebuildslave
+            return workerworker
 
         self.connector = reactor.connectTCP("127.0.0.1", self.port, factory)
 
@@ -254,73 +254,73 @@ class TestSlaveComm(unittest.TestCase):
         else:
             d = defer.DeferredList([login_d, setBuilderList_d],
                                    consumeErrors=True, fireOnOneErrback=True)
-            d.addCallback(lambda _: slavebuildslave)
+            d.addCallback(lambda _: workerworker)
             return d
 
-    def slaveSideDisconnect(self, slave):
+    def workerSideDisconnect(self, worker):
         """Disconnect from the worker side"""
-        slave.master_persp.broker.transport.loseConnection()
+        worker.master_persp.broker.transport.loseConnection()
 
     @defer.inlineCallbacks
     def test_connect_disconnect(self):
         """Test a single worker connecting and disconnecting."""
-        yield self.addSlave()
+        yield self.addWorker()
 
         # connect
-        slave = yield self.connectSlave()
+        worker = yield self.connectWorker()
 
         # disconnect
-        self.slaveSideDisconnect(slave)
+        self.workerSideDisconnect(worker)
 
         # wait for the resulting detach
-        yield slave.waitForDetach()
+        yield worker.waitForDetach()
 
     @flaky(bugNumber=2761)
     @defer.inlineCallbacks
-    def test_duplicate_slave(self):
-        yield self.addSlave()
+    def test_duplicate_worker(self):
+        yield self.addWorker()
 
         # connect first worker
-        slave1 = yield self.connectSlave()
+        worker1 = yield self.connectWorker()
 
         # connect second worker; this should fail
         try:
-            yield self.connectSlave(waitForBuilderList=False)
+            yield self.connectWorker(waitForBuilderList=False)
             connect_failed = False
         except Exception:
             connect_failed = True
         self.assertTrue(connect_failed)
 
         # disconnect both and wait for that to percolate
-        self.slaveSideDisconnect(slave1)
+        self.workerSideDisconnect(worker1)
 
-        yield slave1.waitForDetach()
+        yield worker1.waitForDetach()
 
         # flush the exception logged for this on the master
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def test_duplicate_slave_old_dead(self):
-        yield self.addSlave()
+    def test_duplicate_worker_old_dead(self):
+        yield self.addWorker()
 
         # connect first worker
-        slave1 = yield self.connectSlave()
+        worker1 = yield self.connectWorker()
 
         # monkeypatch that worker to fail with PBConnectionLost when its
         # remote_print method is called
         def remote_print(message):
-            slave1.master_persp.broker.transport.loseConnection()
+            worker1.master_persp.broker.transport.loseConnection()
             raise pb.PBConnectionLost("fake!")
-        slave1.remote_print = remote_print
+        worker1.remote_print = remote_print
 
         # connect second worker; this should succeed, and the old worker
         # should be disconnected.
-        slave2 = yield self.connectSlave()
+        worker2 = yield self.connectWorker()
 
         # disconnect both and wait for that to percolate
-        self.slaveSideDisconnect(slave2)
+        self.workerSideDisconnect(worker2)
 
-        yield slave1.waitForDetach()
+        yield worker1.waitForDetach()
 
         # flush the exception logged for this on the worker
         self.assertEqual(len(self.flushLoggedErrors(pb.PBConnectionLost)), 1)
