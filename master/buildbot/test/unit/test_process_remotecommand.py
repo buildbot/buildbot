@@ -168,7 +168,7 @@ class TestWorkerTransition(unittest.TestCase):
 
         w = mock.Mock()
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertIsNone(cmd.worker)
+            self.assertIdentical(cmd.worker, None)
 
             cmd.worker = w
 
