@@ -75,9 +75,9 @@ def masterConfig():
     # do a bunch of transfer to exercise the protocol
     f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
     f.addStep(steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
-    f.addStep(steps.FileUpload(slavesrc="dir/file2.txt", masterdest="master.txt"))
+    f.addStep(steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
     f.addStep(steps.FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
-    f.addStep(steps.DirectoryUpload(slavesrc="dir", masterdest="dir"))
+    f.addStep(steps.DirectoryUpload(workersrc="dir", masterdest="dir"))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],

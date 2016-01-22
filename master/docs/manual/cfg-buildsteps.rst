@@ -1960,13 +1960,13 @@ We want to put it into the master-side :file:`~/public_html/ref.html`, and add a
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.FileUpload(slavesrc="docs/reference.html",
+    f.addStep(steps.FileUpload(workersrc="docs/reference.html",
                                masterdest="/home/bb/public_html/ref.html",
                                url="http://somesite/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`, so things like ``~`` will be expanded properly.
 Non-absolute paths will be interpreted relative to the buildmaster's base directory.
-Likewise, the ``slavesrc=`` argument will be expanded and interpreted relative to the builder's working directory.
+Likewise, the ``workersrc=`` argument will be expanded and interpreted relative to the builder's working directory.
 
 .. note::
 
@@ -2021,7 +2021,7 @@ On the slave-side the directory can be found under :file:`docs`::
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.DirectoryUpload(slavesrc="docs",
+    f.addStep(steps.DirectoryUpload(workersrc="docs",
                                     masterdest="~/public_html/docs",
                                     url="~buildbot/docs"))
 
@@ -2144,7 +2144,7 @@ In this example, the step renames a tarball based on the day of the week.
 
     from buildbot.plugins import steps
 
-    f.addStep(steps.FileUpload(slavesrc="widgetsoft.tar.gz",
+    f.addStep(steps.FileUpload(workersrc="widgetsoft.tar.gz",
                          masterdest="/var/buildoutputs/widgetsoft-new.tar.gz"))
     f.addStep(steps.MasterShellCommand(
         command="mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz",
