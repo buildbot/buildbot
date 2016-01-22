@@ -27,6 +27,7 @@ from buildbot.process.buildstep import SUCCESS
 from buildbot.util import json
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import on_deprecated_name_usage
 from twisted.internet import defer
 from twisted.python import log
 
@@ -87,13 +88,26 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     renderables = ['workersrc', 'masterdest', 'url']
 
-    def __init__(self, slavesrc, masterdest,
+    def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
                  keepstamp=False, url=None,
+                 slavesrc=None,  # deprecated, use `workersrc` instead
                  **buildstep_kwargs):
+        # Deprecated API support.
+        if slavesrc is not None:
+            on_deprecated_name_usage(
+                "'slavesrc' keyword argument is deprecated, "
+                "use 'workersrc' instead")
+            assert workersrc is None
+            workersrc = slavesrc
+
+        # Emulate that first two arguments are positional.
+        if workersrc is None or masterdest is None:
+            raise TypeError("__init__() takes at least 3 arguments")
+
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.workersrc = slavesrc
+        self.workersrc = workersrc
         self._registerOldWorkerAttr("workersrc")
         self.masterdest = masterdest
         self.maxsize = maxsize

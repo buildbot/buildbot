@@ -107,11 +107,11 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testConstructorModeType(self):
         self.assertRaises(config.ConfigErrors, lambda:
-                          transfer.FileUpload(slavesrc=__file__, masterdest='xyz', mode='g+rwx'))
+                          transfer.FileUpload(workersrc=__file__, masterdest='xyz', mode='g+rwx'))
 
     def testBasic(self):
         self.setupStep(
-            transfer.FileUpload(slavesrc='srcfile', masterdest=self.destfile))
+            transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expectCommands(
             Expect('uploadFile', dict(
@@ -128,7 +128,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testTimestamp(self):
         self.setupStep(
-            transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, keepstamp=True))
+            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, keepstamp=True))
 
         timestamp = (os.path.getatime(__file__),
                      os.path.getmtime(__file__))
@@ -161,7 +161,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testURL(self):
         self.setupStep(
-            transfer.FileUpload(slavesrc=__file__, masterdest=self.destfile, url="http://server/file"))
+            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file"))
 
         self.step.addURL = Mock()
 
@@ -187,7 +187,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testFailure(self):
         self.setupStep(
-            transfer.FileUpload(slavesrc='srcfile', masterdest=self.destfile))
+            transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         self.expectCommands(
             Expect('uploadFile', dict(
@@ -204,7 +204,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testException(self):
         self.setupStep(
-            transfer.FileUpload(slavesrc='srcfile', masterdest=self.destfile))
+            transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
 
         behavior = UploadError(uploadString("Hello world!"))
 
@@ -228,7 +228,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         return d
 
     def test_workersrc_old_api(self):
-        step = transfer.FileUpload(slavesrc='srcfile', masterdest='dstfile')
+        step = transfer.FileUpload(workersrc='srcfile', masterdest='dstfile')
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             new = step.workersrc
@@ -239,6 +239,26 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             old = step.slavesrc
 
         self.assertIdentical(new, old)
+
+    def test_init_workersrc_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.FileUpload(workersrc='srcfile', masterdest='dstfile')
+
+        self.assertEqual(step.workersrc, 'srcfile')
+
+    def test_init_workersrc_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavesrc' keyword argument is deprecated"):
+            step = transfer.FileUpload(slavesrc='srcfile', masterdest='dstfile')
+
+        self.assertEqual(step.workersrc, 'srcfile')
+
+    def test_init_workersrc_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.FileUpload('srcfile', 'dstfile')
+
+        self.assertEqual(step.workersrc, 'srcfile')
 
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):

@@ -255,6 +255,11 @@ Here is the complete list of changed API:
    * - :py:attr:`buildbot.steps.transfer.FileUpload.slavesrc`
      - :py:attr:`~buildbot.steps.transfer.FileUpload.workersrc`
 
+   * - :py:class:`buildbot.steps.transfer.FileUpload`
+       constructor argument ``slavesrc`` was renamed to
+
+     - ``workersrc``
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::
