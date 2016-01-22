@@ -24,6 +24,10 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import ignoreWarning
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -402,3 +406,21 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_WorkerBuildStep(self):
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.steps.slave import SlaveBuildStep
+
+        class C(SlaveBuildStep):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'SlaveBuildStep' class is deprecated"):
+            c = C()
+            self.assertIsInstance(c, worker.WorkerBuildStep)

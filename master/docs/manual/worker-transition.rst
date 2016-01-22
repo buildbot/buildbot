@@ -252,6 +252,13 @@ Here is the complete list of changed API:
      - ``maxCountForWorker``
 
 
+   * - :py:mod:`buildbot.steps.slave`
+     - :py:mod:`buildbot.steps.worker`
+
+   * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
+     - :py:class:`buildbot.steps.worker.WorkerBuildStep`
+
+
    * - :py:attr:`buildbot.steps.transfer.FileUpload.slavesrc`
      - :py:attr:`~buildbot.steps.transfer.FileUpload.workersrc`
 
@@ -466,10 +473,6 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:attr:`buildbot.steps.shell.ShellCommand.slaveEnvironment`
        (Note: this variable is renderable)
      - :py:attr:`buildbot.steps.shell.ShellCommand.workerEnvironment`
-
-
-   * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
-     - :py:class:`buildbot.steps.worker.SlaveBuildStep`
 
 
    * - :py:mod:`buildbot.status.slave`
