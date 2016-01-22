@@ -292,7 +292,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_run_usePTY_old_slave(self):
+    def test_run_usePTY_old_worker(self):
         self.setupStep(
             shell.ShellCommand(workdir='build', command="echo hello",
                                usePTY=True),

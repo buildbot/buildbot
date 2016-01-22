@@ -632,7 +632,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
-    def test_mode_incremental_oldslave(self):
+    def test_mode_incremental_oldworker(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='incremental'))
@@ -1397,7 +1397,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
-    def test_mode_incremental_no_existing_repo_oldslave(self):
+    def test_mode_incremental_no_existing_repo_oldworker(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='incremental'))

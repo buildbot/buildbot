@@ -66,13 +66,13 @@ class TestListener(unittest.TestCase):
     @defer.inlineCallbacks
     def test_getPerspective(self):
         listener = self.makeListener()
-        buildslave = mock.Mock()
-        buildslave.workername = 'test'
+        worker = mock.Mock()
+        worker.workername = 'test'
         mind = mock.Mock()
 
         listener.updateRegistration('example', 'pass', 'tcp:1234')
-        self.master.workers.register(buildslave)
-        conn = yield listener._getPerspective(mind, buildslave.workername)
+        self.master.workers.register(worker)
+        conn = yield listener._getPerspective(mind, worker.workername)
 
         mind.broker.transport.setTcpKeepAlive.assert_called_with(1)
         self.assertIsInstance(conn, pb.Connection)
@@ -91,28 +91,28 @@ class TestConnection(unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master()
         self.mind = mock.Mock()
-        self.buildslave = mock.Mock()
+        self.worker = mock.Mock()
 
     def test_constructor(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
 
         self.assertEqual(conn.mind, self.mind)
         self.assertEqual(conn.master, self.master)
-        self.assertEqual(conn.worker, self.buildslave)
+        self.assertEqual(conn.worker, self.worker)
 
     @defer.inlineCallbacks
     def test_attached(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         att = yield conn.attached(self.mind)
 
         self.assertNotEqual(conn.keepalive_timer, None)
-        self.buildslave.attached.assert_called_with(conn)
+        self.worker.attached.assert_called_with(conn)
         self.assertEqual(att, conn)
 
         conn.detached(self.mind)
 
     def test_detached(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.attached(self.mind)
         conn.detached(self.mind)
 
@@ -120,14 +120,14 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(conn.mind, None)
 
     def test_loseConnection(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.loseConnection()
 
         self.assertEqual(conn.keepalive_timer, None)
         conn.mind.broker.transport.loseConnection.assert_called_with()
 
     def test_remotePrint(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.remotePrint(message='test')
         conn.mind.callRemote.assert_called_with('print', message='test')
 
@@ -142,7 +142,7 @@ class TestConnection(unittest.TestCase):
                 return defer.succeed('TheVersion')
 
         self.mind.callRemote.side_effect = side_effect
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
         r = {'info': 'test', 'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
@@ -161,7 +161,7 @@ class TestConnection(unittest.TestCase):
                 return defer.succeed('TheVersion')
 
         self.mind.callRemote.side_effect = side_effect
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
         r = {'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
@@ -173,7 +173,7 @@ class TestConnection(unittest.TestCase):
     def test_remoteSetBuilderList(self):
         builders = ['builder1', 'builder2']
         self.mind.callRemote.return_value = defer.succeed(builders)
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         r = yield conn.remoteSetBuilderList(builders)
 
         self.assertEqual(r, builders)
@@ -184,7 +184,7 @@ class TestConnection(unittest.TestCase):
         builders = ['builder']
         ret_val = {'builder': mock.Mock()}
         self.mind.callRemote.return_value = defer.succeed(ret_val)
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.remoteSetBuilderList(builders)
 
         RCInstance, builder_name, commandID = base.RemoteCommandImpl(), "builder", None
@@ -200,24 +200,24 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(callargs[1].impl, RCInstance)
 
     def test_doKeepalive(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.doKeepalive()
 
         self.mind.callRemote.assert_called_with('print', message="keepalive")
 
     def test_remoteShutdown(self):
         self.mind.callRemote.return_value = defer.succeed(None)
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         # note that we do not test the "old way", as it is now *very* old.
         conn.remoteShutdown()
 
         self.mind.callRemote.assert_called_with('shutdown')
 
     def test_remoteStartBuild(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         builders = {'builder': mock.Mock()}
         self.mind.callRemote.return_value = defer.succeed(builders)
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.remoteSetBuilderList(builders)
 
         conn.remoteStartBuild('builder')
@@ -225,7 +225,7 @@ class TestConnection(unittest.TestCase):
         builders['builder'].callRemote.assert_called_with('startBuild')
 
     def test_startStopKeepaliveTimer(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
 
         conn.startKeepaliveTimer()
         self.assertNotEqual(conn.keepalive_timer, None)
@@ -234,14 +234,14 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(conn.keepalive_timer, None)
 
     def test_perspective_shutdown(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.perspective_shutdown()
 
         conn.worker.shutdownRequested.assert_called_with()
         conn.worker.messageReceivedFromWorker.assert_called_with()
 
     def test_perspective_keepalive(self):
-        conn = pb.Connection(self.master, self.buildslave, self.mind)
+        conn = pb.Connection(self.master, self.worker, self.mind)
         conn.perspective_keepalive()
 
         conn.worker.messageReceivedFromWorker.assert_called_with()

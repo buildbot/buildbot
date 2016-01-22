@@ -36,20 +36,20 @@ class TestFakeConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.buildslave = mock.Mock()
-        self.conn = fakeprotocol.FakeConnection(self.master, self.buildslave)
+        self.worker = mock.Mock()
+        self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
 
 
 class TestConnection(protocols.ConnectionInterfaceTest, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.buildslave = mock.Mock()
-        self.conn = base.Connection(self.master, self.buildslave)
+        self.worker = mock.Mock()
+        self.conn = base.Connection(self.master, self.worker)
 
     def test_constructor(self):
         self.assertEqual(self.conn.master, self.master)
-        self.assertEqual(self.conn.worker, self.buildslave)
+        self.assertEqual(self.conn.worker, self.worker)
 
     def test_notify(self):
         cb = mock.Mock()

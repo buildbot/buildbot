@@ -66,7 +66,7 @@ class TestLocalWorker(unittest.TestCase):
         self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('custom'))
 
     @defer.inlineCallbacks
-    def test_slaveinfo(self):
+    def test_workerinfo(self):
         sl = self.createWorker('bot',
                                max_builds=2,
                                notify_on_missing=['me@me.com'],
