@@ -258,6 +258,9 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.steps.slave.SlaveBuildStep`
      - :py:class:`buildbot.steps.worker.WorkerBuildStep`
 
+   * - :py:class:`buildbot.steps.slave.CompositeStepMixin.getFileContentFromSlave`
+     - :py:class:`buildbot.steps.worker.CompositeStepMixin.getFileContentFromWorker`
+
 
    * - :py:attr:`buildbot.steps.transfer.FileUpload.slavesrc`
      - :py:attr:`~buildbot.steps.transfer.FileUpload.workersrc`

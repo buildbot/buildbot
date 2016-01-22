@@ -523,7 +523,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     def start(self):
         if self.suppressionFile is None:
             return ShellCommand.start(self)
-        d = self.getFileContentFromSlave(self.suppressionFile, abandonOnFailure=True)
+        d = self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
 

@@ -593,7 +593,7 @@ This class can only be used in new-style steps.
         This uses Python's ``glob`` module.
         If the ``glob`` method fails, it aborts the step.
 
-    .. py:method:: getFileContentFromSlave(path, abandonOnFailure=False)
+    .. py:method:: getFileContentFromWorker(path, abandonOnFailure=False)
 
         :param path: path of the file to download from slave
         :returns: string via deferred (content of the file)
