@@ -278,6 +278,15 @@ Here is the complete list of changed API:
 
      - ``workersrcs``
 
+
+   * - :py:attr:`buildbot.steps.transfer.FileDownload.slavedest`
+     - :py:attr:`~buildbot.steps.transfer.FileDownload.workerdest`
+
+   * - :py:class:`buildbot.steps.transfer.FileDownload`
+       constructor argument ``slavedest`` was renamed to
+
+     - ``workerdest``
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

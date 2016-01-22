@@ -383,19 +383,33 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         return BuildStep.finished(self, result)
 
 
-class FileDownload(_TransferBuildStep):
+class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
     name = 'download'
 
-    renderables = ['mastersrc', 'slavedest']
+    renderables = ['mastersrc', 'workerdest']
 
-    def __init__(self, mastersrc, slavedest,
+    def __init__(self, mastersrc, workerdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
+                 slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
+        # Deprecated API support.
+        if slavedest is not None:
+            on_deprecated_name_usage(
+                "'slavedest' keyword argument is deprecated, "
+                "use 'workerdest' instead")
+            assert workerdest is None
+            workerdest = slavedest
+
+        # Emulate that first two arguments are positional.
+        if workerdest is None:
+            raise TypeError("__init__() takes at least 3 arguments")
+
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.mastersrc = mastersrc
-        self.slavedest = slavedest
+        self.workerdest = workerdest
+        self._registerOldWorkerAttr("workerdest")
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -409,11 +423,11 @@ class FileDownload(_TransferBuildStep):
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
         source = os.path.expanduser(self.mastersrc)
-        slavedest = self.slavedest
+        workerdest = self.workerdest
         log.msg("FileDownload started, from master %r to worker %r" %
-                (source, slavedest))
+                (source, workerdest))
 
-        self.descriptionDone = "downloading to %s" % os.path.basename(slavedest)
+        self.descriptionDone = "downloading to %s" % os.path.basename(workerdest)
 
         # setup structures for reading the file
         try:
@@ -430,7 +444,7 @@ class FileDownload(_TransferBuildStep):
 
         # default arguments
         args = {
-            'slavedest': slavedest,
+            'slavedest': workerdest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,

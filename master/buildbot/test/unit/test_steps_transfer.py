@@ -610,6 +610,52 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertRaises(TypeError, lambda: transfer.MultipleFileUpload(['srcfile']))
 
 
+class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_workerdest_old_api(self):
+        step = transfer.FileDownload(mastersrc='srcfile', workerdest='dstfile')
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = step.workerdest
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' attribute is deprecated"):
+            old = step.slavedest
+
+        self.assertIdentical(new, old)
+
+    def test_init_workerdest_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.FileDownload(mastersrc='srcfile', workerdest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavedest' keyword argument is deprecated"):
+            step = transfer.FileDownload(mastersrc='srcfile', slavedest='dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_workerdest_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            step = transfer.FileDownload('srcfile', 'dstfile')
+
+        self.assertEqual(step.workerdest, 'dstfile')
+
+    def test_init_positional_args(self):
+        self.assertRaises(TypeError, lambda: transfer.FileDownload())
+        self.assertRaises(TypeError, lambda: transfer.FileDownload('srcfile'))
+
+
 class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
