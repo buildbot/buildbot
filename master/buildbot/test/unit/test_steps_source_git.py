@@ -2246,7 +2246,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='full', method='clean'))

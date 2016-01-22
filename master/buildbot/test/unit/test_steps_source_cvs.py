@@ -1102,7 +1102,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             cvs.CVS(cvsroot=":pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot",
                     cvsmodule="mozilla/browser/", mode='full', method='clean'))

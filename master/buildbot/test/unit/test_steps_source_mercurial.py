@@ -1051,7 +1051,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             mercurial.Mercurial(repourl='http://hg.mozilla.org',
                                 mode='full', method='clean', branchType='inrepo'))
