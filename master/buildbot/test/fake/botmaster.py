@@ -23,7 +23,7 @@ class FakeBotMaster(service.AsyncMultiService):
         self.setName("fake-botmaster")
         self.locks = {}
         self.builders = {}
-        self.buildsStartedForSlaves = []
+        self.buildsStartedForWorkers = []
 
     def getLockByID(self, lockid):
         if lockid not in self.locks:
@@ -41,7 +41,7 @@ class FakeBotMaster(service.AsyncMultiService):
         return self.builders.get(workername, [])
 
     def maybeStartBuildsForWorker(self, workername):
-        self.buildsStartedForSlaves.append(workername)
+        self.buildsStartedForWorkers.append(workername)
 
     def workerLost(self, bot):
         pass
