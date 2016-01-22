@@ -21,7 +21,7 @@ from buildbot.db import buildrequests, builds
 from buildbot.test.util import connector_component, db
 from buildbot.test.fake import fakedb
 from buildbot.util import UTC, epoch2datetime
-from buildbot.status.results import RESUME, CANCELED
+from buildbot.status.results import RESUME, CANCELED, BEGINNING
 
 class TestBuildsetsConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -1123,6 +1123,24 @@ class TestBuildsetsConnectorComponent(
 
         return d
 
+    def fakeRequest(self, brid, bsid, results, buildername='bldr1', complete=False, priority=0, submitted_at=None):
+        return {'slavepool': None,
+                'artifactbrid': None,
+                'buildername': buildername,
+                'claimed_at': None,
+                'results': results,
+                'mine': False,
+                'triggeredbybrid': None,
+                'submitted_at': epoch2datetime(submitted_at) if submitted_at else None,
+                'claimed': False,
+                'complete': complete,
+                'complete_at': None,
+                'buildsetid': bsid,
+                'priority': priority,
+                'mergebrid': None,
+                'brid': brid,
+                'startbrid': None}
+
     def test_getBuildRequestInQueue(self):
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1"),
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2"),
@@ -1134,27 +1152,67 @@ class TestBuildsetsConnectorComponent(
                        fakedb.BuildRequestClaim(brid=4, objectid=self.MASTER_ID, claimed_at=1300103810),
                        fakedb.BuildRequestClaim(brid=5, objectid=self.MASTER_ID, claimed_at=1300103810)]
 
-        def fakeRequest(brid, bsid, results, complete):
-            return {'slavepool': None,
-                    'artifactbrid': None,
-                    'buildername': 'bldr1',
-                    'claimed_at': None,
-                    'results': results,
-                    'mine': False,
-                    'triggeredbybrid': None,
-                    'submitted_at': None,
-                    'claimed': False,
-                    'complete': complete,
-                    'complete_at': None,
-                    'buildsetid': bsid,
-                    'priority': 0,
-                    'mergebrid': None,
-                    'brid': brid,
-                    'startbrid': None}
-
         d = self.insertTestData(breqs + breqsclaims)
         d.addCallback(lambda _: self.db.buildrequests.getBuildRequestInQueue(buildername="bldr1"))
-        d.addCallback(lambda queue: self.assertEqual(queue, [fakeRequest(1, 1, -1, False), fakeRequest(3, 3, 9, False)]))
+        d.addCallback(lambda queue: self.assertEqual(queue, [self.fakeRequest(1, 1, BEGINNING),
+                                                             self.fakeRequest(3, 3, RESUME)]))
+        return d
+
+    def insertBuildRequestsInQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1", priority=20, submitted_at=1450171024),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2", priority=50, submitted_at=1450171039),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1", results=RESUME,
+                                     complete=0, priority=100, submitted_at=1449668061),
+                 fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1", results=0, complete=1, priority=75,
+                                     submitted_at=1450451019,),
+                 fakedb.BuildRequest(id=5, buildsetid=5, buildername="bldr1", results=RESUME, complete=0, mergebrid=3),
+                 fakedb.BuildRequest(id=6, buildsetid=6, buildername="bldr1", priority=100, submitted_at=1449579016),
+                 fakedb.BuildRequest(id=7, buildsetid=7, buildername="bldr1", results=RESUME, complete=0,
+                                     priority=50, submitted_at=1449579016),
+                 fakedb.BuildRequest(id=8, buildsetid=8, buildername="bldr1", priority=30, submitted_at=1450171024)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=id, objectid=self.MASTER_ID, claimed_at=1300103810)
+                       for id in range(3, 8)]
+
+        breqs_sourcestamps = []
+        ssid = 1
+        for id in range(1, 9):
+            breqs_sourcestamps.append(fakedb.SourceStampSet(id=id))
+            breqs_sourcestamps.append(fakedb.Buildset(id=id, sourcestampsetid=id))
+            breqs_sourcestamps.append(fakedb.SourceStamp(id=ssid,
+                                                         revision='a%d' % id,
+                                                         codebase='1',
+                                                         sourcestampsetid=id,
+                                                         branch='master',
+                                                         repository='z'))
+            breqs_sourcestamps.append(fakedb.SourceStamp(id=ssid+1,
+                                                         revision='b%d' % id,
+                                                         codebase='2',
+                                                         sourcestampsetid=id,
+                                                         branch='staging',
+                                                         repository='w'))
+            ssid+=2
+
+        d = self.insertTestData(breqs + breqsclaims + breqs_sourcestamps)
+        return d
+
+    def test_getBuildRequestInQueueCodebasesFound(self):
+        expectedBreqs = [self.fakeRequest(brid=8, bsid=8, results=BEGINNING, priority=30, submitted_at=1450171024),
+                         self.fakeRequest(brid=1, bsid=1, results=BEGINNING, priority=20, submitted_at=1450171024),
+                         self.fakeRequest(brid=3, bsid=3, results=RESUME, priority=100, submitted_at=1449668061),
+                         self.fakeRequest(brid=7, bsid=7, results=RESUME, priority=50, submitted_at=1449579016)]
+
+        sourcestamps_filter = [{'b_codebase': '1', 'b_branch': 'master'},
+                               {'b_codebase': '2', 'b_branch': 'staging'}]
+
+        def checkResults(buildqueue):
+            self.assertEquals(buildqueue, expectedBreqs)
+
+        d = self.insertBuildRequestsInQueue()
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestInQueue(buildername="bldr1",
+                                                                            sourcestamps=sourcestamps_filter,
+                                                                            sorted=True))
+        d.addCallback(checkResults)
         return d
 
     def insertPrioritizedBreqs(self):
