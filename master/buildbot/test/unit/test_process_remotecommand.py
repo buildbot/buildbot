@@ -13,10 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
+
 from buildbot.process import remotecommand
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial import unittest
 
 
@@ -153,3 +159,22 @@ class TestFakeRunCommand(unittest.TestCase, Tests):
 
     remoteCommandClass = fakeremotecommand.FakeRemoteCommand
     remoteShellCommandClass = fakeremotecommand.FakeRemoteShellCommand
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_worker_old_api(self):
+        cmd = remotecommand.RemoteCommand('cmd', [])
+
+        w = mock.Mock()
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertIsNone(cmd.worker)
+
+            cmd.worker = w
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'buildslave' attribute is deprecated"):
+            old = cmd.buildslave
+
+        self.assertIdentical(old, w)

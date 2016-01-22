@@ -314,6 +314,9 @@ Here is the complete list of changed API:
 
      - ``workerdest``
 
+   * - :py:attr:`buildbot.process.remotecommand.RemoteCommand.buildslave`
+     - :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

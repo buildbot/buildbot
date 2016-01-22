@@ -808,7 +808,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def runCommand(self, command):
         self.cmd = command
-        command.buildslave = self.worker
+        command.worker = self.worker
         try:
             res = yield command.run(self, self.remote, self.build.builder.name)
         finally:

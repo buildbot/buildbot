@@ -21,6 +21,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
+from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import log
@@ -32,7 +33,7 @@ class RemoteException(Exception):
     pass
 
 
-class RemoteCommand(base.RemoteCommandImpl):
+class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
 
     # class-level unique identifier generator for command ids
     _commandCounter = 0
@@ -62,7 +63,8 @@ class RemoteCommand(base.RemoteCommandImpl):
         self.ignore_updates = ignore_updates
         self.decodeRC = decodeRC
         self.conn = None
-        self.buildslave = None
+        self.worker = None
+        self._registerOldWorkerAttr("worker", pattern="buildworker")
         self.step = None
         self.builder_name = None
         self.commandID = None
@@ -181,7 +183,7 @@ class RemoteCommand(base.RemoteCommandImpl):
         @type  updates: list of [object, int]
         @param updates: list of updates from the remote command
         """
-        self.buildslave.messageReceivedFromWorker()
+        self.worker.messageReceivedFromWorker()
         max_updatenum = 0
         for (update, num) in updates:
             # log.msg("update[%d]:" % num)
@@ -207,7 +209,7 @@ class RemoteCommand(base.RemoteCommandImpl):
 
         @rtype: None
         """
-        self.buildslave.messageReceivedFromWorker()
+        self.worker.messageReceivedFromWorker()
         # call the real remoteComplete a moment later, but first return an
         # acknowledgement so the worker can retire the completion message.
         if self.active:
