@@ -42,6 +42,7 @@ __all__ = (
 #   removed. It's good to think now how this can be gracefully done later.
 #   For example, if I explicitly configure warnings in buildbot.tac template
 #   now, later generated from such template buildbot.tac files will break.
+# * Perhaphs remove "pattern" from deprecated_name() and always use "name"?
 
 
 def deprecated_name(new_name, pattern=None):
