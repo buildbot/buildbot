@@ -103,13 +103,13 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                   builderid=None):
         if buildslaveid is None and name is None:
             defer.returnValue(None)
-        bslaves = yield self.getWorkers(_buildslaveid=buildslaveid,
+        bslaves = yield self.getWorkers(_workerid=buildslaveid,
                                         _name=name, masterid=masterid, builderid=builderid)
         if bslaves:
             defer.returnValue(bslaves[0])
     define_old_worker_method(locals(), getWorker, pattern="Buildworker")
 
-    def getWorkers(self, _buildslaveid=None, _name=None, masterid=None,
+    def getWorkers(self, _workerid=None, _name=None, masterid=None,
                    builderid=None):
         def thd(conn):
             bslave_tbl = self.db.model.buildslaves
@@ -130,8 +130,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 from_obj=[j],
                 order_by=[bslave_tbl.c.id])
 
-            if _buildslaveid is not None:
-                q = q.where(bslave_tbl.c.id == _buildslaveid)
+            if _workerid is not None:
+                q = q.where(bslave_tbl.c.id == _workerid)
             if _name is not None:
                 q = q.where(bslave_tbl.c.name == _name)
             if masterid is not None:
@@ -170,8 +170,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 from_obj=[j],
                 order_by=[conn_tbl.c.buildslaveid])
 
-            if _buildslaveid is not None:
-                q = q.where(conn_tbl.c.buildslaveid == _buildslaveid)
+            if _workerid is not None:
+                q = q.where(conn_tbl.c.buildslaveid == _workerid)
             if _name is not None:
                 q = q.where(bslave_tbl.c.name == _name)
             if masterid is not None:
@@ -186,27 +186,26 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             return list(itervalues(rv))
         return self.db.pool.do(thd)
 
-    def workerConnected(self, buildslaveid, masterid, slaveinfo):
+    def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):
             conn_tbl = self.db.model.connected_buildslaves
             q = conn_tbl.insert()
             try:
                 conn.execute(q,
-                             {'buildslaveid': buildslaveid, 'masterid': masterid})
+                             {'buildslaveid': workerid, 'masterid': masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
 
             bs_tbl = self.db.model.buildslaves
-            q = bs_tbl.update(whereclause=(bs_tbl.c.id == buildslaveid))
-            conn.execute(q, info=slaveinfo)
+            q = bs_tbl.update(whereclause=(bs_tbl.c.id == workerid))
+            conn.execute(q, info=workerinfo)
         return self.db.pool.do(thd)
 
-    def workerDisconnected(self, buildslaveid, masterid):
+    def workerDisconnected(self, workerid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_buildslaves
-            q = tbl.delete(whereclause=(
-                tbl.c.buildslaveid == buildslaveid) &
-                (tbl.c.masterid == masterid))
+            q = tbl.delete(whereclause=(tbl.c.buildslaveid == workerid) &
+                                       (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)

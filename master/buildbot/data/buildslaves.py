@@ -119,9 +119,9 @@ class Buildslave(base.ResourceType):
     @defer.inlineCallbacks
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         yield self.master.db.buildslaves.workerConnected(
-            buildslaveid=buildslaveid,
+            workerid=buildslaveid,
             masterid=masterid,
-            slaveinfo=slaveinfo)
+            workerinfo=slaveinfo)
         bs = yield self.master.data.get(('buildslaves', buildslaveid))
         self.produceEvent(bs, 'connected')
 
@@ -129,7 +129,7 @@ class Buildslave(base.ResourceType):
     @defer.inlineCallbacks
     def buildslaveDisconnected(self, buildslaveid, masterid):
         yield self.master.db.buildslaves.workerDisconnected(
-            buildslaveid=buildslaveid,
+            workerid=buildslaveid,
             masterid=masterid)
         bs = yield self.master.data.get(('buildslaves', buildslaveid))
         self.produceEvent(bs, 'disconnected')

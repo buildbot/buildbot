@@ -602,7 +602,7 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConfigured`
 
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
-       method positional argument ``buildslaveid`` was renamed
+       method argument ``buildslaveid`` was renamed
        (introduced in nine)
      - ``workerid``
 
@@ -610,13 +610,33 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        (introduced in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
 
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+       method argument ``_buildslaveid`` was renamed
+       (introduced in nine)
+     - ``_workerid``
+
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
        (introduced in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConnected`
 
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+       method argument ``slaveinfo`` was renamed
+       (introduced in nine)
+     - ``workerinfo``
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+       method argument ``buildslaveid`` was renamed
+       (introduced in nine)
+     - ``workerid``
+
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
        (introduced in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerDisconnected`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
+       method argument ``buildslaveid`` was renamed
+       (introduced in nine)
+     - ``workerid``
 
 Other changes:
 

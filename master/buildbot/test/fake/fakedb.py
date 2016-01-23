@@ -1427,13 +1427,13 @@ class FakeBuildslavesComponent(FakeDBComponent):
             self._mkdict(worker, builderid, masterid)
             for worker in slaves])
 
-    def workerConnected(self, buildslaveid, masterid, slaveinfo):
-        slave = self.buildslaves.get(buildslaveid)
+    def workerConnected(self, workerid, masterid, workerinfo):
+        slave = self.buildslaves.get(workerid)
         # test serialization
-        json.dumps(slaveinfo)
+        json.dumps(workerinfo)
         if slave is not None:
-            slave['info'] = slaveinfo
-        new_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
+            slave['info'] = workerinfo
+        new_conn = dict(masterid=masterid, buildslaveid=workerid)
         if new_conn not in itervalues(self.connected):
             conn_id = max([0] + list(self.connected)) + 1
             self.connected[conn_id] = new_conn
@@ -1465,8 +1465,8 @@ class FakeBuildslavesComponent(FakeDBComponent):
                              for buildermasterid in buildermasterids])
         return defer.succeed(None)
 
-    def workerDisconnected(self, buildslaveid, masterid):
-        del_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
+    def workerDisconnected(self, workerid, masterid):
+        del_conn = dict(masterid=masterid, buildslaveid=workerid)
         for id, conn in iteritems(self.connected):
             if conn == del_conn:
                 del self.connected[id]

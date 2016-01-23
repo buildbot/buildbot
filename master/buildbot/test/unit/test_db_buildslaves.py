@@ -96,12 +96,12 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_buildslaveConnected(self):
         @self.assertArgSpecMatches(self.db.buildslaves.workerConnected)
-        def workerConnected(self, buildslaveid, masterid, slaveinfo):
+        def workerConnected(self, workerid, masterid, workerinfo):
             pass
 
     def test_signature_buildslaveDisconnected(self):
         @self.assertArgSpecMatches(self.db.buildslaves.workerDisconnected)
-        def workerDisconnected(self, buildslaveid, masterid):
+        def workerDisconnected(self, workerid, masterid):
             pass
 
     def test_signature_buildslaveConfigured(self):
@@ -402,7 +402,7 @@ class Tests(interfaces.InterfaceTests):
         NEW_INFO = {'other': [1, 2, 3]}
 
         yield self.db.buildslaves.workerConnected(
-            buildslaveid=self.BS1_ID, masterid=11, slaveinfo=NEW_INFO)
+            workerid=self.BS1_ID, masterid=11, workerinfo=NEW_INFO)
 
         bs = yield self.db.buildslaves.getWorker(self.BS1_ID)
         self.assertEqual(bs, {
@@ -419,7 +419,7 @@ class Tests(interfaces.InterfaceTests):
                                        buildslaveid=self.BS1_ID, masterid=11),
         ])
         yield self.db.buildslaves.workerConnected(
-            buildslaveid=self.BS1_ID, masterid=11, slaveinfo={})
+            workerid=self.BS1_ID, masterid=11, workerinfo={})
 
         bs = yield self.db.buildslaves.getWorker(self.BS1_ID)
         self.assertEqual(bs['connected_to'], [11])
@@ -433,7 +433,7 @@ class Tests(interfaces.InterfaceTests):
                                        buildslaveid=self.BS1_ID, masterid=11),
         ])
         yield self.db.buildslaves.workerDisconnected(
-            buildslaveid=self.BS1_ID, masterid=11)
+            workerid=self.BS1_ID, masterid=11)
 
         bs = yield self.db.buildslaves.getWorker(self.BS1_ID)
         self.assertEqual(bs['connected_to'], [10])
@@ -442,7 +442,7 @@ class Tests(interfaces.InterfaceTests):
     def test_buildslaveDisconnected_already_disconnected(self):
         yield self.insertTestData(self.baseRows + self.buildslave1_rows)
         yield self.db.buildslaves.workerDisconnected(
-            buildslaveid=self.BS1_ID, masterid=11)
+            workerid=self.BS1_ID, masterid=11)
 
         bs = yield self.db.buildslaves.getWorker(self.BS1_ID)
         self.assertEqual(bs['connected_to'], [])
