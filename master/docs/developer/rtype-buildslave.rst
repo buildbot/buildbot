@@ -120,7 +120,7 @@ All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.buildslaves.BuildslaveResourceType
 
-    .. py:method:: findSchedulerId(name)
+    .. py:method:: findBuildslaveId(name)
 
         :param name: buildslave name
         :type name: 50-character identifier
