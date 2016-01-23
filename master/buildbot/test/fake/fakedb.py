@@ -1339,17 +1339,17 @@ class FakeBuildsetsComponent(FakeDBComponent):
         return bsid
 
 
-class FakeBuildslavesComponent(FakeDBComponent):
+class FakeWorkersComponent(FakeDBComponent):
 
     def setUp(self):
-        self.buildslaves = {}
+        self.workers = {}
         self.configured = {}
         self.connected = {}
 
     def insertTestData(self, rows):
         for row in rows:
             if isinstance(row, Buildslave):
-                self.buildslaves[row.id] = dict(
+                self.workers[row.id] = dict(
                     id=row.id,
                     name=row.name,
                     info=row.info)
@@ -1366,18 +1366,18 @@ class FakeBuildslavesComponent(FakeDBComponent):
     def findWorkerId(self, name, _reactor=reactor):
         validation.verifyType(self.t, 'name', name,
                               validation.IdentifierValidator(50))
-        for m in itervalues(self.buildslaves):
+        for m in itervalues(self.workers):
             if m['name'] == name:
                 return defer.succeed(m['id'])
-        id = len(self.buildslaves) + 1
-        self.buildslaves[id] = dict(
+        id = len(self.workers) + 1
+        self.workers[id] = dict(
             id=id,
             name=name,
             info={})
         return defer.succeed(id)
 
-    def _getBuildslaveByName(self, name):
-        for worker in itervalues(self.buildslaves):
+    def _getWorkerByName(self, name):
+        for worker in itervalues(self.workers):
             if worker['name'] == name:
                 return worker
         return None
@@ -1385,14 +1385,14 @@ class FakeBuildslavesComponent(FakeDBComponent):
     def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
         # get the id and the worker
         if workerid is None:
-            for worker in itervalues(self.buildslaves):
+            for worker in itervalues(self.workers):
                 if worker['name'] == name:
                     workerid = worker['id']
                     break
             else:
                 worker = None
         else:
-            worker = self.buildslaves.get(workerid)
+            worker = self.workers.get(workerid)
 
         if not worker:
             return defer.succeed(None)
@@ -1404,8 +1404,8 @@ class FakeBuildslavesComponent(FakeDBComponent):
     def getWorkers(self, masterid=None, builderid=None):
         if masterid is not None or builderid is not None:
             builder_masters = self.db.builders.builder_masters
-            slaves = []
-            for worker in itervalues(self.buildslaves):
+            workers = []
+            for worker in itervalues(self.workers):
                 configured = [cfg for cfg in self.configured.itervalues()
                               if cfg['buildslaveid'] == worker['id']]
                 pairs = [builder_masters[cfg['buildermasterid']]
@@ -1419,20 +1419,20 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 if masterid is not None:
                     if not any((masterid == p[1]) for p in pairs):
                         continue
-                slaves.append(worker)
+                workers.append(worker)
         else:
-            slaves = list(itervalues(self.buildslaves))
+            workers = list(itervalues(self.workers))
 
         return defer.succeed([
             self._mkdict(worker, builderid, masterid)
-            for worker in slaves])
+            for worker in workers])
 
     def workerConnected(self, workerid, masterid, workerinfo):
-        slave = self.buildslaves.get(workerid)
+        worker = self.workers.get(workerid)
         # test serialization
         json.dumps(workerinfo)
-        if slave is not None:
-            slave['info'] = workerinfo
+        if worker is not None:
+            worker['info'] = workerinfo
         new_conn = dict(masterid=masterid, buildslaveid=workerid)
         if new_conn not in itervalues(self.connected):
             conn_id = max([0] + list(self.connected)) + 1
@@ -1473,10 +1473,10 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 break
         return defer.succeed(None)
 
-    def _configuredOn(self, buildslaveid, builderid=None, masterid=None):
+    def _configuredOn(self, workerid, builderid=None, masterid=None):
         cfg = []
         for cs in itervalues(self.configured):
-            if cs['buildslaveid'] != buildslaveid:
+            if cs['buildslaveid'] != workerid:
                 continue
             bid, mid = self.db.builders.builder_masters[cs['buildermasterid']]
             if builderid is not None and bid != builderid:
@@ -1486,23 +1486,23 @@ class FakeBuildslavesComponent(FakeDBComponent):
             cfg.append({'builderid': bid, 'masterid': mid})
         return cfg
 
-    def _connectedTo(self, buildslaveid, masterid=None):
+    def _connectedTo(self, workerid, masterid=None):
         conns = []
         for cs in itervalues(self.connected):
-            if cs['buildslaveid'] != buildslaveid:
+            if cs['buildslaveid'] != workerid:
                 continue
             if masterid is not None and cs['masterid'] != masterid:
                 continue
             conns.append(cs['masterid'])
         return conns
 
-    def _mkdict(self, sl, builderid, masterid):
+    def _mkdict(self, w, builderid, masterid):
         return {
-            'id': sl['id'],
-            'slaveinfo': sl['info'],
-            'name': sl['name'],
-            'configured_on': self._configuredOn(sl['id'], builderid, masterid),
-            'connected_to': self._connectedTo(sl['id'], masterid),
+            'id': w['id'],
+            'slaveinfo': w['info'],
+            'name': w['name'],
+            'configured_on': self._configuredOn(w['id'], builderid, masterid),
+            'connected_to': self._connectedTo(w['id'], masterid),
         }
 
 
@@ -2411,7 +2411,7 @@ class FakeDBConnector(service.AsyncMultiService):
         self._components.append(comp)
         self.buildsets = comp = FakeBuildsetsComponent(self, testcase)
         self._components.append(comp)
-        self.workers = comp = FakeBuildslavesComponent(self, testcase)
+        self.workers = comp = FakeWorkersComponent(self, testcase)
         self._components.append(comp)
         self.state = comp = FakeStateComponent(self, testcase)
         self._components.append(comp)
