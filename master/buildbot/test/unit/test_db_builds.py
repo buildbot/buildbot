@@ -97,7 +97,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_addBuild(self):
         @self.assertArgSpecMatches(self.db.builds.addBuild)
-        def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
+        def addBuild(self, builderid, buildrequestid, workerid, masterid,
                      state_string):
             pass
 
@@ -197,7 +197,7 @@ class Tests(interfaces.InterfaceTests):
         clock.advance(TIME1)
         yield self.insertTestData(self.backgroundData)
         id, number = yield self.db.builds.addBuild(builderid=77,
-                                                   buildrequestid=41, buildslaveid=13, masterid=88,
+                                                   buildrequestid=41, workerid=13, masterid=88,
                                                    state_string=u'test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
@@ -216,7 +216,7 @@ class Tests(interfaces.InterfaceTests):
                          masterid=88, buildslaveid=13),
         ])
         id, number = yield self.db.builds.addBuild(builderid=77,
-                                                   buildrequestid=41, buildslaveid=13, masterid=88,
+                                                   buildrequestid=41, workerid=13, masterid=88,
                                                    state_string=u'test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
@@ -310,7 +310,7 @@ class RealTests(Tests):
                           'started_at': TIME1, 'state_string': "hi"})
 
         id, number = yield self.db.builds.addBuild(builderid=77,
-                                                   buildrequestid=41, buildslaveid=13, masterid=88,
+                                                   buildrequestid=41, workerid=13, masterid=88,
                                                    state_string=u'test test2', _reactor=clock,
                                                    _race_hook=raceHook)
         bdict = yield self.db.builds.getBuild(id)

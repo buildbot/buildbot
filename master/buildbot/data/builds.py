@@ -193,7 +193,7 @@ class Build(base.ResourceType):
         res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,
-            buildslaveid=buildslaveid,
+            workerid=buildslaveid,
             masterid=self.master.masterid,
             state_string=u'created')
         defer.returnValue(res)

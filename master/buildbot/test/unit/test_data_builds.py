@@ -225,7 +225,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_callthrough('addBuild', self.rtype.addBuild,
                                         builderid=10, buildrequestid=13, buildslaveid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
-                                                        buildslaveid=20, masterid=self.master.masterid,
+                                                        workerid=20, masterid=self.master.masterid,
                                                         state_string=u'created'))
 
     def test_newBuildEvent(self):

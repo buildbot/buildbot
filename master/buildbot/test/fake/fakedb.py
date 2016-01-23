@@ -1822,7 +1822,7 @@ class FakeBuildsComponent(FakeDBComponent):
 
         return defer.succeed(ret)
 
-    def addBuild(self, builderid, buildrequestid, buildslaveid, masterid,
+    def addBuild(self, builderid, buildrequestid, workerid, masterid,
                  state_string, _reactor=reactor):
         validation.verifyType(self.t, 'state_string', state_string,
                               validation.StringValidator())
@@ -1831,7 +1831,7 @@ class FakeBuildsComponent(FakeDBComponent):
                             if r['builderid'] == builderid]) + 1
         self.builds[id] = dict(id=id, number=number,
                                buildrequestid=buildrequestid, builderid=builderid,
-                               buildslaveid=buildslaveid, masterid=masterid,
+                               buildslaveid=workerid, masterid=masterid,
                                state_string=state_string,
                                started_at=_reactor.seconds(), complete_at=None,
                                results=None)
