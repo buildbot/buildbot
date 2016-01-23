@@ -103,36 +103,36 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                   builderid=None):
         if workerid is None and name is None:
             defer.returnValue(None)
-        bslaves = yield self.getWorkers(_workerid=workerid,
+        workers = yield self.getWorkers(_workerid=workerid,
                                         _name=name, masterid=masterid, builderid=builderid)
-        if bslaves:
-            defer.returnValue(bslaves[0])
+        if workers:
+            defer.returnValue(workers[0])
 
     def getWorkers(self, _workerid=None, _name=None, masterid=None,
                    builderid=None):
         def thd(conn):
-            bslave_tbl = self.db.model.buildslaves
+            workers_tbl = self.db.model.buildslaves
             conn_tbl = self.db.model.connected_buildslaves
             cfg_tbl = self.db.model.configured_buildslaves
             bm_tbl = self.db.model.builder_masters
 
-            def selectSlave(q):
+            def selectWorker(q):
                 return q
 
-            # first, get the buildslave itself and the configured_on info
-            j = bslave_tbl
+            # first, get the worker itself and the configured_on info
+            j = workers_tbl
             j = j.outerjoin(cfg_tbl)
             j = j.outerjoin(bm_tbl)
             q = sa.select(
-                [bslave_tbl.c.id, bslave_tbl.c.name, bslave_tbl.c.info,
+                [workers_tbl.c.id, workers_tbl.c.name, workers_tbl.c.info,
                  bm_tbl.c.builderid, bm_tbl.c.masterid],
                 from_obj=[j],
-                order_by=[bslave_tbl.c.id])
+                order_by=[workers_tbl.c.id])
 
             if _workerid is not None:
-                q = q.where(bslave_tbl.c.id == _workerid)
+                q = q.where(workers_tbl.c.id == _workerid)
             if _name is not None:
-                q = q.where(bslave_tbl.c.name == _name)
+                q = q.where(workers_tbl.c.name == _name)
             if masterid is not None:
                 q = q.where(bm_tbl.c.masterid == masterid)
             if builderid is not None:
@@ -163,7 +163,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             if _name is not None:
                 # note this is not an outer join; if there are unconnected
                 # workers, they were captured in rv above
-                j = j.join(bslave_tbl)
+                j = j.join(workers_tbl)
             q = sa.select(
                 [conn_tbl.c.buildslaveid, conn_tbl.c.masterid],
                 from_obj=[j],
@@ -172,7 +172,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             if _workerid is not None:
                 q = q.where(conn_tbl.c.buildslaveid == _workerid)
             if _name is not None:
-                q = q.where(bslave_tbl.c.name == _name)
+                q = q.where(workers_tbl.c.name == _name)
             if masterid is not None:
                 q = q.where(conn_tbl.c.masterid == masterid)
 
