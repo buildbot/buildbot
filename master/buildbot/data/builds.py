@@ -137,7 +137,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
             buildrequestid=kwargs.get('buildrequestid'),
-            buildslaveid=kwargs.get('buildslaveid'),
+            workerid=kwargs.get('buildslaveid'),
             complete=complete)
         # returns properties' list
         filters = resultSpec.popProperties()

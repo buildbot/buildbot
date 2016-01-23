@@ -1807,14 +1807,14 @@ class FakeBuildsComponent(FakeDBComponent):
                 return defer.succeed(self._row2dict(row))
         return defer.succeed(None)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, buildslaveid=None, complete=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
         ret = []
         for (id, row) in iteritems(self.builds):
             if builderid is not None and row['builderid'] != builderid:
                 continue
             if buildrequestid is not None and row['buildrequestid'] != buildrequestid:
                 continue
-            if buildslaveid is not None and row['buildslaveid'] != buildslaveid:
+            if workerid is not None and row['buildslaveid'] != workerid:
                 continue
             if complete is not None and complete != (row['complete_at'] is not None):
                 continue

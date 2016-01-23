@@ -92,7 +92,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuilds(self):
         @self.assertArgSpecMatches(self.db.builds.getBuilds)
-        def getBuilds(self, builderid=None, buildrequestid=None, buildslaveid=None, complete=None):
+        def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
             pass
 
     def test_signature_addBuild(self):
@@ -176,7 +176,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuilds_buildslaveid(self):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
-        bdicts = yield self.db.builds.getBuilds(buildslaveid=13)
+        bdicts = yield self.db.builds.getBuilds(workerid=13)
         for bdict in bdicts:
             validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
