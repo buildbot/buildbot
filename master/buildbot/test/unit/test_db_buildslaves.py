@@ -85,7 +85,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuildslave(self):
         @self.assertArgSpecMatches(self.db.buildslaves.getWorker)
-        def getWorker(self, buildslaveid=None, name=None,
+        def getWorker(self, workerid=None, name=None,
                       masterid=None, builderid=None):
             pass
 
@@ -117,7 +117,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_findWorkerId_insert(self):
         id = yield self.db.buildslaves.findWorkerId(name=u"xyz")
-        bslave = yield self.db.buildslaves.getWorker(buildslaveid=id)
+        bslave = yield self.db.buildslaves.getWorker(workerid=id)
         self.assertEqual(bslave['name'], 'xyz')
         self.assertEqual(bslave['slaveinfo'], {})
 
@@ -130,7 +130,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_no_such(self):
         yield self.insertTestData(self.baseRows)
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=99)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=99)
         self.assertEqual(slavedict, None)
 
     @defer.inlineCallbacks
@@ -142,7 +142,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_not_configured(self):
         yield self.insertTestData(self.baseRows)
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -156,7 +156,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Buildslave(id=32, name='two'),
             fakedb.ConnectedBuildslave(buildslaveid=32, masterid=11),
         ])
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=32)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=32)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=32, name='two', slaveinfo={'a': 'b'},
@@ -175,7 +175,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.ConfiguredBuildslave(buildslaveid=32, buildermasterid=24),
             fakedb.ConfiguredBuildslave(buildslaveid=32, buildermasterid=25),
         ])
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=32)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=32)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=32, name='two', slaveinfo={'a': 'b'},
@@ -199,7 +199,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
             fakedb.ConfiguredBuildslave(buildslaveid=30, buildermasterid=12),
         ])
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -214,7 +214,7 @@ class Tests(interfaces.InterfaceTests):
             fakedb.ConfiguredBuildslave(buildslaveid=30, buildermasterid=12),
             fakedb.ConnectedBuildslave(buildslaveid=30, masterid=10),
         ])
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -225,7 +225,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_with_multiple_masters(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         slavedict['configured_on'].sort()
         self.assertEqual(slavedict,
@@ -239,7 +239,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_with_multiple_masters_builderid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30, builderid=20)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30, builderid=20)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         slavedict['configured_on'].sort()
         self.assertEqual(slavedict,
@@ -252,7 +252,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_with_multiple_masters_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30, masterid=11)
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30, masterid=11)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -263,7 +263,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getBuildslave_with_multiple_masters_builderid_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
-        slavedict = yield self.db.buildslaves.getWorker(buildslaveid=30,
+        slavedict = yield self.db.buildslaves.getWorker(workerid=30,
                                                         builderid=20, masterid=11)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
@@ -591,15 +591,15 @@ class TestWorkerTransition(unittest.TestCase):
             c = C()
             self.assertIsInstance(c, worker.WorkersConnectorComponent)
 
-    def test_getWorker_old_api(self):
+    def test_getWorkers_old_api(self):
         method = mock.Mock(return_value='dummy')
         with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.getWorker',
+                'buildbot.db.worker.WorkersConnectorComponent.getWorkers',
                 method):
             m = worker.WorkersConnectorComponent(mock.Mock())
             with assertProducesWarning(
                     DeprecatedWorkerNameWarning,
-                    message_pattern="'getBuildslave' method is deprecated"):
-                dummy = m.getBuildslave('id')
+                    message_pattern="'getBuildslaves' method is deprecated"):
+                dummy = m.getBuildslaves()
         self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('id')
+        method.assert_called_once_with()

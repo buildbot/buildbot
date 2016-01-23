@@ -1382,17 +1382,17 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 return worker
         return None
 
-    def getWorker(self, buildslaveid=None, name=None, masterid=None, builderid=None):
+    def getWorker(self, workerid=None, name=None, masterid=None, builderid=None):
         # get the id and the worker
-        if buildslaveid is None:
+        if workerid is None:
             for worker in itervalues(self.buildslaves):
                 if worker['name'] == name:
-                    buildslaveid = worker['id']
+                    workerid = worker['id']
                     break
             else:
                 worker = None
         else:
-            worker = self.buildslaves.get(buildslaveid)
+            worker = self.buildslaves.get(workerid)
 
         if not worker:
             return defer.succeed(None)

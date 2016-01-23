@@ -335,8 +335,9 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.db.buildslave.BuildslavesConnectorComponent`
      - :py:class:`buildbot.db.worker.WorkersConnectorComponent`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorker`
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+       (introduced in nine)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
 
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
@@ -606,9 +607,8 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        (introduced in nine)
      - ``workerid``
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
-       (introduced in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorker`
 
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
        method argument ``_buildslaveid`` was renamed

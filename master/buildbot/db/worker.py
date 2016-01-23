@@ -99,15 +99,14 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
-    def getWorker(self, buildslaveid=None, name=None, masterid=None,
+    def getWorker(self, workerid=None, name=None, masterid=None,
                   builderid=None):
-        if buildslaveid is None and name is None:
+        if workerid is None and name is None:
             defer.returnValue(None)
-        bslaves = yield self.getWorkers(_workerid=buildslaveid,
+        bslaves = yield self.getWorkers(_workerid=workerid,
                                         _name=name, masterid=masterid, builderid=builderid)
         if bslaves:
             defer.returnValue(bslaves[0])
-    define_old_worker_method(locals(), getWorker, pattern="Buildworker")
 
     def getWorkers(self, _workerid=None, _name=None, masterid=None,
                    builderid=None):
@@ -185,6 +184,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
+    define_old_worker_method(locals(), getWorkers, pattern="Buildworker")
 
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):

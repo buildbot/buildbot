@@ -53,7 +53,7 @@ class BuildslaveEndpoint(Db2DataMixin, base.Endpoint):
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         sldict = yield self.master.db.buildslaves.getWorker(
-            buildslaveid=kwargs.get('buildslaveid'),
+            workerid=kwargs.get('buildslaveid'),
             name=kwargs.get('name'),
             masterid=kwargs.get('masterid'),
             builderid=kwargs.get('builderid'))
