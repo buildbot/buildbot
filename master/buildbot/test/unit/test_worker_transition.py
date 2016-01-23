@@ -334,6 +334,33 @@ class AttributeMixin(unittest.TestCase):
         with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.slavenames, ["a", "b", "c"])
 
+    def test_attribute_setter(self):
+        class C(WorkerAPICompatMixin):
+
+            def __init__(self):
+                self.workers = None
+                self._registerOldWorkerAttr("workers", pattern="buildworker")
+
+                self.workernames = None
+                self._registerOldWorkerAttr("workernames")
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            c = C()
+
+            c.workers = [1, 2, 3]
+            c.workernames = ["a", "b", "c"]
+
+        self.assertEqual(c.workers, [1, 2, 3])
+        self.assertEqual(c.workernames, ["a", "b", "c"])
+
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
+            c.buildslaves = [1, 2, 3]
+        self.assertEqual(c.workers, [1, 2, 3])
+
+        with assertProducesWarning(DeprecatedWorkerNameWarning):
+            c.slavenames = ["a", "b", "c"]
+        self.assertEqual(c.workernames, ["a", "b", "c"])
+
     def test_attribute_error(self):
         class C(WorkerAPICompatMixin):
             pass
