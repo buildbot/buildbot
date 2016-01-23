@@ -58,7 +58,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     define_old_worker_method(locals(), deconfigureAllWorkersForMaster,
                              name="deconfigureAllBuidslavesForMaster")
 
-    def workerConfigured(self, buildslaveid, masterid, builderids):
+    def workerConfigured(self, workerid, masterid, builderids):
 
         def thd(conn):
 
@@ -78,7 +78,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(bm_tbl)
             q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j])
             q = q.where(bm_tbl.c.masterid == masterid)
-            q = q.where(cfg_tbl.c.buildslaveid == buildslaveid)
+            q = q.where(cfg_tbl.c.buildslaveid == workerid)
             oldbuildermasterids = set([row['buildermasterid'] for row in conn.execute(q)])
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
@@ -94,7 +94,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             if toinsertbuildermasterids:
                 q = cfg_tbl.insert()
                 conn.execute(q,
-                             [{'buildslaveid': buildslaveid, 'buildermasterid': buildermasterid}
+                             [{'buildslaveid': workerid, 'buildermasterid': buildermasterid}
                               for buildermasterid in toinsertbuildermasterids])
 
             transaction.commit()

@@ -106,7 +106,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_buildslaveConfigured(self):
         @self.assertArgSpecMatches(self.db.buildslaves.workerConfigured)
-        def workerConfigured(self, buildslaveid, masterid, builderids):
+        def workerConfigured(self, workerid, masterid, builderids):
             pass
 
     def test_signature_deconfigureAllBuidslavesForMaster(self):
@@ -455,7 +455,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.buildslaves.deconfigureAllWorkersForMaster(masterid=10)
 
         yield self.db.buildslaves.workerConfigured(
-            buildslaveid=30, masterid=10, builderids=[20, 22])
+            workerid=30, masterid=10, builderids=[20, 22])
 
         bs = yield self.db.buildslaves.getWorker(30)
         self.assertEqual(sorted(bs['configured_on']), sorted([
@@ -471,11 +471,11 @@ class Tests(interfaces.InterfaceTests):
         yield self.db.buildslaves.deconfigureAllWorkersForMaster(masterid=10)
 
         yield self.db.buildslaves.workerConfigured(
-            buildslaveid=30, masterid=10, builderids=[20, 22])
+            workerid=30, masterid=10, builderids=[20, 22])
 
         # configure again (should eat the duplicate insertion errors)
         yield self.db.buildslaves.workerConfigured(
-            buildslaveid=30, masterid=10, builderids=[20, 21, 22])
+            workerid=30, masterid=10, builderids=[20, 21, 22])
 
         bs = yield self.db.buildslaves.getWorker(30)
         self.assertEqual(sorted(bs['configured_on']), sorted([
@@ -490,7 +490,7 @@ class Tests(interfaces.InterfaceTests):
 
         # should remove builder 21, and add 22
         yield self.db.buildslaves.workerConfigured(
-            buildslaveid=30, masterid=10, builderids=[20, 22])
+            workerid=30, masterid=10, builderids=[20, 22])
 
         bs = yield self.db.buildslaves.getWorker(30)
         self.assertEqual(sorted(bs['configured_on']), sorted([
@@ -504,7 +504,7 @@ class Tests(interfaces.InterfaceTests):
 
         # should remove all builders from master 10
         yield self.db.buildslaves.workerConfigured(
-            buildslaveid=30, masterid=10, builderids=[])
+            workerid=30, masterid=10, builderids=[])
 
         bs = yield self.db.buildslaves.getWorker(30)
         self.assertEqual(sorted(bs['configured_on']), sorted([
@@ -517,7 +517,7 @@ class Tests(interfaces.InterfaceTests):
         # should remove builder 21, and add 22
         yield self.db.buildslaves.deconfigureAllWorkersForMaster(masterid=10)
         yield self.db.buildslaves.workerConfigured(
-            buildslaveid=30, masterid=10, builderids=[])
+            workerid=30, masterid=10, builderids=[])
 
         # should only keep builder for master 11
         bs = yield self.db.buildslaves.getWorker(30)

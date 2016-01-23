@@ -343,6 +343,7 @@ Here is the complete list of changed API:
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.deconfigureAllWorkersForMaster`
 
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
+       (introduced in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConfigured`
 
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
@@ -456,7 +457,7 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
      - :py:meth:`buildbot.process.workerforbuilder.AbstractWorkerForBuilder.getWorkerCommandVersion`
 
    * - :py:meth:`buildbot.process.slavebuilder.AbstractSlaveBuilder.attached`
-       method positional argument ``slave`` was renamed
+       method argument ``slave`` was renamed
      - ``worker``
 
 
@@ -606,6 +607,11 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:class:`buildbot.protocols.pb.Connection`
        constructor positional argument ``buildslave`` was renamed
      - ``worker``
+
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
+       method positional argument ``buildslaveid`` was renamed
+     - ``workerid``
 
 Other changes:
 

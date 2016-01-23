@@ -105,7 +105,7 @@ class Buildslave(base.ResourceType):
     @defer.inlineCallbacks
     def buildslaveConfigured(self, buildslaveid, masterid, builderids):
         yield self.master.db.buildslaves.workerConfigured(
-            buildslaveid=buildslaveid,
+            workerid=buildslaveid,
             masterid=masterid,
             builderids=builderids)
 

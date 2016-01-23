@@ -1446,7 +1446,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
             if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
 
-    def workerConfigured(self, buildslaveid, masterid, builderids):
+    def workerConfigured(self, workerid, masterid, builderids):
 
         buildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                             if mid == masterid and builderid in builderids]
@@ -1458,9 +1458,9 @@ class FakeBuildslavesComponent(FakeDBComponent):
         allbuildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                                if mid == masterid]
         for k, v in self.configured.items():
-            if v['buildermasterid'] in allbuildermasterids and v['buildslaveid'] == buildslaveid:
+            if v['buildermasterid'] in allbuildermasterids and v['buildslaveid'] == workerid:
                 del self.configured[k]
-        self.insertTestData([ConfiguredBuildslave(buildslaveid=buildslaveid,
+        self.insertTestData([ConfiguredBuildslave(buildslaveid=workerid,
                                                   buildermasterid=buildermasterid)
                              for buildermasterid in buildermasterids])
         return defer.succeed(None)
