@@ -671,7 +671,7 @@ buildslaves
 
 .. index:: double: BuildSlaves; DB Connector Component
 
-.. py:class:: BuildslavesConnectorComponent
+.. py:class:: WorkersConnectorComponent
 
     This class handles Buildbot's notion of buildslaves.
     The buildslave information is returned as a dictionary:

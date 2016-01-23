@@ -13,12 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.db import buildslaves
+from buildbot.db import worker
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import ignoreWarning
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -562,8 +566,26 @@ class TestRealDB(unittest.TestCase,
         @d.addCallback
         def finish_setup(_):
             self.db.buildslaves = \
-                buildslaves.BuildslavesConnectorComponent(self.db)
+                worker.WorkersConnectorComponent(self.db)
         return d
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_WorkerBuildStep(self):
+        with ignoreWarning(DeprecatedWorkerModuleWarning):
+            from buildbot.db.buildslave import BuildslavesConnectorComponent
+
+        class C(BuildslavesConnectorComponent):
+
+            def __init__(self):
+                pass
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'BuildslavesConnectorComponent' class is deprecated"):
+            c = C()
+            self.assertIsInstance(c, worker.WorkersConnectorComponent)

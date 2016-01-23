@@ -327,6 +327,14 @@ Here is the complete list of changed API:
    * - :py:attr:`buildbot.process.remotecommand.RemoteCommand.buildslave`
      - :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
 
+
+   * - :py:mod:`buildbot.db.buildslave`
+     - :py:mod:`~buildbot.db.worker`
+
+
+   * - :py:class:`buildbot.db.buildslave.BuildslavesConnectorComponent`
+     - :py:class:`buildbot.db.worker.WorkersConnectorComponent`
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

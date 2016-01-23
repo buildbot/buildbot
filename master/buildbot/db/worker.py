@@ -21,7 +21,7 @@ from buildbot.util import identifiers
 from twisted.internet import defer
 
 
-class BuildslavesConnectorComponent(base.DBConnectorComponent):
+class WorkersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def findBuildslaveId(self, name):
