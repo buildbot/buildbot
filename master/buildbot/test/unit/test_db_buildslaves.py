@@ -264,7 +264,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_with_multiple_masters_builderid_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30,
-                                                        builderid=20, masterid=11)
+                                                    builderid=20, masterid=11)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -276,7 +276,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_by_name_with_multiple_masters_builderid_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(name='zero',
-                                                        builderid=20, masterid=11)
+                                                    builderid=20, masterid=11)
         validation.verifyDbDict(self, 'buildslavedict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
