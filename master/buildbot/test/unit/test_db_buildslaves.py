@@ -591,45 +591,6 @@ class TestWorkerTransition(unittest.TestCase):
             c = C()
             self.assertIsInstance(c, worker.WorkersConnectorComponent)
 
-    def test_findWorkerId_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.findWorkerId',
-                method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'findBuildslaveId' method is deprecated"):
-                dummy = m.findBuildslaveId('name')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('name')
-
-    def test_deconfigureAllWorkersForMaster_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.deconfigureAllWorkersForMaster',
-                method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'deconfigureAllBuidslavesForMaster' method is deprecated"):
-                dummy = m.deconfigureAllBuidslavesForMaster('masterid')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('masterid')
-
-    def test_workerConfigured_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.workerConfigured',
-                method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'buildslaveConfigured' method is deprecated"):
-                dummy = m.buildslaveConfigured('workerid', 'masterid', 'builderids')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('workerid', 'masterid', 'builderids')
-
     def test_getWorker_old_api(self):
         method = mock.Mock(return_value='dummy')
         with mock.patch(
@@ -642,42 +603,3 @@ class TestWorkerTransition(unittest.TestCase):
                 dummy = m.getBuildslave('id')
         self.assertEqual(dummy, 'dummy')
         method.assert_called_once_with('id')
-
-    def test_getWorkers_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.getWorkers',
-                method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getBuildslaves' method is deprecated"):
-                dummy = m.getBuildslaves('id')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('id')
-
-    def test_workerConnected_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.workerConnected',
-                method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'buildslaveConnected' method is deprecated"):
-                dummy = m.buildslaveConnected('workerid', 'masterid', 'workerinfo')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('workerid', 'masterid', 'workerinfo')
-
-    def test_workerDisconnected_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.workerDisconnected',
-                method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'buildslaveDisconnected' method is deprecated"):
-                dummy = m.buildslaveDisconnected('workerid', 'masterid')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('workerid', 'masterid')

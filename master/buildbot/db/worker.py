@@ -36,7 +36,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 name=name,
                 info={},
             ))
-    define_old_worker_method(locals(), findWorkerId, pattern="Buildworker")
 
     def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
@@ -55,8 +54,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q)
 
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), deconfigureAllWorkersForMaster,
-                             name="deconfigureAllBuidslavesForMaster")
 
     def workerConfigured(self, workerid, masterid, builderids):
 
@@ -100,7 +97,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), workerConfigured, pattern="buildworker")
 
     @defer.inlineCallbacks
     def getWorker(self, buildslaveid=None, name=None, masterid=None,
@@ -189,7 +185,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), getWorkers, pattern="Buildworker")
 
     def workerConnected(self, buildslaveid, masterid, slaveinfo):
         def thd(conn):
@@ -206,7 +201,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = bs_tbl.update(whereclause=(bs_tbl.c.id == buildslaveid))
             conn.execute(q, info=slaveinfo)
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), workerConnected, pattern="buildworker")
 
     def workerDisconnected(self, buildslaveid, masterid):
         def thd(conn):
@@ -216,4 +210,3 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), workerDisconnected, pattern="buildworker")

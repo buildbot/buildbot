@@ -335,28 +335,8 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.db.buildslave.BuildslavesConnectorComponent`
      - :py:class:`buildbot.db.worker.WorkersConnectorComponent`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.findBuildslaveId`
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.findWorkerId`
-
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.deconfigureAllBuidslavesForMaster`
-       (note typo ``Buidslaves``)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.deconfigureAllWorkersForMaster`
-
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
-       (introduced in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConfigured`
-
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorker`
-
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
-
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConnected`
-
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerDisconnected`
 
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
@@ -609,9 +589,34 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
      - ``worker``
 
 
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.findBuildslaveId`
+       (introduced in nine)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.findWorkerId`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.deconfigureAllBuidslavesForMaster`
+       (introduced in nine, note typo ``Buidslaves``)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.deconfigureAllWorkersForMaster`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
+       (introduced in nine)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConfigured`
+
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
        method positional argument ``buildslaveid`` was renamed
+       (introduced in nine)
      - ``workerid``
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+       (introduced in nine)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+       (introduced in nine)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConnected`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
+       (introduced in nine)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerDisconnected`
 
 Other changes:
 
