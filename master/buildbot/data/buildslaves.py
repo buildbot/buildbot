@@ -52,7 +52,7 @@ class BuildslaveEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        sldict = yield self.master.db.buildslaves.getBuildslave(
+        sldict = yield self.master.db.buildslaves.getWorker(
             buildslaveid=kwargs.get('buildslaveid'),
             name=kwargs.get('name'),
             masterid=kwargs.get('masterid'),
@@ -74,7 +74,7 @@ class BuildslavesEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        sldicts = yield self.master.db.buildslaves.getBuildslaves(
+        sldicts = yield self.master.db.buildslaves.getWorkers(
             builderid=kwargs.get('builderid'),
             masterid=kwargs.get('masterid'))
         defer.returnValue([self.db2data(sl) for sl in sldicts])
@@ -104,7 +104,7 @@ class Buildslave(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def buildslaveConfigured(self, buildslaveid, masterid, builderids):
-        yield self.master.db.buildslaves.buildslaveConfigured(
+        yield self.master.db.buildslaves.workerConfigured(
             buildslaveid=buildslaveid,
             masterid=masterid,
             builderids=builderids)
@@ -118,7 +118,7 @@ class Buildslave(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
-        yield self.master.db.buildslaves.buildslaveConnected(
+        yield self.master.db.buildslaves.workerConnected(
             buildslaveid=buildslaveid,
             masterid=masterid,
             slaveinfo=slaveinfo)
@@ -128,7 +128,7 @@ class Buildslave(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def buildslaveDisconnected(self, buildslaveid, masterid):
-        yield self.master.db.buildslaves.buildslaveDisconnected(
+        yield self.master.db.buildslaves.workerDisconnected(
             buildslaveid=buildslaveid,
             masterid=masterid)
         bs = yield self.master.data.get(('buildslaves', buildslaveid))
@@ -137,7 +137,7 @@ class Buildslave(base.ResourceType):
     @base.updateMethod
     def deconfigureAllBuidslavesForMaster(self, masterid):
         # unconfigure all workers for this master
-        return self.master.db.buildslaves.deconfigureAllBuidslavesForMaster(
+        return self.master.db.buildslaves.deconfigureAllWorkersForMaster(
             masterid=masterid)
 
     def _masterDeactivated(self, masterid):

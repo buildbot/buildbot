@@ -347,7 +347,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getVersion(), None)
 
         # check that a new worker row was added for this worker
-        bs = yield self.master.db.buildslaves.getBuildslave(name='bot')
+        bs = yield self.master.db.buildslaves.getWorker(name='bot')
         self.assertEqual(bs['name'], 'bot')
 
     @defer.inlineCallbacks
@@ -441,7 +441,7 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getVersion(), 'TheVersion')
 
         # and the db is updated too:
-        db_worker = yield self.master.db.buildslaves.getBuildslave(name="bot")
+        db_worker = yield self.master.db.buildslaves.getWorker(name="bot")
 
         self.assertEqual(db_worker['slaveinfo']['admin'], 'TheAdmin')
         self.assertEqual(db_worker['slaveinfo']['host'], 'TheHost')

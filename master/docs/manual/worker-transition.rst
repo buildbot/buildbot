@@ -338,6 +338,25 @@ Here is the complete list of changed API:
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.findBuildslaveId`
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.findWorkerId`
 
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.deconfigureAllBuidslavesForMaster`
+       (note typo ``Buidslaves``)
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.deconfigureAllWorkersForMaster`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConfigured`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorker`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConnected`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerDisconnected`
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

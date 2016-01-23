@@ -124,7 +124,7 @@ class Row(object):
     def checkForeignKeys(self, db, t):
         accessors = dict(
             buildsetid=db.buildsets.getBuildset,
-            buildslaveid=db.buildslaves.getBuildslave,
+            buildslaveid=db.buildslaves.getWorker,
             builderid=db.builders.getBuilder,
             buildid=db.builds.getBuild,
             changesourceid=db.changesources.getChangeSource,
@@ -1382,7 +1382,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                 return worker
         return None
 
-    def getBuildslave(self, buildslaveid=None, name=None, masterid=None, builderid=None):
+    def getWorker(self, buildslaveid=None, name=None, masterid=None, builderid=None):
         # get the id and the worker
         if buildslaveid is None:
             for worker in itervalues(self.buildslaves):
@@ -1401,7 +1401,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
         # by builderid and masterid
         return defer.succeed(self._mkdict(worker, builderid, masterid))
 
-    def getBuildslaves(self, masterid=None, builderid=None):
+    def getWorkers(self, masterid=None, builderid=None):
         if masterid is not None or builderid is not None:
             builder_masters = self.db.builders.builder_masters
             slaves = []
@@ -1427,7 +1427,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
             self._mkdict(worker, builderid, masterid)
             for worker in slaves])
 
-    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+    def workerConnected(self, buildslaveid, masterid, slaveinfo):
         slave = self.buildslaves.get(buildslaveid)
         # test serialization
         json.dumps(slaveinfo)
@@ -1439,14 +1439,14 @@ class FakeBuildslavesComponent(FakeDBComponent):
             self.connected[conn_id] = new_conn
         return defer.succeed(None)
 
-    def deconfigureAllBuidslavesForMaster(self, masterid):
+    def deconfigureAllWorkersForMaster(self, masterid):
         buildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                             if mid == masterid]
         for k, v in self.configured.items():
             if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
 
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+    def workerConfigured(self, buildslaveid, masterid, builderids):
 
         buildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                             if mid == masterid and builderid in builderids]
@@ -1465,7 +1465,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                              for buildermasterid in buildermasterids])
         return defer.succeed(None)
 
-    def buildslaveDisconnected(self, buildslaveid, masterid):
+    def workerDisconnected(self, buildslaveid, masterid):
         del_conn = dict(masterid=masterid, buildslaveid=buildslaveid)
         for id, conn in iteritems(self.connected):
             if conn == del_conn:

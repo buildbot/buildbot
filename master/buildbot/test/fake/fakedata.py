@@ -405,24 +405,24 @@ class FakeUpdates(service.AsyncService):
         return self.master.db.buildslaves.findWorkerId(name)
 
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
-        return self.master.db.buildslaves.buildslaveConnected(
+        return self.master.db.buildslaves.workerConnected(
             buildslaveid=buildslaveid,
             masterid=masterid,
             slaveinfo=slaveinfo)
 
     def buildslaveConfigured(self, buildslaveid, masterid, builderids):
-        return self.master.db.buildslaves.buildslaveConfigured(
+        return self.master.db.buildslaves.workerConfigured(
             buildslaveid=buildslaveid,
             masterid=masterid,
             builderids=builderids)
 
     def buildslaveDisconnected(self, buildslaveid, masterid):
-        return self.master.db.buildslaves.buildslaveDisconnected(
+        return self.master.db.buildslaves.workerDisconnected(
             buildslaveid=buildslaveid,
             masterid=masterid)
 
     def deconfigureAllBuidslavesForMaster(self, masterid):
-        return self.master.db.buildslaves.deconfigureAllBuidslavesForMaster(
+        return self.master.db.buildslaves.deconfigureAllWorkersForMaster(
             masterid=masterid)
 
 

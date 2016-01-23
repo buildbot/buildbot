@@ -38,7 +38,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             ))
     define_old_worker_method(locals(), findWorkerId, pattern="Buildworker")
 
-    def deconfigureAllBuidslavesForMaster(self, masterid):
+    def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and worker
             # as sqlalchemy does not support delete with join, we need to do that in 2 queries
@@ -55,8 +55,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q)
 
         return self.db.pool.do(thd)
+    define_old_worker_method(locals(), deconfigureAllWorkersForMaster,
+                             name="deconfigureAllBuidslavesForMaster")
 
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+    def workerConfigured(self, buildslaveid, masterid, builderids):
 
         def thd(conn):
 
@@ -98,19 +100,21 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
         return self.db.pool.do(thd)
+    define_old_worker_method(locals(), workerConfigured, pattern="buildworker")
 
     @defer.inlineCallbacks
-    def getBuildslave(self, buildslaveid=None, name=None, masterid=None,
-                      builderid=None):
+    def getWorker(self, buildslaveid=None, name=None, masterid=None,
+                  builderid=None):
         if buildslaveid is None and name is None:
             defer.returnValue(None)
-        bslaves = yield self.getBuildslaves(_buildslaveid=buildslaveid,
-                                            _name=name, masterid=masterid, builderid=builderid)
+        bslaves = yield self.getWorkers(_buildslaveid=buildslaveid,
+                                        _name=name, masterid=masterid, builderid=builderid)
         if bslaves:
             defer.returnValue(bslaves[0])
+    define_old_worker_method(locals(), getWorker, pattern="Buildworker")
 
-    def getBuildslaves(self, _buildslaveid=None, _name=None, masterid=None,
-                       builderid=None):
+    def getWorkers(self, _buildslaveid=None, _name=None, masterid=None,
+                   builderid=None):
         def thd(conn):
             bslave_tbl = self.db.model.buildslaves
             conn_tbl = self.db.model.connected_buildslaves
@@ -185,8 +189,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
+    define_old_worker_method(locals(), getWorkers, pattern="Buildworker")
 
-    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+    def workerConnected(self, buildslaveid, masterid, slaveinfo):
         def thd(conn):
             conn_tbl = self.db.model.connected_buildslaves
             q = conn_tbl.insert()
@@ -201,8 +206,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = bs_tbl.update(whereclause=(bs_tbl.c.id == buildslaveid))
             conn.execute(q, info=slaveinfo)
         return self.db.pool.do(thd)
+    define_old_worker_method(locals(), workerConnected, pattern="buildworker")
 
-    def buildslaveDisconnected(self, buildslaveid, masterid):
+    def workerDisconnected(self, buildslaveid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_buildslaves
             q = tbl.delete(whereclause=(
@@ -210,3 +216,4 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)
+    define_old_worker_method(locals(), workerDisconnected, pattern="buildworker")
