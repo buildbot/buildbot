@@ -124,7 +124,7 @@ class Row(object):
     def checkForeignKeys(self, db, t):
         accessors = dict(
             buildsetid=db.buildsets.getBuildset,
-            buildslaveid=db.buildslaves.getWorker,
+            buildslaveid=db.workers.getWorker,
             builderid=db.builders.getBuilder,
             buildid=db.builds.getBuild,
             changesourceid=db.changesources.getChangeSource,
@@ -2411,7 +2411,7 @@ class FakeDBConnector(service.AsyncMultiService):
         self._components.append(comp)
         self.buildsets = comp = FakeBuildsetsComponent(self, testcase)
         self._components.append(comp)
-        self.buildslaves = comp = FakeBuildslavesComponent(self, testcase)
+        self.workers = comp = FakeBuildslavesComponent(self, testcase)
         self._components.append(comp)
         self.state = comp = FakeStateComponent(self, testcase)
         self._components.append(comp)

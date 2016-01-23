@@ -36,9 +36,11 @@ from buildbot.db import steps
 from buildbot.db import tags
 from buildbot.db import users
 from buildbot.util import service
+from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.python import log
+
 
 upgrade_message = textwrap.dedent("""\
 
@@ -52,7 +54,8 @@ upgrade_message = textwrap.dedent("""\
     """).strip()
 
 
-class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
+class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
+                  service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
     #
@@ -88,7 +91,8 @@ class DBConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
-        self.buildslaves = worker.WorkersConnectorComponent(self)
+        self.workers = worker.WorkersConnectorComponent(self)
+        self._registerOldWorkerAttr("workers", pattern="buildworker")
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)

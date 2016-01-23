@@ -339,6 +339,10 @@ Here is the complete list of changed API:
        (introduced in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
 
+
+   * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
+     - :py:attr:`buildbot.db.connector.DBConnector.workers`
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

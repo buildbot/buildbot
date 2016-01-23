@@ -247,7 +247,7 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
     def test_findBuildslaveId(self):
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)
-        self.master.db.buildslaves.findWorkerId = \
+        self.master.db.workers.findWorkerId = \
             mock.Mock(return_value=rv)
         self.assertIdentical(self.rtype.findBuildslaveId(u'foo'), rv)
 

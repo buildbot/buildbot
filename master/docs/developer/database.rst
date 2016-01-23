@@ -667,7 +667,7 @@ buildsets
 buildslaves
 ~~~~~~~~~~~
 
-.. py:module:: buildbot.db.buildslaves
+.. py:module:: buildbot.db.workers
 
 .. index:: double: BuildSlaves; DB Connector Component
 
