@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import mock
 
 from buildbot.db import worker
 from buildbot.test.fake import fakedb
@@ -77,9 +78,9 @@ class Tests(interfaces.InterfaceTests):
 
     # tests
 
-    def test_signature_findBuildslaveId(self):
-        @self.assertArgSpecMatches(self.db.buildslaves.findBuildslaveId)
-        def findBuildslaveId(self, name):
+    def test_signature_findWorkerId(self):
+        @self.assertArgSpecMatches(self.db.buildslaves.findWorkerId)
+        def findWorkerId(self, name):
             pass
 
     def test_signature_getBuildslave(self):
@@ -114,16 +115,16 @@ class Tests(interfaces.InterfaceTests):
             pass
 
     @defer.inlineCallbacks
-    def test_findBuildslaveId_insert(self):
-        id = yield self.db.buildslaves.findBuildslaveId(name=u"xyz")
+    def test_findWorkerId_insert(self):
+        id = yield self.db.buildslaves.findWorkerId(name=u"xyz")
         bslave = yield self.db.buildslaves.getBuildslave(buildslaveid=id)
         self.assertEqual(bslave['name'], 'xyz')
         self.assertEqual(bslave['slaveinfo'], {})
 
     @defer.inlineCallbacks
-    def test_findBuildslaveId_existing(self):
+    def test_findWorkerId_existing(self):
         yield self.insertTestData(self.baseRows)
-        id = yield self.db.buildslaves.findBuildslaveId(name=u"one")
+        id = yield self.db.buildslaves.findWorkerId(name=u"one")
         self.assertEqual(id, 31)
 
     @defer.inlineCallbacks
@@ -589,3 +590,16 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="'BuildslavesConnectorComponent' class is deprecated"):
             c = C()
             self.assertIsInstance(c, worker.WorkersConnectorComponent)
+
+    def test_findWorkerId_old_api(self):
+        method = mock.Mock(return_value='dummy')
+        with mock.patch(
+                'buildbot.db.worker.WorkersConnectorComponent.findWorkerId',
+                method):
+            m = worker.WorkersConnectorComponent(mock.Mock())
+            with assertProducesWarning(
+                    DeprecatedWorkerNameWarning,
+                    message_pattern="'findBuildslaveId' method is deprecated"):
+                dummy = m.findBuildslaveId('name')
+        self.assertEqual(dummy, 'dummy')
+        method.assert_called_once_with('name')

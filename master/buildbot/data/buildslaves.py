@@ -113,7 +113,7 @@ class Buildslave(base.ResourceType):
     def findBuildslaveId(self, name):
         if not identifiers.isIdentifier(50, name):
             raise ValueError("Buildslave name %r is not a 50-character identifier" % (name,))
-        return self.master.db.buildslaves.findBuildslaveId(name)
+        return self.master.db.buildslaves.findWorkerId(name)
 
     @base.updateMethod
     @defer.inlineCallbacks

@@ -687,7 +687,7 @@ buildslaves
     The buildslave information can be any JSON-able object.
     See :bb:rtype:`buildslave` for more detail.
 
-    .. py:method:: findBuildslaveId(name=name)
+    .. py:method:: findWorkerId(name=name)
 
         :param name: buildslave name
         :type name: 50-character identifier

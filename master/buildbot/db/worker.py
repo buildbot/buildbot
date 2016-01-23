@@ -18,13 +18,14 @@ import sqlalchemy as sa
 
 from buildbot.db import base
 from buildbot.util import identifiers
+from buildbot.worker_transition import define_old_worker_method
 from twisted.internet import defer
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def findBuildslaveId(self, name):
+    def findWorkerId(self, name):
         tbl = self.db.model.buildslaves
         # callers should verify this and give good user error messages
         assert identifiers.isIdentifier(50, name)
@@ -35,6 +36,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 name=name,
                 info={},
             ))
+    define_old_worker_method(locals(), findWorkerId, pattern="Buildworker")
 
     def deconfigureAllBuidslavesForMaster(self, masterid):
         def thd(conn):

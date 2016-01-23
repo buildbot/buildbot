@@ -1363,7 +1363,7 @@ class FakeBuildslavesComponent(FakeDBComponent):
                     masterid=row.masterid,
                     buildslaveid=row.buildslaveid)
 
-    def findBuildslaveId(self, name, _reactor=reactor):
+    def findWorkerId(self, name, _reactor=reactor):
         validation.verifyType(self.t, 'name', name,
                               validation.IdentifierValidator(50))
         for m in itervalues(self.buildslaves):

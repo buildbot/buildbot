@@ -335,6 +335,9 @@ Here is the complete list of changed API:
    * - :py:class:`buildbot.db.buildslave.BuildslavesConnectorComponent`
      - :py:class:`buildbot.db.worker.WorkersConnectorComponent`
 
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.findBuildslaveId`
+     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.findWorkerId`
+
 API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
 .. todo::

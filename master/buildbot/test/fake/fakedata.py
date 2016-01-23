@@ -402,7 +402,7 @@ class FakeUpdates(service.AsyncService):
                               validation.IdentifierValidator(50))
         # this needs to actually get inserted into the db (fake or real) since
         # getBuildslave will get called later
-        return self.master.db.buildslaves.findBuildslaveId(name)
+        return self.master.db.buildslaves.findWorkerId(name)
 
     def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
         return self.master.db.buildslaves.buildslaveConnected(
