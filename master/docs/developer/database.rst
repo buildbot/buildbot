@@ -1860,9 +1860,9 @@ Testing migrations with real databases
 --------------------------------------
 
 By default Buildbot test suite uses SQLite database for testings database
-migrations.  To use other database set ``BUILDBOT_TEST_DB_URL``
-environment variable to value in
-`SQLAlchemy database URL specification
+migrations.
+To use other database set ``BUILDBOT_TEST_DB_URL`` environment variable to
+value in `SQLAlchemy database URL specification
 <http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls>`_.
 
 
