@@ -135,10 +135,10 @@ class Worker(base.ResourceType):
         self.produceEvent(bs, 'disconnected')
 
     @base.updateMethod
-    def deconfigureAllBuidslavesForMaster(self, masterid):
+    def deconfigureAllWorkersForMaster(self, masterid):
         # unconfigure all workers for this master
         return self.master.db.workers.deconfigureAllWorkersForMaster(
             masterid=masterid)
 
     def _masterDeactivated(self, masterid):
-        return self.deconfigureAllBuidslavesForMaster(masterid)
+        return self.deconfigureAllWorkersForMaster(masterid)

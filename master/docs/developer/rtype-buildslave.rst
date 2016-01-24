@@ -159,7 +159,7 @@ All update methods are available as attributes of ``master.data.updates``.
         Record the given buildslave as being configured on the given master and for given builders.
 
 
-    .. py:method:: deconfigureAllBuidslavesForMaster(masterid)
+    .. py:method:: deconfigureAllWorkersForMaster(masterid)
 
         :param integer masterid: the ID of the master to which it configured
         :returns: Deferred

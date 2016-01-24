@@ -421,7 +421,7 @@ class FakeUpdates(service.AsyncService):
             workerid=workerid,
             masterid=masterid)
 
-    def deconfigureAllBuidslavesForMaster(self, masterid):
+    def deconfigureAllWorkersForMaster(self, masterid):
         return self.master.db.workers.deconfigureAllWorkersForMaster(
             masterid=masterid)
 

@@ -971,6 +971,9 @@ Python API changes:
    * - :py:meth:`buildbot.data.buildslaves.Buildslave.buildslaveDisconnected`
      - :py:meth:`~buildbot.data.workers.Worker.workerDisconnected`
 
+   * - :py:meth:`buildbot.data.buildslaves.Buildslave.deconfigureAllBuidslavesForMaster`
+     - :py:meth:`~buildbot.data.workers.Worker.deconfigureAllWorkersForMaster`
+
 
    * - ``buildslaveid`` in function arguments and API specification
      - ``workerid``
