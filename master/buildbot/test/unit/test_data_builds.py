@@ -158,7 +158,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_buildslave(self):
-        builds = yield self.callGet(('buildslaves', 13, 'builds'))
+        builds = yield self.callGet(('workers', 13, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
@@ -240,7 +240,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                                   builderid=10, buildrequestid=13, workerid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
                                               (('builds', '100', 'new'), self.new_build_event),
-                                              (('buildslaves', '20', 'builds', '100', 'new'), self.new_build_event)])
+                                              (('workers', '20', 'builds', '100', 'new'), self.new_build_event)])
 
     def test_signature_setBuildStateString(self):
         @self.assertArgSpecMatches(

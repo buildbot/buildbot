@@ -1,5 +1,5 @@
-class Buildslave extends Factory
+class Worker extends Factory
     constructor: (Base, dataService) ->
-        return class BuildslaveInstance extends Base
+        return class WorkerInstance extends Base
             constructor: (object, endpoint) ->
                 super(object, endpoint)

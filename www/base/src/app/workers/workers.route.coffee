@@ -2,7 +2,7 @@ class State extends Config
     constructor: ($stateProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
-        name = 'buildslaves'
+        name = 'workers'
 
         # Menu Configuration
         cfg =
@@ -14,7 +14,7 @@ class State extends Config
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
-            url: '/buildslaves'
+            url: '/workers'
             data: cfg
 
         bbSettingsServiceProvider.addSettingsGroup

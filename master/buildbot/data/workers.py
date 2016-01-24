@@ -40,14 +40,14 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /buildslaves/n:workerid
-        /buildslaves/i:name
-        /masters/n:masterid/buildslaves/n:workerid
-        /masters/n:masterid/buildslaves/i:name
-        /masters/n:masterid/builders/n:builderid/buildslaves/n:workerid
-        /masters/n:masterid/builders/n:builderid/buildslaves/i:name
-        /builders/n:builderid/buildslaves/n:workerid
-        /builders/n:builderid/buildslaves/i:name
+        /workers/n:workerid
+        /workers/i:name
+        /masters/n:masterid/workers/n:workerid
+        /masters/n:masterid/workers/i:name
+        /masters/n:masterid/builders/n:builderid/workers/n:workerid
+        /masters/n:masterid/builders/n:builderid/workers/i:name
+        /builders/n:builderid/workers/n:workerid
+        /builders/n:builderid/workers/i:name
     """
 
     @defer.inlineCallbacks
@@ -64,12 +64,12 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
-    rootLinkName = 'buildslaves'
+    rootLinkName = 'workers'
     pathPatterns = """
-        /buildslaves
-        /masters/n:masterid/buildslaves
-        /masters/n:masterid/builders/n:builderid/buildslaves
-        /builders/n:builderid/buildslaves
+        /workers
+        /masters/n:masterid/workers
+        /masters/n:masterid/builders/n:builderid/workers
+        /builders/n:builderid/workers
     """
 
     @defer.inlineCallbacks
@@ -83,11 +83,11 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 class Worker(base.ResourceType):
 
     name = "buildslave"
-    plural = "buildslaves"
+    plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
     keyFields = ['workerid']
     eventPathPatterns = """
-        /buildslaves/:workerid
+        /workers/:workerid
     """
 
     class EntityType(types.Entity):
@@ -122,7 +122,7 @@ class Worker(base.ResourceType):
             workerid=workerid,
             masterid=masterid,
             workerinfo=workerinfo)
-        bs = yield self.master.data.get(('buildslaves', workerid))
+        bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'connected')
 
     @base.updateMethod
@@ -131,7 +131,7 @@ class Worker(base.ResourceType):
         yield self.master.db.workers.workerDisconnected(
             workerid=workerid,
             masterid=masterid)
-        bs = yield self.master.data.get(('buildslaves', workerid))
+        bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'disconnected')
 
     @base.updateMethod

@@ -245,7 +245,7 @@ class Contact(service.AsyncService):
 
     @defer.inlineCallbacks
     def getOnlineBuilders(self):
-        all_workers = yield self.master.data.get(('buildslaves',))
+        all_workers = yield self.master.data.get(('workers',))
         online_builderids = set()
         for worker in all_workers:
             connected = worker['connected_to']

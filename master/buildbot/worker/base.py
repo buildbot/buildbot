@@ -206,7 +206,7 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def _getWorkerInfo(self):
         worker = yield self.master.data.get(
-            ('buildslaves', self.workerid))
+            ('workers', self.workerid))
         self._applyWorkerInfo(worker['workerinfo'])
 
     def setServiceParent(self, parent):

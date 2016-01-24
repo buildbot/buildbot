@@ -17,7 +17,7 @@ describe 'overview', ->
 
     it 'should display tiles normally', ->
         $httpBackend.expectDataGET('masters')
-        $httpBackend.expectDataGET('buildslaves')
+        $httpBackend.expectDataGET('workers')
         $httpBackend.expectDataGET('builders')
         $httpBackend.expectDataGET('schedulers')
         elem = $compile('<overview></overview>')($rootScope)

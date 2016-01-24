@@ -105,7 +105,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('buildslaves', 2))
+        d = self.callGet(('workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -115,7 +115,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_name(self):
-        d = self.callGet(('buildslaves', 'linux'))
+        d = self.callGet(('workers', 'linux'))
 
         @d.addCallback
         def check(buildslave):
@@ -125,7 +125,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_masterid(self):
-        d = self.callGet(('masters', 14, 'buildslaves', 2))
+        d = self.callGet(('masters', 14, 'workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -135,7 +135,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_builderid(self):
-        d = self.callGet(('builders', 40, 'buildslaves', 2))
+        d = self.callGet(('builders', 40, 'workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -145,7 +145,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_masterid_builderid(self):
-        d = self.callGet(('masters', 13, 'builders', 40, 'buildslaves', 2))
+        d = self.callGet(('masters', 13, 'builders', 40, 'workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -155,7 +155,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('buildslaves', 99))
+        d = self.callGet(('workers', 99))
 
         @d.addCallback
         def check(buildslave):
@@ -176,7 +176,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('buildslaves',))
+        d = self.callGet(('workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -186,7 +186,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(('masters', '13', 'buildslaves',))
+        d = self.callGet(('masters', '13', 'workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -197,7 +197,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid(self):
-        d = self.callGet(('builders', '41', 'buildslaves',))
+        d = self.callGet(('builders', '41', 'workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -208,7 +208,7 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_builderid(self):
-        d = self.callGet(('masters', '13', 'builders', '41', 'buildslaves',))
+        d = self.callGet(('masters', '13', 'builders', '41', 'workers',))
 
         @d.addCallback
         def check(buildslaves):

@@ -100,7 +100,7 @@ class Builders extends Controller
 
         $scope.builders = data.getBuilders()
         $scope.builders.onNew = (builder) ->
-            builder.buildslaves ?= slavesByBuilderId[builder.builderid] || []
+            builder.workers ?= slavesByBuilderId[builder.builderid] || []
             builder.builds ?= buildsByBuilderId[builder.builderid] || []
             builder.loadMasters()
 
@@ -108,13 +108,13 @@ class Builders extends Controller
         # and then associate by builder
         # @todo, we cannot do same optims for masters due to lack of data api
 
-        slaves = data.getBuildslaves()
+        slaves = data.getWorkers()
         slaves.onNew = slaves.onUpdate =  (slave) ->
             slave.configured_on?.forEach (conf) ->
                 # the builder might not be yet loaded, so we need to store the slave list
                 if $scope.builders.hasOwnProperty(conf.builderid)
                     builder = []
-                    slaveslist = $scope.builders.get(conf.builderid).buildslaves ?= []
+                    slaveslist = $scope.builders.get(conf.builderid).workers ?= []
                 else
                     slaveslist = slavesByBuilderId[conf.builderid] ?= []
                 slaveslist.push(slave)

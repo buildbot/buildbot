@@ -1,4 +1,4 @@
-class Buildslaves extends Controller
+class Workers extends Controller
     constructor: ($scope, dataService, bbSettingsService) ->
         $scope.maybeGetMasterNameFromBuilderMaster = (buildermaster) ->
             activeMasters = 0
@@ -14,7 +14,7 @@ class Buildslaves extends Controller
 
         $scope.builders = data.getBuilders()
         $scope.masters = data.getMasters()
-        $scope.buildslaves = data.getBuildslaves()
+        $scope.workers = data.getWorkers()
 
         $scope.settings = bbSettingsService.getSettingsGroup("Slaves")
         $scope.$watch('settings', ->

@@ -125,7 +125,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         /builds
         /builders/n:builderid/builds
         /buildrequests/n:buildrequestid/builds
-        /buildslaves/n:workerid/builds
+        /workers/n:workerid/builds
     """
     rootLinkName = 'builds'
 
@@ -163,7 +163,7 @@ class Build(base.ResourceType):
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid
-        /buildslaves/:workerid/builds/:buildid
+        /workers/:workerid/builds/:buildid
     """
 
     class EntityType(types.Entity):

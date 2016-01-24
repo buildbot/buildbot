@@ -988,3 +988,67 @@ Python API changes:
 
    * - ``slaveinfo`` in function arguments and API specification
      - ``workerinfo``
+
+Changed REST endpoints:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Old name
+     - New name
+
+   * - ``/buildslaves``
+     - ``/workers``
+
+   * - ``/buildslaves/n:buildslaveid``
+     - ``/workers/n:workerid``
+
+   * - ``/buildslaves/n:buildslaveid/builds``
+     - ``/workers/n:workerid/builds``
+
+   * - ``/buildslaves/:buildslaveid/builds/:buildid``
+     - ``/workers/:workerid/builds/:buildid``
+
+   * - ``/masters/n:masterid/buildslaves``
+     - ``/masters/n:masterid/workers``
+
+   * - ``/masters/n:masterid/buildslaves/n:buildslaveid``
+     - ``/masters/n:masterid/workers/n:workersid``
+
+   * - ``/masters/n:masterid/builders/n:builderid/buildslaves``
+     - ``/masters/n:masterid/builders/n:builderid/workers``
+
+   * - ``/masters/n:masterid/builders/n:builderid/buildslaves/n:buildslaveid``
+     - ``/masters/n:masterid/builders/n:builderid/workers/n:workersid``
+
+   * - ``/builders/n:builderid/buildslaves``
+     - ``/builders/n:builderid/workers``
+
+   * - ``/builders/n:builderid/buildslaves/n:buildslaveid``
+     - ``/builders/n:builderid/workers/n:workerid``
+
+Changed REST object keys:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Old name
+     - New name
+
+   * - ``buildslaveid``
+     - ``workerid``
+
+   * - ``slaveinfo``
+     - ``workerinfo``
+
+   * - ``buildslave``
+     - ``worker``
+
+   * - ``buildslaves``
+     - ``workers``
+
+``data_module`` and ``base`` were updated accordingly.
+
+.. todo::
+
+   ``md_base`` is not updated and currently broken.
