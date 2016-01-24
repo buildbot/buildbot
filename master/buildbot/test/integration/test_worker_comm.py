@@ -168,7 +168,7 @@ class TestWorkerComm(unittest.TestCase):
         self.master.status = master.Status()
         self.master.status.setServiceParent(self.master)
         self.master.botmaster = self.botmaster
-        self.master.data.updates.buildslaveConfigured = lambda *a, **k: None
+        self.master.data.updates.workerConfigured = lambda *a, **k: None
         yield self.master.startService()
 
         self.buildworker = None

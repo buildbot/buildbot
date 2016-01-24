@@ -265,7 +265,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.updateLocks()
 
         bids = [b._builderid for b in self.botmaster.getBuildersForWorker(self.name)]
-        yield self.master.data.updates.buildslaveConfigured(self.workerid, self.master.masterid, bids)
+        yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
 
         # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
@@ -279,7 +279,7 @@ class AbstractWorker(service.BuildbotService, object):
             self.registration = None
         self.stopMissingTimer()
         # mark this worker as configured for zero builders in this master
-        yield self.master.data.updates.buildslaveConfigured(self.workerid, self.master.masterid, [])
+        yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
 
     def startMissingTimer(self):

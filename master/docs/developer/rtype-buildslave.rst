@@ -149,7 +149,7 @@ All update methods are available as attributes of ``master.data.updates``.
         Record the given buildslave as no longer attached to the given master.
         This method also sends a message indicating the disconnection.
 
-    .. py:method:: buildslaveConfigured(workerid, masterid, builderids)
+    .. py:method:: workerConfigured(workerid, masterid, builderids)
 
         :param integer workerid: the ID of the buildslave or None
         :param integer masterid: the ID of the master to which it configured

@@ -239,8 +239,8 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_buildslaveConfigured(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.buildslaveConfigured,  # fake
-            self.rtype.buildslaveConfigured)  # real
+            self.master.data.updates.workerConfigured,  # fake
+            self.rtype.workerConfigured)  # real
         def buildslaveConfigured(self, workerid, masterid, builderids):
             pass
 

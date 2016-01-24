@@ -103,7 +103,7 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveConfigured(self, workerid, masterid, builderids):
+    def workerConfigured(self, workerid, masterid, builderids):
         yield self.master.db.workers.workerConfigured(
             workerid=workerid,
             masterid=masterid,

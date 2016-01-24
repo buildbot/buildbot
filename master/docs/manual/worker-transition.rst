@@ -959,6 +959,9 @@ Python API changes:
    * - :py:class:`buildbot.data.buildslaves.Buildslave`
      - :py:class:`~buildbot.data.workers.Worker`
 
+   * - :py:meth:`buildbot.data.buildslaves.Buildslave.buildslaveConfigured`
+     - :py:meth:`~buildbot.data.workers.Worker.workerConfigured`
+
 
    * - ``buildslaveid`` in function arguments and API specification
      - ``workerid``

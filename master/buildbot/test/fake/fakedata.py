@@ -410,7 +410,7 @@ class FakeUpdates(service.AsyncService):
             masterid=masterid,
             workerinfo=slaveinfo)
 
-    def buildslaveConfigured(self, workerid, masterid, builderids):
+    def workerConfigured(self, workerid, masterid, builderids):
         return self.master.db.workers.workerConfigured(
             workerid=workerid,
             masterid=masterid,
