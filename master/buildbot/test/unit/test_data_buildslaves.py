@@ -163,9 +163,9 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
 
-class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = workers.BuildslavesEndpoint
+    endpointClass = workers.WorkersEndpoint
     resourceTypeClass = workers.Buildslave
 
     def setUp(self):

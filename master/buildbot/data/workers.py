@@ -61,7 +61,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             defer.returnValue(self.db2data(sldict))
 
 
-class BuildslavesEndpoint(Db2DataMixin, base.Endpoint):
+class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
     rootLinkName = 'buildslaves'
@@ -84,7 +84,7 @@ class Buildslave(base.ResourceType):
 
     name = "buildslave"
     plural = "buildslaves"
-    endpoints = [WorkerEndpoint, BuildslavesEndpoint]
+    endpoints = [WorkerEndpoint, WorkersEndpoint]
     keyFields = ['buildslaveid']
     eventPathPatterns = """
         /buildslaves/:buildslaveid
