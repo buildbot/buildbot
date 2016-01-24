@@ -23,6 +23,6 @@ class State extends Config
             items:[
                 type:'bool'
                 name:'show_old_slaves'
-                caption:'Show old slaves'
+                caption:'Show old workers'
                 default_value: false
             ]
