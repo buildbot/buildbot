@@ -1884,7 +1884,7 @@ To run tests with PostgreSQL:
        -p 127.0.0.1:15432:5432 -d postgres:9.5
    # Start interesting tests
    BUILDBOT_TEST_DB_URL=postgresql://postgres:password@localhost:15432/postgres \
-       trial buildbot.test.unit.test_db_migrate_versions_045_worker_transition
+       trial buildbot.test
 
 To run tests with MySQL:
 
@@ -1898,7 +1898,7 @@ To run tests with MySQL:
        -p 127.0.0.1:13306:3306 -d mysql:5.5
    # Start interesting tests
    BUILDBOT_TEST_DB_URL=mysql+mysqldb://root:password@localhost/?host=localhost&port=13306 \
-       trial buildbot.test.unit.test_db_migrate_versions_045_worker_transition
+       trial buildbot.test
 
 .. todo::
 
