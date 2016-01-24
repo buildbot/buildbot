@@ -117,7 +117,7 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveConnected(self, workerid, masterid, slaveinfo):
+    def workerConnected(self, workerid, masterid, slaveinfo):
         yield self.master.db.workers.workerConnected(
             workerid=workerid,
             masterid=masterid,

@@ -128,7 +128,7 @@ All update methods are available as attributes of ``master.data.updates``.
 
         Get the ID for the given buildslave name, inventing one if necessary.
 
-    .. py:method:: buildslaveConnected(workerid, masterid, slaveinfo)
+    .. py:method:: workerConnected(workerid, masterid, slaveinfo)
 
         :param integer workerid: ID of the newly-connected buildslave
         :param integer masterid: the ID of the master to which it connected

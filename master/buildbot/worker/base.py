@@ -371,7 +371,7 @@ class AbstractWorker(service.BuildbotService, object):
             'version': conn.info.get('version')
         }
 
-        yield self.master.data.updates.buildslaveConnected(
+        yield self.master.data.updates.workerConnected(
             workerid=self.workerid,
             masterid=self.master.masterid,
             slaveinfo=workerinfo
