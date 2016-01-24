@@ -1855,3 +1855,52 @@ id.
 
 If this weakness has a significant performance impact, it would be acceptable to
 conditionalize use of the subquery on the database dialect.
+
+Testing migrations with real databases
+--------------------------------------
+
+By default Buildbot test suite uses SQLite database for testings database
+migrations.  To use other database set ``BUILDBOT_TEST_DB_URL``
+environment variable to value in
+`SQLAlchemy database URL specification
+<http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls>`_.
+
+
+Run databases in Docker
+~~~~~~~~~~~~~~~~~~~~~~~
+
+`Docker <https://www.docker.com/>`_ allows to easily install and configure
+different databases locally in containers.
+
+To run tests with PostgreSQL:
+
+.. code-block:: bash
+
+   # Install psycopg.
+   pip install psycopg2
+   # Start container with PostgreSQL 9.5.
+   # It will listen on port 15432 on localhost.
+   sudo docker run --name bb-test-postgres -e POSTGRES_PASSWORD=password \
+       -p 127.0.0.1:15432:5432 -d postgres:9.5
+   # Start interesting tests
+   BUILDBOT_TEST_DB_URL=postgresql://postgres:password@localhost:15432/postgres \
+       trial buildbot.test.unit.test_db_migrate_versions_045_worker_transition
+
+To run tests with MySQL:
+
+.. code-block:: bash
+
+   # Install MySQL-python.
+   pip install MySQL-python
+   # Start container with MySQL 5.5.
+   # It will listen on port 13306 on localhost.
+   sudo docker run --name bb-test-mysql -e MYSQL_ROOT_PASSWORD=password \
+       -p 127.0.0.1:13306:3306 -d mysql:5.5
+   # Start interesting tests
+   BUILDBOT_TEST_DB_URL=mysql+mysqldb://root:password@localhost/?host=localhost&port=13306 \
+       trial buildbot.test.unit.test_db_migrate_versions_045_worker_transition
+
+.. todo::
+
+   On MySQL 5.7 SQLAlchemy fails with
+   ``sqlalchemy.exc.OperationalError: (OperationalError) (1193, "Unknown system variable 'storage_engine'") None None``

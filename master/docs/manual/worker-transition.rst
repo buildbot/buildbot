@@ -930,3 +930,7 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        method argument ``buildslaveid`` was renamed
        (introduced in nine)
      - ``workerid``
+
+New section added to :ref:`Database <developer-database>` documentation
+with information about ``BUILDBOT_TEST_DB_URL`` environment variable and
+how to test Buildbot with PostgreSQL and MySQL in Docker.
