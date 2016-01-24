@@ -1897,7 +1897,7 @@ To run tests with MySQL:
    sudo docker run --name bb-test-mysql -e MYSQL_ROOT_PASSWORD=password \
        -p 127.0.0.1:13306:3306 -d mysql:5.5
    # Start interesting tests
-   BUILDBOT_TEST_DB_URL=mysql+mysqldb://root:password@localhost/?host=localhost&port=13306 \
+   BUILDBOT_TEST_DB_URL=mysql+mysqldb://root:password@127.0.0.1:13306/mysql \
        trial buildbot.test
 
 .. todo::
