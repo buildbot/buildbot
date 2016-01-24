@@ -207,7 +207,7 @@ class AbstractWorker(service.BuildbotService, object):
     def _getWorkerInfo(self):
         worker = yield self.master.data.get(
             ('buildslaves', self.workerid))
-        self._applyWorkerInfo(worker['slaveinfo'])
+        self._applyWorkerInfo(worker['workerinfo'])
 
     def setServiceParent(self, parent):
         # botmaster needs to set before setServiceParent which calls startService
@@ -374,7 +374,7 @@ class AbstractWorker(service.BuildbotService, object):
         yield self.master.data.updates.workerConnected(
             workerid=self.workerid,
             masterid=self.master.masterid,
-            slaveinfo=workerinfo
+            workerinfo=workerinfo
         )
 
         if self.worker_system == "nt":

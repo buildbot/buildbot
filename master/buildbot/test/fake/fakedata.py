@@ -404,11 +404,11 @@ class FakeUpdates(service.AsyncService):
         # getBuildslave will get called later
         return self.master.db.workers.findWorkerId(name)
 
-    def workerConnected(self, workerid, masterid, slaveinfo):
+    def workerConnected(self, workerid, masterid, workerinfo):
         return self.master.db.workers.workerConnected(
             workerid=workerid,
             masterid=masterid,
-            workerinfo=slaveinfo)
+            workerinfo=workerinfo)
 
     def workerConfigured(self, workerid, masterid, builderids):
         return self.master.db.workers.workerConfigured(

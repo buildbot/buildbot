@@ -977,3 +977,6 @@ Python API changes:
 
    * - ``buildslaveid`` in function arguments and API specification
      - ``workerid``
+
+   * - ``slaveinfo`` in function arguments and API specification
+     - ``workerinfo``

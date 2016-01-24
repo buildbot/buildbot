@@ -15,4 +15,4 @@ md-list.slave-list
           count="slave.configured_on.length",
           when="{'0': 'no builder.','one': '1 builder.','other': '{} builders.'}")
     div.slave-info(flex-gt-md="50")
-      inspect-data(data="slave.slaveinfo")
+      inspect-data(data="slave.workerinfo")

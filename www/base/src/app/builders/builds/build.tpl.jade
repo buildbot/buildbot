@@ -37,7 +37,7 @@
                   tr
                       td.text-left name
                       td.text-center {{buildslave.name}}
-                tr(ng-repeat="(name, value) in buildslave.slaveinfo")
+                tr(ng-repeat="(name, value) in buildslave.workerinfo")
                   td.text-left {{ name }}
                   td.text-right {{ value }}
           tab(heading="Responsible Users")

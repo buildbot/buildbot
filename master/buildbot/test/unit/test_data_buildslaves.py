@@ -65,7 +65,7 @@ def bs1(builderid=None, masterid=None):
     return _filt({
         'workerid': 1,
         'name': 'linux',
-        'slaveinfo': {},
+        'workerinfo': {},
         'connected_to': [
             {'masterid': 13},
         ],
@@ -80,7 +80,7 @@ def bs2(builderid=None, masterid=None):
     return _filt({
         'workerid': 2,
         'name': 'windows',
-        'slaveinfo': {'a': 'b'},
+        'workerinfo': {'a': 'b'},
         'connected_to': [
             {'masterid': 14},
         ],

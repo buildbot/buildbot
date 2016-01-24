@@ -25,7 +25,7 @@ class Db2DataMixin(object):
         return {
             'workerid': dbdict['id'],
             'name': dbdict['name'],
-            'slaveinfo': dbdict['slaveinfo'],
+            'workerinfo': dbdict['slaveinfo'],
             'connected_to': [
                 {'masterid': id}
                 for id in dbdict['connected_to']],
@@ -98,7 +98,7 @@ class Worker(base.ResourceType):
         configured_on = types.List(of=types.Dict(
             masterid=types.Integer(),
             builderid=types.Integer()))
-        slaveinfo = types.JsonObject()
+        workerinfo = types.JsonObject()
     entityType = EntityType(name)
 
     @base.updateMethod
@@ -117,11 +117,11 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def workerConnected(self, workerid, masterid, slaveinfo):
+    def workerConnected(self, workerid, masterid, workerinfo):
         yield self.master.db.workers.workerConnected(
             workerid=workerid,
             masterid=masterid,
-            workerinfo=slaveinfo)
+            workerinfo=workerinfo)
         bs = yield self.master.data.get(('buildslaves', workerid))
         self.produceEvent(bs, 'connected')
 

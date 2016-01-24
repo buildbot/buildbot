@@ -10,8 +10,8 @@ Buildslaves
     :type connected_to: list of objects with keys ``masterid`` and ``link``
     :attr configured_on: list of builders on masters this buildslave is configured on
     :type configured_on: list of objects with keys ``masterid``, ``builderid``, and ``link``
-    :attr slaveinfo: information about the slave
-    :type slaveinfo: dictionary
+    :attr workerinfo: information about the slave
+    :type workerinfo: dictionary
 
     The contents of the ``connected_to`` and ``configured_on`` attributes are sensitive to the context of the request.
     If a builder or master is specified in the path, then only the corresponding connections and configurations are included in the result.
@@ -128,12 +128,12 @@ All update methods are available as attributes of ``master.data.updates``.
 
         Get the ID for the given buildslave name, inventing one if necessary.
 
-    .. py:method:: workerConnected(workerid, masterid, slaveinfo)
+    .. py:method:: workerConnected(workerid, masterid, workerinfo)
 
         :param integer workerid: ID of the newly-connected buildslave
         :param integer masterid: the ID of the master to which it connected
-        :param slaveinfo: the new buildslave information dictionary
-        :type slaveinfo: dict
+        :param workerinfo: the new buildslave information dictionary
+        :type workerinfo: dict
         :returns: Deferred
 
         Record the given buildslave as attached to the given master, and update its cached slave information.
