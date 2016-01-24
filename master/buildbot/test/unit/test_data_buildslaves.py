@@ -95,7 +95,7 @@ def bs2(builderid=None, masterid=None):
 class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = workers.WorkerEndpoint
-    resourceTypeClass = workers.Buildslave
+    resourceTypeClass = workers.Worker
 
     def setUp(self):
         self.setUpEndpoint()
@@ -166,7 +166,7 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = workers.WorkersEndpoint
-    resourceTypeClass = workers.Buildslave
+    resourceTypeClass = workers.Worker
 
     def setUp(self):
         self.setUpEndpoint()
@@ -224,7 +224,7 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True, wantDb=True, wantData=True)
-        self.rtype = workers.Buildslave(self.master)
+        self.rtype = workers.Worker(self.master)
         return self.master.db.insertTestData([
             fakedb.Master(id=13),
             fakedb.Master(id=14),

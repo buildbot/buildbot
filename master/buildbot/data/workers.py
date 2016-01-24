@@ -80,7 +80,7 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue([self.db2data(sl) for sl in sldicts])
 
 
-class Buildslave(base.ResourceType):
+class Worker(base.ResourceType):
 
     name = "buildslave"
     plural = "buildslaves"
