@@ -4,7 +4,7 @@ class Master extends Factory
             constructor: (object, endpoint) ->
                 endpoints = [
                     'builders'          # /builders/:builderid
-                    'buildslaves'       # /buildslaves/:buildslaveid
+                    'buildslaves'       # /buildslaves/:workerid
                                         # /buildslaves/:name
                     'changesources'     # /changesources/:changesourceid
                     'schedulers'        # /schedulers/:schedulerid

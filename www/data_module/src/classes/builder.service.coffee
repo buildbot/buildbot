@@ -6,7 +6,7 @@ class Builder extends Factory
                     'builds'            # /builds/:buildid
                     'buildrequests'     # /buildrequests/:buildrequestid
                     'forceschedulers'   # /forceschedulers
-                    'buildslaves'       # /buildslaves/:buildslaveid
+                    'buildslaves'       # /buildslaves/:workerid
                                         # /buildslaves/:name
                     'masters'           # /masters/:masterid
                 ]

@@ -182,7 +182,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     new_build_event = {'builderid': 10,
                        'buildid': 100,
                        'buildrequestid': 13,
-                       'buildslaveid': 20,
+                       'workerid': 20,
                        'complete': False,
                        'complete_at': None,
                        'masterid': 824,
@@ -218,12 +218,12 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuild,  # fake
             self.rtype.addBuild)  # real
-        def newBuild(self, builderid, buildrequestid, buildslaveid):
+        def newBuild(self, builderid, buildrequestid, workerid):
             pass
 
     def test_newBuild(self):
         return self.do_test_callthrough('addBuild', self.rtype.addBuild,
-                                        builderid=10, buildrequestid=13, buildslaveid=20,
+                                        builderid=10, buildrequestid=13, workerid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
                                                         workerid=20, masterid=self.master.masterid,
                                                         state_string=u'created'))
@@ -237,7 +237,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
             defer.returnValue(None)
 
         return self.do_test_event(addBuild,
-                                  builderid=10, buildrequestid=13, buildslaveid=20,
+                                  builderid=10, buildrequestid=13, workerid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
                                               (('builds', '100', 'new'), self.new_build_event),
                                               (('buildslaves', '20', 'builds', '100', 'new'), self.new_build_event)])

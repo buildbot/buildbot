@@ -372,7 +372,7 @@ class AbstractWorker(service.BuildbotService, object):
         }
 
         yield self.master.data.updates.buildslaveConnected(
-            buildslaveid=self.workerid,
+            workerid=self.workerid,
             masterid=self.master.masterid,
             slaveinfo=workerinfo
         )
@@ -407,7 +407,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.master.status.workerDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.buildslaveDisconnected(
-            buildslaveid=self.workerid,
+            workerid=self.workerid,
             masterid=self.master.masterid,
         )
 

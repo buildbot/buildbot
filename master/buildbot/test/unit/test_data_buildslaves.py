@@ -63,7 +63,7 @@ def _filt(bs, builderid, masterid):
 
 def bs1(builderid=None, masterid=None):
     return _filt({
-        'buildslaveid': 1,
+        'workerid': 1,
         'name': 'linux',
         'slaveinfo': {},
         'connected_to': [
@@ -78,7 +78,7 @@ def bs1(builderid=None, masterid=None):
 
 def bs2(builderid=None, masterid=None):
     return _filt({
-        'buildslaveid': 2,
+        'workerid': 2,
         'name': 'windows',
         'slaveinfo': {'a': 'b'},
         'connected_to': [
@@ -241,7 +241,7 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.buildslaveConfigured,  # fake
             self.rtype.buildslaveConfigured)  # real
-        def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+        def buildslaveConfigured(self, workerid, masterid, builderids):
             pass
 
     def test_findBuildslaveId(self):

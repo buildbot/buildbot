@@ -23,7 +23,7 @@ class Db2DataMixin(object):
 
     def db2data(self, dbdict):
         return {
-            'buildslaveid': dbdict['id'],
+            'workerid': dbdict['id'],
             'name': dbdict['name'],
             'slaveinfo': dbdict['slaveinfo'],
             'connected_to': [
@@ -40,20 +40,20 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
-        /buildslaves/n:buildslaveid
+        /buildslaves/n:workerid
         /buildslaves/i:name
-        /masters/n:masterid/buildslaves/n:buildslaveid
+        /masters/n:masterid/buildslaves/n:workerid
         /masters/n:masterid/buildslaves/i:name
-        /masters/n:masterid/builders/n:builderid/buildslaves/n:buildslaveid
+        /masters/n:masterid/builders/n:builderid/buildslaves/n:workerid
         /masters/n:masterid/builders/n:builderid/buildslaves/i:name
-        /builders/n:builderid/buildslaves/n:buildslaveid
+        /builders/n:builderid/buildslaves/n:workerid
         /builders/n:builderid/buildslaves/i:name
     """
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         sldict = yield self.master.db.workers.getWorker(
-            workerid=kwargs.get('buildslaveid'),
+            workerid=kwargs.get('workerid'),
             name=kwargs.get('name'),
             masterid=kwargs.get('masterid'),
             builderid=kwargs.get('builderid'))
@@ -85,13 +85,13 @@ class Worker(base.ResourceType):
     name = "buildslave"
     plural = "buildslaves"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
-    keyFields = ['buildslaveid']
+    keyFields = ['workerid']
     eventPathPatterns = """
-        /buildslaves/:buildslaveid
+        /buildslaves/:workerid
     """
 
     class EntityType(types.Entity):
-        buildslaveid = types.Integer()
+        workerid = types.Integer()
         name = types.String()
         connected_to = types.List(of=types.Dict(
             masterid=types.Integer()))
@@ -103,9 +103,9 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+    def buildslaveConfigured(self, workerid, masterid, builderids):
         yield self.master.db.workers.workerConfigured(
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=masterid,
             builderids=builderids)
 
@@ -117,21 +117,21 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+    def buildslaveConnected(self, workerid, masterid, slaveinfo):
         yield self.master.db.workers.workerConnected(
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=masterid,
             workerinfo=slaveinfo)
-        bs = yield self.master.data.get(('buildslaves', buildslaveid))
+        bs = yield self.master.data.get(('buildslaves', workerid))
         self.produceEvent(bs, 'connected')
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveDisconnected(self, buildslaveid, masterid):
+    def buildslaveDisconnected(self, workerid, masterid):
         yield self.master.db.workers.workerDisconnected(
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=masterid)
-        bs = yield self.master.data.get(('buildslaves', buildslaveid))
+        bs = yield self.master.data.get(('buildslaves', workerid))
         self.produceEvent(bs, 'disconnected')
 
     @base.updateMethod

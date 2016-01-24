@@ -46,7 +46,7 @@ class Db2DataMixin(object):
             'number': dbdict['number'],
             'builderid': dbdict['builderid'],
             'buildrequestid': dbdict['buildrequestid'],
-            'buildslaveid': dbdict['workerid'],
+            'workerid': dbdict['workerid'],
             'masterid': dbdict['masterid'],
             'started_at': dbdict['started_at'],
             'complete_at': dbdict['complete_at'],
@@ -125,7 +125,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         /builds
         /builders/n:builderid/builds
         /buildrequests/n:buildrequestid/builds
-        /buildslaves/n:buildslaveid/builds
+        /buildslaves/n:workerid/builds
     """
     rootLinkName = 'builds'
 
@@ -137,7 +137,7 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
             buildrequestid=kwargs.get('buildrequestid'),
-            workerid=kwargs.get('buildslaveid'),
+            workerid=kwargs.get('workerid'),
             complete=complete)
         # returns properties' list
         filters = resultSpec.popProperties()
@@ -159,11 +159,11 @@ class Build(base.ResourceType):
     name = "build"
     plural = "builds"
     endpoints = [BuildEndpoint, BuildsEndpoint]
-    keyFields = ['builderid', 'buildid', 'buildslaveid']
+    keyFields = ['builderid', 'buildid', 'workerid']
     eventPathPatterns = """
         /builders/:builderid/builds/:number
         /builds/:buildid
-        /buildslaves/:buildslaveid/builds/:buildid
+        /buildslaves/:workerid/builds/:buildid
     """
 
     class EntityType(types.Entity):
@@ -171,7 +171,7 @@ class Build(base.ResourceType):
         number = types.Integer()
         builderid = types.Integer()
         buildrequestid = types.Integer()
-        buildslaveid = types.Integer()
+        workerid = types.Integer()
         masterid = types.Integer()
         started_at = types.DateTime()
         complete = types.Boolean()
@@ -189,11 +189,11 @@ class Build(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuild(self, builderid, buildrequestid, buildslaveid):
+    def addBuild(self, builderid, buildrequestid, workerid):
         res = yield self.master.db.builds.addBuild(
             builderid=builderid,
             buildrequestid=buildrequestid,
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=self.master.masterid,
             state_string=u'created')
         defer.returnValue(res)

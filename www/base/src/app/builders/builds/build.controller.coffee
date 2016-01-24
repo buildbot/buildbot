@@ -121,7 +121,7 @@ class Build extends Controller
                     console.log change
                     $scope.responsibles[change.author_name] = change.author_email
 
-                data.getBuildslaves(build.buildslaveid).onChange = (buildslaves) ->
+                data.getBuildslaves(build.workerid).onChange = (buildslaves) ->
                     $scope.buildslave = publicFieldsFilter(buildslaves[0])
 
                 data.getBuildrequests(build.buildrequestid).onChange = (buildrequests) ->

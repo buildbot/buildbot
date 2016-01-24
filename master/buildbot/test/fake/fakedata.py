@@ -44,7 +44,7 @@ class FakeUpdates(service.AsyncService):
         self.builderIds = {}  # { name : id }; users can add schedulers here
         self.schedulerMasters = {}  # { schedulerid : masterid }
         self.changesourceMasters = {}  # { changesourceid : masterid }
-        self.buildslaveIds = {}  # { name : id }; users can add workers here
+        self.workerIds = {}  # { name : id }; users can add workers here
         # { logid : {'finished': .., 'name': .., 'type': .., 'content': [ .. ]} }
         self.logs = {}
         self.claimedBuildRequests = set([])
@@ -280,12 +280,12 @@ class FakeUpdates(service.AsyncService):
         self.changesourceMasters[changesourceid] = masterid
         return defer.succeed(True)
 
-    def addBuild(self, builderid, buildrequestid, buildslaveid):
+    def addBuild(self, builderid, buildrequestid, workerid):
         validation.verifyType(self.testcase, 'builderid', builderid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'buildrequestid', buildrequestid,
                               validation.IntValidator())
-        validation.verifyType(self.testcase, 'buildslaveid', buildslaveid,
+        validation.verifyType(self.testcase, 'workerid', workerid,
                               validation.IntValidator())
         return defer.succeed((10, 1))
 
@@ -404,21 +404,21 @@ class FakeUpdates(service.AsyncService):
         # getBuildslave will get called later
         return self.master.db.workers.findWorkerId(name)
 
-    def buildslaveConnected(self, buildslaveid, masterid, slaveinfo):
+    def buildslaveConnected(self, workerid, masterid, slaveinfo):
         return self.master.db.workers.workerConnected(
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=masterid,
             workerinfo=slaveinfo)
 
-    def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+    def buildslaveConfigured(self, workerid, masterid, builderids):
         return self.master.db.workers.workerConfigured(
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=masterid,
             builderids=builderids)
 
-    def buildslaveDisconnected(self, buildslaveid, masterid):
+    def buildslaveDisconnected(self, workerid, masterid):
         return self.master.db.workers.workerDisconnected(
-            workerid=buildslaveid,
+            workerid=workerid,
             masterid=masterid)
 
     def deconfigureAllBuidslavesForMaster(self, masterid):
