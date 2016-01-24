@@ -397,7 +397,7 @@ class FakeUpdates(service.AsyncService):
         self.logs[logid]['content'].append(content)
         return defer.succeed(None)
 
-    def findBuildslaveId(self, name):
+    def findWorkerId(self, name):
         validation.verifyType(self.testcase, 'buildslave name', name,
                               validation.IdentifierValidator(50))
         # this needs to actually get inserted into the db (fake or real) since

@@ -219,7 +219,7 @@ class AbstractWorker(service.BuildbotService, object):
     def startService(self):
         self.updateLocks()
         self.startMissingTimer()
-        self.workerid = yield self.master.data.updates.findBuildslaveId(
+        self.workerid = yield self.master.data.updates.findWorkerId(
             self.name)
 
         yield self._getWorkerInfo()

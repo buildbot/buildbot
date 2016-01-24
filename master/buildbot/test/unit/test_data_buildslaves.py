@@ -232,8 +232,8 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_findBuildslaveId(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.findBuildslaveId,  # fake
-            self.rtype.findBuildslaveId)  # real
+            self.master.data.updates.findWorkerId,  # fake
+            self.rtype.findWorkerId)  # real
         def findBuildslaveId(self, name):
             pass
 
@@ -249,8 +249,8 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
         rv = defer.succeed(None)
         self.master.db.workers.findWorkerId = \
             mock.Mock(return_value=rv)
-        self.assertIdentical(self.rtype.findBuildslaveId(u'foo'), rv)
+        self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
     def test_findBuildslaveId_not_id(self):
-        self.assertRaises(ValueError, self.rtype.findBuildslaveId, 'foo')
-        self.assertRaises(ValueError, self.rtype.findBuildslaveId, u'123/foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, 'foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')

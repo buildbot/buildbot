@@ -110,7 +110,7 @@ class Worker(base.ResourceType):
             builderids=builderids)
 
     @base.updateMethod
-    def findBuildslaveId(self, name):
+    def findWorkerId(self, name):
         if not identifiers.isIdentifier(50, name):
             raise ValueError("Worker name %r is not a 50-character identifier" % (name,))
         return self.master.db.workers.findWorkerId(name)
