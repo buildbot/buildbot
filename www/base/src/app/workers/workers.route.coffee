@@ -19,7 +19,7 @@ class State extends Config
 
         bbSettingsServiceProvider.addSettingsGroup
             name:'Slaves'
-            caption: 'Slaves page related settings'
+            caption: 'Workers page related settings'
             items:[
                 type:'bool'
                 name:'show_old_slaves'
