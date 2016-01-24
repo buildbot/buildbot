@@ -4,9 +4,9 @@ class Builders extends Controller
         _.mixin($scope, resultsService)
         $scope.connected2class = (slave) ->
             if slave.connected_to.length > 0
-                return "slave_CONNECTED"
+                return "worker_CONNECTED"
             else
-                return "slave_DISCONNECTED"
+                return "worker_DISCONNECTED"
         $scope.hasActiveMaster = (builder) ->
             active = false
             if not builder.masters?
