@@ -15,7 +15,7 @@
 
 import mock
 
-from buildbot.data import buildslaves
+from buildbot.data import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -94,8 +94,8 @@ def bs2(builderid=None, masterid=None):
 
 class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = buildslaves.BuildslaveEndpoint
-    resourceTypeClass = buildslaves.Buildslave
+    endpointClass = workers.BuildslaveEndpoint
+    resourceTypeClass = workers.Buildslave
 
     def setUp(self):
         self.setUpEndpoint()
@@ -165,8 +165,8 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = buildslaves.BuildslavesEndpoint
-    resourceTypeClass = buildslaves.Buildslave
+    endpointClass = workers.BuildslavesEndpoint
+    resourceTypeClass = workers.Buildslave
 
     def setUp(self):
         self.setUpEndpoint()
@@ -224,7 +224,7 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True, wantDb=True, wantData=True)
-        self.rtype = buildslaves.Buildslave(self.master)
+        self.rtype = workers.Buildslave(self.master)
         return self.master.db.insertTestData([
             fakedb.Master(id=13),
             fakedb.Master(id=14),

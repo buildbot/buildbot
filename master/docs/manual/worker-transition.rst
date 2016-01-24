@@ -930,3 +930,17 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        method argument ``buildslaveid`` was renamed
        (introduced in nine)
      - ``workerid``
+
+Data API
+--------
+
+Python API changes:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Old name
+     - New name
+
+   * - :py:mod:`buildbot.data.buildslaves`
+     - :py:mod:`~buildbot.data.workers`
