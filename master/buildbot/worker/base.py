@@ -406,7 +406,7 @@ class AbstractWorker(service.BuildbotService, object):
         log.msg("Worker.detached(%s)" % (self.name,))
         self.master.status.workerDisconnected(self.name)
         self.releaseLocks()
-        yield self.master.data.updates.buildslaveDisconnected(
+        yield self.master.data.updates.workerDisconnected(
             workerid=self.workerid,
             masterid=self.master.masterid,
         )

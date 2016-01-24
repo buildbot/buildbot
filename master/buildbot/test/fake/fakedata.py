@@ -416,7 +416,7 @@ class FakeUpdates(service.AsyncService):
             masterid=masterid,
             builderids=builderids)
 
-    def buildslaveDisconnected(self, workerid, masterid):
+    def workerDisconnected(self, workerid, masterid):
         return self.master.db.workers.workerDisconnected(
             workerid=workerid,
             masterid=masterid)

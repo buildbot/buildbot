@@ -140,7 +140,7 @@ All update methods are available as attributes of ``master.data.updates``.
         The supplied information completely replaces any existing information.
         This method also sends a message indicating the connection.
 
-    .. py:method:: buildslaveDisconnected(workerid, masterid)
+    .. py:method:: workerDisconnected(workerid, masterid)
 
         :param integer workerid: ID of the newly-connected buildslave
         :param integer masterid: the ID of the master to which it connected

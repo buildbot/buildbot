@@ -968,6 +968,9 @@ Python API changes:
    * - :py:meth:`buildbot.data.buildslaves.Buildslave.buildslaveConnected`
      - :py:meth:`~buildbot.data.workers.Worker.workerConnected`
 
+   * - :py:meth:`buildbot.data.buildslaves.Buildslave.buildslaveDisconnected`
+     - :py:meth:`~buildbot.data.workers.Worker.workerDisconnected`
+
 
    * - ``buildslaveid`` in function arguments and API specification
      - ``workerid``

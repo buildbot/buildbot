@@ -127,7 +127,7 @@ class Worker(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def buildslaveDisconnected(self, workerid, masterid):
+    def workerDisconnected(self, workerid, masterid):
         yield self.master.db.workers.workerDisconnected(
             workerid=workerid,
             masterid=masterid)
