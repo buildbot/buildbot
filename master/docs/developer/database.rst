@@ -718,12 +718,12 @@ buildslaves
         Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
         The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getWorkers`.
 
-    .. py:method:: workerConnected(buildslaveid, masterid, slaveinfo)
+    .. py:method:: workerConnected(buildslaveid, masterid, workerinfo)
 
         :param integer buildslaveid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it connected
-        :param slaveinfo: the new buildslave information dictionary
-        :type slaveinfo: dict
+        :param workerinfo: the new buildslave information dictionary
+        :type workerinfo: dict
         :returns: Deferred
 
         Record the given buildslave as attached to the given master, and update its cached slave information.
