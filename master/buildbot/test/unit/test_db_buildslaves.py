@@ -62,17 +62,17 @@ class Tests(interfaces.InterfaceTests):
         fakedb.ConnectedWorker(id=3111, workerid=31, masterid=11),
     ]
 
-    # sample buildslave data, with id's avoiding the postgres id sequence
+    # sample worker data, with id's avoiding the postgres id sequence
 
     BOGUS_NAME = 'bogus'
 
     BS1_NAME, BS1_ID, BS1_INFO = 'bs1', 100, {'a': 1}
-    buildslave1_rows = [
+    worker1_rows = [
         fakedb.Worker(id=BS1_ID, name=BS1_NAME, info=BS1_INFO),
     ]
 
     BS2_NAME, BS2_ID, BS2_INFO = 'bs2', 200, {'a': 1, 'b': 2}
-    buildslave2_rows = [
+    worker2_rows = [
         fakedb.Worker(id=BS2_ID, name=BS2_NAME, info=BS2_INFO),
     ]
 
@@ -83,28 +83,28 @@ class Tests(interfaces.InterfaceTests):
         def findWorkerId(self, name):
             pass
 
-    def test_signature_getBuildslave(self):
+    def test_signature_getWorker(self):
         @self.assertArgSpecMatches(self.db.workers.getWorker)
         def getWorker(self, workerid=None, name=None,
                       masterid=None, builderid=None):
             pass
 
-    def test_signature_getBuildslaves(self):
+    def test_signature_getWorkers(self):
         @self.assertArgSpecMatches(self.db.workers.getWorkers)
         def getWorkers(self, masterid=None, builderid=None):
             pass
 
-    def test_signature_buildslaveConnected(self):
+    def test_signature_workerConnected(self):
         @self.assertArgSpecMatches(self.db.workers.workerConnected)
         def workerConnected(self, workerid, masterid, workerinfo):
             pass
 
-    def test_signature_buildslaveDisconnected(self):
+    def test_signature_workerDisconnected(self):
         @self.assertArgSpecMatches(self.db.workers.workerDisconnected)
         def workerDisconnected(self, workerid, masterid):
             pass
 
-    def test_signature_buildslaveConfigured(self):
+    def test_signature_workerConfigured(self):
         @self.assertArgSpecMatches(self.db.workers.workerConfigured)
         def workerConfigured(self, workerid, masterid, builderids):
             pass
@@ -128,19 +128,19 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(id, 31)
 
     @defer.inlineCallbacks
-    def test_getBuildslave_no_such(self):
+    def test_getWorker_no_such(self):
         yield self.insertTestData(self.baseRows)
         slavedict = yield self.db.workers.getWorker(workerid=99)
         self.assertEqual(slavedict, None)
 
     @defer.inlineCallbacks
-    def test_getBuildslave_by_name_no_such(self):
+    def test_getWorker_by_name_no_such(self):
         yield self.insertTestData(self.baseRows)
         slavedict = yield self.db.workers.getWorker(name='NOSUCH')
         self.assertEqual(slavedict, None)
 
     @defer.inlineCallbacks
-    def test_getBuildslave_not_configured(self):
+    def test_getWorker_not_configured(self):
         yield self.insertTestData(self.baseRows)
         slavedict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', slavedict)
@@ -149,7 +149,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[], configured_on=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_connected_not_configured(self):
+    def test_getWorker_connected_not_configured(self):
         yield self.insertTestData(self.baseRows + [
             # the worker is connected to this master, but not configured.
             # weird, but the DB should represent it.
@@ -163,7 +163,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[11], configured_on=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_multiple_connections(self):
+    def test_getWorker_multiple_connections(self):
         yield self.insertTestData(self.baseRows + [
             # the worker is connected to two masters at once.
             # weird, but the DB should represent it.
@@ -185,7 +185,7 @@ class Tests(interfaces.InterfaceTests):
                                   ]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_by_name_not_configured(self):
+    def test_getWorker_by_name_not_configured(self):
         yield self.insertTestData(self.baseRows)
         slavedict = yield self.db.workers.getWorker(name='zero')
         validation.verifyDbDict(self, 'workerdict', slavedict)
@@ -194,7 +194,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[], configured_on=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_not_connected(self):
+    def test_getWorker_not_connected(self):
         yield self.insertTestData(self.baseRows + [
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
             fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
@@ -208,7 +208,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_connected(self):
+    def test_getWorker_connected(self):
         yield self.insertTestData(self.baseRows + [
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
             fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
@@ -223,7 +223,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[10]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_with_multiple_masters(self):
+    def test_getWorker_with_multiple_masters(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', slavedict)
@@ -237,7 +237,7 @@ class Tests(interfaces.InterfaceTests):
                               ]), connected_to=[10]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_with_multiple_masters_builderid(self):
+    def test_getWorker_with_multiple_masters_builderid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30, builderid=20)
         validation.verifyDbDict(self, 'workerdict', slavedict)
@@ -250,7 +250,7 @@ class Tests(interfaces.InterfaceTests):
                               ]), connected_to=[10]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_with_multiple_masters_masterid(self):
+    def test_getWorker_with_multiple_masters_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30, masterid=11)
         validation.verifyDbDict(self, 'workerdict', slavedict)
@@ -261,7 +261,7 @@ class Tests(interfaces.InterfaceTests):
                                   ], connected_to=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_with_multiple_masters_builderid_masterid(self):
+    def test_getWorker_with_multiple_masters_builderid_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30,
                                                     builderid=20, masterid=11)
@@ -273,7 +273,7 @@ class Tests(interfaces.InterfaceTests):
                                   ], connected_to=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslave_by_name_with_multiple_masters_builderid_masterid(self):
+    def test_getWorker_by_name_with_multiple_masters_builderid_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(name='zero',
                                                     builderid=20, masterid=11)
@@ -285,7 +285,7 @@ class Tests(interfaces.InterfaceTests):
                                   ], connected_to=[]))
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_no_config(self):
+    def test_getWorkers_no_config(self):
         yield self.insertTestData(self.baseRows)
         slavedicts = yield self.db.workers.getWorkers()
         [validation.verifyDbDict(self, 'workerdict', slavedict)
@@ -298,7 +298,7 @@ class Tests(interfaces.InterfaceTests):
         ]))
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_with_config(self):
+    def test_getWorkers_with_config(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers()
         for slavedict in slavedicts:
@@ -319,7 +319,7 @@ class Tests(interfaces.InterfaceTests):
         ]))
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_empty(self):
+    def test_getWorkers_empty(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(masterid=11, builderid=21)
         for slavedict in slavedicts:
@@ -328,7 +328,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sorted(slavedicts), [])
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_with_config_builderid(self):
+    def test_getWorkers_with_config_builderid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(builderid=20)
         for slavedict in slavedicts:
@@ -347,7 +347,7 @@ class Tests(interfaces.InterfaceTests):
         ]))
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_with_config_masterid_10(self):
+    def test_getWorkers_with_config_masterid_10(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(masterid=10)
         for slavedict in slavedicts:
@@ -362,7 +362,7 @@ class Tests(interfaces.InterfaceTests):
         ]))
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_with_config_masterid_11(self):
+    def test_getWorkers_with_config_masterid_11(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(masterid=11)
         for slavedict in slavedicts:
@@ -381,7 +381,7 @@ class Tests(interfaces.InterfaceTests):
         ]))
 
     @defer.inlineCallbacks
-    def test_getBuildslaves_with_config_masterid_11_builderid_22(self):
+    def test_getWorkers_with_config_masterid_11_builderid_22(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(
             masterid=11, builderid=22)
@@ -396,8 +396,8 @@ class Tests(interfaces.InterfaceTests):
         ]))
 
     @defer.inlineCallbacks
-    def test_buildslaveConnected_existing(self):
-        yield self.insertTestData(self.baseRows + self.buildslave1_rows)
+    def test_workerConnected_existing(self):
+        yield self.insertTestData(self.baseRows + self.worker1_rows)
 
         NEW_INFO = {'other': [1, 2, 3]}
 
@@ -413,8 +413,8 @@ class Tests(interfaces.InterfaceTests):
             'connected_to': [11]})
 
     @defer.inlineCallbacks
-    def test_buildslaveConnected_already_connected(self):
-        yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
+    def test_workerConnected_already_connected(self):
+        yield self.insertTestData(self.baseRows + self.worker1_rows + [
             fakedb.ConnectedWorker(id=888,
                                    workerid=self.BS1_ID, masterid=11),
         ])
@@ -425,8 +425,8 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bs['connected_to'], [11])
 
     @defer.inlineCallbacks
-    def test_buildslaveDisconnected(self):
-        yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
+    def test_workerDisconnected(self):
+        yield self.insertTestData(self.baseRows + self.worker1_rows + [
             fakedb.ConnectedWorker(id=888,
                                    workerid=self.BS1_ID, masterid=10),
             fakedb.ConnectedWorker(id=889,
@@ -439,8 +439,8 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bs['connected_to'], [10])
 
     @defer.inlineCallbacks
-    def test_buildslaveDisconnected_already_disconnected(self):
-        yield self.insertTestData(self.baseRows + self.buildslave1_rows)
+    def test_workerDisconnected_already_disconnected(self):
+        yield self.insertTestData(self.baseRows + self.worker1_rows)
         yield self.db.workers.workerDisconnected(
             workerid=self.BS1_ID, masterid=11)
 
@@ -448,7 +448,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bs['connected_to'], [])
 
     @defer.inlineCallbacks
-    def test_buildslaveConfigured(self):
+    def test_workerConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
@@ -464,7 +464,7 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
-    def test_buildslaveConfiguredTwice(self):
+    def test_workerConfiguredTwice(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
