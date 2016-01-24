@@ -102,7 +102,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             if buildrequestid is not None:
                 q = q.where(tbl.c.buildrequestid == buildrequestid)
             if workerid is not None:
-                q = q.where(tbl.c.buildslaveid == workerid)
+                q = q.where(tbl.c.workerid == workerid)
             if complete is not None:
                 if complete:
                     q = q.where(tbl.c.complete_at != NULL)
@@ -133,7 +133,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     r = conn.execute(self.db.model.builds.insert(),
                                      dict(number=new_number, builderid=builderid,
                                           buildrequestid=buildrequestid,
-                                          buildslaveid=workerid, masterid=masterid,
+                                          workerid=workerid, masterid=masterid,
                                           started_at=started_at, complete_at=None,
                                           state_string=state_string))
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
@@ -205,7 +205,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             number=row.number,
             builderid=row.builderid,
             buildrequestid=row.buildrequestid,
-            buildslaveid=row.buildslaveid,
+            workerid=row.workerid,
             masterid=row.masterid,
             started_at=mkdt(row.started_at),
             complete_at=mkdt(row.complete_at),

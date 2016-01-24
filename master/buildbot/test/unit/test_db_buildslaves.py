@@ -38,8 +38,8 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Builder(id=20, name=u'a'),
         fakedb.Builder(id=21, name=u'b'),
         fakedb.Builder(id=22, name=u'c'),
-        fakedb.Buildslave(id=30, name='zero'),
-        fakedb.Buildslave(id=31, name='one'),
+        fakedb.Worker(id=30, name='zero'),
+        fakedb.Worker(id=31, name='one'),
     ]
 
     multipleMasters = [
@@ -48,18 +48,18 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuilderMaster(id=14, builderid=20, masterid=11),
         fakedb.BuilderMaster(id=15, builderid=22, masterid=11),
         fakedb.BuilderMaster(id=16, builderid=22, masterid=10),
-        fakedb.ConfiguredBuildslave(
-            id=3012, buildslaveid=30, buildermasterid=12),
-        fakedb.ConfiguredBuildslave(
-            id=3013, buildslaveid=30, buildermasterid=13),
-        fakedb.ConfiguredBuildslave(
-            id=3014, buildslaveid=30, buildermasterid=14),
-        fakedb.ConfiguredBuildslave(
-            id=3114, buildslaveid=31, buildermasterid=14),
-        fakedb.ConfiguredBuildslave(
-            id=3115, buildslaveid=31, buildermasterid=15),
-        fakedb.ConnectedBuildslave(id=3010, buildslaveid=30, masterid=10),
-        fakedb.ConnectedBuildslave(id=3111, buildslaveid=31, masterid=11),
+        fakedb.ConfiguredWorker(
+            id=3012, workerid=30, buildermasterid=12),
+        fakedb.ConfiguredWorker(
+            id=3013, workerid=30, buildermasterid=13),
+        fakedb.ConfiguredWorker(
+            id=3014, workerid=30, buildermasterid=14),
+        fakedb.ConfiguredWorker(
+            id=3114, workerid=31, buildermasterid=14),
+        fakedb.ConfiguredWorker(
+            id=3115, workerid=31, buildermasterid=15),
+        fakedb.ConnectedWorker(id=3010, workerid=30, masterid=10),
+        fakedb.ConnectedWorker(id=3111, workerid=31, masterid=11),
     ]
 
     # sample buildslave data, with id's avoiding the postgres id sequence
@@ -68,12 +68,12 @@ class Tests(interfaces.InterfaceTests):
 
     BS1_NAME, BS1_ID, BS1_INFO = 'bs1', 100, {'a': 1}
     buildslave1_rows = [
-        fakedb.Buildslave(id=BS1_ID, name=BS1_NAME, info=BS1_INFO),
+        fakedb.Worker(id=BS1_ID, name=BS1_NAME, info=BS1_INFO),
     ]
 
     BS2_NAME, BS2_ID, BS2_INFO = 'bs2', 200, {'a': 1, 'b': 2}
     buildslave2_rows = [
-        fakedb.Buildslave(id=BS2_ID, name=BS2_NAME, info=BS2_INFO),
+        fakedb.Worker(id=BS2_ID, name=BS2_NAME, info=BS2_INFO),
     ]
 
     # tests
@@ -143,7 +143,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_not_configured(self):
         yield self.insertTestData(self.baseRows)
         slavedict = yield self.db.workers.getWorker(workerid=30)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               connected_to=[], configured_on=[]))
@@ -153,11 +153,11 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + [
             # the worker is connected to this master, but not configured.
             # weird, but the DB should represent it.
-            fakedb.Buildslave(id=32, name='two'),
-            fakedb.ConnectedBuildslave(buildslaveid=32, masterid=11),
+            fakedb.Worker(id=32, name='two'),
+            fakedb.ConnectedWorker(workerid=32, masterid=11),
         ])
         slavedict = yield self.db.workers.getWorker(workerid=32)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=32, name='two', slaveinfo={'a': 'b'},
                               connected_to=[11], configured_on=[]))
@@ -167,16 +167,16 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + [
             # the worker is connected to two masters at once.
             # weird, but the DB should represent it.
-            fakedb.Buildslave(id=32, name='two'),
-            fakedb.ConnectedBuildslave(buildslaveid=32, masterid=10),
-            fakedb.ConnectedBuildslave(buildslaveid=32, masterid=11),
+            fakedb.Worker(id=32, name='two'),
+            fakedb.ConnectedWorker(workerid=32, masterid=10),
+            fakedb.ConnectedWorker(workerid=32, masterid=11),
             fakedb.BuilderMaster(id=24, builderid=20, masterid=10),
             fakedb.BuilderMaster(id=25, builderid=20, masterid=11),
-            fakedb.ConfiguredBuildslave(buildslaveid=32, buildermasterid=24),
-            fakedb.ConfiguredBuildslave(buildslaveid=32, buildermasterid=25),
+            fakedb.ConfiguredWorker(workerid=32, buildermasterid=24),
+            fakedb.ConfiguredWorker(workerid=32, buildermasterid=25),
         ])
         slavedict = yield self.db.workers.getWorker(workerid=32)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=32, name='two', slaveinfo={'a': 'b'},
                               connected_to=[10, 11], configured_on=[
@@ -188,7 +188,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_by_name_not_configured(self):
         yield self.insertTestData(self.baseRows)
         slavedict = yield self.db.workers.getWorker(name='zero')
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               connected_to=[], configured_on=[]))
@@ -197,10 +197,10 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_not_connected(self):
         yield self.insertTestData(self.baseRows + [
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
-            fakedb.ConfiguredBuildslave(buildslaveid=30, buildermasterid=12),
+            fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
         ])
         slavedict = yield self.db.workers.getWorker(workerid=30)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
@@ -211,11 +211,11 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_connected(self):
         yield self.insertTestData(self.baseRows + [
             fakedb.BuilderMaster(id=12, builderid=20, masterid=10),
-            fakedb.ConfiguredBuildslave(buildslaveid=30, buildermasterid=12),
-            fakedb.ConnectedBuildslave(buildslaveid=30, masterid=10),
+            fakedb.ConfiguredWorker(workerid=30, buildermasterid=12),
+            fakedb.ConnectedWorker(workerid=30, masterid=10),
         ])
         slavedict = yield self.db.workers.getWorker(workerid=30)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
@@ -226,7 +226,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_with_multiple_masters(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         slavedict['configured_on'].sort()
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -240,7 +240,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_with_multiple_masters_builderid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30, builderid=20)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         slavedict['configured_on'].sort()
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -253,7 +253,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslave_with_multiple_masters_masterid(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30, masterid=11)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
@@ -265,7 +265,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(workerid=30,
                                                     builderid=20, masterid=11)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
@@ -277,7 +277,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedict = yield self.db.workers.getWorker(name='zero',
                                                     builderid=20, masterid=11)
-        validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        validation.verifyDbDict(self, 'workerdict', slavedict)
         self.assertEqual(slavedict,
                          dict(id=30, name='zero', slaveinfo={'a': 'b'},
                               configured_on=[
@@ -288,7 +288,7 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildslaves_no_config(self):
         yield self.insertTestData(self.baseRows)
         slavedicts = yield self.db.workers.getWorkers()
-        [validation.verifyDbDict(self, 'buildslavedict', slavedict)
+        [validation.verifyDbDict(self, 'workerdict', slavedict)
          for slavedict in slavedicts]
         self.assertEqual(sorted(slavedicts), sorted([
             dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -302,7 +302,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers()
         for slavedict in slavedicts:
-            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            validation.verifyDbDict(self, 'workerdict', slavedict)
             slavedict['configured_on'].sort()
         self.assertEqual(sorted(slavedicts), sorted([
             dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -323,7 +323,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(masterid=11, builderid=21)
         for slavedict in slavedicts:
-            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            validation.verifyDbDict(self, 'workerdict', slavedict)
             slavedict['configured_on'].sort()
         self.assertEqual(sorted(slavedicts), [])
 
@@ -332,7 +332,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(builderid=20)
         for slavedict in slavedicts:
-            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            validation.verifyDbDict(self, 'workerdict', slavedict)
             slavedict['configured_on'].sort()
         self.assertEqual(sorted(slavedicts), sorted([
             dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -351,7 +351,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(masterid=10)
         for slavedict in slavedicts:
-            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            validation.verifyDbDict(self, 'workerdict', slavedict)
             slavedict['configured_on'].sort()
         self.assertEqual(sorted(slavedicts), sorted([
             dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -366,7 +366,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
         slavedicts = yield self.db.workers.getWorkers(masterid=11)
         for slavedict in slavedicts:
-            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            validation.verifyDbDict(self, 'workerdict', slavedict)
             slavedict['configured_on'].sort()
         self.assertEqual(sorted(slavedicts), sorted([
             dict(id=30, name='zero', slaveinfo={'a': 'b'},
@@ -386,7 +386,7 @@ class Tests(interfaces.InterfaceTests):
         slavedicts = yield self.db.workers.getWorkers(
             masterid=11, builderid=22)
         for slavedict in slavedicts:
-            validation.verifyDbDict(self, 'buildslavedict', slavedict)
+            validation.verifyDbDict(self, 'workerdict', slavedict)
             slavedict['configured_on'].sort()
         self.assertEqual(sorted(slavedicts), sorted([
             dict(id=31, name='one', slaveinfo={'a': 'b'},
@@ -415,8 +415,8 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_buildslaveConnected_already_connected(self):
         yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
-            fakedb.ConnectedBuildslave(id=888,
-                                       buildslaveid=self.BS1_ID, masterid=11),
+            fakedb.ConnectedWorker(id=888,
+                                   workerid=self.BS1_ID, masterid=11),
         ])
         yield self.db.workers.workerConnected(
             workerid=self.BS1_ID, masterid=11, workerinfo={})
@@ -427,10 +427,10 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_buildslaveDisconnected(self):
         yield self.insertTestData(self.baseRows + self.buildslave1_rows + [
-            fakedb.ConnectedBuildslave(id=888,
-                                       buildslaveid=self.BS1_ID, masterid=10),
-            fakedb.ConnectedBuildslave(id=889,
-                                       buildslaveid=self.BS1_ID, masterid=11),
+            fakedb.ConnectedWorker(id=888,
+                                   workerid=self.BS1_ID, masterid=10),
+            fakedb.ConnectedWorker(id=889,
+                                   workerid=self.BS1_ID, masterid=11),
         ])
         yield self.db.workers.workerDisconnected(
             workerid=self.BS1_ID, masterid=11)
@@ -485,7 +485,7 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
-    def test_buildslaveReConfigured(self):
+    def test_workerReConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
         # should remove builder 21, and add 22
@@ -499,7 +499,7 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
-    def test_buildslaveUnconfigured(self):
+    def test_workerUnconfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
         # should remove all builders from master 10
@@ -560,9 +560,9 @@ class TestRealDB(unittest.TestCase,
 
     def setUp(self):
         d = self.setUpConnectorComponent(
-            table_names=['buildslaves', 'masters', 'builders',
-                         'builder_masters', 'connected_buildslaves',
-                         'configured_buildslaves'])
+            table_names=['workers', 'masters', 'builders',
+                         'builder_masters', 'connected_workers',
+                         'configured_workers'])
 
         @d.addCallback
         def finish_setup(_):

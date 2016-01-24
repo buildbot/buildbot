@@ -388,7 +388,7 @@ dbdict['builderdict'] = DictValidator(
 
 # worker
 
-dbdict['buildslavedict'] = DictValidator(
+dbdict['workerdict'] = DictValidator(
     id=IntValidator(),
     name=StringValidator(),
     configured_on=ListValidator(
@@ -533,7 +533,7 @@ _build = dict(
     number=IntValidator(),
     builderid=IntValidator(),
     buildrequestid=IntValidator(),
-    buildslaveid=IntValidator(),
+    workerid=IntValidator(),
     masterid=IntValidator(),
     started_at=IntValidator(),
     complete=BooleanValidator(),
@@ -559,7 +559,7 @@ dbdict['dbbuilddict'] = buildbase = DictValidator(
     number=IntValidator(),
     builderid=IntValidator(),
     buildrequestid=IntValidator(),
-    buildslaveid=IntValidator(),
+    workerid=IntValidator(),
     masterid=IntValidator(),
     started_at=DateTimeValidator(),
     complete_at=NoneOk(DateTimeValidator()),

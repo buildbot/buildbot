@@ -353,7 +353,7 @@ class TestAbstractWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_startService_getWorkerInfo_fromDb(self):
         self.master.db.insertTestData([
-            fakedb.Buildslave(id=9292, name='bot', info={
+            fakedb.Worker(id=9292, name='bot', info={
                 'admin': 'TheAdmin',
                 'host': 'TheHost',
                 'access_uri': 'TheURI',
@@ -416,7 +416,7 @@ class TestAbstractWorker(unittest.TestCase):
     def test_attached_workerInfoUpdates(self):
         # put in stale info:
         self.master.db.insertTestData([
-            fakedb.Buildslave(name='bot', info={
+            fakedb.Worker(name='bot', info={
                 'admin': 'WrongAdmin',
                 'host': 'WrongHost',
                 'access_uri': 'WrongURI',

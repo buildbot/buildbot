@@ -43,35 +43,35 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuildRequest(id=42, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
         fakedb.Master(id=89, name="bar"),
-        fakedb.Buildslave(id=13, name='sl'),
-        fakedb.Buildslave(id=12, name='sl2'),
+        fakedb.Worker(id=13, name='sl'),
+        fakedb.Worker(id=12, name='sl2'),
     ]
 
     threeBuilds = [
         fakedb.Build(id=50, buildrequestid=42, number=5, masterid=88,
-                     builderid=77, buildslaveid=13, state_string="test",
+                     builderid=77, workerid=13, state_string="test",
                      started_at=TIME1),
         fakedb.Build(id=51, buildrequestid=41, number=6, masterid=88,
-                     builderid=88, buildslaveid=13, state_string="test",
+                     builderid=88, workerid=13, state_string="test",
                      started_at=TIME2),
         fakedb.Build(id=52, buildrequestid=42, number=7, masterid=88,
-                     builderid=77, buildslaveid=12, state_string="test",
+                     builderid=77, workerid=12, state_string="test",
                      started_at=TIME3, complete_at=TIME4, results=5),
     ]
 
     threeBdicts = {
         50: {'id': 50, 'buildrequestid': 42, 'builderid': 77,
-             'masterid': 88, 'number': 5, 'buildslaveid': 13,
+             'masterid': 88, 'number': 5, 'workerid': 13,
              'started_at': epoch2datetime(TIME1),
              'complete_at': None, 'state_string': 'test',
              'results': None},
         51: {'id': 51, 'buildrequestid': 41, 'builderid': 88,
-             'masterid': 88, 'number': 6, 'buildslaveid': 13,
+             'masterid': 88, 'number': 6, 'workerid': 13,
              'started_at': epoch2datetime(TIME2),
              'complete_at': None, 'state_string': 'test',
              'results': None},
         52: {'id': 52, 'buildrequestid': 42, 'builderid': 77,
-             'masterid': 88, 'number': 7, 'buildslaveid': 12,
+             'masterid': 88, 'number': 7, 'workerid': 12,
              'started_at': epoch2datetime(TIME3),
              'complete_at': epoch2datetime(TIME4),
              'state_string': 'test',
@@ -129,7 +129,7 @@ class Tests(interfaces.InterfaceTests):
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, buildslaveid=13,
+                                     masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
                                      state_string=u'test', results=None))
 
@@ -174,7 +174,7 @@ class Tests(interfaces.InterfaceTests):
                          [self.threeBdicts[50], self.threeBdicts[52]])
 
     @defer.inlineCallbacks
-    def test_getBuilds_buildslaveid(self):
+    def test_getBuilds_workerid(self):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(workerid=13)
         for bdict in bdicts:
@@ -202,7 +202,7 @@ class Tests(interfaces.InterfaceTests):
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
-                                 'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
+                                 'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
                                  'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
@@ -213,7 +213,7 @@ class Tests(interfaces.InterfaceTests):
         clock.advance(TIME1)
         yield self.insertTestData(self.backgroundData + [
             fakedb.Build(number=10, buildrequestid=41, builderid=77,
-                         masterid=88, buildslaveid=13),
+                         masterid=88, workerid=13),
         ])
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, workerid=13, masterid=88,
@@ -222,7 +222,7 @@ class Tests(interfaces.InterfaceTests):
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 11)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
-                                 'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
+                                 'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
                                  'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
@@ -235,7 +235,7 @@ class Tests(interfaces.InterfaceTests):
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, buildslaveid=13,
+                                     masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
                                      state_string=u'test test2', results=None))
 
@@ -248,7 +248,7 @@ class Tests(interfaces.InterfaceTests):
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
-                                     masterid=88, builderid=77, buildslaveid=13,
+                                     masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1),
                                      complete_at=epoch2datetime(TIME4),
                                      state_string=u'test',
@@ -306,7 +306,7 @@ class RealTests(Tests):
                 return
             conn.execute(self.db.model.builds.insert(),
                          {'number': numbers.pop(0), 'buildrequestid': 41,
-                          'masterid': 88, 'buildslaveid': 13, 'builderid': 77,
+                          'masterid': 88, 'workerid': 13, 'builderid': 77,
                           'started_at': TIME1, 'state_string': "hi"})
 
         id, number = yield self.db.builds.addBuild(builderid=77,
@@ -317,7 +317,7 @@ class RealTests(Tests):
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 8)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
-                                 'id': id, 'masterid': 88, 'number': number, 'buildslaveid': 13,
+                                 'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
                                  'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
@@ -339,7 +339,7 @@ class TestRealDB(unittest.TestCase,
     def setUp(self):
         d = self.setUpConnectorComponent(
             table_names=['builds', 'builders', 'masters', 'buildrequests',
-                         'buildsets', 'buildslaves', 'build_properties'])
+                         'buildsets', 'workers', 'build_properties'])
 
         @d.addCallback
         def finish_setup(_):

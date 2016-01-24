@@ -46,7 +46,7 @@ class Db2DataMixin(object):
             'number': dbdict['number'],
             'builderid': dbdict['builderid'],
             'buildrequestid': dbdict['buildrequestid'],
-            'buildslaveid': dbdict['buildslaveid'],
+            'buildslaveid': dbdict['workerid'],
             'masterid': dbdict['masterid'],
             'started_at': dbdict['started_at'],
             'complete_at': dbdict['complete_at'],

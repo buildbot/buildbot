@@ -136,7 +136,7 @@ class TestGerritStatusPush(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
@@ -150,7 +150,7 @@ class TestGerritStatusPush(unittest.TestCase):
         for results in buildResults:
             self.db.insertTestData([
                 fakedb.BuildRequest(id=11 + i, buildsetid=98, builderid=79 + i),
-                fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i, buildslaveid=13,
+                fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i, workerid=13,
                              masterid=92, results=results, state_string=u"buildText"),
                 fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
                 fakedb.Log(id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s',

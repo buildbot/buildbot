@@ -712,7 +712,7 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_getChangesForBuild(self):
         rows = [fakedb.Master(id=88, name="bar"),
-                fakedb.Buildslave(id=13, name='one'),
+                fakedb.Worker(id=13, name='one'),
                 fakedb.Builder(id=77, name='A')]
         lastID = {"changeid": 0,
                   "sourcestampid": 0,
@@ -773,7 +773,7 @@ class RealTests(Tests):
                              masterid=88,
                              builderid=77,
                              state_string="test",
-                             buildslaveid=13,
+                             workerid=13,
                              started_at=SOMETIME + lastID["buildid"],
                              complete_at=SOMETIME + 2 * lastID["buildid"],
                              results=results)])
@@ -838,7 +838,7 @@ class TestRealDB(unittest.TestCase,
             table_names=['changes', 'change_files',
                          'change_properties', 'scheduler_changes', 'schedulers',
                          'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
-                         'users', 'buildsets', 'buildslaves', 'builders', 'masters',
+                         'users', 'buildsets', 'workers', 'builders', 'masters',
                          'buildrequests', 'builds', 'buildset_sourcestamps'])
 
         @d.addCallback

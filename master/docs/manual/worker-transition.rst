@@ -757,6 +757,59 @@ Renamed events:
 Database
 --------
 
+Shema changes:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Old name
+     - New name
+
+   * - ``buildslaves`` table
+     - ``workers``
+
+   * - ``builds.buildslaveid`` (not ForeignKey) column
+     - ``workerid``
+
+
+   * - ``configured_buildslaves`` table
+     - ``configured_workers``
+
+   * - ``configured_buildslaves.buildslaveid`` (ForeignKey) column
+     - ``workerid``
+
+
+   * - ``connected_buildslaves`` table
+     - ``connected_workers``
+
+   * - ``connected_buildslaves.buildslaveid`` (ForeignKey) column
+     - ``workerid``
+
+
+   * - ``buildslaves_name`` index
+     - ``workers_name``
+
+   * - ``configured_slaves_buildmasterid`` index
+     - ``configured_workers_buildmasterid``
+
+   * - ``configured_slaves_slaves`` index
+     - ``configured_workers_workers``
+
+   * - ``configured_slaves_identity`` index
+     - ``configured_workers_identity``
+
+   * - ``connected_slaves_masterid`` index
+     - ``connected_workers_masterid``
+
+   * - ``connected_slaves_slaves`` index
+     - ``connected_workers_workers``
+
+   * - ``connected_slaves_identity`` index
+     - ``connected_workers_identity``
+
+   * - ``builds_buildslaveid`` index
+     - ``builds_workerid``
+
 List of database-related changes in API (fallback for old API is provided):
 
 .. list-table::
@@ -792,6 +845,15 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
    * - Old name
      - New name
+
+   * - :py:attr:`buildbot.db.model.Model.buildslaves`
+     - :py:attr:`buildbot.db.model.Model.workers`
+
+   * - :py:attr:`buildbot.db.model.Model.configured_buildslaves`
+     - :py:attr:`buildbot.db.model.Model.configured_workers`
+
+   * - :py:attr:`buildbot.db.model.Model.connected_buildslaves`
+     - :py:attr:`buildbot.db.model.Model.connected_workers`
 
    * - :py:class:`buildbot.protocols.base.Connection`
        constructor positional argument ``buildslave`` was renamed

@@ -26,7 +26,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
     def findWorkerId(self, name):
-        tbl = self.db.model.buildslaves
+        tbl = self.db.model.workers
         # callers should verify this and give good user error messages
         assert identifiers.isIdentifier(50, name)
         return self.findSomethingId(
@@ -41,7 +41,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and worker
             # as sqlalchemy does not support delete with join, we need to do that in 2 queries
-            cfg_tbl = self.db.model.configured_buildslaves
+            cfg_tbl = self.db.model.configured_workers
             bm_tbl = self.db.model.builder_masters
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
@@ -59,7 +59,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
         def thd(conn):
 
-            cfg_tbl = self.db.model.configured_buildslaves
+            cfg_tbl = self.db.model.configured_workers
             bm_tbl = self.db.model.builder_masters
 
             # get the buildermasterids that are configured
@@ -75,7 +75,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(bm_tbl)
             q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j])
             q = q.where(bm_tbl.c.masterid == masterid)
-            q = q.where(cfg_tbl.c.buildslaveid == workerid)
+            q = q.where(cfg_tbl.c.workerid == workerid)
             oldbuildermasterids = set([row['buildermasterid'] for row in conn.execute(q)])
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
@@ -91,7 +91,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             if toinsertbuildermasterids:
                 q = cfg_tbl.insert()
                 conn.execute(q,
-                             [{'buildslaveid': workerid, 'buildermasterid': buildermasterid}
+                             [{'workerid': workerid, 'buildermasterid': buildermasterid}
                               for buildermasterid in toinsertbuildermasterids])
 
             transaction.commit()
@@ -111,9 +111,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     def getWorkers(self, _workerid=None, _name=None, masterid=None,
                    builderid=None):
         def thd(conn):
-            workers_tbl = self.db.model.buildslaves
-            conn_tbl = self.db.model.connected_buildslaves
-            cfg_tbl = self.db.model.configured_buildslaves
+            workers_tbl = self.db.model.workers
+            conn_tbl = self.db.model.connected_workers
+            cfg_tbl = self.db.model.configured_workers
             bm_tbl = self.db.model.builder_masters
 
             def selectWorker(q):
@@ -165,22 +165,22 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 # workers, they were captured in rv above
                 j = j.join(workers_tbl)
             q = sa.select(
-                [conn_tbl.c.buildslaveid, conn_tbl.c.masterid],
+                [conn_tbl.c.workerid, conn_tbl.c.masterid],
                 from_obj=[j],
-                order_by=[conn_tbl.c.buildslaveid])
+                order_by=[conn_tbl.c.workerid])
 
             if _workerid is not None:
-                q = q.where(conn_tbl.c.buildslaveid == _workerid)
+                q = q.where(conn_tbl.c.workerid == _workerid)
             if _name is not None:
                 q = q.where(workers_tbl.c.name == _name)
             if masterid is not None:
                 q = q.where(conn_tbl.c.masterid == masterid)
 
             for row in conn.execute(q):
-                id = row.buildslaveid
+                id = row.workerid
                 if id not in rv:
                     continue
-                rv[row.buildslaveid]['connected_to'].append(row.masterid)
+                rv[row.workerid]['connected_to'].append(row.masterid)
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
@@ -188,24 +188,24 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):
-            conn_tbl = self.db.model.connected_buildslaves
+            conn_tbl = self.db.model.connected_workers
             q = conn_tbl.insert()
             try:
                 conn.execute(q,
-                             {'buildslaveid': workerid, 'masterid': masterid})
+                             {'workerid': workerid, 'masterid': masterid})
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # if the row is already present, silently fail..
                 pass
 
-            bs_tbl = self.db.model.buildslaves
+            bs_tbl = self.db.model.workers
             q = bs_tbl.update(whereclause=(bs_tbl.c.id == workerid))
             conn.execute(q, info=workerinfo)
         return self.db.pool.do(thd)
 
     def workerDisconnected(self, workerid, masterid):
         def thd(conn):
-            tbl = self.db.model.connected_buildslaves
-            q = tbl.delete(whereclause=(tbl.c.buildslaveid == workerid) &
+            tbl = self.db.model.connected_workers
+            q = tbl.delete(whereclause=(tbl.c.workerid == workerid) &
                                        (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)

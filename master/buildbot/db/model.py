@@ -119,9 +119,8 @@ class Model(base.DBConnectorComponent):
                       sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
                                 nullable=False),
                       # worker which performed this build
-                      # TODO: ForeignKey to buildslaves table, named buildslaveid (#3088)
-                      # TODO: keep nullable to support worker-free builds (#3088)
-                      sa.Column('buildslaveid', sa.Integer),
+                      # keep nullable to support worker-free builds
+                      sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id')),
                       # master which controlled this build
                       sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
                                 nullable=False),
@@ -240,31 +239,31 @@ class Model(base.DBConnectorComponent):
                                               nullable=False),
                                     )
 
-    # buildslaves
-    buildslaves = sa.Table("buildslaves", metadata,
-                           sa.Column("id", sa.Integer, primary_key=True),
-                           sa.Column("name", sa.String(50), nullable=False),
-                           sa.Column("info", JsonObject, nullable=False),
-                           )
+    # workers
+    workers = sa.Table("workers", metadata,
+                       sa.Column("id", sa.Integer, primary_key=True),
+                       sa.Column("name", sa.String(50), nullable=False),
+                       sa.Column("info", JsonObject, nullable=False),
+                       )
 
-    # link buildslaves to all builder/master pairs for which they are
+    # link workers to all builder/master pairs for which they are
     # configured
-    configured_buildslaves = sa.Table('configured_buildslaves', metadata,
-                                      sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                      sa.Column('buildermasterid', sa.Integer,
-                                                sa.ForeignKey('builder_masters.id'), nullable=False),
-                                      sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                                                nullable=False),
-                                      )
+    configured_workers = sa.Table('configured_workers', metadata,
+                                  sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                                  sa.Column('buildermasterid', sa.Integer,
+                                            sa.ForeignKey('builder_masters.id'), nullable=False),
+                                  sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                                            nullable=False),
+                                  )
 
-    # link buildslaves to the masters they are currently connected to
-    connected_buildslaves = sa.Table('connected_buildslaves', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                     sa.Column('masterid', sa.Integer,
-                                               sa.ForeignKey('masters.id'), nullable=False),
-                                     sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                                               nullable=False),
-                                     )
+    # link workers to the masters they are currently connected to
+    connected_workers = sa.Table('connected_workers', metadata,
+                                 sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+                                 sa.Column('masterid', sa.Integer,
+                                           sa.ForeignKey('masters.id'), nullable=False),
+                                 sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                                           nullable=False),
+                                 )
 
     # changes
 
@@ -587,7 +586,7 @@ class Model(base.DBConnectorComponent):
     sa.Index('buildsets_submitted_at', buildsets.c.submitted_at)
     sa.Index('buildset_properties_buildsetid',
              buildset_properties.c.buildsetid)
-    sa.Index('buildslaves_name', buildslaves.c.name, unique=True)
+    sa.Index('workers_name', workers.c.name, unique=True)
     sa.Index('changes_branch', changes.c.branch)
     sa.Index('changes_revision', changes.c.revision)
     sa.Index('changes_author', changes.c.author)
@@ -615,18 +614,18 @@ class Model(base.DBConnectorComponent):
              builders_tags.c.builderid,
              builders_tags.c.tagid,
              unique=True)
-    sa.Index('configured_slaves_buildmasterid',
-             configured_buildslaves.c.buildermasterid)
-    sa.Index('configured_slaves_slaves', configured_buildslaves.c.buildslaveid)
-    sa.Index('configured_slaves_identity',
-             configured_buildslaves.c.buildermasterid,
-             configured_buildslaves.c.buildslaveid, unique=True)
-    sa.Index('connected_slaves_masterid',
-             connected_buildslaves.c.masterid)
-    sa.Index('connected_slaves_slaves', connected_buildslaves.c.buildslaveid)
-    sa.Index('connected_slaves_identity',
-             connected_buildslaves.c.masterid,
-             connected_buildslaves.c.buildslaveid, unique=True)
+    sa.Index('configured_workers_buildmasterid',
+             configured_workers.c.buildermasterid)
+    sa.Index('configured_workers_workers', configured_workers.c.workerid)
+    sa.Index('configured_workers_identity',
+             configured_workers.c.buildermasterid,
+             configured_workers.c.workerid, unique=True)
+    sa.Index('connected_workers_masterid',
+             connected_workers.c.masterid)
+    sa.Index('connected_workers_workers', connected_workers.c.workerid)
+    sa.Index('connected_workers_identity',
+             connected_workers.c.masterid,
+             connected_workers.c.workerid, unique=True)
     sa.Index('users_identifier', users.c.identifier, unique=True)
     sa.Index('users_info_uid', users_info.c.uid)
     sa.Index('users_info_uid_attr_type', users_info.c.uid,
@@ -652,8 +651,8 @@ class Model(base.DBConnectorComponent):
     sa.Index('builds_number',
              builds.c.builderid, builds.c.number,
              unique=True)
-    sa.Index('builds_buildslaveid',
-             builds.c.buildslaveid)
+    sa.Index('builds_workerid',
+             builds.c.workerid)
     sa.Index('builds_masterid',
              builds.c.masterid)
     sa.Index('steps_number', steps.c.buildid, steps.c.number,
