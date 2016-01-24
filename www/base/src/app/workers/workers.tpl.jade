@@ -7,7 +7,7 @@
                 th Builders
                 th Infos
             tr(ng-repeat='worker in workers',
-               ng-show="settings.show_old_slaves.value || worker.configured_on.length > 0")
+               ng-show="settings.show_old_workers.value || worker.configured_on.length > 0")
                 td {{worker.name}}
                 td {{worker.connected_to.length}} connection
                 td
@@ -21,5 +21,5 @@
     .row
         .form-group
             label.checkbox-inline
-                input(type="checkbox" name="{{settings.show_old_slaves.name}}" ng-model="settings.show_old_slaves.value")
-                | {{settings.show_old_slaves.caption}}
+                input(type="checkbox" name="{{settings.show_old_workers.name}}" ng-model="settings.show_old_workers.value")
+                | {{settings.show_old_workers.caption}}

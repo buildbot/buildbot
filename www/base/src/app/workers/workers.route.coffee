@@ -22,7 +22,7 @@ class State extends Config
             caption: 'Workers page related settings'
             items:[
                 type:'bool'
-                name:'show_old_slaves'
+                name:'show_old_workers'
                 caption:'Show old workers'
                 default_value: false
             ]
