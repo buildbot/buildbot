@@ -92,9 +92,9 @@ def bs2(builderid=None, masterid=None):
     }, builderid, masterid)
 
 
-class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = workers.BuildslaveEndpoint
+    endpointClass = workers.WorkerEndpoint
     resourceTypeClass = workers.Buildslave
 
     def setUp(self):

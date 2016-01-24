@@ -944,3 +944,6 @@ Python API changes:
 
    * - :py:mod:`buildbot.data.buildslaves`
      - :py:mod:`~buildbot.data.workers`
+
+   * - :py:class:`buildbot.data.buildslaves.BuildslaveEndpoint`
+     - :py:class:`~buildbot.data.workers.WorkerEndpoint`

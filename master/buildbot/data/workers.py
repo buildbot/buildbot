@@ -36,7 +36,7 @@ class Db2DataMixin(object):
         }
 
 
-class BuildslaveEndpoint(Db2DataMixin, base.Endpoint):
+class WorkerEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
@@ -84,7 +84,7 @@ class Buildslave(base.ResourceType):
 
     name = "buildslave"
     plural = "buildslaves"
-    endpoints = [BuildslaveEndpoint, BuildslavesEndpoint]
+    endpoints = [WorkerEndpoint, BuildslavesEndpoint]
     keyFields = ['buildslaveid']
     eventPathPatterns = """
         /buildslaves/:buildslaveid
