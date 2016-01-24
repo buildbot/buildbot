@@ -826,8 +826,16 @@ List of database-related changes in API (fallback for old API is provided):
      - :py:class:`buildbot.db.worker.WorkersConnectorComponent`
 
    * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
-       (introduced in nine)
+       (rewritten in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+       (rewritten in nine)
+       and
+       :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
+       (introduced in nine)
+       results uses instead of ``'slaveinfo'`` key
+     - ``'workerinfo'`` key
 
 
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`

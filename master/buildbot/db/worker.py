@@ -151,7 +151,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                         'name': row.name,
                         'configured_on': cfgs,
                         'connected_to': [],
-                        'slaveinfo': row.info}
+                        'workerinfo': row.info}
                     rv[lastId] = res
                 if row.builderid and row.masterid:
                     cfgs.append({'builderid': row.builderid,

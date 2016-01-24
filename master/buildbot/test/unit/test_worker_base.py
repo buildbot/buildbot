@@ -443,10 +443,10 @@ class TestAbstractWorker(unittest.TestCase):
         # and the db is updated too:
         db_worker = yield self.master.db.workers.getWorker(name="bot")
 
-        self.assertEqual(db_worker['slaveinfo']['admin'], 'TheAdmin')
-        self.assertEqual(db_worker['slaveinfo']['host'], 'TheHost')
-        self.assertEqual(db_worker['slaveinfo']['access_uri'], 'TheURI')
-        self.assertEqual(db_worker['slaveinfo']['version'], 'TheVersion')
+        self.assertEqual(db_worker['workerinfo']['admin'], 'TheAdmin')
+        self.assertEqual(db_worker['workerinfo']['host'], 'TheHost')
+        self.assertEqual(db_worker['workerinfo']['access_uri'], 'TheURI')
+        self.assertEqual(db_worker['workerinfo']['version'], 'TheVersion')
 
     @defer.inlineCallbacks
     def test_worker_shutdown(self):

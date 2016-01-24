@@ -1499,7 +1499,7 @@ class FakeWorkersComponent(FakeDBComponent):
     def _mkdict(self, w, builderid, masterid):
         return {
             'id': w['id'],
-            'slaveinfo': w['info'],
+            'workerinfo': w['info'],
             'name': w['name'],
             'configured_on': self._configuredOn(w['id'], builderid, masterid),
             'connected_to': self._connectedTo(w['id'], masterid),

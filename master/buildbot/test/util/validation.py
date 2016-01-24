@@ -398,7 +398,7 @@ dbdict['workerdict'] = DictValidator(
         )
     ),
     connected_to=ListValidator(IntValidator()),
-    slaveinfo=JsonValidator(),
+    workerinfo=JsonValidator(),
 )
 
 # buildset

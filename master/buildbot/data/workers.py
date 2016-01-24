@@ -25,7 +25,7 @@ class Db2DataMixin(object):
         return {
             'workerid': dbdict['id'],
             'name': dbdict['name'],
-            'workerinfo': dbdict['slaveinfo'],
+            'workerinfo': dbdict['workerinfo'],
             'connected_to': [
                 {'masterid': id}
                 for id in dbdict['connected_to']],

@@ -678,7 +678,7 @@ buildslaves
 
     * ``id``
     * ``name`` - the name of the buildslave
-    * ``slaveinfo`` - buildslave information as dictionary
+    * ``workerinfo`` - buildslave information as dictionary
     * ``connected_to`` - a list of masters, by ID, to which this buildslave is currently connected.
       This list will typically contain only one master, but in unusual circumstances the same bulidslave may appear to be connected to multiple masters simultaneously.
     * ``configured_on`` - a list of master-builder pairs, on which this buildslave is configured.
