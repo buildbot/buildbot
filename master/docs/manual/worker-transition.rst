@@ -931,6 +931,11 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
        (introduced in nine)
      - ``workerid``
 
+
+   * - :py:class:`buildbot.reporters.message.MessageFormatter`
+       template variable ``slavename``
+     - ``workername``
+
 Data API
 --------
 

@@ -116,7 +116,7 @@ class MessageFormatter(object):
         cxt = dict(results=build['results'],
                    mode=mode,
                    buildername=buildername,
-                   slavename=build['properties'].get('workername', ["<unknown>"])[0],
+                   workername=build['properties'].get('workername', ["<unknown>"])[0],
                    buildset=buildset,
                    build=build,
                    projects=self.getProjects(ss_list, master),
