@@ -16,7 +16,7 @@ class Workers extends Controller
         $scope.masters = data.getMasters()
         $scope.workers = data.getWorkers()
 
-        $scope.settings = bbSettingsService.getSettingsGroup("Slaves")
+        $scope.settings = bbSettingsService.getSettingsGroup("Workers")
         $scope.$watch('settings', ->
             bbSettingsService.save()
         , true)

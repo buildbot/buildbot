@@ -18,7 +18,7 @@ class State extends Config
             data: cfg
 
         bbSettingsServiceProvider.addSettingsGroup
-            name:'Slaves'
+            name:'Workers'
             caption: 'Workers page related settings'
             items:[
                 type:'bool'
