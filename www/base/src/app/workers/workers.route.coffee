@@ -7,7 +7,7 @@ class State extends Config
         # Menu Configuration
         cfg =
             group: "builds"
-            caption: 'Build Slaves'
+            caption: 'Workers'
 
         # Register new state
         $stateProvider.state
