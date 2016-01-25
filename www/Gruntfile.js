@@ -1,4 +1,7 @@
 /*global module*/
+
+var compass = require('compass-importer')
+
 module.exports = function (grunt) {
     "use strict";
 
@@ -14,6 +17,8 @@ module.exports = function (grunt) {
                 src: ["sass"],
                 src_watch: ["sass/**/*.scss"],
                 dest: "prod/css",
+                dest_css_file: "prod/css/default.css",
+                src_css_file: "sass/default.scss",
                 src_css: ['*.css', '!*.min.css'],
                 ext: '.css'
             },
@@ -47,27 +52,29 @@ module.exports = function (grunt) {
                     "script/templates/**/*.hbs"
                 ],
                 dest: "generated/precompiled.handlebars.js"
+            },
+            fonts:{
+                src: "fonts/katana_icons/**",
+                dist: "fonts/katana_icons/",
+                config: "fonts/katana_icons/config.json"
             }
         },
-        compass: {
+        fontelloUpdate: {
             options: {
-                sassDir: "<%= files.css.src %>",
-                cssDir: "<%= files.css.dest %>"
-            },
-            prod: {
-                options: {
-                    force: true,
-                    environment: "production",
-                    outputStyle: "nested"
-                }
-            },
-            dev: {
-                options: {
-                    debugInfo: true,
-                    environment: "development",
-                    outputStyle: "nested"
-                }
+                config: "<%= files.fonts.config %>",
+                overwrite: true,
+                fonts: "<%= files.fonts.dist %>"
             }
+        },
+        sass: {
+			options: {
+				importer: compass
+			},
+			dist: {
+				files: {
+					"<%= files.css.dest_css_file %>": "<%= files.css.src_css_file %>"
+				}
+			}
         },
         cssmin: {
             options: {
@@ -114,7 +121,7 @@ module.exports = function (grunt) {
             },
             css: {
                 files: ["<%= files.css.src_watch %>"],
-                tasks: ["compass:" + target, "cssmin"]
+                tasks: ["sass", "cssmin"]
             },
             js: {
                 files: ["<%= files.js.src %>"],
@@ -126,6 +133,10 @@ module.exports = function (grunt) {
             handlebars: {
                 files: ["<%= files.handlebars.src %>"],
                 tasks: ["handlebars:compile", "requirejs:" + target]
+            },
+            fonts: {
+                files: ["<%= files.fonts.src %>"],
+                tasks: ["fontelloUpdate", "sass", "cssmin"]
             }
         },
         karma: {
@@ -192,13 +203,14 @@ module.exports = function (grunt) {
     });
 
     // Load plugins here
-    grunt.loadNpmTasks("grunt-contrib-compass");
     grunt.loadNpmTasks("grunt-contrib-watch"); // run grunt watch for converting sass files to css in realtime
     grunt.loadNpmTasks("grunt-contrib-requirejs");
     grunt.loadNpmTasks("grunt-contrib-handlebars");
     grunt.loadNpmTasks("grunt-karma");
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-open');
+    grunt.loadNpmTasks('grunt-sass');
+    grunt.loadNpmTasks('grunt-fontello-update');
 
     // Define your tasks here
     grunt.registerTask("prod", ["test", "build:prod"]);
@@ -206,7 +218,7 @@ module.exports = function (grunt) {
         if (overrideTarget !== undefined) {
             target = overrideTarget;
         }
-        grunt.task.run(["compass:" + target, "cssmin", "handlebars:compile", "requirejs:" + target]);
+        grunt.task.run(["fontelloUpdate", "sass", "cssmin", "handlebars:compile", "requirejs:" + target]);
     });
     grunt.registerTask("test", ["karma:unit"]);
     grunt.registerTask("coverage", ["karma:coverage", "open:coverage"]);
