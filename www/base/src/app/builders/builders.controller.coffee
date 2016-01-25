@@ -2,8 +2,8 @@ class Builders extends Controller
     constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams, $location) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
-        $scope.connected2class = (slave) ->
-            if slave.connected_to.length > 0
+        $scope.connected2class = (worker) ->
+            if worker.connected_to.length > 0
                 return "worker_CONNECTED"
             else
                 return "worker_DISCONNECTED"
@@ -95,33 +95,33 @@ class Builders extends Controller
 
         data = dataService.open().closeOnDestroy($scope)
         byNumber = (a, b) -> return a.number - b.number
-        slavesByBuilderId = {}
+        workersByBuilderId = {}
         buildsByBuilderId = {}
 
         $scope.builders = data.getBuilders()
         $scope.builders.onNew = (builder) ->
-            builder.workers ?= slavesByBuilderId[builder.builderid] || []
+            builder.workers ?= workersByBuilderId[builder.builderid] || []
             builder.builds ?= buildsByBuilderId[builder.builderid] || []
             builder.loadMasters()
 
-        # as there is usually lots of builders, its better to get the overall list of slaves, and builds
-        # and then associate by builder
+        # as there is usually lots of builders, its better to get the overall
+        # list of workers, and builds and then associate by builder
         # @todo, we cannot do same optims for masters due to lack of data api
 
-        slaves = data.getWorkers()
-        slaves.onNew = slaves.onUpdate =  (slave) ->
-            slave.configured_on?.forEach (conf) ->
-                # the builder might not be yet loaded, so we need to store the slave list
+        workers = data.getWorkers()
+        workers.onNew = workers.onUpdate =  (worker) ->
+            worker.configured_on?.forEach (conf) ->
+                # the builder might not be yet loaded, so we need to store the worker list
                 if $scope.builders.hasOwnProperty(conf.builderid)
                     builder = []
-                    slaveslist = $scope.builders.get(conf.builderid).workers ?= []
+                    workerslist = $scope.builders.get(conf.builderid).workers ?= []
                 else
-                    slaveslist = slavesByBuilderId[conf.builderid] ?= []
-                slaveslist.push(slave)
+                    workerslist = workersByBuilderId[conf.builderid] ?= []
+                workerslist.push(worker)
 
         builds = data.getBuilds(limit: 200, order: '-started_at')
         builds.onNew = builds.onUpdate = (build) ->
-            # the builder might not be yet loaded, so we need to store the slave list
+            # the builder might not be yet loaded, so we need to store the worker list
             if $scope.builders.hasOwnProperty(build.builderid)
                 builder = []
                 buildslist = $scope.builders.get(build.builderid).builds ?= []
