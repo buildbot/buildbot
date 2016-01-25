@@ -74,7 +74,7 @@ class Builder extends Controller
         @moreInfo =
             tags: @info.tags
             description: @info.description
-            slaves: @info.loadBuildslaves()
+            slaves: @info.loadWorkers()
             masters: @info.loadMasters()
             forceschedulers: @forceschedulers
 
