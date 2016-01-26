@@ -6,8 +6,8 @@ class State extends Config
 
         # Register new state
         $stateProvider.state
-            controller: "slavesController"
-            controllerAs: 'slaves'
+            controller: "workersController"
+            controllerAs: 'workers'
             templateUrl: "views/#{name}.html"
             name: name
             url: "/workers"
