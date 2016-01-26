@@ -82,6 +82,7 @@
     "jasmine-core": "^2.4.1",
     "phantomjs": "^1.9.19",
     "gulp-sass": "^2.1.1"
+
   },
   "main": "./main",
   "bin": {},
@@ -89,7 +90,7 @@
     "node": "~4.4.0",
     "npm": "<3.0.0"
   },
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}

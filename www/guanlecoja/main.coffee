@@ -239,7 +239,7 @@ module.exports =  (gulp) ->
         gulp.src config.files.less.concat(config.files.sass)
             .pipe cached('styles')
             .pipe(catch_errors(gif("*.less", less())))
-            .pipe(catch_errors(gif("*.scss", sass())))
+            .pipe(catch_errors(gif("*.scss", sass({includePaths: [config.bower.directory]}))))
             .pipe remember('styles')
             .pipe concat(config.output_styles)
             .pipe gif(prod, cssmin())
@@ -321,7 +321,8 @@ module.exports =  (gulp) ->
             done()
             # need process.exit to avoid need for a double ctrl-c
             # karma watch is overriding ctrl-c, then the gulp watch does not see it
-            process.exit(code)
+            if dev
+                process.exit(code)
         server = new karma.Server(karmaconf, mydone)
         server.start()
         return null

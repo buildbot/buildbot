@@ -225,7 +225,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
-* 0.6.0: Support sass. Better coffeescript coverage, by bumping karma-coverage version
+* 0.6.1: Support sass include PATH to be implicitly set as includePath. fix problem with impossibility to create a task after karma 
 * 0.5.5: update dependencies for npm 3
 * 0.5.4: add more documentation on the testing methodology
 * 0.5.3: fix problem with generated packages does not work with symlink
