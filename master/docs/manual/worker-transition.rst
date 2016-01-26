@@ -24,6 +24,9 @@ classes, functions and attributes are still available and can be used.
 Complete removal of "slave"-containing terminology is planned in version
 **TODO**.
 
+Rename of API introduced in beta versions of Buildbot 0.9.0 done without
+providing fallback.
+
 Old names fallback settings
 ---------------------------
 
@@ -50,10 +53,8 @@ using any other Buildbot classes.
 Changed API
 -----------
 
-In general "Slave" and "Buildslave" parts in identifiers was replaced with
-"Worker", "SlaveBuilder" with "WorkerBuilder".
-
-Here is the list of changed API:
+In general "Slave" and "Buildslave" parts in identifiers and messages were
+replaced with "Worker"; "SlaveBuilder" with "WorkerForBuilder".
 
 .. todo::
 
@@ -66,15 +67,21 @@ Here is the list of changed API:
       If they are private, then no fallback should be provided and they
       change shouldn't be documented.
 
-    * Thorought tests for old modules imports are not yet written.
+    * Thorough tests for old modules imports are not yet written
+      (import of old-named modules is done in tests, but expected warning for
+      deprecated module import is not tested yet).
 
     * Test that module reloading works and doesn't produce more warnings than
       it should.
 
-    * Some classes are marked as ``(private?)`` because they are not mentined
-      in the documentation, but in my opinion they most probably used by
+    * Some classes are marked as ``(private?)`` because they are not mentioned
+      in the documentation, but in my opinion may be used by
       end users (so they either should be documented, or fallback for them
       should be removed).
+      If some identifiers don't need fallback for old name, then it should be
+      removed.
+
+Here is the list of changed API (use of old names from this list will work):
 
 .. list-table::
    :header-rows: 1
@@ -328,7 +335,7 @@ Here is the list of changed API:
      - :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
 
 
-API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
+API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback):
 
 .. todo::
 
@@ -562,7 +569,7 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
    * - :py:attr:`buildbot.locks.RealSlaveLock.maxCountForSlave`
      - :py:attr:`buildbot.locks.RealWorkerLock.maxCountForWorker`
 
-Other changes:
+Other changes (done without providing fallback):
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
 
@@ -757,7 +764,7 @@ Renamed events:
 Database
 --------
 
-Shema changes:
+Schema changes:
 
 .. list-table::
    :header-rows: 1
@@ -769,7 +776,7 @@ Shema changes:
      - ``workers``
 
    * - ``builds.buildslaveid`` (not ForeignKey) column
-     - ``workerid``
+     - ``workerid`` (now ForeignKey)
 
 
    * - ``configured_buildslaves`` table
@@ -829,14 +836,6 @@ List of database-related changes in API (fallback for old API is provided):
        (rewritten in nine)
      - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
-       (rewritten in nine)
-       and
-       :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
-       (introduced in nine)
-       results uses instead of ``'slaveinfo'`` key
-     - ``'workerinfo'`` key
-
 
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
      - :py:attr:`buildbot.db.connector.DBConnector.workers`
@@ -853,6 +852,15 @@ API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
 
    * - Old name
      - New name
+
+   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+       (rewritten in nine)
+       and
+       :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
+       (introduced in nine)
+       results uses instead of ``'slaveinfo'`` key
+     - ``'workerinfo'`` key
+
 
    * - :py:attr:`buildbot.db.model.Model.buildslaves`
      - :py:attr:`buildbot.db.model.Model.workers`
@@ -1048,10 +1056,6 @@ Changed REST object keys:
      - ``workers``
 
 ``data_module`` and ``base`` were updated accordingly.
-
-.. todo::
-
-   ``md_base`` is not updated and currently broken.
 
 Web UI
 ------
