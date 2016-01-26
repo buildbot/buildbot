@@ -1261,19 +1261,19 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda: config.BuilderConfig(
                 factory=[], name='a', workernames=['a']))
 
-    def test_no_slavenames(self):
+    def test_no_workernames(self):
         self.assertRaisesConfigError(
             "builder 'a': at least one workername is required",
             lambda: config.BuilderConfig(
                 name='a', factory=self.factory))
 
-    def test_bogus_slavenames(self):
+    def test_bogus_workernames(self):
         self.assertRaisesConfigError(
             "workernames must be a list or a string",
             lambda: config.BuilderConfig(
                 name='a', workernames={1: 2}, factory=self.factory))
 
-    def test_bogus_slavename(self):
+    def test_bogus_workername(self):
         self.assertRaisesConfigError(
             "workername must be a string",
             lambda: config.BuilderConfig(
