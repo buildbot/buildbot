@@ -52,7 +52,7 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_error(self):
         def thd():
-            self.assertRaises(KeyError, self.dbConfig.get, u"slaves")
+            self.assertRaises(KeyError, self.dbConfig.get, u"workers")
 
         return threads.deferToThread(thd)
 
@@ -83,34 +83,34 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
     def test_default(self):
         def thd():
             db = self.createDbConfig()
-            self.assertEqual("foo", db.get(u"slaves", "foo"))
+            self.assertEqual("foo", db.get(u"workers", "foo"))
 
         return threads.deferToThread(thd)
 
     def test_error(self):
         def thd():
             db = self.createDbConfig()
-            self.assertRaises(KeyError, db.get, u"slaves")
+            self.assertRaises(KeyError, db.get, u"workers")
 
         return threads.deferToThread(thd)
 
     def test_bad_url(self):
         def thd():
             db = self.createDbConfig("garbage://")
-            self.assertRaises(KeyError, db.get, u"slaves")
+            self.assertRaises(KeyError, db.get, u"workers")
 
         return threads.deferToThread(thd)
 
     def test_bad_url2(self):
         def thd():
             db = self.createDbConfig("trash")
-            self.assertRaises(KeyError, db.get, u"slaves")
+            self.assertRaises(KeyError, db.get, u"workers")
 
         return threads.deferToThread(thd)
 
     def test_bad_url3(self):
         def thd():
             db = self.createDbConfig("sqlite://bad")
-            self.assertRaises(KeyError, db.get, u"slaves")
+            self.assertRaises(KeyError, db.get, u"workers")
 
         return threads.deferToThread(thd)

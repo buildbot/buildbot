@@ -131,7 +131,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             fakedb.Master(id=9),
             fakedb.Buildset(id=2022),
             fakedb.Buildset(id=2011),
-            fakedb.Worker(id=13, name="some:slave"),
+            fakedb.Worker(id=13, name="some:worker"),
             make_fake_br(11, 77),
             make_fake_br(22, 78),
             make_fake_build(11),

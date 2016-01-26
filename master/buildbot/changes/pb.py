@@ -137,7 +137,7 @@ class PBChangeSource(base.ChangeSource):
         port = self._calculatePort(new_config)
         if not port:
             config.error("No port specified for PBChangeSource, and no "
-                         "slave port configured")
+                         "worker port configured")
 
         # and, if it's changed, re-register
         if port != self.registered_port and self.isActive():

@@ -375,7 +375,7 @@ class Worker(Row):
 
     defaults = dict(
         id=None,
-        name='some:slave',
+        name='some:worker',
         info={"a": "b"},
     )
 

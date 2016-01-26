@@ -41,7 +41,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             res = conn.execute(buildslaves.select())
             self.assertEqual(res.fetchall(), [])
 
-            # and buildslave name is unique, so we'll get an error here
+            # and worker name is unique, so we'll get an error here
             dialect = conn.dialect.name
             exc = (sa.exc.ProgrammingError if dialect == 'postgresql'
                    else sa.exc.IntegrityError)

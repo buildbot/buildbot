@@ -398,10 +398,10 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     def findWorkerId(self, name):
-        validation.verifyType(self.testcase, 'buildslave name', name,
+        validation.verifyType(self.testcase, 'worker name', name,
                               validation.IdentifierValidator(50))
         # this needs to actually get inserted into the db (fake or real) since
-        # getBuildslave will get called later
+        # getWorker will get called later
         return self.master.db.workers.findWorkerId(name)
 
     def workerConnected(self, workerid, masterid, workerinfo):
