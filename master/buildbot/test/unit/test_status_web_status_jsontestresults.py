@@ -26,16 +26,24 @@ from twisted.trial import unittest
 
 class TestJSONTestResource(unittest.TestCase):
     def setupStatus(self):
+        self.artifactServerPath = "/test/artifact/server/path"
+        def getProperty(x, y):
+            if x == "artifactServerPath" and y == "":
+                return self.artifactServerPath
+            return None
+
         st = self.build_step_status = mock.Mock(BuildStepStatus)
 
         build_status = mock.Mock(BuildStatus)
         build_status.getNumber = lambda: 1
+
         builder_status = mock.Mock(BuilderStatus)
         builder_status.getFriendlyName = lambda: "BuilderStatusFriendlyName"
         builder_status.getName = lambda: "BuilderStatusName"
 
         builder_status.getProject = lambda: "Example Project"
         build_status.getBuilder = lambda: builder_status
+        build_status.getProperty = getProperty
         st.getBuild = lambda: build_status
 
         self.results = {
@@ -43,7 +51,7 @@ class TestJSONTestResource(unittest.TestCase):
                 2: 'Skipped',
                 3: 'Ignored',
                 4: 'Success',
-                5: 'Failure',
+                5: 'Failed',
                 6: 'Error',
                 7: 'Cancelled'
             }
@@ -83,6 +91,7 @@ class TestJSONTestResource(unittest.TestCase):
         self.assertEqual(ctx['path_to_codebases'], 'projects/Example%20Project')
         self.assertEqual(ctx['path_to_build'], 'projects/Example%20Project/builders/BuilderStatusName/builds/1')
         self.assertEqual(ctx['build_number'], 1)
+        self.assertEqual(ctx['path_to_artifacts'], self.artifactServerPath)
         self.assertEqual(ctx['selectedproject'], 'Example Project')
         self.assertFalse(hasattr(ctx, 'results'))
 
@@ -102,6 +111,7 @@ class TestJSONTestResource(unittest.TestCase):
         self.assertEqual(ctx['path_to_codebases'], 'projects/Example%20Project')
         self.assertEqual(ctx['path_to_build'], 'projects/Example%20Project/builders/BuilderStatusName/builds/1')
         self.assertEqual(ctx['build_number'], 1)
+        self.assertEqual(ctx['path_to_artifacts'], self.artifactServerPath)
         self.assertEqual(ctx['selectedproject'], 'Example Project')
 
     def test_log_resource_correct_json(self):
@@ -122,6 +132,7 @@ class TestJSONTestResource(unittest.TestCase):
         self.assertEqual(ctx['path_to_build'], 'projects/Example%20Project/builders/BuilderStatusName/builds/1')
         self.assertEqual(ctx['build_number'], 1)
         self.assertEqual(ctx['selectedproject'], 'Example Project')
+        self.assertEqual(ctx['path_to_artifacts'], self.artifactServerPath)
         self.assertEqual(ctx['results'], self.results)
 
     def test_log_resource_correct_json_incorrect_properties(self):
@@ -141,6 +152,7 @@ class TestJSONTestResource(unittest.TestCase):
         self.assertEqual(ctx['path_to_codebases'], 'projects/Example%20Project')
         self.assertEqual(ctx['path_to_build'], 'projects/Example%20Project/builders/BuilderStatusName/builds/1')
         self.assertEqual(ctx['build_number'], 1)
+        self.assertEqual(ctx['path_to_artifacts'], self.artifactServerPath)
         self.assertEqual(ctx['selectedproject'], 'Example Project')
 
 

@@ -69,6 +69,9 @@ class TestArtifactSteps(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS, status_text=['Artifact(s) uploaded.'])
+        self.expectProperty('artifactServerPath',
+                            'http://srv.com/dir/build_1_17_12_2014_13_31_26_+0000',
+                            'UploadArtifact')
         return self.runStep()
 
     def test_upload_artifact_Win_DOS(self):

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import json
 from twisted.python import log
+from urlparse import urljoin
 from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_builders, path_to_codebases, path_to_build
 
 
@@ -26,6 +27,7 @@ class JSONTestResource(HtmlResource):
     def content(self, req, cxt):
         s = self.step_status
         b = s.getBuild()
+
         builder_status = b.getBuilder()
         project = builder_status.getProject()
 
@@ -35,6 +37,7 @@ class JSONTestResource(HtmlResource):
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_build'] = path_to_build(req, b)
         cxt['build_number'] = b.getNumber()
+        cxt['path_to_artifacts'] = b.getProperty("artifactServerPath", "")
         cxt['selectedproject'] = project
 
         try:
@@ -53,12 +56,22 @@ class JSONTestResource(HtmlResource):
                     success_per = (float(success_count) / float(total_count)) * 100.0
                     json_data['summary']['success_rate'] = success_per
 
+            json_data['filters'] = {
+                'Inconclusive': True,
+                'Skipped': False,
+                'Ignored': False,
+                'Success': False,
+                'Failed': True,
+                'Error': True,
+                'Cancelled': True
+            }
+
             cxt['results'] = {
                 0: 'Inconclusive',
                 2: 'Skipped',
                 3: 'Ignored',
                 4: 'Success',
-                5: 'Failure',
+                5: 'Failed',
                 6: 'Error',
                 7: 'Cancelled'
             }

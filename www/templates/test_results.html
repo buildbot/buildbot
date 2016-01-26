@@ -11,43 +11,32 @@
     </script>
 {% endblock %}
 {% block content %}
-<div class="top left"></div>
-<div class="log-main" data-failed-tests="{{ data.summary.failedCount }}">
-    <div id="dataTablesFilter" class="fl-right top-filter-list">
-        <div id="CheckBoxesList" class="check-boxes-list">
-            <label for="failedinput">Failed</label>
-            <input checked="checked" type="checkbox" value="Failure" id="failedinput"/>
-            <label for="passinput">Passed</label>
-            <input type="checkbox" value="Pass" id="passinput"/>
-            <label for="ignoreinput">Ignored</label>
-            <input type="checkbox" value="Ignored" id="ignoreinput"/>
-            <label for="inconclusiveinput">Inconclusive</label>
-            <input type="checkbox" value="Inconclusive" id="inconclusiveinput"/>
-            <label for="skippedinput">Skipped</label>
-            <input type="checkbox" value="Skipped" id="skippedinput"/>
+    <div class="top left"></div>
+    <div class="log-main" data-failed-tests="{{ data.summary.failedCount }}">
+        <div id="dataTablesFilter" class="fl-right top-filter-list">
+            <div id="CheckBoxesList" class="check-boxes-list">
+                {% for key, checked in data.filters.iteritems() %}
+                    <label for="{{ key }}input">{{ key }}</label>
+                    <input {{ 'checked=checked' if checked else '' }} type="checkbox" value="{{ key }}" id="{{ key }}input"/>
+                {% endfor %}
+            </div>
+            <div class="dataTables_filter">
+                <label class="input-label"></label>
+                <input type="text" placeholder="Free text filter" id="filterinput"/>
+            </div>
+            <button class="grey-btn" id="submitFilter">Filter</button>
+            <button class="grey-btn" id="clearFilter">Clear</button>
         </div>
-        <div class="dataTables_filter">
-            <label class="input-label"></label>
-            <input type="text" placeholder="Free text filter" id="filterinput"/>
-        </div>
-        <button class="grey-btn" id="submitFilter">Filter</button>
-        <button class="grey-btn" id="clearFilter">Clear</button>
     </div>
-</div>
 
-<h1 class="main-head" id=":i18n:Summary">Summary</h1>
-
-<div class="container">
+    <h1 class="main-head" id=":i18n:Summary">Summary</h1>
     <table class="table table-katana" id="summaryTable">
         <thead>
         <tr>
             <th class="txt-align-left first-child">All tests</th>
-            <th class="txt-align-left first-child">Passed</th>
-            <th class="txt-align-left">Failures</th>
-            <th class="txt-align-left">Errors</th>
-            <th class="txt-align-left">Ignored</th>
-            <th class="txt-align-left">Skipped</th>
-            <th class="txt-align-left">Inconclusive</th>
+            {% for key in data.filters %}
+                <th class="txt-align-left">{{ key }}</th>
+            {% endfor %}
             <th class="txt-align-left">Success Rate</th>
             <th class="txt-align-left">Time(s)</th>
         </tr>
@@ -59,13 +48,12 @@
             <tr class="Pass">
         {% endif %}
         <td class="txt-align-left first-child">{{ data.summary.testsCount }}</td>
-        <td class="txt-align-left">{{ data.summary.successCount }}</td>
-        <td class="txt-align-left">{{ data.summary.failedCount }}</td>
-        <td class="txt-align-left">{{ data.summary.errorCount }}</td>
-        <td class="txt-align-left">{{ data.summary.ignoredCount }}</td>
-        <td class="txt-align-left">{{ data.summary.skippedCount }}</td>
-        <td class="txt-align-left">{{ data.summary.inconclusiveCount }}</td>
-        <td class="txt-align-left">{{ '%0.2f' % data.summary.success_rate }} %</td>
+        {% for key in data.filters %}
+            {% set key = key.lower() + 'Count' %}
+            <td class="txt-align-left">{{ data.summary[key] if key in data.summary else 0 }}</td>
+        {% endfor %}
+
+        <td class="txt-align-left">{{ '%0.2f' % data.summary.success_rate + '%' if data.summary.success_rate else '' }}</td>
         <td class="txt-align-left" data-time="{{ data.summary.time }}">{{ data.summary.time }}</td>
         </tr>
         </tbody>
@@ -73,7 +61,5 @@
 
     {%- block suites -%}
     {%- endblock -%}
-
-</div>
 
 {% endblock %}
