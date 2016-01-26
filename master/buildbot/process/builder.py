@@ -31,6 +31,10 @@ from buildbot.process.build import Build
 from buildbot.process.slavebuilder import BUILDING
 
 
+class Slavepool(object):
+    slavenames = 'slavenames'
+    startSlavenames = 'startSlavenames'
+
 def enforceChosenSlave(bldr, slavebuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
@@ -151,16 +155,12 @@ class Builder(config.ReconfigurableServiceMixin,
         slave_builder = self.getSlaveBuilder(slavename=slavename)
         return slave_builder.isAvailable() if slave_builder else False
 
-    def getAvailableSlavesToProcessBuildRequests(self, queue=None):
-        getSlavesFunc = self.getAvailableSlaves if queue == 'unclaimed' \
-            else self.getAvailableSlavesToResume if queue == 'resume' \
-            else self.getAllSlaves
+    def getAvailableSlavesToProcessBuildRequests(self, slavepool):
+        getSlavesFunc = self.getAvailableSlaves if slavepool == Slavepool.startSlavenames \
+            else self.getAvailableSlavesToResume if slavepool == Slavepool.slavenames \
+            else None
 
-        availableSlavesToProcessBuildRequests = [slavebuilder.slave.slavename
-                                  for slavebuilder in getSlavesFunc()
-                                  if slavebuilder.isAvailable()]
-
-        return availableSlavesToProcessBuildRequests
+        return getSlavesFunc() if getSlavesFunc else None
 
     def reclaimAllBuilds(self):
         brids = set()

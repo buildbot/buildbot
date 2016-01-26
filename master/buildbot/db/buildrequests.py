@@ -27,6 +27,11 @@ from buildbot.status.results import RESUME, CANCELED
 from twisted.python.failure import Failure
 
 
+class Queue(object):
+    unclaimed = 'unclaimed'
+    resume = 'resume'
+
+
 class AlreadyClaimedError(Exception):
     pass
 
@@ -327,10 +332,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 .where(reqs_tbl.c.results == RESUME) \
                 .where(reqs_tbl.c.mergebrid == None)
 
-            if queue == 'unclaimed':
+            if queue == Queue.unclaimed:
                 buildersqueue = pending
 
-            elif queue == 'resume':
+            elif queue == Queue.resume:
                 buildersqueue = resumebuilds
 
             else:

@@ -23,7 +23,8 @@ from twisted.application import service
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.status.results import RESUME, BEGINNING
-from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.db.buildrequests import AlreadyClaimedError, Queue
+from buildbot.process.builder import Slavepool
 from buildbot import util
 
 import random
@@ -554,7 +555,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBreq)
 
     def getResumeSlavepool(self, selectedSlavepool):
-        if selectedSlavepool == "startSlavenames":
+        if selectedSlavepool == Slavepool.startSlavenames:
             return self.slavepool
 
         return self.resumeSlavePool
@@ -572,7 +573,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         slavepool = self.getResumeSlavepool(breq.slavepool)
 
         # run the build on a specific slave
-        if breq.slavepool != "startSlavenames" and self.buildRequestHasSelectedSlave(breq):
+        if breq.slavepool != Slavepool.startSlavenames and self.buildRequestHasSelectedSlave(breq):
             slavebuilder = yield self.buildHasSelectedSlave(breq, slavepool)
             if slavebuilder is not None:
                 nextBuild = (slavebuilder, breq)
@@ -1037,10 +1038,21 @@ class KatanaBuildRequestDistributor(service.Service):
 
             bldr = self.botmaster.builders.get(br["buildername"])
 
-            availableSlaves = bldr.getAvailableSlavesToProcessBuildRequests(queue=queue)
+            def getSlavepool():
+                if queue == Queue.unclaimed :
+                    return Slavepool.startSlavenames
+                elif queue == Queue.resume and br['slavepool']:
+                    return br['slavepool']
+                return Slavepool.slavenames
+
+            slavepool = getSlavepool()
+            availableSlaves = bldr.getAvailableSlavesToProcessBuildRequests(slavepool=slavepool)
 
             if not availableSlaves:
                 unavailableBuilderNames.append(br["buildername"])
+                log.msg("Not available slaves in '%s' list to process buildrequest.id %d for builder %s"
+                        % (slavepool, br['brid'], br["buildername"]))
+
                 continue
 
             if br["selected_slave"] is None:
@@ -1051,7 +1063,7 @@ class KatanaBuildRequestDistributor(service.Service):
                                         and br['results'] == BEGINNING and bldr.shouldUseSelectedSlave()
 
             resumingBuildRequestShouldUseSelectedSlave = br["selected_slave"] \
-                                        and br['results'] == RESUME and br['slavepool'] != 'startSlavenames'
+                                        and br['results'] == RESUME and br['slavepool'] != Slavepool.startSlavenames
 
             if buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave:
                 if bldr.slaveIsAvailable(slavename=br["selected_slave"]):
@@ -1079,7 +1091,7 @@ class KatanaBuildRequestDistributor(service.Service):
         # get the actual builder object that should start running new builds
         timer = self.timerLogStart(msg="_callMaybeStartBuildsOnBuilder starting _getNextPriorityBuilder",
                                    function_name="KatanaBuildRequestDistributor._callMaybeStartBuildsOnBuilder()")
-        bldr = yield self._getNextPriorityBuilder(queue='unclaimed')
+        bldr = yield self._getNextPriorityBuilder(queue=Queue.unclaimed)
         self.timerLogFinished(msg="_callMaybeStartBuildsOnBuilder _getNextPriorityBuilder finished", timer=timer)
 
         if bldr is None:
@@ -1100,7 +1112,7 @@ class KatanaBuildRequestDistributor(service.Service):
         # get the actual builder object that should start running new builds
         timer = self.timerLogStart(msg="_callMaybeResumeBuildsOnBuilder starting _getNextPriorityBuilder",
                                    function_name="KatanaBuildRequestDistributor._callMaybeResumeBuildsOnBuilder()")
-        bldr = yield self._getNextPriorityBuilder(queue='resume')
+        bldr = yield self._getNextPriorityBuilder(queue=Queue.resume)
         self.timerLogFinished(msg="_callMaybeResumeBuildsOnBuilder _getNextPriorityBuilder finished", timer=timer)
 
         if bldr is None:

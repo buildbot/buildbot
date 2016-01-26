@@ -18,6 +18,7 @@ import sqlalchemy as sa
 from twisted.trial import unittest
 from twisted.internet import task, defer
 from buildbot.db import buildrequests, builds
+from buildbot.db.buildrequests import Queue
 from buildbot.test.util import connector_component, db
 from buildbot.test.fake import fakedb
 from buildbot.util import UTC, epoch2datetime
@@ -1303,7 +1304,7 @@ class TestBuildsetsConnectorComponent(
                                      selected_slave=None, slavepool=None)]
 
         d = self.insertPrioritizedBreqs()
-        d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue='unclaimed'))
+        d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.unclaimed))
         d.addCallback(lambda queue: self.assertEqual(queue, expectedBreqs))
         return d
 
@@ -1327,7 +1328,7 @@ class TestBuildsetsConnectorComponent(
                                      selected_slave=None, slavepool=None)]
 
         d = self.insertPrioritizedBreqs()
-        d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue='resume'))
+        d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.resume))
         d.addCallback(lambda queue: self.assertEqual(queue, expectedBreqs))
         return d
 
