@@ -2,7 +2,7 @@ class State extends Config
     constructor: ($stateProvider) ->
 
         # Name of the state
-        name = 'builds.slaves'
+        name = 'builds.workers'
 
         # Register new state
         $stateProvider.state
