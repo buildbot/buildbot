@@ -12,4 +12,4 @@ class State extends Config
             name: name
             url: "/slaves"
             data:
-                title: 'Builds / Slaves'
+                title: 'Builds / Workers'
