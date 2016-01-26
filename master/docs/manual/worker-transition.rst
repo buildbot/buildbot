@@ -573,8 +573,28 @@ Other changes (done without providing fallback):
 
 * Functions argument ``buildslaveName`` renamed to ``workerName``.
 
-* ``s`` and ``sl`` loops variables were renamed to ``worker`` or ``w``;
-  ``sb`` to ``wfb``; ``bs1`` to ``w1``.
+* Loop variables, local variables, helper functions:
+
+  .. list-table::
+     :header-rows: 1
+
+     * - Old name
+       - New name
+
+     * - ``s``
+       - ``w`` or ``worker``
+
+     * - ``sl``
+       - ``w`` or ``worker``
+
+     * - ``sb``
+       - ``wfb`` ("worker for builder")
+
+     * - ``bs1()``, ``bs2()``
+       - ``w1()``, ``w2()``
+
+     * - ``bslave``
+       - ``worker``
 
 * In :py:meth:`buildbot.config.BuilderConfig.getConfigDict` result
   ``'slavenames'`` key changed to ``'workernames'``;
