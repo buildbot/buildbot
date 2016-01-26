@@ -1,8 +1,8 @@
-md-list.slave-list
+md-list.worker-list
   md-subheader.md-no-sticky Workers
   md-divider
-  div.slave-item(ng-repeat="worker in workers.list", layout="row", layout-md="column")
-    div.slave-title(flex-gt-md="50")
+  div.worker-item(ng-repeat="worker in workers.list", layout="row", layout-md="column")
+    div.worker-title(flex-gt-md="50")
       h3 {{ worker.name }}
       p
         | Connected to 
@@ -14,5 +14,5 @@ md-list.slave-list
         ng-pluralize(
           count="worker.configured_on.length",
           when="{'0': 'no builder.','one': '1 builder.','other': '{} builders.'}")
-    div.slave-info(flex-gt-md="50")
+    div.worker-info(flex-gt-md="50")
       inspect-data(data="worker.workerinfo")
