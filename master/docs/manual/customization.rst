@@ -855,7 +855,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
             self.finished(util.SUCCESS)
 
 
-For more information on the available commands, see :doc:`../developer/master-slave`.
+For more information on the available commands, see :doc:`../developer/master-worker`.
 
 .. todo::
 
