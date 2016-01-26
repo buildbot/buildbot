@@ -6,11 +6,24 @@
 * @author Simon Holm
 */
 
-@include font-face("katana_icons", font-files("katana_icons/katana_icons.eot?cachebusting=6", "katana_icons/katana_icons.ttf?cachebusting=6"));
-@include font-face("pacifico", font-files("pacifico/pacifico-webfont.eot?cachebusting=2", "pacifico/pacifico-webfont.ttf?cachebusting=2"));
-@include font-face("leckerlione", font-files("leckerlione/leckerlione-regular-webfont.eot?cachebusting=6", "leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6"));
-    
-  
+@font-face {
+  font-family: "katana_icons";
+  src: url("../../fonts/katana_icons/katana_icons.eot?cachebusting=6") format('eot'),
+       url("../../fonts/katana_icons/katana_icons.ttf?cachebusting=6")  format('truetype');
+}
+
+@font-face {
+  font-family: "pacifico";
+  src: url("../../fonts/pacifico/pacifico-webfont.eot?cachebusting=2") format('eot'),
+       url("../../fonts/pacifico/pacifico-webfont.ttf?cachebusting=2")  format('truetype');
+}
+
+@font-face {
+  font-family: "leckerlione";
+  src: url("../../fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6") format('eot'),
+       url("../../fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6")  format('truetype');
+}
+
 // Typography
 
 .user-settings {
@@ -226,13 +239,11 @@ div.welcome-txt {
   }  
 }
 
-.branch-icon{
+.branch-icon {
   width: 15px;
   height: 15px;
-  background: generated-image-url("branch.png", $cache-buster: true) no-repeat;
   float: left;
 }
-
 
 .step-head {
 	position: relative;
