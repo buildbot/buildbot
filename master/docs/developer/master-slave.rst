@@ -164,7 +164,7 @@ Master-Side RemoteCommand Methods
 :meth:`~buildbot.process.remotecommand.RemoteCommand.remote_complete`
     Signal that the command is complete, either successfully or with a Twisted failure.
 
-.. _master-slave-updates:
+.. _master-worker-updates:
 
 Updates
 -------

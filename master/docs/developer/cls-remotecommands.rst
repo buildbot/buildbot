@@ -8,7 +8,7 @@ This is accomplished via :class:`RemoteCommand` and its subclasses.
 Each represents a single operation on the slave.
 
 Most data is returned to a command via updates.
-These updates are described in detail in :ref:`master-slave-updates`.
+These updates are described in detail in :ref:`master-worker-updates`.
 
 RemoteCommand
 ~~~~~~~~~~~~~
@@ -33,7 +33,7 @@ RemoteCommand
     It handles updates for ``rc`` by recording the value in its ``rc`` attribute.
 
     Most slave-side commands, even those which do not spawn a new process on the slave, generate logs and an ``rc``, requiring this class or one of its subclasses.
-    See :ref:`master-slave-updates` for the updates that each command may send.
+    See :ref:`master-worker-updates` for the updates that each command may send.
 
     .. py:attribute:: active
 
@@ -78,7 +78,7 @@ RemoteCommand
         :param updates: new information from the slave
 
         Handles updates from the slave on the running command.
-        See :ref:`master-slave-updates` for the content of the updates.
+        See :ref:`master-worker-updates` for the content of the updates.
         This class splits the updates out, and handles the ``ignore_updates`` option, then calls :meth:`remoteUpdate` to process the update.
 
     .. py:method:: remote_complete(failure=None)
