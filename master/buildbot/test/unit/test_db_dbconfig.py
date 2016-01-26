@@ -36,17 +36,17 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_basic(self):
         def thd():
-            slavesInDB = ['foo', 'bar']
-            self.dbConfig.set(u"slaves", slavesInDB)
-            slaves = self.dbConfig.get(u"slaves")
-            self.assertEqual(slaves, slavesInDB)
+            workersInDB = ['foo', 'bar']
+            self.dbConfig.set(u"workers", workersInDB)
+            workers = self.dbConfig.get(u"workers")
+            self.assertEqual(workers, workersInDB)
 
         return threads.deferToThread(thd)
 
     def test_default(self):
         def thd():
-            slaves = self.dbConfig.get(u"slaves", "default")
-            self.assertEqual(slaves, "default")
+            workers = self.dbConfig.get(u"workers", "default")
+            self.assertEqual(workers, "default")
 
         return threads.deferToThread(thd)
 

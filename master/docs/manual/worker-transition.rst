@@ -587,6 +587,9 @@ Other changes (done without providing fallback):
      * - ``sl``
        - ``w`` or ``worker``
 
+     * - ``bs`` ("buildslave")
+       - ``w``
+
      * - ``sb``
        - ``wfb`` ("worker for builder")
 
@@ -595,6 +598,9 @@ Other changes (done without providing fallback):
 
      * - ``bslave``
        - ``worker``
+
+     * - ``BS1_NAME``, ``BS1_ID``, ``BS1_INFO``
+       - ``W1_NAME``, ``W1_ID``, ``W1_INFO``
 
 * In :py:meth:`buildbot.config.BuilderConfig.getConfigDict` result
   ``'slavenames'`` key changed to ``'workernames'``;
