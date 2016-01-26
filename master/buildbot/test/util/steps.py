@@ -168,13 +168,13 @@ class BuildStepMixin(object):
         b.allFiles = lambda: buildFiles
         b.master = self.master
 
-        def getSlaveVersion(cmd, oldversion):
+        def getWorkerVersion(cmd, oldversion):
             if cmd in worker_version:
                 return worker_version[cmd]
             if '*' in worker_version:
                 return worker_version['*']
             return oldversion
-        b.getWorkerCommandVersion = getSlaveVersion
+        b.getWorkerCommandVersion = getWorkerVersion
         b.workerEnvironment = worker_env.copy()
         step.setBuild(b)
 
