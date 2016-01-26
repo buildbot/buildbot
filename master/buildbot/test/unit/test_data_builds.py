@@ -157,7 +157,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_buildslave(self):
+    def test_get_worker(self):
         builds = yield self.callGet(('workers', 13, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])

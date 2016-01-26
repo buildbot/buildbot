@@ -61,7 +61,7 @@ def _filt(bs, builderid, masterid):
     return bs
 
 
-def bs1(builderid=None, masterid=None):
+def w1(builderid=None, masterid=None):
     return _filt({
         'workerid': 1,
         'name': 'linux',
@@ -76,7 +76,7 @@ def bs1(builderid=None, masterid=None):
     }, builderid, masterid)
 
 
-def bs2(builderid=None, masterid=None):
+def w2(builderid=None, masterid=None):
     return _filt({
         'workerid': 2,
         'name': 'windows',
@@ -108,58 +108,58 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(('workers', 2))
 
         @d.addCallback
-        def check(buildslave):
-            self.validateData(buildslave)
-            buildslave['configured_on'].sort()
-            self.assertEqual(buildslave, bs2())
+        def check(worker):
+            self.validateData(worker)
+            worker['configured_on'].sort()
+            self.assertEqual(worker, w2())
         return d
 
     def test_get_existing_name(self):
         d = self.callGet(('workers', 'linux'))
 
         @d.addCallback
-        def check(buildslave):
-            self.validateData(buildslave)
-            buildslave['configured_on'].sort()
-            self.assertEqual(buildslave, bs1())
+        def check(worker):
+            self.validateData(worker)
+            worker['configured_on'].sort()
+            self.assertEqual(worker, w1())
         return d
 
     def test_get_existing_masterid(self):
         d = self.callGet(('masters', 14, 'workers', 2))
 
         @d.addCallback
-        def check(buildslave):
-            self.validateData(buildslave)
-            buildslave['configured_on'].sort()
-            self.assertEqual(buildslave, bs2(masterid=14))
+        def check(worker):
+            self.validateData(worker)
+            worker['configured_on'].sort()
+            self.assertEqual(worker, w2(masterid=14))
         return d
 
     def test_get_existing_builderid(self):
         d = self.callGet(('builders', 40, 'workers', 2))
 
         @d.addCallback
-        def check(buildslave):
-            self.validateData(buildslave)
-            buildslave['configured_on'].sort()
-            self.assertEqual(buildslave, bs2(builderid=40))
+        def check(worker):
+            self.validateData(worker)
+            worker['configured_on'].sort()
+            self.assertEqual(worker, w2(builderid=40))
         return d
 
     def test_get_existing_masterid_builderid(self):
         d = self.callGet(('masters', 13, 'builders', 40, 'workers', 2))
 
         @d.addCallback
-        def check(buildslave):
-            self.validateData(buildslave)
-            buildslave['configured_on'].sort()
-            self.assertEqual(buildslave, bs2(masterid=13, builderid=40))
+        def check(worker):
+            self.validateData(worker)
+            worker['configured_on'].sort()
+            self.assertEqual(worker, w2(masterid=13, builderid=40))
         return d
 
     def test_get_missing(self):
         d = self.callGet(('workers', 99))
 
         @d.addCallback
-        def check(buildslave):
-            self.assertEqual(buildslave, None)
+        def check(worker):
+            self.assertEqual(worker, None)
         return d
 
 
@@ -179,47 +179,47 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         d = self.callGet(('workers',))
 
         @d.addCallback
-        def check(buildslaves):
-            [self.validateData(b) for b in buildslaves]
-            [b['configured_on'].sort() for b in buildslaves]
-            self.assertEqual(sorted(buildslaves), sorted([bs1(), bs2()]))
+        def check(workers):
+            [self.validateData(b) for b in workers]
+            [b['configured_on'].sort() for b in workers]
+            self.assertEqual(sorted(workers), sorted([w1(), w2()]))
         return d
 
     def test_get_masterid(self):
         d = self.callGet(('masters', '13', 'workers',))
 
         @d.addCallback
-        def check(buildslaves):
-            [self.validateData(b) for b in buildslaves]
-            [b['configured_on'].sort() for b in buildslaves]
-            self.assertEqual(sorted(buildslaves),
-                             sorted([bs1(masterid=13), bs2(masterid=13)]))
+        def check(workers):
+            [self.validateData(b) for b in workers]
+            [b['configured_on'].sort() for b in workers]
+            self.assertEqual(sorted(workers),
+                             sorted([w1(masterid=13), w2(masterid=13)]))
         return d
 
     def test_get_builderid(self):
         d = self.callGet(('builders', '41', 'workers',))
 
         @d.addCallback
-        def check(buildslaves):
-            [self.validateData(b) for b in buildslaves]
-            [b['configured_on'].sort() for b in buildslaves]
-            self.assertEqual(sorted(buildslaves),
-                             sorted([bs2(builderid=41)]))
+        def check(workers):
+            [self.validateData(b) for b in workers]
+            [b['configured_on'].sort() for b in workers]
+            self.assertEqual(sorted(workers),
+                             sorted([w2(builderid=41)]))
         return d
 
     def test_get_masterid_builderid(self):
         d = self.callGet(('masters', '13', 'builders', '41', 'workers',))
 
         @d.addCallback
-        def check(buildslaves):
-            [self.validateData(b) for b in buildslaves]
-            [b['configured_on'].sort() for b in buildslaves]
-            self.assertEqual(sorted(buildslaves),
-                             sorted([bs2(masterid=13, builderid=41)]))
+        def check(workers):
+            [self.validateData(b) for b in workers]
+            [b['configured_on'].sort() for b in workers]
+            self.assertEqual(sorted(workers),
+                             sorted([w2(masterid=13, builderid=41)]))
         return d
 
 
-class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
+class Worker(interfaces.InterfaceTests, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -230,27 +230,27 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Master(id=14),
         ])
 
-    def test_signature_findBuildslaveId(self):
+    def test_signature_findWorkerId(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.findWorkerId,  # fake
             self.rtype.findWorkerId)  # real
-        def findBuildslaveId(self, name):
+        def findWorkerId(self, name):
             pass
 
-    def test_signature_buildslaveConfigured(self):
+    def test_signature_workerConfigured(self):
         @self.assertArgSpecMatches(
             self.master.data.updates.workerConfigured,  # fake
             self.rtype.workerConfigured)  # real
-        def buildslaveConfigured(self, workerid, masterid, builderids):
+        def workerConfigured(self, workerid, masterid, builderids):
             pass
 
-    def test_findBuildslaveId(self):
+    def test_findWorkerId(self):
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)
         self.master.db.workers.findWorkerId = \
             mock.Mock(return_value=rv)
         self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
-    def test_findBuildslaveId_not_id(self):
+    def test_findWorkerId_not_id(self):
         self.assertRaises(ValueError, self.rtype.findWorkerId, 'foo')
         self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')
