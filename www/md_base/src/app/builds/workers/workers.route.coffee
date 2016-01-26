@@ -10,6 +10,6 @@ class State extends Config
             controllerAs: 'slaves'
             templateUrl: "views/#{name}.html"
             name: name
-            url: "/slaves"
+            url: "/workers"
             data:
                 title: 'Builds / Workers'
