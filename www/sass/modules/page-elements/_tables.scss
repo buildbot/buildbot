@@ -470,7 +470,7 @@ table.codebase-branch-table {
     &.branch-overview {
         .border-table-holder {
             border-left: 0;
-            padding-left: 0;
+            box-shadow: none;
         }
     }
 }

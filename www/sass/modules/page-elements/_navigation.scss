@@ -190,12 +190,10 @@ ul.top-menu > .project-dropdown {
 
 .sub-menu-container {
     //background-color: #90B6D5;
-    @include bgimage (linear-gradient(top , mix( #62646D, lighten($brand-primary, 30%)) 0%, mix( #62646D, lighten($brand-katana, 30%)) 100%));
-    border-bottom: 1px solid #FFFFFF;
-    border-top:1px solid lighten($brand-primary, 20%) ;
+    @include bgimage (linear-gradient(top , $breadcrumb-background-top 0%, $breadcrumb-background-bottom 100%));
+    border-bottom: 1px solid darken($breadcrumb-background-bottom, 1%);
+    border-top:1px lighten($breadcrumb-background-top, 1%);
     margin-bottom: 22px;
-	
-	
 }
 
 .header + .container {
@@ -216,7 +214,7 @@ ul.top-menu > .project-dropdown {
 		font-weight: bold;
 		letter-spacing:1.1px;
 		line-height:12px;
-		@include text-shadow(0 -1px 0 rgba(0, 0, 0, 0.3));
+
 		&:first-child {
 			padding-left:8px;
 		}
