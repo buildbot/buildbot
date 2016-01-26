@@ -270,7 +270,7 @@ setup_args = {
                 'Configure', 'WarningCountingShellCommand', 'Compile',
                 'Test', 'PerlModuleTest']),
             ('buildbot.steps.shellsequence', ['ShellSequence']),
-            ('buildbot.steps.slave', [
+            ('buildbot.steps.worker', [
                 'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
                 'RemoveDirectory', 'MakeDirectory']),
             ('buildbot.steps.source.bzr', ['Bzr']),
