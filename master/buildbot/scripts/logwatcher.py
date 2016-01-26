@@ -132,6 +132,7 @@ class LogWatcher(LineOnlyReceiver):
                 break
 
         if "message from master: attached" in line:
+            # TODO: How this is used?
             return self.finished("buildslave")
         if "reconfig aborted" in line or 'reconfig partially applied' in line:
             return self.finished(Failure(ReconfigError()))
