@@ -5,10 +5,10 @@ div.tile
     | {{ overview.masters.active }} active.
 div.tile
   div.title Workers
-  div.count {{ overview.slaves.count }}
+  div.count {{ overview.workers.count }}
   div.extra
     ng-pluralize(
-      count="overview.slaves.connections",
+      count="overview.workers.connections",
       when="{'0': 'No connection.','one': '1 connection.','other': '{} connections.'}")
 div.tile
   div.title Builders
