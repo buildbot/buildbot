@@ -35,12 +35,12 @@ class _Overview extends Controller
             for master in masters
                 @masters.active++ if master.active
 
-        data.getWorkers().onChange = (slaves) =>
+        data.getWorkers().onChange = (workers) =>
             @slaves =
                 connections: 0
-                count: slaves.length
-            for slave in slaves
-                @slaves.connections += slave.connected_to.length
+                count: workers.length
+            for worker in workers
+                @slaves.connections += worker.connected_to.length
 
         data.getBuilders().onChange = (builders) =>
             @builders.count = builders.length
