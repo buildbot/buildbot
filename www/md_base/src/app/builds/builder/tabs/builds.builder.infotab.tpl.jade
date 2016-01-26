@@ -20,5 +20,5 @@ md-content.tab-content.builder-info
   div(layout-gt-md="row")
     div.label(flex="50") build slaves
     div.detail
-      span(ng-if="!builder.moreInfo.slaves") No slave.
-      a(ng-repeat="slave in builder.moreInfo.slaves", ui-sref="builds.slaves") {{ slave.name }}
+      span(ng-if="!builder.moreInfo.workers") No slave.
+      a(ng-repeat="slave in builder.moreInfo.workers", ui-sref="builds.slaves") {{ slave.name }}
