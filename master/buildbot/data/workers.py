@@ -82,7 +82,7 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
 class Worker(base.ResourceType):
 
-    name = "buildslave"
+    name = "worker"
     plural = "workers"
     endpoints = [WorkerEndpoint, WorkersEndpoint]
     keyFields = ['workerid']
