@@ -34,7 +34,7 @@ class Change(unittest.TestCase):
                       project='Buildbot'),
 
         fakedb.ChangeFile(changeid=23, filename='master/README.txt'),
-        fakedb.ChangeFile(changeid=23, filename='slave/README.txt'),
+        fakedb.ChangeFile(changeid=23, filename='worker/README.txt'),
 
         fakedb.ChangeProperty(changeid=23, property_name='notest',
                               property_value='["no","Change"]'),
@@ -55,7 +55,7 @@ class Change(unittest.TestCase):
             branch=u'warnerdb',
             revlink=u'http://warner/0e92a098b',
             properties={'notest': "no"},
-            files=[u'master/README.txt', u'slave/README.txt'],
+            files=[u'master/README.txt', u'worker/README.txt'],
             revision=u'deadbeef'))
         self.change23.number = 23
 
@@ -98,7 +98,7 @@ class Change(unittest.TestCase):
         self.assertTrue(re.match(textwrap.dedent(u'''\
             Files:
              master/README.txt
-             slave/README.txt
+             worker/README.txt
             On: git://warner
             For: Buildbot
             At: .*
@@ -118,7 +118,7 @@ class Change(unittest.TestCase):
             'codebase': u'mainapp',
             'comments': u'fix whitespace',
             'files': [{'name': u'master/README.txt'},
-                      {'name': u'slave/README.txt'}],
+                      {'name': u'worker/README.txt'}],
             'number': 23,
             'project': u'Buildbot',
             'properties': [('notest', 'no', 'Change')],

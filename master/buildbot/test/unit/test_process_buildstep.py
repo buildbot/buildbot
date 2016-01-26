@@ -17,7 +17,7 @@ from future.utils import itervalues
 import mock
 
 from buildbot import locks
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -29,13 +29,17 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import remotecommand as fakeremotecommand
-from buildbot.test.fake import slave
+from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import interfaces
 from buildbot.test.util import steps
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
@@ -121,8 +125,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock1 = mock.Mock(spec=locks.MasterLock)
         lock1.name = "masterlock"
 
-        lock2 = mock.Mock(spec=locks.SlaveLock)
-        lock2.name = "slavelock"
+        lock2 = mock.Mock(spec=locks.WorkerLock)
+        lock2.name = "workerlock"
 
         renderedLocks = [False]
 
@@ -144,8 +148,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock1 = mock.Mock(spec=locks.MasterLock)
         lock1.name = "masterlock"
 
-        lock2 = mock.Mock(spec=locks.SlaveLock)
-        lock2.name = "slavelock"
+        lock2 = mock.Mock(spec=locks.WorkerLock)
+        lock2.name = "workerlock"
 
         self.setupStep(self.FakeBuildStep(locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
         self.expectOutcome(result=SUCCESS)
@@ -154,7 +158,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_runCommand(self):
         bs = buildstep.BuildStep()
-        bs.buildslave = slave.FakeSlave(master=None)  # master is not used here
+        bs.worker = worker.FakeWorker(master=None)  # master is not used here
         bs.remote = 'dummy'
         bs.build = fakebuild.FakeBuild()
         bs.build.builder.name = 'fake'
@@ -500,32 +504,32 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st.description = 'fooing'
         self.checkSummary(st.getResultSummary(), u'fooing (failure)')
 
-    # Test calling checkSlaveHasCommand() when buildslave have support for
+    # Test calling checkWorkerHasCommand() when worker have support for
     # requested remote command.
-    def testcheckSlaveHasCommandGood(self):
-        # patch BuildStep.slaveVersion() to return success
-        mockedSlaveVersion = mock.Mock()
-        self.patch(buildstep.BuildStep, "slaveVersion", mockedSlaveVersion)
+    def testcheckWorkerHasCommandGood(self):
+        # patch BuildStep.workerVersion() to return success
+        mockedWorkerVersion = mock.Mock()
+        self.patch(buildstep.BuildStep, "workerVersion", mockedWorkerVersion)
 
         # check that no exceptions are raised
-        buildstep.BuildStep().checkSlaveHasCommand("foo")
+        buildstep.BuildStep().checkWorkerHasCommand("foo")
 
-        # make sure slaveVersion() was called with correct arguments
-        mockedSlaveVersion.assert_called_once_with("foo")
+        # make sure workerVersion() was called with correct arguments
+        mockedWorkerVersion.assert_called_once_with("foo")
 
-    # Test calling checkSlaveHasCommand() when buildslave is to old to support
+    # Test calling checkWorkerHasCommand() when worker is to old to support
     # requested remote command.
-    def testcheckSlaveHasCommandTooOld(self):
-        # patch BuildStep.slaveVersion() to return error
+    def testcheckWorkerHasCommandTooOld(self):
+        # patch BuildStep.workerVersion() to return error
         self.patch(buildstep.BuildStep,
-                   "slaveVersion",
+                   "workerVersion",
                    mock.Mock(return_value=None))
 
         # make sure appropriate exception is raised
         step = buildstep.BuildStep()
-        self.assertRaisesRegexp(BuildSlaveTooOldError,
-                                "slave is too old, does not know about foo",
-                                step.checkSlaveHasCommand, "foo")
+        self.assertRaisesRegexp(WorkerTooOldError,
+                                "worker is too old, does not know about foo",
+                                step.checkWorkerHasCommand, "foo")
 
 
 class TestLoggingBuildStep(unittest.TestCase):
@@ -576,7 +580,7 @@ class InterfaceTests(interfaces.InterfaceTests):
             'warnOnFailure',
             'alwaysRun',
             'build',
-            'buildslave',
+            'worker',
             'step_status',
             'progress',
             'stopped',
@@ -588,9 +592,9 @@ class InterfaceTests(interfaces.InterfaceTests):
         def setBuild(self, build):
             pass
 
-    def test_signature_setBuildSlave(self):
-        @self.assertArgSpecMatches(self.step.setBuildSlave)
-        def setBuildSlave(self, buildslave):
+    def test_signature_setWorker(self):
+        @self.assertArgSpecMatches(self.step.setWorker)
+        def setWorker(self, worker):
             pass
 
     def test_signature_setupProgress(self):
@@ -638,19 +642,19 @@ class InterfaceTests(interfaces.InterfaceTests):
         def setProgress(self, metric, value):
             pass
 
-    def test_signature_slaveVersion(self):
-        @self.assertArgSpecMatches(self.step.slaveVersion)
-        def slaveVersion(self, command, oldversion=None):
+    def test_signature_workerVersion(self):
+        @self.assertArgSpecMatches(self.step.workerVersion)
+        def workerVersion(self, command, oldversion=None):
             pass
 
-    def test_signature_slaveVersionIsOlderThan(self):
-        @self.assertArgSpecMatches(self.step.slaveVersionIsOlderThan)
-        def slaveVersionIsOlderThan(self, command, minversion):
+    def test_signature_workerVersionIsOlderThan(self):
+        @self.assertArgSpecMatches(self.step.workerVersionIsOlderThan)
+        def workerVersionIsOlderThan(self, command, minversion):
             pass
 
-    def test_signature_getSlaveName(self):
-        @self.assertArgSpecMatches(self.step.getSlaveName)
-        def getSlaveName(self):
+    def test_signature_getWorkerName(self):
+        @self.assertArgSpecMatches(self.step.getWorkerName)
+        def getWorkerName(self):
             pass
 
     def test_signature_runCommand(self):
@@ -1006,9 +1010,9 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.runStep()
 
     @defer.inlineCallbacks
-    def test_example_old_slave(self):
+    def test_example_old_worker(self):
         self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
-                       slave_version={'*': "1.1"}, wantDefaultWorkdir=False)
+                       worker_version={'*': "1.1"}, wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'])
             # note missing parameters
@@ -1017,8 +1021,8 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('stdio').header,
-                         u'NOTE: slave does not allow master to override usePTY\n'
-                         'NOTE: slave does not allow master to specify interruptSignal\n')
+                         u'NOTE: worker does not allow master to override usePTY\n'
+                         'NOTE: worker does not allow master to specify interruptSignal\n')
 
     @defer.inlineCallbacks
     def test_description(self):
@@ -1034,3 +1038,96 @@ class TestShellMixin(steps.BuildStepMixin,
     def test_getResultSummary(self):
         self.setupStep(SimpleShellCommand(command=['a', ['b', 'c']]))
         self.assertEqual(self.step.getResultSummary(), {u'step': u"'a b ...'"})
+
+
+class TestWorkerTransition(unittest.TestCase):
+
+    def test_worker_old_api(self):
+        bs = buildstep.BuildStep()
+
+        worker = mock.Mock()
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            bs.setWorker(worker)
+
+            new = bs.worker
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'buildslave' attribute is deprecated"):
+            old = bs.buildslave
+
+        self.assertIdentical(new, worker)
+        self.assertIdentical(old, new)
+
+    def test_set_worker_old_api(self):
+        bs = buildstep.BuildStep()
+
+        worker = mock.Mock()
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'setBuildSlave' method is deprecated"):
+            bs.setBuildSlave(worker)
+
+        self.assertIdentical(bs.worker, worker)
+
+    def test_worker_version_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerCommandVersion = mock.Mock()
+        bs.build.getWorkerCommandVersion.return_value = "ver"
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaveVersion' method is deprecated"):
+            ver = bs.slaveVersion(None)
+
+        self.assertEqual(ver, "ver")
+
+    def test_workerVersionIsOlderThan_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerCommandVersion = mock.Mock()
+        bs.build.getWorkerCommandVersion.return_value = "1.0"
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaveVersionIsOlderThan' method is deprecated"):
+            older = bs.slaveVersionIsOlderThan(None, "2.0")
+
+        self.assertTrue(older)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaveVersionIsOlderThan' method is deprecated"):
+            older = bs.slaveVersionIsOlderThan(None, "0.5")
+
+        self.assertFalse(older)
+
+    def test_checkWorkerHasCommand_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerCommandVersion = mock.Mock()
+        bs.build.getWorkerCommandVersion.return_value = None
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'checkSlaveHasCommand' method is deprecated"):
+            self.assertRaises(WorkerTooOldError,
+                              lambda: bs.checkSlaveHasCommand("foo"))
+
+    def test_getWorkerName_old_api(self):
+        bs = buildstep.BuildStep()
+
+        bs.build = mock.Mock()
+        bs.build.getWorkerName = mock.Mock()
+        bs.build.getWorkerName.return_value = "worker name"
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'getSlaveName' method is deprecated"):
+            name = bs.getSlaveName()
+
+        self.assertEqual(name, "worker name")

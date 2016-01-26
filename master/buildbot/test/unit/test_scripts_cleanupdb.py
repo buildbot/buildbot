@@ -101,7 +101,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         # we reuse RealDatabaseMixin to setup the db
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
-                                                  'buildslaves'])
+                                                  'workers'])
         master = fakemaster.make_master()
         master.config.db['db_url'] = self.db_url
         self.db = DBConnector(self.basedir)

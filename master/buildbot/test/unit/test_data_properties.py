@@ -67,8 +67,8 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Buildset(id=28),
             fakedb.BuildRequest(id=5, buildsetid=28),
             fakedb.Master(id=3),
-            fakedb.Buildslave(id=42, name="Friday"),
-            fakedb.Build(id=786, buildrequestid=5, masterid=3, buildslaveid=42),
+            fakedb.Worker(id=42, name="Friday"),
+            fakedb.Build(id=786, buildrequestid=5, masterid=3, workerid=42),
             fakedb.BuildProperty(buildid=786, name="year", value=1651, source="Wikipedia"),
             fakedb.BuildProperty(buildid=786, name="island_name", value="despair", source="Book"),
         ])
@@ -120,8 +120,8 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Buildset(id=28),
             fakedb.BuildRequest(id=5, buildsetid=28),
             fakedb.Master(id=3),
-            fakedb.Buildslave(id=42, name="Friday"),
-            fakedb.Build(id=1234, buildrequestid=5, masterid=3, buildslaveid=42),
+            fakedb.Worker(id=42, name="Friday"),
+            fakedb.Build(id=1234, buildrequestid=5, masterid=3, workerid=42),
         ])
 
         self.master.db.builds.setBuildProperty = mock.Mock(wraps=self.master.db.builds.setBuildProperty)

@@ -28,6 +28,8 @@ from twisted.internet import defer
 from twisted.python.components import registerAdapter
 from zope.interface import implements
 
+from buildbot.worker_transition import on_deprecated_name_usage
+
 
 class Properties(util.ComparableMixin):
 
@@ -293,6 +295,21 @@ class WithProperties(util.ComparableMixin):
         elif lambda_subs:
             raise ValueError('WithProperties takes either positional or keyword substitutions, not both.')
 
+        # Deprecated after worker-name transition property names support.
+        if self.args:
+            # Property names are specified in the arguments, e.g.
+            #     WithProperties("build-%s-%s.tar.gz", "branch", "revision")
+            for prop_name in self.args:
+                _on_property_usage(prop_name, stacklevel=4)
+        else:
+            # Property names are specified in string format, e.g.
+            #     WithProperties('REVISION=%(got_revision)s')
+            # TODO: this is not perfect parsing of string formatting, but well
+            # enough for real cases.
+            for match in re.finditer(r"%\(([A-Za-z0-9_]+)\)", self.fmtstring):
+                prop_name = match.group(1)
+                _on_property_usage(prop_name, stacklevel=4)
+
     def getRenderingFor(self, build):
         pmap = _PropertyMap(build.getProperties())
         if self.args:
@@ -407,6 +424,19 @@ class _Lazy(util.ComparableMixin, object):
         return '_Lazy(%r)' % self.value
 
 
+def _on_property_usage(prop_name, stacklevel=None):
+    """Handle deprecated properties after worker-name transition."""
+    deprecated_to_new_props = {'slavename': 'workername'}
+
+    if prop_name in deprecated_to_new_props:
+        on_deprecated_name_usage(
+            "Property '{old_name}' is deprecated, "
+            "use '{new_name}' instead.".format(
+                old_name=prop_name,
+                new_name=deprecated_to_new_props[prop_name]),
+            stacklevel=stacklevel)
+
+
 class Interpolate(util.ComparableMixin, object):
 
     """
@@ -448,6 +478,9 @@ class Interpolate(util.ComparableMixin, object):
         if not Interpolate.identifier_re.match(prop):
             config.error("Property name must be alphanumeric for prop Interpolation '%s'" % arg)
             prop = repl = None
+
+        _on_property_usage(prop, stacklevel=7)
+
         return _thePropertyDict, prop, repl
 
     @staticmethod
@@ -603,6 +636,8 @@ class Property(util.ComparableMixin):
         self.key = key
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
+
+        _on_property_usage(key, stacklevel=4)
 
     def getRenderingFor(self, props):
         if self.defaultWhenFalse:

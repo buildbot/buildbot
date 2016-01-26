@@ -22,7 +22,11 @@ from buildbot.process import builder
 from buildbot.process import factory
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -40,8 +44,8 @@ class BuilderMixin(object):
                     **config_kwargs):
         """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
-        config_args = dict(name=name, slavename="slv", builddir="bdir",
-                           slavebuilddir="sbdir", factory=self.factory)
+        config_args = dict(name=name, workername="slv", builddir="bdir",
+                           workerbuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
@@ -51,13 +55,13 @@ class BuilderMixin(object):
         # patch into the _startBuildsFor method
         self.builds_started = []
 
-        def _startBuildFor(slavebuilder, buildrequests):
-            self.builds_started.append((slavebuilder, buildrequests))
+        def _startBuildFor(workerforbuilder, buildrequests):
+            self.builds_started.append((workerforbuilder, buildrequests))
             return defer.succeed(True)
         self.bldr._startBuildFor = _startBuildFor
 
         if patch_random:
-            # patch 'random.choice' to always take the slave that sorts
+            # patch 'random.choice' to always take the worker that sorts
             # last, based on its name
             self.patch(random, "choice",
                        lambda lst: sorted(lst, key=lambda m: m.name)[-1])
@@ -89,27 +93,27 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             # patch into the _startBuildsFor method
             self.builds_started = []
 
-            def _startBuildFor(slavebuilder, buildrequests):
-                self.builds_started.append((slavebuilder, buildrequests))
+            def _startBuildFor(workerforbuilder, buildrequests):
+                self.builds_started.append((workerforbuilder, buildrequests))
                 return defer.succeed(startBuildsForSucceeds)
             self.bldr._startBuildFor = _startBuildFor
         return d
 
     def assertBuildsStarted(self, exp):
-        # munge builds_started into a list of (slave, [brids])
+        # munge builds_started into a list of (worker, [brids])
         builds_started = [
             (sl.name, [br.id for br in buildreqs])
             for (sl, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
-    def setSlaveBuilders(self, slavebuilders):
-        """C{slaves} maps name : available"""
-        self.bldr.slaves = []
-        for name, avail in iteritems(slavebuilders):
-            sb = mock.Mock(spec=['isAvailable'], name=name)
-            sb.name = name
-            sb.isAvailable.return_value = avail
-            self.bldr.slaves.append(sb)
+    def setWorkerForBuilders(self, workerforbuilders):
+        """C{workerforbuilders} maps name : available"""
+        self.bldr.workers = []
+        for name, avail in iteritems(workerforbuilders):
+            wfb = mock.Mock(spec=['isAvailable'], name=name)
+            wfb.name = name
+            wfb.isAvailable.return_value = avail
+            self.bldr.workers.append(wfb)
 
     # services
 
@@ -118,7 +122,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         # this will cause an exception if maybeStartBuild tries to start
-        self.bldr.slaves = None
+        self.bldr.workers = None
 
         # so we just hope this does not fail
         yield self.bldr.stopService()
@@ -127,32 +131,32 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
     # maybeStartBuild
     def _makeMocks(self):
-        slave = mock.Mock()
-        slave.name = 'slave'
+        worker = mock.Mock()
+        worker.name = 'worker'
         buildrequest = mock.Mock()
         buildrequest.id = 10
         buildrequests = [buildrequest]
-        return slave, buildrequests
+        return worker, buildrequests
 
     @defer.inlineCallbacks
     def test_maybeStartBuild(self):
         yield self.makeBuilder()
 
-        slave, buildrequests = self._makeMocks()
+        worker, buildrequests = self._makeMocks()
 
-        started = yield self.bldr.maybeStartBuild(slave, buildrequests)
+        started = yield self.bldr.maybeStartBuild(worker, buildrequests)
         self.assertEqual(started, True)
-        self.assertBuildsStarted([('slave', [10])])
+        self.assertBuildsStarted([('worker', [10])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_failsToStart(self):
         yield self.makeBuilder(startBuildsForSucceeds=False)
 
-        slave, buildrequests = self._makeMocks()
+        worker, buildrequests = self._makeMocks()
 
-        started = yield self.bldr.maybeStartBuild(slave, buildrequests)
+        started = yield self.bldr.maybeStartBuild(worker, buildrequests)
         self.assertEqual(started, False)
-        self.assertBuildsStarted([('slave', [10])])
+        self.assertBuildsStarted([('worker', [10])])
 
     @defer.inlineCallbacks
     def do_test_getCollapseRequestsFn(self, builder_param=None,
@@ -234,74 +238,74 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         # by default, it returns True
-        startable = yield self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
 
-        startable = yield self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, True)
 
         # set a configurable one
         record = []
 
-        def canStartBuild(bldr, slave, breq):
-            record.append((bldr, slave, breq))
-            return (slave, breq) == ('slave', 100)
+        def canStartBuild(bldr, worker, breq):
+            record.append((bldr, worker, breq))
+            return (worker, breq) == ('worker', 100)
         self.bldr.config.canStartBuild = canStartBuild
 
-        startable = yield self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'slave', 100)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100)])
 
-        startable = yield self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
         # set a configurable one to return Deferred
         record = []
 
-        def canStartBuild_deferred(bldr, slave, breq):
-            record.append((bldr, slave, breq))
-            return defer.succeed((slave, breq) == ('slave', 100))
+        def canStartBuild_deferred(bldr, worker, breq):
+            record.append((bldr, worker, breq))
+            return defer.succeed((worker, breq) == ('worker', 100))
         self.bldr.config.canStartBuild = canStartBuild_deferred
 
-        startable = yield self.bldr.canStartBuild('slave', 100)
+        startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'slave', 100)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100)])
 
-        startable = yield self.bldr.canStartBuild('slave', 101)
+        startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(record, [(self.bldr, 'slave', 100), (self.bldr, 'slave', 101)])
+        self.assertEqual(record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
     @defer.inlineCallbacks
-    def test_enforceChosenSlave(self):
-        """enforceChosenSlave rejects and accepts builds"""
+    def test_enforceChosenWorker(self):
+        """enforceChosenWorker rejects and accepts builds"""
         yield self.makeBuilder()
 
-        self.bldr.config.canStartBuild = builder.enforceChosenSlave
+        self.bldr.config.canStartBuild = builder.enforceChosenWorker
 
-        slave = mock.Mock()
-        slave.slave.slavename = 'slave5'
+        workerforbuilder = mock.Mock()
+        workerforbuilder.worker.workername = 'worker5'
 
         breq = mock.Mock()
 
-        # no buildslave requested
+        # no worker requested
         breq.properties = {}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
-        # buildslave requested as the right one
-        breq.properties = {'slavename': 'slave5'}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        # worker requested as the right one
+        breq.properties = {'workername': 'worker5'}
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
-        # buildslave requested as the wrong one
-        breq.properties = {'slavename': 'slave4'}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        # worker requested as the wrong one
+        breq.properties = {'workername': 'worker4'}
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(False, result)
 
-        # buildslave set to non string value gets skipped
-        breq.properties = {'slavename': 0}
-        result = yield self.bldr.canStartBuild(slave, breq)
+        # worker set to non string value gets skipped
+        breq.properties = {'workername': 0}
+        result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
 
     @defer.inlineCallbacks
@@ -322,6 +326,84 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         builderid = yield self.bldr.getBuilderId()
         self.assertEqual(builderid, 13)
         fbi.assert_not_called()
+
+    def test_enforceChosenWorker_old_api(self):
+        from buildbot.process.builder import enforceChosenSlave
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'enforceChosenSlave' function is deprecated"):
+            breq = mock.Mock()
+            breq.properties = {}
+            enforceChosenSlave(mock.Mock(), mock.Mock(), breq)
+
+    def test_attaching_workers_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = bldr.attaching_workers
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'attaching_slaves' attribute is deprecated"):
+            old = bldr.attaching_slaves
+
+        self.assertIdentical(new, old)
+
+    def test_workers_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = bldr.workers
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slaves' attribute is deprecated"):
+            old = bldr.slaves
+
+        self.assertIdentical(new, old)
+
+    def test_canStartWithWorkerForBuilder_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+        bldr.config = mock.Mock()
+        bldr.config.locks = []
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'canStartWithSlavebuilder' method is deprecated"):
+            with mock.patch(
+                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
+                    mock.Mock(return_value='dummy')):
+                dummy = bldr.canStartWithSlavebuilder(mock.Mock())
+                self.assertEqual(dummy, 'dummy')
+
+    def test_addLatentWorker_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'addLatentSlave' method is deprecated"):
+            method = mock.Mock(return_value='dummy')
+            with mock.patch(
+                    'buildbot.process.builder.Builder.addLatentWorker',
+                    method):
+                dummy = bldr.addLatentSlave(mock.Mock())
+                self.assertEqual(dummy, 'dummy')
+                self.assertTrue(method.called)
+
+    def test_getAvailableWorkers_old_api(self):
+        bldr = builder.Builder('bldr', _addServices=False)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'getAvailableSlaves' method is deprecated"):
+            method = mock.Mock(return_value='dummy')
+            with mock.patch(
+                    'buildbot.process.builder.Builder.getAvailableWorkers',
+                    method):
+                dummy = bldr.getAvailableSlaves(mock.Mock())
+                self.assertEqual(dummy, 'dummy')
+                self.assertTrue(method.called)
 
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):
@@ -408,8 +490,8 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
-        config_args = dict(name='bldr', slavename="slv", builddir="bdir",
-                           slavebuilddir="sbdir", factory=self.factory,
+        config_args = dict(name='bldr', workername="slv", builddir="bdir",
+                           workerbuilddir="sbdir", factory=self.factory,
                            description='Noe', tags=['NewTag'])
         new_builder_config = config.BuilderConfig(**config_args)
         new_builder_config.description = "New"

@@ -16,7 +16,6 @@
 import mock
 import os
 
-from buildbot import config
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
@@ -42,8 +41,6 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
     def do_test_master(self):
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
-        m.config = config.MasterConfig.loadConfig(
-            self.basedir, self.configfile)
 
         # update the DB
         yield m.db.setup(check_version=False)
@@ -92,7 +89,6 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 # will help to flush out any bugs that may otherwise be difficult to find.
 
 c = BuildmasterConfig = {}
-from buildbot.buildslave import BuildSlave
 from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.pb import PBChangeSource
 from buildbot.config import BuilderConfig
@@ -100,8 +96,9 @@ from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.basic import AnyBranchScheduler
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.steps.shell import ShellCommand
-c['slaves'] = [BuildSlave("local1", "localpw")]
-c['slavePortnum'] = 0
+from buildbot.worker import Worker
+c['workers'] = [Worker("local1", "localpw")]
+c['protocols'] = {'pb': {'port': 'tcp:0'}}
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []
@@ -117,7 +114,7 @@ f1.addStep(ShellCommand(command='echo hi'))
 c['builders'] = []
 c['builders'].append(
     BuilderConfig(name="testy",
-                  slavenames=["local1"],
+                  workernames=["local1"],
                   factory=f1))
 c['status'] = []
 c['title'] = "test"

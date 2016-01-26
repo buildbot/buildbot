@@ -1,46 +1,46 @@
-BuildslaveManager
-=================
+WorkerManager
+=============
 
-.. py:module:: buildbot.buildslave.manager
+.. py:module:: buildbot.worker.manager
 
-BuildslaveRegistration
-----------------------
+WorkerRegistration
+------------------
 
-.. py:class:: BuildslaveRegistration(master, buildslave)
+.. py:class:: WorkerRegistration(master, worker)
 
-    Represents single BuildSlave registration
+    Represents single Worker registration
 
     .. py:method:: unregister()
 
-        Remove registartion for `buildslave`
+        Remove registartion for `worker`
 
-    .. py:method:: update(slave_config, global_config)
+    .. py:method:: update(worker_config, global_config)
 
-        :param slave_config: new BuildSlave instance
-        :type slave_config: :class:`~buildbot.buildslave.base.BuildSlave`
+        :param worker_config: new Worker instance
+        :type worker_config: :class:`~buildbot.worker.Worker`
         :param global_config: Buildbot config
         :type global_config: :class:`~buildbot.config.MasterConfig`
 
         Update the registration in case the port or password has changed.
 
         NOTE: You should invoke this method after calling
-        `BuildslaveManager.register(buildslave)`
+        `WorkerManager.register(worker)`
 
-BuildslaveManager
------------------
+WorkerManager
+-------------
 
-.. py:class:: BuildslaveManager(master)
+.. py:class:: WorkerManager(master)
 
-    Handle BuildSlave registrations for mulitple protocols
+    Handle Worker registrations for mulitple protocols
 
-    .. py:method:: register(buildslave)
+    .. py:method:: register(worker)
 
-        :param slave_config: new BuildSlave instance
-        :type slave_config: :class:`~buildbot.buildslave.base.BuildSlave`
-        :returns: :class:`~buildbot.buildslave.manager.BuildslaveRegistration`
+        :param worker: new Worker instance
+        :type worker: :class:`~buildbot.worker.Worker`
+        :returns: :class:`~buildbot.worker.manager.WorkerRegistration`
 
-        Creates :class:`~buildbot.buildslave.manager.BuildslaveRegistration`
+        Creates :class:`~buildbot.worker.manager.WorkerRegistration`
         instance.
 
-        NOTE: You should invoke `.update()` on returned BuildslaveRegistration
+        NOTE: You should invoke `.update()` on returned WorkerRegistration
         instance

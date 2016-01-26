@@ -912,7 +912,7 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
         self.expectProperty('got_revision', self.REVID, 'Monotone')
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             mtn.Monotone(repourl='mtn://localhost/monotone',
                          mode='full', method='clean', branch='master'))

@@ -28,6 +28,8 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import on_deprecated_name_usage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -67,7 +69,7 @@ def warnDeprecated(version, msg):
     log.msg("NOTE: [%s and later] %s" % (version, msg))
 
 
-class MasterConfig(util.ComparableMixin):
+class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -114,7 +116,8 @@ class MasterConfig(util.ComparableMixin):
         )
         self.schedulers = {}
         self.builders = []
-        self.slaves = []
+        self.workers = []
+        self._registerOldWorkerAttr("workers")
         self.change_sources = []
         self.status = []
         self.user_managers = []
@@ -137,8 +140,11 @@ class MasterConfig(util.ComparableMixin):
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
         "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "services", "slavePortnum", "slaves", "status", "title", "titleURL",
-        "user_managers", "validation", 'www'
+        "schedulers", "services", "status", "title", "titleURL",
+        "user_managers", "validation", "www", "workers",
+
+        "slavePortnum",  # deprecated, c['protocols']['pb']['port'] should be used
+        "slaves",  # deprecated, "worker" should be used
     ])
     compare_attrs = list(_known_config_keys)
 
@@ -242,7 +248,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
             config.load_builders(filename, config_dict)
-            config.load_slaves(filename, config_dict)
+            config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
             config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
@@ -363,11 +369,15 @@ class MasterConfig(util.ComparableMixin):
 
         # saved for backward compatability
         if 'slavePortnum' in config_dict:
-            slavePortnum = config_dict.get('slavePortnum')
-            if isinstance(slavePortnum, int):
-                slavePortnum = "tcp:%d" % slavePortnum
+            on_deprecated_name_usage(
+                "c['slavePortnum'] key is deprecated, use "
+                "c['protocols']['pb']['port'] instead",
+                filename=filename)
+            port = config_dict.get('slavePortnum')
+            if isinstance(port, int):
+                port = "tcp:%d" % port
             pb_options = self.protocols.get('pb', {})
-            pb_options['port'] = slavePortnum
+            pb_options['port'] = port
             self.protocols['pb'] = pb_options
 
         if 'multiMaster' in config_dict:
@@ -526,40 +536,75 @@ class MasterConfig(util.ComparableMixin):
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
                 warnings.warn("Absolute path '%s' for builder may cause "
-                              "mayhem.  Perhaps you meant to specify slavebuilddir "
+                              "mayhem.  Perhaps you meant to specify workerbuilddir "
                               "instead.")
 
         self.builders = builders
 
-    def load_slaves(self, filename, config_dict):
-        if 'slaves' not in config_dict:
-            return
-        slaves = config_dict['slaves']
+    @staticmethod
+    def _check_workers(workers, conf_key):
+        if not isinstance(workers, (list, tuple)):
+            error("{0} must be a list".format(conf_key))
+            return False
 
-        if not isinstance(slaves, (list, tuple)):
-            error("c['slaves'] must be a list")
-            return
-
-        for sl in slaves:
-            if not interfaces.IBuildSlave.providedBy(sl):
-                msg = "c['slaves'] must be a list of BuildSlave instances"
+        for worker in workers:
+            if not interfaces.IWorker.providedBy(worker):
+                msg = "{0} must be a list of Worker instances".format(conf_key)
                 error(msg)
-                return
+                return False
 
-            def validate(slavename):
-                if slavename in ("debug", "change", "status"):
-                    yield "slave name %r is reserved" % slavename
-                if not util_identifiers.ident_re.match(slavename):
-                    yield "slave name %r is not an identifier" % slavename
-                if not slavename:
-                    yield "slave name %r cannot be an empty string" % slavename
-                if len(slavename) > 50:
-                    yield "slave name %r is longer than %d characters" % (slavename, 50)
+            def validate(workername):
+                if workername in ("debug", "change", "status"):
+                    yield "worker name %r is reserved" % workername
+                if not util_identifiers.ident_re.match(workername):
+                    yield "worker name %r is not an identifier" % workername
+                if not workername:
+                    yield "worker name %r cannot be an empty string" % workername
+                if len(workername) > 50:
+                    yield "worker name %r is longer than %d characters" % (workername, 50)
 
-            for msg in validate(sl.slavename):
+            errors = list(validate(worker.workername))
+            for msg in errors:
                 error(msg)
 
-        self.slaves = config_dict['slaves']
+            if errors:
+                return False
+
+        return True
+
+    def load_workers(self, filename, config_dict):
+        config_valid = True
+
+        deprecated_workers = config_dict.get('slaves')
+        if deprecated_workers is not None:
+            on_deprecated_name_usage(
+                "c['slaves'] key is deprecated, use c['workers'] instead",
+                filename=filename)
+            if not self._check_workers(deprecated_workers, "c['slaves']"):
+                config_valid = False
+
+        workers = config_dict.get('workers')
+        if workers is not None:
+            if not self._check_workers(workers, "c['workers']"):
+                config_valid = False
+
+        if deprecated_workers is not None and workers is not None:
+            error("Use of c['workers'] and c['slaves'] at the same time is "
+                  "not supported. Use only c['workers'] instead")
+            return
+
+        if not config_valid:
+            return
+
+        elif deprecated_workers is not None or workers is not None:
+            self.workers = []
+            if deprecated_workers is not None:
+                self.workers.extend(deprecated_workers)
+            if workers is not None:
+                self.workers.extend(workers)
+
+        else:
+            pass
 
     def load_change_sources(self, filename, config_dict):
         change_source = config_dict.get('change_source', [])
@@ -657,8 +702,8 @@ class MasterConfig(util.ComparableMixin):
         if self.multiMaster:
             return
 
-        if not self.slaves:
-            error("no slaves are configured")
+        if not self.workers:
+            error("no workers are configured")
 
         if not self.builders:
             error("no builders are configured")
@@ -708,15 +753,15 @@ class MasterConfig(util.ComparableMixin):
 
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
-        # to unknown slaves
-        slavenames = set([s.slavename for s in self.slaves])
+        # to unknown workers
+        workernames = set([w.workername for w in self.workers])
         seen_names = set()
         seen_builddirs = set()
 
         for b in self.builders:
-            unknowns = set(b.slavenames) - slavenames
+            unknowns = set(b.workernames) - workernames
             if unknowns:
-                error("builder '%s' uses unknown slaves %s" %
+                error("builder '%s' uses unknown workers %s" %
                       (b.name, ", ".join(repr(u) for u in unknowns)))
             if b.name in seen_names:
                 error("duplicate builder name '%s'" % b.name)
@@ -756,18 +801,50 @@ class MasterConfig(util.ComparableMixin):
 
         if ports:
             return
-        if self.slaves:
-            error("slaves are configured, but c['protocols'] not")
+        if self.workers:
+            error("workers are configured, but c['protocols'] not")
 
 
-class BuilderConfig(util_config.ConfiguredMixin):
+class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
-    def __init__(self, name=None, slavename=None, slavenames=None,
-                 builddir=None, slavebuilddir=None, factory=None,
+    def __init__(self, name=None, workername=None, workernames=None,
+                 builddir=None, workerbuilddir=None, factory=None,
                  tags=None, category=None,
-                 nextSlave=None, nextBuild=None, locks=None, env=None,
+                 nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None):
+                 canStartBuild=None,
+
+                 slavename=None,  # deprecated, use `workername` instead
+                 slavenames=None,  # deprecated, use `workernames` instead
+                 slavebuilddir=None,  # deprecated, use `workerbuilddir` instead
+                 nextSlave=None,  # deprecated, use `nextWorker` instead
+                 ):
+
+        # Deprecated API support.
+        if slavename is not None:
+            on_deprecated_name_usage(
+                "'slavename' keyword argument is deprecated, "
+                "use 'workername' instead")
+            assert workername is None
+            workername = slavename
+        if slavenames is not None:
+            on_deprecated_name_usage(
+                "'slavenames' keyword argument is deprecated, "
+                "use 'workernames' instead")
+            assert workernames is None
+            workernames = slavenames
+        if slavebuilddir is not None:
+            on_deprecated_name_usage(
+                "'slavebuilddir' keyword argument is deprecated, "
+                "use 'workerbuilddir' instead")
+            assert workerbuilddir is None
+            workerbuilddir = slavebuilddir
+        if nextSlave is not None:
+            on_deprecated_name_usage(
+                "'nextSlave' keyword argument is deprecated, "
+                "use 'workerbuilddir' instead")
+            assert workerbuilddir is None
+            nextWorker = nextSlave
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -788,35 +865,37 @@ class BuilderConfig(util_config.ConfiguredMixin):
             error("builder '%s's factory is not a BuildFactory instance" % name)
         self.factory = factory
 
-        # slavenames can be a single slave name or a list, and should also
-        # include slavename, if given
-        if isinstance(slavenames, str):
-            slavenames = [slavenames]
-        if slavenames:
-            if not isinstance(slavenames, list):
-                error("builder '%s': slavenames must be a list or a string" %
+        # workernames can be a single worker name or a list, and should also
+        # include workername, if given
+        if isinstance(workernames, str):
+            workernames = [workernames]
+        if workernames:
+            if not isinstance(workernames, list):
+                error("builder '%s': workernames must be a list or a string" %
                       (name,))
         else:
-            slavenames = []
+            workernames = []
 
-        if slavename:
-            if not isinstance(slavename, str):
-                error("builder '%s': slavename must be a string" % (name,))
-            slavenames = slavenames + [slavename]
-        if not slavenames:
-            error("builder '%s': at least one slavename is required" % (name,))
+        if workername:
+            if not isinstance(workername, str):
+                error("builder '%s': workername must be a string" % (name,))
+            workernames = workernames + [workername]
+        if not workernames:
+            error("builder '%s': at least one workername is required" % (name,))
 
-        self.slavenames = slavenames
+        self.workernames = workernames
+        self._registerOldWorkerAttr("workernames")
 
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
         self.builddir = builddir
 
-        # slavebuilddir defaults to builddir
-        if slavebuilddir is None:
-            slavebuilddir = builddir
-        self.slavebuilddir = slavebuilddir
+        # workerbuilddir defaults to builddir
+        if workerbuilddir is None:
+            workerbuilddir = builddir
+        self.workerbuilddir = workerbuilddir
+        self._registerOldWorkerAttr("workerbuilddir")
 
         # remainder are optional
 
@@ -841,14 +920,15 @@ class BuilderConfig(util_config.ConfiguredMixin):
 
         self.tags = tags
 
-        self.nextSlave = nextSlave
-        if nextSlave and not callable(nextSlave):
-            error('nextSlave must be a callable')
-            # Keeping support of the previous nextSlave API
-        if nextSlave and (nextSlave.func_code.co_argcount == 2 or
-                          (isinstance(nextSlave, MethodType) and
-                           nextSlave.func_code.co_argcount == 3)):
-            self.nextSlave = lambda x, y, z: nextSlave(x, y)  # pragma: no cover
+        self.nextWorker = nextWorker
+        self._registerOldWorkerAttr("nextWorker")
+        if nextWorker and not callable(nextWorker):
+            error('nextWorker must be a callable')
+            # Keeping support of the previous nextWorker API
+        if nextWorker and (nextWorker.func_code.co_argcount == 2 or
+                           (isinstance(nextWorker, MethodType) and
+                            nextWorker.func_code.co_argcount == 3)):
+            self.nextWorker = lambda x, y, z: nextWorker(x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
@@ -870,15 +950,15 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # constructor!
         rv = {
             'name': self.name,
-            'slavenames': self.slavenames,
+            'workernames': self.workernames,
             'factory': self.factory,
             'builddir': self.builddir,
-            'slavebuilddir': self.slavebuilddir,
+            'workerbuilddir': self.workerbuilddir,
         }
         if self.tags:
             rv['tags'] = self.tags
-        if self.nextSlave:
-            rv['nextSlave'] = self.nextSlave
+        if self.nextWorker:
+            rv['nextWorker'] = self.nextWorker
         if self.nextBuild:
             rv['nextBuild'] = self.nextBuild
         if self.locks:

@@ -205,7 +205,6 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
 
         def TCPClient(host, port, factory):
             client = mock.Mock(name='tcp-client')
-            print "host"
             client.host = host
             client.port = port
             client.factory = factory

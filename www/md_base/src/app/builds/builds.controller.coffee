@@ -4,7 +4,7 @@ class Builds extends Controller
 
     menuItems: [
         {value:'builds.masters', title: 'MASTERS', icon:'wand'}
-        {value:'builds.slaves', title: 'SLAVES', icon:'hammer'}
+        {value:'builds.workers', title: 'WORKERS', icon:'hammer'}
         {value:'builds.schedulers', title: 'SCHEDULERS', icon:'clock'}
         {value:'builds.changes', title: 'LATEST CHANGES', icon:'changes'}
     ]

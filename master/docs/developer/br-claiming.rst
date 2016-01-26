@@ -20,7 +20,7 @@ This distribution process is re-run whenever an event occurs that may allow a ne
 Such events can be signalled to master with
 
 * :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForBuilder` when a single builder is affected;
-* :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForSlave` when a single slave is affected; or
+* :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForWorker` when a single slave is affected; or
 * :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForAllBuilders` when all builders may be affected.
 
 In particular, when a master receives a new-build-request message, it performs the equivalent of :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForBuilder` for the affected builder.

@@ -13,8 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.status.buildset import BuildSetSummaryNotifierMixin
 from buildbot.process.results import SUCCESS
+from buildbot.status.buildset import BuildSetSummaryNotifierMixin
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuildStatus
@@ -53,17 +53,17 @@ class TestBuildSetSummaryNotifierMixin(unittest.TestCase):
 
         notifier.master.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=99, results=SUCCESS, reason="testReason"),
             fakedb.Builder(id=80, name='Builder0'),
             fakedb.Builder(id=81, name='Builder1'),
             fakedb.Builder(id=82, name='Builder2'),
             fakedb.BuildRequest(id=10, buildsetid=99, builderid=80),
-            fakedb.Build(number=0, buildrequestid=10, masterid=92, buildslaveid=13),
+            fakedb.Build(number=0, buildrequestid=10, masterid=92, workerid=13),
             fakedb.BuildRequest(id=11, buildsetid=99, builderid=81),
-            fakedb.Build(number=0, buildrequestid=11, masterid=92, buildslaveid=13),
+            fakedb.Build(number=0, buildrequestid=11, masterid=92, workerid=13),
             fakedb.BuildRequest(id=12, buildsetid=99, builderid=82),
-            fakedb.Build(number=0, buildrequestid=12, masterid=92, buildslaveid=13)
+            fakedb.Build(number=0, buildrequestid=12, masterid=92, workerid=13)
         ])
 
         if info is not None:

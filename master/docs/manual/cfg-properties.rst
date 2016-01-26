@@ -23,7 +23,7 @@ The sources for properties are:
     This is most commonly used with the :bb:cmdline:`sendchange` command.
 forced builds
     The "Force Build" form allows users to specify properties
-:bb:cfg:`buildslaves <slaves>`
+:bb:cfg:`buildslaves <workers>`
     A buildslave can pass properties on to the builds it performs.
 :ref:`builds <Common-Build-Properties>`
     A build automatically sets a number of properties on itself.
@@ -74,8 +74,8 @@ The following build properties are set when the build is started, and are availa
 
 .. index:: single: Properties; slavename
 
-``slavename``
-    This is a string which identifies which buildslave the build is running on.
+``workername``
+    This is a string which identifies which worker the build is running on.
 
 .. index:: single: Properties; scheduler
 

@@ -72,18 +72,18 @@ That copy will be thrown away every time a build is complete.
 
 ::
 
-    from buildbot.plugins import buildslave, util
-    c['slaves'] = [
-        buildslave.LibVirtSlave('minion1', 'sekrit',
-                                util.Connection("qemu:///session"),
-                                '/home/buildbot/images/minion1',
-                                '/home/buildbot/images/base_image')
+    from buildbot.plugins import worker, util
+    c['workers'] = [
+        worker.LibVirtWorker('minion1', 'sekrit',
+                             util.Connection("qemu:///session"),
+                             '/home/buildbot/images/minion1',
+                             '/home/buildbot/images/base_image')
     ]
 
 You can use virt-manager to define ``minion1`` with the correct hardware.
 If you don't, buildbot won't be able to find a VM to start.
 
-:class:`LibVirtSlave` accepts the following arguments:
+:class:`LibVirtWorker` accepts the following arguments:
 
 ``name``
     Both a buildbot username and the name of the virtual machine.

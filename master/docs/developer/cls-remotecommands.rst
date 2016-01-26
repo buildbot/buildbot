@@ -42,7 +42,7 @@ RemoteCommand
     .. py:method:: run(step, remote)
 
         :param step: the buildstep invoking this command
-        :param remote: a reference to the remote :class:`SlaveBuilder` instance
+        :param remote: a reference to the remote :class:`WorkerForBuilder` instance
         :returns: Deferred
 
         Run the command.

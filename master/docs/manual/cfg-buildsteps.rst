@@ -17,7 +17,7 @@ Each :class:`BuildFactory` can be created with a list of steps, or the factory c
 The basic behavior for a :class:`BuildStep` is to:
 
 * run for a while, then stop
-* possibly invoke some RemoteCommands on the attached build slave
+* possibly invoke some RemoteCommands on the attached worker
 * possibly produce a set of log files
 * finish with a status described by one of four values defined in :mod:`buildbot.status.builder`: ``SUCCESS``, ``WARNINGS``, ``FAILURE``, ``SKIPPED``
 * provide a list of short strings to describe the step
@@ -141,7 +141,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 .. index:: Buildstep Parameter; locks
 
 ``locks``
-    a list of ``Locks`` (instances of :class:`buildbot.locks.SlaveLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
+    a list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting this :class:`Step`.
     Alternatively this could be a renderable that returns this list during build execution.
     This lets you defer picking the locks to acquire until the build step is about to start running.
     The ``Locks`` will be released when the step is complete.
@@ -661,7 +661,7 @@ The :bb:step:`P4` build step creates a `Perforce <http://www.perforce.com/>`_ cl
 
     from buildbot.plugins import steps, util
     factory.addStep(steps.P4(p4port=p4port,
-                             p4client=util.WithProperties('%(P4USER)s-%(slavename)s-%(buildername)s'),
+                             p4client=util.WithProperties('%(P4USER)s-%(workername)s-%(buildername)s'),
                              p4user=p4user,
                              p4base='//depot',
                              p4viewspec=p4viewspec,
@@ -1960,13 +1960,13 @@ We want to put it into the master-side :file:`~/public_html/ref.html`, and add a
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.FileUpload(slavesrc="docs/reference.html",
+    f.addStep(steps.FileUpload(workersrc="docs/reference.html",
                                masterdest="/home/bb/public_html/ref.html",
                                url="http://somesite/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`, so things like ``~`` will be expanded properly.
 Non-absolute paths will be interpreted relative to the buildmaster's base directory.
-Likewise, the ``slavesrc=`` argument will be expanded and interpreted relative to the builder's working directory.
+Likewise, the ``workersrc=`` argument will be expanded and interpreted relative to the builder's working directory.
 
 .. note::
 
@@ -1978,11 +1978,11 @@ For example, let's assume that some step requires a configuration file that, for
     from buildbot.plugins import steps
 
     f.addStep(steps.FileDownload(mastersrc="~/todays_build_config.txt",
-                                 slavedest="build_config.txt"))
+                                 workerdest="build_config.txt"))
     f.addStep(steps.ShellCommand(command=["make", "config"]))
 
-Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``slavedest=`` argument is relative to the builder's working directory.
-If the buildslave is running in :file:`~buildslave`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildslave/tests-i386/build`, and a ``slavedest=`` of :file:`foo/bar.html` will get put in :file:`~buildslave/tests-i386/build/foo/bar.html`.
+Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``workerdest=`` argument is relative to the builder's working directory.
+If the buildslave is running in :file:`~buildslave`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildslave/tests-i386/build`, and a ``workerdest=`` of :file:`foo/bar.html` will get put in :file:`~buildslave/tests-i386/build/foo/bar.html`.
 Both of these commands will create any missing intervening directories.
 
 Other Parameters
@@ -2021,7 +2021,7 @@ On the slave-side the directory can be found under :file:`docs`::
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.DirectoryUpload(slavesrc="docs",
+    f.addStep(steps.DirectoryUpload(workersrc="docs",
                                     masterdest="~/public_html/docs",
                                     url="~buildbot/docs"))
 
@@ -2050,7 +2050,7 @@ This parameter should either be a list, or something that can be rendered as a l
 
     f.addStep(steps.ShellCommand(command=["make", "test"]))
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
-    f.addStep(steps.MultipleFileUpload(slavesrcs=["docs", "test-results.html"],
+    f.addStep(steps.MultipleFileUpload(workersrcs=["docs", "test-results.html"],
                                        masterdest="~/public_html",
                                        url="~buildbot"))
 
@@ -2104,7 +2104,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
     from buildbot.plugins import steps, util
     f.addStep(steps.StringDownload(util.Interpolate("%(src::branch)s-%(prop:got_revision)s\n"),
-            slavedest="buildid.txt"))
+            workerdest="buildid.txt"))
 
 :bb:step:`StringDownload` works just like :bb:step:`FileDownload` except it takes a single argument, ``s``, representing the string to download instead of a ``mastersrc`` argument.
 
@@ -2112,7 +2112,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 
     from buildbot.plugins import steps
     buildinfo = { branch: Property('branch'), got_revision: Property('got_revision') }
-    f.addStep(steps.JSONStringDownload(buildinfo, slavedest="buildinfo.json"))
+    f.addStep(steps.JSONStringDownload(buildinfo, workerdest="buildinfo.json"))
 
 :bb:step:`JSONStringDownload` is similar, except it takes an ``o`` argument, which must be JSON serializable, and transfers that as a JSON-encoded string to the slave.
 
@@ -2121,7 +2121,7 @@ Instead of having to create a temporary file and then use FileDownload, you can 
 ::
 
     from buildbot.plugins import steps
-    f.addStep(steps.JSONPropertiesDownload(slavedest="build-properties.json"))
+    f.addStep(steps.JSONPropertiesDownload(workerdest="build-properties.json"))
 
 :bb:step:`JSONPropertiesDownload` transfers a json-encoded string that represents a dictionary where properties maps to a dictionary of build property ``name`` to property ``value``; and ``sourcestamp`` represents the build's sourcestamp.
 
@@ -2144,7 +2144,7 @@ In this example, the step renames a tarball based on the day of the week.
 
     from buildbot.plugins import steps
 
-    f.addStep(steps.FileUpload(slavesrc="widgetsoft.tar.gz",
+    f.addStep(steps.FileUpload(workersrc="widgetsoft.tar.gz",
                          masterdest="/var/buildoutputs/widgetsoft-new.tar.gz"))
     f.addStep(steps.MasterShellCommand(
         command="mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz",
@@ -2208,7 +2208,7 @@ It is usually called with the ``value`` argument being specifed as a :ref:`Inter
 
     from buildbot.plugins import steps, util
     f.addStep(steps.SetProperty(property="SomeProperty",
-        value=util.Interpolate("sch=%(prop:scheduler)s, slave=%(prop:slavename)s")))
+        value=util.Interpolate("sch=%(prop:scheduler)s, slave=%(prop:workername)s")))
 
 .. bb:step:: SetPropertyFromCommand
 
@@ -2644,6 +2644,6 @@ Example::
                          data = {
                             'builder': util.Property('buildername'),
                             'buildnumber': util.Property('buildnumber'),
-                            'slavename': util.Property('slavename'),
+                            'workername': util.Property('workername'),
                             'revision': util.Property('got_revision')
                          }))

@@ -1119,14 +1119,14 @@ Example::
                 required = True),
                 ])
 
-.. bb:sched:: BuildslaveChoiceParameter
+.. bb:sched:: WorkerChoiceParameter
 
-BuildslaveChoiceParameter
-#########################
+WorkerChoiceParameter
+#####################
 
 This parameter allows a scheduler to require that a build is assigned to the chosen buildslave.
-The choice is assigned to the `slavename` property for the build.
-The :py:class:`~buildbot.builder.enforceChosenSlave` functor must be assigned to the ``canStartBuild`` parameter for the ``Builder``.
+The choice is assigned to the `workername` property for the build.
+The :py:class:`~buildbot.builder.enforceChosenWorker` functor must be assigned to the ``canStartBuild`` parameter for the ``Builder``.
 
 Example::
 
@@ -1136,14 +1136,14 @@ Example::
     ForceScheduler(
         # ...
         properties=[
-            BuildslaveChoiceParameter(),
+            WorkerChoiceParameter(),
         ]
     )
 
     # builders:
     BuilderConfig(
         # ...
-        canStartBuild=util.enforceChosenSlave,
+        canStartBuild=util.enforceChosenWorker,
     )
 
 AnyPropertyParameter

@@ -120,16 +120,16 @@ BuildStep
 
         The build object controlling this step.
 
-    .. py:method:: setBuildSlave(build)
+    .. py:method:: setWorker(build)
 
-        :param build: the :class:`~buildbot.buildslave.BuildSlave` instance on which this step will run.
+        :param build: the :class:`~buildbot.worker.Worker` instance on which this step will run.
 
-        Similarly, this method is called with the build slave that will run this step.
-        The default implementation sets the :attr:`buildslave` attribute.
+        Similarly, this method is called with the worker that will run this step.
+        The default implementation sets the :attr:`worker` attribute.
 
-    .. py:attribute:: buildslave
+    .. py:attribute:: worker
 
-        The build slave that will run this step.
+        The worker that will run this step.
 
     .. py:attribute:: workdir
 
@@ -330,7 +330,7 @@ BuildStep
     The following methods are provided as utilities to subclasses.
     These methods should only be invoked after the step is started.
 
-    .. py:method:: slaveVersion(command, oldversion=None)
+    .. py:method:: workerVersion(command, oldversion=None)
 
         :param command: command to examine
         :type command: string
@@ -339,14 +339,14 @@ BuildStep
 
         Fetch the version of the named command, as specified on the slave.
         In practice, all commands on a slave have the same version, but passing ``command`` is still useful to ensure that the command is implemented on the slave.
-        If the command is not implemented on the slave, :meth:`slaveVersion` will return ``None``.
+        If the command is not implemented on the slave, :meth:`workerVersion` will return ``None``.
 
         Versions take the form ``x.y`` where ``x`` and ``y`` are integers, and are compared as expected for version numbers.
 
-        Buildbot versions older than 0.5.0 did not support version queries; in this case, :meth:`slaveVersion` will return ``oldVersion``.
+        Buildbot versions older than 0.5.0 did not support version queries; in this case, :meth:`workerVersion` will return ``oldVersion``.
         Since such ancient versions of Buildbot are no longer in use, this functionality is largely vestigial.
 
-    .. py:method:: slaveVersionIsOlderThan(command, minversion)
+    .. py:method:: workerVersionIsOlderThan(command, minversion)
 
         :param command: command to examine
         :type command: string
@@ -360,13 +360,13 @@ BuildStep
         :param command: command to examine
         :type command: string
 
-        This method raise BuildSlaveTooOldError if ``command`` is not implemented on the slave
+        This method raise :py:class:`~buildbot.interfaces.WorkerTooOldError` if ``command`` is not implemented on the slave
 
-    .. py:method:: getSlaveName()
+    .. py:method:: getWorkerName()
 
         :returns: string
 
-        Get the name of the buildslave assigned to this step.
+        Get the name of the worker assigned to this step.
 
     Most steps exist to run commands.
     While the details of exactly how those commands are constructed are left to subclasses, the execution of those commands comes down to this method:
@@ -376,7 +376,7 @@ BuildStep
         :param command: :py:class:`~buildbot.process.remotecommand.RemoteCommand` instance
         :returns: Deferred
 
-        This method connects the given command to the step's buildslave and runs it, returning the Deferred from :meth:`~buildbot.process.remotecommand.RemoteCommand.run`.
+        This method connects the given command to the step's worker and runs it, returning the Deferred from :meth:`~buildbot.process.remotecommand.RemoteCommand.run`.
 
     The :class:`BuildStep` class provides methods to add log data to the step.
     Subclasses provide a great deal of user-configurable functionality on top of these methods.
@@ -593,7 +593,7 @@ This class can only be used in new-style steps.
         This uses Python's ``glob`` module.
         If the ``glob`` method fails, it aborts the step.
 
-    .. py:method:: getFileContentFromSlave(path, abandonOnFailure=False)
+    .. py:method:: getFileContentFromWorker(path, abandonOnFailure=False)
 
         :param path: path of the file to download from slave
         :returns: string via deferred (content of the file)

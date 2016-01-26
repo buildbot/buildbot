@@ -155,10 +155,10 @@ described in :ref:`developer-Reconfiguration`.
         :bb:cfg:`builders`.  Builders specified as dictionaries in the
         configuration file are converted to instances.
 
-    .. py:attribute:: slaves
+    .. py:attribute:: workers
 
-        The list of :py:class:`BuildSlave` instances from
-        :bb:cfg:`slaves`.
+        The list of :py:class:`Worker` instances from
+        :bb:cfg:`workers`.
 
     .. py:attribute:: change_sources
 
@@ -216,26 +216,26 @@ Builder Configuration
 
         The builder's factory.
 
-    .. py:attribute:: slavenames
+    .. py:attribute:: workernames
 
-        The builder's slave names (a list, regardless of whether the names were
-        specified with ``slavename`` or ``slavenames``).
+        The builder's worker names (a list, regardless of whether the names were
+        specified with ``workername`` or ``workernames``).
 
     .. py:attribute:: builddir
 
         The builder's builddir.
 
-    .. py:attribute:: slavebuilddir
+    .. py:attribute:: workerbuilddir
 
-        The builder's slave-side builddir.
+        The builder's worker-side builddir.
 
     .. py:attribute:: category
 
         The builder's category.
 
-    .. py:attribute:: nextSlave
+    .. py:attribute:: nextWorker
 
-        The builder's nextSlave callable.
+        The builder's nextWorker callable.
 
     .. py:attribute:: nextBuild
 
@@ -495,10 +495,10 @@ This method takes care of the basic slave attributes, including changing the PB
 registration if necessary.  Any subclasses that add configuration parameters
 should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and
 update those parameters.  As with Schedulers, because the
-:py:class:`~buildbot.buildslave.AbstractBuildSlave` instance is given directly
+:py:class:`~buildbot.worker.AbstractWorker` instance is given directly
 in the configuration, on reconfig instances must extract the configuration from
 a new instance.  The
-:py:meth:`~buildbot.buildslave.AbstractBuildSlave.findNewSlaveInstance` method
+:py:meth:`~buildbot.worker.AbstractWorker.findNewSlaveInstance` method
 can be used to find the new instance.
 
 User Managers

@@ -23,25 +23,25 @@ class FakeBotMaster(service.AsyncMultiService):
         self.setName("fake-botmaster")
         self.locks = {}
         self.builders = {}
-        self.buildsStartedForSlaves = []
+        self.buildsStartedForWorkers = []
 
     def getLockByID(self, lockid):
         if lockid not in self.locks:
             self.locks[lockid] = lockid.lockClass(lockid)
         # if the master.cfg file has changed maxCount= on the lock, the next
         # time a build is started, they'll get a new RealLock instance. Note
-        # that this requires that MasterLock and SlaveLock (marker) instances
+        # that this requires that MasterLock and WorkerLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
     def getLockFromLockAccess(self, access):
         return self.getLockByID(access.lockid)
 
-    def getBuildersForSlave(self, slavename):
-        return self.builders.get(slavename, [])
+    def getBuildersForWorker(self, workername):
+        return self.builders.get(workername, [])
 
-    def maybeStartBuildsForSlave(self, slavename):
-        self.buildsStartedForSlaves.append(slavename)
+    def maybeStartBuildsForWorker(self, workername):
+        self.buildsStartedForWorkers.append(workername)
 
-    def slaveLost(self, slave):
+    def workerLost(self, bot):
         pass

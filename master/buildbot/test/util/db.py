@@ -65,11 +65,30 @@ class RealDatabaseMixin(object):
     #  - cooperates better at runtime with thread-sensitive DBAPI's
 
     def __thd_clean_database(self, conn):
-        # drop the known tables, although sometimes this misses dependencies
-        try:
-            model.Model.metadata.drop_all(bind=conn, checkfirst=True)
-        except sa.exc.ProgrammingError:
-            pass
+        # TODO: Don't drop schema from model. Drop all introspected tables
+        # in the code below.
+
+        # Dropping schema from model is correct and working operation only if
+        # database schema is exactly corresponds to the model schema.
+
+        # If it is not (e.g. migration script failed or migration results in
+        # old version of model), then some tables outside model schema may be
+        # present, that will reference tables in the model schema.
+        # In this case either dropping model schema will fail (if database
+        # enforces referential integrity, e.g. PostgreSQL), or
+        # dropping left tables in the code below will fail (if database allows
+        # removing of tables on which other tables have references,
+        # e.g. SQLite).
+
+        # TODO: Is `meta.reflect()` below may miss some schema items?
+
+        if False:
+            # drop the known tables, although sometimes this misses
+            # dependencies
+            try:
+                model.Model.metadata.drop_all(bind=conn, checkfirst=True)
+            except sa.exc.ProgrammingError:
+                pass
 
         # see if we can find any other tables to drop
         try:

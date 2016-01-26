@@ -131,7 +131,7 @@ Now, create the slave:
 
 .. note:: If you decided to create this from another computer, you should replace ``localhost`` with the name of the computer where your master is running.
 
-The username (``example-slave``), and password (``pass``) should be the same as those in :file:`master/master.cfg`; verify this is the case by looking at the section for ``c['slaves']``:
+The username (``example-slave``), and password (``pass``) should be the same as those in :file:`master/master.cfg`; verify this is the case by looking at the section for ``c['workers']``:
 
 .. code-block:: bash
 

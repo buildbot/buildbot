@@ -667,18 +667,18 @@ buildsets
 buildslaves
 ~~~~~~~~~~~
 
-.. py:module:: buildbot.db.buildslaves
+.. py:module:: buildbot.db.workers
 
 .. index:: double: BuildSlaves; DB Connector Component
 
-.. py:class:: BuildslavesConnectorComponent
+.. py:class:: WorkersConnectorComponent
 
     This class handles Buildbot's notion of buildslaves.
     The buildslave information is returned as a dictionary:
 
     * ``id``
     * ``name`` - the name of the buildslave
-    * ``slaveinfo`` - buildslave information as dictionary
+    * ``workerinfo`` - buildslave information as dictionary
     * ``connected_to`` - a list of masters, by ID, to which this buildslave is currently connected.
       This list will typically contain only one master, but in unusual circumstances the same bulidslave may appear to be connected to multiple masters simultaneously.
     * ``configured_on`` - a list of master-builder pairs, on which this buildslave is configured.
@@ -687,7 +687,7 @@ buildslaves
     The buildslave information can be any JSON-able object.
     See :bb:rtype:`buildslave` for more detail.
 
-    .. py:method:: findBuildslaveId(name=name)
+    .. py:method:: findWorkerId(name=name)
 
         :param name: buildslave name
         :type name: 50-character identifier
@@ -696,7 +696,7 @@ buildslaves
         Get the ID for a buildslave, adding a new buildslave to the database if necessary.
         The slave information for a new buildslave is initialized to an empty dictionary.
 
-    .. py:method:: getBuildslaves(masterid=None, builderid=None)
+    .. py:method:: getWorkers(masterid=None, builderid=None)
 
         :param integer masterid: limit to slaves configured on this master
         :param integer builderid: limit to slaves configured on this builder
@@ -707,7 +707,7 @@ buildslaves
         The ``configured_on`` results are limited by the filtering parameters as well.
         The ``connected_to`` results are limited by the ``masterid`` parameter.
 
-    .. py:method:: getBuildslave(slaveid=None, name=None, masterid=None, builderid=None)
+    .. py:method:: getWorker(slaveid=None, name=None, masterid=None, builderid=None)
 
         :param string name: the name of the buildslave to retrieve
         :param integer buildslaveid: the ID of the buildslave to retrieve
@@ -716,20 +716,20 @@ buildslaves
         :returns: info dictionary or None, via Deferred
 
         Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
-        The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getBuildslaves`.
+        The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getWorkers`.
 
-    .. py:method:: buildslaveConnected(buildslaveid, masterid, slaveinfo)
+    .. py:method:: workerConnected(buildslaveid, masterid, workerinfo)
 
         :param integer buildslaveid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it connected
-        :param slaveinfo: the new buildslave information dictionary
-        :type slaveinfo: dict
+        :param workerinfo: the new buildslave information dictionary
+        :type workerinfo: dict
         :returns: Deferred
 
         Record the given buildslave as attached to the given master, and update its cached slave information.
         The supplied information completely replaces any existing information.
 
-    .. py:method:: buildslaveDisconnected(buildslaveid, masterid)
+    .. py:method:: workerDisconnected(buildslaveid, masterid)
 
         :param integer buildslaveid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it connected
@@ -737,7 +737,7 @@ buildslaves
 
         Record the given buildslave as no longer attached to the given master.
 
-    .. py:method:: buildslaveConfigured(buildslaveid, masterid, builderids)
+    .. py:method:: workerConfigured(buildslaveid, masterid, builderids)
 
         :param integer buildslaveid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it configured
@@ -748,7 +748,7 @@ buildslaves
         This method will also remove any other builder that were configured previously for same (slave, master) combination.
 
 
-    .. py:method:: deconfigureAllBuidslavesForMaster(masterid)
+    .. py:method:: deconfigureAllWorkersForMaster(masterid)
 
         :param integer masterid: the ID of the master to which it configured
         :returns: Deferred
@@ -1855,3 +1855,52 @@ id.
 
 If this weakness has a significant performance impact, it would be acceptable to
 conditionalize use of the subquery on the database dialect.
+
+Testing migrations with real databases
+--------------------------------------
+
+By default Buildbot test suite uses SQLite database for testings database
+migrations.
+To use other database set ``BUILDBOT_TEST_DB_URL`` environment variable to
+value in `SQLAlchemy database URL specification
+<http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls>`_.
+
+
+Run databases in Docker
+~~~~~~~~~~~~~~~~~~~~~~~
+
+`Docker <https://www.docker.com/>`_ allows to easily install and configure
+different databases locally in containers.
+
+To run tests with PostgreSQL:
+
+.. code-block:: bash
+
+   # Install psycopg.
+   pip install psycopg2
+   # Start container with PostgreSQL 9.5.
+   # It will listen on port 15432 on localhost.
+   sudo docker run --name bb-test-postgres -e POSTGRES_PASSWORD=password \
+       -p 127.0.0.1:15432:5432 -d postgres:9.5
+   # Start interesting tests
+   BUILDBOT_TEST_DB_URL=postgresql://postgres:password@localhost:15432/postgres \
+       trial buildbot.test
+
+To run tests with MySQL:
+
+.. code-block:: bash
+
+   # Install MySQL-python.
+   pip install MySQL-python
+   # Start container with MySQL 5.5.
+   # It will listen on port 13306 on localhost.
+   sudo docker run --name bb-test-mysql -e MYSQL_ROOT_PASSWORD=password \
+       -p 127.0.0.1:13306:3306 -d mysql:5.5
+   # Start interesting tests
+   BUILDBOT_TEST_DB_URL=mysql+mysqldb://root:password@127.0.0.1:13306/mysql \
+       trial buildbot.test
+
+.. note::
+
+   Currently Buildbot doesn't work with MySQL 5.7 Docker image, see issue
+   :bug:`3421`.

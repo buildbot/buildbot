@@ -10,6 +10,7 @@ Buildbot Manual
    installation/index
    concepts
    configuration
+   worker-transition
    customization
    new-style-steps
    cmdline

@@ -632,11 +632,11 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
-    def test_mode_incremental_oldslave(self):
+    def test_mode_incremental_oldworker(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='incremental'))
-        self.step.build.getSlaveCommandVersion = lambda cmd, oldversion: "2.15"
+        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1397,11 +1397,11 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectProperty('got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', 'Git')
         return self.runStep()
 
-    def test_mode_incremental_no_existing_repo_oldslave(self):
+    def test_mode_incremental_no_existing_repo_oldworker(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='incremental'))
-        self.step.build.getSlaveCommandVersion = lambda cmd, oldversion: "2.15"
+        self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -2246,7 +2246,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_slave_connection_lost(self):
+    def test_worker_connection_lost(self):
         self.setupStep(
             git.Git(repourl='http://github.com/buildbot/buildbot.git',
                     mode='full', method='clean'))

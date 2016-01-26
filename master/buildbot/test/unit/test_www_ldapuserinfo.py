@@ -98,10 +98,10 @@ class LdapUserInfo(unittest.TestCase):
     @defer.inlineCallbacks
     def test_updateUserInfoGroups(self):
         self.makeSearchSideEffect([[("cn", {"accountFullName": "me too",
-                                  "accountEmail": "mee@too"})],
-                         [("cn", {"groupName": ["group"]}),
-                          ("cn", {"groupName": ["group2"]})
-                          ], []])
+                                            "accountEmail": "mee@too"})],
+                                   [("cn", {"groupName": ["group"]}),
+                                    ("cn", {"groupName": ["group2"]})
+                                    ], []])
         res = yield self.userInfoProvider.getUserInfo("me")
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})

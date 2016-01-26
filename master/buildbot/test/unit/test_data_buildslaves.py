@@ -15,7 +15,7 @@
 
 import mock
 
-from buildbot.data import buildslaves
+from buildbot.data import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -32,21 +32,21 @@ testData = [
     fakedb.BuilderMaster(id=4014, builderid=40, masterid=14),
     fakedb.BuilderMaster(id=4113, builderid=41, masterid=13),
 
-    fakedb.Buildslave(id=1, name=u'linux', info={}),
-    fakedb.ConfiguredBuildslave(id=14013,
-                                buildslaveid=1, buildermasterid=4013),
-    fakedb.ConfiguredBuildslave(id=14014,
-                                buildslaveid=1, buildermasterid=4014),
-    fakedb.ConnectedBuildslave(id=113, masterid=13, buildslaveid=1),
+    fakedb.Worker(id=1, name=u'linux', info={}),
+    fakedb.ConfiguredWorker(id=14013,
+                            workerid=1, buildermasterid=4013),
+    fakedb.ConfiguredWorker(id=14014,
+                            workerid=1, buildermasterid=4014),
+    fakedb.ConnectedWorker(id=113, masterid=13, workerid=1),
 
-    fakedb.Buildslave(id=2, name=u'windows', info={"a": "b"}),
-    fakedb.ConfiguredBuildslave(id=24013,
-                                buildslaveid=2, buildermasterid=4013),
-    fakedb.ConfiguredBuildslave(id=24014,
-                                buildslaveid=2, buildermasterid=4014),
-    fakedb.ConfiguredBuildslave(id=24113,
-                                buildslaveid=2, buildermasterid=4113),
-    fakedb.ConnectedBuildslave(id=214, masterid=14, buildslaveid=2),
+    fakedb.Worker(id=2, name=u'windows', info={"a": "b"}),
+    fakedb.ConfiguredWorker(id=24013,
+                            workerid=2, buildermasterid=4013),
+    fakedb.ConfiguredWorker(id=24014,
+                            workerid=2, buildermasterid=4014),
+    fakedb.ConfiguredWorker(id=24113,
+                            workerid=2, buildermasterid=4113),
+    fakedb.ConnectedWorker(id=214, masterid=14, workerid=2),
 ]
 
 
@@ -63,9 +63,9 @@ def _filt(bs, builderid, masterid):
 
 def bs1(builderid=None, masterid=None):
     return _filt({
-        'buildslaveid': 1,
+        'workerid': 1,
         'name': 'linux',
-        'slaveinfo': {},
+        'workerinfo': {},
         'connected_to': [
             {'masterid': 13},
         ],
@@ -78,9 +78,9 @@ def bs1(builderid=None, masterid=None):
 
 def bs2(builderid=None, masterid=None):
     return _filt({
-        'buildslaveid': 2,
+        'workerid': 2,
         'name': 'windows',
-        'slaveinfo': {'a': 'b'},
+        'workerinfo': {'a': 'b'},
         'connected_to': [
             {'masterid': 14},
         ],
@@ -92,10 +92,10 @@ def bs2(builderid=None, masterid=None):
     }, builderid, masterid)
 
 
-class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = buildslaves.BuildslaveEndpoint
-    resourceTypeClass = buildslaves.Buildslave
+    endpointClass = workers.WorkerEndpoint
+    resourceTypeClass = workers.Worker
 
     def setUp(self):
         self.setUpEndpoint()
@@ -105,7 +105,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get_existing(self):
-        d = self.callGet(('buildslaves', 2))
+        d = self.callGet(('workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -115,7 +115,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_name(self):
-        d = self.callGet(('buildslaves', 'linux'))
+        d = self.callGet(('workers', 'linux'))
 
         @d.addCallback
         def check(buildslave):
@@ -125,7 +125,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_masterid(self):
-        d = self.callGet(('masters', 14, 'buildslaves', 2))
+        d = self.callGet(('masters', 14, 'workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -135,7 +135,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_builderid(self):
-        d = self.callGet(('builders', 40, 'buildslaves', 2))
+        d = self.callGet(('builders', 40, 'workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -145,7 +145,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_existing_masterid_builderid(self):
-        d = self.callGet(('masters', 13, 'builders', 40, 'buildslaves', 2))
+        d = self.callGet(('masters', 13, 'builders', 40, 'workers', 2))
 
         @d.addCallback
         def check(buildslave):
@@ -155,7 +155,7 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_missing(self):
-        d = self.callGet(('buildslaves', 99))
+        d = self.callGet(('workers', 99))
 
         @d.addCallback
         def check(buildslave):
@@ -163,10 +163,10 @@ class BuildslaveEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
 
-class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
+class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
-    endpointClass = buildslaves.BuildslavesEndpoint
-    resourceTypeClass = buildslaves.Buildslave
+    endpointClass = workers.WorkersEndpoint
+    resourceTypeClass = workers.Worker
 
     def setUp(self):
         self.setUpEndpoint()
@@ -176,7 +176,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.tearDownEndpoint()
 
     def test_get(self):
-        d = self.callGet(('buildslaves',))
+        d = self.callGet(('workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -186,7 +186,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid(self):
-        d = self.callGet(('masters', '13', 'buildslaves',))
+        d = self.callGet(('masters', '13', 'workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -197,7 +197,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_builderid(self):
-        d = self.callGet(('builders', '41', 'buildslaves',))
+        d = self.callGet(('builders', '41', 'workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -208,7 +208,7 @@ class BuildslavesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     def test_get_masterid_builderid(self):
-        d = self.callGet(('masters', '13', 'builders', '41', 'buildslaves',))
+        d = self.callGet(('masters', '13', 'builders', '41', 'workers',))
 
         @d.addCallback
         def check(buildslaves):
@@ -224,7 +224,7 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantMq=True, wantDb=True, wantData=True)
-        self.rtype = buildslaves.Buildslave(self.master)
+        self.rtype = workers.Worker(self.master)
         return self.master.db.insertTestData([
             fakedb.Master(id=13),
             fakedb.Master(id=14),
@@ -232,25 +232,25 @@ class Buildslave(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_signature_findBuildslaveId(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.findBuildslaveId,  # fake
-            self.rtype.findBuildslaveId)  # real
+            self.master.data.updates.findWorkerId,  # fake
+            self.rtype.findWorkerId)  # real
         def findBuildslaveId(self, name):
             pass
 
     def test_signature_buildslaveConfigured(self):
         @self.assertArgSpecMatches(
-            self.master.data.updates.buildslaveConfigured,  # fake
-            self.rtype.buildslaveConfigured)  # real
-        def buildslaveConfigured(self, buildslaveid, masterid, builderids):
+            self.master.data.updates.workerConfigured,  # fake
+            self.rtype.workerConfigured)  # real
+        def buildslaveConfigured(self, workerid, masterid, builderids):
             pass
 
     def test_findBuildslaveId(self):
         # this just passes through to the db method, so test that
         rv = defer.succeed(None)
-        self.master.db.buildslaves.findBuildslaveId = \
+        self.master.db.workers.findWorkerId = \
             mock.Mock(return_value=rv)
-        self.assertIdentical(self.rtype.findBuildslaveId(u'foo'), rv)
+        self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
     def test_findBuildslaveId_not_id(self):
-        self.assertRaises(ValueError, self.rtype.findBuildslaveId, 'foo')
-        self.assertRaises(ValueError, self.rtype.findBuildslaveId, u'123/foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, 'foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')

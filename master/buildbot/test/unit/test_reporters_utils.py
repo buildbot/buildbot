@@ -18,10 +18,10 @@ import textwrap
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.reporters import utils
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
+from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 
@@ -40,20 +40,20 @@ class TestDataUtils(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=9, buildsetid=97, builderid=80),
             fakedb.BuildRequest(id=10, buildsetid=97, builderid=80),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
             fakedb.BuildRequest(id=12, buildsetid=98, builderid=80),
-            fakedb.Build(id=18, number=0, builderid=80, buildrequestid=9, buildslaveid=13,
+            fakedb.Build(id=18, number=0, builderid=80, buildrequestid=9, workerid=13,
                          masterid=92, results=FAILURE),
-            fakedb.Build(id=19, number=1, builderid=80, buildrequestid=10, buildslaveid=13,
+            fakedb.Build(id=19, number=1, builderid=80, buildrequestid=10, workerid=13,
                          masterid=92, results=RETRY),
-            fakedb.Build(id=20, number=2, builderid=80, buildrequestid=11, buildslaveid=13,
+            fakedb.Build(id=20, number=2, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=SUCCESS),
-            fakedb.Build(id=21, number=3, builderid=80, buildrequestid=12, buildslaveid=13,
+            fakedb.Build(id=21, number=3, builderid=80, buildrequestid=12, workerid=13,
                          masterid=92, results=SUCCESS),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(id=234),
@@ -67,7 +67,7 @@ class TestDataUtils(unittest.TestCase):
         ])
         for _id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
                 fakedb.Step(id=100 + _id, buildid=_id, name="step1"),
                 fakedb.Step(id=200 + _id, buildid=_id, name="step2"),
@@ -95,7 +95,7 @@ class TestDataUtils(unittest.TestCase):
         build2 = res['builds'][1]
         buildset = res['buildset']
         self.assertEqual(build1['properties'], {u'reason': (u'because', u'fakedb'),
-                                                u'slavename': (u'sl', u'fakedb')})
+                                                u'workername': (u'sl', u'fakedb')})
         self.assertEqual(len(build1['steps']), 2)
         self.assertEqual(build1['buildid'], 20)
         self.assertEqual(build2['buildid'], 21)

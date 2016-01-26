@@ -20,13 +20,13 @@ import sys
 from buildbot import config
 from buildbot.config import ConfigErrors
 from buildbot.process import properties
-from buildbot.reporters import utils
-from buildbot.reporters.mail import MailNotifier
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import utils
+from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -52,11 +52,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=98, results=results, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
-            fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, buildslaveid=13,
+            fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, workerid=13,
                          masterid=92, results=results),
             fakedb.Step(id=50, buildid=20, number=5, name='make'),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
@@ -74,7 +74,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ])
         for _id in (20,):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="slavename", value="sl"),
+                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
             ])
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,

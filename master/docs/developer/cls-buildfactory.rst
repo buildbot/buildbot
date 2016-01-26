@@ -20,7 +20,7 @@ Each step can affect the build process in the following ways:
   :attr:`haltOnFailure` is useful for setup steps upon which the rest of the build depends: if the CVS checkout or :command:`./configure` process fails, there is no point in trying to compile or test the resulting tree.
 
 * If the step's :attr:`alwaysRun` attribute is ``True``, then it will always be run, regardless of if previous steps have failed.
-  This is useful for cleanup steps that should always be run to return the build directory or build slave into a good state.
+  This is useful for cleanup steps that should always be run to return the build directory or worker into a good state.
 
 * If the :attr:`flunkOnFailure` or :attr:`flunkOnWarnings` flag is set, then a result of ``FAILURE`` or ``WARNINGS`` will mark the build as a whole as ``FAILED``.
   However, the remaining steps will still be executed.

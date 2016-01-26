@@ -104,7 +104,7 @@ class FakeBot(pb.Avatar):
 
     def runCommand(self, cmd):
         cmd = RemoteShellCommand(workdir='.', command=cmd)
-        cmd.buildslave = self
+        cmd.worker = self
         cmd.logs['stdio'] = FakeLog()
         cmd._closeWhenFinished['stdio'] = False
         d = cmd.run(self, self.builder)

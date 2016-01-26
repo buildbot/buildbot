@@ -95,7 +95,7 @@ All update methods are available as attributes of ``master.data.updates``.
 
 .. py:class:: buildbot.data.builds.Build
 
-    .. py:method:: newBuild(builderid, buildrequestid, buildslaveid)
+    .. py:method:: newBuild(builderid, buildrequestid, workerid)
 
         :param integer builderid: builder performing this build
         :param integer buildrequstid: build request being built

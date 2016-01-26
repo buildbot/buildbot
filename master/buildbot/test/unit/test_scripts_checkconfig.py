@@ -78,13 +78,13 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 from buildbot.process.factory import BuildFactory
                 c['builders'] = [
                     BuilderConfig('testbuilder', factory=BuildFactory(),
-                                  slavename='sl'),
+                                  workername='worker'),
                 ]
-                from buildbot.buildslave import BuildSlave
-                c['slaves'] = [
-                    BuildSlave('sl', 'pass'),
+                from buildbot.worker import Worker
+                c['workers'] = [
+                    Worker('worker', 'pass'),
                 ]
-                c['slavePortnum'] = 9989
+                c['protocols'] = {'pb': {'port': 9989}}
                 """)
         self.do_test_load(config=config,
                           stdout_re=re.compile('Config file is good!'))
@@ -101,12 +101,12 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                               'No module named test_scripts_checkconfig_does_not_exist'))
         self.flushLoggedErrors()
 
-    def test_failure_no_slaves(self):
+    def test_failure_no_workers(self):
         config = textwrap.dedent("""\
                 BuildmasterConfig={}
                 """)
         self.do_test_load(config=config,
-                          stderr_re=re.compile('no slaves'))
+                          stderr_re=re.compile('no workers'))
         self.flushLoggedErrors()
 
     def test_success_imports(self):
@@ -115,8 +115,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
-                c['slaves'] = []
-                c['slavePortnum'] = port
+                c['workers'] = []
+                c['protocols'] = {'pb': {'port': port}}
                 """)
         other_files = {'othermodule.py': 'port = 9989'}
         self.do_test_load(config=config, other_files=other_files)
@@ -127,8 +127,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 c = BuildmasterConfig = {}
                 c['schedulers'] = []
                 c['builders'] = []
-                c['slaves'] = []
-                c['slavePortnum'] = port
+                c['workers'] = []
+                c['protocols'] = {'pb': {'port': 9989}}
                 """)
         other_files = {
             ('otherpackage', '__init__.py'): '',

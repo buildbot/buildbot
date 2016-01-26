@@ -18,8 +18,8 @@ However there is a much simpler way to use it, so in the configuration file, its
 
     from buildbot.plugins import util
     c['builders'] = [
-        util.BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f_quick),
-        util.BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
+        util.BuilderConfig(name='quick', workernames=['bot1', 'bot2'], factory=f_quick),
+        util.BuilderConfig(name='thorough', workername='bot1', factory=f_thorough),
     ]
 
 ``BuilderConfig`` takes the following keyword arguments:
@@ -27,13 +27,13 @@ However there is a much simpler way to use it, so in the configuration file, its
 ``name``
     This specifies the Builder's name, which is used in status reports.
 
-``slavename``
+``workername``
 
-``slavenames``
+``workernames``
     These arguments specify the buildslave or buildslaves that will be used by this Builder.
-    All slaves names must appear in the :bb:cfg:`slaves` configuration parameter.
+    All slaves names must appear in the :bb:cfg:`workers` configuration parameter.
     Each buildslave can accommodate multiple builders.
-    The ``slavenames`` parameter can be a list of names, while ``slavename`` can specify only one slave.
+    The ``workernames`` parameter can be a list of names, while ``workername`` can specify only one slave.
 
 ``factory``
     This is a :class:`buildbot.process.factory.BuildFactory` instance which controls how the build is performed by defining the steps in the build.
@@ -47,11 +47,11 @@ Other optional keys may be set on each ``BuilderConfig``:
     If not set, this parameter defaults to the builder name, with some characters escaped.
     Each builder must have a unique build directory.
 
-``slavebuilddir``
+``workerbuilddir``
     Specifies the name of a subdirectory (under the slave's configured base directory) in which everything related to this builder will be placed on the buildslave.
     This is where checkouts, compiles, and tests are run.
     If not set, defaults to ``builddir``.
-    If a slave is connected to multiple builders that share the same ``slavebuilddir``, make sure the slave is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
+    If a slave is connected to multiple builders that share the same ``workerbuilddir``, make sure the slave is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
 
 ``tags``
     If provided, this is a list of strings that identifies tags for the builder.
@@ -60,11 +60,11 @@ Other optional keys may be set on each ``BuilderConfig``:
     You can tag these new builders with a ``test`` tag, make your main status clients ignore them, and have only private status clients pick them up.
     As soon as they work, you can move them over to the active tag.
 
-``nextSlave``
+``nextWorker``
      If provided, this is a function that controls which slave will be assigned future jobs.
-     The function is passed three arguments, the :class:`Builder` object which is assigning a new job, a list of :class:`SlaveBuilder` objects and the :class:`BuildRequest`.
-     The function should return one of the :class:`SlaveBuilder` objects, or ``None`` if none of the available slaves should be used.
-     As an example, for each ``slave`` in the list, ``slave.slave`` will be a :class:`BuildSlave` object, and ``slave.slave.slavename`` is the slave's name.
+     The function is passed three arguments, the :class:`Builder` object which is assigning a new job, a list of :class:`WorkerForBuilder` objects and the :class:`BuildRequest`.
+     The function should return one of the :class:`WorkerForBuilder` objects, or ``None`` if none of the available slaves should be used.
+     As an example, for each ``slave`` in the list, ``slave.slave`` will be a :class:`Worker` object, and ``slave.slave.slavename`` is the slave's name.
      The function can optionally return a Deferred, which should fire with the same results.
 
 ``nextBuild``
@@ -75,7 +75,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
 ``canStartBuild``
     If provided, this is a function that can veto whether a particular buildslave should be used for a given build request.
-    The function is passed three arguments: the :class:`Builder`, a :class:`BuildSlave`, and a :class:`BuildRequest`.
+    The function is passed three arguments: the :class:`Builder`, a :class:`Worker`, and a :class:`BuildRequest`.
     The function should return ``True`` if the combination is acceptable, or ``False`` otherwise.
     This function can optionally return a Deferred which should fire with the same results.
 
@@ -99,7 +99,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
         c['builders'] = [
           BuilderConfig(name='test', factory=f,
-                slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
+                workernames=['slave1', 'slave2', 'slave3', 'slave4'],
                 env={'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}),
         ]
 
@@ -166,5 +166,5 @@ Such a function can be provided to the BuilderConfig as follows::
     c['builders'] = [
         BuilderConfig(name='test', factory=f,
             nextBuild=pickNextBuild,
-            slavenames=['slave1', 'slave2', 'slave3', 'slave4']),
+            workernames=['slave1', 'slave2', 'slave3', 'slave4']),
     ]

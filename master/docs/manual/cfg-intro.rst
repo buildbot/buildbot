@@ -96,7 +96,7 @@ If you have errors in your configuration file, checkconfig will let you know:
 
     % buildbot checkconfig master.cfg
     Configuration Errors:
-    c['slaves'] must be a list of BuildSlave instances
+    c['workers'] must be a list of BuildSlave instances
     no slaves are configured
     builder 'smoketest' uses unknown slaves 'linux-002'
 

@@ -151,8 +151,8 @@ setup_args = {
 
     'packages': [
         "buildbot",
-        "buildbot.buildslave",
-        "buildbot.buildslave.protocols",
+        "buildbot.worker",
+        "buildbot.worker.protocols",
         "buildbot.changes",
         "buildbot.clients",
         "buildbot.data",
@@ -234,13 +234,13 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
-        ('buildbot.buildslave', [
-            ('buildbot.buildslave.base', ['BuildSlave']),
-            ('buildbot.buildslave.ec2', ['EC2LatentBuildSlave']),
-            ('buildbot.buildslave.libvirt', ['LibVirtSlave']),
-            ('buildbot.buildslave.openstack', ['OpenStackLatentBuildSlave']),
-            ('buildbot.buildslave.docker', ['DockerLatentBuildSlave']),
-            ('buildbot.buildslave.local', ['LocalBuildSlave']),
+        ('buildbot.worker', [
+            ('buildbot.worker.base', ['Worker']),
+            ('buildbot.worker.ec2', ['EC2LatentWorker']),
+            ('buildbot.worker.libvirt', ['LibVirtWorker']),
+            ('buildbot.worker.openstack', ['OpenStackLatentWorker']),
+            ('buildbot.worker.docker', ['DockerLatentWorker']),
+            ('buildbot.worker.local', ['LocalWorker']),
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
@@ -302,7 +302,7 @@ setup_args = {
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though
-            ('buildbot.buildslave.libvirt', ['Connection']),
+            ('buildbot.worker.libvirt', ['Connection']),
             ('buildbot.changes.filter', ['ChangeFilter']),
             ('buildbot.changes.gerritchangesource', ['GerritChangeFilter']),
             ('buildbot.changes.svnpoller', [
@@ -311,10 +311,19 @@ setup_args = {
                 ('svn.split_file_branches', 'split_file_branches'),
                 ('svn.split_file_alwaystrunk', 'split_file_alwaystrunk')]),
             ('buildbot.config', ['BuilderConfig']),
-            ('buildbot.locks', ['MasterLock', 'SlaveLock']),
+            ('buildbot.locks', [
+                'MasterLock',
+                'WorkerLock',
+                # deprecated, use WorkerLock
+                'SlaveLock'
+            ]),
             ('buildbot.manhole', [
                 'AuthorizedKeysManhole', 'PasswordManhole', 'TelnetManhole']),
-            ('buildbot.process.builder', ['enforceChosenSlave']),
+            ('buildbot.process.builder', [
+                'enforceChosenWorker',
+                # deprecated, use enforceChosenWorker
+                'enforceChosenSlave',
+            ]),
             ('buildbot.process.factory', [
                 'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
                 'BasicBuildFactory', 'QuickBuildFactory', 'BasicSVN']),
@@ -327,10 +336,14 @@ setup_args = {
             ('buildbot.revlinks', ['RevlinkMatch']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
-                'BuildslaveChoiceParameter', 'ChoiceStringParameter',
+                'ChoiceStringParameter',
                 'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
-                'StringParameter', 'TextParameter', 'UserNameParameter']),
+                'StringParameter', 'TextParameter', 'UserNameParameter',
+                'WorkerChoiceParameter',
+                # deprecated, use WorkerChoiceParameter
+                'BuildslaveChoiceParameter',
+                ]),
             ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),

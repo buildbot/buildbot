@@ -46,7 +46,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77, name='bbb'),
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=77,
                                 priority=7, submitted_at=self.SUBMITTED_AT_EPOCH,
@@ -102,7 +102,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Builder(id=78, name='ccc'),
             fakedb.Builder(id=79, name='ddd'),
             fakedb.Master(id=fakedb.FakeBuildRequestsComponent.MASTER_ID),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=77,
                                 priority=7, submitted_at=self.SUBMITTED_AT_EPOCH,
@@ -573,7 +573,7 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.master.db.insertTestData([
             fakedb.Builder(id=77, name='builder'),
             fakedb.Master(id=88),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.SourceStamp(id=234),
             fakedb.BuildsetSourceStamp(buildsetid=8822, sourcestampid=234),

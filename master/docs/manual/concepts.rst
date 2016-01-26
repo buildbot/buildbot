@@ -94,7 +94,7 @@ Branches are expressed as subdirectories of the main central repository, which m
 Nor does it really have branches.
 In Darcs, each working directory is also a repository, and there are operations to push and pull patches from one of these ``repositories`` to another.
 For the Buildbot's purposes, all you need to do is specify the URL of a repository that you want to build from.
-The build slave will then pull the latest patches from that repository and build them.
+The worker will then pull the latest patches from that repository and build them.
 Multiple branches are implemented by using multiple repositories (possibly living on the same server).
 
 Builders which use Darcs therefore have a static ``repourl`` which specifies the location of the repository.
@@ -351,7 +351,7 @@ A merge of buildrequests is performed per codebase, thus on changes having the s
 Builders
 --------
 
-The Buildmaster runs a collection of :class:`Builder`\s, each of which handles a single type of build (e.g. full versus quick), on one or more build slaves.
+The Buildmaster runs a collection of :class:`Builder`\s, each of which handles a single type of build (e.g. full versus quick), on one or more workers.
 :class:`Builder`\s serve as a kind of queue for a particular type of build.
 Each :class:`Builder` gets a separate column in the waterfall display.
 In general, each :class:`Builder` runs independently (although various kinds of interlocks can cause one :class:`Builder` to have an effect on another).
@@ -374,7 +374,7 @@ A builder also has a :class:`BuildFactory`, which is responsible for creating ne
 Build Slaves
 ------------
 
-Each builder is associated with one of more :class:`BuildSlave`\s.
+Each builder is associated with one of more :class:`Worker`\s.
 A builder which is used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should naturally be associated with a Mac buildslave.
 
 If multiple buildslaves are available for any given builder, you will have some measure of redundancy: in case one slave goes offline, the others can still keep the :class:`Builder` working.

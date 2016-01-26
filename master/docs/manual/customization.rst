@@ -29,7 +29,7 @@ For example, the following will generate a builder for each of a range of suppor
         c['builders'].append(util.BuilderConfig(
                 name="test-%s" % python,
                 factory=f,
-                slavenames=pytest_slaves))
+                workernames=pytest_slaves))
 
 .. _Collapse-Request-Functions:
 
@@ -358,7 +358,7 @@ Aside from the service methods, the other concerns in the previous section apply
 Writing a New Latent Buildslave Implementation
 ----------------------------------------------
 
-Writing a new latent buildslave should only require subclassing :class:`buildbot.buildslave.AbstractLatentBuildSlave` and implementing :meth:`start_instance` and :meth:`stop_instance`.
+Writing a new latent buildslave should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance`.
 
 ::
 
@@ -376,7 +376,7 @@ Writing a new latent buildslave should only require subclassing :class:`buildbot
         # Callback value is ignored.
         raise NotImplementedError
 
-See :class:`buildbot.buildslave.ec2.EC2LatentBuildSlave` for an example.
+See :class:`buildbot.worker.ec2.EC2LatentWorker` for an example.
 
 Custom Build Classes
 --------------------
@@ -420,7 +420,7 @@ Here is an example how you can achieve workdir-per-repo::
         build_factory.addStep(Git(mode="update"))
         # ...
         builders.append ({'name': 'mybuilder',
-                          'slavename': 'myslave',
+                          'workername': 'myslave',
                           'builddir': 'mybuilder',
                           'factory': build_factory})
 
@@ -598,7 +598,7 @@ This latter option makes it easy to save the results to a file and run :command:
 Writing Log Files
 ~~~~~~~~~~~~~~~~~
 
-Most commonly, logfiles come from commands run on the build slave.
+Most commonly, logfiles come from commands run on the worker.
 Internally, these are configured by supplying the :class:`~buildbot.process.remotecommand.RemoteCommand` instance with log files via the :meth:`~buildbot.process.remoteCommand.RemoteCommand.useLog` method::
 
     @defer.inlineCallbacks
@@ -801,7 +801,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
 
     from buildbot.plugins import steps, util
-    from buildbot.interfaces import BuildSlaveTooOldError
+    from buildbot.interfaces import WorkerTooOldError
     import stat
 
     class MyBuildStep(steps.BuildStep):
@@ -812,8 +812,8 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
 
         def start(self):
             # make sure the slave knows about stat
-            slavever = (self.slaveVersion('stat'),
-                        self.slaveVersion('glob'))
+            slavever = (self.workerVersion('stat'),
+                        self.workerVersion('glob'))
             if not all(slavever):
                 raise BuildSlaveToOldError('need stat and glob')
 
