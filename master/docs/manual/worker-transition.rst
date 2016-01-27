@@ -1081,7 +1081,7 @@ Changed REST object keys:
    * - ``buildslaves``
      - ``workers``
 
-``data_module`` and ``base`` were updated accordingly.
+``data_module`` version bumped from ``1.2.0`` to ``2.0.0``.
 
 Web UI
 ------
