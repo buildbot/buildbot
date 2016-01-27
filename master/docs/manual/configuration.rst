@@ -16,7 +16,7 @@ The next section, :doc:`customization`, describes this approach, with frequent r
     cfg-global
     cfg-changesources
     cfg-schedulers
-    cfg-buildslaves
+    cfg-workers
     cfg-builders
     cfg-buildfactories
     cfg-properties

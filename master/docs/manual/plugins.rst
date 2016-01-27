@@ -21,7 +21,7 @@ allows to use a component of kind ``kind``.
 Available ``kind``\s are:
 
 ``buildslave``
-    workers, described in :doc:`cfg-buildslaves`
+    workers, described in :doc:`cfg-workers`
 
 ``changes``
     change source, described in :doc:`cfg-changesources`
