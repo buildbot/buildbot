@@ -176,7 +176,7 @@ As of time of writing, Buildbot supports the following latent workers:
    :maxdepth: 1
 
    cfg-buildslaves-ec2.rst
-   cfg-buildslaves-libvirt.rst
+   cfg-workers-libvirt.rst
    cfg-workers-openstack.rst
    cfg-workers-docker.rst
 
