@@ -22,10 +22,10 @@ define(function (require) {
             EXCEPTION: [4, "exception"],
             RETRY: [5, "retry"],
             CANCELED: [6, "exception"],
-            NOT_REBUILT: [7, "not_rebuilt"],
-            DEPENDENCY_FAILURE: [8, "dependency_failure"],
+            NOT_REBUILT: [7, "not-rebuilt"],
+            DEPENDENCY_FAILURE: [8, "dependency-failure"],
             RUNNING: [9, "running"],
-            NOT_STARTED: [10, "not_started"],
+            NOT_STARTED: [10, "not-started"],
             None: ""
         },
         settings = {};

@@ -323,7 +323,7 @@ class StatusResourceBuild(HtmlResource):
                     step['css_class'] = "running"
                     step['time_to_run'] = "running"
             else:
-                step['css_class'] = "not_started"
+                step['css_class'] = "not-started"
                 step['time_to_run'] = ""
 
             cxt['steps'].append(step)

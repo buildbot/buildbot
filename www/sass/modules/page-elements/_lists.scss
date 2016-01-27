@@ -41,7 +41,7 @@
 	li {
 	   	margin-bottom: 14px;
     	padding-bottom: 15px;
-    	&.status-not_started {
+    	&.status-not-started {
     		.step-head,
     		.index-count,
     		span {
@@ -147,7 +147,7 @@ a.no-artifacts {
 		margin-right: 4px;		
 		width: 14px;	    	
 		//border: 1px solid #B4B7B0;
-		&.not_rebuilt {
+		&.not-rebuilt {
 			border: 1px solid #B4B7B0;
 		}
 
