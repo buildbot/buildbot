@@ -27,8 +27,7 @@
                 <div class="clearfix"></div>
                 {% for artifact in suite.artifacts %}
                     <div class="artifact">
-                    {% set artifact = artifact.strip('/') %}
-                        <a target="_blank" href="{{ path_to_artifacts + artifact }}">{{ artifact }}</a>
+                        <a target="_blank" href="{{ join(path_to_artifacts, artifact) }}">{{ artifact }}</a>
                     </div>
                 {% endfor %}
             </div>
@@ -81,9 +80,8 @@
                                 <div class="test-image-list">
                                     {% for image in test.artifacts %}
                                         <div class="test-image">
-                                        {% set image = image.strip('/') %}
                                             <div class="test-image-title">{{ image }}</div>
-                                            <img src="{{ path_to_artifacts + image }}" alt="Description"/>
+                                            <img src="{{ join(path_to_artifacts, image) }}" alt="Description"/>
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -111,8 +109,7 @@
                         <td class="txt-align-left first-child ">
                             {% for artifact in test.artifacts %}
                                 <div class="artifact">
-                                {% set artifact = artifact.strip('/') %}
-                                    <a target="_blank" href="{{ path_to_artifacts + artifact }}">{{ artifact }}</a>
+                                    <a target="_blank" href="{{ join(path_to_artifacts, artifact) }}">{{ artifact }}</a>
                                 </div>
                             {% endfor %}
                         </td>
