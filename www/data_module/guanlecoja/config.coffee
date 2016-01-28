@@ -22,6 +22,7 @@ gulp.task "publish", ['default'], ->
         dependencies: {}
     cd "buildbot-data-js"
     exec("git reset --hard origin/master")
+    rm "-rf", "dist"
     cp "-rf", "../dist", "."
     cp "-rf", "../README.md", "."
     JSON.stringify(bower_json, null, "  ").to("bower.json")
