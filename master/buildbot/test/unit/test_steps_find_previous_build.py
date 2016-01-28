@@ -6,6 +6,7 @@ from buildbot.test.util import steps
 from buildbot.steps import artifact
 from buildbot.test.fake import fakemaster, fakedb
 from buildbot.status.results import SUCCESS, SKIPPED
+from buildbot.test.util import config
 
 from buildbot.test.fake.remotecommand import ExpectShell
 
@@ -17,7 +18,7 @@ class FakeSourceStamp(object):
     def asDict(self, includePatch = True):
         return self.__dict__.copy()
 
-class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
+class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -85,6 +86,16 @@ class TestFindPreviousSuccessfulBuild(steps.BuildStepMixin, unittest.TestCase):
                                                               revision=12, sourcestampsetid=1)])
 
     # tests FindPreviousSuccessfulBuild
+
+    def test_previous_build_not_invalid_ResumeSlavepoolParmeter(self):
+        self.assertRaisesConfigError("resumeSlavepool='zzstartSlavenames', "
+                                     "this parameter must be equals to 'startSlavenames' or 'slavenames'",
+                                     lambda: artifact.FindPreviousSuccessfulBuild(resumeSlavepool="zzstartSlavenames"))
+
+    def test_previous_build_valid_ResumeSlavepoolParmeter(self):
+        self.setupStep(artifact.FindPreviousSuccessfulBuild(resumeSlavepool='startSlavenames'))
+        self.expectOutcome(result=SUCCESS, status_text=['Running build (previous sucessful build not found).'])
+        return self.runStep()
 
     def test_previous_build_not_found(self):
         self.setupStep(artifact.FindPreviousSuccessfulBuild())
