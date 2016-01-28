@@ -8,6 +8,7 @@ import mock
 from buildbot.db import buildrequests
 from buildbot.db.buildrequests import Queue
 from buildbot.test.util import connector_component
+from buildbot.status.results import RESUME
 
 
 class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMixin, unittest.TestCase):
@@ -45,12 +46,14 @@ class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMi
             table_names=['buildrequests', 'buildrequest_claims', 'buildsets', 'buildset_properties'])
 
         self.db.buildrequests = buildrequests.BuildRequestsConnectorComponent(self.db)
+        self.db.master.getObjectId = lambda : defer.succeed(self.MASTER_ID)
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
         self.master = self.botmaster.master = mock.Mock(name='master')
         self.master.db = self.db
         self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
         self.brd.startService()
+        self.MASTER_ID = 1
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -59,17 +62,40 @@ class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMi
             yield self.brd.stopService()
 
     @defer.inlineCallbacks
-    def test_getNextPriorityBuilder(self):
+    def test_getNextPriorityBuilderUnclaimedQueue(self):
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
                                  priority=20, submitted_at=1449578391),
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
                                  priority=50, submitted_at=1450171039),
-                 # add a build waiting for resume
-                 ]
-        yield self.insertTestData(breqs)
-        self.createBuilder(name='bldr2', slavenames={'slave-01': 1}, startSlavenames={'slave-02': 1})
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                     priority=100,submitted_at=1449578391,
+                                     results=RESUME, complete=0)]
 
+        breqsclaims = [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1449578391)]
+
+        yield self.insertTestData(breqs + breqsclaims)
+
+        self.createBuilder(name='bldr2', slavenames={'slave-01': False}, startSlavenames={'slave-02': True})
         builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+
+        self.assertEquals(builder.name, 'bldr2')
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderResumeQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                 priority=20, submitted_at=1449578391, results=RESUME, complete=0),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                 priority=50, submitted_at=1450171039, results=RESUME, complete=0),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                     priority=100,submitted_at=1449578391)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
+                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+
+        yield self.insertTestData(breqs + breqsclaims)
+
+        self.createBuilder(name='bldr2', slavenames={'slave-01': True}, startSlavenames={'slave-02': False})
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
 
         self.assertEquals(builder.name, 'bldr2')
 
