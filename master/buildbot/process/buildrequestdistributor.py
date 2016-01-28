@@ -1046,7 +1046,7 @@ class KatanaBuildRequestDistributor(service.Service):
                 return Slavepool.slavenames
 
             slavepool = getSlavepool()
-            availableSlaves = bldr.getAvailableSlavesToProcessBuildRequests(slavepool=slavepool)
+            availableSlaves = bldr.getAvailableSlavesToProcessBuildRequests(slavepool=slavepool) if bldr else None
 
             if not availableSlaves:
                 unavailableBuilderNames.append(br["buildername"])

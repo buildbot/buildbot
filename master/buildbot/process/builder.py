@@ -158,9 +158,9 @@ class Builder(config.ReconfigurableServiceMixin,
     def getAvailableSlavesToProcessBuildRequests(self, slavepool):
         getSlavesFunc = self.getAvailableSlaves if slavepool == Slavepool.startSlavenames \
             else self.getAvailableSlavesToResume if slavepool == Slavepool.slavenames \
-            else None
+            else lambda: None
 
-        return getSlavesFunc() if getSlavesFunc else None
+        return getSlavesFunc()
 
     def reclaimAllBuilds(self):
         brids = set()

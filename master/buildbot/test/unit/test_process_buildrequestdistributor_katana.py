@@ -1,10 +1,78 @@
-import unittest
+from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequestdistributor
 from buildbot.process import builder, factory
 from buildbot import config
 import mock
+from buildbot.db import buildrequests
+from buildbot.db.buildrequests import Queue
+from buildbot.test.util import connector_component
+
+
+class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMixin, unittest.TestCase):
+
+    def addSlavesToList(self, slavelist, slavebuilders):
+        """C{slaves} maps name : available"""
+        for name, avail in slavebuilders.iteritems():
+            sb = mock.Mock(spec=['isAvailable'], name=name)
+            sb.name = name
+            sb.isAvailable.return_value = avail
+            sb.slave = mock.Mock()
+            sb.slave.slave_status = mock.Mock(spec=['getName'])
+            sb.slave.slave_status.getName.return_value = name
+            slavelist.append(sb)
+
+    def createBuilder(self, name, slavenames={'slave-01': 1}, startSlavenames={'slave-02': 1}):
+        bldr = builder.Builder(name, _addServices=False)
+        self.factory = factory.BuildFactory()
+
+        def getSlaves(param):
+            return param.keys() if list and isinstance(param, dict) else []
+
+        config_args = dict(name=name, slavenames=getSlaves(slavenames),
+                           startSlavenames=getSlaves(startSlavenames), builddir="bdir",
+                           slavebuilddir="sbdir", project='default', factory=self.factory)
+
+        bldr.config = config.BuilderConfig(**config_args)
+        self.botmaster.builders[name] = bldr
+        self.addSlavesToList(bldr.slaves, slavenames)
+        self.addSlavesToList(bldr.startSlaves, startSlavenames)
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        yield self.setUpConnectorComponent(
+            table_names=['buildrequests', 'buildrequest_claims', 'buildsets', 'buildset_properties'])
+
+        self.db.buildrequests = buildrequests.BuildRequestsConnectorComponent(self.db)
+        self.botmaster = mock.Mock(name='botmaster')
+        self.botmaster.builders = {}
+        self.master = self.botmaster.master = mock.Mock(name='master')
+        self.master.db = self.db
+        self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
+        self.brd.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tearDownConnectorComponent()
+        if self.brd.running:
+            yield self.brd.stopService()
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilder(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                 priority=20, submitted_at=1449578391),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                 priority=50, submitted_at=1450171039),
+                 # add a build waiting for resume
+                 ]
+        yield self.insertTestData(breqs)
+        self.createBuilder(name='bldr2', slavenames={'slave-01': 1}, startSlavenames={'slave-02': 1})
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+
+        self.assertEquals(builder.name, 'bldr2')
+
 
 class KatanaBuildChooserTestCase(unittest.TestCase):
 
