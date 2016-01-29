@@ -497,9 +497,7 @@ should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and
 update those parameters.  As with Schedulers, because the
 :py:class:`~buildbot.buildslave.AbstractBuildSlave` instance is given directly
 in the configuration, on reconfig instances must extract the configuration from
-a new instance.  The
-:py:meth:`~buildbot.buildslave.AbstractBuildSlave.findNewSlaveInstance` method
-can be used to find the new instance.
+a new instance.
 
 User Managers
 .............
