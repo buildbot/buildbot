@@ -92,7 +92,9 @@ class BuildRequest(Row):
         artifactbrid = None,
         triggeredbybrid = None,
         mergebrid = None,
-        startbrid = None
+        startbrid = None,
+        slavepool = None
+
     )
 
     id_column = 'id'

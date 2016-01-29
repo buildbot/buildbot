@@ -1,7 +1,9 @@
 from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.python import log
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequestdistributor
+from buildbot.process.buildrequestdistributor import Slavepool
 from buildbot.process import builder, factory
 from buildbot import config
 import mock
@@ -14,6 +16,8 @@ from buildbot.status.results import RESUME
 class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMixin, unittest.TestCase):
 
     def addSlavesToList(self, slavelist, slavebuilders):
+        if not slavebuilders:
+            return
         """C{slaves} maps name : available"""
         for name, avail in slavebuilders.iteritems():
             sb = mock.Mock(spec=['isAvailable'], name=name)
@@ -24,16 +28,21 @@ class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMi
             sb.slave.slave_status.getName.return_value = name
             slavelist.append(sb)
 
-    def createBuilder(self, name, slavenames={'slave-01': 1}, startSlavenames={'slave-02': 1}):
+    def createBuilder(self, name, slavenames=None, startSlavenames=None):
         bldr = builder.Builder(name, _addServices=False)
         self.factory = factory.BuildFactory()
 
         def getSlaves(param):
             return param.keys() if list and isinstance(param, dict) else []
 
-        config_args = dict(name=name, slavenames=getSlaves(slavenames),
-                           startSlavenames=getSlaves(startSlavenames), builddir="bdir",
+        config_args = dict(name=name, builddir="bdir",
                            slavebuilddir="sbdir", project='default', factory=self.factory)
+
+        if slavenames:
+            config_args['slavenames'] = getSlaves(slavenames)
+
+        if startSlavenames:
+            config_args['startSlavenames'] = getSlaves(startSlavenames)
 
         bldr.config = config.BuilderConfig(**config_args)
         self.botmaster.builders[name] = bldr
@@ -98,6 +107,114 @@ class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMi
         builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
 
         self.assertEquals(builder.name, 'bldr2')
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderUnknownBuilder(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",priority=20, submitted_at=1449578391),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2", priority=50, submitted_at=1450171039)]
+
+        yield self.insertTestData(breqs)
+
+        self.createBuilder(name='bldr1', slavenames={'slave-01': True}, startSlavenames={'slave-02': True})
+
+        self.log = []
+        self.expectedLog =["_getNextPriorityBuilder found 2 buildrequests in the 'unclaimed' Queue",
+                           "Not available slaves in 'startSlavenames' list "
+                           "to process buildrequest.id 2 for builder bldr2"]
+        def addLog(value):
+            self.log.append(value)
+
+        self.patch(log, 'msg', addLog)
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        # builder could be removed from master after reconfiguration
+        # in this case brd should pick next high priority builder and a message should be added to log
+        self.assertEquals(builder.name, 'bldr1')
+        self.assertEquals(self.log, self.expectedLog)
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderEmptyQueue(self):
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.assertEquals(builder, None)
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.assertEquals(builder, None)
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderCheckAvailableSlavesInPool(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
+                                     priority=20, submitted_at=1449578391, slavepool=Slavepool.slavenames),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                     priority=50, submitted_at=1450171039, slavepool=Slavepool.startSlavenames,
+                                     results=RESUME, complete=0)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
+                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+
+        self.createBuilder(name='bldr1', slavenames={'slave-01': True}, startSlavenames={'slave-02': False})
+        self.createBuilder(name='bldr2', slavenames={'slave-01': True}, startSlavenames={'slave-02': False})
+
+        yield self.insertTestData(breqs + breqsclaims)
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+
+        self.assertEquals(builder.name, "bldr2")
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderNotAvailableSlavesToProcessRequests(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                 priority=20, submitted_at=1449578391),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                 priority=50, submitted_at=1450171039),
+                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                     priority=100,submitted_at=1449578391,
+                                     results=RESUME, complete=0)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1449578391)]
+
+        self.createBuilder(name='bldr1', slavenames={'slave-01': False}, startSlavenames={'slave-02': False})
+        self.createBuilder(name='bldr2', slavenames={'slave-01': False}, startSlavenames={'slave-02': False})
+
+        yield self.insertTestData(breqs + breqsclaims)
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.assertEquals(builder, None)
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.assertEquals(builder, None)
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderSelectedSlaveUnclaimQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2",
+                                     priority=2, submitted_at=1450171024),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                     priority=50, submitted_at=1450171039)]
+
+        breqsprop = [fakedb.BuildsetProperty(buildsetid=2,
+                                             property_name='selected_slave',
+                                             property_value='["slave-01", "Force Build Form"]')]
+
+        yield self.insertTestData(breqs + breqsprop)
+
+        self.createBuilder(name='bldr1', slavenames={'slave-01': False, 'slave-02': True})
+        self.createBuilder(name='bldr2', slavenames={'slave-01': True, 'slave-02': True})
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        # selected slave not available pick next builder
+        self.assertEquals(builder.name, "bldr2")
+
+        # selected slave available
+        self.createBuilder(name='bldr1', slavenames={'slave-01': True, 'slave-02': True})
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.assertEquals(builder.name, "bldr1")
+
+        # Unclaim Queue Ignored selected slave
+        self.createBuilder(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+        self.createBuilder(name='bldr2', slavenames={'slave-01': True, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+
+        # selected slave not available pick next builder
+        self.assertEquals(builder.name, "bldr1")
 
 
 class KatanaBuildChooserTestCase(unittest.TestCase):
