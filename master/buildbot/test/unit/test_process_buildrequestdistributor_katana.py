@@ -70,6 +70,8 @@ class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMi
         if self.brd.running:
             yield self.brd.stopService()
 
+    # _getNextPriorityBuilder Tests
+
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnclaimedQueue(self):
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
@@ -207,14 +209,69 @@ class TestKatanaBuildRequestDistributor(connector_component.ConnectorComponentMi
         builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
         self.assertEquals(builder.name, "bldr1")
 
-        # Unclaim Queue Ignored selected slave
+        # Unclaim queue should ignored selected slave
         self.createBuilder(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
                            startSlavenames={'slave-03': True})
         self.createBuilder(name='bldr2', slavenames={'slave-01': True, 'slave-02': True},
                            startSlavenames={'slave-03': True})
 
-        # selected slave not available pick next builder
         self.assertEquals(builder.name, "bldr1")
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderSelectedSlaveResumeQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
+                                     priority=20, submitted_at=1449578391),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                     priority=50, submitted_at=1450171039,
+                                     results=RESUME, complete=0)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
+                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+
+        breqsprop = [fakedb.BuildsetProperty(buildsetid=2,
+                                             property_name='selected_slave',
+                                             property_value='["slave-01", "Force Build Form"]')]
+
+        yield self.insertTestData(breqs + breqsclaims + breqsprop)
+        self.createBuilder(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+        self.createBuilder(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        # selected slave not available pick next builder
+        self.assertEquals(builder.name, "bldr2")
+        # selected slave is available
+        self.createBuilder(name='bldr1', slavenames={'slave-01': True, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.assertEquals(builder.name, "bldr1")
+
+
+    @defer.inlineCallbacks
+    def test_getNextPriorityBuilderIgnoreSelectedSlaveResumeQueue(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
+                                     priority=20, submitted_at=1449578391),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                     priority=50, submitted_at=1450171039,
+                                     results=RESUME, complete=0, slavepool=Slavepool.startSlavenames)]
+
+        breqsclaims = [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
+                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+
+        breqsprop = [fakedb.BuildsetProperty(buildsetid=2,
+                                             property_name='selected_slave',
+                                             property_value='["slave-01", "Force Build Form"]')]
+
+        yield self.insertTestData(breqs + breqsclaims + breqsprop)
+
+        self.createBuilder(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+        self.createBuilder(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
+                           startSlavenames={'slave-03': True})
+
+        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.assertEquals(builder.name,  "bldr1")
 
 
 class KatanaBuildChooserTestCase(unittest.TestCase):

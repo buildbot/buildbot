@@ -1039,7 +1039,7 @@ class KatanaBuildRequestDistributor(service.Service):
             bldr = self.botmaster.builders.get(br["buildername"])
 
             def getSlavepool():
-                if queue == Queue.unclaimed :
+                if queue == Queue.unclaimed:
                     return Slavepool.startSlavenames
                 elif queue == Queue.resume and br['slavepool']:
                     return br['slavepool']
@@ -1055,10 +1055,6 @@ class KatanaBuildRequestDistributor(service.Service):
 
                 continue
 
-            if br["selected_slave"] is None:
-                defer.returnValue(bldr)
-                return
-
             buildRequestShouldUseSelectedSlave = br["selected_slave"] \
                                         and br['results'] == BEGINNING and bldr.shouldUseSelectedSlave()
 
@@ -1069,7 +1065,13 @@ class KatanaBuildRequestDistributor(service.Service):
                 if bldr.slaveIsAvailable(slavename=br["selected_slave"]):
                     defer.returnValue(bldr)
                     return
+
                 # slave not available check next br
+                continue
+
+            # bldr can start the build on any available slave
+            defer.returnValue(bldr)
+            return
 
         defer.returnValue(None)
 
