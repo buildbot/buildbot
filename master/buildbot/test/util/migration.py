@@ -84,5 +84,17 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                 schema.runchange(version, change, 1)
         d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
 
+        def check_table_charsets(engine):
+            # charsets are only a problem for MySQL
+            if engine.dialect.name != 'mysql':
+                return
+            dbs = [r[0] for r in engine.execute("show tables")]
+            for tbl in dbs:
+                r = engine.execute("show create table %s" % tbl)
+                create_table = r.fetchone()[1]
+                self.assertIn('DEFAULT CHARSET=utf8', create_table,
+                              "table %s does not have the utf8 charset" % tbl)
+        d.addCallback(lambda _: self.db.pool.do(check_table_charsets))
+
         d.addCallback(lambda _: self.db.pool.do(verify_thd_cb))
         return d
