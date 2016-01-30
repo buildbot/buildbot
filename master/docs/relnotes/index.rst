@@ -26,6 +26,9 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Note that Buildbot is not yet compatible with MySQL-5.7.
+  See :bug:`3421` for status and to help out.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
