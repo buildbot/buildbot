@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -29,19 +30,21 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
     def create_tables_thd(self, conn):
         metadata = sa.MetaData()
-        self.objects = sa.Table("objects", metadata,
-                                sa.Column("id", sa.Integer, primary_key=True),
-                                sa.Column('name', sa.String(128), nullable=False),
-                                sa.Column('class_name', sa.String(128), nullable=False),
-                                sa.UniqueConstraint('name', 'class_name', name='object_identity'),
-                                )
-        self.object_state = sa.Table("object_state", metadata,
-                                     sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
-                                               nullable=False),
-                                     sa.Column("name", sa.String(length=256), nullable=False),
-                                     sa.Column("value_json", sa.Text, nullable=False),
-                                     sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
-                                     )
+        self.objects = sautils.Table(
+            "objects", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+            sa.UniqueConstraint('name', 'class_name', name='object_identity'),
+        )
+        self.object_state = sautils.Table(
+            "object_state", metadata,
+            sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                      nullable=False),
+            sa.Column("name", sa.String(length=256), nullable=False),
+            sa.Column("value_json", sa.Text, nullable=False),
+            sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
+        )
         self.objects.create(bind=conn)
         self.object_state.create(bind=conn)
 

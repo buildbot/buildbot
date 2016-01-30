@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
 
@@ -26,18 +28,21 @@ def upgrade(migrate_engine):
              # ..
              )
 
-    changesources = sa.Table('changesources', metadata,
-                             sa.Column("id", sa.Integer, primary_key=True),
-                             sa.Column('name', sa.Text, nullable=False),
-                             sa.Column('name_hash', sa.String(40), nullable=False),
-                             )
+    changesources = sautils.Table(
+        'changesources', metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column('name', sa.Text, nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
 
-    changesource_masters = sa.Table('changesource_masters', metadata,
-                                    sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
-                                              nullable=False, primary_key=True),
-                                    sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                                              nullable=False),
-                                    )
+    changesource_masters = sautils.Table(
+        'changesource_masters', metadata,
+        sa.Column('changesourceid', sa.Integer,
+                  sa.ForeignKey('changesources.id'), nullable=False,
+                  primary_key=True),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                  nullable=False),
+    )
 
     # create the new tables
     changesources.create()

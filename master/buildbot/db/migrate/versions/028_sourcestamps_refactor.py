@@ -17,6 +17,8 @@ import hashlib
 import sqlalchemy as sa
 import time
 
+from buildbot.util import sautils
+
 
 def rename_sourcestamps_to_old(migrate_engine):
     metadata = sa.MetaData()
@@ -52,43 +54,45 @@ def add_new_schema_parts(migrate_engine):
              sa.Column('id', sa.Integer, primary_key=True),
              # ...
              )
-    sourcestamps = sa.Table('sourcestamps', metadata,
-                            sa.Column('id', sa.Integer, primary_key=True),
-                            sa.Column('ss_hash', sa.String(40), nullable=False),
-                            sa.Column('branch', sa.String(256)),
-                            sa.Column('revision', sa.String(256)),
-                            sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
-                            sa.Column('repository', sa.String(length=512), nullable=False,
-                                      server_default=''),
-                            sa.Column('codebase', sa.String(256), nullable=False,
-                                      server_default=sa.DefaultClause("")),
-                            sa.Column('project', sa.String(length=512), nullable=False,
-                                      server_default=''),
-                            sa.Column('created_at', sa.Integer, nullable=False),
-                            )
+    sourcestamps = sautils.Table(
+        'sourcestamps', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('ss_hash', sa.String(40), nullable=False),
+        sa.Column('branch', sa.String(256)),
+        sa.Column('revision', sa.String(256)),
+        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+        sa.Column('repository', sa.String(length=512), nullable=False,
+                  server_default=''),
+        sa.Column('codebase', sa.String(256), nullable=False,
+                  server_default=sa.DefaultClause("")),
+        sa.Column('project', sa.String(length=512), nullable=False,
+                  server_default=''),
+        sa.Column('created_at', sa.Integer, nullable=False),
+    )
     sourcestamps.create()
 
     idx = sa.Index('sourcestamps_ss_hash_key',
                    sourcestamps.c.ss_hash, unique=True)
     idx.create()
 
-    changes = sa.Table('changes', metadata,
-                       sa.Column('changeid', sa.Integer, primary_key=True),
-                       sa.Column('author', sa.String(256), nullable=False),
-                       sa.Column('comments', sa.String(1024), nullable=False),
-                       sa.Column('is_dir', sa.SmallInteger, nullable=False),
-                       sa.Column('branch', sa.String(256)),
-                       sa.Column('revision', sa.String(256)),
-                       sa.Column('revlink', sa.String(256)),
-                       sa.Column('when_timestamp', sa.Integer, nullable=False),
-                       sa.Column('category', sa.String(256)),
-                       sa.Column('repository', sa.String(length=512), nullable=False,
-                                 server_default=''),
-                       sa.Column('codebase', sa.String(256), nullable=False,
-                                 server_default=sa.DefaultClause("")),
-                       sa.Column('project', sa.String(length=512), nullable=False,
-                                 server_default=''),
-                       )
+    changes = sautils.Table(
+        'changes', metadata,
+        sa.Column('changeid', sa.Integer, primary_key=True),
+        sa.Column('author', sa.String(256), nullable=False),
+        sa.Column('comments', sa.String(1024), nullable=False),
+        sa.Column('is_dir', sa.SmallInteger, nullable=False),
+        sa.Column('branch', sa.String(256)),
+        sa.Column('revision', sa.String(256)),
+        sa.Column('revlink', sa.String(256)),
+        sa.Column('when_timestamp', sa.Integer, nullable=False),
+        sa.Column('category', sa.String(256)),
+        sa.Column('repository', sa.String(length=512), nullable=False,
+                  server_default=''),
+        sa.Column('codebase', sa.String(256), nullable=False,
+                  server_default=sa.DefaultClause("")),
+        sa.Column('project', sa.String(length=512), nullable=False,
+                  server_default=''),
+    )
     sourcestampid = sa.Column('sourcestampid', sa.Integer,
                               sa.ForeignKey('sourcestamps.id'))
     sourcestampid.create(changes, populate_default=True)
@@ -231,15 +235,16 @@ def migrate_data(migrate_engine):
                                    sa.ForeignKey('sourcestampsets.id')),
                          )
 
-    buildset_sourcestamps = sa.Table('buildset_sourcestamps', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True),
-                                     sa.Column('buildsetid', sa.Integer,
-                                               sa.ForeignKey('buildsets.id'),
-                                               nullable=False),
-                                     sa.Column('sourcestampid', sa.Integer,
-                                               sa.ForeignKey('sourcestamps.id'),
-                                               nullable=False),
-                                     )
+    buildset_sourcestamps = sautils.Table(
+        'buildset_sourcestamps', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('buildsetid', sa.Integer,
+                  sa.ForeignKey('buildsets.id'),
+                  nullable=False),
+        sa.Column('sourcestampid', sa.Integer,
+                  sa.ForeignKey('sourcestamps.id'),
+                  nullable=False),
+    )
     buildset_sourcestamps.create()
     idx = sa.Index('buildset_sourcestamps_buildsetid',
                    buildset_sourcestamps.c.buildsetid)
@@ -252,9 +257,9 @@ def migrate_data(migrate_engine):
 
     # now translate the existing buildset -> sourcestampset relationships into
     # buildset -> buildset_sourcestamps
-    f = buildsets.join(sourcestamps_old,
-                       onclause=sourcestamps_old.c.sourcestampsetid
-                       == buildsets.c.sourcestampsetid)
+    f = buildsets.join(
+        sourcestamps_old,
+        onclause=sourcestamps_old.c.sourcestampsetid == buildsets.c.sourcestampsetid)
     ss = sourcestamps_old
     q = sa.select([buildsets.c.id, ss.c.branch, ss.c.revision,
                    ss.c.project, ss.c.codebase, ss.c.repository, ss.c.patchid],

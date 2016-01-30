@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -31,22 +32,25 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def setup_thd(conn):
             metadata = sa.MetaData()
             metadata.bind = conn
-            scheduler_changes = sa.Table('scheduler_changes', metadata,
-                                         sa.Column('objectid', sa.Integer),
-                                         sa.Column('changeid', sa.Integer),
-                                         # ..
-                                         )
+            scheduler_changes = sautils.Table(
+                'scheduler_changes', metadata,
+                sa.Column('objectid', sa.Integer),
+                sa.Column('changeid', sa.Integer),
+                # ..
+            )
             scheduler_changes.create()
 
-            sa.Table('masters', metadata,
-                     sa.Column('id', sa.Integer, primary_key=True),
-                     # ..
-                     ).create()
+            sautils.Table(
+                'masters', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                # ..
+            ).create()
 
-            sa.Table('changes', metadata,
-                     sa.Column('changeid', sa.Integer, primary_key=True),
-                     # ..
-                     ).create()
+            sautils.Table(
+                'changes', metadata,
+                sa.Column('changeid', sa.Integer, primary_key=True),
+                # ..
+            ).create()
 
             idx = sa.Index('scheduler_changes_objectid',
                            scheduler_changes.c.objectid)

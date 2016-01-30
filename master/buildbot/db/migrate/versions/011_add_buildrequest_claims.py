@@ -41,11 +41,11 @@ def migrate_claims(migrate_engine, metadata, buildrequests, objects,
         str(sautils.InsertFromSelect(objects, new_objects)))
 
     # now make a buildrequest_claims row for each claimed build request
-    join = buildrequests.join(objects,
-                              (buildrequests.c.claimed_by_name == objects.c.name)
-                              # (have to use sa.text because str, below, doesn't work
-                              # with placeholders)
-                              & (objects.c.class_name == sa.text("'BuildMaster'")))
+    join = buildrequests.join(
+        objects, (buildrequests.c.claimed_by_name == objects.c.name) &
+        # (have to use sa.text because str, below, doesn't work
+        # with placeholders)
+        (objects.c.class_name == sa.text("'BuildMaster'")))
     claims = sa.select([
         buildrequests.c.id.label('brid'),
         objects.c.id.label('objectid'),
@@ -105,13 +105,14 @@ def upgrade(migrate_engine):
                        )
 
     # and a new buildrequest_claims table
-    buildrequest_claims = sa.Table('buildrequest_claims', metadata,
-                                   sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                                             index=True, unique=True),
-                                   sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
-                                             index=True, nullable=True),
-                                   sa.Column('claimed_at', sa.Integer, nullable=False),
-                                   )
+    buildrequest_claims = sautils.Table(
+        'buildrequest_claims', metadata,
+        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                  index=True, unique=True),
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id'),
+                  index=True, nullable=True),
+        sa.Column('claimed_at', sa.Integer, nullable=False),
+    )
 
     # create the new table
     buildrequest_claims.create()

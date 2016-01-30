@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -51,8 +52,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # one table to test that corner case
             for i, col in enumerate(self.cols):
                 tbl_name, col_name = col.split('.')
-                tbl = sa.Table(tbl_name, metadata,
-                               sa.Column(col_name, sa.Integer, primary_key=True))
+                tbl = sautils.Table(
+                    tbl_name, metadata,
+                    sa.Column(col_name, sa.Integer, primary_key=True))
                 tbl.create()
                 if i > 1:
                     conn.execute(tbl.insert(), {col_name: i})
@@ -65,8 +67,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # is as expected
             for i, col in enumerate(self.cols):
                 tbl_name, col_name = col.split('.')
-                tbl = sa.Table(tbl_name, metadata,
-                               sa.Column(col_name, sa.Integer, primary_key=True))
+                tbl = sautils.Table(
+                    tbl_name, metadata,
+                    sa.Column(col_name, sa.Integer, primary_key=True))
                 r = conn.execute(tbl.insert(), {})
                 if i > 1:
                     exp = i + 1

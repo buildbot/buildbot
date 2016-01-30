@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -29,7 +31,7 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     sa.Table('steps', metadata, autoload=True)
-    logs = sa.Table(
+    logs = sautils.Table(
         'logs', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.Text, nullable=False),
@@ -42,7 +44,7 @@ def upgrade(migrate_engine):
     )
     logs.create()
 
-    logchunks = sa.Table(
+    logchunks = sautils.Table(
         'logchunks', metadata,
         sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
         # 0-based line number range in this chunk (inclusive); note that for

@@ -23,6 +23,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
+from buildbot.util import sautils
 from twisted.internet import defer
 from twisted.python import log
 
@@ -59,11 +60,12 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
 
         def setup_thd(conn):
             metadata = sa.MetaData()
-            table = sa.Table('migrate_version', metadata,
-                             sa.Column('repository_id', sa.String(250),
-                                       primary_key=True),
-                             sa.Column('repository_path', sa.Text),
-                             sa.Column('version', sa.Integer))
+            table = sautils.Table(
+                'migrate_version', metadata,
+                sa.Column('repository_id', sa.String(250), primary_key=True),
+                sa.Column('repository_path', sa.Text),
+                sa.Column('version', sa.Integer),
+            )
             table.create(bind=conn)
             conn.execute(table.insert(),
                          repository_id='Buildbot',

@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db.types.json import JsonObject
+from buildbot.util import sautils
 
 
 def upgrade(migrate_engine):
@@ -39,21 +40,23 @@ def upgrade(migrate_engine):
                            sa.Column("info", JsonObject, nullable=False),
                            )
 
-    configured_buildslaves = sa.Table('configured_buildslaves', metadata,
-                                      sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                      sa.Column('buildermasterid', sa.Integer,
-                                                sa.ForeignKey('builder_masters.id'), nullable=False),
-                                      sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                                                nullable=False),
-                                      )
+    configured_buildslaves = sautils.Table(
+        'configured_buildslaves', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('buildermasterid', sa.Integer,
+                  sa.ForeignKey('builder_masters.id'), nullable=False),
+        sa.Column('buildslaveid', sa.Integer,
+                  sa.ForeignKey('buildslaves.id'), nullable=False),
+    )
 
-    connected_buildslaves = sa.Table('connected_buildslaves', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                     sa.Column('masterid', sa.Integer,
-                                               sa.ForeignKey('masters.id'), nullable=False),
-                                     sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                                               nullable=False),
-                                     )
+    connected_buildslaves = sautils.Table(
+        'connected_buildslaves', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id'), nullable=False),
+        sa.Column('buildslaveid', sa.Integer,
+                  sa.ForeignKey('buildslaves.id'), nullable=False),
+    )
 
     # update the column length in bulidslaves
     buildslaves.c.name.alter(sa.String(50), nullable=False)

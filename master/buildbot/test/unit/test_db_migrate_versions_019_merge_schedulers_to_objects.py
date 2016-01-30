@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -31,34 +32,38 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        changes = sa.Table('changes', metadata,
-                           sa.Column('changeid', sa.Integer, primary_key=True),
-                           # the rest is unimportant
-                           )
+        changes = sautils.Table(
+            'changes', metadata,
+            sa.Column('changeid', sa.Integer, primary_key=True),
+            # the rest is unimportant
+        )
         changes.create()
 
-        buildsets = sa.Table('buildsets', metadata,
-                             sa.Column('id', sa.Integer, primary_key=True),
-                             # the rest is unimportant
-                             )
+        buildsets = sautils.Table(
+            'buildsets', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            # the rest is unimportant
+        )
         buildsets.create()
 
-        self.schedulers = sa.Table("schedulers", metadata,
-                                   sa.Column('schedulerid', sa.Integer, primary_key=True),
-                                   sa.Column('name', sa.String(128), nullable=False),
-                                   sa.Column('class_name', sa.String(128), nullable=False),
-                                   )
+        self.schedulers = sautils.Table(
+            "schedulers", metadata,
+            sa.Column('schedulerid', sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+        )
         self.schedulers.create(bind=conn)
         sa.Index('name_and_class', self.schedulers.c.name,
                  self.schedulers.c.class_name).create()
 
-        self.scheduler_changes = sa.Table('scheduler_changes', metadata,
-                                          sa.Column('schedulerid', sa.Integer,
-                                                    sa.ForeignKey('schedulers.schedulerid')),
-                                          sa.Column('changeid', sa.Integer,
-                                                    sa.ForeignKey('changes.changeid')),
-                                          sa.Column('important', sa.SmallInteger),
-                                          )
+        self.scheduler_changes = sautils.Table(
+            'scheduler_changes', metadata,
+            sa.Column('schedulerid', sa.Integer,
+                      sa.ForeignKey('schedulers.schedulerid')),
+            sa.Column('changeid', sa.Integer,
+                      sa.ForeignKey('changes.changeid')),
+            sa.Column('important', sa.SmallInteger),
+        )
         self.scheduler_changes.create()
         sa.Index('scheduler_changes_schedulerid',
                  self.scheduler_changes.c.schedulerid).create()
@@ -68,7 +73,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                  self.scheduler_changes.c.schedulerid,
                  self.scheduler_changes.c.changeid, unique=True).create()
 
-        self.scheduler_upstream_buildsets = sa.Table(
+        self.scheduler_upstream_buildsets = sautils.Table(
             'scheduler_upstream_buildsets', metadata,
             sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
             sa.Column('schedulerid', sa.Integer,
@@ -81,11 +86,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         sa.Index('scheduler_upstream_buildsets_schedulerid',
                  self.scheduler_upstream_buildsets.c.schedulerid).create()
 
-        self.objects = sa.Table("objects", metadata,
-                                sa.Column("id", sa.Integer, primary_key=True),
-                                sa.Column('name', sa.String(128), nullable=False),
-                                sa.Column('class_name', sa.String(128), nullable=False),
-                                )
+        self.objects = sautils.Table(
+            "objects", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+        )
         self.objects.create(bind=conn)
 
         sa.Index('object_identity', self.objects.c.name,

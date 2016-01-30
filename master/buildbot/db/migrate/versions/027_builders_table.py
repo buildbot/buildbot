@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -25,20 +27,22 @@ def upgrade(migrate_engine):
              # ..
              )
 
-    builders = sa.Table('builders', metadata,
-                        sa.Column('id', sa.Integer, primary_key=True),
-                        sa.Column('name', sa.Text, nullable=False),
-                        sa.Column('name_hash', sa.String(40), nullable=False),
-                        )
+    builders = sautils.Table(
+        'builders', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('name', sa.Text, nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
     builders.create()
 
-    builder_masters = sa.Table('builder_masters', metadata,
-                               sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                               sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
-                                         nullable=False),
-                               sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                                         nullable=False),
-                               )
+    builder_masters = sautils.Table(
+        'builder_masters', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+                  nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                  nullable=False),
+    )
     builder_masters.create()
 
     idx = sa.Index('builder_name_hash', builders.c.name_hash, unique=True)
