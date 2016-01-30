@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
 
@@ -55,25 +57,28 @@ def upgrade(migrate_engine):
              # ..
              )
 
-    schedulers = sa.Table('schedulers', metadata,
-                          sa.Column("id", sa.Integer, primary_key=True),
-                          sa.Column('name', sa.Text, nullable=False),
-                          sa.Column('name_hash', sa.String(40), nullable=False),
-                          )
+    schedulers = sautils.Table(
+        'schedulers', metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column('name', sa.Text, nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
 
-    scheduler_masters = sa.Table('scheduler_masters', metadata,
-                                 sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
-                                           nullable=False, primary_key=True),
-                                 sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                                           nullable=False),
-                                 )
+    scheduler_masters = sautils.Table(
+        'scheduler_masters', metadata,
+        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
+                  nullable=False, primary_key=True),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                  nullable=False),
+    )
 
-    scheduler_changes = sa.Table('scheduler_changes', metadata,
-                                 sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id')),
-                                 sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
-                                 # true (nonzero) if this change is important to this scheduler
-                                 sa.Column('important', sa.Integer),
-                                 )
+    scheduler_changes = sautils.Table(
+        'scheduler_changes', metadata,
+        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id')),
+        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
+        # true (nonzero) if this change is important to this scheduler
+        sa.Column('important', sa.Integer),
+    )
 
     # create the new tables
     schedulers.create()

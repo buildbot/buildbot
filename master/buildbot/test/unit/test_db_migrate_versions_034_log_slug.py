@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -32,7 +33,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            steps = sa.Table(
+            steps = sautils.Table(
                 'steps', metadata,
                 sa.Column('id', sa.Integer, primary_key=True),
                 sa.Column('number', sa.Integer, nullable=False),
@@ -47,7 +48,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             )
             steps.create()
 
-            logs = sa.Table(
+            logs = sautils.Table(
                 'logs', metadata,
                 sa.Column('id', sa.Integer, primary_key=True),
                 sa.Column('name', sa.String(50), nullable=False),
@@ -59,7 +60,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             )
             logs.create()
 
-            logchunks = sa.Table(
+            logchunks = sautils.Table(
                 'logchunks', metadata,
                 sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
                 # 0-based line number range in this chunk (inclusive); note that for

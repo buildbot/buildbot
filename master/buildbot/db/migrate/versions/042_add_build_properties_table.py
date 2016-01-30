@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -26,14 +28,14 @@ def upgrade(migrate_engine):
              )
 
     # This table contains input properties for builds
-    build_properties = sa.Table('build_properties', metadata,
-                                sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id'),
-                                          nullable=False),
-                                sa.Column('name', sa.String(256), nullable=False),
-                                # JSON-encoded value
-                                sa.Column('value', sa.Text, nullable=False),
-                                sa.Column('source', sa.Text, nullable=False),
-                                )
+    build_properties = sautils.Table(
+        'build_properties', metadata,
+        sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id'), nullable=False),
+        sa.Column('name', sa.String(256), nullable=False),
+        # JSON-encoded value
+        sa.Column('value', sa.Text, nullable=False),
+        sa.Column('source', sa.Text, nullable=False),
+    )
 
     # create the new table
     build_properties.create()

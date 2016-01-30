@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -31,16 +32,18 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        steps = sa.Table('steps', metadata,
-                         sa.Column('id', sa.Integer, primary_key=True),
-                         sa.Column('number', sa.Integer, nullable=False),
-                         sa.Column('name', sa.String(50), nullable=False),
-                         sa.Column('buildid', sa.Integer),
-                         sa.Column('started_at', sa.Integer),
-                         sa.Column('complete_at', sa.Integer),
-                         sa.Column('state_string', sa.Text, nullable=False, server_default=''),
-                         sa.Column('results', sa.Integer),
-                         sa.Column('urls_json', sa.Text, nullable=False))
+        steps = sautils.Table(
+            'steps', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('number', sa.Integer, nullable=False),
+            sa.Column('name', sa.String(50), nullable=False),
+            sa.Column('buildid', sa.Integer),
+            sa.Column('started_at', sa.Integer),
+            sa.Column('complete_at', sa.Integer),
+            sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+            sa.Column('results', sa.Integer),
+            sa.Column('urls_json', sa.Text, nullable=False),
+        )
         steps.create()
 
         conn.execute(steps.insert(), [

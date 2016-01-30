@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from sqlalchemy.engine import reflection
 from twisted.trial import unittest
 
@@ -32,51 +33,56 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        self.changes = sa.Table('changes', metadata,
-                                sa.Column('changeid', sa.Integer, primary_key=True),
-                                sa.Column('author', sa.String(256), nullable=False),
-                                sa.Column('comments', sa.String(1024), nullable=False),
-                                sa.Column('is_dir', sa.SmallInteger, nullable=False),
-                                sa.Column('branch', sa.String(256)),
-                                sa.Column('revision', sa.String(256)),
-                                sa.Column('revlink', sa.String(256)),
-                                sa.Column('when_timestamp', sa.Integer, nullable=False),
-                                sa.Column('category', sa.String(256)),
-                                sa.Column('repository', sa.String(length=512), nullable=False,
-                                          server_default=''),
-                                sa.Column('project', sa.String(length=512), nullable=False,
-                                          server_default=''),
-                                )
+        self.changes = sautils.Table(
+            'changes', metadata,
+            sa.Column('changeid', sa.Integer, primary_key=True),
+            sa.Column('author', sa.String(256), nullable=False),
+            sa.Column('comments', sa.String(1024), nullable=False),
+            sa.Column('is_dir', sa.SmallInteger, nullable=False),
+            sa.Column('branch', sa.String(256)),
+            sa.Column('revision', sa.String(256)),
+            sa.Column('revlink', sa.String(256)),
+            sa.Column('when_timestamp', sa.Integer, nullable=False),
+            sa.Column('category', sa.String(256)),
+            sa.Column('repository', sa.String(length=512), nullable=False,
+                      server_default=''),
+            sa.Column('project', sa.String(length=512), nullable=False,
+                      server_default=''),
+        )
         self.changes.create(bind=conn)
 
-        self.schedulers = sa.Table("schedulers", metadata,
-                                   sa.Column('schedulerid', sa.Integer, primary_key=True),
-                                   sa.Column('name', sa.String(128), nullable=False),
-                                   sa.Column('class_name', sa.String(128), nullable=False),
-                                   )
+        self.schedulers = sautils.Table(
+            "schedulers", metadata,
+            sa.Column('schedulerid', sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+        )
         self.schedulers.create(bind=conn)
 
-        self.users = sa.Table("users", metadata,
-                              sa.Column("uid", sa.Integer, primary_key=True),
-                              sa.Column("identifier", sa.String(256), nullable=False),
-                              sa.Column("bb_username", sa.String(128)),
-                              sa.Column("bb_password", sa.String(128)),
-                              )
+        self.users = sautils.Table(
+            "users", metadata,
+            sa.Column("uid", sa.Integer, primary_key=True),
+            sa.Column("identifier", sa.String(256), nullable=False),
+            sa.Column("bb_username", sa.String(128)),
+            sa.Column("bb_password", sa.String(128)),
+        )
         self.users.create(bind=conn)
 
-        self.objects = sa.Table("objects", metadata,
-                                sa.Column("id", sa.Integer, primary_key=True),
-                                sa.Column('name', sa.String(128), nullable=False),
-                                sa.Column('class_name', sa.String(128), nullable=False),
-                                )
+        self.objects = sautils.Table(
+            "objects", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+        )
         self.objects.create()
 
-        self.object_state = sa.Table("object_state", metadata,
-                                     sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
-                                               nullable=False),
-                                     sa.Column("name", sa.String(length=256), nullable=False),
-                                     sa.Column("value_json", sa.Text, nullable=False),
-                                     )
+        self.object_state = sautils.Table(
+            "object_state", metadata,
+            sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                      nullable=False),
+            sa.Column("name", sa.String(length=256), nullable=False),
+            sa.Column("value_json", sa.Text, nullable=False),
+        )
         self.object_state.create()
 
         # these indices should already exist everywhere but on sqlite
@@ -101,8 +107,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
         def verify_thd(conn):
             insp = reflection.Inspector.from_engine(conn)
-            indexes = (insp.get_indexes('changes')
-                       + insp.get_indexes('schedulers'))
+            indexes = (insp.get_indexes('changes') + insp.get_indexes('schedulers'))
             self.assertEqual(
                 sorted([i['name'] for i in indexes]),
                 sorted([

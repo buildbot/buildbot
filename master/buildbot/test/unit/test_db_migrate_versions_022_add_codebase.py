@@ -19,6 +19,7 @@ import sqlalchemy as sa
 from buildbot.test.util import migration
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -35,30 +36,32 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        self.sourcestamps = sa.Table('sourcestamps', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True),
-                                     sa.Column('branch', sa.String(256)),
-                                     sa.Column('revision', sa.String(256)),
-                                     sa.Column('patchid', sa.Integer),
-                                     sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
-                                     sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
-                                     sa.Column('sourcestampsetid', sa.Integer),
-                                     )
+        self.sourcestamps = sautils.Table(
+            'sourcestamps', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('branch', sa.String(256)),
+            sa.Column('revision', sa.String(256)),
+            sa.Column('patchid', sa.Integer),
+            sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('sourcestampsetid', sa.Integer),
+        )
         self.sourcestamps.create(bind=conn)
 
-        self.changes = sa.Table('changes', metadata,
-                                sa.Column('changeid', sa.Integer, primary_key=True),
-                                sa.Column('author', sa.String(256), nullable=False),
-                                sa.Column('comments', sa.String(1024), nullable=False),
-                                sa.Column('is_dir', sa.SmallInteger, nullable=False),
-                                sa.Column('branch', sa.String(256)),
-                                sa.Column('revision', sa.String(256)),
-                                sa.Column('revlink', sa.String(256)),
-                                sa.Column('when_timestamp', sa.Integer, nullable=False),
-                                sa.Column('category', sa.String(256)),
-                                sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
-                                sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
-                                )
+        self.changes = sautils.Table(
+            'changes', metadata,
+            sa.Column('changeid', sa.Integer, primary_key=True),
+            sa.Column('author', sa.String(256), nullable=False),
+            sa.Column('comments', sa.String(1024), nullable=False),
+            sa.Column('is_dir', sa.SmallInteger, nullable=False),
+            sa.Column('branch', sa.String(256)),
+            sa.Column('revision', sa.String(256)),
+            sa.Column('revlink', sa.String(256)),
+            sa.Column('when_timestamp', sa.Integer, nullable=False),
+            sa.Column('category', sa.String(256)),
+            sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+        )
         self.changes.create(bind=conn)
 
     def reload_tables_after_migration(self, conn):

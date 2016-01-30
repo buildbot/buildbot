@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -32,19 +33,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildrequests = sa.Table('buildrequests', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True),
-                                     sa.Column('buildsetid', sa.Integer, nullable=False),
-                                     sa.Column('buildername', sa.String(length=256),
-                                               nullable=False),
-                                     sa.Column('priority', sa.Integer, nullable=False,
-                                               server_default=sa.DefaultClause("0")),
-                                     sa.Column('complete', sa.Integer,
-                                               server_default=sa.DefaultClause("0")),
-                                     sa.Column('results', sa.SmallInteger),
-                                     sa.Column('submitted_at', sa.Integer, nullable=False),
-                                     sa.Column('complete_at', sa.Integer),
-                                     )
+            buildrequests = sautils.Table(
+                'buildrequests', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                sa.Column('buildsetid', sa.Integer, nullable=False),
+                sa.Column('buildername', sa.String(length=256),
+                          nullable=False),
+                sa.Column('priority', sa.Integer, nullable=False,
+                          server_default=sa.DefaultClause("0")),
+                sa.Column('complete', sa.Integer,
+                          server_default=sa.DefaultClause("0")),
+                sa.Column('results', sa.SmallInteger),
+                sa.Column('submitted_at', sa.Integer, nullable=False),
+                sa.Column('complete_at', sa.Integer),
+            )
             buildrequests.create()
 
             conn.execute(buildrequests.insert(), [

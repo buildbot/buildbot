@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -24,24 +26,24 @@ def upgrade(migrate_engine):
     # drop the tags column
     builders.c.tags.drop()
 
-    tags = sa.Table('tags', metadata,
-                    sa.Column('id', sa.Integer, primary_key=True),
-                    # tag's name
-                    sa.Column('name', sa.Text, nullable=False),
-                    # sha1 of name; used for a unique index
-                    sa.Column('name_hash', sa.String(40), nullable=False),
-                    )
+    tags = sautils.Table(
+        'tags', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        # tag's name
+        sa.Column('name', sa.Text, nullable=False),
+        # sha1 of name; used for a unique index
+        sa.Column('name_hash', sa.String(40), nullable=False),
+    )
 
     # a many-to-may relationship between builders and tags
-    builders_tags = sa.Table('builders_tags', metadata,
-                             sa.Column('id', sa.Integer, primary_key=True),
-                             sa.Column('builderid', sa.Integer,
-                                       sa.ForeignKey('builders.id'),
-                                       nullable=False),
-                             sa.Column('tagid', sa.Integer,
-                                       sa.ForeignKey('tags.id'),
-                                       nullable=False),
-                             )
+    builders_tags = sautils.Table(
+        'builders_tags', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+                  nullable=False),
+        sa.Column('tagid', sa.Integer, sa.ForeignKey('tags.id'),
+                  nullable=False),
+    )
 
     # create the new tables
     tags.create()
