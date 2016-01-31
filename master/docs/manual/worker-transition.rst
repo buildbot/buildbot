@@ -1089,3 +1089,8 @@ Web UI
 In base web UI (``www/base``) and Material Design web UI (``www/md_base``)
 all "slave"-named messages and identifiers were renamed to use "worker" names
 and new REST API endpoints.
+
+MQ layer
+--------
+
+``buildslaveid`` key in messages were replaced with ``workerid``.
