@@ -1,5 +1,5 @@
 .. -*- rst -*-
-.. _Buildslaves:
+.. _Workers:
 
 .. bb:cfg:: workers
 
