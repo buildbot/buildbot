@@ -809,7 +809,7 @@ GitHubStatus (not migrated)
                              endDescription='Build done.')
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
-        workernames=['slave1'],
+        workernames=['worker1'],
         factory=BuilderFactory(),
         properties={
             "github_repo_owner": "buildbot",
