@@ -108,7 +108,7 @@ Methods:
 ``.getXs([id], [query])``: returns Collection which will eventually contain all the requested data
 
   * it's highly advised to use these instead of the lower level ``.get('string')`` function
-  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Buildslaves``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
+  * ``Xs`` can be the following: ``Builds``, ``Builders``, ``Buildrequests``, ``Buildsets``, ``Workers``, ``Changes``, ``Changesources``, ``Forceschedulers``, ``Masters``, ``Schedulers``, ``Sourcestamps``
   * The collections returns without using an accessor are not automatically updated.
     So use those methods only when you know the data are not changing
 
