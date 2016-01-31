@@ -1,7 +1,7 @@
 Protocols
 =========
 
-To exchange information over the network between master and slave we need to use
+To exchange information over the network between master and worker we need to use
 protocol.
 
 :mod:`buildbot.worker.protocols.base` provide interfaces to implement
@@ -19,9 +19,9 @@ to know about protocol calls or handle protocol specific exceptions.
     Protocol-specific subclasses are instantiated with protocol-specific
     parameters by the buildmaster during startup.
 
-.. py:class:: Connection(master, buildslave)
+.. py:class:: Connection(master, worker)
 
-    Represents connection to single slave
+    Represents connection to single worker
 
     .. py:attribute:: proxies
 
@@ -39,7 +39,7 @@ to know about protocol calls or handle protocol specific exceptions.
         :param cb: callback
         :returns: :py:class:`buildbot.util.subscriptions.Subscription`
 
-        Register a callback to be called if slave gets disconnected
+        Register a callback to be called if worker gets disconnected
 
     .. py:method:: loseConnection()
 
@@ -47,17 +47,17 @@ to know about protocol calls or handle protocol specific exceptions.
 
     .. py:method:: remotePrint(message)
 
-        :param message: message for slave
+        :param message: message for worker
         :type message: string
         :returns: Deferred
 
-        Print message to slave log file
+        Print message to worker log file
 
     .. py:method:: remoteGetWorkerInfo()
 
         :returns: Deferred
 
-        Get slave information, commands and version, put them in dictonary
+        Get worker information, commands and version, put them in dictonary
         then return back
 
     .. py:method:: remoteSetBuilderList(builders)
@@ -66,7 +66,7 @@ to know about protocol calls or handle protocol specific exceptions.
         :type builders: List
         :returns: Deferred containing PB references XXX
 
-        Take list with wanted builders and send them to slave, return list with
+        Take list with wanted builders and send them to worker, return list with
         created builders
 
     .. py:method:: remoteStartCommand(remoteCommand, builderName, commandId, commandName, args)
@@ -76,19 +76,19 @@ to know about protocol calls or handle protocol specific exceptions.
         :type builderName: string
         :param commandId: command number
         :type commandId: string
-        :param commandName: command which will be executed on slave
+        :param commandName: command which will be executed on worker
         :type commandName: string
         :param args: arguments for that command
         :type args: List
         :returns: Deferred
 
-        Start command on slave
+        Start command on worker
 
     .. py:method:: remoteShutdown()
 
         :returns: Deferred
 
-        Shutdown the slave, causing its process to halt permanently.
+        Shutdown the worker, causing its process to halt permanently.
 
     .. py:method:: remoteStartBuild(builderName)
 
@@ -107,21 +107,21 @@ to know about protocol calls or handle protocol specific exceptions.
         :type why: string
         :returns: Deferred
 
-        Interrupt the command executed on builderName with given commandId on slave, print reason "why" to
-        slave logs
+        Interrupt the command executed on builderName with given commandId on worker, print reason "why" to
+        worker logs
 
-Following classes are describing the slave -> master part of the protocol.
+Following classes are describing the worker -> master part of the protocol.
 
-In order to support old slaves, we must make sure we do not change the current pb protocol.
+In order to support old workers, we must make sure we do not change the current pb protocol.
 This is why we implement a ``Impl vs Proxy`` methods.
-All the objects that are referenced from the slaves for remote calls have an ``Impl`` and a ``Proxy`` base classes in this module.
+All the objects that are referenced from the workers for remote calls have an ``Impl`` and a ``Proxy`` base classes in this module.
 
 ``Impl`` classes are subclassed by buildbot master, and implement the actual logic for the protocol api.
-``Proxy`` classes are implemented by the slave/master protocols, and implements the demux and de-serialization of protocol calls.
+``Proxy`` classes are implemented by the worker/master protocols, and implements the demux and de-serialization of protocol calls.
 
-On slave sides, those proxy objects are replaced by a proxy object having a single method to call master side methodss:
+On worker sides, those proxy objects are replaced by a proxy object having a single method to call master side methodss:
 
-.. py:class:: SlaveProxyObject()
+.. py:class:: workerProxyObject()
 
     .. py:method:: callRemote(message, *args, **kw)
 
@@ -135,7 +135,7 @@ On slave sides, those proxy objects are replaced by a proxy object having a sing
 
         :param updates: dictionary of updates
 
-        Called when the slaves has updates to the current remote command
+        Called when the workers has updates to the current remote command
 
         possible keys for updates are:
 
@@ -164,12 +164,12 @@ On slave sides, those proxy objects are replaced by a proxy object having a sing
 
         :param failure: copy of the failure if any
 
-            Called by the slave when the command is complete.
+            Called by the worker when the command is complete.
 
 
 .. py:class:: FileWriterImpl()
 
-    Class used to implement data transfer between slave and master
+    Class used to implement data transfer between worker and master
 
     .. :py:method:: remote_write(data)
 
@@ -199,7 +199,7 @@ On slave sides, those proxy objects are replaced by a proxy object having a sing
         :param maxLength: maximum length of the data to send
         :returns: data read
 
-        called when slave needs more data
+        called when worker needs more data
 
     .. py:method:: remote_close()
 
