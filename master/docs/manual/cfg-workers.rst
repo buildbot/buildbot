@@ -115,7 +115,7 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
                           notify_on_missing="bob@example.com")
     ]
 
-.. index:: BuildSlaves; latent
+.. index:: BuildSlaves; local
 
 .. _Local-Buildslaves:
 
