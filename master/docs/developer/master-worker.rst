@@ -363,7 +363,7 @@ following arguments:
 
     Base directory for the destination filename, relative to the builder basedir.
 
-``slavedest``
+``workerdest``
 
     Filename to write to, relative to the workdir.
 
