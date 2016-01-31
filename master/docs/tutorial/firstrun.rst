@@ -7,7 +7,7 @@ First Run
 Goal
 ----
 
-This tutorial will take you from zero to running your first buildbot master and slave as quickly as possible, without changing the default configuration.
+This tutorial will take you from zero to running your first buildbot master and worker as quickly as possible, without changing the default configuration.
 
 This tutorial is all about instant gratification and the five minute experience: in five minutes we want to convince you that this project Works, and that you should seriously consider spending some more time learning the system.
 In this tutorial no configuration or code changes are done.
@@ -96,26 +96,26 @@ It should ends with lines like these:
 
 From now on, feel free to visit the web status page running on the port 8010: http://localhost:8010/
 
-Our master now needs (at least) a slave to execute its commands.
+Our master now needs (at least) a worker to execute its commands.
 For that, heads on to the next section !
 
-Creating a slave
-----------------
+Creating a worker
+-----------------
 
-The buildslave will be executing the commands sent by the master.
+The worker will be executing the commands sent by the master.
 In this tutorial, we are using the pyflakes project as an example.
-As a consequence of this, your slave will need access to the git_ command in order to checkout some code.
+As a consequence of this, your worker will need access to the git_ command in order to checkout some code.
 Be sure that it is installed, or the builds will fail.
 
-Same as we did for our master, we will create a virtualenv for our slave next to the other one.
-It would however be completely ok to do this on another computer - as long as the *slave* computer is able to connect to the *master* one:
+Same as we did for our master, we will create a virtualenv for our worker next to the other one.
+It would however be completely ok to do this on another computer - as long as the *worker* computer is able to connect to the *master* one:
 
 .. code-block:: bash
 
   cd
   cd tmp
-  virtualenv --no-site-packages bb-slave
-  cd bb-slave
+  virtualenv --no-site-packages bb-worker
+  cd bb-worker
 
 Install the ``buildslave`` command:
 
@@ -123,41 +123,41 @@ Install the ``buildslave`` command:
 
    ./bin/pip install buildbot-slave
 
-Now, create the slave:
+Now, create the worker:
 
 .. code-block:: bash
 
-  ./bin/buildslave create-slave slave localhost example-slave pass
+  ./bin/buildslave create-slave worker localhost example-worker pass
 
 .. note:: If you decided to create this from another computer, you should replace ``localhost`` with the name of the computer where your master is running.
 
-The username (``example-slave``), and password (``pass``) should be the same as those in :file:`master/master.cfg`; verify this is the case by looking at the section for ``c['workers']``:
+The username (``example-worker``), and password (``pass``) should be the same as those in :file:`master/master.cfg`; verify this is the case by looking at the section for ``c['workers']``:
 
 .. code-block:: bash
 
   cat master/master.cfg
 
-And finally, start the slave:
+And finally, start the worker:
 
 .. code-block:: bash
 
-  ./bin/buildslave start slave
+  ./bin/buildslave start worker
 
-Check the slave's output.
+Check the worker's output.
 It should end with lines like these:
 
 .. code-block:: none
 
   2014-11-01 15:56:51+0100 [-] Connecting to localhost:9989
   2014-11-01 15:56:51+0100 [Broker,client] message from master: attached
-  The buildslave appears to have (re)started correctly.
+  The worker appears to have (re)started correctly.
 
 Meanwhile, from the other terminal, in the master log (:file:``twisted.log`` in the master directory), you should see lines like these:
 
 .. code-block:: none
 
-  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] slave 'example-slave' attaching from IPv4Address(TCP, '127.0.0.1', 54015)
-  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] Got slaveinfo from 'example-slave'
+  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] worker 'example-worker' attaching from IPv4Address(TCP, '127.0.0.1', 54015)
+  2014-11-01 15:56:51+0100 [Broker,1,127.0.0.1] Got workerinfo from 'example-worker'
   2014-11-01 15:56:51+0100 [-] bot attached
 
 You should now be able to go to http://localhost:8010, where you will see a web page similar to:
