@@ -738,7 +738,7 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
 ``p4client``
     (optional): The name of the client to use.
     In ``mode='full'`` and ``mode='incremental'``, it's particularly important that a unique name is used for each checkout directory to avoid incorrect synchronization.
-    For this reason, Python percent substitution will be performed on this value to replace ``%(prop:workername)s`` with the slave name and ``%(prop:buildername)s`` with the builder name.
+    For this reason, Python percent substitution will be performed on this value to replace ``%(prop:workername)s`` with the worker name and ``%(prop:buildername)s`` with the builder name.
     The default is ``buildbot_%(prop:workername)s_%(prop:buildername)s``.
 
 ``p4line_end``
