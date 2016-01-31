@@ -416,7 +416,7 @@ Build text
 Mapping of property names to (values, source)
     ``build['properties']``
 
-Slave name
+Worker name
     ``build['properties']['workername']``
 
 Build reason (from a forced build)
