@@ -21,7 +21,7 @@ For example, the following will generate a builder for each of a range of suppor
 
     pythons = ['python2.4', 'python2.5', 'python2.6', 'python2.7',
                'python3.2', 'python3.3']
-    pytest_slaves = ["slave%s" % n for n in range(10)]
+    pytest_workers = ["worker%s" % n for n in range(10)]
     for python in pythons:
         f = util.BuildFactory()
         f.addStep(steps.SVN(...))
@@ -29,7 +29,7 @@ For example, the following will generate a builder for each of a range of suppor
         c['builders'].append(util.BuilderConfig(
                 name="test-%s" % python,
                 factory=f,
-                workernames=pytest_slaves))
+                workernames=pytest_workers))
 
 .. _Collapse-Request-Functions:
 
@@ -355,10 +355,10 @@ The ``poll`` method should return a Deferred to signal its completion.
 
 Aside from the service methods, the other concerns in the previous section apply here, too.
 
-Writing a New Latent Buildslave Implementation
-----------------------------------------------
+Writing a New Latent Worker Implementation
+------------------------------------------
 
-Writing a new latent buildslave should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance`.
+Writing a new latent worker should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance`.
 
 ::
 
@@ -420,7 +420,7 @@ Here is an example how you can achieve workdir-per-repo::
         build_factory.addStep(Git(mode="update"))
         # ...
         builders.append ({'name': 'mybuilder',
-                          'workername': 'myslave',
+                          'workername': 'myworker',
                           'builddir': 'mybuilder',
                           'factory': build_factory})
 
@@ -428,8 +428,8 @@ The end result is a set of workdirs like
 
 .. code-block:: none
 
-    Repo1 => <buildslave-base>/mybuilder/a78890ba
-    Repo2 => <buildslave-base>/mybuilder/0823ba88
+    Repo1 => <worker-base>/mybuilder/a78890ba
+    Repo2 => <worker-base>/mybuilder/0823ba88
 
 You could make the :func:`workdir()` function compute other paths, based on parts of the repo URL in the sourcestamp, or lookup in a lookup table based on repo URL.
 As long as there is a permanent 1:1 mapping between repos and workdir, this will work.
@@ -522,14 +522,14 @@ The :bb:step:`ShellCommand` class implements this ``run`` method, and in most ca
 Running Commands
 ~~~~~~~~~~~~~~~~
 
-To spawn a command in the buildslave, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
+To spawn a command in the worker, create a :class:`~buildbot.process.remotecommand.RemoteCommand` instance in your step's ``run`` method and run it with :meth:`~buildbot.process.remotecommand.BuildStep.runCommand`::
 
     cmd = RemoteCommand(args)
     d = self.runCommand(cmd)
 
-The :py:class:`~buildbot.process.buildstep.CommandMixin` class offers a simple interface to several common slave-side commands.
+The :py:class:`~buildbot.process.buildstep.CommandMixin` class offers a simple interface to several common worker-side commands.
 
-For the much more common task of running a shell command on the buildslave, use :py:class:`~buildbot.process.buildstep.ShellMixin`.
+For the much more common task of running a shell command on the worker, use :py:class:`~buildbot.process.buildstep.ShellMixin`.
 This class provides a method to handle the myriad constructor arguments related to shell commands, as well as a method to create new :py:class:`~buildbot.process.remotecommand.RemoteCommand` instances.
 This mixin is the recommended method of implementing custom shell-based steps.
 The older pattern of subclassing ``ShellCommand`` is no longer recommended.
@@ -642,8 +642,8 @@ Again, note that the log input must be a unicode string.
 Finally, :meth:`~buildbot.process.buildstep.BuildStep.addHTMLLog` is similar to :meth:`~buildbot.process.buildstep.BuildStep.addCompleteLog`, but the resulting log will be tagged as containing HTML.
 The web UI will display the contents of the log using the browser.
 
-The ``logfiles=`` argument to :bb:step:`ShellCommand` and its subclasses creates new log files and fills them in realtime by asking the buildslave to watch a actual file on disk.
-The buildslave will look for additions in the target file and report them back to the :class:`BuildStep`.
+The ``logfiles=`` argument to :bb:step:`ShellCommand` and its subclasses creates new log files and fills them in realtime by asking the worker to watch a actual file on disk.
+The worker will look for additions in the target file and report them back to the :class:`BuildStep`.
 These additions will be added to the log file by calling :meth:`addStdout`.
 
 All log files can be used as the source of a :class:`~buildbot.process.logobserver.LogObserver` just like the normal :file:`stdio` :class:`LogFile`.
@@ -782,17 +782,17 @@ Discovering files
 ~~~~~~~~~~~~~~~~~
 
 When implementing a :class:`BuildStep` it may be necessary to know about files that are created during the build.
-There are a few slave commands that can be used to find files on the slave and test for the existence (and type) of files and directories.
+There are a few worker commands that can be used to find files on the worker and test for the existence (and type) of files and directories.
 
-The slave provides the following file-discovery related commands:
+The worker provides the following file-discovery related commands:
 
-* `stat` calls :func:`os.stat` for a file in the slave's build directory.
+* `stat` calls :func:`os.stat` for a file in the worker's build directory.
   This can be used to check if a known file exists and whether it is a regular file, directory or symbolic link.
 
-* `listdir` calls :func:`os.listdir` for a directory on the slave.
-  It can be used to obtain a list of files that are present in a directory on the slave.
+* `listdir` calls :func:`os.listdir` for a directory on the worker.
+  It can be used to obtain a list of files that are present in a directory on the worker.
 
-* `glob` calls :func:`glob.glob` on the slave, with a given shell-style pattern containing wildcards.
+* `glob` calls :func:`glob.glob` on the worker, with a given shell-style pattern containing wildcards.
 
 For example, we could use stat to check if a given path exists and contains ``*.pyc`` files.
 If the path does not exist (or anything fails) we mark the step as failed; if the path exists but is not a directory, we mark the step as having "warnings".
@@ -811,11 +811,11 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
             self.dirname = dirname
 
         def start(self):
-            # make sure the slave knows about stat
-            slavever = (self.workerVersion('stat'),
+            # make sure the worker knows about stat
+            workerver = (self.workerVersion('stat'),
                         self.workerVersion('glob'))
-            if not all(slavever):
-                raise BuildSlaveToOldError('need stat and glob')
+            if not all(workerver):
+                raise WorkerTooOldError('need stat and glob')
 
             cmd = buildstep.RemoteCommand('stat', {'file': self.dirname})
 
