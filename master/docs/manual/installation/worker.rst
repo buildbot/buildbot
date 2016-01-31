@@ -1,7 +1,7 @@
 Buildslave Setup
 ================
 
-.. _Creating-a-buildslave:
+.. _Creating-a-worker:
 
 Creating a buildslave
 ---------------------

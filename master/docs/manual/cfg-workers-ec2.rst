@@ -45,7 +45,7 @@ Creating an AMI is out of the scope of this document.
 The `EC2 Getting Started Guide <http://docs.amazonwebservices.com/AWSEC2/latest/GettingStartedGuide/>`_ is a good resource for this task.
 Here are a few additional hints.
 
-* When an instance of the image starts, it needs to automatically start a buildbot slave that connects to your master (to create a buildbot slave, :ref:`Creating-a-buildslave`; to make a daemon, :ref:`Launching-the-daemons`).
+* When an instance of the image starts, it needs to automatically start a buildbot slave that connects to your master (to create a buildbot slave, :ref:`Creating-a-worker`; to make a daemon, :ref:`Launching-the-daemons`).
 * You may want to make an instance of the buildbot slave, configure it as a standard buildslave in the master (i.e., not as a latent slave), and test and debug it that way before you turn it into an AMI and convert to a latent slave in the master.
 
 Configure the Master with an :class:`~buildbot.worker.ec2.EC2LatentWorker`
