@@ -41,10 +41,10 @@ Psycopg: http://initd.org/psycopg/
 Maintenance
 -----------
 
-The buildmaster can be configured to send out email notifications when a slave has been offline for a while.
-Be sure to configure the buildmaster with a contact email address for each slave so these notifications are sent to someone who can bring it back online.
+The buildmaster can be configured to send out email notifications when a worker has been offline for a while.
+Be sure to configure the buildmaster with a contact email address for each worker so these notifications are sent to someone who can bring it back online.
 
-If you find you can no longer provide a buildslave to the project, please let the project admins know, so they can put out a call for a replacement.
+If you find you can no longer provide a worker to the project, please let the project admins know, so they can put out a call for a replacement.
 
 The Buildbot records status and logs output continually, each time a build is performed.
 The status tends to be small, but the build logs can become quite large.
@@ -85,21 +85,21 @@ Sometimes it is safer to fully-specify everything:
         start /usr/home/buildbot/basedir
 
 Take the time to get the ``@reboot`` job set up.
-Otherwise, things will work fine for a while, but the first power outage or system reboot you have will stop the buildslave with nothing but the cries of sorrowful developers to remind you that it has gone away.
+Otherwise, things will work fine for a while, but the first power outage or system reboot you have will stop the worker with nothing but the cries of sorrowful developers to remind you that it has gone away.
 
 .. _Connecting-to-the-buildmaster:
 
 Connecting to the buildmaster
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the buildslave cannot connect to the buildmaster, the reason should be described in the :file:`twistd.log` logfile.
+If the worker cannot connect to the buildmaster, the reason should be described in the :file:`twistd.log` logfile.
 Some common problems are an incorrect master hostname or port number, or a mistyped bot name or password.
-If the buildslave loses the connection to the master, it is supposed to attempt to reconnect with an exponentially-increasing backoff.
+If the worker loses the connection to the master, it is supposed to attempt to reconnect with an exponentially-increasing backoff.
 Each attempt (and the time of the next attempt) will be logged.
-If you get impatient, just manually stop and re-start the buildslave.
+If you get impatient, just manually stop and re-start the worker.
 
-When the buildmaster is restarted, all slaves will be disconnected, and will attempt to reconnect as usual.
-The reconnect time will depend upon how long the buildmaster is offline (i.e. how far up the exponential backoff curve the slaves have travelled).
+When the buildmaster is restarted, all workers will be disconnected, and will attempt to reconnect as usual.
+The reconnect time will depend upon how long the buildmaster is offline (i.e. how far up the exponential backoff curve the workers have travelled).
 Again, :samp:`buildslave restart {BASEDIR}` will speed up the process.
 
 .. _Contrib-Scripts:
