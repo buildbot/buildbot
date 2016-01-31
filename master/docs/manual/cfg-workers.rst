@@ -47,7 +47,7 @@ For example::
                       properties={ 'os':'solaris' }),
     ]
 
-.. index:: Build Slaves; limiting concurrency
+.. index:: Workers; limiting concurrency
 
 The :class:`Worker` constructor can also take an optional ``max_builds`` parameter to limit the number of builds that it will execute simultaneously::
 
@@ -115,7 +115,7 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
                           notify_on_missing="bob@example.com")
     ]
 
-.. index:: BuildSlaves; local
+.. index:: Workers; local
 
 .. _Local-Buildslaves:
 
@@ -138,7 +138,7 @@ A configuration for two workers would look like::
     ]
 
 
-.. index:: BuildSlaves; latent
+.. index:: Workers; latent
 
 .. _Latent-Buildslaves:
 

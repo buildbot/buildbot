@@ -1,6 +1,6 @@
 .. index::
     Docker
-    Buildslaves; Docker
+    Workers; Docker
 
 Docker latent worker
 ====================

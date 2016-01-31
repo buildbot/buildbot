@@ -669,7 +669,7 @@ buildslaves
 
 .. py:module:: buildbot.db.workers
 
-.. index:: double: BuildSlaves; DB Connector Component
+.. index:: double: Workers; DB Connector Component
 
 .. py:class:: WorkersConnectorComponent
 

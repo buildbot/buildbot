@@ -2,7 +2,7 @@
 
 .. index::
    libvirt
-   BuildSlaves; libvirt
+   Workers; libvirt
 
 Libvirt
 =======

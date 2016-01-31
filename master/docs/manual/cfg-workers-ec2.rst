@@ -2,7 +2,7 @@
 
 .. index::
    AWS EC2
-   BuildSlaves; AWS EC2
+   Workers; AWS EC2
 
 Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 =====================================================
