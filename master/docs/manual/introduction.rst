@@ -130,7 +130,7 @@ In this case, the mapping would look like:
     Builder(full-ppc)   ->  BuildSlaves(slave-ppc)
     Builder(source-tarball) -> BuildSlaves(slave-i386, slave-ppc)
 
-and each :class:`Worker` would have two :class:`SlaveBuilders` inside it, one for a full builder, and a second for the source-tarball builder.
+and each :class:`Worker` would have two :class:`SlaveBuilder`\s inside it, one for a full builder, and a second for the source-tarball builder.
 
 Once a :class:`WorkerForBuilder` is available, the :class:`Builder` pulls one or more :class:`BuildRequest`\s off its incoming queue.
 (It may pull more than one if it determines that it can merge the requests together; for example, there may be multiple requests to build the current *HEAD* revision).
