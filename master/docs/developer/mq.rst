@@ -129,7 +129,7 @@ Wamp
             'builderid': 10,
             'buildid': 1,
             'buildrequestid': 13,
-            'buildslaveid': 20,
+            'workerid': 20,
             'complete': False,
             'complete_at': None,
             'masterid': 824,

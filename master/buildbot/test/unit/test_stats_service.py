@@ -203,7 +203,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             number=build['number'],
             builderid=build['builderid'],
             buildrequestid=build['buildrequestid'],
-            buildslaveid=build['workerid'],
+            workerid=build['workerid'],
             masterid=build['masterid'],
             started_at=build['started_at'],
             complete=True,

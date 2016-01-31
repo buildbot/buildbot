@@ -472,7 +472,6 @@ class TestContactChannel(unittest.TestCase):
                                         number=build['number'],
                                         builderid=build['builderid'],
                                         buildrequestid=build['buildrequestid'],
-                                        # TODO: why not buildslaveid=?
                                         workerid=build['workerid'],
                                         masterid=build['masterid'],
                                         started_at=datetime2epoch(build['started_at']),
