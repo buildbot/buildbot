@@ -243,7 +243,7 @@ builds
     * ``number`` (the build number, unique only within the builder)
     * ``builderid`` (the ID of the builder that performed this build)
     * ``buildrequestid`` (the ID of the build request that caused this build)
-    * ``buildslaveid`` (the ID of the slave on which this build was performed)
+    * ``workerid`` (the ID of the slave on which this build was performed)
     * ``masterid`` (the ID of the master on which this build was performed)
     * ``started_at`` (datetime at which this build began)
     * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
@@ -286,7 +286,7 @@ builds
         Get a list of builds, in the format described above.
         Each of the parameters limit the resulting set of builds.
 
-    .. py:method:: addBuild(builderid, buildrequestid, buildslaveid, masterid, state_string)
+    .. py:method:: addBuild(builderid, buildrequestid, workerid, masterid, state_string)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: build request id
@@ -710,7 +710,7 @@ buildslaves
     .. py:method:: getWorker(slaveid=None, name=None, masterid=None, builderid=None)
 
         :param string name: the name of the buildslave to retrieve
-        :param integer buildslaveid: the ID of the buildslave to retrieve
+        :param integer workerid: the ID of the buildslave to retrieve
         :param integer masterid: limit to slaves configured on this master
         :param integer builderid: limit to slaves configured on this builder
         :returns: info dictionary or None, via Deferred
@@ -718,9 +718,9 @@ buildslaves
         Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
         The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getWorkers`.
 
-    .. py:method:: workerConnected(buildslaveid, masterid, workerinfo)
+    .. py:method:: workerConnected(workerid, masterid, workerinfo)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer workerid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it connected
         :param workerinfo: the new buildslave information dictionary
         :type workerinfo: dict
@@ -729,17 +729,17 @@ buildslaves
         Record the given buildslave as attached to the given master, and update its cached slave information.
         The supplied information completely replaces any existing information.
 
-    .. py:method:: workerDisconnected(buildslaveid, masterid)
+    .. py:method:: workerDisconnected(workerid, masterid)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer workerid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it connected
         :returns: Deferred
 
         Record the given buildslave as no longer attached to the given master.
 
-    .. py:method:: workerConfigured(buildslaveid, masterid, builderids)
+    .. py:method:: workerConfigured(workerid, masterid, builderids)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer workerid: the ID of the buildslave
         :param integer masterid: the ID of the master to which it configured
         :param list of integer builderids: the ID of the builders to which it is configured
         :returns: Deferred
