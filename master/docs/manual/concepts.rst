@@ -83,7 +83,7 @@ When branches are used, the ``p4base`` and ``defaultBranch`` are concatenated to
 For the purposes of Buildbot (which never commits changes), the repository is specified with a URL and a revision number.
 
 The most common way to obtain read-only access to a bzr tree is via HTTP, simply by making the repository visible through a web server like Apache.
-Bzr can also use FTP and SFTP servers, if the buildslave process has sufficient privileges to access them.
+Bzr can also use FTP and SFTP servers, if the worker process has sufficient privileges to access them.
 Higher performance can be obtained by running a special Bazaar-specific server.
 None of these matter to the buildbot: the repository URL just has to match the kind of server being used.
 The ``repoURL`` argument provides the location of the repository.
@@ -176,7 +176,7 @@ Repository
 
 This attribute specifies the repository in which this change occurred.
 In the case of DVCS's, this information may be required to check out the committed source code.
-However, using the repository from a change has security risks: if Buildbot is configured to blindly trust this information, then it may easily be tricked into building arbitrary source code, potentially compromising the buildslaves and the integrity of subsequent builds.
+However, using the repository from a change has security risks: if Buildbot is configured to blindly trust this information, then it may easily be tricked into building arbitrary source code, potentially compromising the workers and the integrity of subsequent builds.
 
 .. _Attr-Codebase:
 
@@ -334,8 +334,8 @@ BuildRequests
 -------------
 
 A :class:`BuildRequest` is a request to build a specific set of source code (specified by one ore more source stamps) on a single :class:`Builder`.
-Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. when an associated buildslave becomes free).
-:class:`BuildRequest`\s are prioritized from oldest to newest, so when a buildslave becomes free, the :class:`Builder` with the oldest :class:`BuildRequest` is run.
+Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. when an associated worker becomes free).
+:class:`BuildRequest`\s are prioritized from oldest to newest, so when a worker becomes free, the :class:`Builder` with the oldest :class:`BuildRequest` is run.
 
 The :class:`BuildRequest` contains one :class:`SourceStamp` specification per codebase.
 The actual process of running the build (the series of :class:`Step`\s that will be executed) is implemented by the :class:`Build` object.
@@ -358,9 +358,9 @@ In general, each :class:`Builder` runs independently (although various kinds of 
 
 Each builder is a long-lived object which controls a sequence of :class:`Build`\s.
 Each :class:`Builder` is created when the config file is first parsed, and lives forever (or rather until it is removed from the config file).
-It mediates the connections to the buildslaves that do all the work, and is responsible for creating the :class:`Build` objects - :ref:`Concepts-Build`.
+It mediates the connections to the workers that do all the work, and is responsible for creating the :class:`Build` objects - :ref:`Concepts-Build`.
 
-Each builder gets a unique name, and the path name of a directory where it gets to do all its work (there is a buildmaster-side directory for keeping status information, as well as a buildslave-side directory where the actual checkout/compile/test commands are executed).
+Each builder gets a unique name, and the path name of a directory where it gets to do all its work (there is a buildmaster-side directory for keeping status information, as well as a worker-side directory where the actual checkout/compile/test commands are executed).
 
 .. _Concepts-Build-Factories:
 
@@ -375,13 +375,13 @@ Workers
 -------
 
 Each builder is associated with one of more :class:`Worker`\s.
-A builder which is used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should naturally be associated with a Mac buildslave.
+A builder which is used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should naturally be associated with a Mac worker.
 
-If multiple buildslaves are available for any given builder, you will have some measure of redundancy: in case one slave goes offline, the others can still keep the :class:`Builder` working.
-In addition, multiple buildslaves will allow multiple simultaneous builds for the same :class:`Builder`, which might be useful if you have a lot of forced or ``try`` builds taking place.
+If multiple workers are available for any given builder, you will have some measure of redundancy: in case one worker goes offline, the others can still keep the :class:`Builder` working.
+In addition, multiple workers will allow multiple simultaneous builds for the same :class:`Builder`, which might be useful if you have a lot of forced or ``try`` builds taking place.
 
-If you use this feature, it is important to make sure that the buildslaves are all, in fact, capable of running the given build.
-The slave hosts should be configured similarly, otherwise you will spend a lot of time trying (unsuccessfully) to reproduce a failure that only occurs on some of the buildslaves and not the others.
+If you use this feature, it is important to make sure that the workers are all, in fact, capable of running the given build.
+The worker hosts should be configured similarly, otherwise you will spend a lot of time trying (unsuccessfully) to reproduce a failure that only occurs on some of the workers and not the others.
 Different platforms, operating systems, versions of major programs or libraries, all these things mean you should use separate Builders.
 
 .. _Concepts-Build:
@@ -556,7 +556,7 @@ Some projects want to perform nightly builds as well as building in response to 
 Such a project would run two schedulers, both pointing to the same set of builders, but could provide an ``is_nightly`` property so that steps can distinguish the nightly builds, perhaps to run more resource-intensive tests.
 
 Some projects have different build processes on different systems.
-Rather than create a build factory for each slave, the steps can use buildslave properties to identify the unique aspects of each slave and adapt the build process dynamically.
+Rather than create a build factory for each worker, the steps can use worker properties to identify the unique aspects of each worker and adapt the build process dynamically.
 
 .. _Multiple-Codebase-Builds:
 
