@@ -19,7 +19,7 @@ to know about protocol calls or handle protocol specific exceptions.
     Protocol-specific subclasses are instantiated with protocol-specific
     parameters by the buildmaster during startup.
 
-.. py:class:: Connection(master, buildslave, mind)
+.. py:class:: Connection(master, buildslave)
 
     Represents connection to single slave
 
