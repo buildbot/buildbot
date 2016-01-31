@@ -652,7 +652,7 @@ The option `-r` option is advisable here, just like for ``create-master``.
 
     buildslave create-slave -r {BASEDIR} {MASTERHOST}:{PORT} {SLAVENAME} {PASSWORD}
 
-The create-slave options are described in :ref:`Buildslave-Options`.
+The create-slave options are described in :ref:`Worker-Options`.
 
 .. bb:cmdline:: start (buildslave)
 

@@ -85,7 +85,7 @@ Here's a good checklist for setting up a buildslave:
 
   If you run many buildslaves, you may want to create a single :file:`~buildslave/info` file and share it among all the buildslaves with symlinks.
 
-.. _Buildslave-Options:
+.. _Worker-Options:
 
 Buildslave Options
 ~~~~~~~~~~~~~~~~~~
