@@ -8,11 +8,11 @@ Requirements
 Common Requirements
 -------------------
 
-At a bare minimum, you'll need the following for both the buildmaster and a buildslave:
+At a bare minimum, you'll need the following for both the buildmaster and a worker:
 
 Python: http://www.python.org
 
-  Both Buildbot master and Buildbot slave require Python-2.6, although Python-2.7 is recommended.
+  Both Buildbot master and Buildbot worker require Python-2.6, although Python-2.7 is recommended.
 
   .. note::
 
@@ -21,8 +21,8 @@ Python: http://www.python.org
 
 Twisted: http://twistedmatrix.com
 
-  Buildbot requires Twisted-11.0.0 or later on the master, and Twisted-8.1.0 on the slave.
-  In upcoming versions of Buildbot, a newer Twisted will also be required on the slave.
+  Buildbot requires Twisted-11.0.0 or later on the master, and Twisted-8.1.0 on the worker.
+  In upcoming versions of Buildbot, a newer Twisted will also be required on the worker.
   As always, the most recent version is recommended.
   Note that Twisted requires ZopeInterface to be installed as well.
 
@@ -30,14 +30,14 @@ Future:
 
   As part of ongoing (but as-yet incomplete) work to make Buildbot compatible with Python 3, the master requires the ``future`` module.
 
-Of course, your project's build process will impose additional requirements on the buildslaves.
+Of course, your project's build process will impose additional requirements on the workers.
 These hosts must have all the tools necessary to compile and test your project's source code.
 
 Windows Support
 ~~~~~~~~~~~~~~~
 
-Buildbot - both master and slave - runs well natively on Windows.
-The slave runs well on Cygwin, but because of problems with SQLite on Cygwin, the master does not.
+Buildbot - both master and worker - runs well natively on Windows.
+The worker runs well on Cygwin, but because of problems with SQLite on Cygwin, the master does not.
 
 Buildbot's windows testing is limited to the most recent Twisted and Python versions.
 For best results, use the most recent available versions of these libraries on Windows.
