@@ -171,7 +171,7 @@ The following example will add a Docker latent worker for docker running at the 
                                   image='my_project_worker')
     ]
 
-In addition to the arguments available for any :ref:`Latent-Buildslaves`, :class:`DockerLatentWorker` will accept the following extra ones:
+In addition to the arguments available for any :ref:`Latent-Workers`, :class:`DockerLatentWorker` will accept the following extra ones:
 
 ``docker_host``
     (mandatory)

@@ -140,7 +140,7 @@ A configuration for two workers would look like::
 
 .. index:: Workers; latent
 
-.. _Latent-Buildslaves:
+.. _Latent-Workers:
 
 Latent Workers
 ~~~~~~~~~~~~~~
