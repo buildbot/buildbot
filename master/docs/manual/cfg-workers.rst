@@ -18,7 +18,7 @@ Buildbot also supports "on-demand", or latent, workers, which allow buildbot to 
 Defining Workers
 ~~~~~~~~~~~~~~~~
 
-A :class:`Worker` instance is created with a ``workername`` and a ``slavepassword``.
+A :class:`Worker` instance is created with a ``workername`` and a ``workerpassword``.
 These are the same two values that need to be provided to the worker administrator when they create the worker.
 
 The workername must be unique, of course.
@@ -55,8 +55,8 @@ The :class:`Worker` constructor can also take an optional ``max_builds`` paramet
         worker.Worker("bot-linux", "linuxpassword", max_builds=2)
     ]
 
-Master-Slave TCP Keepalive
-++++++++++++++++++++++++++
+Master-Worker TCP Keepalive
++++++++++++++++++++++++++++
 
 By default, the buildmaster sends a simple, non-blocking message to each worker every hour.
 These keepalives ensure that traffic is flowing over the underlying TCP connection, allowing the system's network stack to detect any problems before a build is started.
@@ -126,7 +126,7 @@ To simplify the maintainance, you may even want to run them in the same process.
 
 This is what LocalWorker is for.
 Instead of configuring a ``worker.Worker``, you have to configure a ``worker.LocalWorker``.
-As the slave is running on the same process, password is not necessary.
+As the worker is running on the same process, password is not necessary.
 You can run as many local workers as long as your machine CPU and memory is allowing.
 
 A configuration for two workers would look like::
