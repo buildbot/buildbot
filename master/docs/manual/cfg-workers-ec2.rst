@@ -9,9 +9,9 @@ Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 
 `EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to start virtual machines in an Amazon data center.
 Please see their website for details, including costs.
-Using the AWS EC2 latent buildslaves involves getting an EC2 account with AWS and setting up payment; customizing one or more EC2 machine images ("AMIs") on your desired operating system(s) and publishing them (privately if needed); and configuring the buildbot master to know how to start your customized images for "substantiating" your latent slaves.
+Using the AWS EC2 latent workers involves getting an EC2 account with AWS and setting up payment; customizing one or more EC2 machine images ("AMIs") on your desired operating system(s) and publishing them (privately if needed); and configuring the buildbot master to know how to start your customized images for "substantiating" your latent workers.
 
-This document will guide you through setup of a AWS EC2 latent buildslave:
+This document will guide you through setup of a AWS EC2 latent worker:
 
 .. contents::
    :depth: 1
@@ -20,7 +20,7 @@ This document will guide you through setup of a AWS EC2 latent buildslave:
 Get an AWS EC2 Account
 ----------------------
 
-To start off, to use the AWS EC2 latent buildslave, you need to get an AWS developer account and sign up for EC2.
+To start off, to use the AWS EC2 latent worker, you need to get an AWS developer account and sign up for EC2.
 Although Amazon often changes this process, these instructions should help you get started:
 
 1. Go to http://aws.amazon.com/ and click to "Sign Up Now" for an AWS account.
@@ -45,8 +45,8 @@ Creating an AMI is out of the scope of this document.
 The `EC2 Getting Started Guide <http://docs.amazonwebservices.com/AWSEC2/latest/GettingStartedGuide/>`_ is a good resource for this task.
 Here are a few additional hints.
 
-* When an instance of the image starts, it needs to automatically start a buildbot slave that connects to your master (to create a buildbot slave, :ref:`Creating-a-worker`; to make a daemon, :ref:`Launching-the-daemons`).
-* You may want to make an instance of the buildbot slave, configure it as a standard buildslave in the master (i.e., not as a latent slave), and test and debug it that way before you turn it into an AMI and convert to a latent slave in the master.
+* When an instance of the image starts, it needs to automatically start a buildbot worker that connects to your master (to create a buildbot worker, :ref:`Creating-a-worker`; to make a daemon, :ref:`Launching-the-daemons`).
+* You may want to make an instance of the buildbot worker, configure it as a standard worker in the master (i.e., not as a latent worker), and test and debug it that way before you turn it into an AMI and convert to a latent worker in the master.
 
 Configure the Master with an :class:`~buildbot.worker.ec2.EC2LatentWorker`
 --------------------------------------------------------------------------
@@ -64,10 +64,10 @@ If you have not, and someone has given you access to an AMI, these hints may hel
   Later on, we'll call the first one your ``identifier`` and the second one your ``secret_identifier``\.
 
 When creating an :class:`~buildbot.worker.ec2.EC2LatentWorker` in the buildbot master configuration, the first three arguments are required.
-The name and password are the first two arguments, and work the same as with normal buildslaves.
+The name and password are the first two arguments, and work the same as with normal workers.
 The next argument specifies the type of the EC2 virtual machine (available options as of this writing include ``m1.small``, ``m1.large``, ``m1.xlarge``, ``c1.medium``, and ``c1.xlarge``; see the EC2 documentation for descriptions of these machines).
 
-Here is the simplest example of configuring an EC2 latent buildslave.
+Here is the simplest example of configuring an EC2 latent worker.
 It specifies all necessary remaining values explicitly in the instantiation.
 
 ::
@@ -163,7 +163,7 @@ This allows 10 to sort after 1, for instance.
             valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
             identifier='publickey', secret_identifier='privatekey')
 
-In addition to using the password as a handshake between the master and the slave, you may want to use a firewall to assert that only machines from a specific IP can connect as slaves.
+In addition to using the password as a handshake between the master and the worker, you may want to use a firewall to assert that only machines from a specific IP can connect as workers.
 This is possible with AWS EC2 by using the Elastic IP feature.
 To configure, generate a Elastic IP in AWS, and then specify it in your configuration using the ``elastic_ip`` argument.
 
@@ -178,9 +178,9 @@ To configure, generate a Elastic IP in AWS, and then specify it in your configur
                                elastic_ip='208.77.188.166')
     ]
 
-One other way to configure a slave is by settings AWS tags.
+One other way to configure a worker is by settings AWS tags.
 They can for example be used to have a more restrictive security `IAM <http://aws.amazon.com/iam/>`_ policy.
-To get Buildbot to tag the latent slave specify the tag keys and values in your configuration using the ``tags`` argument.
+To get Buildbot to tag the latent worker specify the tag keys and values in your configuration using the ``tags`` argument.
 
 ::
 
@@ -251,4 +251,4 @@ If the spot request continues to fail, and the number of attempts exceeds the va
 
 In this example, a spot request will be sent with a bid price of 15% above the 24-hour average.
 If the request fails with the status **price-too-low**, the request will be resubmitted up to twice, each time with a 10% increase in the bid price.
-If the request succeeds, the buildslave will substantiate as normal and run any pending builds.
+If the request succeeds, the worker will substantiate as normal and run any pending builds.
