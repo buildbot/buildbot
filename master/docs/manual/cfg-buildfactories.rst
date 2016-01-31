@@ -72,7 +72,7 @@ The following attributes can be set on a build factory after it is created, e.g.
     (defaults to 'build'): workdir given to every build step created by this factory as default.
     The workdir can be overridden in a build step definition.
 
-    If this attribute is set to a string, that string will be used for constructing the workdir (buildslave base + builder builddir + workdir).
+    If this attribute is set to a string, that string will be used for constructing the workdir (worker base + builder builddir + workdir).
     The attribute can also be a Python callable, for more complex cases, as described in :ref:`Factory-Workdir-Functions`.
 
 .. _DynamicBuildFactories:
@@ -197,7 +197,7 @@ Optional Arguments:
 
 ``configureEnv``
     The environment used for the initial configuration step.
-    This accepts a dictionary which will be merged into the buildslave's normal environment.
+    This accepts a dictionary which will be merged into the worker's normal environment.
     This is commonly used to provide things like ``CFLAGS="-O2 -g"`` (to turn off debug symbols during the compile).
     Defaults to an empty dictionary.
 
