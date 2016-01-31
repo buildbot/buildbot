@@ -20,7 +20,7 @@ The following snippet
 allows to use a component of kind ``kind``.
 Available ``kind``\s are:
 
-``buildslave``
+``worker``
     workers, described in :doc:`cfg-workers`
 
 ``changes``
