@@ -10,13 +10,13 @@ Libvirt
 `libvirt <http://www.libvirt.org/>`_ is a virtualization API for interacting with the virtualization capabilities of recent versions of Linux and other OSes.
 It is LGPL and comes with a stable C API, and Python bindings.
 
-This means we know have an API which when tied to buildbot allows us to have slaves that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
+This means we know have an API which when tied to buildbot allows us to have workers that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
 
 The libvirt code in Buildbot was developed against libvirt 0.7.5 on Ubuntu Lucid.
 It is used with KVM to test Python code on Karmic VM's, but obviously isn't limited to that.
 Each build is run on a new VM, images are temporary and thrown away after each build.
 
-This document will guide you through setup of a libvirt latent buildslave:
+This document will guide you through setup of a libvirt latent worker:
 
 .. contents::
    :depth: 1
@@ -39,12 +39,12 @@ Configuring your base image
 ---------------------------
 
 You need to create a base image for your builds that has everything needed to build your software.
-You need to configure the base image with a buildbot slave that is configured to connect to the master on boot.
+You need to configure the base image with a buildbot worker that is configured to connect to the master on boot.
 
 Because this image may need updating a lot, we strongly suggest scripting its creation.
 
-If you want to have multiple slaves using the same base image it can be annoying to duplicate the image just to change the buildbot credentials.
-One option is to use libvirt's DHCP server to allocate an identity to the slave: DHCP sets a hostname, and the slave takes its identity from that.
+If you want to have multiple workers using the same base image it can be annoying to duplicate the image just to change the buildbot credentials.
+One option is to use libvirt's DHCP server to allocate an identity to the worker: DHCP sets a hostname, and the worker takes its identity from that.
 
 Doing all this is really beyond the scope of the manual, but there is a :file:`vmbuilder` script and a :file:`network.xml` file to create such a DHCP server in :file:`contrib/` (:ref:`Contrib-Scripts`) that should get you started:
 
