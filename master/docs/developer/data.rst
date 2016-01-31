@@ -41,7 +41,7 @@ Implicit filters are supported.
 Control
 +++++++
 
-The control sections defines a set of actions that cause Buildbot to behave in a certain way, e.g., rebuilding a build or shutting down a slave.
+The control sections defines a set of actions that cause Buildbot to behave in a certain way, e.g., rebuilding a build or shutting down a worker.
 Actions correspond to a particular resource, although sometimes that resource is the root resource (an empty tuple).
 
 Updates
