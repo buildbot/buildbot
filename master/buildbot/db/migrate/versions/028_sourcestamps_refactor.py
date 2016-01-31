@@ -288,8 +288,7 @@ def drop_old_schema_parts(migrate_engine):
                                    server_default=sa.DefaultClause("0")),
                          sa.Column('complete_at', sa.Integer),
                          sa.Column('results', sa.SmallInteger),
-                         sa.Column('sourcestampsetid', sa.Integer,
-                                   sa.ForeignKey('sourcestampsets.id')),
+                         sa.Column('sourcestampsetid', sa.Integer),
                          )
 
     # there's a leftover bogus foreign key constraint referencing
