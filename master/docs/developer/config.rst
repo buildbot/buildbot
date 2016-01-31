@@ -106,7 +106,7 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:attribute:: protocols
 
-        The per-protocol port specification for slave connections.
+        The per-protocol port specification for worker connections.
         Based on :bb:cfg:`protocols`.
 
     .. py:attribute:: multiMaster
@@ -271,7 +271,7 @@ Error Handling
 If any errors are encountered while loading the configuration :py:func:`buildbot.config.error`
 should be called. This can occur both in the configuration-loading code,
 and in the constructors of any objects that are instantiated in the
-configuration - change sources, slaves, schedulers, build steps, and so on.
+configuration - change sources, workers, schedulers, build steps, and so on.
 
 .. py:function:: error(error)
 
@@ -482,16 +482,16 @@ One workaround for this is to change the name of the scheduler before each
 reconfig - this will cause the old scheduler to be stopped, and the new
 scheduler (with the new name and class) to be started.
 
-Slaves
-......
+Workers
+.......
 
-Similar to schedulers, slaves are specified by name, so new and old
-configurations are first compared by name, and any slaves to be added or
-removed are noted.  Slaves for which the fully-qualified class name has changed
-are also added and removed.  All slaves have their
+Similar to schedulers, workers are specified by name, so new and old
+configurations are first compared by name, and any workers to be added or
+removed are noted.  Workers for which the fully-qualified class name has changed
+are also added and removed.  All workers have their
 :py:meth:`~ReconfigurableServiceMixin.reconfigService` method called.
 
-This method takes care of the basic slave attributes, including changing the PB
+This method takes care of the basic worker attributes, including changing the PB
 registration if necessary.  Any subclasses that add configuration parameters
 should override :py:meth:`~ReconfigurableServiceMixin.reconfigService` and
 update those parameters.  As with Schedulers, because the
