@@ -224,7 +224,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means that when a full VC checkout fails, it should be retried up to ``repeats`` times, waiting ``delay`` seconds between attempts.
     If you don't provide this, it defaults to ``None``, which means VC operations should not be retried.
-    This is provided to make life easier for buildslaves which are stuck behind poor network connections.
+    This is provided to make life easier for workers which are stuck behind poor network connections.
 
 ``repository``
     The name of this parameter might vary depending on the Source step you are running.
@@ -232,7 +232,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 
     A common idiom is to pass ``Property('repository', 'url://default/repo/path')`` as repository.
     This grabs the repository from the source stamp of the build.
-    This can be a security issue, if you allow force builds from the web, or have the :class:`WebStatus` change hooks enabled; as the buildslave will download code from an arbitrary repository.
+    This can be a security issue, if you allow force builds from the web, or have the :class:`WebStatus` change hooks enabled; as the worker will download code from an arbitrary repository.
 
 ``codebase``
     This specifies which codebase the source step should use to select the right source stamp.
@@ -987,7 +987,7 @@ Monotone step takes the following arguments:
 ShellCommand
 ------------
 
-Most interesting steps involve executing a process of some sort on the buildslave.
+Most interesting steps involve executing a process of some sort on the worker.
 The :bb:step:`ShellCommand` class handles this activity.
 
 Several subclasses of :bb:step:`ShellCommand` are provided as starting points for common build steps.
@@ -998,7 +998,7 @@ Using ShellCommands
 .. py:class:: buildbot.steps.shell.ShellCommand
 
 This is a useful base class for just about everything you might want to do during a build (except for the initial source checkout).
-It runs a single command in a child shell on the buildslave.
+It runs a single command in a child shell on the worker.
 All stdout/stderr is recorded into a :class:`LogFile`.
 The step usually finishes with a status of ``FAILURE`` if the command's exit code is non-zero, otherwise it has a status of ``SUCCESS``.
 
@@ -1013,7 +1013,7 @@ The :bb:step:`ShellCommand` arguments are:
 ``command``
     a list of strings (preferred) or single string (discouraged) which specifies the command to be run.
     A list of strings is preferred because it can be used directly as an argv array.
-    Using a single string (with embedded spaces) requires the buildslave to pass the string to :command:`/bin/sh` for interpretation, which raises all sorts of difficult questions about how to escape or interpret shell metacharacters.
+    Using a single string (with embedded spaces) requires the worker to pass the string to :command:`/bin/sh` for interpretation, which raises all sorts of difficult questions about how to escape or interpret shell metacharacters.
 
     If ``command`` contains nested lists (for example, from a properties substitution), then that list will be flattened before it is executed.
 
@@ -1035,7 +1035,7 @@ The :bb:step:`ShellCommand` arguments are:
         f.addStep(steps.ShellCommand(command=["make", "test"],
                                      env={'LANG': 'fr_FR'}))
 
-    These variable settings will override any existing ones in the buildslave's environment or the environment specified in the :class:`Builder`.
+    These variable settings will override any existing ones in the worker's environment or the environment specified in the :class:`Builder`.
     The exception is :envvar:`PYTHONPATH`, which is merged with (actually prepended to) any existing :envvar:`PYTHONPATH` setting.
     The following example will prepend :file:`/home/buildbot/lib/python` to any existing :envvar:`PYTHONPATH`::
 
@@ -1944,7 +1944,7 @@ Transferring Files
 .. py:class:: buildbot.steps.transfer.FileUpload
 .. py:class:: buildbot.steps.transfer.FileDownload
 
-Most of the work involved in a build will take place on the buildslave.
+Most of the work involved in a build will take place on the worker.
 But occasionally it is useful to do some work on the buildmaster side.
 The most basic way to involve the buildmaster is simply to move a file from the slave to the master, or vice versa.
 There are a pair of steps named :bb:step:`FileUpload` and :bb:step:`FileDownload` to provide this functionality.
@@ -1973,7 +1973,7 @@ Likewise, the ``workersrc=`` argument will be expanded and interpreted relative 
    The copied file will have the same permissions on the master as on the slave, look at the ``mode=`` parameter to set it differently.
 
 To move a file from the master to the slave, use the :bb:step:`FileDownload` command.
-For example, let's assume that some step requires a configuration file that, for whatever reason, could not be recorded in the source code repository or generated on the buildslave side::
+For example, let's assume that some step requires a configuration file that, for whatever reason, could not be recorded in the source code repository or generated on the worker side::
 
     from buildbot.plugins import steps
 
@@ -1982,7 +1982,7 @@ For example, let's assume that some step requires a configuration file that, for
     f.addStep(steps.ShellCommand(command=["make", "config"]))
 
 Like :bb:step:`FileUpload`, the ``mastersrc=`` argument is interpreted relative to the buildmaster's base directory, and the ``workerdest=`` argument is relative to the builder's working directory.
-If the buildslave is running in :file:`~buildslave`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~buildslave/tests-i386/build`, and a ``workerdest=`` of :file:`foo/bar.html` will get put in :file:`~buildslave/tests-i386/build/foo/bar.html`.
+If the worker is running in :file:`~worker`, and the builder's ``builddir`` is something like :file:`tests-i386`, then the workdir is going to be :file:`~worker/tests-i386/build`, and a ``workerdest=`` of :file:`foo/bar.html` will get put in :file:`~worker/tests-i386/build/foo/bar.html`.
 Both of these commands will create any missing intervening directories.
 
 Other Parameters
@@ -1995,7 +1995,7 @@ The ``blocksize=`` argument controls how the file is sent over the network: larg
 The ``mode=`` argument allows you to control the access permissions of the target file, traditionally expressed as an octal integer.
 The most common value is probably ``0755``, which sets the `x` executable bit on the file (useful for shell scripts and the like).
 The default value for ``mode=`` is None, which means the permission bits will default to whatever the umask of the writing process is.
-The default umask tends to be fairly restrictive, but at least on the buildslave you can make it less restrictive with a --umask command-line option at creation time (:ref:`Worker-Options`).
+The default umask tends to be fairly restrictive, but at least on the worker you can make it less restrictive with a --umask command-line option at creation time (:ref:`Worker-Options`).
 
 The ``keepstamp=`` argument is a boolean that, when ``True``, forces the modified and accessed time of the destination file to match the times of the source file.
 When ``False`` (the default), the modified and accessed times of the destination file are set to the current time on the buildmaster.
@@ -2011,7 +2011,7 @@ Transfering Directories
 
 .. py:class:: buildbot.steps.transfer.DirectoryUpload
 
-To transfer complete directories from the buildslave to the master, there is a :class:`BuildStep` named :bb:step:`DirectoryUpload`.
+To transfer complete directories from the worker to the master, there is a :class:`BuildStep` named :bb:step:`DirectoryUpload`.
 It works like :bb:step:`FileUpload`, just for directories.
 However it does not support the ``maxsize``, ``blocksize`` and ``mode`` arguments.
 As an example, let's assume an generated project documentation, which consists of many files (like the output of :command:`doxygen` or :command:`epydoc`).
@@ -2260,7 +2260,7 @@ Avoid using the ``extract_fn`` form of this step with commands that produce a gr
 
 .. bb:step:: SetPropertiesFromEnv
 
-.. py:class:: buildbot.steps.slave.SetPropertiesFromEnv
+.. py:class:: buildbot.steps.worker.SetPropertiesFromEnv
 
 SetPropertiesFromEnv
 ++++++++++++++++++++
