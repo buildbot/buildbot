@@ -1662,10 +1662,10 @@ The 'tests' and 'test failed' progress metrics will now accumulate test data fro
 If ``failureOnNoTests`` is ``True``, this step will fail if no test is run.
 By default ``failureOnNoTests`` is False.
 
-.. _Slave-Filesystem-Steps:
+.. _Worker-Filesystem-Steps:
 
-Slave Filesystem Steps
-----------------------
+Worker Filesystem Steps
+-----------------------
 
 Here are some buildsteps for manipulating the worker's filesystem.
 
