@@ -685,7 +685,7 @@ buildslaves
       Each pair is represented by a dictionary with keys ``buliderid`` and ``masterid``.
 
     The buildslave information can be any JSON-able object.
-    See :bb:rtype:`buildslave` for more detail.
+    See :bb:rtype:`worker` for more detail.
 
     .. py:method:: findWorkerId(name=name)
 
