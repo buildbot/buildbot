@@ -225,7 +225,11 @@ fi
 
 if git diff --name-only $REVRANGE | grep ^master/docs/ ; then
     status "building docs"
-    make -C master/docs VERSION=latest clean html || not_ok "docs failed"
+    # Don't clean builddir if built in quick mode
+    if ! $quick ; then
+        make -C master/docs clean || not_ok "docs cleanup failed"
+    fi
+    make -C master/docs VERSION=latest html || not_ok "docs failed"
 else
     status "not building docs, because it was not changed"
 fi
