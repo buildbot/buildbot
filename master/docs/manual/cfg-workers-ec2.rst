@@ -78,6 +78,8 @@ It specifies all necessary remaining values explicitly in the instantiation.
                                ami='ami-12345',
                                identifier='publickey',
                                secret_identifier='privatekey'
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
                                )
     ]
 
@@ -92,6 +94,8 @@ Both the AMI and the account information can be specified in alternate ways.
    Buildbot supports the standard AWS credentials file.
    You can then make the access privileges stricter for this separate file, and potentially let more people read your main configuration file.
    If your master is running in EC2, you can also use IAM roles for EC2 to delegate permissions.
+
+``keypair_name`` and ``security_name`` allow you to specify different names for these AWS EC2 values.
 
 You can make an :file:`.aws` directory in the home folder of the user running the buildbot master.
 In that directory, create a file called :file:`credentials`.
@@ -111,7 +115,10 @@ Then you can instantiate the worker as follows.
     from buildbot.plugins import worker
     c['workers'] = [
         worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                       ami='ami-12345')
+                               ami='ami-12345',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
+                               )
     ]
 
 Previous examples used a particular AMI.
@@ -129,7 +136,10 @@ One available filter is to specify the acceptable AMI owners, by AWS account num
                                   valid_ami_owners=[11111111111,
                                                     22222222222],
                                   identifier='publickey',
-                                  secret_identifier='privatekey')
+                                  secret_identifier='privatekey',
+                                  keypair_name='latent_buildbot_worker',
+                                  security_name='latent_buildbot_worker',
+                                  )
 
 The other available filter is to provide a regular expression string that will be matched against each AMI's location (the S3 bucket and manifest name).
 
@@ -139,7 +149,11 @@ The other available filter is to provide a regular expression string that will b
     bot1 = worker.EC2LatentWorker(
             'bot1', 'sekrit', 'm1.large',
             valid_ami_location_regex=r'buildbot\-.*/image.manifest.xml',
-            identifier='publickey', secret_identifier='privatekey')
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='latent_buildbot_worker',
+            security_name='latent_buildbot_worker',
+            )
 
 The regular expression can specify a group, which will be preferred for the sorting.
 Only the first group is used; subsequent groups are ignored.
@@ -150,7 +164,11 @@ Only the first group is used; subsequent groups are ignored.
     bot1 = worker.EC2LatentWorker(
         'bot1', 'sekrit', 'm1.large',
         valid_ami_location_regex=r'buildbot\-.*\-(.*)/image.manifest.xml',
-        identifier='publickey', secret_identifier='privatekey')
+        identifier='publickey',
+        secret_identifier='privatekey',
+        keypair_name='latent_buildbot_worker',
+        security_name='latent_buildbot_worker',
+        )
 
 If the group can be cast to an integer, it will be.
 This allows 10 to sort after 1, for instance.
@@ -161,7 +179,11 @@ This allows 10 to sort after 1, for instance.
     bot1 = worker.EC2LatentWorker(
             'bot1', 'sekrit', 'm1.large',
             valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
-            identifier='publickey', secret_identifier='privatekey')
+            identifier='publickey',
+            secret_identifier='privatekey',
+            keypair_name='latent_buildbot_worker',
+            security_name='latent_buildbot_worker',
+            )
 
 In addition to using the password as a handshake between the master and the worker, you may want to use a firewall to assert that only machines from a specific IP can connect as workers.
 This is possible with AWS EC2 by using the Elastic IP feature.
@@ -175,7 +197,10 @@ To configure, generate a Elastic IP in AWS, and then specify it in your configur
                                'ami-12345',
                                identifier='publickey',
                                secret_identifier='privatekey',
-                               elastic_ip='208.77.188.166')
+                               elastic_ip='208.77.188.166',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
+                               )
     ]
 
 One other way to configure a worker is by settings AWS tags.
@@ -187,10 +212,12 @@ To get Buildbot to tag the latent worker specify the tag keys and values in your
     from buildbot.plugins import worker
     c['workers'] = [
         worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                       'ami-12345',
-                                       identifier='publickey',
-                                       secret_identifier='privatekey',
-                                       tags={'SomeTag': 'foo'})
+                               'ami-12345',
+                               identifier='publickey',
+                               secret_identifier='privatekey',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
+                               tags={'SomeTag': 'foo'})
     ]
 
 The :class:`~buildbot.worker.ec2.EC2LatentWorker` supports all other configuration from the standard :class:`Worker`.
@@ -198,9 +225,6 @@ The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for a
 ``missing_timeout`` defaults to 20 minutes.
 
 ``volumes`` expects a list of (volume_id, mount_point) tuples to attempt attaching when your instance has been created.
-
-``keypair_name`` and ``security_name`` allow you to specify different names for these AWS EC2 values.
-They both default to ``latent_buildbot_slave``.
 
 Spot instances
 --------------
@@ -217,6 +241,8 @@ Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`
                                identifier='publickey',
                                secret_identifier='privatekey',
                                elastic_ip='208.77.188.166',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
                                placement='b', spot_instance=True,
                                max_spot_price=0.09,
                                price_multiplier=1.15,
@@ -242,6 +268,8 @@ If the spot request continues to fail, and the number of attempts exceeds the va
                                identifier='publickey',
                                secret_identifier='privatekey',
                                elastic_ip='208.77.188.166',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
                                placement='b', spot_instance=True,
                                max_spot_price=0.09,
                                price_multiplier=1.15,
