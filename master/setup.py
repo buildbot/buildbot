@@ -193,9 +193,7 @@ setup_args = {
         ("buildbot", [
             "buildbot/buildbot.png",
         ]),
-        ("buildbot/reporters/templates/", [
-            "buildbot/reporters/templates/default_mail.txt",
-        ]),
+        include("buildbot/reporters/templates", "*.txt"),
         ("buildbot/db/migrate", [
             "buildbot/db/migrate/migrate.cfg",
         ]),
