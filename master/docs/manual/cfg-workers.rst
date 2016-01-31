@@ -37,7 +37,7 @@ A configuration for two workers would look like::
 Worker Options
 ~~~~~~~~~~~~~~
 
-.. index:: Properties; from buildslave
+.. index:: Properties; from worker
 
 :class:`Worker` objects can also be created with an optional ``properties`` argument, a dictionary specifying properties that will be available to any builds performed on this worker.
 For example::
