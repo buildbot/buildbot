@@ -69,10 +69,10 @@ Troubleshooting
 
 Here are a few hints on diagnosing common problems.
 
-.. _Starting-the-buildslave:
+.. _Starting-the-worker:
 
-Starting the buildslave
-~~~~~~~~~~~~~~~~~~~~~~~
+Starting the worker
+~~~~~~~~~~~~~~~~~~~
 
 Cron jobs are typically run with a minimal shell (:file:`/bin/sh`, not :file:`/bin/bash`), and tilde expansion is not always performed in such commands.
 You may want to use explicit paths, because the :envvar:`PATH` is usually quite short and doesn't include anything set by your shell's startup scripts (:file:`.profile`, :file:`.bashrc`, etc).

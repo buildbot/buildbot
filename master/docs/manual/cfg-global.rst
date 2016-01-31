@@ -418,10 +418,10 @@ For that purpose, see :ref:`Prioritizing-Builds`.
 
 .. bb:cfg:: protocols
 
-.. _Setting-the-PB-Port-for-Slaves:
+.. _Setting-the-PB-Port-for-Workers:
 
-Setting the PB Port for Slaves
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Setting the PB Port for Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 

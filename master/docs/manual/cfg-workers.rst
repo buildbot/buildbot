@@ -70,7 +70,7 @@ The interval can be modified by specifying the interval in seconds using the ``k
 
 The interval can be set to ``None`` to disable this functionality altogether.
 
-.. _When-Buildslaves-Go-Missing:
+.. _When-Workers-Go-Missing:
 
 When Workers Go Missing
 +++++++++++++++++++++++
@@ -154,7 +154,7 @@ Thanks to services such as Amazon Web Services' Elastic Compute Cloud ("AWS EC2"
 The workers that are started on-demand are called "latent" workers.
 As of this writing, buildbot ships with an abstract base class for building latent workers, and a concrete implementation for AWS EC2 and for libvirt.
 
-.. _Common-Latent-Buildslaves-Options:
+.. _Common-Latent-Workers-Options:
 
 Common Options
 ++++++++++++++

@@ -369,10 +369,10 @@ Build Factories
 
 A builder also has a :class:`BuildFactory`, which is responsible for creating new :class:`Build` instances: because the :class:`Build` instance is what actually performs each build, choosing the :class:`BuildFactory` is the way to specify what happens each time a build is done (:ref:`Concepts-Build`).
 
-.. _Concepts-Build-Slaves:
+.. _Concepts-Workers:
 
-Build Slaves
-------------
+Workers
+-------
 
 Each builder is associated with one of more :class:`Worker`\s.
 A builder which is used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should naturally be associated with a Mac buildslave.

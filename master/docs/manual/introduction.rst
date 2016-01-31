@@ -67,10 +67,10 @@ The buildmaster is configured and maintained by the *buildmaster admin*, who is 
 Each buildslave is maintained by a *buildslave admin*, who do not need to be quite as involved.
 Generally slaves are run by anyone who has an interest in seeing the project work well on their favorite platform.
 
-.. _BuildSlave-Connections:
+.. Worker-Connections:
 
-BuildSlave Connections
-~~~~~~~~~~~~~~~~~~~~~~
+Worker Connections
+~~~~~~~~~~~~~~~~~~
 
 The buildslaves are typically run on a variety of separate machines, at least one per platform of interest.
 These machines connect to the buildmaster over a TCP connection to a publically-visible port.

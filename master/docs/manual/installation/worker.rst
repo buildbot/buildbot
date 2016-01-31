@@ -158,10 +158,10 @@ To use these, just include them on the ``buildslave create-slave`` command line,
 
     Both master and slave must be at least version 0.8.3 for this feature to work.
 
-.. _Other-Buildslave-Configuration:
+.. _Other-Worker-Configuration:
 
-Other Buildslave Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Other Worker Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``unicode_encoding``
     This represents the encoding that buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
@@ -176,10 +176,10 @@ Other Buildslave Configuration
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
                unicode_encoding='utf-8', allow_shutdown='signal')
 
-.. _Upgrading-an-Existing-Buildslave:
+.. _Upgrading-an-Existing-Worker:
 
-Upgrading an Existing Buildslave
---------------------------------
+Upgrading an Existing Worker
+----------------------------
 
 If you have just installed a new version of Buildbot-slave, you may need to take some steps to upgrade it.
 If you are upgrading to version 0.8.2 or later, you can run
@@ -188,7 +188,7 @@ If you are upgrading to version 0.8.2 or later, you can run
 
     buildslave upgrade-slave /path/to/buildslave/dir
 
-.. _Buildslave-Version-specific-Notes:
+.. _Worker-Version-specific-Notes:
 
 Version-specific Notes
 ~~~~~~~~~~~~~~~~~~~~~~
