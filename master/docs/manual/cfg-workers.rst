@@ -117,7 +117,7 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
 
 .. index:: Workers; local
 
-.. _Local-Buildslaves:
+.. _Local-Workers:
 
 Local Workers
 ~~~~~~~~~~~~~
