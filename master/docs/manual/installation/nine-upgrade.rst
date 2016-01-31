@@ -150,7 +150,7 @@ Unfortunately, many existing names do not fit this pattern.
 
 The following fields are identifiers:
 
-* buildslave name (50-character)
+* worker name (50-character)
 * builder name (20-character)
 * step name (50-character)
 
@@ -159,7 +159,7 @@ Other Config Settings
 
 The default master.cfg file contains some new changes, which you should look over:
 
-* ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the buildslaves)
+* ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the workers)
 * Waterfall View: requires installation (``pip install buildbot-waterfall-view``) and configuration (``c['www'] = { ..., 'plugins': {'waterfall_view': {} }``).
 
 Build History
