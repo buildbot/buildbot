@@ -1687,7 +1687,7 @@ This step requires worker version 0.8.4 or later.
 .. bb:step:: CopyDirectory
 
 CopyDirectory
-+++++++++++++++
++++++++++++++
 
 This command copies a directory on the worker.
 
@@ -1726,7 +1726,7 @@ This step requires worker version 0.8.4 or later.
 .. bb:step:: MakeDirectory
 
 MakeDirectory
-+++++++++++++++
++++++++++++++
 
 This command creates a directory on the worker.
 
