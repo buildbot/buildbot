@@ -299,7 +299,7 @@ Upload a file from the slave to the master.  The arguments are
 
     The base directory for the filename, relative to the builder's basedir.
 
-``slavesrc``
+``workersrc``
 
     Name of the filename to read from., relative to the workdir.
 
@@ -335,7 +335,7 @@ Similar to ``uploadFile``, this command will upload an entire directory to the
 master, in the form of a tarball.  It takes the following arguments:
 
 ``workdir``
-``slavesrc``
+``workersrc``
 ``writer``
 ``maxsize``
 ``blocksize``

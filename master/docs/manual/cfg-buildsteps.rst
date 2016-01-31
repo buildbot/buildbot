@@ -2043,7 +2043,7 @@ Transferring Multiple Files At Once
 .. py:class:: buildbot.steps.transfer.MultipleFileUpload
 
 In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files (and directories) in a single :class:`BuildStep`.
-The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``slavesrc`` parameter it takes a (plural) ``slavesrcs`` parameter.
+The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``workersrc`` parameter it takes a (plural) ``workersrcs`` parameter.
 This parameter should either be a list, or something that can be rendered as a list.::
 
     from buildbot.plugins import steps
