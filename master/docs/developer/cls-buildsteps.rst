@@ -355,7 +355,7 @@ BuildStep
 
         This method returns true if ``command`` is not implemented on the worker, or if it is older than ``minversion``.
 
-    .. py:method:: slaveVersionHasCommand(command)
+    .. py:method:: checkWorkerHasCommand(command)
 
         :param command: command to examine
         :type command: string
