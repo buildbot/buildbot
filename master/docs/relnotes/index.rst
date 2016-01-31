@@ -29,8 +29,8 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Slave
------
+Worker
+------
 
 Features
 ~~~~~~~~
