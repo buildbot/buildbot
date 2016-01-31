@@ -23,8 +23,8 @@ The sources for properties are:
     This is most commonly used with the :bb:cmdline:`sendchange` command.
 forced builds
     The "Force Build" form allows users to specify properties
-:bb:cfg:`buildslaves <workers>`
-    A buildslave can pass properties on to the builds it performs.
+:bb:cfg:`workers <workers>`
+    A worker can pass properties on to the builds it performs.
 :ref:`builds <Common-Build-Properties>`
     A build automatically sets a number of properties on itself.
 :bb:cfg:`builders <builders>`
@@ -83,7 +83,7 @@ The following build properties are set when the build is started, and are availa
     If the build was started from a scheduler, then this property will contain the name of that scheduler.
 
 ``workdir``
-    The absolute path of the base working directory on the slave, of the current builder.
+    The absolute path of the base working directory on the worker, of the current builder.
 
 .. index:: single: Properties; workdir
 
@@ -291,7 +291,7 @@ While ``renderer`` is useful for creating new renderables, ``Transform`` is easi
 The function must either be a callable object or a renderable producing one.
 When rendered, a ``Transform`` first replaces all of its arguments that are renderables with their renderings, then calls the function, passing it the positional and keyword arguments, and returns the result as its own rendering.
 
-For example, suppose ``my_path`` is a path on the buildslave, and you want to get it relative to the build directory.
+For example, suppose ``my_path`` is a path on the worker, and you want to get it relative to the build directory.
 You can do it like this::
 
     import os.path
