@@ -229,7 +229,7 @@ This will compile the base webapp in development mode, and automatically rebuild
 
 Testing with real data
 ~~~~~~~~~~~~~~~~~~~~~~
-Front-end only hackers might want to just skip the master and slave setup, and just focus on the UI.
+Front-end only hackers might want to just skip the master and worker setup, and just focus on the UI.
 It can also be very useful to just try the UI with real data from your production.
 For those use-cases, ``gulp dev proxy`` can be used.
 
