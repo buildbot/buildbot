@@ -4,11 +4,11 @@ Protocols
 To exchange information over the network between master and slave we need to use
 protocol.
 
-:mod:`buildbot.buildslave.protocols.base` provide interfaces to implement
+:mod:`buildbot.worker.protocols.base` provide interfaces to implement
 wrappers around protocol specific calls, so other classes which use them do not need
 to know about protocol calls or handle protocol specific exceptions.
 
-.. py:module:: buildbot.buildslave.protocols.base
+.. py:module:: buildbot.worker.protocols.base
 
 
 .. py:class:: Listener(master)
@@ -71,7 +71,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
     .. py:method:: remoteStartCommand(remoteCommand, builderName, commandId, commandName, args)
 
-        :param remoteCommand: :py:class:`~buildbot.buildslave.protocols.base.RemoteCommandImpl` instance
+        :param remoteCommand: :py:class:`~buildbot.worker.protocols.base.RemoteCommandImpl` instance
         :param builderName: self explanatory
         :type builderName: string
         :param commandId: command number
