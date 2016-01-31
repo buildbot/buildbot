@@ -16,7 +16,7 @@ Buildbot is an open-source continuous integration framework for automating softw
   Developers, who do not have the facilities to test their changes everywhere before committing, will know shortly afterwards whether they have broken the build or not.
 * Buildbot allows to track various metrics (warning counts, lint checks, image size, compile time, etc) over time.
 * Buildbot has minimal requirements for workers: using virtualenv, only a Python installation is required.
-* Build slaves can be run behind a NAT firewall and communicate with the master.
+* Workers can be run behind a NAT firewall and communicate with the master.
 * Buildbot has a variety of status-reporting tools to get information about builds in front of developers in a timely manner.
 
 Documentation
