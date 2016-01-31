@@ -1,16 +1,16 @@
-Build Slaves
-============
+Workers
+=======
 
-.. py:module:: buildbot.buildslave
+.. py:module:: buildbot.worker
 
-The :py:class:`Worker` class represents a buildslave, which may or may not be connected to the master.
+The :py:class:`Worker` class represents a worker, which may or may not be connected to the master.
 Instances of this class are created directly in the Buildbot configuration file.
 
-BuildSlave
-----------
+Worker
+------
 
-.. py:class:: BuildSlave
+.. py:class:: Worker
 
-    .. py:attribute:: bulidslaveid
+    .. py:attribute:: workerid
 
-        The ID of this buildslave in the database.
+        The ID of this worker in the database.
