@@ -5,7 +5,7 @@ Command-line Tool
 
 This section describes command-line tools available after buildbot installation.
 Since version 0.8 the one-for-all :command:`buildbot` command-line tool was divided into two parts namely :command:`buildbot` and :command:`buildslave`.
-The last one was separated from main command-line tool to minimize dependencies required for running a buildslave while leaving all other functions to :command:`buildbot` tool.
+The last one was separated from main command-line tool to minimize dependencies required for running a worker while leaving all other functions to :command:`buildbot` tool.
 
 Every command-line tool has a list of global options and a set of commands which have their own options.
 One can run these tools in the following way:
@@ -15,7 +15,7 @@ One can run these tools in the following way:
    buildbot [global options] command [command options]
    buildslave [global options] command [command options]
 
-The ``buildbot`` command is used on the master, while ``buildslave`` is used on the slave.
+The ``buildbot`` command is used on the master, while ``buildslave`` is used on the worker.
 Global options are the same for both tools which perform the following actions:
 
 --help
@@ -115,7 +115,7 @@ stop
 
     buildbot stop {BASEDIR}
 
-This terminates the daemon (either buildmaster or buildslave) running in the given directory.
+This terminates the daemon (either buildmaster or worker) running in the given directory.
 The option `--clean` option shuts down the buildmaster cleanly.
 
 .. bb:cmdline:: sighup
@@ -632,18 +632,18 @@ Note carefully that the names in the :file:`options` file usually do not match t
 ``masterstatus``
     ``try_wait`` and ``masterstatus`` (equivalent to option `--wait` and ``master``, respectively) are used to ask the :bb:cmdline:`try` command to wait for the requested build to complete.
 
-buildslave
-----------
+worker
+------
 
-:command:`buildslave` command-line tool is used for buildslave management only and does not provide any additional functionality.
-One can create, start, stop and restart the buildslave.
+:command:`buildslave` command-line tool is used for worker management only and does not provide any additional functionality.
+One can create, start, stop and restart the worker.
 
 .. bb:cmdline:: create-slave
 
 create-slave
 ~~~~~~~~~~~~
 
-This creates a new directory and populates it with files that let it be used as a buildslave's base directory.
+This creates a new directory and populates it with files that let it be used as a worker's base directory.
 You must provide several arguments, which are used to create the initial :file:`buildbot.tac` file.
 
 The option `-r` option is advisable here, just like for ``create-master``.
@@ -654,12 +654,12 @@ The option `-r` option is advisable here, just like for ``create-master``.
 
 The create-slave options are described in :ref:`Worker-Options`.
 
-.. bb:cmdline:: start (buildslave)
+.. bb:cmdline:: start (worker)
 
 start
 ~~~~~
 
-This starts a buildslave which was already created in the given base directory.
+This starts a worker which was already created in the given base directory.
 The daemon is launched in the background, with events logged to a file named :file:`twistd.log`.
 
 .. code-block:: none
@@ -670,7 +670,7 @@ The option `--nodaemon` option instructs Buildbot to skip daemonizing.
 The process will start in the foreground.
 It will only return to the command-line when it is stopped.
 
-.. bb:cmdline:: restart (buildslave)
+.. bb:cmdline:: restart (worker)
 
 restart
 ~~~~~~~
@@ -679,17 +679,17 @@ restart
 
     buildslave restart [--nodaemon] BASEDIR
 
-This restarts a buildslave which is already running.
+This restarts a worker which is already running.
 It is equivalent to a ``stop`` followed by a ``start``.
 
 The option `--nodaemon` option has the same meaning as for ``start``.
 
-.. bb:cmdline:: stop (buildslave)
+.. bb:cmdline:: stop (worker)
 
 stop
 ~~~~
 
-This terminates the daemon buildslave running in the given directory.
+This terminates the daemon worker running in the given directory.
 
 .. code-block:: none
 
