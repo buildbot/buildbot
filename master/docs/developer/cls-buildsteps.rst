@@ -112,7 +112,7 @@ BuildStep
 
         :param build: the :class:`~buildbot.process.build.Build` instance controlling this step.
 
-        This method is called during setup to set the build instance controlling this slave.
+        This method is called during setup to set the build instance controlling this worker.
         Subclasses can override this to get access to the build object as soon as it is available.
         The default implementation sets the :attr:`build` attribute.
 
@@ -161,7 +161,7 @@ BuildStep
 
     .. py:method:: startStep(remote)
 
-        :param remote: a remote reference to the slave-side
+        :param remote: a remote reference to the worker-side
             :class:`~buildslave.bot.SlaveBuilder` instance
         :returns: Deferred
 
@@ -225,7 +225,7 @@ BuildStep
         The step should be brought to a halt as quickly as possible, by cancelling a remote command, killing a local process, etc.
         The step must still finish with either :meth:`finished` or :meth:`failed`.
 
-        The ``reason`` parameter can be a string or, when a slave is lost during step processing, a :exc:`~twisted.internet.error.ConnectionLost` failure.
+        The ``reason`` parameter can be a string or, when a worker is lost during step processing, a :exc:`~twisted.internet.error.ConnectionLost` failure.
 
         The parent method handles any pending lock operations, and should be called by implementations in subclasses.
 
@@ -334,12 +334,12 @@ BuildStep
 
         :param command: command to examine
         :type command: string
-        :param oldversion: return value if the slave does not specify a version
+        :param oldversion: return value if the worker does not specify a version
         :returns: string
 
-        Fetch the version of the named command, as specified on the slave.
-        In practice, all commands on a slave have the same version, but passing ``command`` is still useful to ensure that the command is implemented on the slave.
-        If the command is not implemented on the slave, :meth:`workerVersion` will return ``None``.
+        Fetch the version of the named command, as specified on the worker.
+        In practice, all commands on a worker have the same version, but passing ``command`` is still useful to ensure that the command is implemented on the worker.
+        If the command is not implemented on the worker, :meth:`workerVersion` will return ``None``.
 
         Versions take the form ``x.y`` where ``x`` and ``y`` are integers, and are compared as expected for version numbers.
 
@@ -353,14 +353,14 @@ BuildStep
         :param minversion: minimum version
         :returns: boolean
 
-        This method returns true if ``command`` is not implemented on the slave, or if it is older than ``minversion``.
+        This method returns true if ``command`` is not implemented on the worker, or if it is older than ``minversion``.
 
     .. py:method:: slaveVersionHasCommand(command)
 
         :param command: command to examine
         :type command: string
 
-        This method raise :py:class:`~buildbot.interfaces.WorkerTooOldError` if ``command`` is not implemented on the slave
+        This method raise :py:class:`~buildbot.interfaces.WorkerTooOldError` if ``command`` is not implemented on the worker
 
     .. py:method:: getWorkerName()
 
@@ -479,7 +479,7 @@ LoggingBuildStep
     * provides hooks for summarizing and evaluating the command's result
     * supports lazy logfiles
     * handles the mechanics of starting, interrupting, and finishing remote commands
-    * detects lost slaves and finishes with a status of
+    * detects lost workers and finishes with a status of
       :data:`~buildbot.process.results.RETRY`
 
     .. py:attribute:: logfiles
@@ -581,7 +581,7 @@ This class can only be used in new-style steps.
         :param path: path to test
         :returns: Boolean via Deferred
 
-        Determine if the given path exists on the slave (in any form - file, directory, or otherwise).
+        Determine if the given path exists on the worker (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
     .. py:method:: runGlob(glob)
@@ -589,22 +589,22 @@ This class can only be used in new-style steps.
         :param path: path to test
         :returns: list of filenames
 
-        Get the list of files matching the given path pattern on the slave.
+        Get the list of files matching the given path pattern on the worker.
         This uses Python's ``glob`` module.
         If the ``glob`` method fails, it aborts the step.
 
     .. py:method:: getFileContentFromWorker(path, abandonOnFailure=False)
 
-        :param path: path of the file to download from slave
+        :param path: path of the file to download from worker
         :returns: string via deferred (content of the file)
 
-        Get the content of a file on the slave.
+        Get the content of a file on the worker.
 
 
 ShellMixin
 ----------
 
-Most Buildbot steps run shell commands on the slave, and Buildbot has an impressive array of configuration parameters to control that execution.
+Most Buildbot steps run shell commands on the worker, and Buildbot has an impressive array of configuration parameters to control that execution.
 The ``ShellMixin`` mixin provides the tools to make running shell commands easy and flexible.
 
 This class can only be used in new-style steps.
@@ -650,7 +650,7 @@ This class can only be used in new-style steps.
         :returns: :py:class:`~buildbot.process.remotecommand.RemoteShellCommand` instance via Deferred
 
         This method constructs a :py:class:`~buildbot.process.remotecommand.RemoteShellCommand` instance based on the instance attributes and any supplied overrides.
-        It must be called while the step is running, as it examines the slave capabilities before creating the command.
+        It must be called while the step is running, as it examines the worker capabilities before creating the command.
         It takes care of just about everything:
 
          * Creating log files and associating them with the command
