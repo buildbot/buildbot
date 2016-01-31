@@ -72,7 +72,7 @@ The following build properties are set when the build is started, and are availa
     Each build gets a number, scoped to the :class:`Builder` (so the first build performed on any given :class:`Builder` will have a build number of 0).
     This integer property contains the build's number.
 
-.. index:: single: Properties; slavename
+.. index:: single: Properties; workername
 
 ``workername``
     This is a string which identifies which worker the build is running on.

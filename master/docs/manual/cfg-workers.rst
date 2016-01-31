@@ -18,13 +18,13 @@ Buildbot also supports "on-demand", or latent, workers, which allow buildbot to 
 Defining Workers
 ~~~~~~~~~~~~~~~~
 
-A :class:`Worker` instance is created with a ``slavename`` and a ``slavepassword``.
+A :class:`Worker` instance is created with a ``workername`` and a ``slavepassword``.
 These are the same two values that need to be provided to the worker administrator when they create the worker.
 
-The slavename must be unique, of course.
+The workername must be unique, of course.
 The password exists to prevent evildoers from interfering with the buildbot by inserting their own (broken) workers into the system and thus displacing the real ones.
 
-Workers with an unrecognized slavename or a non-matching password will be rejected when they attempt to connect, and a message describing the problem will be written to the log file (see :ref:`Logfiles`).
+Workers with an unrecognized workername or a non-matching password will be rejected when they attempt to connect, and a message describing the problem will be written to the log file (see :ref:`Logfiles`).
 
 A configuration for two workers would look like::
 

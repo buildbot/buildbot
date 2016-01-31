@@ -64,7 +64,7 @@ Here's a good checklist for setting up a worker:
 
   Now run the 'worker' command as follows:
 
-      :samp:`buildslave create-slave {BASEDIR} {MASTERHOST}:{PORT} {SLAVENAME} {PASSWORD}`
+      :samp:`buildslave create-slave {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}`
 
   This will create the base directory and a collection of files inside, including the :file:`buildbot.tac` file that contains all the information you passed to the :command:`buildbot` command.
 
@@ -96,7 +96,7 @@ To use these, just include them on the ``buildslave create-slave`` command line,
 
 .. code-block:: bash
 
-    buildslave create-slave --umask=022 ~/worker buildmaster.example.org:42012 {myslavename} {mypasswd}
+    buildslave create-slave --umask=022 ~/worker buildmaster.example.org:42012 {myworkername} {mypasswd}
 
 .. program:: buildslave create-slave
 

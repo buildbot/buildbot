@@ -30,7 +30,7 @@ Builds
 
             When combined with ``field`` filter, to get properties, one should ensure **properties** ``field`` is set.
 
-            * api/v2/builds?field=buildid&field=properties&property=slavename&property=user
+            * api/v2/builds?field=buildid&field=properties&property=workername&property=user
 
     .. note::
 

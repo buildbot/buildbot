@@ -64,7 +64,7 @@ Other optional keys may be set on each ``BuilderConfig``:
      If provided, this is a function that controls which slave will be assigned future jobs.
      The function is passed three arguments, the :class:`Builder` object which is assigning a new job, a list of :class:`WorkerForBuilder` objects and the :class:`BuildRequest`.
      The function should return one of the :class:`WorkerForBuilder` objects, or ``None`` if none of the available slaves should be used.
-     As an example, for each ``slave`` in the list, ``slave.slave`` will be a :class:`Worker` object, and ``slave.slave.slavename`` is the slave's name.
+     As an example, for each ``slave`` in the list, ``slave.slave`` will be a :class:`Worker` object, and ``slave.slave.workername`` is the slave's name.
      The function can optionally return a Deferred, which should fire with the same results.
 
 ``nextBuild``
