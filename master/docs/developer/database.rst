@@ -290,7 +290,7 @@ builds
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: build request id
-        :param integer slaveid: slave performing the build
+        :param integer workerid: slave performing the build
         :param integer masterid: master performing the build
         :param unicode state_string: initial state of the build
         :returns: tuple of build ID and build number, via Deferred
@@ -707,7 +707,7 @@ buildslaves
         The ``configured_on`` results are limited by the filtering parameters as well.
         The ``connected_to`` results are limited by the ``masterid`` parameter.
 
-    .. py:method:: getWorker(slaveid=None, name=None, masterid=None, builderid=None)
+    .. py:method:: getWorker(workerid=None, name=None, masterid=None, builderid=None)
 
         :param string name: the name of the buildslave to retrieve
         :param integer workerid: the ID of the buildslave to retrieve

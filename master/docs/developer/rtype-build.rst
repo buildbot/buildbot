@@ -7,7 +7,7 @@ Builds
     :attr integer number: the number of this build (sequential for a given builder)
     :attr integer builderid: id of the builder for this build
     :attr integer buildrequestid: build request for which this build was performed, or None if no such request exists
-    :attr integer slaveid: the slave this build ran on
+    :attr integer workerid: the slave this build ran on
     :attr integer masterid: the master this build ran on
     :attr timestamp started_at: time at which this build started
     :attr boolean complete: true if this build is complete
@@ -99,7 +99,7 @@ All update methods are available as attributes of ``master.data.updates``.
 
         :param integer builderid: builder performing this build
         :param integer buildrequstid: build request being built
-        :param integer slaveid: slave on which this build is performed
+        :param integer workerid: slave on which this build is performed
         :returns: (buildid, number) via Deferred
 
         Create a new build resource and return its ID.
