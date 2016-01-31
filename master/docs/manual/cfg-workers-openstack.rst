@@ -6,7 +6,7 @@ OpenStack
 `OpenStack <http://openstack.org/>`_ is a series of interconnected components that facilitates managing compute, storage, and network resources in a data center.
 It is available under the Apache License and has a REST interface along with a Python client.
 
-This document will guide you through setup of an OpenStack latent buildslave:
+This document will guide you through setup of an OpenStack latent worker:
 
 .. contents::
    :depth: 1
@@ -23,7 +23,7 @@ Create an Image
 
 OpenStack supports a large number of image formats.
 OpenStack maintains a short list of prebuilt images; if the desired image is not listed, The `OpenStack Compute Administration Manual <http://docs.openstack.org/trunk/openstack-compute/admin/content/index.html>`_ is a good resource for creating new images.
-You need to configure the image with a buildbot slave to connect to the master on boot.
+You need to configure the image with a buildbot worker to connect to the master on boot.
 
 Configure the Master with an OpenStackLatentWorker
 --------------------------------------------------
@@ -35,10 +35,10 @@ These are the same details set in either environment variables or passed as opti
 :class:`OpenStackLatentWorker` accepts the following arguments:
 
 ``name``
-    The buildslave name.
+    The worker name.
 
 ``password``
-    A password for the buildslave to login to the master with.
+    A password for the worker to login to the master with.
 
 ``flavor``
     The flavor ID to use for the instance.
@@ -96,7 +96,7 @@ These are the same details set in either environment variables or passed as opti
     A dict that will be appended to the arguments when creating a VM.
     Buildbot uses the OpenStack Nova version 1.1 API.
 
-Here is the simplest example of configuring an OpenStack latent buildslave.
+Here is the simplest example of configuring an OpenStack latent worker.
 
 ::
 
