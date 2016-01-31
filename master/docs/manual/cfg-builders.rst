@@ -30,10 +30,10 @@ However there is a much simpler way to use it, so in the configuration file, its
 ``workername``
 
 ``workernames``
-    These arguments specify the buildslave or buildslaves that will be used by this Builder.
-    All slaves names must appear in the :bb:cfg:`workers` configuration parameter.
-    Each buildslave can accommodate multiple builders.
-    The ``workernames`` parameter can be a list of names, while ``workername`` can specify only one slave.
+    These arguments specify the worker or workers that will be used by this Builder.
+    All workers names must appear in the :bb:cfg:`workers` configuration parameter.
+    Each worker can accommodate multiple builders.
+    The ``workernames`` parameter can be a list of names, while ``workername`` can specify only one worker.
 
 ``factory``
     This is a :class:`buildbot.process.factory.BuildFactory` instance which controls how the build is performed by defining the steps in the build.
@@ -48,23 +48,23 @@ Other optional keys may be set on each ``BuilderConfig``:
     Each builder must have a unique build directory.
 
 ``workerbuilddir``
-    Specifies the name of a subdirectory (under the slave's configured base directory) in which everything related to this builder will be placed on the buildslave.
+    Specifies the name of a subdirectory (under the worker's configured base directory) in which everything related to this builder will be placed on the worker.
     This is where checkouts, compiles, and tests are run.
     If not set, defaults to ``builddir``.
-    If a slave is connected to multiple builders that share the same ``workerbuilddir``, make sure the slave is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
+    If a worker is connected to multiple builders that share the same ``workerbuilddir``, make sure the worker is set to run one build at a time or ensure this is fine to run multiple builds from the same directory simultaneously.
 
 ``tags``
     If provided, this is a list of strings that identifies tags for the builder.
     Status clients can limit themselves to a subset of the available tags.
-    A common use for this is to add new builders to your setup (for a new module, or for a new buildslave) that do not work correctly yet and allow you to integrate them with the active builders.
+    A common use for this is to add new builders to your setup (for a new module, or for a new worker) that do not work correctly yet and allow you to integrate them with the active builders.
     You can tag these new builders with a ``test`` tag, make your main status clients ignore them, and have only private status clients pick them up.
     As soon as they work, you can move them over to the active tag.
 
 ``nextWorker``
-     If provided, this is a function that controls which slave will be assigned future jobs.
+     If provided, this is a function that controls which worker will be assigned future jobs.
      The function is passed three arguments, the :class:`Builder` object which is assigning a new job, a list of :class:`WorkerForBuilder` objects and the :class:`BuildRequest`.
-     The function should return one of the :class:`WorkerForBuilder` objects, or ``None`` if none of the available slaves should be used.
-     As an example, for each ``slave`` in the list, ``slave.slave`` will be a :class:`Worker` object, and ``slave.slave.workername`` is the slave's name.
+     The function should return one of the :class:`WorkerForBuilder` objects, or ``None`` if none of the available workers should be used.
+     As an example, for each ``worker`` in the list, ``worker.worker`` will be a :class:`Worker` object, and ``worker.worker.workername`` is the worker's name.
      The function can optionally return a Deferred, which should fire with the same results.
 
 ``nextBuild``
@@ -74,7 +74,7 @@ Other optional keys may be set on each ``BuilderConfig``:
     This function can optionally return a Deferred which should fire with the same results.
 
 ``canStartBuild``
-    If provided, this is a function that can veto whether a particular buildslave should be used for a given build request.
+    If provided, this is a function that can veto whether a particular worker should be used for a given build request.
     The function is passed three arguments: the :class:`Builder`, a :class:`Worker`, and a :class:`BuildRequest`.
     The function should return ``True`` if the combination is acceptable, or ``False`` otherwise.
     This function can optionally return a Deferred which should fire with the same results.
@@ -85,10 +85,10 @@ Other optional keys may be set on each ``BuilderConfig``:
 ``env``
     A Builder may be given a dictionary of environment variables in this parameter.
     The variables are used in :bb:step:`ShellCommand` steps in builds created by this builder.
-    The environment variables will override anything in the buildslave's environment.
+    The environment variables will override anything in the worker's environment.
     Variables passed directly to a :class:`ShellCommand` will override variables of the same name passed to the Builder.
 
-    For example, if you have a pool of identical slaves it is often easier to manage variables like :envvar:`PATH` from Buildbot rather than manually editing it inside of the slaves' environment.
+    For example, if you have a pool of identical workers it is often easier to manage variables like :envvar:`PATH` from Buildbot rather than manually editing it inside of the workers' environment.
 
     ::
 
@@ -99,7 +99,7 @@ Other optional keys may be set on each ``BuilderConfig``:
 
         c['builders'] = [
           BuilderConfig(name='test', factory=f,
-                workernames=['slave1', 'slave2', 'slave3', 'slave4'],
+                workernames=['worker1', 'worker2', 'worker3', 'worker4'],
                 env={'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}),
         ]
 
@@ -129,7 +129,7 @@ Collapsing Build Requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When more than one build request is available for a builder, Buildbot can "collapse" the requests into a single build.
-This is desirable when build requests arrive more quickly than the available slaves can satisfy them, but has the drawback that separate results for each build are not available.
+This is desirable when build requests arrive more quickly than the available workers can satisfy them, but has the drawback that separate results for each build are not available.
 
 Requests are only candidated for a merge if both requests have exactly the same :ref:`codebases<Attr-Codebase>`.
 
@@ -166,5 +166,5 @@ Such a function can be provided to the BuilderConfig as follows::
     c['builders'] = [
         BuilderConfig(name='test', factory=f,
             nextBuild=pickNextBuild,
-            workernames=['slave1', 'slave2', 'slave3', 'slave4']),
+            workernames=['worker1', 'worker2', 'worker3', 'worker4']),
     ]
