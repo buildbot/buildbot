@@ -1,7 +1,7 @@
-Master-Slave API
-================
+Master-Worker API
+=================
 
-This section describes the master-slave interface.
+This section describes the master-worker interface.
 
 Connection
 ----------
@@ -9,36 +9,36 @@ Connection
 The interface is based on Twisted's Perspective Broker, which operates over TCP
 connections.
 
-The slave connects to the master, using the parameters supplied to
+The worker connects to the master, using the parameters supplied to
 :command:`buildslave create-slave`.  It uses a reconnecting process with an
 exponential backoff, and will automatically reconnect on disconnection.
 
-Once connected, the slave authenticates with the Twisted Cred (newcred)
+Once connected, the worker authenticates with the Twisted Cred (newcred)
 mechanism, using the username and password supplied to :command:`buildslave
-create-slave`.  The *mind* is the slave bot instance (class
+create-slave`.  The *mind* is the worker bot instance (class
 :class:`buildslave.bot.Bot`).
 
 On the master side, the realm is implemented by
 :class:`buildbot.master.Dispatcher`, which examines the username of incoming
 avatar requests.  There are special cases for ``change``, ``debug``, and
 ``statusClient``, which are not discussed here.  For all other usernames,
-the botmaster is consulted, and if a slave with that name is configured, its
+the botmaster is consulted, and if a worker with that name is configured, its
 :class:`buildbot.worker.Worker` instance is returned as the perspective.
 
-Build Slaves
-------------
+Workers
+-------
 
-At this point, the master-side BuildSlave object has a pointer to the remote,
-slave-side Bot object in its ``self.slave``, and the slave-side Bot object has
-a reference to the master-side BuildSlave object in its ``self.perspective``.
+At this point, the master-side Worker object has a pointer to the remote,
+worker-side Bot object in its ``self.worker``, and the worker-side Bot object has
+a reference to the master-side Worker object in its ``self.perspective``.
 
 Bot methods
 ~~~~~~~~~~~
 
-The slave-side Bot object has the following remote methods:
+The worker-side Bot object has the following remote methods:
 
 :meth:`~buildslave.bot.Bot.remote_getCommands`
-    Returns a list of ``(name, version)`` for all commands the slave recognizes
+    Returns a list of ``(name, version)`` for all commands the worker recognizes
 
 :meth:`~buildslave.bot.Bot.remote_setBuilderList`
     Given a list of builders and their build directories, ensures that
@@ -49,26 +49,26 @@ The slave-side Bot object has the following remote methods:
     This method returns a dictionary of :class:`SlaveBuilder` objects - see below
 
 :meth:`~buildslave.bot.Bot.remote_print`
-    Adds a message to the slave logfile
+    Adds a message to the worker logfile
 
 :meth:`~buildslave.bot.Bot.remote_getSlaveInfo`
-    Returns the contents of the slave's :file:`info/` directory. This also
+    Returns the contents of the worker's :file:`info/` directory. This also
     contains the keys
 
     ``environ``
-        copy of the slaves environment
+        copy of the workers environment
     ``system``
-        OS the slave is running (extracted from Python's os.name)
+        OS the worker is running (extracted from Python's os.name)
     ``basedir``
-        base directory where slave is running
+        base directory where worker is running
     ``numcpus``
-        number of CPUs on the slave, either as configured or as detected (since buildbot-slave version 0.9.0)
+        number of CPUs on the worker, either as configured or as detected (since buildbot-slave version 0.9.0)
 
 :meth:`~buildslave.bot.Bot.remote_getVersion`
-    Returns the slave's version
+    Returns the worker's version
 
-BuildSlave methods
-~~~~~~~~~~~~~~~~~~
+Worker methods
+~~~~~~~~~~~~~~
 
 The master-side object has the following method:
 
@@ -80,8 +80,8 @@ Setup
 
 After the initial connection and trading of a mind (Bot) for an avatar
 (BuildSlave), the master calls the Bot's :meth:`setBuilderList` method to set
-up the proper slave builders on the slave side.  This method returns a
-reference to each of the new slave-side :class:`~buildslave.bot.SlaveBuilder`
+up the proper builders on the worker side.  This method returns a
+reference to each of the new worker-side :class:`~buildslave.bot.SlaveBuilder`
 objects, described below.  Each of these is handed to the corresponding
 master-side :class:`~buildbot.process.workerforbuilder.WorkerForBuilder` object.
 
@@ -96,7 +96,7 @@ To ping a remote SlaveBuilder, the master calls its :meth:`print` method.
 Building
 --------
 
-When a build starts, the master calls the slave's :meth:`startBuild` method.
+When a build starts, the master calls the worker's :meth:`startBuild` method.
 Each BuildStep instance will subsequently call the :meth:`startCommand` method,
 passing a reference to itself as the ``stepRef`` parameter.  The
 :meth:`startCommand` method returns immediately, and the end of the command is
@@ -106,14 +106,14 @@ Slave Builders
 --------------
 
 Each worker has a set of builders which can run on it.  These are
-represented by distinct classes on the master and slave, just like the
+represented by distinct classes on the master and worker, just like the
 BuildSlave and Bot objects described above.
 
-On the slave side, builders are represented as instances of the
+On the worker side, builders are represented as instances of the
 :class:`buildslave.bot.SlaveBuilder` class.  On the master side, they are
 represented by the :class:`buildbot.process.workerforbuilder.SlaveBuilder` class.
 The identical names are a source of confusion.  The following will refer to
-these as the slave-side and master-side SlaveBuilder classes.  Each object
+these as the worker-side and master-side SlaveBuilder classes.  Each object
 keeps a reference to its opposite in ``self.remote``.
 
 Slave-Side SlaveBuilder Methods
@@ -123,20 +123,20 @@ Slave-Side SlaveBuilder Methods
     Provides a reference to the master-side SlaveBuilder
 
 :meth:`~buildslave.bot.SlaveBuilder.remote_print`
-    Adds a message to the slave logfile; used to check round-trip connectivity
+    Adds a message to the worker logfile; used to check round-trip connectivity
 
 :meth:`~buildslave.bot.SlaveBuilder.remote_startBuild`
     Indicates that a build is about to start, and that any subsequent
     commands are part of that build
 
 :meth:`~buildslave.bot.SlaveBuilder.remote_startCommand`
-    Invokes a command on the slave side
+    Invokes a command on the worker side
 
 :meth:`~buildslave.bot.SlaveBuilder.remote_interruptCommand`
     Interrupts the currently-running command
 
 :meth:`~buildslave.bot.SlaveBuilder.remote_shutdown`
-    Shuts down the slave cleanly
+    Shuts down the worker cleanly
 
 Master-side WorkerForBuilder Methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,10 +146,10 @@ The master side does not have any remotely-callable methods.
 Commands
 --------
 
-Actual work done by the slave is represented on the master side by a
+Actual work done by the worker is represented on the master side by a
 :class:`buildbot.process.remotecommand.RemoteCommand` instance.
 
-The command instance keeps a reference to the slave-side
+The command instance keeps a reference to the worker-side
 :class:`buildslave.bot.SlaveBuilder`, and calls methods like
 :meth:`~buildslave.bot.SlaveBuilder.remote_startCommand` to start new commands.
 Once that method is called, the :class:`~buildslave.bot.SlaveBuilder` instance
@@ -169,7 +169,7 @@ Master-Side RemoteCommand Methods
 Updates
 -------
 
-Updates from the slave, sent via
+Updates from the worker, sent via
 :meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`, are a list of
 individual update elements.  Each update element is, in turn, a list of the
 form ``[data, 0]`` where the 0 is present for historical reasons.  The data is
@@ -177,7 +177,7 @@ a dictionary, with keys describing the contents.  The updates are handled by
 :meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update`.
 
 Updates with different keys can be combined into a single dictionary or
-delivered sequentially as list elements, at the slave's option.
+delivered sequentially as list elements, at the worker's option.
 
 To summarize, an ``updates`` parameter to
 :meth:`~buildbot.process.remotecommand.RemoteCommand.remote_update` might look like
@@ -193,14 +193,14 @@ this::
 Defined Commands
 ~~~~~~~~~~~~~~~~
 
-The following commands are defined on the slaves.
+The following commands are defined on the workers.
 
 .. _shell-command-args:
 
 shell
 .....
 
-Runs a shell command on the slave.  This command takes the following arguments:
+Runs a shell command on the worker.  This command takes the following arguments:
 
 ``command``
 
@@ -215,7 +215,7 @@ Runs a shell command on the slave.  This command takes the following arguments:
 ``env``
 
     A dictionary of environment variables to augment or replace the
-    existing environment on the slave.  In this dictionary, ``PYTHONPATH``
+    existing environment on the worker.  In this dictionary, ``PYTHONPATH``
     is treated specially: it should be a list of path components, rather
     than a string, and will be prepended to the existing Python path.
 
@@ -235,7 +235,7 @@ Runs a shell command on the slave.  This command takes the following arguments:
 ``usePTY``
 
     If true, the command should be run with a PTY (POSIX only).  This
-    defaults to the value specified in the slave's ``buildbot.tac``.
+    defaults to the value specified in the worker's ``buildbot.tac``.
 
 ``not_really``
 
@@ -293,7 +293,7 @@ The ``shell`` command sends the following updates:
 uploadFile
 ..........
 
-Upload a file from the slave to the master.  The arguments are
+Upload a file from the worker to the master.  The arguments are
 
 ``workdir``
 
@@ -320,9 +320,9 @@ Upload a file from the slave to the master.  The arguments are
 
     If true, preserve the file modified and accessed times.
 
-The slave calls a few remote methods on the writer object.  First, the
+The worker calls a few remote methods on the writer object.  First, the
 ``write`` method is called with a bytestring containing data, until all of the
-data has been transmitted.  Then, the slave calls the writer's ``close``,
+data has been transmitted.  Then, the worker calls the writer's ``close``,
 followed (if ``keepstamp`` is true) by a call to ``upload(atime, mtime)``.
 
 This command sends ``rc`` and ``stderr`` updates, as defined for the ``shell``
@@ -347,7 +347,7 @@ master, in the form of a tarball.  It takes the following arguments:
     Compression algorithm to use -- one of ``None``, ``'bz2'``, or ``'gz'``.
 
 The writer object is treated similarly to the ``uploadFile`` command, but after
-the file is closed, the slave calls the master's ``unpack`` method with no
+the file is closed, the worker calls the master's ``unpack`` method with no
 arguments to extract the tarball.
 
 This command sends ``rc`` and ``stderr`` updates, as defined for the ``shell``
@@ -356,7 +356,7 @@ command.
 downloadFile
 ............
 
-This command will download a file from the master to the slave.  It takes the
+This command will download a file from the master to the worker.  It takes the
 following arguments:
 
 ``workdir``
@@ -385,7 +385,7 @@ following arguments:
 
 The reader object's ``read(maxsize)`` method will be called with a maximum
 size, which will return no more than that number of bytes as a bytestring.  At
-EOF, it will return an empty string.  Once EOF is received, the slave will call
+EOF, it will return an empty string.  Once EOF is received, the worker will call
 the remote ``close`` method.
 
 This command sends ``rc`` and ``stderr`` updates, as defined for the ``shell``
@@ -394,7 +394,7 @@ command.
 mkdir
 .....
 
-This command will create a directory on the slave.  It will also create any
+This command will create a directory on the worker.  It will also create any
 intervening directories required.  It takes the following argument:
 
 ``dir``
@@ -406,7 +406,7 @@ The ``mkdir`` command produces the same updates as ``shell``.
 rmdir
 .....
 
-This command will remove a directory or file on the slave.  It takes the following arguments:
+This command will remove a directory or file on the worker.  It takes the following arguments:
 
 ``dir``
 
@@ -422,7 +422,7 @@ The ``rmdir`` command produces the same updates as ``shell``.
 cpdir
 .....
 
-This command will copy a directory from place to place on the slave.  It takes the following
+This command will copy a directory from place to place on the worker.  It takes the following
 arguments:
 
 ``fromdir``
