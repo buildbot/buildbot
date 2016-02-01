@@ -26,4 +26,4 @@ on_deprecated_module_usage(
 from buildbot.db.worker import WorkersConnectorComponent as _WorkersConnectorComponent
 
 define_old_worker_class(locals(), _WorkersConnectorComponent,
-                        pattern="Buildworker")
+                        name="BuildslavesConnectorComponent")

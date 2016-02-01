@@ -64,7 +64,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         self.decodeRC = decodeRC
         self.conn = None
         self.worker = None
-        self._registerOldWorkerAttr("worker", pattern="buildworker")
+        self._registerOldWorkerAttr("worker", name="buildslave")
         self.step = None
         self.builder_name = None
         self.commandID = None

@@ -308,7 +308,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def __init__(self, **kwargs):
         self.worker = None
-        self._registerOldWorkerAttr("worker", pattern="buildworker")
+        self._registerOldWorkerAttr("worker", name="buildslave")
 
         for p in self.__class__.parms:
             if p in kwargs:
@@ -349,7 +349,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setWorker(self, worker):
         self.worker = worker
-    define_old_worker_method(locals(), setWorker, pattern="BuildWorker")
+    define_old_worker_method(locals(), setWorker, name="setBuildSlave")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):

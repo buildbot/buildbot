@@ -40,18 +40,17 @@ class CompatNameGeneration(unittest.TestCase):
 
         self.assertRaises(AssertionError, compat_name, "worKer")
 
-    def test_patterned_rename(self):
+    def test_dummy_rename(self):
         self.assertEqual(
-            compat_name("SomeWorker", pattern="BuildWorker"),
-            "SomeBuildSlave")
-        self.assertEqual(
-            compat_name("SomeWorker", pattern="Buildworker"),
-            "SomeBuildslave")
-        self.assertEqual(
-            compat_name("someworker", pattern="buildworker"),
-            "somebuildslave")
+            compat_name("SomeWorker", name="BuildSlave"),
+            "BuildSlave")
 
-        self.assertRaises(KeyError, compat_name, "worker", pattern="missing")
+        # Deprecated name by definition must contain "slave"
+        self.assertRaises(AssertionError, compat_name, "worker",
+                          name="somestr")
+        # New name always contains "worker" instead of "slave".
+        self.assertRaises(AssertionError, compat_name, "somestr",
+                          name="slave")
 
 
 class ClassAlias(unittest.TestCase):
@@ -62,12 +61,22 @@ class ClassAlias(unittest.TestCase):
 
         locals = {}
         define_old_worker_class_alias(
-            locals, IWorker, pattern="BuildWorker")
-        self.assertIn("IBuildSlave", locals)
-        self.assertTrue(locals["IBuildSlave"] is IWorker)
+            locals, IWorker)
+        self.assertIn("ISlave", locals)
+        self.assertTrue(locals["ISlave"] is IWorker)
 
         # TODO: Is there a way to detect usage of class alias and print
         # warning?
+
+    def test_class_alias_with_name(self):
+        class IWorker:
+            pass
+
+        locals = {}
+        define_old_worker_class_alias(
+            locals, IWorker, name="IBuildSlave")
+        self.assertIn("IBuildSlave", locals)
+        self.assertTrue(locals["IBuildSlave"] is IWorker)
 
     def test_module_reload(self):
         # pylint: disable=function-redefined
@@ -77,7 +86,7 @@ class ClassAlias(unittest.TestCase):
             pass
 
         define_old_worker_class_alias(
-            locals, IWorker, pattern="BuildWorker")
+            locals, IWorker, name="IBuildSlave")
         self.assertIn("IBuildSlave", locals)
         self.assertTrue(locals["IBuildSlave"] is IWorker)
 
@@ -86,7 +95,7 @@ class ClassAlias(unittest.TestCase):
             pass
 
         define_old_worker_class_alias(
-            locals, IWorker, pattern="BuildWorker")
+            locals, IWorker, name="IBuildSlave")
         self.assertIn("IBuildSlave", locals)
         self.assertTrue(locals["IBuildSlave"] is IWorker)
 
@@ -113,7 +122,7 @@ class ClassWrapper(unittest.TestCase):
         self.assertEqual(slave.arg, "arg")
         self.assertEqual(slave.kwargs, dict(a=1, b=2))
 
-    def test_class_wrapper_pattern(self):
+    def test_class_wrapper_with_name(self):
         class Worker(object):
 
             def __init__(self, arg, **kwargs):
@@ -121,7 +130,7 @@ class ClassWrapper(unittest.TestCase):
                 self.kwargs = kwargs
 
         locals = {}
-        define_old_worker_class(locals, Worker, pattern="Buildworker")
+        define_old_worker_class(locals, Worker, name="Buildslave")
         self.assertIn("Buildslave", locals)
         Buildslave = locals["Buildslave"]
         self.assertTrue(issubclass(Buildslave, Worker))
@@ -317,7 +326,7 @@ class AttributeMixin(unittest.TestCase):
 
             def __init__(self):
                 self.workers = [1, 2, 3]
-                self._registerOldWorkerAttr("workers", pattern="buildworker")
+                self._registerOldWorkerAttr("workers", name="buildslaves")
 
                 self.workernames = ["a", "b", "c"]
                 self._registerOldWorkerAttr("workernames")
@@ -339,7 +348,7 @@ class AttributeMixin(unittest.TestCase):
 
             def __init__(self):
                 self.workers = None
-                self._registerOldWorkerAttr("workers", pattern="buildworker")
+                self._registerOldWorkerAttr("workers", name="buildslaves")
 
                 self.workernames = None
                 self._registerOldWorkerAttr("workernames")

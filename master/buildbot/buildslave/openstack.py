@@ -25,4 +25,5 @@ on_deprecated_module_usage(
 
 from buildbot.worker.openstack import OpenStackLatentWorker as _OpenStackLatentWorker
 
-define_old_worker_class(locals(), _OpenStackLatentWorker, pattern="BuildWorker")
+define_old_worker_class(locals(), _OpenStackLatentWorker,
+                        name="OpenStackLatentBuildSlave")

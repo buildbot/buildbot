@@ -92,7 +92,7 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.workers = worker.WorkersConnectorComponent(self)
-        self._registerOldWorkerAttr("workers", pattern="buildworker")
+        self._registerOldWorkerAttr("workers", name="buildslaves")
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)

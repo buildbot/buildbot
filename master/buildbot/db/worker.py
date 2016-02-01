@@ -184,7 +184,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), getWorkers, pattern="Buildworker")
+    define_old_worker_method(locals(), getWorkers, name="getBuildslaves")
 
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):
