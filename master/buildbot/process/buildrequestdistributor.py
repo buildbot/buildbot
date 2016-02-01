@@ -385,34 +385,11 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         return breq.properties.hasProperty("selected_slave")
 
-
     @defer.inlineCallbacks
-    def _chooseBuild(self, buildrequests, useSelectedSlave=True):
-        """
-        Choose the next build from the given set of build requests (represented
-        as dictionaries).  Defaults to returning the first request (earliest
-        submitted).
-
-        @param buildrequests: sorted list of build request dictionaries
-        @returns: a build request dictionary or None via Deferred
-        """
-        sorted_requests = sorted(buildrequests, key=lambda br: (-br["priority"], br["submitted_at"]))
-        for b in sorted_requests:
-            breq = yield self._getBuildRequestForBrdict(b)
-            if useSelectedSlave and self.buildRequestHasSelectedSlave(breq):
-                selected_slave = self.getSelectedSlaveFromBuildRequest(breq)
-                if selected_slave and selected_slave.isAvailable():
-                    defer.returnValue(b)
-            else:
-                defer.returnValue(b)
-
-        defer.returnValue(None)
-
-    @defer.inlineCallbacks
-    def _chooseBuildRequest(self, buildrequests, useSelectedSlave=True):
+    def _chooseBuildRequest(self, buildrequests):
         nextBreq = None
 
-        brdict = yield self._chooseBuild(buildrequests, useSelectedSlave=useSelectedSlave)
+        brdict = buildrequests[0] if buildrequests else None
 
         if brdict:
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
@@ -459,8 +436,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                 nextBreq = None
         else:
             # otherwise just return the first build
-            nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts,
-                                                      useSelectedSlave=self.bldr.shouldUseSelectedSlave())
+            nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts)
 
         defer.returnValue(nextBreq)
 
@@ -533,13 +509,22 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(None)
 
     @defer.inlineCallbacks
+    def _fetchUnclaimedBrdicts(self):
+        if self.unclaimedBrdicts is None:
+            brdicts = yield self.master.db.buildrequests.getBuildRequests(
+                    buildername=self.bldr.name, claimed=False, sorted=True)
+            self.unclaimedBrdicts = brdicts
+        defer.returnValue(self.unclaimedBrdicts)
+
+    @defer.inlineCallbacks
     def _fetchResumeBrdicts(self):
         # we need to resume builds that are claimed by this master
         # since the status is not in the db
         if self.resumeBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                buildername=self.bldr.name, claimed="mine", complete=False, results=RESUME, mergebrids="exclude")
-            brdicts.sort(key=lambda brd : brd['submitted_at'])
+                    buildername=self.bldr.name, claimed="mine",
+                    complete=False, results=RESUME,
+                    mergebrids="exclude", sorted=True)
             self.resumeBrdicts = brdicts
         defer.returnValue(self.resumeBrdicts)
 
@@ -578,7 +563,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             if slavebuilder is not None:
                 nextBuild = (slavebuilder, breq)
 
-            # if the slave is not available anymore try another build
+            # if the slave is not available anymore find another high priority builder
             defer.returnValue(nextBuild)
             return
 
@@ -688,7 +673,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             if slavebuilder is not None:
                 nextBuild = (slavebuilder, breq)
 
-            # if the slave is not available anymore try another build
+            # if the slave is not available anymore find another high priority builder
             defer.returnValue(nextBuild)
             return
 

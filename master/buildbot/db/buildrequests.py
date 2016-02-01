@@ -142,7 +142,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
                          bsid=None, _master_objectid=None, brids=None,
-                         branch=None, repository=None, results=None, mergebrids=None):
+                         branch=None, repository=None, results=None,
+                         mergebrids=None, sorted=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -203,6 +204,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             if repository is not None:
                 q = q.where(sstamps_tbls.c.repository == repository)
+
+            if sorted:
+                q = q.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
             res = conn.execute(q)
 

@@ -933,7 +933,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             return defer.succeed(None)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-                         bsid=None, results=None, mergebrids=None):
+                         bsid=None, results=None, mergebrids=None, sorted=False):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -967,6 +967,10 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 elif mergebrids and br.mergebrid not in mergebrids:
                         continue
             rv.append(self._brdictFromRow(br))
+
+        if sorted:
+            rv.sort(key=lambda br: (-br["priority"], br["submitted_at"]))
+
         return defer.succeed(rv)
 
     def getPrioritizedBuildRequestsInQueue(self, queue=None):
