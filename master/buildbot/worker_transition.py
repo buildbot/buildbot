@@ -29,7 +29,7 @@ __all__ = (
     "define_old_worker_class", "define_old_worker_property",
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
-    "deprecated_worker_class", "deprecated_name",
+    "deprecated_worker_class",
 )
 
 # TODO:
@@ -45,12 +45,12 @@ __all__ = (
 # * Perhaps remove "pattern" from deprecated_name() and always use "name"?
 
 
-def deprecated_name(new_name, pattern=None):
+def _deprecated_name(new_name, pattern=None, name=None):
     """Returns old API ("slave") name for new name ("worker").
 
-    >>> assert deprecated_name("Worker") == "Slave"
-    >>> assert deprecated_name("SomeWorkerStuff") == "SomeSlaveStuff"
-    >>> assert deprecated_name("SomeWorker", pattern="BuildWorker") == \
+    >>> assert _deprecated_name("Worker") == "Slave"
+    >>> assert _deprecated_name("SomeWorkerStuff") == "SomeSlaveStuff"
+    >>> assert _deprecated_name("SomeWorker", pattern="BuildWorker") == \
         "SomeBuildSlave"
 
     Unfortunately "slave" -> "worker" renaming is not one-to-one relation,
@@ -65,7 +65,14 @@ def deprecated_name(new_name, pattern=None):
     `pattern` parameter is used to specify which of (3), (4) or (5) case
     of renaming should be used. If `pattern` is not specified then rules
     (1) and (2) are applied.
+
+    For the sake of usage if `name' argument is specified it will returned
+    as the result.
     """
+
+    if name is not None:
+        assert pattern is None
+        return name
 
     allowed_patterns = {
         "BuildWorker": {"Worker": "BuildSlave"},
@@ -150,12 +157,12 @@ def on_deprecated_module_usage(message, stacklevel=None):
     warnings.warn(DeprecatedWorkerModuleWarning(message), None, stacklevel)
 
 
-def define_old_worker_class_alias(scope, cls, pattern=None):
+def define_old_worker_class_alias(scope, cls, pattern=None, name=None):
     """Add same class but with old API name.
 
     Useful for interfaces."""
 
-    compat_name = deprecated_name(cls.__name__, pattern=pattern)
+    compat_name = _deprecated_name(cls.__name__, pattern=pattern, name=name)
 
     scope[compat_name] = cls
 
@@ -163,11 +170,7 @@ def define_old_worker_class_alias(scope, cls, pattern=None):
 def deprecated_worker_class(cls, pattern=None, name=None):
     assert issubclass(cls, object)
 
-    if name is not None:
-        assert pattern is None
-        compat_name = name
-    else:
-        compat_name = deprecated_name(cls.__name__, pattern=pattern)
+    compat_name = _deprecated_name(cls.__name__, pattern=pattern, name=name)
 
     def __new__(instance_cls, *args, **kwargs):
         on_deprecated_name_usage(
@@ -201,16 +204,16 @@ def define_old_worker_class(scope, cls, pattern=None, name=None):
     scope[compat_class.__name__] = compat_class
 
 
-def define_old_worker_property(scope, name, pattern=None):
+def define_old_worker_property(scope, new_name, pattern=None, name=None):
     """Define old-named property inside class."""
-    compat_name = deprecated_name(name, pattern=pattern)
+    compat_name = _deprecated_name(new_name, pattern=pattern, name=name)
     assert compat_name not in scope
 
     def get(self):
         on_deprecated_name_usage(
             "'{old}' attribute is deprecated, use '{new}' instead.".format(
-                new=name, old=compat_name))
-        return getattr(self, name)
+                new=new_name, old=compat_name))
+        return getattr(self, new_name)
 
     scope[compat_name] = property(get)
 
@@ -219,11 +222,7 @@ def define_old_worker_method(scope, method, pattern=None, name=None):
     """Define old-named method inside class."""
     method_name = method.__name__
 
-    if name is not None:
-        assert pattern is None
-        compat_name = name
-    else:
-        compat_name = deprecated_name(method_name, pattern=pattern)
+    compat_name = _deprecated_name(method_name, pattern=pattern, name=name)
 
     assert compat_name not in scope
 
@@ -238,9 +237,9 @@ def define_old_worker_method(scope, method, pattern=None, name=None):
     scope[compat_name] = old_method
 
 
-def define_old_worker_func(scope, func, pattern=None):
+def define_old_worker_func(scope, func, pattern=None, name=None):
     """Define old-named function."""
-    compat_name = deprecated_name(func.__name__, pattern=pattern)
+    compat_name = _deprecated_name(func.__name__, pattern=pattern, name=name)
 
     def old_func(*args, **kwargs):
         on_deprecated_name_usage(
@@ -294,11 +293,7 @@ class WorkerAPICompatMixin(object):
 
     def _registerOldWorkerAttr(self, attr_name, pattern=None, name=None):
         """Define old-named attribute inside class instance."""
-        if name is not None:
-            assert pattern is None
-            compat_name = name
-        else:
-            compat_name = deprecated_name(attr_name, pattern=pattern)
+        compat_name = _deprecated_name(attr_name, pattern=pattern, name=name)
         assert compat_name not in self.__dict__
         assert compat_name not in self.__compat_attrs
         self.__compat_attrs[compat_name] = attr_name
