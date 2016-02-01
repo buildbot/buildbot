@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 import json
 from twisted.python import log
-from urlparse import urljoin
+from os.path import join
 from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_builders, path_to_codebases, path_to_build
 
 
@@ -23,6 +23,12 @@ class JSONTestResource(HtmlResource):
         HtmlResource.__init__(self)
         self.log = log
         self.step_status = step_status
+
+    def get_artifact_path(self, build):
+        server_path = build.getProperty("artifactServerPath", "")
+        dir_path = build.getProperty("TestReportUploadDirectory", "")
+
+        return join(server_path, dir_path)
 
     def content(self, req, cxt):
         s = self.step_status
@@ -37,7 +43,8 @@ class JSONTestResource(HtmlResource):
         cxt['path_to_codebases'] = path_to_codebases(req, project)
         cxt['path_to_build'] = path_to_build(req, b)
         cxt['build_number'] = b.getNumber()
-        cxt['path_to_artifacts'] = b.getProperty("artifactServerPath", "")
+        cxt['path_to_artifacts'] = self.get_artifact_path(b)
+        cxt['join'] = join
         cxt['selectedproject'] = project
 
         try:
