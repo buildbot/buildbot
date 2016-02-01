@@ -22,7 +22,7 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import _deprecated_name as compat_name
+from buildbot.worker_transition import _compat_name
 from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import define_old_worker_class_alias
 from buildbot.worker_transition import define_old_worker_func
@@ -33,24 +33,24 @@ from buildbot.worker_transition import define_old_worker_property
 class CompatNameGeneration(unittest.TestCase):
 
     def test_generic_rename(self):
-        self.assertEqual(compat_name("Worker"), "Slave")
-        self.assertEqual(compat_name("worker"), "slave")
-        self.assertEqual(compat_name("SomeWorkerStuff"), "SomeSlaveStuff")
-        self.assertEqual(compat_name("theworkerstuff"), "theslavestuff")
+        self.assertEqual(_compat_name("Worker"), "Slave")
+        self.assertEqual(_compat_name("worker"), "slave")
+        self.assertEqual(_compat_name("SomeWorkerStuff"), "SomeSlaveStuff")
+        self.assertEqual(_compat_name("theworkerstuff"), "theslavestuff")
 
-        self.assertRaises(AssertionError, compat_name, "worKer")
+        self.assertRaises(AssertionError, _compat_name, "worKer")
 
     def test_dummy_rename(self):
         self.assertEqual(
-            compat_name("SomeWorker", name="BuildSlave"),
+            _compat_name("SomeWorker", compat_name="BuildSlave"),
             "BuildSlave")
 
         # Deprecated name by definition must contain "slave"
-        self.assertRaises(AssertionError, compat_name, "worker",
-                          name="somestr")
+        self.assertRaises(AssertionError, _compat_name, "worker",
+                          compat_name="somestr")
         # New name always contains "worker" instead of "slave".
-        self.assertRaises(AssertionError, compat_name, "somestr",
-                          name="slave")
+        self.assertRaises(AssertionError, _compat_name, "somestr",
+                          compat_name="slave")
 
 
 class ClassAlias(unittest.TestCase):

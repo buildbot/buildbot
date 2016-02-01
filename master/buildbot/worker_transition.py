@@ -44,12 +44,12 @@ __all__ = (
 #   now, later generated from such template buildbot.tac files will break.
 
 
-def _deprecated_name(new_name, name=None):
+def _compat_name(new_name, compat_name=None):
     """Returns old API ("slave") name for new name ("worker").
 
-    >>> assert _deprecated_name("Worker") == "Slave"
-    >>> assert _deprecated_name("SomeWorkerStuff") == "SomeSlaveStuff"
-    >>> assert _deprecated_name("SomeWorker", name="SomeBuildSlave") == \
+    >>> assert _compat_name("Worker") == "Slave"
+    >>> assert _compat_name("SomeWorkerStuff") == "SomeSlaveStuff"
+    >>> assert _compat_name("SomeWorker", compat_name="SomeBuildSlave") == \
         "SomeBuildSlave"
 
     If `name` is not specified old name is construct by replacing:
@@ -60,10 +60,10 @@ def _deprecated_name(new_name, name=None):
     it will returned as the result.
     """
 
-    if name is not None:
-        assert "slave" in name.lower()
+    if compat_name is not None:
+        assert "slave" in compat_name.lower()
         assert "worker" in new_name.lower()
-        return name
+        return compat_name
 
     compat_replacements = {
         "worker": "slave",
@@ -144,7 +144,7 @@ def define_old_worker_class_alias(scope, cls, name=None):
 
     Useful for interfaces."""
 
-    compat_name = _deprecated_name(cls.__name__, name=name)
+    compat_name = _compat_name(cls.__name__, compat_name=name)
 
     scope[compat_name] = cls
 
@@ -152,7 +152,7 @@ def define_old_worker_class_alias(scope, cls, name=None):
 def deprecated_worker_class(cls, name=None):
     assert issubclass(cls, object)
 
-    compat_name = _deprecated_name(cls.__name__, name=name)
+    compat_name = _compat_name(cls.__name__, compat_name=name)
 
     def __new__(instance_cls, *args, **kwargs):
         on_deprecated_name_usage(
@@ -188,7 +188,7 @@ def define_old_worker_class(scope, cls, name=None):
 
 def define_old_worker_property(scope, new_name, name=None):
     """Define old-named property inside class."""
-    compat_name = _deprecated_name(new_name, name=name)
+    compat_name = _compat_name(new_name, compat_name=name)
     assert compat_name not in scope
 
     def get(self):
@@ -204,7 +204,7 @@ def define_old_worker_method(scope, method, name=None):
     """Define old-named method inside class."""
     method_name = method.__name__
 
-    compat_name = _deprecated_name(method_name, name=name)
+    compat_name = _compat_name(method_name, compat_name=name)
 
     assert compat_name not in scope
 
@@ -221,7 +221,7 @@ def define_old_worker_method(scope, method, name=None):
 
 def define_old_worker_func(scope, func, name=None):
     """Define old-named function."""
-    compat_name = _deprecated_name(func.__name__, name=name)
+    compat_name = _compat_name(func.__name__, compat_name=name)
 
     def old_func(*args, **kwargs):
         on_deprecated_name_usage(
@@ -275,7 +275,7 @@ class WorkerAPICompatMixin(object):
 
     def _registerOldWorkerAttr(self, attr_name, name=None):
         """Define old-named attribute inside class instance."""
-        compat_name = _deprecated_name(attr_name, name=name)
+        compat_name = _compat_name(attr_name, compat_name=name)
         assert compat_name not in self.__dict__
         assert compat_name not in self.__compat_attrs
         self.__compat_attrs[compat_name] = attr_name
