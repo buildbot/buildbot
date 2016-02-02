@@ -28,10 +28,10 @@ from buildbot.worker import AbstractWorker as _AbstractWorker
 from buildbot.worker import Worker as _Worker
 
 AbstractBuildSlave = deprecated_worker_class(
-    _AbstractWorker, name="AbstractBuildSlave")
+    _AbstractWorker, class_name="AbstractBuildSlave")
 BuildSlave = deprecated_worker_class(
-    _Worker, name="BuildSlave")
+    _Worker, class_name="BuildSlave")
 AbstractLatentBuildSlave = deprecated_worker_class(
-    _AbstractLatentWorker, name="AbstractLatentBuildSlave")
+    _AbstractLatentWorker, class_name="AbstractLatentBuildSlave")
 
 __all__ = ("AbstractBuildSlave", "BuildSlave", "AbstractLatentBuildSlave")

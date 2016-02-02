@@ -149,10 +149,10 @@ def define_old_worker_class_alias(scope, cls, compat_name=None):
     scope[compat_name] = cls
 
 
-def deprecated_worker_class(cls, name=None):
+def deprecated_worker_class(cls, class_name=None):
     assert issubclass(cls, object)
 
-    compat_name = _compat_name(cls.__name__, compat_name=name)
+    compat_name = _compat_name(cls.__name__, compat_name=class_name)
 
     def __new__(instance_cls, *args, **kwargs):
         on_deprecated_name_usage(
@@ -182,7 +182,7 @@ def define_old_worker_class(scope, cls, compat_name=None):
     Useful for instantiable classes.
     """
 
-    compat_class = deprecated_worker_class(cls, name=compat_name)
+    compat_class = deprecated_worker_class(cls, class_name=compat_name)
     scope[compat_class.__name__] = compat_class
 
 
