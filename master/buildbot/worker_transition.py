@@ -200,11 +200,11 @@ def define_old_worker_property(scope, new_name, compat_name=None):
     scope[compat_name] = property(get)
 
 
-def define_old_worker_method(scope, method, name=None):
+def define_old_worker_method(scope, method, compat_name=None):
     """Define old-named method inside class."""
     method_name = method.__name__
 
-    compat_name = _compat_name(method_name, compat_name=name)
+    compat_name = _compat_name(method_name, compat_name=compat_name)
 
     assert compat_name not in scope
 

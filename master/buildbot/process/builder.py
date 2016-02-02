@@ -309,7 +309,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                  for access in self.config.locks]
         return Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
     define_old_worker_method(locals(), canStartWithWorkerForBuilder,
-                             name="canStartWithSlavebuilder")
+                             compat_name="canStartWithSlavebuilder")
 
     def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):

@@ -349,7 +349,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setWorker(self, worker):
         self.worker = worker
-    define_old_worker_method(locals(), setWorker, name="setBuildSlave")
+    define_old_worker_method(locals(), setWorker, compat_name="setBuildSlave")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
