@@ -219,9 +219,9 @@ def define_old_worker_method(scope, method, compat_name=None):
     scope[compat_name] = old_method
 
 
-def define_old_worker_func(scope, func, name=None):
+def define_old_worker_func(scope, func, compat_name=None):
     """Define old-named function."""
-    compat_name = _compat_name(func.__name__, compat_name=name)
+    compat_name = _compat_name(func.__name__, compat_name=compat_name)
 
     def old_func(*args, **kwargs):
         on_deprecated_name_usage(
