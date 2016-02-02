@@ -186,9 +186,9 @@ def define_old_worker_class(scope, cls, compat_name=None):
     scope[compat_class.__name__] = compat_class
 
 
-def define_old_worker_property(scope, new_name, name=None):
+def define_old_worker_property(scope, new_name, compat_name=None):
     """Define old-named property inside class."""
-    compat_name = _compat_name(new_name, compat_name=name)
+    compat_name = _compat_name(new_name, compat_name=compat_name)
     assert compat_name not in scope
 
     def get(self):
