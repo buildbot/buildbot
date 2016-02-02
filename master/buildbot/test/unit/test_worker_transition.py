@@ -130,7 +130,7 @@ class ClassWrapper(unittest.TestCase):
                 self.kwargs = kwargs
 
         locals = {}
-        define_old_worker_class(locals, Worker, name="Buildslave")
+        define_old_worker_class(locals, Worker, compat_name="Buildslave")
         self.assertIn("Buildslave", locals)
         Buildslave = locals["Buildslave"]
         self.assertTrue(issubclass(Buildslave, Worker))

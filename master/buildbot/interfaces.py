@@ -48,14 +48,14 @@ class BuilderInUseError(Exception):
 class WorkerTooOldError(Exception):
     pass
 define_old_worker_class(
-    locals(), WorkerTooOldError, name="BuildSlaveTooOldError")
+    locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
 
 
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
 define_old_worker_class(
     locals(), LatentWorkerFailedToSubstantiate,
-    name="LatentBuildSlaveFailedToSubstantiate")
+    compat_name="LatentBuildSlaveFailedToSubstantiate")
 
 
 class IPlugin(Interface):

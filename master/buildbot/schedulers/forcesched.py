@@ -357,7 +357,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
         workernames.insert(0, self.anySentinel)
         return workernames
 define_old_worker_class(locals(), WorkerChoiceParameter,
-                        name="BuildslaveChoiceParameter")
+                        compat_name="BuildslaveChoiceParameter")
 
 
 class NestedParameter(BaseParameter):

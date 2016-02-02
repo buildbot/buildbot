@@ -25,4 +25,4 @@ on_deprecated_module_usage(
 
 from buildbot.worker.ec2 import EC2LatentWorker as _EC2LatentWorker
 
-define_old_worker_class(locals(), _EC2LatentWorker, name="EC2LatentBuildSlave")
+define_old_worker_class(locals(), _EC2LatentWorker, compat_name="EC2LatentBuildSlave")

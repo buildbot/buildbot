@@ -36,8 +36,8 @@ from buildbot.process.workerforbuilder import SUBSTANTIATING  # noqa
 from buildbot.process.workerforbuilder import WorkerForBuilder as _WorkerForBuilder
 
 define_old_worker_class(locals(), _AbstractWorkerForBuilder,
-                        name="AbstractSlaveBuilder")
+                        compat_name="AbstractSlaveBuilder")
 define_old_worker_class(locals(), _WorkerForBuilder,
-                        name="SlaveBuilder")
+                        compat_name="SlaveBuilder")
 define_old_worker_class(locals(), _LatentWorkerForBuilder,
-                        name="LatentSlaveBuilder")
+                        compat_name="LatentSlaveBuilder")

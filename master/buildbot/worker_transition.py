@@ -176,13 +176,13 @@ def deprecated_worker_class(cls, name=None):
     return compat_class
 
 
-def define_old_worker_class(scope, cls, name=None):
+def define_old_worker_class(scope, cls, compat_name=None):
     """Define old-named class that inherits new names class.
 
     Useful for instantiable classes.
     """
 
-    compat_class = deprecated_worker_class(cls, name=name)
+    compat_class = deprecated_worker_class(cls, name=compat_name)
     scope[compat_class.__name__] = compat_class
 
 
