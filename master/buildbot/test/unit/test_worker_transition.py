@@ -74,7 +74,7 @@ class ClassAlias(unittest.TestCase):
 
         locals = {}
         define_old_worker_class_alias(
-            locals, IWorker, name="IBuildSlave")
+            locals, IWorker, compat_name="IBuildSlave")
         self.assertIn("IBuildSlave", locals)
         self.assertTrue(locals["IBuildSlave"] is IWorker)
 
@@ -86,7 +86,7 @@ class ClassAlias(unittest.TestCase):
             pass
 
         define_old_worker_class_alias(
-            locals, IWorker, name="IBuildSlave")
+            locals, IWorker, compat_name="IBuildSlave")
         self.assertIn("IBuildSlave", locals)
         self.assertTrue(locals["IBuildSlave"] is IWorker)
 
@@ -95,7 +95,7 @@ class ClassAlias(unittest.TestCase):
             pass
 
         define_old_worker_class_alias(
-            locals, IWorker, name="IBuildSlave")
+            locals, IWorker, compat_name="IBuildSlave")
         self.assertIn("IBuildSlave", locals)
         self.assertTrue(locals["IBuildSlave"] is IWorker)
 

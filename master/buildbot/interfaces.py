@@ -164,7 +164,7 @@ class ILogObserver(Interface):
 class IWorker(IPlugin):
     # callback methods from the manager
     pass
-define_old_worker_class_alias(locals(), IWorker, name="IBuildSlave")
+define_old_worker_class_alias(locals(), IWorker, compat_name="IBuildSlave")
 
 
 class ILatentWorker(IWorker):
@@ -197,7 +197,7 @@ class ILatentWorker(IWorker):
         build finished.
         """
 define_old_worker_class_alias(
-    locals(), ILatentWorker, name="ILatentBuildSlave")
+    locals(), ILatentWorker, compat_name="ILatentBuildSlave")
 
 
 class IRenderable(Interface):
