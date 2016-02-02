@@ -187,7 +187,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             version_digits = re.sub('[^0-9.]', '', version)
             version_tup = tuple(map(int, version_digits.split('.')))
         except TypeError:
-            pass
+            return  # unparseable -- oh well
 
         if version_tup < (0, 6):
             raise RuntimeError("SQLAlchemy version %s is too old" % (version,))
