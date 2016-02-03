@@ -113,15 +113,16 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
                              {'buildbot_module': buildbot_module}):
             scope = buildbot_module.__dict__
             deprecatedWorkerModuleAttribute(scope, Worker)
-
             # Overwrite with Twisted's module wrapper.
             import buildbot_module
 
             # Module reload is effectively re-run of module contents.
-
             Worker = type("Worker", (object,), {})
             buildbot_module.Worker = Worker
+            scope = buildbot_module.__dict__
             deprecatedWorkerModuleAttribute(scope, Worker)
+            # Overwrite with Twisted's module wrapper.
+            import buildbot_module
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             W = buildbot_module.Worker
