@@ -187,7 +187,6 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None):
 
     compat_name = _compat_name(attribute_name, compat_name=compat_name)
 
-    assert compat_name not in scope
     scope[compat_name] = attribute
 
     _deprecatedModuleAttribute(

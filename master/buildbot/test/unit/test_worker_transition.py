@@ -83,6 +83,39 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
             S = buildbot_module.Slave
         self.assertIdentical(S, Worker)
 
+    def test_module_reload(self):
+        class Worker:
+            pass
+
+        buildbot_module = new.module('buildbot_module')
+        buildbot_module.Worker = Worker
+        with mock.patch.dict(sys.modules,
+                             {'buildbot_module': buildbot_module}):
+            scope = buildbot_module.__dict__
+            deprecatedWorkerModuleAttribute(scope, Worker)
+
+            # Overwrite with Twisted's module wrapper.
+            import buildbot_module
+
+            # Module reload is effectively re-run of module contents.
+
+            class Worker:
+                pass
+
+            buildbot_module.Worker = Worker
+            deprecatedWorkerModuleAttribute(scope, Worker)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            W = buildbot_module.Worker
+        self.assertIdentical(W, Worker)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"buildbot_module\.Slave was deprecated in "
+                                r"Buildbot 0.9.0: Use Worker instead."):
+            S = buildbot_module.Slave
+        self.assertIdentical(S, Worker)
+
 
 class ClassAlias(unittest.TestCase):
 
