@@ -59,9 +59,7 @@ class CompatNameGeneration(unittest.TestCase):
 class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_produces_warning(self):
-        class Worker:
-            pass
-
+        Worker = type("Worker", (object,), {})
         buildbot_module = new.module('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
@@ -84,8 +82,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
         self.assertIdentical(S, Worker)
 
     def test_explicit_name(self):
-        Worker = type("Worker")
-
+        Worker = type("Worker", (object,), {})
         buildbot_module = new.module('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
@@ -109,9 +106,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
         self.assertIdentical(S, Worker)
 
     def test_module_reload(self):
-        class Worker:
-            pass
-
+        Worker = type("Worker", (object,), {})
         buildbot_module = new.module('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
@@ -124,9 +119,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
             # Module reload is effectively re-run of module contents.
 
-            class Worker:
-                pass
-
+            Worker = type("Worker", (object,), {})
             buildbot_module.Worker = Worker
             deprecatedWorkerModuleAttribute(scope, Worker)
 
