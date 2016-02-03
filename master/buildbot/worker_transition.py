@@ -32,7 +32,7 @@ from twisted.python.versions import Version
 
 
 __all__ = (
-    "DeprecatedWorkerNameWarning", "define_old_worker_class_alias",
+    "DeprecatedWorkerNameWarning",
     "define_old_worker_class", "define_old_worker_property",
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
@@ -193,16 +193,6 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None):
         Version("Buildbot", 0, 9, 0),
         _WORKER_WARNING_MARK + "Use {0} instead.".format(attribute_name),
         module_name, compat_name)
-
-
-def define_old_worker_class_alias(scope, cls, compat_name=None):
-    """Add same class but with old API name.
-
-    Useful for interfaces."""
-
-    compat_name = _compat_name(cls.__name__, compat_name=compat_name)
-
-    scope[compat_name] = cls
 
 
 def deprecated_worker_class(cls, class_name=None):

@@ -26,7 +26,6 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import _compat_name
 from buildbot.worker_transition import define_old_worker_class
-from buildbot.worker_transition import define_old_worker_class_alias
 from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import define_old_worker_property
@@ -134,53 +133,6 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
                                 r"Buildbot 0.9.0: Use Worker instead."):
             S = buildbot_module.Slave
         self.assertIdentical(S, Worker)
-
-
-class ClassAlias(unittest.TestCase):
-
-    def test_class_alias(self):
-        class IWorker:
-            pass
-
-        locals = {}
-        define_old_worker_class_alias(
-            locals, IWorker)
-        self.assertIn("ISlave", locals)
-        self.assertTrue(locals["ISlave"] is IWorker)
-
-        # TODO: Is there a way to detect usage of class alias and print
-        # warning?
-
-    def test_class_alias_with_name(self):
-        class IWorker:
-            pass
-
-        locals = {}
-        define_old_worker_class_alias(
-            locals, IWorker, compat_name="IBuildSlave")
-        self.assertIn("IBuildSlave", locals)
-        self.assertTrue(locals["IBuildSlave"] is IWorker)
-
-    def test_module_reload(self):
-        # pylint: disable=function-redefined
-        locals = {}
-
-        class IWorker:
-            pass
-
-        define_old_worker_class_alias(
-            locals, IWorker, compat_name="IBuildSlave")
-        self.assertIn("IBuildSlave", locals)
-        self.assertTrue(locals["IBuildSlave"] is IWorker)
-
-        # "Reload" module
-        class IWorker:
-            pass
-
-        define_old_worker_class_alias(
-            locals, IWorker, compat_name="IBuildSlave")
-        self.assertIn("IBuildSlave", locals)
-        self.assertTrue(locals["IBuildSlave"] is IWorker)
 
 
 class ClassWrapper(unittest.TestCase):

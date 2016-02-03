@@ -26,7 +26,7 @@ from zope.interface import Attribute
 from zope.interface import Interface
 
 from buildbot.worker_transition import define_old_worker_class
-from buildbot.worker_transition import define_old_worker_class_alias
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import on_deprecated_name_usage
 
 # exceptions that can be raised while trying to start a build
@@ -164,7 +164,7 @@ class ILogObserver(Interface):
 class IWorker(IPlugin):
     # callback methods from the manager
     pass
-define_old_worker_class_alias(locals(), IWorker, compat_name="IBuildSlave")
+deprecatedWorkerModuleAttribute(locals(), IWorker, compat_name="IBuildSlave")
 
 
 class ILatentWorker(IWorker):
@@ -196,7 +196,7 @@ class ILatentWorker(IWorker):
         @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
-define_old_worker_class_alias(
+deprecatedWorkerModuleAttribute(
     locals(), ILatentWorker, compat_name="ILatentBuildSlave")
 
 
@@ -516,7 +516,7 @@ class IWorkerStatus(Interface):
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
         recent message was received from the worker."""
-define_old_worker_class_alias(locals(), IWorkerStatus)
+deprecatedWorkerModuleAttribute(locals(), IWorkerStatus)
 
 
 class ISchedulerStatus(Interface):
