@@ -173,9 +173,17 @@ def setupWorkerTransition():
     setWarningMethod(custom_warn_method)
 
 
-def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None):
+def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
+                                    new_name=None):
     """This is similar to Twisted's deprecatedModuleAttribute, but for
     Worker API Rename warnings.
+
+    :param scope: module scope (locals() in the context of a module)
+    :param attribute: module object (class, function, global variable)
+    :param compat_name: optional compatibility name (will be generated if not
+    specified)
+    :param new_name: optional new name (will be used name of attribute object
+    in the module if not specified)
     """
 
     module_name = scope["__name__"]
@@ -183,7 +191,10 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None):
     assert sys.modules[module_name].__dict__ is scope, \
         "scope must be module, i.e. locals()"
 
-    attribute_name = scope.keys()[scope.values().index(attribute)]
+    if new_name is None:
+        attribute_name = scope.keys()[scope.values().index(attribute)]
+    else:
+        attribute_name = new_name
 
     compat_name = _compat_name(attribute_name, compat_name=compat_name)
 
