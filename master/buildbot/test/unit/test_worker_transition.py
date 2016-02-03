@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 
 import mock
+import new
+import sys
 
 from twisted.trial import unittest
 
@@ -28,6 +30,7 @@ from buildbot.worker_transition import define_old_worker_class_alias
 from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import define_old_worker_property
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
 class CompatNameGeneration(unittest.TestCase):
@@ -51,6 +54,34 @@ class CompatNameGeneration(unittest.TestCase):
         # New name always contains "worker" instead of "slave".
         self.assertRaises(AssertionError, _compat_name, "somestr",
                           compat_name="slave")
+
+
+class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
+
+    def test_produces_warning(self):
+        class Worker:
+            pass
+
+        buildbot_module = new.module('buildbot_module')
+        buildbot_module.Worker = Worker
+        with mock.patch.dict(sys.modules,
+                             {'buildbot_module': buildbot_module}):
+            scope = buildbot_module.__dict__
+            deprecatedWorkerModuleAttribute(scope, Worker)
+
+            # Overwrite with Twisted's module wrapper.
+            import buildbot_module
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            W = buildbot_module.Worker
+        self.assertIdentical(W, Worker)
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"buildbot_module\.Slave was deprecated in "
+                                r"Buildbot 0.9.0: Use Worker instead."):
+            S = buildbot_module.Slave
+        self.assertIdentical(S, Worker)
 
 
 class ClassAlias(unittest.TestCase):

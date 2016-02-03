@@ -22,7 +22,14 @@ as an error using Python builtin warnings API.
 """
 
 import functools
+import sys
 import warnings
+
+from twisted.python.deprecate import deprecatedModuleAttribute as _deprecatedModuleAttribute
+from twisted.python.deprecate import getWarningMethod
+from twisted.python.deprecate import setWarningMethod
+from twisted.python.versions import Version
+
 
 __all__ = (
     "DeprecatedWorkerNameWarning", "define_old_worker_class_alias",
@@ -30,6 +37,8 @@ __all__ = (
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
     "deprecated_worker_class",
+    "setupWorkerTransition",
+    "deprecatedWorkerModuleAttribute",
 )
 
 # TODO:
@@ -42,6 +51,9 @@ __all__ = (
 #   removed. It's good to think now how this can be gracefully done later.
 #   For example, if I explicitly configure warnings in buildbot.tac template
 #   now, later generated from such template buildbot.tac files will break.
+
+
+_WORKER_WARNING_MARK = "[WORKER]"
 
 
 def _compat_name(new_name, compat_name=None):
@@ -137,6 +149,51 @@ def on_deprecated_module_usage(message, stacklevel=None):
         stacklevel = 3
 
     warnings.warn(DeprecatedWorkerModuleWarning(message), None, stacklevel)
+
+
+def setupWorkerTransition():
+    """Hook Twisted deprecation machinery to use custom warning class
+    for Worker API deprecation warnings."""
+
+    default_warn_method = getWarningMethod()
+
+    def custom_warn_method(message, category, stacklevel):
+        if _WORKER_WARNING_MARK in message:
+            # Message contains our mark - it's Worker API Renaming warning,
+            # issue it appropriately.
+            message = message.replace(_WORKER_WARNING_MARK, "")
+            if stacklevel is not None:
+                stacklevel += 1
+            warnings.warn(
+                DeprecatedWorkerNameWarning(message), message, stacklevel)
+        else:
+            # Other's warning message
+            default_warn_method(message, category, stacklevel)
+
+    setWarningMethod(custom_warn_method)
+
+
+def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None):
+    """This is similar to Twisted's deprecatedModuleAttribute, but for
+    Worker API Rename warnings.
+    """
+
+    module_name = scope["__name__"]
+    assert module_name in sys.modules, "scope must be module, i.e. locals()"
+    assert sys.modules[module_name].__dict__ is scope, \
+        "scope must be module, i.e. locals()"
+
+    attribute_name = scope.keys()[scope.values().index(attribute)]
+
+    compat_name = _compat_name(attribute_name, compat_name=compat_name)
+
+    assert compat_name not in scope
+    scope[compat_name] = attribute
+
+    _deprecatedModuleAttribute(
+        Version("Buildbot", 0, 9, 0),
+        _WORKER_WARNING_MARK + "Use {0} instead.".format(attribute_name),
+        module_name, compat_name)
 
 
 def define_old_worker_class_alias(scope, cls, compat_name=None):
