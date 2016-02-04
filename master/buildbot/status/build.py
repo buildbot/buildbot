@@ -615,6 +615,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['url'] = status.getURLForThing(self)
         result['url']['path'] += args
         result['builder_url'] = status.getURLForThing(self.builder) + args
+        result['builder_tags'] = self.builder.tags
 
         if self.resume:
             result['resume'] = self.resume
