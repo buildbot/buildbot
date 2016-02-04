@@ -200,8 +200,8 @@ class WwwTestMixin(RequiresWwwMixin):
             got['contentType'] = self.request.headers['content-type']
             exp['contentType'] = [contentType]
         if responseCode is not None:
-            got['responseCode'] = self.request.responseCode
-            exp['responseCode'] = responseCode
+            got['responseCode'] = str(self.request.responseCode)
+            exp['responseCode'] = str(responseCode)
         for header, value in iteritems(headers):
             got[header] = self.request.headers.get(header)
             exp[header] = value

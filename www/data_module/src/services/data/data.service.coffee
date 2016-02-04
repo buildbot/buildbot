@@ -136,8 +136,9 @@ class Data extends Provider
                     if ids.length > 0 then @startConsuming(path)
                 return null
 
-            control: (method, params) ->
-                restService.post
+            control: (ep, id, method, params = {}) ->
+                restPath = dataUtilsService.restPath([ep, id])
+                restService.post restPath,
                     id: @getNextId()
                     jsonrpc: '2.0'
                     method: method
