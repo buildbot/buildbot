@@ -985,14 +985,10 @@ class KatanaBuildRequestDistributor(service.Service):
 
     @defer.inlineCallbacks
     def _maybeStartOrResumeBuildsOn(self, new_builders):
-        yield self.activity_lock.acquire()
-        self.check_new_builds = True
-        self.check_resume_builds = True
-        yield  self.activity_lock.release()
         # start the activity loop, if we aren't already
         #  working on that.
         if not self.active:
-            self._procesBuildRequestsActivityLoop()
+            yield self._procesBuildRequestsActivityLoop()
 
     # Katana's gets the next priority builder from the DB instead of keeping a local list
     @defer.inlineCallbacks
@@ -1125,25 +1121,24 @@ class KatanaBuildRequestDistributor(service.Service):
         while 1:
             yield self.activity_lock.acquire()
 
-            if self.check_new_builds:
-                # continue checking new builds if we have pending builders
-                nextBuilder = yield self._callMaybeStartBuildsOnBuilder()
-                self.check_new_builds = True if nextBuilder is not None else False
+            # continue checking new builds if we have pending builders
+            nextBuilder = yield self._callMaybeStartBuildsOnBuilder()
+            check_new_builds = nextBuilder is not None
 
-            if self.check_resume_builds:
-                # continue checking resume builds if we have pending builders to resume
-                nextResumeBuilder = yield self._callMaybeResumeBuildsOnBuilder()
-                self.check_resume_builds = True if nextResumeBuilder is not None else False
+            # continue checking resume builds if we have pending builders to resume
+            nextResumeBuilder = yield self._callMaybeResumeBuildsOnBuilder()
+            check_resume_builds = nextResumeBuilder is not None
+
+            self.active = self.running and (check_new_builds or check_resume_builds)
 
             self.activity_lock.release()
 
             # bail out if we shouldn't keep looping
-            if not self.running or (not self.check_new_builds and not self.check_resume_builds):
+            if not self.active:
                 break
 
         self.timerLogFinished(msg="KatanaBuildRequestDistributor._procesBuildRequestsActivityLoop finished", timer=timer)
 
-        self.active = False
         self._quiet()
 
     def logResumeOrStartBuildStatus(self, msg, slave, breqs):

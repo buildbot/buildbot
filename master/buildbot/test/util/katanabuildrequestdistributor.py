@@ -4,6 +4,7 @@ from buildbot import config
 import mock
 from buildbot.db import buildrequests, buildsets, sourcestamps
 from buildbot.test.util import connector_component
+from buildbot.process import buildrequestdistributor
 
 class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorComponentMixin, object):
 
@@ -23,6 +24,32 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
         self.botmaster.builders = {}
         self.master = self.botmaster.master = mock.Mock(name='master')
         self.master.db = self.db
+
+    def setUpQuietDeferred(self):
+        # Detects the "end" of the test
+        self.quiet_deferred = defer.Deferred()
+        def _quiet():
+            if self.quiet_deferred:
+                d, self.quiet_deferred = self.quiet_deferred, None
+                d.callback(None)
+            else:
+                self.fail("loop has already gone quiet once")
+        self.brd._quiet = _quiet
+
+    def setUpKatanaBuildRequestDistributor(self):
+        self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
+        self.brd.startService()
+        self.setUpQuietDeferred()
+
+    def stopKatanaBuildRequestDistributor(self):
+        if self.brd.running:
+            yield self.brd.stopService()
+
+    def checkBRDCleanedUp(self):
+        # check that the BRD didnt end with a stuck lock or in the 'active' state (which would mean
+        # it ended without unwinding correctly)
+        self.assertEqual(self.brd.activity_lock.locked, False)
+        self.assertEqual(self.brd.active, False)
 
     @defer.inlineCallbacks
     def tearDownComponents(self):
