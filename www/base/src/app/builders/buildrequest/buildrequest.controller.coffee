@@ -17,7 +17,7 @@ class Buildrequest extends Controller
 
             failure = (why) ->
                 $scope.is_cancelling = false
-                $scope.error = "Cannot cancel: " + why.data.error.message
+                $scope.error = "Cannot cancel: " + why.error.message
                 refreshContextMenu()
 
             $scope.buildrequest.control('cancel').then(success, failure)

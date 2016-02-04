@@ -118,7 +118,7 @@ class FileUpload(_TransferBuildStep):
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
-            self.addURL(os.path.basename(masterdest), self.url)
+            self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
 
         # we use maxsize to limit the amount of data on both sides
         fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
@@ -179,7 +179,7 @@ class DirectoryUpload(_TransferBuildStep):
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
-            self.addURL(os.path.basename(masterdest), self.url)
+            self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
 
         # we use maxsize to limit the amount of data on both sides
         dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
@@ -288,7 +288,7 @@ class MultipleFileUpload(_TransferBuildStep):
 
     def allUploadsDone(self, result, sources, masterdest):
         if self.url is not None:
-            self.addURL(os.path.basename(masterdest), self.url)
+            self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
 
     def start(self):
         self.checkSlaveHasCommand("uploadDirectory")
