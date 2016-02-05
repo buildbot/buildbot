@@ -134,6 +134,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         for fk in fks:
             del fk['name']  # schema dependent
             del fk['referred_schema']  # idem
+            if 'options' in fk:
+                del fk['options']  # newer versions of sqlalchemy
 
         # finally, assert
         if fks != exp:
