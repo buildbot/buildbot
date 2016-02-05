@@ -27,34 +27,34 @@ describe 'buildrequest summary controller', ->
 
     it 'should get the buildrequest', ->
         buildrequests = [{buildrequestid: 1}]
-        dataService.when('buildrequests/1', buildrequests)
+        dataService.expect('buildrequests/1', buildrequests)
         expect(dataService.get).not.toHaveBeenCalled()
         controller = createController()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', $scope.buildrequestid)
-        $scope.$apply()
+        $timeout.flush()
+        dataService.verifyNoOutstandingExpectation()
         expect($scope.buildrequest.buildrequestid).toBe(1)
 
     it 'should query for builds again if first query returns 0', ->
         buildrequests = [{buildrequestid: 1}]
-        dataService.when('buildrequests/1', buildrequests)
+        dataService.expect('buildrequests/1', buildrequests)
         builds = []
-        dataService.when('builds', {buildrequestid: 1}, builds)
 
         controller = createController()
-        expect(dataService.get).toHaveBeenCalledWith('buildrequests', 1)
-        $scope.$apply()
+        $timeout.flush()
+        dataService.verifyNoOutstandingExpectation()
 
-        $scope.buildrequest.claimed = true
-        $scope.$apply()
-        expect(dataService.get).toHaveBeenCalledWith('builds', {buildrequestid: 1})
-        lastCount = dataService.get.calls.count()
+        dataService.expect('builds', {buildrequestid: 1}, builds)
+
+        $scope.$apply ->
+            $scope.buildrequest.claimed = true
+        $timeout.flush()
+
+        dataService.verifyNoOutstandingExpectation()
         expect($scope.builds.length).toBe(builds.length)
 
-        builds = [{buildid: 1}, {buildid: 2}]
-        dataService.when('builds', {buildrequestid: 1}, builds)
+        builds = [{buildid: 1, buildrequestid: 1}, {buildid: 2, buildrequestid: 1}]
+        $scope.builds.from(builds)
 
         $timeout.flush()
-        expect(dataService.get).toHaveBeenCalledWith('builds', {buildrequestid: 1})
-        count = dataService.get.calls.count()
-        expect(count).toBe(lastCount + 1)
+        dataService.verifyNoOutstandingExpectation()
         expect($scope.builds.length).toBe(builds.length)

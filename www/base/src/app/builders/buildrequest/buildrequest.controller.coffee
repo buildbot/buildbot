@@ -41,12 +41,11 @@ class Buildrequest extends Controller
             glTopbarContextualActionsService.setContextualActions(actions)
         $scope.$watch('buildrequest.complete', refreshContextMenu)
 
-        data = dataService.open($scope)
-        data.getBuildrequests($stateParams.buildrequest).then (buildrequests) ->
-            buildrequest = buildrequests[0]
+        data = dataService.open().closeOnDestroy($scope)
+        data.getBuildrequests($stateParams.buildrequest).onNew = (buildrequest) ->
             $scope.buildrequest = publicFieldsFilter(buildrequest)
-            data.getBuilders(buildrequest.builderid).then (builders) ->
-                $scope.builder = builder = builders[0]
+            data.getBuilders(buildrequest.builderid).onNew = (builder) ->
+                $scope.builder = builder
                 breadcrumb = [
                         caption: "buildrequests"
                         sref: "buildrequests"
@@ -60,5 +59,5 @@ class Buildrequest extends Controller
 
                 glBreadcrumbService.setBreadcrumb(breadcrumb)
 
-            data.getBuildsets(buildrequest.buildsetid).then (buildsets) ->
+            data.getBuildsets(buildrequest.buildsetid).onNew = (buildsets) ->
                 $scope.buildset = publicFieldsFilter(buildsets[0])

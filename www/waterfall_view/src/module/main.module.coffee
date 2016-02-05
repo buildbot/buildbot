@@ -7,16 +7,17 @@ class WaterfallView extends App
         'bbData'
     ]
 
+
 class Waterfall extends Controller
     self = null
     constructor: (@$scope, $q, $timeout, @$window, @$log,
-                  @$modal, @dataService, d3Service, @dataProcessorService,
+                  @$modal, dataService, d3Service, @dataProcessorService,
                   scaleService, @bbSettingsService) ->
-        self = @
+        self = this
 
         # Show the loading spinner
         @loading = true
-
+        @dataAccessor = dataService.open().closeOnDestroy(@$scope)
         # Get Waterfall settings
         @s = @bbSettingsService.getSettingsGroup('Waterfall')
         @c =
@@ -49,12 +50,13 @@ class Waterfall extends Controller
             buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
-        builders = @dataService.getBuilders()
-        @$scope.builders = builders.getArray()
-        builds = @dataService.getBuilds({limit: @c.limit, order: '-complete_at'})
-        @$scope.builds = builds.getArray()
+        @$scope.builders = @builders = @dataAccessor.getBuilders()
+        @$scope.builders.queryExecutor.isFiltered = (v) ->
+            return not v.masterids? or v.masterids.length > 0
+        @buildLimit = @c.limit
+        @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
 
-        $q.all([d3Service.get(), builders, builds]).then ([@d3, @builders, @builds]) =>
+        d3Service.get().then (@d3) =>
 
             # Create a scale object
             @scale = new scaleService(@d3)
@@ -87,14 +89,8 @@ class Waterfall extends Controller
 
             # Update view on data change
             loadingMore = false
-            @$scope.$watch('builds', ((builds) =>
-                if builds? and @builds.length isnt builds.length
-                    @builds = builds
-                    @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
-                    @dataProcessorService.addStatus(@builders)
-                    @render()
-                    loadingMore = false
-                ), true)
+            @builds.onChange = @builders.onChange = @renderNewData
+
 
             # Lazy load builds on scroll
             containerParent = @container.node().parentNode
@@ -108,12 +104,12 @@ class Waterfall extends Controller
 
             @$window.onkeydown = (e) =>
                 # +
-                if e.keyCode is 107
+                if e.keyIdentifier is 'U+002B'
                     e.preventDefault()
                     @incrementScaleFactor()
                     @render()
                 # -
-                else if e.keyCode is 109
+                if e.keyIdentifier is 'U+002D'
                     e.preventDefault()
                     @decrementScaleFactor()
                     @render()
@@ -135,11 +131,18 @@ class Waterfall extends Controller
     # Load more builds
     ###
     loadMore: ->
-        promise = @dataService.getBuilds({limit: @builds.length + @c.limit, order: '-complete_at'})
-        promise.then (builds) =>
+        if @builds.length < @buildLimit
+            # last query returned less build than expected, so we went to the begining of time
+            # no need to query again
+            return
+        @buildLimit = @builds.length + @c.limit
+        builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
+        builds.onChange = (builds) =>
+            @$scope.builds.close()  # force close the old collection's auto-update
             @$scope.builds = builds
-        return promise
-        # $scope.$watch renders the new data
+            # renders the new data
+            builds.onChange = @renderNewData
+            builds.onChange()
 
     ###
     # Create svg elements for chart and header, append svg groups
@@ -194,7 +197,7 @@ class Waterfall extends Controller
     # Set the container height
     ###
     setHeight: ->
-        h = - @c.gap
+        h = -@c.gap
         for group in @groups
             h += (group.max - group.min + @c.gap)
         height = h * @c.scaling + @c.margin.top + @c.margin.bottom
@@ -214,7 +217,7 @@ class Waterfall extends Controller
     ###
     getInnerHeight: ->
         height = @getHeight()
-        return height- @c.margin.top - @c.margin.bottom
+        return height - @c.margin.top - @c.margin.bottom
 
     ###
     # Returns headers height
@@ -267,7 +270,7 @@ class Waterfall extends Controller
             p = self.d3.select(@parentNode)
             a = p.append('a')
                 .attr('xlink:href', "#/builders/#{builderid}")
-            a.node().appendChild(@)
+            a.node().appendChild(this)
 
         # Rotate text
         xAxisSelect.selectAll('text')
@@ -283,7 +286,7 @@ class Waterfall extends Controller
             .attr('x1', 0)
             .attr('x2', 0)
             .attr('y1', x.rangeBand() / 2)
-            .attr('y2', - x.rangeBand() / 2)
+            .attr('y2', -x.rangeBand() / 2)
             .attr('class', self.getResultClassFromThing)
             .classed('stroke', true)
 
@@ -312,8 +315,8 @@ class Waterfall extends Controller
 
         # White background
         axis.append('rect')
-            .attr('x', - @c.margin.left)
-            .attr('y', - @c.margin.top)
+            .attr('x', -@c.margin.left)
+            .attr('y', -@c.margin.top)
             .attr('width', @c.margin.left)
             .attr('height', @getHeight())
             .style('fill', '#fff')
@@ -339,7 +342,7 @@ class Waterfall extends Controller
 
         # Break text on ^ character
         lineBreak = ->
-            e = self.d3.select(@)
+            e = self.d3.select(this)
             words = e.text().split('^')
             e.text('')
 
@@ -379,12 +382,15 @@ class Waterfall extends Controller
             .append('g')
                 .attr('class', 'build')
                 .attr('transform', (build) -> "translate(0, #{y(build.complete_at)})")
-
+        max = (a, b) ->
+            if (a > b)
+                return a
+            return b
         # Draw rectangle for each build
         builds.append('rect')
             .attr('class', self.getResultClassFromThing)
             .attr('width', x.rangeBand())
-            .attr('height', (build) -> y(build.started_at) - y(build.complete_at))
+            .attr('height', (build) -> max(10, Math.abs(y(build.started_at) - y(build.complete_at))))
             .classed('fill', true)
 
         # Optional: grey rectangle below buildids
@@ -413,15 +419,15 @@ class Waterfall extends Controller
     # Event actions
     ###
     mouseOver: (build) ->
-        e = self.d3.select(@)
-        mouse = self.d3.mouse(@)
+        e = self.d3.select(this)
+        mouse = self.d3.mouse(this)
         self.addTicks(build)
         self.drawYAxis()
 
         # Move build and builder to front
         p = self.d3.select(@parentNode)
-        @parentNode.appendChild(@)
-        p.each -> @parentNode.appendChild(@)
+        @parentNode.appendChild(this)
+        p.each -> @parentNode.appendChild(this)
 
         # Show tooltip on the left or on the right
         r = build.builderid < self.builders.length / 2
@@ -442,7 +448,7 @@ class Waterfall extends Controller
             .attr('points', points())
 
         # Load steps
-        build.loadSteps().then (buildsteps) ->
+        build.loadSteps().onChange = (buildsteps) ->
             # Resize the tooltip
             height = buildsteps.length * 15 + 7
             tooltip.transition().duration(100)
@@ -468,15 +474,15 @@ class Waterfall extends Controller
                     .text((step, i) -> "#{i + 1}. #{step.name} #{duration(step)}")
 
     mouseMove: (build) ->
-        e = self.d3.select(@)
+        e = self.d3.select(this)
 
         # Move the tooltip to the mouse position
-        mouse = self.d3.mouse(@)
+        mouse = self.d3.mouse(this)
         e.select('.svg-tooltip')
             .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
 
     mouseOut: (build) ->
-        e = self.d3.select(@)
+        e = self.d3.select(this)
         self.removeTicks()
         self.drawYAxis()
 
@@ -491,6 +497,12 @@ class Waterfall extends Controller
             windowClass: 'modal-small'
             resolve:
                 selectedBuild: -> build
+
+    renderNewData: =>
+        @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
+        @dataProcessorService.addStatus(@builders)
+        @render()
+        loadingMore = false
 
     ###
     # Render the waterfall view

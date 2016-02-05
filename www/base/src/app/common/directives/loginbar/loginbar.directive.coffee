@@ -7,6 +7,12 @@ class Loginbar extends Directive('common')
             scope: {}
             templateUrl: 'views/loginbar.html'
         }
+class AutoLogin extends Config
+    constructor: (config) ->
+        if config.auth? and config.auth.autologin and config.user.anonymous and config.auth.oauth2
+            window.stop()
+            document.location = "auth/login?redirect=" + document.location.hash.substr(1)
+
 
 class _loginbar extends Controller('common')
     constructor: ($scope, config, $http, $location) ->
@@ -34,11 +40,6 @@ class _loginbar extends Controller('common')
                 url: "#{baseurl}auth/logout"
             .success (data, status) ->
                 window.location.reload()
+
         $scope.loginoauth2 = ->
-            $http
-                method: "GET"
-                url: "#{baseurl}auth/login"
-            .success (data, status) ->
-                document.location = data
-        if config.auth.autologin and config.user.anonymous and config.auth.oauth2
-            $scope.loginoauth2()
+            document.location = "#{baseurl}auth/login"

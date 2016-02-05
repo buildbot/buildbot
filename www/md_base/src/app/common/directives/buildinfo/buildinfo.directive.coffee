@@ -21,11 +21,11 @@ class _BuildInfo extends Controller
     raw_properties: {}
 
     constructor: ->
-        @build.loadChanges().then (changes) =>
+        @build.loadChanges().onChange = (changes) =>
             @changes = changes
             @change_owners = @processOwners(_.uniq(change.author for change in changes))
 
-            @build.loadProperties().then (data) =>
+            @build.loadProperties().onChange = (data) =>
                 @processProperties(data[0])
 
     processOwners: (owners = []) ->

@@ -1,4 +1,5 @@
-[pep8]
+[flake8]
+
 show-source = yes
 statistics = yes
 count = yes

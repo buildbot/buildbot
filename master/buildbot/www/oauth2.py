@@ -42,11 +42,20 @@ class OAuth2LoginResource(auth.LoginResource):
     def renderLogin(self, request):
         code = request.args.get("code", [""])[0]
         if not code:
-            url = yield self.auth.getLoginURL()
-            defer.returnValue(url)
+            url = request.args.get("redirect", [None])[0]
+            url = yield self.auth.getLoginURL(url)
+            raise resource.Redirect(url)
         else:
             details = yield self.auth.verifyCode(code)
+            if self.auth.userInfoProvider is not None:
+                infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
+                details.update(infos)
             request.getSession().user_info = details
+            state = request.args.get("state", [""])[0]
+            print repr(state)
+            if state:
+                for redirect in parse_qs(state).get('redirect', []):
+                    raise resource.Redirect(self.auth.homeUri + "#" + redirect)
             raise resource.Redirect(self.auth.homeUri)
 
 
@@ -84,12 +93,14 @@ class OAuth2Auth(auth.AuthBase):
     def getLoginResource(self):
         return OAuth2LoginResource(self.master, self)
 
-    def getLoginURL(self):
+    def getLoginURL(self, redirect_url):
         """
         Returns the url to redirect the user to for user consent
         """
-        oauth_params = {'redirect_uri': self.loginUri, 'client_id': self.clientId,
-                        'response_type': 'code'}
+        oauth_params = {'redirect_uri': self.loginUri,
+                        'client_id': self.clientId, 'response_type': 'code'}
+        if redirect_url is not None:
+            oauth_params['state'] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
         return defer.succeed("%s?%s" % (self.authUri, urlencode(oauth_params)))
 
@@ -143,9 +154,8 @@ class GoogleAuth(OAuth2Auth):
     tokenUri = 'https://accounts.google.com/o/oauth2/token'
     authUriAdditionalParams = dict(scope=" ".join([
                                    'https://www.googleapis.com/auth/userinfo.email',
-                                   'https://www.googleapis.com/auth/userinfo.profile',
-                                   ]),
-                                   access_type='offline')
+                                   'https://www.googleapis.com/auth/userinfo.profile'
+                                   ]))
 
     def getUserInfoFromOAuthClient(self, c):
         data = self.get(c, '/userinfo')

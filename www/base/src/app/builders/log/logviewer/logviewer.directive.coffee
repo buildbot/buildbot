@@ -61,7 +61,7 @@ class Logviewer extends Directive
             controller: ($scope) ->
                 $scope.lines = self.lines
                 self.scope = $scope
-                data = dataService.open($scope)
+                data = dataService.open().closeOnDestroy($scope)
                 self.updateLog()
 
             link: (scope, elm, attr) ->

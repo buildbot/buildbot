@@ -1,15 +1,18 @@
 #! /bin/bash
 TEST='buildbot.test buildslave.test'
 
-# some colors
-# plain
-_ESC=$'\e'
-GREEN="$_ESC[0;32m"
-MAGENTA="$_ESC[0;35m"
-RED="$_ESC[0;31m"
-LTCYAN="$_ESC[1;36m"
-YELLOW="$_ESC[1;33m"
-NORM="$_ESC[0;0m"
+# if stdout is a terminal define some colors
+# validate.sh can be run as hook from GUI git clients, such as git-gui
+if test -t 1; then
+    # plain
+    _ESC=$'\e'
+    GREEN="$_ESC[0;32m"
+    MAGENTA="$_ESC[0;35m"
+    RED="$_ESC[0;31m"
+    LTCYAN="$_ESC[1;36m"
+    YELLOW="$_ESC[1;33m"
+    NORM="$_ESC[0;0m"
+fi
 
 ## parse options
 
@@ -31,7 +34,7 @@ if $help; then
     echo "USAGE: common/validate.sh [oldrev] [--quick] [--no-js] [--help]"
     echo "  This script will test a set of patches (oldrev..HEAD) for basic acceptability as a patch"
     echo "  Run it in an activated virtualenv with the current Buildbot installed, as well as"
-    echo "      sphinx, pyflakes, mock, and so on"
+    echo "      sphinx, flake8, mock, and so on"
     echo "To use a different directory for tests, pass TRIALTMP=/path as an env variable"
     echo "if --quick is passed validate will skip unit tests and concentrate on coding style"
     echo "if --no-js is passed validate will skip tests that require Node and NPM"
@@ -169,12 +172,12 @@ $RES || warning "some import fixes failed -- not enforcing for now"
 status "running autopep8"
 if [[ -z `which autopep8` ]]; then
     warning "autopep8 is not installed"
-elif [[ ! -f common/pep8rc ]]; then
-    warning "common/pep8rc not found"
+elif [[ ! -f common/flake8rc ]]; then
+    warning "common/flake8rc not found"
 else
     changes_made=false
     for filename in ${py_files[@]}; do
-        LINEWIDTH=$(grep -E "max-line-length" common/pep8rc | sed 's/ //g' | cut -d'=' -f 2)
+        LINEWIDTH=$(grep -E "max-line-length" common/flake8rc | sed 's/ //g' | cut -d'=' -f 2)
         # even if we dont enforce errors, if they can be fixed automatically, thats better..
         IGNORES=E123,E501,W6
         # ignore is not None for SQLAlchemy code..
@@ -191,32 +194,17 @@ else
     fi
 fi
 
-status "running pep8"
-if [[ -z `which pep8` ]]; then
-    warning "pep8 is not installed"
-elif [[ ! -f common/pep8rc ]]; then
-    warning "common/pep8rc not found"
+status "running flake8"
+if [[ -z `which flake8` ]]; then
+    warning "flake8 is not installed"
 else
-    pep8_ok=true
+    flake8_ok=true
     for filename in ${py_files[@]}; do
-        if ! pep8 --config=common/pep8rc "$filename"; then
-            pep8_ok=false
+        if ! flake8 --config=common/flake8rc "$filename"; then
+            flake8_ok=false
         fi
     done
-    $pep8_ok || not_ok "pep8 failed"
-fi
-
-status "running pyflakes"
-if [[ -z `which pyflakes` ]]; then
-    warning "pyflakes is not installed"
-else
-    pyflakes_ok=true
-    for filename in ${py_files[@]}; do
-        if ! pyflakes "$filename"; then
-            pyflakes_ok=false
-        fi
-    done
-    $pyflakes_ok || not_ok "pyflakes failed"
+    $flake8_ok || not_ok "flake8 failed"
 fi
 
 
@@ -237,7 +225,11 @@ fi
 
 if git diff --name-only $REVRANGE | grep ^master/docs/ ; then
     status "building docs"
-    make -C master/docs VERSION=latest clean html || not_ok "docs failed"
+    # Don't clean builddir if built in quick mode
+    if ! $quick ; then
+        make -C master/docs clean || not_ok "docs cleanup failed"
+    fi
+    make -C master/docs VERSION=latest html || not_ok "docs failed"
 else
     status "not building docs, because it was not changed"
 fi

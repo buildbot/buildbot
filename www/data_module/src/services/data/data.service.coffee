@@ -4,11 +4,11 @@ class Data extends Provider
     cache: false
 
     ### @ngInject ###
-    $get: ($log, $injector, $q, restService, socketService, dataUtilsService, ENDPOINTS) ->
+    $get: ($log, $injector, $q, restService, socketService, dataUtilsService, Collection, ENDPOINTS) ->
         return new class DataService
             self = null
             constructor: ->
-                self = @
+                self = this
                 # setup socket listeners
                 #socketService.eventStream.onUnsubscribe = @unsubscribeListener
                 socketService.onclose = @socketCloseListener
@@ -17,124 +17,49 @@ class Data extends Provider
 
             # the arguments are in this order: endpoint, id, child, id of child, query
             get: (args...) ->
-                # keep defined arguments only
-                args = args.filter (e) -> e?
 
                 # get the query parameters
-                [..., last] = args
+                [args, query] = dataUtilsService.splitOptions(args)
+                subscribe = accessor = undefined
+
                 # subscribe for changes if 'subscribe' is true or undefined
-                subscribe = last.subscribe or not last.subscribe?
-                if angular.isObject(last)
-                    query = args.pop()
-                    # 'subscribe' is not part of the query
-                    delete query.subscribe
+                subscribe = query.subscribe == true
+                accessor = query.accessor
+                if subscribe and not accessor
+                    $log.warn "subscribe call should be done after DataService.open()"
+                    $log.warn "for maintaining trace of observers"
+                    subscribe = false
 
+                # 'subscribe' is not part of the query
+                delete query.subscribe
+                delete query.accessor
+
+                restPath = dataUtilsService.restPath(args)
                 # up to date array, this will be returned
-                updating = []
+                collection = new Collection(restPath, query, accessor)
 
-                promise = $q (resolve, reject) =>
+                if subscribe
+                    subscribePromise = collection.subscribe()
+                else
+                    subscribePromise = $q.resolve()
 
-                    if subscribe
-                        # TODO needs testing
-                        # store all messages before the classes subscribe for changes
-                        # resend once those are ready
-                        messages = []
-                        unsubscribe = socketService.eventStream.subscribe (data) ->
-                            messages.push(data)
+                subscribePromise.then ->
+                    # get the data from the rest api
+                    restService.get(restPath, query).then (response) ->
 
-                        # start consuming WebSocket messages
-                        socketPath = dataUtilsService.socketPath(args)
-                        socketPromise = @startConsuming(socketPath)
-                    else socketPromise = $q.resolve()
+                        type = dataUtilsService.type(restPath)
+                        datalist = response[type]
+                        # the response should always be an array
+                        if not angular.isArray(datalist)
+                            e = "#{datalist} is not an array"
+                            $log.error(e)
+                            return
 
-                    socketPromise.then =>
-                        # get the data from the rest api
-                        restPath = dataUtilsService.restPath(args)
-                        restPromise = restService.get(restPath, query)
+                        # fill up the collection with initial data
+                        collection.initial(datalist)
 
-                        restPromise.then (response) =>
+                return collection
 
-                            type = dataUtilsService.type(restPath)
-                            response = response[type]
-                            try
-                                # try to get the wrapper class
-                                className = dataUtilsService.className(restPath)
-                                # the classes have the dataService as a dependency
-                                # $injector.get doesn't throw circular dependency exception
-                                WrapperClass = $injector.get(className)
-                            catch e
-                                # use the Base class otherwise
-                                console.log "unknown wrapper for", className
-                                WrapperClass = $injector.get('Base')
-                            # the response should always be an array
-                            if angular.isArray(response)
-                                # strip the id or name from the path if it's there
-                                endpoint = dataUtilsService.endpointPath(args)
-                                # wrap the elements in classes
-                                response = response.map (i) -> new WrapperClass(i, endpoint)
-                                # map of path: [listener id]
-                                @listeners ?= {}
-                                # add listener ids to the socket path
-                                @listeners[socketPath] ?= []
-                                response.forEach (r) =>
-                                    @listeners[socketPath].push(r._listenerId)
-                                # handle /new messages
-                                socketService.eventStream.subscribe (data) =>
-                                    key = data.k
-                                    message = data.m
-                                    # filter for relevant message
-                                    streamRegex = ///^#{endpoint}\/(\w+|\d+)\/new$///g
-                                    # add new instance to the updating array
-                                    if streamRegex.test(key)
-                                        newInstance = new WrapperClass(message, endpoint)
-                                        updating.push(newInstance)
-                                        @listeners[socketPath].push(newInstance._listenerId)
-                                # TODO needs testing
-                                # resend messages
-                                if subscribe
-                                    messages.forEach (m) -> socketService.eventStream.push(m)
-                                    unsubscribe()
-                                # fill up the updating array
-                                angular.copy(response, updating)
-                                # the updating array is ready to be used
-                                resolve(updating)
-                            else
-                                e = "#{response} is not an array"
-                                $log.error(e)
-                                reject(e)
-                        , (e) => reject(e)
-                    , (e) => reject(e)
-
-                promise.getArray = -> updating
-
-                return promise
-
-            startConsuming: (path) ->
-                socketService.send({
-                    cmd: 'startConsuming'
-                    path: path
-                })
-
-            stopConsuming: (path) ->
-                socketService.send({
-                    cmd: 'stopConsuming'
-                    path: path
-                })
-
-            # make the stopConsuming calls when there is no listener for a specific endpoint
-            unsubscribeListener: (removed) =>
-                for path, ids of @listeners
-                    i = ids.indexOf(removed.id)
-                    if i > -1
-                        ids.splice(i, 1)
-                        if ids.length is 0 then @stopConsuming(path)
-
-            # resend the start consuming messages for active paths
-            socketCloseListener: =>
-                if not @listeners? then return
-                for path, ids of @listeners
-                    if ids.length > 0 then @startConsuming(path)
-                return null
 
             control: (ep, id, method, params = {}) ->
                 restPath = dataUtilsService.restPath([ep, id])
@@ -154,75 +79,86 @@ class Data extends Provider
                 ENDPOINTS.forEach (e) =>
                     # capitalize endpoint names
                     E = dataUtilsService.capitalize(e)
-                    @::["get#{E}"] = (args...) =>
+                    this::["get#{E}"] = (args...) ->
                         self.get(e, args...)
 
             # opens a new accessor
             open: ->
                 return new class DataAccessor
-                    rootClasses = []
+                    collectionRefs = []
                     constructor: ->
-                        @rootClasses = rootClasses
                         @constructor.generateEndpoints()
 
-                    # calls unsubscribe on each root classes
-                    close: ->
-                        @rootClasses.forEach (c) -> c.unsubscribe()
+                    registerCollection: (c) ->
+                        collectionRefs.push(c)
 
-                    # closes the group when the scope is destroyed
+                    close: ->
+                        collectionRefs.forEach (c) -> c.close()
+
+                    # Closes the group when the scope is destroyed
                     closeOnDestroy: (scope) ->
                         if not angular.isFunction(scope.$on)
                             throw new TypeError("Parameter 'scope' doesn't have an $on function")
                         scope.$on '$destroy', => @close()
+                        return this
 
-                    # generate functions for root endpoints
+                    # Generate functions for root endpoints
                     @generateEndpoints: ->
                         ENDPOINTS.forEach (e) =>
                             # capitalize endpoint names
                             E = dataUtilsService.capitalize(e)
-                            @::["get#{E}"] = (args...) =>
-                                p = self["get#{E}"](args...)
-                                # when the promise is resolved add the root level classes
-                                # to an array (on close we can call unsubscribe on those)
-                                p.then (classes) ->
-                                    classes.forEach (c) -> rootClasses.push(c)
-                                return p
+                            this::["get#{E}"] = (args...) ->
+                                [args, query] = dataUtilsService.splitOptions(args)
+                                query.subscribe ?= true
+                                query.accessor = this
+                                return self.get(e, args..., query)
 
         ############## utils for testing
         # register return values for the mocked get function
             mocks: {}
             spied: false
-            when: (args...) ->
-                [url, query, returnValue] = args
+            when: (url, query, returnValue) ->
                 if not returnValue?
                     [query, returnValue] = [{}, query]
                 if jasmine? and not @spied
-                    spyOn(@, 'get').and.callFake(@_mockGet)
+                    spyOn(this, 'get').and.callFake(@_mockGet)
                     @spied = true
 
                 @mocks[url] ?= {}
                 @mocks[url][query] = returnValue
 
+            expect: (url, query, returnValue) ->
+                if not returnValue?
+                    [query, returnValue] = [{}, query]
+                @_expects ?= []
+                @_expects.push([url, query])
+                @when(url, query, returnValue)
+
+            verifyNoOutstandingExpectation:  ->
+                if @_expects? and @_expects.length
+                    fail("expecting #{@_expects.length} more data requests " +
+                        "(#{angular.toJson(@_expects)})")
+
             # register return values with the .when function
             # when testing get will return the given values
             _mockGet: (args...) ->
                 [url, query] = @processArguments(args)
-                queryWithoutSubscribe = angular.copy(query)
-                delete queryWithoutSubscribe.subscribe
+                queryWithoutSubscribe = {}
+                for k, v of query
+                    if k != "subscribe" and k != "accessor"
+                        queryWithoutSubscribe[k] = v
+                if @_expects
+                    [exp_url, exp_query] = @_expects.shift()
+                    expect(exp_url).toEqual(url)
+                    expect(exp_query).toEqual(queryWithoutSubscribe)
                 returnValue = @mocks[url]?[query] or @mocks[url]?[queryWithoutSubscribe]
-                if not returnValue? then throw new Error("No return value for: #{url} (#{angular.toJson(query)})")
-                collection = @createCollection(url, query, returnValue)
-                p = $q.resolve(collection)
-                p.getArray = -> collection
-                return p
+                if not returnValue? then throw new Error("No return value for: #{url} " +
+                    "(#{angular.toJson(queryWithoutSubscribe)})")
+                collection = @createCollection(url, queryWithoutSubscribe, returnValue)
+                return collection
 
             processArguments: (args) ->
-                # keep defined arguments only
-                args.filter (e) -> e?
-                # get the query parameters
-                [..., last] = args
-                if angular.isObject(last)
-                    query = args.pop()
+                [args, query] = dataUtilsService.splitOptions(args)
                 restPath = dataUtilsService.restPath(args)
                 return [restPath, query or {}]
 
@@ -231,17 +167,15 @@ class Data extends Provider
             createCollection: (url, query, response) ->
                 restPath = url
                 type = dataUtilsService.type(restPath)
-                try
-                    # try to get the wrapper class
-                    className = dataUtilsService.className(restPath)
-                    # the classes have the dataService as a dependency
-                    # $injector.get doesn't throw circular dependency exception
-                    WrapperClass = $injector.get(className)
-                catch e
-                    # use the Base class otherwise
-                    console.log "unknown wrapper for", className
-                    WrapperClass = $injector.get('Base')
-                # strip the id or name from the path if it's there
-                endpoint = dataUtilsService.endpointPath([restPath])
-                # wrap the elements in classes
-                response = response.map (i) -> new WrapperClass(i, endpoint)
+                collection = new Collection(restPath, query)
+
+                # populate the response with default ids
+                # for convenience
+                id = collection.id
+                idCounter = 1
+                response.forEach (d) ->
+                    if not d.hasOwnProperty(id)
+                        d[id] = idCounter++
+
+                collection.initial(response)
+                return collection

@@ -134,7 +134,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # default to the MyISAM storage engine; InnoDB is not supported
         storage_engine = u.query.pop('storage_engine', 'MyISAM')
         kwargs['connect_args'] = {
-            'init_command': 'SET storage_engine=%s' % storage_engine,
+            'init_command': 'SET default_storage_engine=%s' % storage_engine,
         }
 
         if 'use_unicode' in u.query:
@@ -187,7 +187,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             version_digits = re.sub('[^0-9.]', '', version)
             version_tup = tuple(map(int, version_digits.split('.')))
         except TypeError:
-            pass
+            return  # unparseable -- oh well
 
         if version_tup < (0, 6):
             raise RuntimeError("SQLAlchemy version %s is too old" % (version,))

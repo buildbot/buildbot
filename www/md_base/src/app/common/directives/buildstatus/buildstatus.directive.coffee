@@ -30,5 +30,5 @@ class _BuildStatus extends Controller
                 @status_class = 'unknown'
                 @icon = 'pending'
 
-        $scope.$watch 'status.build', updateBuild, true
+        $scope.$watch 'status.build', updateBuild
 

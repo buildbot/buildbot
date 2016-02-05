@@ -15,7 +15,10 @@ This section gives some general information about Buildbot development.
     schedulers
     utils
     results
-    www
+    www-server
+    www-data-module
+    www-base-app
+    www-md_base-app
     auth
     authz
     master-slave

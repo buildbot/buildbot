@@ -13,7 +13,7 @@
                 td 
                     span(ng-repeat="buildermaster in buildslave.configured_on")
                         a(ui-sref="builder({builder: buildermaster.builderid})")
-                            | {{ buildersById[buildermaster.builderid].name +
+                            | {{ builders.get(buildermaster.builderid).name +
                             |    maybeGetMasterNameFromBuilderMaster(buildermaster)}}
                         | &nbsp;
                 td 

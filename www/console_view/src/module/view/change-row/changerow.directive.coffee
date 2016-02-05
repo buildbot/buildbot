@@ -7,15 +7,17 @@ class ChangeRow extends Directive
                 width: '='
                 cellWidth: '='
                 change: '='
+                builders: '='
             }
             templateUrl: 'console_view/views/changerow.html'
             controller: '_changeRowController'
             controllerAs: 'cr'
         }
 
+
 class _changeRow extends Controller
     constructor: ($scope, resultsService, @$modal) ->
-        angular.extend @, resultsService
+        angular.extend this, resultsService
         @infoIsCollapsed = true
 
         $scope.$on 'showAllInfo', (event, value) =>
@@ -25,19 +27,9 @@ class _changeRow extends Controller
         $scope.$watch 'cellWidth', (@cellWidth) =>
         $scope.$watch 'change', (@change) =>
             if @change
-                if angular.isString(@change.author)
-                    @formatAuthor()
                 if angular.isString(@change.repository)
                     @createLink()
-
-    formatAuthor: ->
-        # Official W3C email regular expression
-        emailRegex = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/
-        email = emailRegex.exec(@change.author)
-        # Remove email from author string
-        if email && @change.author.split(' ').length > 0
-            @change.author = @change.author.replace(///\s<#{email[0]}>///, '')
-            @change.email = email[0]
+        $scope.$watch 'builders', (@builders) ->
 
     createLink: ->
         repository = @change.repository.replace('.git', '')

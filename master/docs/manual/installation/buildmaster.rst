@@ -111,7 +111,7 @@ Version-specific Notes
 Upgrading from Buildbot-0.8.x to Buildbot-0.9.x
 '''''''''''''''''''''''''''''''''''''''''''''''
 
-See :ref:`Upgrading to Nine` for a guide to upgrading from -1.8.x to 0.9.x
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
 Upgrading a Buildmaster to Buildbot-0.7.6
 '''''''''''''''''''''''''''''''''''''''''

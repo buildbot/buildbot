@@ -32,11 +32,13 @@ class FieldBase(object):
         'le': lambda d, v: d <= v[0],
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
+        'contains': lambda d, v: v[0] in d,
     }
 
     plural_operators = {
         'eq': lambda d, v: d in v,
         'ne': lambda d, v: d not in v,
+        'contains': lambda d, v: set(v) <= set(d),
     }
 
     def __init__(self, field, op, values):

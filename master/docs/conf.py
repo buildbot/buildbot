@@ -30,7 +30,8 @@ needs_sphinx = '1.0'
 extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.extlinks',
-    'bbdocs.ext'
+    'bbdocs.ext',
+    'sphinxcontrib.blockdiag'
 ]
 todo_include_todos=True
 

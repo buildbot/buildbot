@@ -16,7 +16,10 @@
     li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)", ng-repeat="step in buildsummary.steps",
                        ng-click="step.fulldisplay=!step.fulldisplay")
       span.pull-right(ng-if="step.started_at")
-        | {{ step.duration| durationformat:'LLL' }}
+        span(ng-show="step.complete")
+            | {{ step.duration| durationformat:'LLL' }}
+        span(ng-show="!step.complete")
+            | {{ buildsummary.now - step.started_at| durationformat:'LLL' }}
         | &nbsp;{{step.state_string}}
       span.badge-status(ng-class="results2class(step, 'pulse')")
         | {{step.number}}
