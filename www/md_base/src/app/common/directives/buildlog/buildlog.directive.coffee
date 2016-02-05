@@ -34,7 +34,7 @@ class _BuildLog extends Controller
 
         # Load and process contents
         @log = @raw_log
-        @contents = @log.contents or @log.loadContents().getArray()
+        @contents = @log.contents or @log.loadContents()
         @updateContents()
 
     addLine: (lineno, line) ->

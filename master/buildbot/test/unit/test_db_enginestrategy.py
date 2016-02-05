@@ -25,9 +25,10 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
     "Test the special case methods, without actually creating a db"
 
     # used several times below
-    mysql_kwargs = dict(basedir='my-base-dir',
-                        connect_args=dict(init_command='SET storage_engine=MyISAM'),
-                        pool_recycle=3600)
+    mysql_kwargs = dict(
+        basedir='my-base-dir',
+        connect_args=dict(init_command='SET default_storage_engine=MyISAM'),
+        pool_recycle=3600)
     sqlite_kwargs = dict(basedir='/my-base-dir', poolclass=NullPool)
 
     def setUp(self):
@@ -164,7 +165,7 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
         kwargs = dict(basedir='my-base-dir')
         u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
         exp = self.mysql_kwargs.copy()
-        exp['connect_args'] = dict(init_command='SET storage_engine=foo')
+        exp['connect_args'] = dict(init_command='SET default_storage_engine=foo')
         self.assertEqual([str(u), max_conns, self.filter_kwargs(kwargs)],
                          ["mysql:///dbname?charset=utf8&use_unicode=True", None,
                           exp])

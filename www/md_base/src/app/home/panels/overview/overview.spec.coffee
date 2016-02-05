@@ -11,7 +11,6 @@ describe 'overview', ->
         $httpBackend = $injector.get('$httpBackend')
         $q = $injector.get('$q')
         dataService = $injector.get('dataService')
-        spyOn(dataService, 'startConsuming').and.returnValue($q.resolve())
         decorateHttpBackend($httpBackend)
 
     beforeEach inject(injected)

@@ -1,6 +1,6 @@
 # developer utilities
 
-.PHONY: docs apidocs pylint
+.PHONY: docs apidocs pylint flake8
 
 PIP?=pip
 
@@ -18,19 +18,15 @@ pylint:
 	$(MAKE) -C slave pylint; slave_res=$$?; \
 	if [ $$master_res != 0 ] || [ $$slave_res != 0 ]; then exit 1; fi
 
-# pyflakes the whole sourcecode (validate.sh will do that as well, but only process the modified files)
-pyflakes:
-	pyflakes master/buildbot slave/buildslave
-
-# pep8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
-pep8:
-	pep8 --config=common/pep8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
+# flake8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
+flake8:
+	flake8 --config=common/flake8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
 
 # rebuild front-end from source
 frontend:
 	$(PIP) install -e pkg
 	$(PIP) install mock
-	for i in base codeparameter console_view waterfall_view nestedexample; do $(PIP) install -e www/$$i ; done
+	for i in base codeparameter console_view waterfall_view nestedexample; do $(PIP) install -e www/$$i || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests:

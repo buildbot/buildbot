@@ -40,6 +40,7 @@ class BuilderEndpoint(base.Endpoint):
         defer.returnValue(
             dict(builderid=builderid,
                  name=bdict['name'],
+                 masterids=bdict['masterids'],
                  description=bdict['description'],
                  tags=bdict['tags']))
 
@@ -60,6 +61,7 @@ class BuildersEndpoint(base.Endpoint):
         defer.returnValue([
             dict(builderid=bd['id'],
                  name=bd['name'],
+                 masterids=bd['masterids'],
                  description=bd['description'],
                  tags=bd['tags'])
             for bd in bdicts])
@@ -75,6 +77,7 @@ class Builder(base.ResourceType):
     class EntityType(types.Entity):
         builderid = types.Integer()
         name = types.Identifier(20)
+        masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
         tags = types.List(of=types.String())
     entityType = EntityType(name)

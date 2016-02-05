@@ -9,24 +9,23 @@ class Builder extends Controller
         @lastBuild = {}
         @forceschedulers = []
         @buildTabs = []
-        
-        data = @dataService.open($scope)
 
-        @builderid = $state.params.builderid
-        @dataService.getBuilders(@builderid).then (data) =>
+        data = @dataService.open().closeOnDestroy($scope)
+
+        @builderid = parseInt(@$state.params.builderid)
+        data.getBuilders(@builderid).onChange = (data) =>
             if data.length == 0
                 alert 'Builder not found!'
-                $state.go('builds')
+                @$state.go('builds')
             else
                 @info = data[0]
-                @forceschedulers = @info.loadForceschedulers().getArray()
+                @forceschedulers = @info.loadForceschedulers()
                 @builds = @info.loadBuilds
-                    builderid: @builderid
                     order: '-number'
                     limit: 20
-                .getArray()
+
                 @loadMoreBuilderInfo()
-                
+
                 # go to buildstab if no child state is selected
                 if @$state.is('builds.builder', builderid:@builderid)
                     @$state.go 'builds.builder.buildstab', builderid: @builderid
@@ -52,7 +51,7 @@ class Builder extends Controller
     closeBuildTab: (number) ->
         idx = @buildTabs.indexOf(number)
         @selectedTab = (if idx > 0 then idx + 2 else 1)
-        @buildTabs.splice(idx, 1) if idx >=0
+        @buildTabs.splice(idx, 1) if idx >= 0
 
     selectTab: (tab, number) ->
         # We handle build tab first to avoid repeated load as md-tabs will auto select newly added tab
@@ -75,8 +74,8 @@ class Builder extends Controller
         @moreInfo =
             tags: @info.tags
             description: @info.description
-            slaves: @info.loadBuildslaves().getArray()
-            masters: @info.loadMasters().getArray()
+            slaves: @info.loadBuildslaves()
+            masters: @info.loadMasters()
             forceschedulers: @forceschedulers
 
     triggerSchedulerDialog: (scheduler, event) ->

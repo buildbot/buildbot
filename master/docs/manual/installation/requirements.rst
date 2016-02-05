@@ -51,7 +51,7 @@ Pywin32: http://sourceforge.net/projects/pywin32/
 Buildmaster Requirements
 ------------------------
 
-Note that all of these requirements aside from SQLite can easily be installed from the Python package repository, PyPi.
+Note that all of these requirements aside from SQLite can easily be installed from the Python package repository, PyPI.
 
 sqlite3: http://www.sqlite.org
 
@@ -70,20 +70,20 @@ Jinja2: http://jinja.pocoo.org/
 
 SQLAlchemy: http://www.sqlalchemy.org/
 
-  Buildbot requires SQLAlchemy version 0.7.10, or version 0.8.1 or higher
+  Buildbot requires SQLAlchemy version 0.8.1 or higher.
   SQLAlchemy allows Buildbot to build database schemas and queries for a wide variety of database systems.
 
 SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
 
-  Buildbot requires one of the following SQLAlchemy-Migrate versions: 0.7.2 or 0.9 or higher.
+  Buildbot requires one of the following SQLAlchemy-Migrate versions 0.9 or higher.
   SQLAlchemy-Migrate-0.9 is required for compatibility with SQLAlchemy versions 0.8.0 and above.
+  As a special case, SQLAlchemy-Migrate-0.7.2 is known to work with SQLAlchemy 0.6.9 and 0.7.10.
   Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to version.
 
 Python-Dateutil: http://labix.org/python-dateutil
 
-  The :bb:sched:`Nightly` scheduler requires Python-Dateutil version 1.5 (the last version to support Python-2.x).
+  Buildbot requires Python-Dateutil in version 1.5 or higher (the last version to support Python-2.x).
   This is a small, pure-python library.
-  Buildbot will function properly without it if the :bb:sched:`Nightly` scheduler is not used.
 
 Autobahn:
 

@@ -23,9 +23,12 @@ class _buildsummary extends Controller('common')
         buildURLMatcher = $urlMatcherFactory.compile(
             "#{baseurl}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
 
-        $interval =>
+        # to get an update of the current builds every seconds, we need to update self.now
+        # but we want to stop counting when the scope destroys!
+        stop = $interval =>
             @now = moment().unix()
         , 1000
+        $scope.$on("$destroy", -> $interval.cancel(stop))
 
         NONE = 0
         ONLY_NOT_SUCCESS = 1
@@ -53,19 +56,22 @@ class _buildsummary extends Controller('common')
         @isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
-            data.getBuilds(buildid).then (builds) ->
-                self.build = build = builds[0]
-                data.getBuilders(build.builderid).then (builders) ->
-                    self.builder = builder = builders[0]
+            data.getBuilds(buildid).onNew = (build) ->
+                self.build = build
+                data.getBuilders(build.builderid).onNew = (builder) ->
+                    self.builder = builder
 
-                build.getSteps().then (steps) ->
-                    self.steps = steps
-                    steps.forEach (step) ->
-                        $scope.$watch (-> step.complete), ->
-                            step.fulldisplay = step.complete == 0 || step.results > 0
-                            if step.complete
-                                step.duration = step.complete_at - step.started_at
-                        step.loadLogs()
+                self.steps = build.getSteps()
+
+                self.steps.onNew = (step) ->
+                    step.loadLogs()
+                    # onUpdate is only called onUpdate, not onNew, but we need to update our additional needed attributes
+                    self.steps.onUpdate(step)
+
+                self.steps.onUpdate = (step) ->
+                    step.fulldisplay = step.complete == 0 || step.results > 0
+                    if step.complete
+                        step.duration = step.complete_at - step.started_at

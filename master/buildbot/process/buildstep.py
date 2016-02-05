@@ -107,7 +107,7 @@ def _maybeUnhandled(fn):
         if self._start_unhandled_deferreds is not None:
             self._start_unhandled_deferreds.append(d)
         return d
-    wrap.func_original = fn
+    wrap.__wrapped__ = fn
     twutil.mergeFunctionMetadata(fn, wrap)
     return wrap
 

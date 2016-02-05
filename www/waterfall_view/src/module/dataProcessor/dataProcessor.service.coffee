@@ -11,8 +11,13 @@ class DataProcessor extends Service
         groupid = -1
         last = groupid: 0, time: 0
         # Create empty builds array for all the builders
-        builder.builds = [] for builder in builders
+        for builder in builders
+            builder.builds = []
         for build in builds
+            builder = builders.get(build.builderid)
+            if not builder? or not builder.builds
+                # builder is filtered, so we don't take its build in account
+                continue
             # Group number starts from 0, for the first time the condition is always true
             ++groupid if build.started_at - last.time > threshold
 
@@ -24,12 +29,13 @@ class DataProcessor extends Service
 
             if not build.complete then build.complete_at = Math.round(new Date() / 1000)
             build.groupid = last.groupid = groupid
-            builders[build.builderid - 1].builds.push(build)
+            builder = builders.get(build.builderid)
+            builder.builds.push(build)
 
             if build.complete_at > last.time then last.time = build.complete_at
         # The last group maximum time
-        groups[last.groupid].max = last.time
-
+        if groups[last.groupid]
+            groups[last.groupid].max = last.time
         return groups
 
     # Add the most recent build result to the builder

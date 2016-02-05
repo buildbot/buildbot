@@ -24,18 +24,20 @@ describe 'Console view', ->
         expect(state.url).toBe("/#{name}")
 
 describe 'Console view controller', ->
-    createController = scope = $rootScope = null
-
     # Test data
 
     builders = [
         builderid: 1
+        masterids: [1]
     ,
         builderid: 2
+        masterids: [1]
     ,
         builderid: 3
+        masterids: [1]
     ,
         builderid: 4
+        masterids: [1]
     ]
 
     builds1 = [
@@ -95,31 +97,20 @@ describe 'Console view controller', ->
         sourcestamp:
             ssid: 1
     ]
+    createController = scope = $rootScope = dataService = $window = $timeout = null
 
     injected = ($injector) ->
         $q = $injector.get('$q')
         $rootScope = $injector.get('$rootScope')
         $window = $injector.get('$window')
+        $timeout = $injector.get('$timeout')
+        dataService = $injector.get('dataService')
         scope = $rootScope.$new()
-
-        # Mocked service
-        buildbotServiceMock =
-            all: (string) =>
-                deferred = $q.defer()
-                switch string
-                    when 'builds'
-                        deferred.resolve builds
-                    when 'builders'
-                        deferred.resolve builders
-                    when 'changes'
-                        deferred.resolve changes
-                    when 'buildrequests'
-                        deferred.resolve buildrequests
-                    when 'buildsets'
-                        deferred.resolve buildsets
-                    else
-                        deferred.resolve []
-                bind: -> deferred.promise
+        dataService.when('builds', builds)
+        dataService.when('builders', builders)
+        dataService.when('changes', changes)
+        dataService.when('buildrequests', buildrequests)
+        dataService.when('buildsets', buildsets)
 
         # Create new controller using controller as syntax
         $controller = $injector.get('$controller')
@@ -129,7 +120,6 @@ describe 'Console view controller', ->
                 $q: $q
                 $window: $window
                 $scope: scope
-                buildbotService: buildbotServiceMock
 
     beforeEach(inject(injected))
 
@@ -153,9 +143,11 @@ describe 'Console view controller', ->
 
     it 'should match the builds with the change', ->
         createController()
-        $rootScope.$digest()
+        $timeout.flush()
         expect(scope.c.changes[0]).toBeDefined()
-        expect(scope.c.changes[0].builds).toBeDefined()
-        expect(scope.c.changes[0].builds.length).toBe(builds1.length)
-        for build in builds1
-            expect(scope.c.changes[0].builds).toContain(build)
+        expect(scope.c.changes[0].buildsPerBuilder).toBeDefined()
+        builds = scope.c.changes[0].buildsPerBuilder
+        expect(builds[1][0].buildid).toBe(1)
+        expect(builds[2][0].buildid).toBe(2)
+        expect(builds[3][0].buildid).toBe(4)
+        expect(builds[4][0].buildid).toBe(3)

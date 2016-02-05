@@ -727,13 +727,13 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
     This string lets you change that.
 
 ``p4port``
-    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot (repository), used as the :option:`-p` argument for all p4 commands.
+    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot (repository), used as the option `-p` argument for all p4 commands.
 
 ``p4user``
-    (optional): the Perforce user, used as the :option:`-u` argument to all p4 commands.
+    (optional): the Perforce user, used as the option `-u` argument to all p4 commands.
 
 ``p4passwd``
-    (optional): the Perforce password, used as the :option:`-p` argument to all p4 commands.
+    (optional): the Perforce password, used as the option `-p` argument to all p4 commands.
 
 ``p4client``
     (optional): The name of the client to use.
@@ -1612,10 +1612,10 @@ The :bb:step:`MTR` step's arguments are:
     Defaults to 16.
 
 ``parallel``
-    Value of :option:`--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
+    Value of option `--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
     Defaults to 4.
     This is used to determine the number of server error log files to download from the slave.
-    Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using :option:`--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
+    Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using option `--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
 
 ``dbpool``
     An instance of :class:`twisted.enterprise.adbapi.ConnectionPool`, or ``None``.
@@ -1763,9 +1763,9 @@ The :bb:step:`BuildEPYDoc` step will run :command:`epydoc` to produce this API d
 You must supply the command line to be used.
 The default is ``make epydocs``, which assumes that your project has a :file:`Makefile` with an `epydocs` target.
 You might wish to use something like :samp:`epydoc -o apiref source/{PKGNAME}` instead.
-You might also want to add :option:`--pdf` to generate a PDF file instead of a large tree of HTML files.
+You might also want to add option `--pdf` to generate a PDF file instead of a large tree of HTML files.
 
-The API docs are generated in-place in the build tree (under the workdir, in the subdirectory controlled by the :option:`-o` argument).
+The API docs are generated in-place in the build tree (under the workdir, in the subdirectory controlled by the option `-o` argument).
 To make them useful, you will probably have to copy them to somewhere they can be read.
 A command like ``rsync -ad apiref/ dev.example.com:~public_html/current-apiref/`` might be useful.
 You might instead want to bundle them into a tarball and publish it in the same place where the generated install tarball is placed.
@@ -2033,7 +2033,7 @@ The optional ``compress`` argument can be given as ``'gz'`` or ``'bz2'`` to comp
 
 .. note::
 
-   The permissions on the copied files will be the same on the master as originally on the slave, see :option:`buildslave create-slave --umask` to change the default one.
+   The permissions on the copied files will be the same on the master as originally on the slave, see option `buildslave create-slave --umask` to change the default one.
 
 .. bb:step:: MultipleFileUpload
 

@@ -62,7 +62,7 @@ create-master
 
 This creates a new directory and populates it with files that allow it to be used as a buildmaster's base directory.
 
-You will usually want to use the :option:`-r` option to create a relocatable :file:`buildbot.tac`.
+You will usually want to use the option `-r` option to create a relocatable :file:`buildbot.tac`.
 This allows you to move the master directory without editing this file.
 
 .. bb:cmdline:: upgrade-master
@@ -89,7 +89,7 @@ start
 This starts a buildmaster which was already created in the given base directory.
 The daemon is launched in the background, with events logged to a file named :file:`twistd.log`.
 
-The :option:`--nodaemon` option instructs Buildbot to skip daemonizing.
+The option `--nodaemon` option instructs Buildbot to skip daemonizing.
 The process will start in the foreground.
 It will only return to the command-line when it is stopped.
 
@@ -104,7 +104,7 @@ restart
 
 Restart the buildmaster.
 This is equivalent to ``stop`` followed by ``start``
-The :option:`--nodaemon` option has the same meaning as for ``start``.
+The option `--nodaemon` option has the same meaning as for ``start``.
 
 .. bb:cmdline:: stop (buildbot)
 
@@ -116,7 +116,7 @@ stop
     buildbot stop {BASEDIR}
 
 This terminates the daemon (either buildmaster or buildslave) running in the given directory.
-The :option:`--clean` option shuts down the buildmaster cleanly.
+The option `--clean` option shuts down the buildmaster cleanly.
 
 .. bb:cmdline:: sighup
 
@@ -187,12 +187,12 @@ Locating the master
 The :command:`try` command needs to be told how to connect to the try scheduler, and must know which of the authentication approaches described above is in use by the buildmaster.
 You specify the approach by using ``--connect=ssh`` or ``--connect=pb`` (or ``try_connect = 'ssh'`` or ``try_connect = 'pb'`` in :file:`.buildbot/options`).
 
-For the PB approach, the command must be given a :option:`--master` argument (in the form :samp:`{HOST}:{PORT}`) that points to TCP port that you picked in the :class:`Try_Userpass` scheduler.
-It also takes a :option:`--username` and :option:`--passwd` pair of arguments that match one of the entries in the buildmaster's ``userpass`` list.
+For the PB approach, the command must be given a option `--master` argument (in the form :samp:`{HOST}:{PORT}`) that points to TCP port that you picked in the :class:`Try_Userpass` scheduler.
+It also takes a option `--username` and option `--passwd` pair of arguments that match one of the entries in the buildmaster's ``userpass`` list.
 These arguments can also be provided as ``try_master``, ``try_username``, and ``try_password`` entries in the :file:`.buildbot/options` file.
 
-For the SSH approach, the command must be given :option:`--host` and :option:`--username`, to get to the buildmaster host.
-It must also be given :option:`--jobdir`, which points to the inlet directory configured above.
+For the SSH approach, the command must be given option `--host` and option `--username`, to get to the buildmaster host.
+It must also be given option `--jobdir`, which points to the inlet directory configured above.
 The jobdir can be relative to the user's home directory, but most of the time you will use an explicit path like :file:`~buildbot/project/trydir`.
 These arguments can be provided in :file:`.buildbot/options` as ``try_host``, ``try_username``, ``try_password``, and ``try_jobdir``.
 
@@ -200,18 +200,18 @@ If you need to use something different from the default ``ssh`` command for
 connecting to the remote system, you can use `--ssh` command line option or
 ``try_ssh`` in the configuration file.
 
-The SSH approach also provides a :option:`--buildbotbin` argument to allow specification of the buildbot binary to run on the buildmaster.
-This is useful in the case where buildbot is installed in a :ref:`virtualenv <Installation-in-a-Virtualenv>` on the buildmaster host, or in other circumstances where the buildbot command is not on the path of the user given by :option:`--username`.
-The :option:`--buildbotbin` argument can be provided in :file:`.buildbot/options` as ``try_buildbotbin``
+The SSH approach also provides a option `--buildbotbin` argument to allow specification of the buildbot binary to run on the buildmaster.
+This is useful in the case where buildbot is installed in a :ref:`virtualenv <Installation-in-a-Virtualenv>` on the buildmaster host, or in other circumstances where the buildbot command is not on the path of the user given by option `--username`.
+The option `--buildbotbin` argument can be provided in :file:`.buildbot/options` as ``try_buildbotbin``
 
 The following command line arguments are deprecated, but retained for backward compatibility:
 
 --tryhost
-  is replaced by :option:`--host`
+  is replaced by option `--host`
 --trydir
-  is replaced by :option:`--jobdir`
+  is replaced by option `--jobdir`
 --master
-  is replaced by :option:`--masterstatus`
+  is replaced by option `--masterstatus`
 
 Likewise, the following :file:`.buildbot/options` file entries are deprecated, but retained for backward compatibility:
 
@@ -221,8 +221,8 @@ Likewise, the following :file:`.buildbot/options` file entries are deprecated, b
 Waiting for results
 ###################
 
-If you provide the :option:`--wait` option (or ``try_wait = True`` in :file:`.buildbot/options`), the ``buildbot try`` command will wait until your changes have either been proven good or bad before exiting.
-Unless you use the :option:`--quiet` option (or ``try_quiet=True``), it will emit a progress message every 60 seconds until the builds have completed.
+If you provide the option `--wait` option (or ``try_wait = True`` in :file:`.buildbot/options`), the ``buildbot try`` command will wait until your changes have either been proven good or bad before exiting.
+Unless you use the option `--quiet` option (or ``try_quiet=True``), it will emit a progress message every 60 seconds until the builds have completed.
 
 The SSH connection method does not support waiting for results.
 
@@ -233,7 +233,7 @@ A trial build is performed on multiple Builders at the same time, and the develo
 The set you choose will depend upon what your goals are: if you are concerned about cross-platform compatibility, you should use multiple Builders, one from each platform of interest.
 You might use just one builder if that platform has libraries or other facilities that allow better test coverage than what you can accomplish on your own machine, or faster test runs.
 
-The set of Builders to use can be specified with multiple :option:`--builder` arguments on the command line.
+The set of Builders to use can be specified with multiple option `--builder` arguments on the command line.
 It can also be specified with a single ``try_builders`` option in :file:`.buildbot/options` that uses a list of strings to specify all the Builder names::
 
     try_builders = ["full-OSX", "full-win32", "full-linux"]
@@ -248,7 +248,7 @@ Specifying the VC system
 ########################
 
 The :command:`try` command also needs to know how to take the developer's current tree and extract the (revision, patch) source-stamp pair.
-Each VC system uses a different process, so you start by telling the :command:`try` command which VC system you are using, with an argument like :option:`--vc=cvs` or :option:`--vc=git`.
+Each VC system uses a different process, so you start by telling the :command:`try` command which VC system you are using, with an argument like option `--vc=cvs` or option `--vc=git`.
 This can also be provided as ``try_vc`` in :file:`.buildbot/options`.
 
 .. The order of this list comes from the end of scripts/tryclient.py
@@ -268,21 +268,21 @@ To set this filename, use ``--topfile=ChangeLog``, or set it in the options file
 You can also manually set the top of the tree with ``--topdir=~/trees/mytree``, or ``try_topdir = '~/trees/mytree'``.
 If you use ``try_topdir``, in a :file:`.buildbot/options` file, you will need a separate options file for each tree you use, so it may be more convenient to use the ``try_topfile`` approach instead.
 
-Other VC systems which work on full projects instead of individual directories (Darcs, Mercurial, Git, Monotone) do not require :command:`try` to know the top directory, so the :option:`--try-topfile` and :option:`--try-topdir` arguments will be ignored.
+Other VC systems which work on full projects instead of individual directories (Darcs, Mercurial, Git, Monotone) do not require :command:`try` to know the top directory, so the option `--try-topfile` and option `--try-topdir` arguments will be ignored.
 
 If the :command:`try` command cannot find the top directory, it will abort with an error message.
 
 The following command line arguments are deprecated, but retained for backward compatibility:
 
-* ``--try-topdir`` is replaced by :option:`--topdir`
-* ``--try-topfile`` is replaced by :option:`--topfile`
+* ``--try-topdir`` is replaced by option `--topdir`
+* ``--try-topfile`` is replaced by option `--topfile`
 
 Determining the branch name
 ###########################
 
 Some VC systems record the branch information in a way that ``try`` can locate it.
 For the others, if you are using something other than the default branch, you will have to tell the buildbot which branch your tree is using.
-You can do this with either the :option:`--branch` argument, or a ``try_branch`` entry in the :file:`.buildbot/options` file.
+You can do this with either the option `--branch` argument, or a ``try_branch`` entry in the :file:`.buildbot/options` file.
 
 Determining the revision and patch
 ##################################
@@ -291,7 +291,7 @@ Each VC system has a separate approach for determining the tree's base revision 
 
 CVS
     :command:`try` pretends that the tree is up to date.
-    It converts the current time into a :option:`-D` time specification, uses it as the base revision, and computes the diff between the upstream tree as of that point in time versus the current contents.
+    It converts the current time into a option `-D` time specification, uses it as the base revision, and computes the diff between the upstream tree as of that point in time versus the current contents.
     This works, more or less, but requires that the local clock be in reasonably good sync with the repository.
 
 SVN
@@ -345,20 +345,20 @@ Monotone
 patch information
 #################
 
-You can provide the :option:`--who=dev` to designate who is running the try build.
+You can provide the option `--who=dev` to designate who is running the try build.
 This will add the ``dev`` to the Reason field on the try build's status web page.
 You can also set ``try_who = dev`` in the :file:`.buildbot/options` file.
-Note that :option:`--who=dev` will not work on version 0.8.3 or earlier masters.
+Note that option `--who=dev` will not work on version 0.8.3 or earlier masters.
 
-Similarly, :option:`--comment=COMMENT` will specify the comment for the patch, which is also displayed in the patch information.
+Similarly, option `--comment=COMMENT` will specify the comment for the patch, which is also displayed in the patch information.
 The corresponding config-file option is ``try_comment``.
 
 Sending properties
 ##################
 
-You can set properties to send with your change using either the :option:`--property=key=value` option, which sets a single property, or the :option:`--properties=key1=value1,key2=value2...` option, which sets multiple comma-separated properties.
+You can set properties to send with your change using either the option `--property=key=value` option, which sets a single property, or the option `--properties=key1=value1,key2=value2...` option, which sets multiple comma-separated properties.
 Either of these can be sepcified multiple times.
-Note that the :option:`--properties` option uses commas to split on properties, so if your property value itself contains a comma, you'll need to use the :option:`--property` option to set it.
+Note that the option `--properties` option uses commas to split on properties, so if your property value itself contains a comma, you'll need to use the option `--property` option to set it.
 
 .. _try--diff:
 
@@ -373,19 +373,19 @@ Now you want to test it out.
 One approach would be to check out a new local tree, apply the patch, run your local tests, then use ``buildbot try`` to run the tests on other platforms.
 An alternate approach is to use the ``buildbot try --diff`` form to have the buildbot test the patch without using a local tree.
 
-This form takes a :option:`--diff` argument which points to a file that contains the patch you want to apply.
-By default this patch will be applied to the TRUNK revision, but if you give the optional :option:`--baserev` argument, a tree of the given revision will be used as a starting point instead of TRUNK.
+This form takes a option `--diff` argument which points to a file that contains the patch you want to apply.
+By default this patch will be applied to the TRUNK revision, but if you give the optional option `--baserev` argument, a tree of the given revision will be used as a starting point instead of TRUNK.
 
 You can also use ``buildbot try --diff=-`` to read the patch from :file:`stdin`.
 
 Each patch has a ``patchlevel`` associated with it.
 This indicates the number of slashes (and preceding pathnames) that should be stripped before applying the diff.
-This exactly corresponds to the :option:`-p` or :option:`--strip` argument to the :command:`patch` utility.
-By default ``buildbot try --diff`` uses a patchlevel of 0, but you can override this with the :option:`-p` argument.
+This exactly corresponds to the option `-p` or option `--strip` argument to the :command:`patch` utility.
+By default ``buildbot try --diff`` uses a patchlevel of 0, but you can override this with the option `-p` argument.
 
-When you use :option:`--diff`, you do not need to use any of the other options that relate to a local tree, specifically :option:`--vc`, :option:`--try-topfile`, or :option:`--try-topdir`.
+When you use option `--diff`, you do not need to use any of the other options that relate to a local tree, specifically option `--vc`, option `--try-topfile`, or option `--try-topdir`.
 These options will be ignored.
-Of course you must still specify how to get to the buildmaster (with :option:`--connect`, :option:`--tryhost`, etc).
+Of course you must still specify how to get to the buildmaster (with option `--connect`, option `--tryhost`, etc).
 
 Other Tools
 ~~~~~~~~~~~
@@ -406,12 +406,12 @@ It requires that you have a :class:`PBChangeSource` (:bb:chsrc:`PBChangeSource`)
     buildbot sendchange --master {MASTERHOST}:{PORT} --auth {USER}:{PASS}
             --who {USER} {FILENAMES..}
 
-The :option:`--auth` option specifies the credentials to use to connect to the master, in the form ``user:pass``.
+The option `--auth` option specifies the credentials to use to connect to the master, in the form ``user:pass``.
 If the password is omitted, then sendchange will prompt for it.
 If both are omitted, the old default (username "change" and password "changepw") will be used.
 Note that this password is well-known, and should not be used on an internet-accessible port.
 
-The :option:`--master` and :option:`--username` arguments can also be given in the options file (see :ref:`buildbot-config-directory`).
+The option `--master` and option `--username` arguments can also be given in the options file (see :ref:`buildbot-config-directory`).
 There are other (optional) arguments which can influence the ``Change`` that gets submitted:
 
 --branch
@@ -446,7 +446,7 @@ There are other (optional) arguments which can influence the ``Change`` that get
 
 --comments
     This provides the change comments as a single argument.
-    You may want to use :option:`--logfile` instead.
+    You may want to use option `--logfile` instead.
 
 --logfile
     This instructs the tool to read the change comments from the given file.
@@ -472,7 +472,7 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
 
 --master
     The :command:`user` command can be run virtually anywhere provided a location of the running buildmaster.
-    The :option:`--master` argument is of the form :samp:`{MASTERHOST}:{PORT}`.
+    The option `--master` argument is of the form :samp:`{MASTERHOST}:{PORT}`.
 
 --username
     PB connection authentication that should match the arguments to `CommandlineUserManager`.
@@ -481,50 +481,50 @@ For details on how Buildbot manages users, see :ref:`Concepts-Users`.
     PB connection authentication that should match the arguments to `CommandlineUserManager`.
 
 --op
-    There are four supported values for the :option:`--op` argument: ``add``, ``update``, ``remove``, and ``get``.
+    There are four supported values for the option `--op` argument: ``add``, ``update``, ``remove``, and ``get``.
     Each are described in full in the following sections.
 
 --bb_username
-    Used with the :option:`--op=update` option, this sets the user's username for web authentication in the database.
-    It requires :option:`--bb_password` to be set along with it.
+    Used with the option `--op=update` option, this sets the user's username for web authentication in the database.
+    It requires option `--bb_password` to be set along with it.
 
 --bb_password
-    Also used with the :option:`--op=update` option, this sets the password portion of a user's web authentication credentials into the database.
+    Also used with the option `--op=update` option, this sets the password portion of a user's web authentication credentials into the database.
     The password is first encrypted prior to storage for security reasons.
 
 --ids
     When working with users, you need to be able to refer to them by unique identifiers to find particular users in the database.
-    The :option:`--ids` option lets you specify a comma separated list of these identifiers for use with the :command:`user` command.
+    The option `--ids` option lets you specify a comma separated list of these identifiers for use with the :command:`user` command.
 
-    The :option:`--ids` option is used only when using :option:`--op=remove` or :option:`--op=get`.
+    The option `--ids` option is used only when using option `--op=remove` or option `--op=get`.
 
 --info
     Users are known in buildbot as a collection of attributes tied together by some unique identifier (see :ref:`Concepts-Users`).
-    These attributes are specified in the form ``{TYPE}={VALUE}`` when using the :option:`--info` option.
+    These attributes are specified in the form ``{TYPE}={VALUE}`` when using the option `--info` option.
     These ``{TYPE}={VALUE}`` pairs are specified in a comma separated list, so for example:
 
     .. code-block:: none
 
         --info=svn=jdoe,git='John Doe <joe@example.com>'
 
-    The :option:`--info` option can be specified multiple times in the :command:`user` command, as each specified option will be interpreted as a new user.
-    Note that :option:`--info` is only used with :option:`--op=add` or with :option:`--op=update`, and whenever you use :option:`--op=update` you need to specify the identifier of the user you want to update.
-    This is done by prepending the :option:`--info` arguments with ``{ID:}``.
+    The option `--info` option can be specified multiple times in the :command:`user` command, as each specified option will be interpreted as a new user.
+    Note that option `--info` is only used with option `--op=add` or with option `--op=update`, and whenever you use option `--op=update` you need to specify the identifier of the user you want to update.
+    This is done by prepending the option `--info` arguments with ``{ID:}``.
     If we were to update ``'jschmo'`` from the previous example, it would look like this:
 
     .. code-block:: none
 
         --info=jdoe:git='Joe Doe <joe@example.com>'
 
-Note that :option:`--master`, :option:`--username`, :option:`--passwd`, and :option:`--op` are always required to issue the :command:`user` command.
+Note that option `--master`, option `--username`, option `--passwd`, and option `--op` are always required to issue the :command:`user` command.
 
-The :option:`--master`, :option:`--username`, and :option:`--passwd` options can be specified in the option file with keywords ``user_master``, ``user_username``, and ``user_passwd``, respectively.
-If ``user_master`` is not specified, then :option:`--master` from the options file will be used instead.
+The option `--master`, option `--username`, and option `--passwd` options can be specified in the option file with keywords ``user_master``, ``user_username``, and ``user_passwd``, respectively.
+If ``user_master`` is not specified, then option `--master` from the options file will be used instead.
 
 Below are examples of how each command should look.
 Whenever a :command:`user` command is successful, results will be shown to whoever issued the command.
 
-For :option:`--op=add`:
+For option `--op=add`:
 
 .. code-block:: none
 
@@ -532,7 +532,7 @@ For :option:`--op=add`:
             --username={USER} --passwd={USERPW} \
             --info={TYPE}={VALUE},...
 
-For :option:`--op=update`:
+For option `--op=update`:
 
 .. code-block:: none
 
@@ -540,7 +540,7 @@ For :option:`--op=update`:
             --username={USER} --passwd={USERPW} \
             --info={ID}:{TYPE}={VALUE},...
 
-For :option:`--op=remove`:
+For option `--op=remove`:
 
 .. code-block:: none
 
@@ -548,7 +548,7 @@ For :option:`--op=remove`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-For :option:`--op=get`:
+For option `--op=get`:
 
 .. code-block:: none
 
@@ -556,7 +556,7 @@ For :option:`--op=get`:
             --username={USER} --passwd={USERPW} \
             --ids={ID1},{ID2},...
 
-A note on :option:`--op=update`: when updating the :option:`--bb_username` and :option:`--bb_password`, the :option:`--info` doesn't need to have additional ``{TYPE}={VALUE}`` pairs to update and can just take the ``{ID}`` portion.
+A note on option `--op=update`: when updating the option `--bb_username` and option `--bb_password`, the option `--info` doesn't need to have additional ``{TYPE}={VALUE}`` pairs to update and can just take the ``{ID}`` portion.
 
 .. _buildbot-config-directory:
 
@@ -582,42 +582,42 @@ The following is a brief sample of what this file's contents could be.
 Note carefully that the names in the :file:`options` file usually do not match the command-line option name.
 
 ``master``
-    Equivalent to :option:`--master` for :bb:cmdline:`sendchange`.
+    Equivalent to option `--master` for :bb:cmdline:`sendchange`.
     It is the location of the :class:`pb.PBChangeSource` for ```sendchange``.
 
 ``username``
-    Equivalent to :option:`--username` for the :bb:cmdline:`sendchange` command.
+    Equivalent to option `--username` for the :bb:cmdline:`sendchange` command.
 
 ``branch``
-    Equivalent to :option:`--branch` for the :bb:cmdline:`sendchange` command.
+    Equivalent to option `--branch` for the :bb:cmdline:`sendchange` command.
 
 ``category``
-    Equivalent to :option:`--category` for the :bb:cmdline:`sendchange` command.
+    Equivalent to option `--category` for the :bb:cmdline:`sendchange` command.
 
 ``try_connect``
-    Equivalent to :option:`--connect`, this specifies how the :bb:cmdline:`try` command should deliver its request to the buildmaster.
+    Equivalent to option `--connect`, this specifies how the :bb:cmdline:`try` command should deliver its request to the buildmaster.
     The currently accepted values are ``ssh`` and ``pb``.
 
 ``try_builders``
-    Equivalent to :option:`--builders`, specifies which builders should be used for the :bb:cmdline:`try` build.
+    Equivalent to option `--builders`, specifies which builders should be used for the :bb:cmdline:`try` build.
 
 ``try_vc``
-    Equivalent to :option:`--vc` for :bb:cmdline:`try`, this specifies the version control system being used.
+    Equivalent to option `--vc` for :bb:cmdline:`try`, this specifies the version control system being used.
 
 ``try_branch``
-    Equivalent to :option:`--branch`, this indicates that the current tree is on a non-trunk branch.
+    Equivalent to option `--branch`, this indicates that the current tree is on a non-trunk branch.
 
 ``try_topdir``
 
 ``try_topfile``
-    Use ``try_topdir``, equivalent to :option:`--try-topdir`, to explicitly indicate the top of your working tree, or ``try_topfile``, equivalent to :option:`--try-topfile` to name a file that will only be found in that top-most directory.
+    Use ``try_topdir``, equivalent to option `--try-topdir`, to explicitly indicate the top of your working tree, or ``try_topfile``, equivalent to option `--try-topfile` to name a file that will only be found in that top-most directory.
 
 ``try_host``
 
 ``try_username``
 
 ``try_dir``
-    When ``try_connect`` is ``ssh``, the command will use ``try_host`` for :option:`--tryhost`, ``try_username`` for :option:`--username`, and ``try_dir`` for :option:`--trydir`.
+    When ``try_connect`` is ``ssh``, the command will use ``try_host`` for option `--tryhost`, ``try_username`` for option `--username`, and ``try_dir`` for option `--trydir`.
     Apologies for the confusing presence and absence of 'try'.
 
 ``try_username``
@@ -625,12 +625,12 @@ Note carefully that the names in the :file:`options` file usually do not match t
 ``try_password``
 
 ``try_master``
-    Similarly, when ``try_connect`` is ``pb``, the command will pay attention to ``try_username`` for :option:`--username`, ``try_password`` for :option:`--passwd`, and ``try_master`` for :option:`--master`.
+    Similarly, when ``try_connect`` is ``pb``, the command will pay attention to ``try_username`` for option `--username`, ``try_password`` for option `--passwd`, and ``try_master`` for option `--master`.
 
 ``try_wait``
 
 ``masterstatus``
-    ``try_wait`` and ``masterstatus`` (equivalent to :option:`--wait` and ``master``, respectively) are used to ask the :bb:cmdline:`try` command to wait for the requested build to complete.
+    ``try_wait`` and ``masterstatus`` (equivalent to option `--wait` and ``master``, respectively) are used to ask the :bb:cmdline:`try` command to wait for the requested build to complete.
 
 buildslave
 ----------
@@ -646,7 +646,7 @@ create-slave
 This creates a new directory and populates it with files that let it be used as a buildslave's base directory.
 You must provide several arguments, which are used to create the initial :file:`buildbot.tac` file.
 
-The :option:`-r` option is advisable here, just like for ``create-master``.
+The option `-r` option is advisable here, just like for ``create-master``.
 
 .. code-block:: none
 
@@ -666,7 +666,7 @@ The daemon is launched in the background, with events logged to a file named :fi
 
     buildslave start [--nodaemon] BASEDIR
 
-The :option:`--nodaemon` option instructs Buildbot to skip daemonizing.
+The option `--nodaemon` option instructs Buildbot to skip daemonizing.
 The process will start in the foreground.
 It will only return to the command-line when it is stopped.
 
@@ -682,7 +682,7 @@ restart
 This restarts a buildslave which is already running.
 It is equivalent to a ``stop`` followed by a ``start``.
 
-The :option:`--nodaemon` option has the same meaning as for ``start``.
+The option `--nodaemon` option has the same meaning as for ``start``.
 
 .. bb:cmdline:: stop (buildslave)
 

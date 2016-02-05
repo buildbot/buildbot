@@ -55,7 +55,7 @@ class InterfaceTests(object):
 
         def remove_decorators(func):
             try:
-                return func.func_original
+                return func.__wrapped__
             except AttributeError:
                 return func
 
@@ -100,8 +100,8 @@ class InterfaceTests(object):
                         interface)
                     self.fail(msg)
                 actual_argspec = getattr(cls, attr)
-                while hasattr(actual_argspec, 'func_original'):
-                    actual_argspec = actual_argspec.func_original
+                while hasattr(actual_argspec, '__wrapped__'):
+                    actual_argspec = actual_argspec.__wrapped__
                 actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
 
                 if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():

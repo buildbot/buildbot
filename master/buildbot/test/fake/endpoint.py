@@ -22,14 +22,14 @@ from buildbot.data import types
 from twisted.internet import defer
 
 testData = {
-    13: {'id': 13, 'info': 'ok', 'success': True},
-    14: {'id': 14, 'info': 'failed', 'success': False},
-    15: {'id': 15, 'info': 'warned', 'success': True},
-    16: {'id': 16, 'info': 'skipped', 'success': True},
-    17: {'id': 17, 'info': 'ignored', 'success': True},
-    18: {'id': 18, 'info': 'unexp', 'success': False},
-    19: {'id': 19, 'info': 'todo', 'success': True},
-    20: {'id': 20, 'info': 'error', 'success': False},
+    13: {'id': 13, 'info': 'ok', 'success': True, 'tags': []},
+    14: {'id': 14, 'info': 'failed', 'success': False, 'tags': []},
+    15: {'id': 15, 'info': 'warned', 'success': True, 'tags': ['a', 'b', ]},
+    16: {'id': 16, 'info': 'skipped', 'success': True, 'tags': ['a']},
+    17: {'id': 17, 'info': 'ignored', 'success': True, 'tags': []},
+    18: {'id': 18, 'info': 'unexp', 'success': False, 'tags': []},
+    19: {'id': 19, 'info': 'todo', 'success': True, 'tags': []},
+    20: {'id': 20, 'info': 'error', 'success': False, 'tags': []},
 }
 
 
@@ -87,4 +87,5 @@ class Test(base.ResourceType):
         id = types.Integer()
         info = types.String()
         success = types.Boolean()
+        tags = types.List(of=types.String())
     entityType = EntityType(name)

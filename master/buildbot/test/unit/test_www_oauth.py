@@ -26,6 +26,7 @@ from buildbot.util import json
 try:
     import requests
     assert requests
+    from buildbot.www import oauth2
 except ImportError:
     requests = None
 
@@ -49,7 +50,6 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         if requests is None:
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
-        from buildbot.www import oauth2
         self.patch(requests, 'request', mock.Mock(spec=requests.request))
         self.patch(requests, 'post', mock.Mock(spec=requests.post))
         self.patch(requests, 'get', mock.Mock(spec=requests.get))
@@ -64,16 +64,26 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
-        res = yield self.googleAuth.getLoginURL()
+        res = yield self.googleAuth.getLoginURL('http://redir')
+        exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
+               "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
+               "ogleapis.com%2Fauth%2Fuserinfo.profile&state=redirect%3Dhttp%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb"
+               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
+        self.assertEqual(res, exp)
+        res = yield self.googleAuth.getLoginURL(None)
         exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
                "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
                "ogleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=h%3A%2Fa%2Fb"
-               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID&access_type=offline")
+               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_getGithubLoginURL(self):
-        res = yield self.githubAuth.getLoginURL()
+        res = yield self.githubAuth.getLoginURL('http://redir')
+        exp = ("https://github.com/login/oauth/authorize?state=redirect%3Dhttp%253A%252F%252Fredir&redirect_uri="
+               "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
+        self.assertEqual(res, exp)
+        res = yield self.githubAuth.getLoginURL(None)
         exp = ("https://github.com/login/oauth/authorize?redirect_uri="
                "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
         self.assertEqual(res, exp)
@@ -113,16 +123,17 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
     def test_loginResource(self):
         class fakeAuth(object):
             homeUri = "://me"
-            getLoginURL = mock.Mock(side_effect=lambda: defer.succeed("://"))
+            getLoginURL = mock.Mock(side_effect=lambda x: defer.succeed("://"))
             verifyCode = mock.Mock(
                 side_effect=lambda code: defer.succeed({"username": "bar"}))
+            userInfoProvider = None
 
         rsrc = self.githubAuth.getLoginResource()
         rsrc.auth = fakeAuth()
         res = yield self.render_resource(rsrc, '/')
-        rsrc.auth.getLoginURL.assert_called_once_with()
+        rsrc.auth.getLoginURL.assert_called_once_with(None)
         rsrc.auth.verifyCode.assert_not_called()
-        self.assertEqual(res, "://")
+        self.assertEqual(res, {'redirected': '://'})
         rsrc.auth.getLoginURL.reset_mock()
         rsrc.auth.verifyCode.reset_mock()
         res = yield self.render_resource(rsrc, '/?code=code!')

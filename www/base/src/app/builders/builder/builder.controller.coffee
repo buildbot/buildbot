@@ -3,10 +3,9 @@ class Builder extends Controller
         glBreadcrumbService, $state, glTopbarContextualActionsService) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
-        data = dataService.open($scope)
+        data = dataService.open().closeOnDestroy($scope)
         builderid = $stateParams.builder
-        data.getBuilders(builderid).then (builders) ->
-            builder = builders[0]
+        data.getBuilders(builderid).onNew = (builder) ->
             $scope.builder = builder
             breadcrumb = [
                     caption: "Builders"
@@ -24,7 +23,7 @@ class Builder extends Controller
                 glBreadcrumbService.setBreadcrumb(breadcrumb)
             glBreadcrumbService.setBreadcrumb(breadcrumb)
 
-            builder.getForceschedulers().then (forceschedulers) ->
+            builder.getForceschedulers().onChange = (forceschedulers) ->
                 $scope.forceschedulers = forceschedulers
                 actions = []
                 _.forEach forceschedulers, (sch) ->
@@ -38,5 +37,5 @@ class Builder extends Controller
                 $scope.$on '$stateChangeSuccess', ->
                     glTopbarContextualActionsService.setContextualActions(actions)
 
-            $scope.builds = builder.getBuilds(limit:20, order:'-number').getArray()
-            $scope.buildrequests = builder.getBuildrequests(claimed:0).getArray()
+            $scope.builds = builder.getBuilds(limit:20, order:'-number')
+            $scope.buildrequests = builder.getBuildrequests(claimed:0)

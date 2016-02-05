@@ -11,8 +11,10 @@ class DataUtils extends Service
                 a = a.filter (e) -> e isnt '*'
                 # if the argument count is even, the last argument is an id
                 if a.length % 2 is 0 then a.pop()
-                a.pop()
-
+                type = a.pop()
+                if type == "contents"
+                    type = "logchunks"
+                return type
             # singularize the type name
             singularType: (arg) ->
                 @type(arg).replace(/s$/, '')
@@ -21,6 +23,10 @@ class DataUtils extends Service
                 @capitalize(@singularType(arg))
 
             classId: (arg) ->
+                if @singularType(arg) == "forcescheduler"
+                    return "name"
+                if @singularType(arg) == "buildset"
+                    return "bsid"
                 @singularType(arg) + "id"
 
             socketPath: (arg) ->
@@ -30,6 +36,9 @@ class DataUtils extends Service
                 # is it odd?
                 if a.length % 2 is 1 then stars.push('*')
                 a.concat(stars).join('/')
+
+            socketPathRE: (socketPath) ->
+                return new RegExp("^" + socketPath.replace(/\*/g, "[^/]+") + "$")
 
             restPath: (arg) ->
                 a = @copyOrSplit(arg)
@@ -53,8 +62,23 @@ class DataUtils extends Service
                     arrayOrString.split('/')
                 else
                     throw new TypeError("Parameter 'arrayOrString' must be a array or a string, not #{typeof arrayOrString}")
+
             unWrap: (object, path) ->
                 object[@type(path)]
+
+            splitOptions: (args) ->
+                # keep defined arguments only
+                args = args.filter (e) -> e?
+
+                query = {} # default
+                # get the query parameters
+                [..., last] = args
+                subscribe = accessor = null
+
+                if angular.isObject(last)
+                    query = args.pop()
+
+                return [args, query]
 
             parse: (object) ->
                 for k, v of object

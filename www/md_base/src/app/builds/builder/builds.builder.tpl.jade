@@ -27,5 +27,5 @@ md-tabs.builder-tabs(
   md-tab(ng-disabled="!false", ng-if="builder.buildTabs.length > 0")
     md-tab-label
       md-icon.tab-divider(md-svg-icon="arrow-down")
-  md-tab.build-tab(label="Build #{{ number }}", ng-repeat="number in builder.buildTabs")
+  md-tab.build-tab(label="Build \#{{ number }}", ng-repeat="number in builder.buildTabs")
 div.builder-content(ui-view="")

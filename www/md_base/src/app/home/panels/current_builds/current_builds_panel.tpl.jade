@@ -3,4 +3,4 @@ div.no-build(ng-if="(current.builds | filter:{complete:false}).length == 0")
   a(ui-sref="builds") builds panel
   | &nbsp;to trigger a build.
 
-build-item.build(ng-repeat="build in current.builds | filter:{complete:false}", build="build", show-builder="current.showBuilders")
+build-item.build(ng-repeat="build in current.builds2 | filter:{complete:false}", build="build", show-builder="current.showBuilders")
