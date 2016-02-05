@@ -37,7 +37,7 @@ from types import StringType
 #   formatted as marshalled Python dictionary objects. This is most often used
 #   when scripting.
 
-debug_logging = True
+debug_logging = False
 
 
 class P4(Source):
