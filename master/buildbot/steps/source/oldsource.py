@@ -1084,6 +1084,9 @@ class P4(SlaveSource):
 
         @type  p4client: string
         @param p4client: The perforce client to use for this buildslave.
+
+        @type  p4branch_is_a_stream: bool
+        @param p4branch_is_a_stream: Is the branch actually a stream?
         """
 
         self.p4base = _ComputeRepositoryURL(self, p4base)
