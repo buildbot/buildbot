@@ -157,12 +157,12 @@ def setupWorkerTransition():
     default_warn_method = getWarningMethod()
 
     def custom_warn_method(message, category, stacklevel):
+        if stacklevel is not None:
+            stacklevel += 1
         if _WORKER_WARNING_MARK in message:
             # Message contains our mark - it's Worker API Renaming warning,
             # issue it appropriately.
             message = message.replace(_WORKER_WARNING_MARK, "")
-            if stacklevel is not None:
-                stacklevel += 1
             warnings.warn(
                 DeprecatedWorkerNameWarning(message), message, stacklevel)
         else:

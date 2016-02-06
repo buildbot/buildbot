@@ -31,6 +31,8 @@ from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import define_old_worker_property
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 
 
 class CompatNameGeneration(unittest.TestCase):
@@ -80,6 +82,30 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
                                 r"Buildbot 0.9.0: Use Worker instead."):
             S = buildbot_module.Slave
         self.assertIdentical(S, Worker)
+
+    def test_not_catched_warning(self):
+        buildbot_module = new.module('buildbot_module')
+        buildbot_module.deprecated_attr = 1
+        with mock.patch.dict(sys.modules,
+                             {'buildbot_module': buildbot_module}):
+            deprecatedModuleAttribute(Version("Buildbot", 0, 9, 0),
+                                      "test message",
+                                      "buildbot_module",
+                                      "deprecated_attr")
+
+            # Overwrite with Twisted's module wrapper.
+            import buildbot_module
+
+        warnings = self.flushWarnings([self.test_not_catched_warning])
+        self.assertEqual(len(warnings), 0)
+
+        # Should produce warning
+        buildbot_module.deprecated_attr
+
+        warnings = self.flushWarnings([self.test_not_catched_warning])
+        self.assertEqual(len(warnings), 1)
+        self.assertEqual(warnings[0]['category'], DeprecationWarning)
+        self.assertIn("test message", warnings[0]['message'])
 
     def test_explicit_compat_name(self):
         Worker = type("Worker", (object,), {})
