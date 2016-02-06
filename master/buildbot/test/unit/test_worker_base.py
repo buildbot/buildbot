@@ -475,52 +475,41 @@ class TestAbstractWorker(unittest.TestCase):
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_abstract_worker(self):
+    def test_AbstractBuildSlave_deprecated_worker(self):
         from buildbot.worker import AbstractWorker
+
         with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.buildslave import AbstractBuildSlave
-
-        class Worker(AbstractBuildSlave):
-
-            def __init__(self):
-                pass
+            import buildbot.buildslave as bs
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'AbstractBuildSlave' class "
-                                "is deprecated"):
-            w = Worker()
-            self.assertIsInstance(w, AbstractWorker)
+                message_pattern="AbstractBuildSlave was deprecated"):
+            deprecated = bs.AbstractBuildSlave
 
-    def test_abstract_latent_worker(self):
+        self.assertIdentical(deprecated, AbstractWorker)
+
+    def test_AbstractLatentBuildSlave_deprecated_worker(self):
         from buildbot.worker import AbstractLatentWorker
+
         with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.buildslave import AbstractLatentBuildSlave
-
-        class Worker(AbstractLatentBuildSlave):
-
-            def __init__(self):
-                pass
+            import buildbot.buildslave as bs
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'AbstractLatentBuildSlave' class "
-                                "is deprecated"):
-            w = Worker()
-            self.assertIsInstance(w, AbstractLatentWorker)
+                message_pattern="AbstractLatentBuildSlave was deprecated"):
+            deprecated = bs.AbstractLatentBuildSlave
 
-    def test_worker(self):
+        self.assertIdentical(deprecated, AbstractLatentWorker)
+
+    def test_BuildSlave_deprecated_worker(self):
         from buildbot.worker import Worker
+
         with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.buildslave import BuildSlave
-
-        class CustomWorker(BuildSlave):
-
-            def __init__(self):
-                pass
+            import buildbot.buildslave as bs
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'BuildSlave' class is deprecated"):
-            w = CustomWorker()
-            self.assertIsInstance(w, Worker)
+                message_pattern="BuildSlave was deprecated"):
+            deprecated = bs.BuildSlave
+
+        self.assertIdentical(deprecated, Worker)
