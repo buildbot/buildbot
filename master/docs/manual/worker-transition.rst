@@ -67,10 +67,6 @@ replaced with "Worker"; "SlaveBuilder" with "WorkerForBuilder".
       If they are private, then no fallback should be provided and they
       change shouldn't be documented.
 
-    * Thorough tests for old modules imports are not yet written
-      (import of old-named modules is done in tests, but expected warning for
-      deprecated module import is not tested yet).
-
     * Test that module reloading works and doesn't produce more warnings than
       it should.
 
