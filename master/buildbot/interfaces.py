@@ -27,18 +27,16 @@ from zope.interface import Interface
 
 from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-from buildbot.worker_transition import on_deprecated_name_usage
 
 # exceptions that can be raised while trying to start a build
 
 
 # This class is deprecated and should no longer be used.
 class NoSlaveError(Exception):
-
-    def __new__(cls, *args, **kwargs):
-        on_deprecated_name_usage(
-            "'{name}' class is deprecated.".format(name=cls.__name__))
-        return Exception.__new__(cls)
+    pass
+deprecatedWorkerModuleAttribute(locals(), NoSlaveError,
+                                compat_name="NoSlaveError",
+                                new_name="")
 
 
 class BuilderInUseError(Exception):

@@ -15,22 +15,44 @@
 
 from twisted.trial import unittest
 
+from buildbot import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
-class TestNoSlaveError(unittest.TestCase):
+class TestWorkerTransition(unittest.TestCase):
 
-    def test_use(self):
-        from buildbot.interfaces import NoSlaveError
-
+    def test_NoSlaveError_deprecated_worker(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'NoSlaveError' class is deprecated"):
-            err = NoSlaveError()
-            assert isinstance(err, NoSlaveError)
+                message_pattern="NoSlaveError was deprecated"):
+            interfaces.NoSlaveError
+
+    def test_IWorker_deprecated_worker(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="IBuildSlave was deprecated"):
+            deprecated = interfaces.IBuildSlave
+
+        self.assertIdentical(deprecated, interfaces.IWorker)
+
+    def test_ILatentWorker_deprecated_worker(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="ILatentBuildSlave was deprecated"):
+            deprecated = interfaces.ILatentBuildSlave
+
+        self.assertIdentical(deprecated, interfaces.ILatentWorker)
+
+    def test_IWorkerStatus_deprecated_worker(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="ISlaveStatus was deprecated"):
+            deprecated = interfaces.ISlaveStatus
+
+        self.assertIdentical(deprecated, interfaces.IWorkerStatus)
 
 
 class TestWorkerTooOldError(unittest.TestCase):
@@ -66,30 +88,3 @@ class TestLatentWorkerFailedToSubstantiate(unittest.TestCase):
                                 "is deprecated"):
             err = LatentBuildSlaveFailedToSubstantiate()
             assert isinstance(err, Exception)
-
-
-class TestIWorker(unittest.TestCase):
-
-    def test_use(self):
-        from buildbot.interfaces import IWorker
-        from buildbot.interfaces import IBuildSlave
-
-        self.assertTrue(IBuildSlave is IWorker)
-
-
-class ILatentWorker(unittest.TestCase):
-
-    def test_use(self):
-        from buildbot.interfaces import ILatentWorker
-        from buildbot.interfaces import ILatentBuildSlave
-
-        self.assertTrue(ILatentBuildSlave is ILatentWorker)
-
-
-class TestIWorkerStatus(unittest.TestCase):
-
-    def test_use(self):
-        from buildbot.interfaces import IWorkerStatus
-        from buildbot.interfaces import ISlaveStatus
-
-        self.assertTrue(IWorkerStatus is ISlaveStatus)
