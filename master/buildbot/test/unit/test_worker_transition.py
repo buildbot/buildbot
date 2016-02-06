@@ -15,6 +15,7 @@
 
 import mock
 import new
+import re
 import sys
 
 from twisted.trial import unittest
@@ -123,6 +124,29 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 message_pattern=r"buildbot_module\.BuildSlave was deprecated in "
                                 r"Buildbot 0.9.0: Use Worker instead."):
+            S = buildbot_module.BuildSlave
+        self.assertIdentical(S, BuildSlave)
+
+    def test_explicit_new_name_empty(self):
+        BuildSlave = type("BuildSlave", (object,), {})
+        buildbot_module = new.module('buildbot_module')
+        buildbot_module.BuildSlave = BuildSlave
+        with mock.patch.dict(sys.modules,
+                             {'buildbot_module': buildbot_module}):
+            scope = buildbot_module.__dict__
+            deprecatedWorkerModuleAttribute(
+                scope, BuildSlave,
+                compat_name="BuildSlave",
+                new_name="")
+
+            # Overwrite with Twisted's module wrapper.
+            import buildbot_module
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "buildbot_module.BuildSlave was deprecated in "
+                    "Buildbot 0.9.0: Don't use it.")):
             S = buildbot_module.BuildSlave
         self.assertIdentical(S, BuildSlave)
 

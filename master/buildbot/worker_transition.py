@@ -73,7 +73,7 @@ def _compat_name(new_name, compat_name=None):
 
     if compat_name is not None:
         assert "slave" in compat_name.lower()
-        assert "worker" in new_name.lower()
+        assert new_name == "" or "worker" in new_name.lower(), new_name
         return compat_name
 
     compat_replacements = {
@@ -182,7 +182,8 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
     :param compat_name: optional compatibility name (will be generated if not
     specified)
     :param new_name: optional new name (will be used name of attribute object
-    in the module if not specified)
+    in the module if not specified). If empty string is specified, then no
+    new name is assumed for this attribute.
     """
 
     module_name = scope["__name__"]
@@ -199,9 +200,14 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
 
     scope[compat_name] = attribute
 
+    if attribute_name:
+        msg = "Use {0} instead.".format(attribute_name)
+    else:
+        msg = "Don't use it."
+
     _deprecatedModuleAttribute(
         Version("Buildbot", 0, 9, 0),
-        _WORKER_WARNING_MARK + "Use {0} instead.".format(attribute_name),
+        _WORKER_WARNING_MARK + msg,
         module_name, compat_name)
 
 
