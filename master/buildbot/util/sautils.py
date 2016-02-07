@@ -54,7 +54,7 @@ def sa_version():
 
 def Table(*args, **kwargs):
     """Wrap table creation to add any necessary dialect-specific options"""
-    # work aorund the case where a database was created for us with
+    # work around the case where a database was created for us with
     # a non-utf8 character set (mysql's default)
     kwargs['mysql_character_set'] = 'utf8'
     return sa.Table(*args, **kwargs)
