@@ -77,7 +77,10 @@ replaced with "Worker"; "SlaveBuilder" with "WorkerForBuilder".
       If some identifiers don't need fallback for old name, then it should be
       removed.
 
-Here is the list of changed API (use of old names from this list will work):
+Below is the list of changed API (use of old names from this list will work).
+Note that some of these symbols are not included in Buildbot's public API.
+Compatibility is provided as a convenience to those using the private symbols
+anyway.
 
 .. list-table::
    :header-rows: 1
@@ -89,7 +92,7 @@ Here is the list of changed API (use of old names from this list will work):
      - :py:class:`~buildbot.interfaces.IWorker`
 
 
-   * - :py:class:`buildbot.interfaces.NoSlaveError` (private?)
+   * - :py:class:`buildbot.interfaces.NoSlaveError` (private)
      - left as is, but deprecated (it shouldn't be used at all)
 
 
@@ -98,7 +101,7 @@ Here is the list of changed API (use of old names from this list will work):
 
 
    * - :py:class:`buildbot.interfaces.LatentBuildSlaveFailedToSubstantiate`
-       (private?)
+       (private)
      - :py:class:`~buildbot.interfaces.LatentWorkerFailedToSubstantiate`
 
 
@@ -106,7 +109,7 @@ Here is the list of changed API (use of old names from this list will work):
      - :py:class:`~buildbot.interfaces.ILatentWorker`
 
 
-   * - :py:class:`buildbot.interfaces.ISlaveStatus` (private?)
+   * - :py:class:`buildbot.interfaces.ISlaveStatus` (will be removed in 0.9.x)
      - :py:class:`~buildbot.interfaces.IWorkerStatus`
 
 
@@ -114,10 +117,10 @@ Here is the list of changed API (use of old names from this list will work):
      - :py:mod:`buildbot.worker`
 
 
-   * - :py:class:`buildbot.buildslave.AbstractBuildSlave` (private?)
+   * - :py:class:`buildbot.buildslave.AbstractBuildSlave`
      - :py:class:`buildbot.worker.AbstractWorker`
 
-   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename` (private?)
+   * - :py:attr:`buildbot.buildslave.AbstractBuildSlave.slavename` (private)
      - :py:attr:`buildbot.worker.AbstractWorker.workername`
 
 
@@ -618,7 +621,8 @@ Other changes (done without providing fallback):
   ``SlaveStatus`` was moved to ``buildbot.status.builder.slave`` previously,
   and now it's :py:class:`buildbot.status.worker.WorkerStatus`.
 
-* :py:mod:`buildbot.status.status_push.StatusPush` events generation changed:
+* :py:mod:`buildbot.status.status_push.StatusPush` events generation changed
+  (this module will be completely removed in 0.9.x):
 
   - instead of ``slaveConnected`` with data ``slave=...`` now generated
     ``workerConnected`` event with data ``worker=...``;
