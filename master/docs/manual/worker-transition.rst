@@ -85,7 +85,7 @@ Here is the list of changed API (use of old names from this list will work):
    * - Old name
      - New name
 
-   * - :py:class:`buildbot.interfaces.IBuildSlave` (private?)
+   * - :py:class:`buildbot.interfaces.IBuildSlave`
      - :py:class:`~buildbot.interfaces.IWorker`
 
 
@@ -102,7 +102,7 @@ Here is the list of changed API (use of old names from this list will work):
      - :py:class:`~buildbot.interfaces.LatentWorkerFailedToSubstantiate`
 
 
-   * - :py:class:`buildbot.interfaces.ILatentBuildSlave` (private?)
+   * - :py:class:`buildbot.interfaces.ILatentBuildSlave`
      - :py:class:`~buildbot.interfaces.ILatentWorker`
 
 
