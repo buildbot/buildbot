@@ -182,7 +182,7 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
     :param compat_name: optional compatibility name (will be generated if not
     specified)
     :param new_name: optional new name (will be used name of attribute object
-    in the module if not specified). If empty string is specified, then no
+    in the module is not specified). If empty string is specified, then no
     new name is assumed for this attribute.
     """
 
