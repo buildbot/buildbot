@@ -9,7 +9,6 @@ from buildbot import config
 import mock
 from buildbot.db.buildrequests import Queue
 from buildbot.status.results import RESUME
-from buildbot.process import cache
 from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
 
 
@@ -163,7 +162,7 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         self.assertEquals(builder.name, "bldr2")
 
         # selected slave available
-        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True, 'slave-02': True})
+        self.slaves['slave-01'].isAvailable.return_value = True
         builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
         self.assertEquals(builder.name, "bldr1")
 
@@ -200,8 +199,7 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         # selected slave not available pick next builder
         self.assertEquals(builder.name, "bldr2")
         # selected slave is available
-        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True, 'slave-02': True},
-                           startSlavenames={'slave-03': True})
+        self.slaves['slave-01'].isAvailable.return_value = True
         builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
         self.assertEquals(builder.name, "bldr1")
 
@@ -236,7 +234,6 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpComponents()
-        self.master.caches = cache.CacheManager()
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -266,10 +263,44 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
         yield self.insertTestData(breqs + bset + breqsprop + sstamp + breqsclaims)
 
     @defer.inlineCallbacks
+    def insertTestDataUnclaimedBreqs(self):
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                     priority=20, submitted_at=1450171024),
+                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                     priority=50, submitted_at=1449668061),
+                fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                    priority=100, submitted_at=1450171039)]
+
+        bset = [fakedb.Buildset(id=1, sourcestampsetid=1),
+                fakedb.Buildset(id=2, sourcestampsetid=2),
+                fakedb.Buildset(id=3, sourcestampsetid=3)]
+
+        sstamp = [fakedb.SourceStamp(sourcestampsetid=1, branch='branch_A'),
+                  fakedb.SourceStamp(sourcestampsetid=2, branch='branch_B'),
+                  fakedb.SourceStamp(sourcestampsetid=3, branch='branch_C')]
+
+        yield self.insertTestData(breqs + bset + sstamp)
+
+
+    @defer.inlineCallbacks
+    def test_popNextBuild(self):
+        self.bldr = self.setupBuilderInMaster(name='bldr1',
+                                              slavenames={'slave-01': False},
+                                              startSlavenames={'slave-02': True})
+
+        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
+
+        yield self.insertTestDataUnclaimedBreqs()
+
+        slave, breq = yield self.buildChooser.popNextBuild()
+
+        self.assertEquals((slave.name, breq.id), ('slave-02', 3))
+
+    @defer.inlineCallbacks
     def test_popNextBuildToResumeShouldSkipSelectedSlave(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
-                                  slavenames={'slave-01': False, 'slave-02': True},
-                                  startSlavenames={'slave-03': True})
+                                              slavenames={'slave-01': False, 'slave-02': True},
+                                              startSlavenames={'slave-03': True})
 
         self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
 
@@ -282,8 +313,8 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
     @defer.inlineCallbacks
     def test_popNextBuildToResumeShouldCheckSelectedSlave(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
-                                  slavenames={'slave-01': False, 'slave-02': True},
-                                  startSlavenames={'slave-03': True})
+                                              slavenames={'slave-01': False, 'slave-02': True},
+                                              startSlavenames={'slave-03': True})
 
         self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
 
@@ -296,8 +327,8 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
     @defer.inlineCallbacks
     def test_fetchResumeBrdictsSortedByPriority(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
-                                  slavenames={'slave-01': False},
-                                  startSlavenames={'slave-02': False})
+                                              slavenames={'slave-01': False},
+                                              startSlavenames={'slave-02': False})
 
         self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
 
@@ -326,19 +357,12 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
     @defer.inlineCallbacks
     def test_fetchUnclaimedBrdictsSortedByPriority(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
-                                  slavenames={'slave-01': False},
-                                  startSlavenames={'slave-02': False})
+                                              slavenames={'slave-01': False},
+                                              startSlavenames={'slave-02': False})
 
         self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
 
-        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
-                                     priority=20, submitted_at=1450171024),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
-                                     priority=50, submitted_at=1449668061),
-                fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
-                                    priority=100, submitted_at=1450171039)]
-
-        yield self.insertTestData(breqs)
+        yield self.insertTestDataUnclaimedBreqs()
 
         breqs = yield self.buildChooser._fetchUnclaimedBrdicts()
 
