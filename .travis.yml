@@ -16,5 +16,9 @@ install:
   - "pip install -e $TEST_TARGET"
   - "pip install -v mock==1.0.1"
   - "pip install -v pyflakes"
+  - "pip install -v coveralls"
 
-script: if [ "$TEST_TARGET" = "master" ]; then trial buildbot ; else trial buildslave ; fi
+script: if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot ; else coverage run `which trial` buildslave ; fi
+
+after_success:
+  - coveralls
