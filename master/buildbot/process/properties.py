@@ -300,7 +300,8 @@ class WithProperties(util.ComparableMixin):
             # Property names are specified in the arguments, e.g.
             #     WithProperties("build-%s-%s.tar.gz", "branch", "revision")
             for prop_name in self.args:
-                _on_property_usage(prop_name, stacklevel=4)
+                # Report on parent frame.
+                _on_property_usage(prop_name, stacklevel=1)
         else:
             # Property names are specified in string format, e.g.
             #     WithProperties('REVISION=%(got_revision)s')
@@ -308,7 +309,8 @@ class WithProperties(util.ComparableMixin):
             # enough for real cases.
             for match in re.finditer(r"%\(([A-Za-z0-9_]+)\)", self.fmtstring):
                 prop_name = match.group(1)
-                _on_property_usage(prop_name, stacklevel=4)
+                # Report on parent frame.
+                _on_property_usage(prop_name, stacklevel=1)
 
     def getRenderingFor(self, build):
         pmap = _PropertyMap(build.getProperties())
@@ -424,8 +426,16 @@ class _Lazy(util.ComparableMixin, object):
         return '_Lazy(%r)' % self.value
 
 
-def _on_property_usage(prop_name, stacklevel=None):
-    """Handle deprecated properties after worker-name transition."""
+def _on_property_usage(prop_name, stacklevel):
+    """Handle deprecated properties after worker-name transition.
+
+    :param stacklevel: stack level relative to the caller's frame.
+    Defaults to caller of the caller of this function.
+    """
+
+    # "Remove" current frame
+    stacklevel += 1
+
     deprecated_to_new_props = {'slavename': 'workername'}
 
     if prop_name in deprecated_to_new_props:
@@ -479,7 +489,8 @@ class Interpolate(util.ComparableMixin, object):
             config.error("Property name must be alphanumeric for prop Interpolation '%s'" % arg)
             prop = repl = None
 
-        _on_property_usage(prop, stacklevel=7)
+        # Report in proper place with typical stack trace...
+        _on_property_usage(prop, stacklevel=4)
 
         return _thePropertyDict, prop, repl
 
@@ -637,7 +648,8 @@ class Property(util.ComparableMixin):
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
 
-        _on_property_usage(key, stacklevel=4)
+        # Report on parent frame.
+        _on_property_usage(key, stacklevel=1)
 
     def getRenderingFor(self, props):
         if self.defaultWhenFalse:

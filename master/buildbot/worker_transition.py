@@ -116,15 +116,20 @@ class DeprecatedWorkerModuleWarning(DeprecatedWorkerAPIWarning):
     """Warning class for use of deprecated modules."""
 
 
-# TODO: make stacklevel relative to caller function
 def on_deprecated_name_usage(message, stacklevel=None, filename=None,
                              lineno=None):
-    """Hook that is ran when old API name is used."""
+    """Hook that is ran when old API name is used.
+
+    :param stacklevel: stack level relative to the caller's frame.
+    Defaults to caller of the caller of this function.
+    """
 
     if filename is None:
         if stacklevel is None:
             # Warning will refer to the caller of the caller of this function.
             stacklevel = 3
+        else:
+            stacklevel += 2
 
         warnings.warn(DeprecatedWorkerNameWarning(message), None, stacklevel)
 
@@ -141,11 +146,17 @@ def on_deprecated_name_usage(message, stacklevel=None, filename=None,
 
 
 def on_deprecated_module_usage(message, stacklevel=None):
-    """Hook that is ran when old API module is used."""
+    """Hook that is ran when old API module is used.
+
+    :param stacklevel: stack level relative to the caller's frame.
+    Defaults to caller of the caller of this function.
+    """
 
     if stacklevel is None:
         # Warning will refer to the caller of the caller of this function.
         stacklevel = 3
+    else:
+        stacklevel += 2
 
     warnings.warn(DeprecatedWorkerModuleWarning(message), None, stacklevel)
 
