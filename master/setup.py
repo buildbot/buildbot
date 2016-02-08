@@ -409,8 +409,8 @@ else:
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'future',
-        'sqlalchemy >= 0.6, <= 0.7.10',
-        'sqlalchemy-migrate==0.7.2',
+        'sqlalchemy>=0.8.0',
+        'sqlalchemy-migrate>=0.9',
         'python-dateutil>=1.5',
         'autobahn >= 0.10.2',
     ]
