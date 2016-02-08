@@ -188,8 +188,7 @@ class TestWorkerTransition(unittest.TestCase):
 
     def test_worker(self):
         from buildbot.worker.openstack import OpenStackLatentWorker
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+        from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
 
         class Worker(OpenStackLatentBuildSlave):
 

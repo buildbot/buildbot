@@ -334,8 +334,7 @@ class TestWorkerTransition(unittest.TestCase):
 
     def test_abstract_worker(self):
         from buildbot.worker.ec2 import EC2LatentWorker
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.buildslave.ec2 import EC2LatentBuildSlave
+        from buildbot.buildslave.ec2 import EC2LatentBuildSlave
 
         class Worker(EC2LatentBuildSlave):
 

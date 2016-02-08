@@ -294,8 +294,7 @@ class TestWorkerTransition(unittest.TestCase):
 
     def test_worker(self):
         from buildbot.worker.libvirt import LibVirtWorker
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.buildslave.libvirt import LibVirtSlave
+        from buildbot.buildslave.libvirt import LibVirtSlave
 
         class Worker(LibVirtSlave):
 

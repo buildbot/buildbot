@@ -84,8 +84,7 @@ class TestAbstractWorkerForBuilder(TestCase):
 class TestWorkerTransition(TestCase):
 
     def test_abstract_worker_for_builder(self):
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.process.slavebuilder import AbstractSlaveBuilder
+        from buildbot.process.slavebuilder import AbstractSlaveBuilder
 
         class WB(AbstractSlaveBuilder):
 
@@ -100,8 +99,7 @@ class TestWorkerTransition(TestCase):
 
     def test_worker_for_builder(self):
         from buildbot.process.workerforbuilder import WorkerForBuilder
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.process.slavebuilder import SlaveBuilder
+        from buildbot.process.slavebuilder import SlaveBuilder
 
         class WB(SlaveBuilder):
 
@@ -116,8 +114,7 @@ class TestWorkerTransition(TestCase):
 
     def test_latent_worker_for_builder(self):
         from buildbot.process.workerforbuilder import LatentWorkerForBuilder
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.process.slavebuilder import LatentSlaveBuilder
+        from buildbot.process.slavebuilder import LatentSlaveBuilder
 
         class WB(LatentSlaveBuilder):
 

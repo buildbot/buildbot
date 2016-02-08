@@ -478,8 +478,7 @@ class TestWorkerTransition(unittest.TestCase):
     def test_AbstractBuildSlave_deprecated_worker(self):
         from buildbot.worker import AbstractWorker
 
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            import buildbot.buildslave as bs
+        import buildbot.buildslave as bs
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
@@ -491,8 +490,7 @@ class TestWorkerTransition(unittest.TestCase):
     def test_AbstractLatentBuildSlave_deprecated_worker(self):
         from buildbot.worker import AbstractLatentWorker
 
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            import buildbot.buildslave as bs
+        import buildbot.buildslave as bs
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
@@ -504,8 +502,7 @@ class TestWorkerTransition(unittest.TestCase):
     def test_BuildSlave_deprecated_worker(self):
         from buildbot.worker import Worker
 
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            import buildbot.buildslave as bs
+        import buildbot.buildslave as bs
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,

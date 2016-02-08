@@ -426,8 +426,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
 class TestWorkerTransition(unittest.TestCase):
 
     def test_WorkerBuildStep(self):
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.steps.slave import SlaveBuildStep
+        from buildbot.steps.slave import SlaveBuildStep
 
         class C(SlaveBuildStep):
 

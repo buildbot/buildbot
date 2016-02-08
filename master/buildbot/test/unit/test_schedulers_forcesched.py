@@ -614,8 +614,7 @@ class TestWorkerTransition(unittest.TestCase):
 
     def test_worker_choice_parameter(self):
         from buildbot.schedulers.forcesched import WorkerChoiceParameter
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.schedulers.forcesched import BuildslaveChoiceParameter
+        from buildbot.schedulers.forcesched import BuildslaveChoiceParameter
 
         class WCP(BuildslaveChoiceParameter):
 

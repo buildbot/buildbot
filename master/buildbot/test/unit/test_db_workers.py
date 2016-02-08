@@ -577,8 +577,7 @@ class TestRealDB(unittest.TestCase,
 class TestWorkerTransition(unittest.TestCase):
 
     def test_WorkerBuildStep(self):
-        with ignoreWarning(DeprecatedWorkerModuleWarning):
-            from buildbot.db.buildslave import BuildslavesConnectorComponent
+        from buildbot.db.buildslave import BuildslavesConnectorComponent
 
         class C(BuildslavesConnectorComponent):
 
