@@ -20,9 +20,7 @@ import mock
 from buildbot import config
 from buildbot import interfaces
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker import openstack
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -186,17 +184,12 @@ class TestOpenStackWorker(unittest.TestCase):
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_worker(self):
+    def test_OpenStackLatentBuildSlave_deprecated(self):
         from buildbot.worker.openstack import OpenStackLatentWorker
-        from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
-
-        class Worker(OpenStackLatentBuildSlave):
-
-            def __init__(self):
-                pass
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'OpenStackLatentBuildSlave' class is deprecated"):
-            w = Worker()
-            self.assertIsInstance(w, OpenStackLatentWorker)
+                message_pattern="OpenStackLatentBuildSlave was deprecated"):
+            from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
+
+        self.assertIdentical(OpenStackLatentBuildSlave, OpenStackLatentWorker)

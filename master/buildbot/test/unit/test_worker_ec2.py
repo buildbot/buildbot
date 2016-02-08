@@ -29,8 +29,6 @@ if boto is not None:
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.test.util.warnings import ignoreWarning
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial import unittest
 
@@ -332,18 +330,12 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_abstract_worker(self):
+    def test_EC2LatentBuildSlave_deprecated(self):
         from buildbot.worker.ec2 import EC2LatentWorker
-        from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-
-        class Worker(EC2LatentBuildSlave):
-
-            def __init__(self):
-                pass
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'EC2LatentBuildSlave' class "
-                                "is deprecated"):
-            w = Worker()
-            self.assertIsInstance(w, EC2LatentWorker)
+                message_pattern="EC2LatentBuildSlave was deprecated"):
+            from buildbot.buildslave.ec2 import EC2LatentBuildSlave
+
+        self.assertIdentical(EC2LatentBuildSlave, EC2LatentWorker)

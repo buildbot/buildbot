@@ -25,7 +25,6 @@ Define the interfaces that are implemented by various buildbot classes.
 from zope.interface import Attribute
 from zope.interface import Interface
 
-from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 # exceptions that can be raised while trying to start a build
@@ -45,13 +44,13 @@ class BuilderInUseError(Exception):
 
 class WorkerTooOldError(Exception):
     pass
-define_old_worker_class(
+deprecatedWorkerModuleAttribute(
     locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
 
 
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
-define_old_worker_class(
+deprecatedWorkerModuleAttribute(
     locals(), LatentWorkerFailedToSubstantiate,
     compat_name="LatentBuildSlaveFailedToSubstantiate")
 

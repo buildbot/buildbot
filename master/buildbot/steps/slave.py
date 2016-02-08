@@ -16,7 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
-from buildbot.worker_transition import define_old_worker_class
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
 reportDeprecatedWorkerModuleUsage(
@@ -28,5 +28,5 @@ reportDeprecatedWorkerModuleUsage(
 # pylint: disable=unused-wildcard-import
 from buildbot.steps.worker import *  # noqa
 
-define_old_worker_class(locals(), WorkerBuildStep)
+deprecatedWorkerModuleAttribute(locals(), WorkerBuildStep)
 del WorkerBuildStep  # noqa

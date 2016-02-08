@@ -15,10 +15,8 @@
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker.base import AbstractWorker
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.trial.unittest import TestCase
 
@@ -83,46 +81,30 @@ class TestAbstractWorkerForBuilder(TestCase):
 
 class TestWorkerTransition(TestCase):
 
-    def test_abstract_worker_for_builder(self):
-        from buildbot.process.slavebuilder import AbstractSlaveBuilder
-
-        class WB(AbstractSlaveBuilder):
-
-            def __init__(self):
-                pass
-
+    def test_AbstractSlaveBuilder_deprecated(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'AbstractSlaveBuilder' class is deprecated"):
-            w = WB()
-            self.assertIsInstance(w, AbstractWorkerForBuilder)
+                message_pattern="AbstractSlaveBuilder was deprecated"):
+            from buildbot.process.slavebuilder import AbstractSlaveBuilder
 
-    def test_worker_for_builder(self):
+        self.assertIdentical(AbstractSlaveBuilder, AbstractWorkerForBuilder)
+
+    def test_SlaveBuilder_deprecated(self):
         from buildbot.process.workerforbuilder import WorkerForBuilder
-        from buildbot.process.slavebuilder import SlaveBuilder
-
-        class WB(SlaveBuilder):
-
-            def __init__(self):
-                pass
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'SlaveBuilder' class is deprecated"):
-            w = WB()
-            self.assertIsInstance(w, WorkerForBuilder)
+                message_pattern="SlaveBuilder was deprecated"):
+            from buildbot.process.slavebuilder import SlaveBuilder
 
-    def test_latent_worker_for_builder(self):
+        self.assertIdentical(SlaveBuilder, WorkerForBuilder)
+
+    def test_LatentSlaveBuilder_deprecated(self):
         from buildbot.process.workerforbuilder import LatentWorkerForBuilder
-        from buildbot.process.slavebuilder import LatentSlaveBuilder
-
-        class WB(LatentSlaveBuilder):
-
-            def __init__(self):
-                pass
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'LatentSlaveBuilder' class is deprecated"):
-            w = WB()
-            self.assertIsInstance(w, LatentWorkerForBuilder)
+                message_pattern="LatentSlaveBuilder was deprecated"):
+            from buildbot.process.slavebuilder import LatentSlaveBuilder
+
+        self.assertIdentical(LatentSlaveBuilder, LatentWorkerForBuilder)

@@ -25,7 +25,7 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import config
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.worker_transition import define_old_worker_class
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
 class ValidationError(ValueError):
@@ -356,8 +356,8 @@ class WorkerChoiceParameter(ChoiceStringParameter):
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames
-define_old_worker_class(locals(), WorkerChoiceParameter,
-                        compat_name="BuildslaveChoiceParameter")
+deprecatedWorkerModuleAttribute(locals(), WorkerChoiceParameter,
+                                compat_name="BuildslaveChoiceParameter")
 
 
 class NestedParameter(BaseParameter):

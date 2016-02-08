@@ -18,9 +18,7 @@ import mock
 from buildbot import config
 from buildbot.test.fake import libvirt
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import ignoreWarning
 from buildbot.worker import libvirt as libvirtworker
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -292,17 +290,12 @@ class TestWorkQueue(unittest.TestCase):
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_worker(self):
+    def test_LibVirtSlave_deprecated(self):
         from buildbot.worker.libvirt import LibVirtWorker
-        from buildbot.buildslave.libvirt import LibVirtSlave
-
-        class Worker(LibVirtSlave):
-
-            def __init__(self):
-                pass
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'LibVirtSlave' class is deprecated"):
-            w = Worker()
-            self.assertIsInstance(w, LibVirtWorker)
+                message_pattern="LibVirtSlave was deprecated"):
+            from buildbot.buildslave.libvirt import LibVirtSlave
+
+        self.assertIdentical(LibVirtSlave, LibVirtWorker)

@@ -16,7 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
-from buildbot.worker_transition import define_old_worker_class
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
 reportDeprecatedWorkerModuleUsage(
@@ -35,9 +35,12 @@ from buildbot.process.workerforbuilder import Ping  # noqa
 from buildbot.process.workerforbuilder import SUBSTANTIATING  # noqa
 from buildbot.process.workerforbuilder import WorkerForBuilder as _WorkerForBuilder
 
-define_old_worker_class(locals(), _AbstractWorkerForBuilder,
-                        compat_name="AbstractSlaveBuilder")
-define_old_worker_class(locals(), _WorkerForBuilder,
-                        compat_name="SlaveBuilder")
-define_old_worker_class(locals(), _LatentWorkerForBuilder,
-                        compat_name="LatentSlaveBuilder")
+deprecatedWorkerModuleAttribute(locals(), _AbstractWorkerForBuilder,
+                                compat_name="AbstractSlaveBuilder",
+                                new_name="AbstractWorkerForBuilder")
+deprecatedWorkerModuleAttribute(locals(), _WorkerForBuilder,
+                                compat_name="SlaveBuilder",
+                                new_name="WorkerForBuilder")
+deprecatedWorkerModuleAttribute(locals(), _LatentWorkerForBuilder,
+                                compat_name="LatentSlaveBuilder",
+                                new_name="LatentWorkerForBuilder")

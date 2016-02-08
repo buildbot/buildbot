@@ -26,7 +26,6 @@ from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import _compat_name
-from buildbot.worker_transition import define_old_worker_class
 from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import define_old_worker_property
@@ -205,112 +204,6 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
                                 r"Buildbot 0.9.0: Use Worker instead."):
             S = buildbot_module.Slave
         self.assertIdentical(S, Worker)
-
-
-class ClassWrapper(unittest.TestCase):
-
-    def test_class_wrapper(self):
-        class Worker(object):
-
-            def __init__(self, arg, **kwargs):
-                self.arg = arg
-                self.kwargs = kwargs
-
-        locals = {}
-        define_old_worker_class(locals, Worker)
-        self.assertIn("Slave", locals)
-        Slave = locals["Slave"]
-        self.assertTrue(issubclass(Slave, Worker))
-
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
-            # Trigger a warning.
-            slave = Slave("arg", a=1, b=2)
-
-        self.assertEqual(slave.arg, "arg")
-        self.assertEqual(slave.kwargs, dict(a=1, b=2))
-
-    def test_class_wrapper_with_name(self):
-        class Worker(object):
-
-            def __init__(self, arg, **kwargs):
-                self.arg = arg
-                self.kwargs = kwargs
-
-        locals = {}
-        define_old_worker_class(locals, Worker, compat_name="Buildslave")
-        self.assertIn("Buildslave", locals)
-        Buildslave = locals["Buildslave"]
-        self.assertTrue(issubclass(Buildslave, Worker))
-
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
-            # Trigger a warning.
-            slave = Buildslave("arg", a=1, b=2)
-
-        self.assertEqual(slave.arg, "arg")
-        self.assertEqual(slave.kwargs, dict(a=1, b=2))
-
-    def test_class_with_new_wrapper(self):
-        class Worker(object):
-
-            def __init__(self, arg, **kwargs):
-                self.arg = arg
-                self.kwargs = kwargs
-
-            def __new__(cls, *args, **kwargs):
-                instance = object.__new__(cls)
-                instance.new_args = args
-                instance.new_kwargs = kwargs
-                return instance
-
-        locals = {}
-        define_old_worker_class(locals, Worker)
-        self.assertIn("Slave", locals)
-        Slave = locals["Slave"]
-        self.assertTrue(issubclass(Slave, Worker))
-
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
-            # Trigger a warning.
-            slave = Slave("arg", a=1, b=2)
-
-        self.assertEqual(slave.arg, "arg")
-        self.assertEqual(slave.kwargs, dict(a=1, b=2))
-        self.assertEqual(slave.new_args, ("arg",))
-        self.assertEqual(slave.new_kwargs, dict(a=1, b=2))
-
-    def test_class_meta(self):
-        class Worker(object):
-            """docstring"""
-
-        locals = {}
-        define_old_worker_class(locals, Worker)
-        Slave = locals["Slave"]
-        self.assertEqual(Slave.__doc__, Worker.__doc__)
-        self.assertEqual(Slave.__module__, Worker.__module__)
-
-    def test_module_reload(self):
-        # pylint: disable=function-redefined
-        locals = {}
-
-        class Worker(object):
-
-            def __init__(self, arg, **kwargs):
-                self.arg = arg
-                self.kwargs = kwargs
-
-        define_old_worker_class(locals, Worker)
-        self.assertIn("Slave", locals)
-        self.assertTrue(issubclass(locals["Slave"], Worker))
-
-        # "Reload" module
-        class Worker(object):
-
-            def __init__(self, arg, **kwargs):
-                self.arg = arg
-                self.kwargs = kwargs
-
-        define_old_worker_class(locals, Worker)
-        self.assertIn("Slave", locals)
-        self.assertTrue(issubclass(locals["Slave"], Worker))
 
 
 class PropertyWrapper(unittest.TestCase):

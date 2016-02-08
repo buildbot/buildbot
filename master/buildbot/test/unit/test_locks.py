@@ -23,19 +23,13 @@ from twisted.trial import unittest
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_worker_status(self):
-        from buildbot.locks import SlaveLock
-
-        class WL(SlaveLock):
-
-            def __init__(self):
-                pass
-
+    def test_SlaveLock_deprecated(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'SlaveLock' class is deprecated"):
-            l = WL()
-            self.assertIsInstance(l, WorkerLock)
+                message_pattern="SlaveLock was deprecated"):
+            from buildbot.locks import SlaveLock
+
+        self.assertIdentical(SlaveLock, WorkerLock)
 
     def test_maxCountForWorker_old_api(self):
         l = WorkerLock("lock")

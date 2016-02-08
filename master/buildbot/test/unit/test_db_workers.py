@@ -21,8 +21,6 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import ignoreWarning
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -576,19 +574,14 @@ class TestRealDB(unittest.TestCase,
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_WorkerBuildStep(self):
-        from buildbot.db.buildslave import BuildslavesConnectorComponent
-
-        class C(BuildslavesConnectorComponent):
-
-            def __init__(self):
-                pass
-
+    def test_BuildslavesConnectorComponent_deprecated(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'BuildslavesConnectorComponent' class is deprecated"):
-            c = C()
-            self.assertIsInstance(c, worker.WorkersConnectorComponent)
+                message_pattern="BuildslavesConnectorComponent was deprecated"):
+            from buildbot.db.buildslave import BuildslavesConnectorComponent
+
+        self.assertIdentical(BuildslavesConnectorComponent,
+                             worker.WorkersConnectorComponent)
 
     def test_getWorkers_old_api(self):
         method = mock.Mock(return_value='dummy')

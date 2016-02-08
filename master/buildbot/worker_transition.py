@@ -33,7 +33,7 @@ from twisted.python.versions import Version
 
 __all__ = (
     "DeprecatedWorkerNameWarning",
-    "define_old_worker_class", "define_old_worker_property",
+    "define_old_worker_property",
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
     "setupWorkerTransition",
@@ -222,43 +222,6 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
         Version("Buildbot", 0, 9, 0),
         _WORKER_WARNING_MARK + msg,
         module_name, compat_name)
-
-
-def _deprecated_worker_class(cls, class_name=None):
-    assert issubclass(cls, object)
-
-    compat_name = _compat_name(cls.__name__, compat_name=class_name)
-
-    def __new__(instance_cls, *args, **kwargs):
-        reportDeprecatedWorkerNameUsage(
-            "'{old}' class is deprecated, use '{new}' instead.".format(
-                new=cls.__name__, old=compat_name))
-        if cls.__new__ is object.__new__:
-            # object.__new__() doesn't accept arguments.
-            instance = cls.__new__(instance_cls)
-        else:
-            # Class has overloaded __new__(), pass arguments to it.
-            instance = cls.__new__(instance_cls, *args, **kwargs)
-
-        return instance
-
-    compat_class = type(compat_name, (cls,), {
-        "__new__": __new__,
-        "__module__": cls.__module__,
-        "__doc__": cls.__doc__,
-        })
-
-    return compat_class
-
-
-def define_old_worker_class(scope, cls, compat_name=None):
-    """Define old-named class that inherits new names class.
-
-    Useful for instantiable classes.
-    """
-
-    compat_class = _deprecated_worker_class(cls, class_name=compat_name)
-    scope[compat_class.__name__] = compat_class
 
 
 def define_old_worker_property(scope, new_name, compat_name=None):

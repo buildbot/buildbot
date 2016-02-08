@@ -18,7 +18,7 @@ from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import define_old_worker_class
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from twisted.internet import defer
 from twisted.python import log
@@ -337,4 +337,4 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
         self._maxCountForWorkerList = tuple(sorted(self.maxCountForWorker.items()))
-define_old_worker_class(locals(), WorkerLock)
+deprecatedWorkerModuleAttribute(locals(), WorkerLock)
