@@ -132,13 +132,22 @@ anyway.
      - :py:class:`buildbot.worker.Worker`
 
 
+   * - :py:mod:`buildbot.buildslave.ec2`
+     - :py:mod:`buildbot.worker.ec2`
+
    * - :py:class:`buildbot.buildslave.ec2.EC2LatentBuildSlave`
      - :py:class:`buildbot.worker.ec2.EC2LatentWorker`
 
 
+   * - :py:mod:`buildbot.buildslave.libvirt`
+     - :py:mod:`buildbot.worker.libvirt`
+
    * - :py:class:`buildbot.buildslave.libvirt.LibVirtSlave`
      - :py:class:`buildbot.worker.libvirt.LibVirtWorker`
 
+
+   * - :py:mod:`buildbot.buildslave.openstack`
+     - :py:mod:`buildbot.worker.openstack`
 
    * - :py:class:`buildbot.buildslave.openstack.OpenStackLatentBuildSlave`
      - :py:class:`buildbot.worker.openstack.OpenStackLatentWorker`

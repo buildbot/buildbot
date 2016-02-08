@@ -63,6 +63,21 @@ with assertProducesWarning(
         message_pattern=r"'buildbot\.db\.buildslave' module is deprecated"):
     import buildbot.db.buildslave as _  # noqa
 
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave\.ec2' module is deprecated"):
+    import buildbot.buildslave.ec2 as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave\.libvirt' module is deprecated"):
+    import buildbot.buildslave.libvirt as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave\.openstack' module is deprecated"):
+    import buildbot.buildslave.openstack as _  # noqa
+
 # All deprecated modules should be loaded, consider future
 # DeprecatedWorkerModuleWarning in tests as errors.
 # All DeprecatedWorkerNameWarning warnings should be explicitly catched too,
