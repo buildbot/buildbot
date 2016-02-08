@@ -29,7 +29,7 @@ from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import on_deprecated_name_usage
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -369,7 +369,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         # saved for backward compatability
         if 'slavePortnum' in config_dict:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "c['slavePortnum'] key is deprecated, use "
                 "c['protocols']['pb']['port'] instead",
                 filename=filename)
@@ -577,7 +577,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         deprecated_workers = config_dict.get('slaves')
         if deprecated_workers is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "c['slaves'] key is deprecated, use c['workers'] instead",
                 filename=filename)
             if not self._check_workers(deprecated_workers, "c['slaves']"):
@@ -822,25 +822,25 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
         # Deprecated API support.
         if slavename is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavename' keyword argument is deprecated, "
                 "use 'workername' instead")
             assert workername is None
             workername = slavename
         if slavenames is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavenames' keyword argument is deprecated, "
                 "use 'workernames' instead")
             assert workernames is None
             workernames = slavenames
         if slavebuilddir is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavebuilddir' keyword argument is deprecated, "
                 "use 'workerbuilddir' instead")
             assert workerbuilddir is None
             workerbuilddir = slavebuilddir
         if nextSlave is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'nextSlave' keyword argument is deprecated, "
                 "use 'workerbuilddir' instead")
             assert workerbuilddir is None

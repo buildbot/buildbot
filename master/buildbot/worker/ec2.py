@@ -23,7 +23,7 @@ import os
 import re
 import time
 
-from buildbot.worker_transition import on_deprecated_name_usage
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 try:
     import boto
@@ -68,12 +68,12 @@ class EC2LatentWorker(AbstractLatentWorker):
                          "EC2LatentWorker")
 
         if keypair_name is None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "Use of default value of 'keypair_name' of EC2LatentWorker "
                 "constructor is deprecated. Please explicitly specify value")
             keypair_name = 'latent_buildbot_slave'
         if security_name is None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "Use of default value of 'security_name' of EC2LatentWorker "
                 "constructor is deprecated. Please explicitly specify value")
             security_name = 'latent_buildbot_slave'

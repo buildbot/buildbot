@@ -28,7 +28,7 @@ from twisted.internet import defer
 from twisted.python.components import registerAdapter
 from zope.interface import implements
 
-from buildbot.worker_transition import on_deprecated_name_usage
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 class Properties(util.ComparableMixin):
@@ -439,7 +439,7 @@ def _on_property_usage(prop_name, stacklevel):
     deprecated_to_new_props = {'slavename': 'workername'}
 
     if prop_name in deprecated_to_new_props:
-        on_deprecated_name_usage(
+        reportDeprecatedWorkerNameUsage(
             "Property '{old_name}' is deprecated, "
             "use '{new_name}' instead.".format(
                 old_name=prop_name,

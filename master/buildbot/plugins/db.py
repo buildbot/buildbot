@@ -19,7 +19,7 @@ from future.utils import itervalues
 
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
-from buildbot.worker_transition import on_deprecated_name_usage
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from pkg_resources import iter_entry_points
 from types import StringTypes
 from zope.interface import Invalid
@@ -283,7 +283,7 @@ class _DeprecatedWorkerPlugins(_Plugins):
                           check_extras=check_extras)
 
     def __contains__(self, name):
-        on_deprecated_name_usage(
+        reportDeprecatedWorkerNameUsage(
             "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
             "use 'buildbot.plugins.worker' instead "
             "(you checked is '{0}' name inside "
@@ -292,7 +292,7 @@ class _DeprecatedWorkerPlugins(_Plugins):
         return _Plugins.__contains__(self, name)
 
     def get(self, name):
-        on_deprecated_name_usage(
+        reportDeprecatedWorkerNameUsage(
             "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
             "use 'buildbot.plugins.worker' instead "
             "(you requested '{0}' name of "
@@ -301,7 +301,7 @@ class _DeprecatedWorkerPlugins(_Plugins):
         return _Plugins.get(self, name)
 
     def __getattr__(self, name):
-        on_deprecated_name_usage(
+        reportDeprecatedWorkerNameUsage(
             "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
             "use 'buildbot.plugins.worker' instead "
             "(you accessed 'buildslave.{0}' name).".format(name))

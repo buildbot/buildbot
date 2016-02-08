@@ -27,7 +27,7 @@ from buildbot.process.buildstep import SUCCESS
 from buildbot.util import json
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import on_deprecated_name_usage
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from twisted.internet import defer
 from twisted.python import log
 
@@ -95,7 +95,7 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
                  **buildstep_kwargs):
         # Deprecated API support.
         if slavesrc is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavesrc' keyword argument is deprecated, "
                 "use 'workersrc' instead")
             assert workersrc is None
@@ -173,7 +173,7 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
                  ):
         # Deprecated API support.
         if slavesrc is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavesrc' keyword argument is deprecated, "
                 "use 'workersrc' instead")
             assert workersrc is None
@@ -244,7 +244,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
                  **buildstep_kwargs):
         # Deprecated API support.
         if slavesrcs is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavesrcs' keyword argument is deprecated, "
                 "use 'workersrcs' instead")
             assert workersrcs is None
@@ -395,7 +395,7 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
                  **buildstep_kwargs):
         # Deprecated API support.
         if slavedest is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavedest' keyword argument is deprecated, "
                 "use 'workerdest' instead")
             assert workerdest is None
@@ -469,7 +469,7 @@ class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
                  **buildstep_kwargs):
         # Deprecated API support.
         if slavedest is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavedest' keyword argument is deprecated, "
                 "use 'workerdest' instead")
             assert workerdest is None
@@ -530,7 +530,7 @@ class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
                  **buildstep_kwargs):
                 # Deprecated API support.
         if slavedest is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavedest' keyword argument is deprecated, "
                 "use 'workerdest' instead")
             assert workerdest is None
@@ -555,7 +555,7 @@ class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
                  **buildstep_kwargs):
         # Deprecated API support.
         if slavedest is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'slavedest' keyword argument is deprecated, "
                 "use 'workerdest' instead")
             assert workerdest is None

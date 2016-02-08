@@ -19,7 +19,7 @@ from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import define_old_worker_class
-from buildbot.worker_transition import on_deprecated_name_usage
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from twisted.internet import defer
 from twisted.python import log
 
@@ -322,7 +322,7 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
                  ):
         # Deprecated API support.
         if maxCountForSlave is not None:
-            on_deprecated_name_usage(
+            reportDeprecatedWorkerNameUsage(
                 "'maxCountForSlave' keyword argument is deprecated, "
                 "use 'maxCountForWorker' instead")
             assert maxCountForWorker is None
