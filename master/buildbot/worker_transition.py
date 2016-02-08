@@ -317,3 +317,7 @@ class WorkerAPICompatMixin(object):
         assert compat_name not in self.__dict__
         assert compat_name not in self.__compat_attrs
         self.__compat_attrs[compat_name] = attr_name
+
+
+# Enable worker transition hooks
+setupWorkerTransition()

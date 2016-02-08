@@ -26,12 +26,6 @@ from subprocess import PIPE
 from subprocess import Popen
 from subprocess import STDOUT
 
-from buildbot.worker_transition import setupWorkerTransition
-
-
-# Enable worker transition hooks
-setupWorkerTransition()
-
 
 def getVersion(init_file):
     """
