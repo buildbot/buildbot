@@ -18,6 +18,7 @@ Unit tests for the plugin framework
 """
 
 import mock
+import re
 
 import buildbot.plugins.db
 
@@ -265,6 +266,11 @@ _WORKER_FAKE_ENTRIES = {
         SimpleFakeEntry('thirdparty', ClassWithInterface),
         SimpleFakeEntry('deep.thirdparty', ClassWithInterface),
     ],
+    'buildbot.util': [
+        SimpleFakeEntry('WorkerLock', ClassWithInterface),
+        SimpleFakeEntry('enforceChosenWorker', ClassWithInterface),
+        SimpleFakeEntry('WorkerChoiceParameter', ClassWithInterface),
+    ],
 }
 
 
@@ -284,6 +290,7 @@ class TestWorkerPluginsTransition(unittest.TestCase):
                         provide_worker_fake_entries):
             self.worker_ns = db.get_plugins('worker')
             self.buildslave_ns = db.get_plugins('buildslave')
+            self.util_ns = db.get_plugins('util')
 
     def test_new_api(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
@@ -357,3 +364,36 @@ class TestWorkerPluginsTransition(unittest.TestCase):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertTrue(
                 self.worker_ns.deep.newthirdparty is ClassWithInterface)
+
+    def test_util_SlaveLock_import(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "'buildbot.util.SlaveLock' is deprecated, "
+                    "use 'buildbot.util.WorkerLock' instead")):
+            deprecated = self.util_ns.SlaveLock
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertIdentical(deprecated, ClassWithInterface)
+
+    def test_util_enforceChosenSlave_import(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "'buildbot.util.enforceChosenSlave' is deprecated, "
+                    "use 'buildbot.util.enforceChosenWorker' instead")):
+            deprecated = self.util_ns.enforceChosenSlave
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertIdentical(deprecated, ClassWithInterface)
+
+    def test_util_BuildslaveChoiceParameter_import(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "'buildbot.util.BuildslaveChoiceParameter' is deprecated, "
+                    "use 'buildbot.util.WorkerChoiceParameter' instead")):
+            deprecated = self.util_ns.BuildslaveChoiceParameter
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertIdentical(deprecated, ClassWithInterface)

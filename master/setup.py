@@ -312,15 +312,11 @@ setup_args = {
             ('buildbot.locks', [
                 'MasterLock',
                 'WorkerLock',
-                # deprecated, use WorkerLock
-                'SlaveLock'
             ]),
             ('buildbot.manhole', [
                 'AuthorizedKeysManhole', 'PasswordManhole', 'TelnetManhole']),
             ('buildbot.process.builder', [
                 'enforceChosenWorker',
-                # deprecated, use enforceChosenWorker
-                'enforceChosenSlave',
             ]),
             ('buildbot.process.factory', [
                 'BuildFactory', 'GNUAutoconf', 'CPAN', 'Distutils', 'Trial',
@@ -339,8 +335,6 @@ setup_args = {
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
                 'StringParameter', 'TextParameter', 'UserNameParameter',
                 'WorkerChoiceParameter',
-                # deprecated, use WorkerChoiceParameter
-                'BuildslaveChoiceParameter',
                 ]),
             ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',

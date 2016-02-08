@@ -94,6 +94,41 @@ class _PluginEntryProxy(_PluginEntry):
         return self._plugin_entry.value
 
 
+class _DeprecatedPluginEntry(_PluginEntry):
+    """Plugin entry that emits warnings when it's value is requested."""
+
+    def __init__(self, compat_name, new_name, plugin_entry):
+        assert isinstance(plugin_entry, _PluginEntry)
+        self._plugin_entry = plugin_entry
+        self._compat_name = compat_name
+        self._new_name = new_name
+
+    def load(self):
+        self._plugin_entry.load()
+
+    @property
+    def group(self):
+        return self._plugin_entry.group
+
+    @property
+    def name(self):
+        return self._plugin_entry.name
+
+    @property
+    def info(self):
+        return self._plugin_entry.info
+
+    @property
+    def value(self):
+        reportDeprecatedWorkerNameUsage(
+            "'{group}.{compat_name}' is deprecated, "
+            "use '{group}.{new_name}' instead".format(
+                group=self.group,
+                compat_name=self._compat_name,
+                new_name=self._new_name))
+        return self._plugin_entry.value
+
+
 class _NSNode(object):
     # pylint: disable=W0212
 
@@ -377,11 +412,27 @@ class _PluginDB(object):
                     ('LibVirtSlave', 'LibVirtWorker'),
                     ('OpenStackLatentBuildSlave', 'OpenStackLatentWorker'),
                 ]
-                for old_name, new_name in old_new_names:
+                for compat_name, new_name in old_new_names:
                     buildslave_ns._tree.add(
-                        old_name, worker_ns._tree._children[new_name])
+                        compat_name, worker_ns._tree._children[new_name])
 
                 tempo = self._namespaces[namespace]
+
+            elif namespace == 'util':
+                tempo = _Plugins(namespace, interface, check_extras)
+
+                # Handle deprecated plugins names in util namespace
+                old_new_names = [
+                    ('SlaveLock', 'WorkerLock'),
+                    ('enforceChosenSlave', 'enforceChosenWorker'),
+                    ('BuildslaveChoiceParameter', 'WorkerChoiceParameter'),
+                ]
+                for compat_name, new_name in old_new_names:
+                    entry = tempo._tree._get(new_name)
+                    assert isinstance(entry, _PluginEntry)
+                    proxy_entry = _DeprecatedPluginEntry(
+                        compat_name, new_name, entry)
+                    tempo._tree.add(compat_name, proxy_entry)
 
             else:
                 tempo = _Plugins(namespace, interface, check_extras)

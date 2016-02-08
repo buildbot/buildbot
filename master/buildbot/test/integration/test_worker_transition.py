@@ -15,6 +15,7 @@
 
 import mock
 import os
+import re
 
 import buildbot.worker
 
@@ -242,3 +243,48 @@ class PluginsTransition(unittest.TestCase):
 
         # Access of old-named workers through new API is an error.
         self.assertRaises(AttributeError, lambda: worker_ns.BuildSlave)
+
+    def test_plugins_util_SlaveLock_import(self):
+        from buildbot.plugins import util
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = util.WorkerLock
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "'buildbot.util.SlaveLock' is deprecated, "
+                    "use 'buildbot.util.WorkerLock' instead")):
+            deprecated = util.SlaveLock
+
+        self.assertIdentical(new, deprecated)
+
+    def test_plugins_util_enforceChosenSlave_import(self):
+        from buildbot.plugins import util
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = util.enforceChosenWorker
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "'buildbot.util.enforceChosenSlave' is deprecated, "
+                    "use 'buildbot.util.enforceChosenWorker' instead")):
+            deprecated = util.enforceChosenSlave
+
+        self.assertIdentical(new, deprecated)
+
+    def test_plugins_util_BuildslaveChoiceParameter_import(self):
+        from buildbot.plugins import util
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = util.WorkerChoiceParameter
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=re.escape(
+                    "'buildbot.util.BuildslaveChoiceParameter' is deprecated, "
+                    "use 'buildbot.util.WorkerChoiceParameter' instead")):
+            deprecated = util.BuildslaveChoiceParameter
+
+        self.assertIdentical(new, deprecated)
