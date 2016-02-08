@@ -148,9 +148,11 @@ class TestBuildJsonResource(unittest.TestCase):
         build_status.getSourceStamps = lambda: [ss]
         build_json = status_json.BuildJsonResource(self.master_status, build_status)
         build_dict = yield build_json.asDict(self.request)
+
         self.assertEqual(build_dict,
                          {'results_text': 'success', 'slave': 'build-slave-01',
                           'slave_url': None, 'builderName': 'builder-01',
+                          'builder_tags': ['tag1', 'tag2'],
                           'url':
                               {'path': 'http://localhost:8080/builders/builder-01/builds/1' +
                                        '?katana-buildbot_branch=katana&_branch=b', 'text': 'builder-01 #1'},
@@ -262,7 +264,7 @@ class TestPastBuildsJsonResource(unittest.TestCase):
         self.assertTrue(len(builds_dict) == 15)
 
         def expectedDict(num):
-            return {'artifacts': None, 'blame': [], 'builderFriendlyName': 'builder-01', 'builderName': 'builder-01',
+            return {'artifacts': None, 'blame': [], 'builderFriendlyName': 'builder-01', 'builderName': 'builder-01', 'builder_tags': ['tag1', 'tag2'],
                     'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01?katana-buildbot_branch=katana',
                     'currentStep': None, 'eta': None, 'failure_url': None, 'isWaiting': False, 'logs': [],
                     'number': num, 'properties': [], 'reason': 'A build was forced by user@localhost',
@@ -382,6 +384,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                      'slave': 'build-slave-01',
                      'slave_url': None,
                      'builderName': 'builder-01',
+                     'builder_tags': ['tag1', 'tag2'],
                      'url':
                          {'path':
                               'http://localhost:8080/projects/Katana/builders/builder-01' +
