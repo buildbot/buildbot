@@ -39,6 +39,7 @@ __all__ = (
     "setupWorkerTransition",
     "deprecatedWorkerModuleAttribute",
     "reportDeprecatedWorkerNameUsage",
+    "reportDeprecatedWorkerModuleUsage",
 )
 
 # TODO:
@@ -146,7 +147,7 @@ def reportDeprecatedWorkerNameUsage(message, stacklevel=None, filename=None,
             filename, lineno)
 
 
-def on_deprecated_module_usage(message, stacklevel=None):
+def reportDeprecatedWorkerModuleUsage(message, stacklevel=None):
     """Hook that is ran when old API module is used.
 
     :param stacklevel: stack level relative to the caller's frame.

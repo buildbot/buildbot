@@ -17,9 +17,9 @@
 # It should never be imported by Buildbot.
 
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-from buildbot.worker_transition import on_deprecated_module_usage
+from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
-on_deprecated_module_usage(
+reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker' module instead".format(old=__name__))
 
