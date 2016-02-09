@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.db.types.json import JsonObject
+from buildbot.util import sautils
 
 
 def upgrade(migrate_engine):
@@ -23,11 +24,12 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    buildslaves = sa.Table("buildslaves", metadata,
-                           sa.Column("id", sa.Integer, primary_key=True),
-                           sa.Column("name", sa.String(256), nullable=False),
-                           sa.Column("info", JsonObject, nullable=False),
-                           )
+    buildslaves = sautils.Table(
+        "buildslaves", metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String(256), nullable=False),
+        sa.Column("info", JsonObject, nullable=False),
+    )
     buildslaves.create()
 
     idx = sa.Index('buildslaves_name', buildslaves.c.name, unique=True)

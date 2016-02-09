@@ -17,6 +17,7 @@ import sqlalchemy as sa
 
 from buildbot.db.types.json import JsonObject
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -33,19 +34,22 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            sa.Table('builder_masters', metadata,
-                     sa.Column('id', sa.Integer, primary_key=True),
-                     # ..
-                     ).create()
-            sa.Table('masters', metadata,
-                     sa.Column('id', sa.Integer, primary_key=True),
-                     # ..
-                     ).create()
-            buildslaves = sa.Table("buildslaves", metadata,
-                                   sa.Column("id", sa.Integer, primary_key=True),
-                                   sa.Column("name", sa.String(256), nullable=False),
-                                   sa.Column("info", JsonObject, nullable=False),
-                                   )
+            sautils.Table(
+                'builder_masters', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                # ..
+            ).create()
+            sautils.Table(
+                'masters', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                # ..
+            ).create()
+            buildslaves = sautils.Table(
+                "buildslaves", metadata,
+                sa.Column("id", sa.Integer, primary_key=True),
+                sa.Column("name", sa.String(256), nullable=False),
+                sa.Column("info", JsonObject, nullable=False),
+            )
             buildslaves.create()
             conn.execute(buildslaves.insert(), {
                 'id': 29,

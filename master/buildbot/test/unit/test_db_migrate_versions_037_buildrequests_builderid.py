@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -32,15 +33,15 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            builders = sa.Table(
+            builders = sautils.Table(
                 'builders', metadata,
                 sa.Column('id', sa.Integer, primary_key=True),
                 sa.Column('name', sa.Text, nullable=False),
                 sa.Column('name_hash', sa.String(40), nullable=False),
-                )
+            )
             builders.create()
 
-            buildsets = sa.Table(
+            buildsets = sautils.Table(
                 'buildsets', metadata,
                 sa.Column('id', sa.Integer, primary_key=True),
                 sa.Column('external_idstring', sa.String(256)),
@@ -52,10 +53,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 sa.Column('results', sa.SmallInteger),
                 sa.Column('parent_buildid', sa.Integer),
                 sa.Column('parent_relationship', sa.Text),
-                )
+            )
             buildsets.create()
 
-            buildrequests = sa.Table(
+            buildrequests = sautils.Table(
                 'buildrequests', metadata,
                 sa.Column('id', sa.Integer, primary_key=True),
                 sa.Column('buildsetid', sa.Integer,
@@ -71,7 +72,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 sa.Column('complete_at', sa.Integer),
                 sa.Column('waited_for', sa.SmallInteger,
                           server_default=sa.DefaultClause("0")),
-                )
+            )
             buildrequests.create()
 
             idx = sa.Index('buildrequests_buildsetid',
@@ -115,7 +116,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                     'buildrequests_builderid',
                     'buildrequests_buildsetid',
                     'buildrequests_complete',
-                    ])
+                ])
 
             # get the new builderid
             bldr2_id = conn.execute(

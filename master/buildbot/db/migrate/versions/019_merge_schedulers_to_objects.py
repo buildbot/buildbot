@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -52,13 +54,12 @@ def upgrade(migrate_engine):
     # schedulers and scheduler_upstream_buildsets aren't coming back, but
     # scheduler_changes is -- along with its indexes
 
-    scheduler_changes_tbl = sa.Table('scheduler_changes', metadata,
-                                     sa.Column('objectid', sa.Integer,
-                                               sa.ForeignKey('objects.id')),
-                                     sa.Column('changeid', sa.Integer,
-                                               sa.ForeignKey('changes.changeid')),
-                                     sa.Column('important', sa.Integer),
-                                     )
+    scheduler_changes_tbl = sautils.Table(
+        'scheduler_changes', metadata,
+        sa.Column('objectid', sa.Integer, sa.ForeignKey('objects.id')),
+        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
+        sa.Column('important', sa.Integer),
+    )
     scheduler_changes_tbl.create()
 
     idx = sa.Index('scheduler_changes_objectid',

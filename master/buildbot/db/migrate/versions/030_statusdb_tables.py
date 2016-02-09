@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -25,34 +27,37 @@ def upgrade(migrate_engine):
              sa.Column('id', sa.Integer, primary_key=True),
              )
 
-    steps = sa.Table('steps', metadata,
-                     sa.Column('id', sa.Integer, primary_key=True),
-                     sa.Column('number', sa.Integer, nullable=False),
-                     sa.Column('name', sa.String(50), nullable=False),
-                     sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
-                     sa.Column('started_at', sa.Integer),
-                     sa.Column('complete_at', sa.Integer),
-                     sa.Column('state_strings_json', sa.Text, nullable=False),
-                     sa.Column('results', sa.Integer),
-                     sa.Column('urls_json', sa.Text, nullable=False),
-                     )
+    steps = sautils.Table(
+        'steps', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('number', sa.Integer, nullable=False),
+        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
+        sa.Column('started_at', sa.Integer),
+        sa.Column('complete_at', sa.Integer),
+        sa.Column('state_strings_json', sa.Text, nullable=False),
+        sa.Column('results', sa.Integer),
+        sa.Column('urls_json', sa.Text, nullable=False),
+    )
 
-    logs = sa.Table('logs', metadata,
-                    sa.Column('id', sa.Integer, primary_key=True),
-                    sa.Column('name', sa.String(50), nullable=False),
-                    sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
-                    sa.Column('complete', sa.SmallInteger, nullable=False),
-                    sa.Column('num_lines', sa.Integer, nullable=False),
-                    sa.Column('type', sa.String(1), nullable=False),
-                    )
+    logs = sautils.Table(
+        'logs', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
+        sa.Column('complete', sa.SmallInteger, nullable=False),
+        sa.Column('num_lines', sa.Integer, nullable=False),
+        sa.Column('type', sa.String(1), nullable=False),
+    )
 
-    logchunks = sa.Table('logchunks', metadata,
-                         sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
-                         sa.Column('first_line', sa.Integer, nullable=False),
-                         sa.Column('last_line', sa.Integer, nullable=False),
-                         sa.Column('content', sa.LargeBinary(65536)),
-                         sa.Column('compressed', sa.SmallInteger, nullable=False),
-                         )
+    logchunks = sautils.Table(
+        'logchunks', metadata,
+        sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
+        sa.Column('first_line', sa.Integer, nullable=False),
+        sa.Column('last_line', sa.Integer, nullable=False),
+        sa.Column('content', sa.LargeBinary(65536)),
+        sa.Column('compressed', sa.SmallInteger, nullable=False),
+    )
 
     steps.create()
     logs.create()

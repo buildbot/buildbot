@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -32,72 +33,78 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            patches = sa.Table('patches', metadata,
-                               sa.Column('id', sa.Integer, primary_key=True),
-                               # ...
-                               )
+            patches = sautils.Table(
+                'patches', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                # ...
+            )
             patches.create()
 
-            sourcestampsets = sa.Table('sourcestampsets', metadata,
-                                       sa.Column('id', sa.Integer, primary_key=True),
-                                       )
+            sourcestampsets = sautils.Table(
+                'sourcestampsets', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+            )
             sourcestampsets.create()
 
-            sourcestamps = sa.Table('sourcestamps', metadata,
-                                    sa.Column('id', sa.Integer, primary_key=True),
-                                    sa.Column('branch', sa.String(256)),
-                                    sa.Column('revision', sa.String(256)),
-                                    sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
-                                    sa.Column('repository', sa.String(length=512), nullable=False,
-                                              server_default=''),
-                                    sa.Column('codebase', sa.String(256), nullable=False,
-                                              server_default=sa.DefaultClause("")),
-                                    sa.Column('project', sa.String(length=512), nullable=False,
-                                              server_default=''),
-                                    sa.Column('sourcestampsetid', sa.Integer,
-                                              sa.ForeignKey('sourcestampsets.id')),
-                                    )
+            sourcestamps = sautils.Table(
+                'sourcestamps', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                sa.Column('branch', sa.String(256)),
+                sa.Column('revision', sa.String(256)),
+                sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+                sa.Column('repository', sa.String(length=512), nullable=False,
+                          server_default=''),
+                sa.Column('codebase', sa.String(256), nullable=False,
+                          server_default=sa.DefaultClause("")),
+                sa.Column('project', sa.String(length=512), nullable=False,
+                          server_default=''),
+                sa.Column('sourcestampsetid', sa.Integer,
+                          sa.ForeignKey('sourcestampsets.id')),
+            )
             sourcestamps.create()
 
-            buildsets = sa.Table('buildsets', metadata,
-                                 sa.Column('id', sa.Integer, primary_key=True),
-                                 sa.Column('external_idstring', sa.String(256)),
-                                 sa.Column('reason', sa.String(256)),
-                                 sa.Column('submitted_at', sa.Integer, nullable=False),
-                                 sa.Column('complete', sa.SmallInteger, nullable=False,
-                                           server_default=sa.DefaultClause("0")),
-                                 sa.Column('complete_at', sa.Integer),
-                                 sa.Column('results', sa.SmallInteger),
-                                 sa.Column('sourcestampsetid', sa.Integer,
-                                           sa.ForeignKey('sourcestampsets.id')),
-                                 )
+            buildsets = sautils.Table(
+                'buildsets', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                sa.Column('external_idstring', sa.String(256)),
+                sa.Column('reason', sa.String(256)),
+                sa.Column('submitted_at', sa.Integer, nullable=False),
+                sa.Column('complete', sa.SmallInteger, nullable=False,
+                          server_default=sa.DefaultClause("0")),
+                sa.Column('complete_at', sa.Integer),
+                sa.Column('results', sa.SmallInteger),
+                sa.Column('sourcestampsetid', sa.Integer,
+                          sa.ForeignKey('sourcestampsets.id')),
+            )
             buildsets.create()
 
-            changes = sa.Table('changes', metadata,
-                               sa.Column('changeid', sa.Integer, primary_key=True),
-                               sa.Column('author', sa.String(256), nullable=False),
-                               sa.Column('comments', sa.String(1024), nullable=False),
-                               sa.Column('is_dir', sa.SmallInteger, nullable=False),  # old, for CVS
-                               sa.Column('branch', sa.String(256)),
-                               sa.Column('revision', sa.String(256)),  # CVS uses NULL
-                               sa.Column('revlink', sa.String(256)),
-                               sa.Column('when_timestamp', sa.Integer, nullable=False),
-                               sa.Column('category', sa.String(256)),
-                               sa.Column('repository', sa.String(length=512), nullable=False,
-                                         server_default=''),
-                               sa.Column('codebase', sa.String(256), nullable=False,
-                                         server_default=sa.DefaultClause("")),
-                               sa.Column('project', sa.String(length=512), nullable=False,
-                                         server_default=''),
-                               )
+            changes = sautils.Table(
+                'changes', metadata,
+                sa.Column('changeid', sa.Integer, primary_key=True),
+                sa.Column('author', sa.String(256), nullable=False),
+                sa.Column('comments', sa.String(1024), nullable=False),
+                sa.Column('is_dir', sa.SmallInteger, nullable=False),  # old, for CVS
+                sa.Column('branch', sa.String(256)),
+                sa.Column('revision', sa.String(256)),  # CVS uses NULL
+                sa.Column('revlink', sa.String(256)),
+                sa.Column('when_timestamp', sa.Integer, nullable=False),
+                sa.Column('category', sa.String(256)),
+                sa.Column('repository', sa.String(length=512), nullable=False,
+                          server_default=''),
+                sa.Column('codebase', sa.String(256), nullable=False,
+                          server_default=sa.DefaultClause("")),
+                sa.Column('project', sa.String(length=512), nullable=False,
+                          server_default=''),
+            )
             changes.create()
 
-            sourcestamp_changes = sa.Table('sourcestamp_changes', metadata,
-                                           sa.Column('sourcestampid', sa.Integer,
-                                                     sa.ForeignKey('sourcestamps.id'), nullable=False),
-                                           sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
-                                                     nullable=False),
-                                           )
+            sourcestamp_changes = sautils.Table(
+                'sourcestamp_changes', metadata,
+                sa.Column('sourcestampid', sa.Integer,
+                          sa.ForeignKey('sourcestamps.id'), nullable=False),
+                sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
+                          nullable=False),
+            )
             sourcestamp_changes.create()
 
             # now insert some data..

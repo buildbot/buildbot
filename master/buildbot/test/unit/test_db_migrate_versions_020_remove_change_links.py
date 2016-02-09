@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -31,18 +32,20 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        changes = sa.Table('changes', metadata,
-                           sa.Column('changeid', sa.Integer, primary_key=True),
-                           # the rest is unimportant
-                           )
+        changes = sautils.Table(
+            'changes', metadata,
+            sa.Column('changeid', sa.Integer, primary_key=True),
+            # the rest is unimportant
+        )
         changes.create()
 
         # Links (URLs) for changes
-        change_links = sa.Table('change_links', metadata,
-                                sa.Column('changeid', sa.Integer,
-                                          sa.ForeignKey('changes.changeid'), nullable=False),
-                                sa.Column('link', sa.String(1024), nullable=False),
-                                )
+        change_links = sautils.Table(
+            'change_links', metadata,
+            sa.Column('changeid', sa.Integer,
+                      sa.ForeignKey('changes.changeid'), nullable=False),
+            sa.Column('link', sa.String(1024), nullable=False),
+        )
         change_links.create()
 
         sa.Index('change_links_changeid', change_links.c.changeid).create()

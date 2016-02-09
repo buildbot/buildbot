@@ -17,6 +17,8 @@
 import os
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def test_unicode(migrate_engine):
     """Test that the database can handle inserting and selecting Unicode"""
@@ -24,10 +26,11 @@ def test_unicode(migrate_engine):
     submeta = sa.MetaData()
     submeta.bind = migrate_engine
 
-    test_unicode = sa.Table('test_unicode', submeta,
-                            sa.Column('u', sa.Unicode(length=100)),
-                            sa.Column('b', sa.LargeBinary),
-                            )
+    test_unicode = sautils.Table(
+        'test_unicode', submeta,
+        sa.Column('u', sa.Unicode(length=100)),
+        sa.Column('b', sa.LargeBinary),
+    )
     test_unicode.create()
 
     # insert a unicode value in there

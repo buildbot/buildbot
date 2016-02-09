@@ -49,27 +49,28 @@ def upgrade(migrate_engine):
                        sa.Column('class_name', sa.String(128), nullable=False),
                        )
 
-    masters = sa.Table("masters", metadata,
-                       sa.Column('id', sa.Integer, primary_key=True),
-                       sa.Column('name', sa.String(128), nullable=False),
-                       sa.Column('name_hash', sa.String(40), nullable=False),
-                       sa.Column('active', sa.Integer, nullable=False),
-                       sa.Column('last_active', sa.Integer, nullable=False),
-                       )
+    masters = sautils.Table(
+        "masters", metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('name', sa.String(128), nullable=False),
+        sa.Column('name_hash', sa.String(40), nullable=False),
+        sa.Column('active', sa.Integer, nullable=False),
+        sa.Column('last_active', sa.Integer, nullable=False),
+    )
 
-    buildrequest_claims_old = sa.Table("buildrequest_claims_old", metadata,
-                                       sa.Column('brid', sa.Integer, index=True),
-                                       sa.Column('objectid', sa.Integer, index=True, nullable=True),
-                                       sa.Column('claimed_at', sa.Integer, nullable=False),
-                                       )
+    buildrequest_claims_old = sautils.Table(
+        "buildrequest_claims_old", metadata,
+        sa.Column('brid', sa.Integer, index=True),
+        sa.Column('objectid', sa.Integer, index=True, nullable=True),
+        sa.Column('claimed_at', sa.Integer, nullable=False),
+    )
 
-    buildrequest_claims = sa.Table('buildrequest_claims', metadata,
-                                   sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                                             nullable=False),
-                                   sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                                             index=True, nullable=True),
-                                   sa.Column('claimed_at', sa.Integer, nullable=False)
-                                   )
+    buildrequest_claims = sautils.Table(
+        'buildrequest_claims', metadata,
+        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'), index=True, nullable=True),
+        sa.Column('claimed_at', sa.Integer, nullable=False),
+    )
 
     # create the new table
     masters.create()

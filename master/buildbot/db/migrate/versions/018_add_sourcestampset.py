@@ -29,9 +29,10 @@ def upgrade(migrate_engine):
 
     # Create the sourcestampset table
     # that defines a sourcestampset
-    sourcestampsets_table = sa.Table("sourcestampsets", metadata,
-                                     sa.Column("id", sa.Integer, primary_key=True),
-                                     )
+    sourcestampsets_table = sautils.Table(
+        "sourcestampsets", metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+    )
     sourcestampsets_table.create()
 
     # All current sourcestampid's are migrated to sourcestampsetid
@@ -46,7 +47,8 @@ def upgrade(migrate_engine):
     metadata.remove(buildsets_table)
     buildsets_table = sa.Table('buildsets', metadata, autoload=True)
 
-    cons = constraint.ForeignKeyConstraint([buildsets_table.c.sourcestampsetid], [sourcestampsets_table.c.id])
+    cons = constraint.ForeignKeyConstraint([buildsets_table.c.sourcestampsetid], [
+                                           sourcestampsets_table.c.id])
     cons.create()
 
     # Add sourcestampsetid including index to sourcestamps table
@@ -54,13 +56,16 @@ def upgrade(migrate_engine):
     ss_sourcestampsetid.create(sourcestamps_table)
 
     # Update the setid to the same value as sourcestampid
-    migrate_engine.execute(str(sourcestamps_table.update().values(sourcestampsetid=sourcestamps_table.c.id)))
+    migrate_engine.execute(str(sourcestamps_table.update().values(
+        sourcestampsetid=sourcestamps_table.c.id)))
     ss_sourcestampsetid.alter(nullable=False)
 
     # Data is up to date, now force integrity
-    cons = constraint.ForeignKeyConstraint([sourcestamps_table.c.sourcestampsetid], [sourcestampsets_table.c.id])
+    cons = constraint.ForeignKeyConstraint([sourcestamps_table.c.sourcestampsetid], [
+                                           sourcestampsets_table.c.id])
     cons.create()
 
     # Add index for performance reasons to find all sourcestamps in a set quickly
-    idx = sa.Index('sourcestamps_sourcestampsetid', sourcestamps_table.c.sourcestampsetid, unique=False)
+    idx = sa.Index('sourcestamps_sourcestampsetid',
+                   sourcestamps_table.c.sourcestampsetid, unique=False)
     idx.create()
