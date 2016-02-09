@@ -148,12 +148,14 @@ class RealDatabaseMixin(object):
             raise
 
     def __thd_create_tables(self, conn, table_names):
-        all_table_names = set(table_names)
-        ordered_tables = [t for t in model.Model.metadata.sorted_tables
-                          if t.name in all_table_names]
-
-        for tbl in ordered_tables:
-            tbl.create(bind=conn, checkfirst=True)
+        table_names_set = set(table_names)
+        tables = [t for t in model.Model.metadata.tables.values()
+                  if t.name in table_names_set]
+        # Create tables using create_all() method. This way not only tables
+        # and direct indices are created, but also deferred references
+        # (that use use_alter=True in definition).
+        model.Model.metadata.create_all(
+            bind=conn, tables=tables, checkfirst=True)
 
     def setUpRealDatabase(self, table_names=[], basedir='basedir',
                           want_pool=True, sqlite_memory=True):
