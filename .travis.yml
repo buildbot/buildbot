@@ -1,0 +1,24 @@
+language: python
+
+python:
+  - "2.7"
+  # - "pypy" Not all tests are working yet
+
+env:
+  - TEST_TARGET=master
+  - TEST_TARGET=slave
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install libsasl2-dev libmysqlclient-dev libldap2-dev libssl-dev python-dev
+
+install:
+  - "pip install -e $TEST_TARGET"
+  - "pip install -v mock==1.0.1"
+  - "pip install -v pyflakes"
+  - "pip install -v coveralls"
+
+script: if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot ; else coverage run `which trial` buildslave ; fi
+
+after_success:
+  - coveralls
