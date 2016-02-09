@@ -4,7 +4,7 @@
     .modal-body
         div.form-horizontal
             .alert.alert-danger(ng-show="error") {{error}}
-            forcefield(field="rootfield")
+            forcefield(field="rootfield" ng-if="rootfield")
     .modal-footer
       button.btn.btn-default(ng-click="cancel()") Cancel
       button.btn.btn-primary(ng-click="ok()") Start Build
