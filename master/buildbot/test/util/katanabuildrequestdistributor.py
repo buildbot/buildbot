@@ -17,7 +17,7 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
     def setUpComponents(self):
         yield self.setUpConnectorComponent(
             table_names=['buildrequests', 'buildrequest_claims', 'buildsets', 'buildset_properties',
-                         'sourcestamps', 'sourcestamp_changes', 'builds'])
+                         'sourcestamps', 'sourcestamp_changes', 'builds', 'sourcestampsets'])
 
         self.db.buildrequests = buildrequests.BuildRequestsConnectorComponent(self.db)
         self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)

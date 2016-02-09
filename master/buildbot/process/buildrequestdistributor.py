@@ -450,6 +450,37 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(breqs + merged_breqs)
 
     @defer.inlineCallbacks
+    def mergeRequests(self, breq, queue):
+        mergedRequests = [breq]
+
+        sourcestamps = []
+        for ss in breq.sources.itervalues():
+            sourcestamps.append({'b_codebase': ss.codebase, 'b_revision': ss.revision,
+                                 'b_branch': ss.branch, 'b_sourcestampsetid': ss.sourcestampsetid})
+
+        if queue == Queue.unclaimed:
+            brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
+                                                                          claimed=False,
+                                                                          sourcestamps=sourcestamps,
+                                                                          sorted=True)
+        elif queue == Queue.resume:
+            brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
+                                                                          claimed="mine",
+                                                                          complete=False,
+                                                                          results=RESUME,
+                                                                          mergebrids="exclude",
+                                                                          sourcestamps=sourcestamps,
+                                                                          sorted=True)
+
+        for brdict in brdicts:
+            req = yield self._getBuildRequestForBrdict(brdict)
+            canMerge = yield self.mergeRequestsFn(self.bldr, breq, req)
+            if canMerge and req.id != breq.id:
+                mergedRequests.append(req)
+
+        defer.returnValue(mergedRequests)
+
+    @defer.inlineCallbacks
     def chooseNextBuildToResume(self):
         slave, breq = yield self.popNextBuildToResume()
 
@@ -459,7 +490,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
 
-        newBreqs = yield self.mergeRequests(breq, pendingBrdicts=self.resumeBrdicts)
+        newBreqs = yield self.mergeRequests(breq, queue=Queue.resume)
         if len(newBreqs) > 1:
             brids = [br.id for br in newBreqs]
             log.msg("merge pending buildrequest to resume %s with %s " % (breq.id, brids[1:]))
@@ -479,7 +510,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             defer.returnValue((None, None))
             return
 
-        breqs = yield self.mergeRequests(breq)
+        breqs = yield self.mergeRequests(breq, queue=Queue.unclaimed)
 
         defer.returnValue((slave, breqs))
 
@@ -583,6 +614,7 @@ class KatanaBuildChooser(BasicBuildChooser):
     def _getBuildRequest(self, claim=True):
 
         getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest if claim else self._getNextBuildToResume
+        queue = Queue.unclaimed if claim else Queue.resume
 
         def getPendingBrdict():
             if claim:
@@ -598,7 +630,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         # 2. try merge this build with a compatible running build
         if breq and self.bldr.building:
-            breqs = yield self.mergeRequests(breq, pendingBrdicts=getPendingBrdict())
+            breqs = yield self.mergeRequests(breq, queue=queue)
             totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(breqs)
             brids = [br.id for br in totalBreqs]
 
@@ -622,7 +654,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             finished_br = yield self.master.db.buildrequests\
                 .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
             if finished_br:
-                breqs = yield self.mergeRequests(breq, pendingBrdicts=getPendingBrdict())
+                breqs = yield self.mergeRequests(breq, queue=queue)
                 brids = [br.id for br in breqs]
                 merged_brids = yield self.master.db.buildrequests\
                     .getRequestsCompatibleToMerge(self.bldr.name, brdict['startbrid'], brids)

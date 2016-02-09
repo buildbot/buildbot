@@ -169,7 +169,7 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     def test_maybeStartOrResumeBuildsOnUnderLoad(self):
         yield self.generateBuildLoadStartOrResumeBuilds()
 
-        yield self.profileAsyncFunc(50, self.brd._maybeStartOrResumeBuildsOn,
+        yield self.profileAsyncFunc(20, self.brd._maybeStartOrResumeBuildsOn,
                                     new_builders=self.botmaster.builders.keys())
 
         self.checkBRDCleanedUp()

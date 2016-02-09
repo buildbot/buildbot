@@ -143,12 +143,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
                          bsid=None, _master_objectid=None, brids=None,
                          branch=None, repository=None, results=None,
-                         mergebrids=None, sorted=False):
+                         mergebrids=None, sourcestamps=None, sorted=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
             bsets_tbl = self.db.model.buildsets
             sstamps_tbls = self.db.model.sourcestamps
+            sourcestampsets_tbl = self.db.model.sourcestampsets
 
             from_clause = reqs_tbl.outerjoin(claims_tbl,
                                              reqs_tbl.c.id == claims_tbl.c.brid)
@@ -205,13 +206,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if repository is not None:
                 q = q.where(sstamps_tbls.c.repository == repository)
 
+            if sourcestamps is not None and sourcestamps:
+                stmt = self.selectBuildSetsExactlyMatchesSourcestamps(sourcestamps=sourcestamps,
+                                                                      sourcestamps_tbl=sstamps_tbls,
+                                                                      sourcestampsets_tbl=sourcestampsets_tbl,
+                                                                      buildsets_tbl=bsets_tbl)
+                q = q.where(reqs_tbl.c.buildsetid.in_(stmt))
+
             if sorted:
                 q = q.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
             res = conn.execute(q)
 
-            return [self._brdictFromRow(row, _master_objectid)
-                    for row in res.fetchall()]
+            rv = [self._brdictFromRow(row, _master_objectid) for row in res.fetchall()]
+
+            return rv
 
         return self.db.pool.do(thd)
 
@@ -369,12 +378,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
-        def thd(conn):
-            sourcestampsets_tbl = self.db.model.sourcestampsets
-            sourcestamps_tbl = self.db.model.sourcestamps
-            buildrequests_tbl = self.db.model.buildrequests
-            buildsets_tbl = self.db.model.buildsets
+    def selectBuildSetsExactlyMatchesSourcestamps(self,
+                                                  sourcestamps,
+                                                  sourcestamps_tbl,
+                                                  sourcestampsets_tbl,
+                                                  buildsets_tbl):
+
             clauses = []
 
             # check sourcestampset has same number of row in the sourcestamps table
@@ -401,8 +410,22 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             stmt3 = sa.select(columns=[buildsets_tbl.c.id]) \
                 .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
 
+            return stmt3
+
+    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
+        def thd(conn):
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            sourcestamps_tbl = self.db.model.sourcestamps
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db.model.buildsets
+
+            stmt = self.selectBuildSetsExactlyMatchesSourcestamps(sourcestamps=sourcestamps,
+                                                                  sourcestamps_tbl=sourcestamps_tbl,
+                                                                  sourcestampsets_tbl=sourcestampsets_tbl,
+                                                                  buildsets_tbl=buildsets_tbl)
+
             last_br = sa.select(columns=[sa.func.max(buildrequests_tbl.c.id).label("id")]) \
-                .where(buildrequests_tbl.c.buildsetid.in_(stmt3)) \
+                .where(buildrequests_tbl.c.buildsetid.in_(stmt)) \
                 .where(buildrequests_tbl.c.complete == 1) \
                 .where(buildrequests_tbl.c.results == 0) \
                 .where(buildrequests_tbl.c.buildername == buildername) \
