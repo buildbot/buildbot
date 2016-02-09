@@ -151,8 +151,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                                                        aws_secret_access_key=secret_identifier)
                 if subnet_id is not None:
                     self.vpc_api_conn = boto.vpc.VPCConnection(region=region_found,
-                                                           aws_access_key_id=identifier,
-                                                           aws_secret_access_key=secret_identifier)
+                                                               aws_access_key_id=identifier,
+                                                               aws_secret_access_key=secret_identifier)
             else:
                 raise ValueError(
                     'The specified region does not exist: ' + region)
