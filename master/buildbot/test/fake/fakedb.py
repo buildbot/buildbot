@@ -69,6 +69,7 @@ class Row(object):
     dicts = ()
     hashedColumns = []
     foreignKeys = []
+    utf8_columns = ()
 
     _next_id = None
 
@@ -90,6 +91,10 @@ class Row(object):
         for k, v in iteritems(self.values):
             if isinstance(v, str):
                 self.values[k] = unicode(v)
+        # encode columns that should be stored utf-8 encoded (e.g. LargeBinary
+        # columns) to utf-8
+        for col in self.utf8_columns:
+            self.values[col] = self.values[col].encode("utf-8")
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
             self.values[hash_col] = self.hashColumns(
@@ -528,6 +533,7 @@ class LogChunk(Row):
         compressed=0)
 
     required_columns = ('logid', )
+    utf8_columns = ('content', )
 
 
 class Master(Row):
@@ -2015,8 +2021,8 @@ class FakeLogsComponent(FakeDBComponent):
                 # make sure there are enough slots in the list
                 if len(lines) < row.last_line + 1:
                     lines.append([None] * (row.last_line + 1 - len(lines)))
-                lines[
-                    row.first_line:row.last_line + 1] = row.content.split('\n')
+                row_lines = row.content.decode('utf-8').split('\n')
+                lines[row.first_line:row.last_line + 1] = row_lines
 
     # component methods
 
