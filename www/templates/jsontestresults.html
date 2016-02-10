@@ -17,7 +17,7 @@
             </div>
 
             {% if suite.error %}
-                <div class="fail"> suite.error</div>
+                <div class="failure"> suite.error</div>
             {% endif %}
         {% endif %}
 
@@ -43,7 +43,7 @@
                     <li><b id="Skipped">Skipped </b><span>{{ suite.summary.skippedCount }}</span></li>
                     <li><b id="Inconclusive">Inconclusive </b><span>{{ suite.summary.inconclusiveCount }}</span>
                     </li>
-                    <li data-time="{{ suite.summary.time }}" data-time-unit="ms"><b id="Time">Time(s) </b>{{ suite.summary.time }}
+                    <li data-time="{{ suite.summary.time }}" data-time-unit="ms"><b id="Time">Time(s) </b>
                     </li>
                 </ul>
             </div>
@@ -70,9 +70,9 @@
                         <td class="txt-align-left">
                             <h5><strong>{{ test.name }}</strong></h5>
                             {% if data.utrPrefix %}
-                                <a class="label label-default collapse" data-target="#testCommand{{ i }}">Command to run locally</a>
+                                <a class="label label-default collapse" data-target="#testCommand{{ suiteNum }}{{ i }}">Command to run locally</a>
 
-                                <div id="testCommand{{ i }}" class="report-command">
+                                <div id="testCommand{{ suiteNum }}{{ i }}" class="report-command">
                                     <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
                                 </div>
                             {% endif %}
@@ -105,7 +105,7 @@
                         </td>
                         <td class="{{ results[test.state] }}">{{ results[test.state] }}</td>
                         {% if test.time %}
-                            <td data-time="{{ test.time }}" data-time-unit="ms">{{ test.time }}</td>
+                            <td data-time="{{ test.time }}" data-time-unit="ms"></td>
                         {% else %}
                             <td>N/A</td>
                         {% endif %}

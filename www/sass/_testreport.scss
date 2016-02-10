@@ -182,7 +182,7 @@ span.uncovered {
 	}
 span.ignored {background: #ffff00;}
 	 
-.Failed {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
+.Failed, .Error {background-color: #EFCFCF;border-top: 1px solid #FFFFFF;}
  
 .failure-detail-cont {
 	vertical-align:top;

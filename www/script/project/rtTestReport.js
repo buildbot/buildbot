@@ -121,7 +121,7 @@ define(function (require) {
                 var timeUnit = $(elem).attr("data-time-unit");
                 var msUnit = timeUnit && timeUnit.trim().toLowerCase() === "ms";
                 var ms = parseFloat($(elem).attr("data-time")) * (msUnit ? 1 : 1000.0),
-                    parsedTime = moment.utc(ms).format(" (HH:mm:ss)");
+                    parsedTime = moment.utc(ms).format("HH:mm:ss");
                 $(elem).append(parsedTime);
             });
         },

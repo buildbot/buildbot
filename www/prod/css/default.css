@@ -1423,7 +1423,7 @@ button.toast-close-button{padding:0;cursor:pointer;background:0 0;border:0;-webk
 span.covered{background:#00df00}
 span.uncovered{background:#df0000;border-top:#9c9c9c 1px solid;border-bottom:#9c9c9c 1px solid;border-right:#9c9c9c 1px solid}
 span.ignored{background:#ff0}
-.Failed{background-color:#EFCFCF;border-top:1px solid #FFF}
+.Error,.Failed{background-color:#EFCFCF;border-top:1px solid #FFF}
 .failure-detail-cont{vertical-align:top}
 .failure-detail-cont a{margin-right:5px}
 .Passed,.Success{border-top:1px solid #FFF;background-color:#DDE6D6}

@@ -56,7 +56,7 @@
         {% endfor %}
 
         <td class="txt-align-left">{{ '%0.2f' % data.summary.success_rate + '%' if data.summary.success_rate else '' }}</td>
-        <td class="txt-align-left" data-time="{{ data.summary.time }}">{{ data.summary.time }}</td>
+        <td class="txt-align-left" data-time="{{ data.summary.time }}"></td>
         </tr>
         </tbody>
     </table>
