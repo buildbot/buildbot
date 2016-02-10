@@ -42,16 +42,14 @@ define(function (require) {
             };
 
             //Filter when return is hit
-            jQuery.fn.dataTableExt.oApi.fnFilterOnReturn = function () {
-                var that = this;
-
+            $.fn.dataTableExt.oApi.fnFilterOnReturn = function () {
                 this.each(function (i) {
                     $.fn.dataTableExt.iApiIndex = i;
-                    var anControl = $('input', that.fnSettings().aanFeatures.f);
+                    var anControl = $('input', this.fnSettings().aanFeatures.f);
                     anControl.unbind('keyup').bind('keypress.katana', function (e) {
-                        if (e.which === 13) {
+                        if (e.which === helpers.keyCodes.ENTER) {
                             $.fn.dataTableExt.iApiIndex = i;
-                            that.fnFilter(anControl.val());
+                            this.fnFilter(anControl.val());
                         }
                     });
                     return this;
@@ -94,7 +92,7 @@ define(function (require) {
             $('.new-window').bind("click.katana", function (e) {
                 e.preventDefault();
                 var newWinHtml = $(this).parent().find($('.failure-detail-txt')).html();
-                privateFunc.openNewWindow(newWinHtml);
+                rtTestReport.openNewWindow(newWinHtml);
             });
 
             // show more / hide
@@ -146,13 +144,13 @@ define(function (require) {
             $filterInput.keydown(function (event) {
                 // Filter on the column (the index) of this element
                 var e = window.event || event;
-                if (e.keyCode === 13) {
-                    privateFunc.filterTables(this.value);
+                if (e.keyCode === helpers.keyCodes.ENTER) {
+                    rtTestReport.filterTables(this.value);
                 }
             });
 
             $submitButton.bind("click.katana", function () {
-                privateFunc.filterTables($filterInput.val());
+                rtTestReport.filterTables($filterInput.val());
             });
 
             // clear the input field
