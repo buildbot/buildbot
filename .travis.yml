@@ -1,6 +1,9 @@
 # Travis CI configuration file
 # http://about.travis-ci.org/docs/
 
+services:
+  - mysql
+
 language: python
 
 # Available Python versions:
@@ -19,6 +22,8 @@ env:
   # recreated for each test).
   # Helps to detect issues with incorrect database setup/cleanup in tests.
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
+  # Configuration that runs tests with real MySQL database
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
 
 cache:
   directories:
@@ -75,6 +80,7 @@ install:
   # Install lz4 for log compression utest
   # Install python-future for py2/3 compatability
   # Install pyjade for custom templates tests
+  # Install MySQL-python for tests that uses real MySQL
   - |
       [ $TESTS = py3 ] || \
       pip install -e pkg \
@@ -84,7 +90,8 @@ install:
                   future \
                   pyjade \
                   boto \
-                  lz4
+                  lz4 \
+                  MySQL-python
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS = py3 ] || pip install --pre buildbot_www"
 
@@ -108,6 +115,10 @@ install:
   - "[ $TESTS != lint ] || pip install pylint==1.1.0 pep8==1.5.7 flake8  astroid==1.3.8"
   # TODO: Pin Sphinx version to workaround http://trac.buildbot.net/ticket/3408
   - "[ $TESTS != docs ] || pip install sphinx==1.3.3"
+
+before_script:
+  # create real MySQL database for tests
+  - mysql -e 'create database bbtest;'
 
 # Tests running commands
 script:
