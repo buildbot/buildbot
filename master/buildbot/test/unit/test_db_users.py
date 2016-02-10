@@ -429,6 +429,16 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         # the existing transaction) and executes a conflicting insert in that
         # connection.  This will cause the insert in the db method to fail, and
         # the data in this insert (8.8.8.8) will appear below.
+
+        if (self.db.pool.engine.dialect.name == 'sqlite' and
+                self.db.pool.engine.url.database not in [None, ':memory:']):
+            # It's not easy to work with file-based SQLite via multiple
+            # connections, because SQLAlchemy (in it's default configuration)
+            # locks file during working session.
+            # TODO: This probably can be supported.
+            raise unittest.SkipTest(
+                "It's hard to test race condition with not in-memory SQLite")
+
         def race_thd(conn):
             conn = self.db.pool.engine.connect()
             conn.execute(self.db.model.users_info.insert(),
