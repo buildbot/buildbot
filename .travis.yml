@@ -14,6 +14,7 @@ env:
   - TWISTED=13.0.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
 
 cache:
   directories:
