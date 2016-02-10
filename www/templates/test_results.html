@@ -5,9 +5,11 @@
     {{ submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Test Results", selectedProject=selectedproject) }}
 {% endblock %}
 
+{% set bodyId = 'id="testresults_page"' %}
+
 {% block extra_script %}
     <script type="text/javascript">
-        require.deps.push('testResults');
+        require.deps.push('rtTestReport');
     </script>
 {% endblock %}
 {% block content %}
