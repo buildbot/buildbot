@@ -121,17 +121,17 @@ class RealDatabaseMixin(object):
                 # about reference cycle.
                 # Looks like it's OK to do it only with SQLAlchemy >= 1.0.0,
                 # since it's not issued in SQLAlchemy == 0.8.0
-                if 'buildsets' in meta.tables:
-                    buildsets_table = meta.tables['buildsets']
-                    for fkc in buildsets_table.foreign_key_constraints:
-                        if fkc.referred_table.name == 'builds':
-                            fkc.use_alter = True
 
-                if 'builds' in meta.tables:
-                    builds_table = meta.tables['builds']
-                    for fkc in builds_table.foreign_key_constraints:
-                        if fkc.referred_table.name == 'buildrequests':
-                            fkc.use_alter = True
+                # List of reference links (table_name, ref_table_name) that
+                # should be broken by adding use_alter=True.
+                table_referenced_table_links = [
+                    ('buildsets', 'builds'), ('builds', 'buildrequests')]
+                for table_name, ref_table_name in table_referenced_table_links:
+                    if table_name in meta.tables:
+                        table = meta.tables[table_name]
+                        for fkc in table.foreign_key_constraints:
+                            if fkc.referred_table.name == ref_table_name:
+                                fkc.use_alter = True
 
             # Drop all reflected tables and indices. May fail, e.g. if
             # SQLAlchemy wouldn't be able to break circular references.
