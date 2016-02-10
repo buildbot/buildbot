@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from future.moves.urllib.parse import quote as urlquote
-from future.utils import itervalues
+from future.utils import itervalues, iterkeys
 
 import itertools
 import os
@@ -42,14 +42,16 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
-                     "category", "project", "pollAtLaunch")
+                     "category", "project", "pollAtLaunch",
+                     "buildPushesWithNoCommits")
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
-                 encoding='utf-8', name=None, pollAtLaunch=False):
+                 encoding='utf-8', name=None, pollAtLaunch=False,
+                 buildPushesWithNoCommits=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -75,6 +77,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.repourl = repourl
         self.branches = branches
         self.encoding = encoding
+        self.buildPushesWithNoCommits = buildPushesWithNoCommits
         self.gitbin = gitbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
@@ -262,10 +265,14 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         # initial run, don't parse all history
         if not self.lastRev:
             return
+        rebuild = False
         if newRev in itervalues(self.lastRev):
-            # TODO: no new changes on this branch
-            # should we just use the lastRev again, but with a different branch?
-            pass
+            if self.buildPushesWithNoCommits and \
+               branch not in iterkeys(self.lastRev):
+                # we know the newRev but not for this branch
+                log.msg('gitpoller: rebuilding %s for new branch "%s"' %
+                        (newRev, branch))
+                rebuild = True
 
         # get the change list
         revListArgs = ([r'--format=%H', r'%s' % newRev] +
@@ -278,6 +285,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         # process oldest change first
         revList = results.split()
         revList.reverse()
+
+        if rebuild and len(revList) == 0:
+            revList = [newRev]
+
         self.changeCount = len(revList)
         self.lastRev[branch] = newRev
 
