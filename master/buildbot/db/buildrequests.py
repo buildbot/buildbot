@@ -481,11 +481,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def mergeBuildingRequest(self, requests, brids, number, claim=True, _reactor=reactor, _master_objectid=None):
+    def mergeBuildingRequest(self, requests, brids, number, queue, _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                if claim:
+                if queue == Queue.unclaimed:
                     claimed_at = self.getClaimedAtValue(_reactor)
                     self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 self.addBuilds(conn, brids, number)
@@ -639,12 +639,12 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         res.close()
 
     @with_master_objectid
-    def mergeFinishedBuildRequest(self, brdict, merged_brids, claim=True,
+    def mergeFinishedBuildRequest(self, brdict, merged_brids, queue,
                                   _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                if claim:
+                if queue == Queue.unclaimed:
                     claimed_at = self.getClaimedAtValue(_reactor)
                     self.insertBuildRequestClaimsTable(conn, _master_objectid, merged_brids, claimed_at)
                 # build request will have same properties so we skip checking it
@@ -660,13 +660,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def mergePendingBuildRequests(self, brids, artifactbrid=None, claim=True, _reactor=reactor, _master_objectid=None):
+    def mergePendingBuildRequests(self, brids, artifactbrid=None, queue=Queue.unclaimed,
+                                  _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
                 buildrequests_tbl = self.db.model.buildrequests
                 claimed_at = self.getClaimedAtValue(_reactor)
-                if claim:
+                if queue == Queue.unclaimed:
                     self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 # we'll need to batch the brids into groups of 100, so that the
                 # parameter lists supported by the DBAPI aren't

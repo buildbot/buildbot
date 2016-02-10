@@ -461,16 +461,14 @@ class KatanaBuildChooser(BasicBuildChooser):
         if queue == Queue.unclaimed:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
                                                                           claimed=False,
-                                                                          sourcestamps=sourcestamps,
-                                                                          sorted=True)
+                                                                          sourcestamps=sourcestamps)
         elif queue == Queue.resume:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
                                                                           claimed="mine",
                                                                           complete=False,
                                                                           results=RESUME,
                                                                           mergebrids="exclude",
-                                                                          sourcestamps=sourcestamps,
-                                                                          sorted=True)
+                                                                          sourcestamps=sourcestamps)
 
         for brdict in brdicts:
             req = yield self._getBuildRequestForBrdict(brdict)
@@ -494,7 +492,9 @@ class KatanaBuildChooser(BasicBuildChooser):
         if len(newBreqs) > 1:
             brids = [br.id for br in newBreqs]
             log.msg("merge pending buildrequest to resume %s with %s " % (breq.id, brids[1:]))
-            yield self.master.db.buildrequests.mergePendingBuildRequests(brids, artifactbrid=breq.id, claim=False)
+            yield self.master.db.buildrequests.mergePendingBuildRequests(brids,
+                                                                         artifactbrid=breq.id,
+                                                                         queue=Queue.resume)
 
         breqs = yield self.fetchPreviouslyMergedBuildRequests([breq])
 
@@ -520,7 +520,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             self.master.buildRequestRemoved(br.bsid, br.id, self.bldr.name)
 
     @defer.inlineCallbacks
-    def mergeBuildingRequests(self, brids, breqs, claim):
+    def mergeBuildingRequests(self, brids, breqs, queue):
         # check only the first br others will be compatible to merge
         for b in self.bldr.building:
             if self.bldr._defaultMergeRequestFn(b.requests[0], breqs[0]):
@@ -528,7 +528,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
                                                                             brids,
                                                                             b.build_status.number,
-                                                                            claim=claim)
+                                                                            queue=queue)
                 except:
                     raise
 
@@ -581,7 +581,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         nextBuild = (None, None)
 
         # 1. pick a request
-        breq = yield self._getBuildRequest(claim=False)
+        breq = yield self._getBuildRequest(queue=Queue.resume)
 
         if not breq:
             defer.returnValue(nextBuild)
@@ -611,15 +611,13 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBuild)
 
     @defer.inlineCallbacks
-    def _getBuildRequest(self, claim=True):
+    def _getBuildRequest(self, queue):
 
-        getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest if claim else self._getNextBuildToResume
-        queue = Queue.unclaimed if claim else Queue.resume
+        getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest \
+            if queue==Queue.unclaimed else self._getNextBuildToResume
 
         def getPendingBrdict():
-            if claim:
-                return self.unclaimedBrdicts
-            return self.resumeBrdicts
+            return self.unclaimedBrdicts if queue == Queue.unclaimed else self.resumeBrdicts
 
         # 1. pick a build request
         breq = yield getNextBuildRequestFunc()
@@ -635,7 +633,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             brids = [br.id for br in totalBreqs]
 
             try:
-                build = yield self.mergeBuildingRequests(brids, totalBreqs, claim=claim)
+                build = yield self.mergeBuildingRequests(brids, totalBreqs, queue=queue)
                 if build is not None:
                     yield self.bldr.maybeUpdateMergedBuilds(brid=build.requests[0].id,
                                                             buildnumber=build.build_status.number,
@@ -671,7 +669,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     log.msg("merge finished buildresquest %s with %s" % (finished_br, totalBrids))
                     yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br,
                                                                                  totalBrids,
-                                                                                 claim=claim)
+                                                                                 queue=queue)
                     yield self.bldr._maybeBuildsetsComplete(totalBreqs, requestRemoved=True)
 
                     buildnumber = yield self.master.db.builds.getBuildNumberForRequest(finished_br['brid'])
@@ -693,7 +691,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         nextBuild = (None, None)
 
         #1. pick a buildrequest
-        breq = yield self._getBuildRequest(claim=True)
+        breq = yield self._getBuildRequest(queue=Queue.unclaimed)
 
         if not breq:
             defer.returnValue(nextBuild)

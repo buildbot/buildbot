@@ -1023,7 +1023,9 @@ class TestBuildsetsConnectorComponent(
                                                                                          startbrid=1))
 
         d.addCallback(lambda brdict:
-                      self.db.buildrequests.mergeFinishedBuildRequest(brdict, merged_brids=[2, 6, 7]))
+                      self.db.buildrequests.mergeFinishedBuildRequest(brdict,
+                                                                      merged_brids=[2, 6, 7],
+                                                                      queue=Queue.unclaimed))
 
         d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='builder', brids=[2, 6, 7]))
 
@@ -1065,7 +1067,9 @@ class TestBuildsetsConnectorComponent(
                                                                                          startbrid=1))
 
         d.addCallback(lambda brdict:
-                      self.db.buildrequests.mergeFinishedBuildRequest(brdict, merged_brids=[6, 7]))
+                      self.db.buildrequests.mergeFinishedBuildRequest(brdict,
+                                                                      merged_brids=[6, 7],
+                                                                      queue=Queue.unclaimed))
 
         d.addCallback(lambda _: self.db.buildrequests.getBuildRequests(buildername='builder', brids=[6, 7]))
 
@@ -1103,7 +1107,10 @@ class TestBuildsetsConnectorComponent(
             return self.db.pool.do(thd)
 
         d = self.insertTestData(breqs + breqsclaims + build)
-        d.addCallback(lambda _: self.db.buildrequests.mergeBuildingRequest(breqs, brids, 1))
+        d.addCallback(lambda _: self.db.buildrequests.mergeBuildingRequest(breqs, brids,
+                                                                           number=1,
+                                                                           queue=Queue.unclaimed))
+
         d.addCallback(lambda _: self.db.builds.getBuildsForRequest(brid=4))
         d.addCallback(checkBuild)
         d.addCallback(check, brids=brids)

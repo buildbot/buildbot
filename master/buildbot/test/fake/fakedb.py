@@ -24,6 +24,7 @@ from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests
+from buildbot.db.buildrequests import Queue
 
 # Fake DB Rows
 
@@ -1080,8 +1081,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
 
-    def mergeBuildingRequest(self, requests, brids, number, claim=True):
-        if claim:
+    def mergeBuildingRequest(self, requests, brids, number, queue):
+        if queue == Queue.unclaimed:
             return self.claimBuildRequests(brids)
 
     def maybeUpdateMergedBrids(self, brids):
