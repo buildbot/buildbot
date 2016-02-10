@@ -121,9 +121,12 @@ class Model(base.DBConnectorComponent):
         sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
         # note that there is 1:N relationship here.
         # In case of slave loss, build has results RETRY
-        # and buildrequest is unclaimed
+        # and buildrequest is unclaimed.
+        # We use use_alter to prevent circular reference
+        # (buildrequests -> buildsets -> builds).
         sa.Column('buildrequestid', sa.Integer,
-                  sa.ForeignKey('buildrequests.id'), nullable=False),
+                  sa.ForeignKey('buildrequests.id', use_alter=True, name='buildrequestid'),
+                  nullable=False),
         # slave which performed this build
         # TODO: ForeignKey to buildslaves table, named buildslaveid (#3088)
         # TODO: keep nullable to support slave-free builds (#3088)

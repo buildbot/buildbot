@@ -572,7 +572,8 @@ class TestRealDB(unittest.TestCase,
         d = self.setUpConnectorComponent(
             table_names=['patches', 'buildsets', 'buildset_properties',
                          'objects', 'buildrequests', 'sourcestamps',
-                         'buildset_sourcestamps', 'builders'])
+                         'buildset_sourcestamps', 'builders',
+                         'builds', 'masters'])
 
         @d.addCallback
         def finish_setup(_):
