@@ -18,7 +18,7 @@ from twisted.python.reflect import namedModule
 from buildbot.steps.source import mercurial
 from buildbot.status.results import SUCCESS, FAILURE, RETRY
 from buildbot.test.util import sourcesteps
-from buildbot.test.fake.remotecommand import ExpectShell, Expect
+from buildbot.test.fake.remotecommand import ExpectShell, Expect, FakeRemoteCommand
 from buildbot import config
 from twisted.internet import defer
 from mock import Mock
@@ -1218,6 +1218,84 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE, status_text=["updating"])
         return self.runStep()
 
+    def test_clean_failed_hg_recovers(self):
+        self.setupStep(
+                mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                    mode='full', method='fresh',
+                                    clobberOnBranchChange=False,
+                                    branchType='inrepo',
+                                    logEnviron=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.hg/store/journal',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/store/lock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/wlock',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/.hg/hgrc',
+                                      logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                              stdout='File "mercurial\revlog.pyc", line 1115, in checkhash\n'
+                                     'RevlogError: integrity check failed on 00manifest.i:270248\n'
+                                     'abort: integrity check failed on 00manifest.i:270248!')
+            + 255,
+            Expect('rmdir', dict(dir='wkdir/.hg', logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir', logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'clone', '--uncompressed', '--noupdate',
+                                 'http://hg.mozilla.org', '.'],
+                        logEnviron=True)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'update',
+                                 '--clean', '--rev', 'default'],
+                        logEnviron=True)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'pull',
+                                 'http://hg.mozilla.org', '--rev', 'default'],
+                        logEnviron=True)
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'identify', '--branch'],
+                        logEnviron=True)
+            + ExpectShell.log('stdio', stdout='using http://hg.mozilla.org\n'+
+                                              ' sending capabilities command \n'+' sending lookup command \n'+
+                                              ' preparing listkeys for "namespaces" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' preparing listkeys for "bookmarks" \n'+
+                                              ' sending listkeys command \n'+
+                                              ' cef7825251aa517ddc1861cf07336ba7446c86c8')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'locate', 'set:added()'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'update', '--clean', '--rev', 'default'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['hg', '--traceback', 'parents', '--template', '{node}\\n'])
+            + 0
+            + ExpectShell.log('stdio', stdout='\n')
+            + ExpectShell.log('stdio',
+                stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS, status_text=["update"])
+        return self.runStep()
+
     def runCommand(self, c):
         for cmd in self.expected_commands:
             if cmd['command'] == [c.remote_command, c.args]:
@@ -1242,6 +1320,10 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def mockRmdirCommand(self, dir, rc):
         return {'command': ['rmdir', {'logEnviron': True, 'dir': dir}],
+                'rc': rc}
+
+    def mockPurgeCommand(self, rc):
+        return {'logEnviron': True, 'command': ['hg', '--traceback', '--config', 'extensions.purge=', 'purge'],
                 'rc': rc}
 
     def setGraceful(self, val):
@@ -1348,3 +1430,21 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         self.assertTrue(self.disconnectGraceful)
         self.assertEqual(self.result, RETRY)
+
+    @defer.inlineCallbacks
+    def test_mercurial_clean_clobberIfIntegrityCheckFails(self):
+        step = self.setupStepRecoveryTests()
+
+        purge = Mock(return_value=1)
+        pull = Mock(return_value=0)
+
+        self.patch(mercurial.Mercurial, "_checkPurge", purge)
+        self.patch(mercurial.Mercurial, "_pullUpdate", pull)
+
+        self.expected_commands = [self.mockPurgeCommand(1)]
+
+        step.clobber = self.clobber
+
+        yield step.clean(None)
+
+        self.assertTrue(self.clobberRepository)
