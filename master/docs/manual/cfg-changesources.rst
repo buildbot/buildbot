@@ -712,6 +712,9 @@ It accepts the following arguments:
     Determines when the first poll occurs.
     True = immediately on launch, False = wait for one pollInterval (default).
 
+``buildPushesWithNoCommits``
+    Determine if a push on a new branch with already known commits should trigger a build. (defaults to False).
+
 ``gitbin``
     path to the Git binary, defaults to just ``'git'``
 
