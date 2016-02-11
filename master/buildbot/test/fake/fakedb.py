@@ -69,7 +69,10 @@ class Row(object):
     dicts = ()
     hashedColumns = []
     foreignKeys = []
-    utf8_columns = ()
+    # Columns that content is represented as sa.Binary-like type in DB model.
+    # They value is bytestring (in contrast to text-like columns, which are
+    # unicode).
+    binary_columns = ()
 
     _next_id = None
 
@@ -91,9 +94,13 @@ class Row(object):
         for k, v in iteritems(self.values):
             if isinstance(v, str):
                 self.values[k] = unicode(v)
-        # encode columns that should be stored utf-8 encoded (e.g. LargeBinary
-        # columns) to utf-8
-        for col in self.utf8_columns:
+        # Binary columns stores either (compressed) binary data or encoded
+        # with utf-8 unicode string. We assume that Row constructor receives
+        # only unicode strings and encode them to utf-8 here.
+        # At this moment there is only one such column: logchunks.contents,
+        # which stores either utf-8 encoded string, or gzip-compressed
+        # utf-8 encoded string.
+        for col in self.binary_columns:
             self.values[col] = self.values[col].encode("utf-8")
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
@@ -533,7 +540,8 @@ class LogChunk(Row):
         compressed=0)
 
     required_columns = ('logid', )
-    utf8_columns = ('content', )
+    # 'content' column is sa.LargeBinary, it's bytestring.
+    binary_columns = ('content',)
 
 
 class Master(Row):
