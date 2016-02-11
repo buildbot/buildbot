@@ -42,15 +42,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertEqual(res.fetchall(), [])
 
             # and buildslave name is unique, so we'll get an error here
-            if conn.dialect.name == 'postgresql':
-                if conn.dialect.driver == 'psycopg2':
-                    # psycopg2
-                    exc = sa.exc.IntegrityError
-                else:
-                    # pg8000
-                    exc = sa.exc.ProgrammingError
-            else:
-                exc = sa.exc.IntegrityError
+            exc = sa.exc.IntegrityError
+            if conn.dialect.driver == 'pg8000':
+                # Constraint validation is an IntegrityError, see
+                # <https://www.python.org/dev/peps/pep-0249/#integrityerror>
+                # but this is not the case with pg8000
+                exc = sa.exc.ProgrammingError
             self.assertRaises(exc, lambda:
                               conn.execute(buildslaves.insert(),
                                            dict(name='bs1', info='{}'),
