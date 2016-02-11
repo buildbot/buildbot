@@ -20,123 +20,154 @@ import sqlalchemy as sa
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.util import json
 from buildbot.util import pickle
+from buildbot.util import sautils
 from twisted.persisted import styles
 
 metadata = sa.MetaData()
 
-last_access = sa.Table('last_access', metadata,
-                       sa.Column('who', sa.String(256), nullable=False),
-                       sa.Column('writing', sa.Integer, nullable=False),
-                       sa.Column('last_access', sa.Integer, nullable=False),
-                       )
+last_access = sautils.Table(
+    'last_access', metadata,
+    sa.Column('who', sa.String(256), nullable=False),
+    sa.Column('writing', sa.Integer, nullable=False),
+    sa.Column('last_access', sa.Integer, nullable=False),
+)
 
-changes_nextid = sa.Table('changes_nextid', metadata,
-                          sa.Column('next_changeid', sa.Integer),
-                          )
+changes_nextid = sautils.Table(
+    'changes_nextid', metadata,
+    sa.Column('next_changeid', sa.Integer),
+)
 
-changes = sa.Table('changes', metadata,
-                   sa.Column('changeid', sa.Integer, autoincrement=False, primary_key=True),
-                   sa.Column('author', sa.String(256), nullable=False),
-                   sa.Column('comments', sa.String(1024), nullable=False),
-                   sa.Column('is_dir', sa.SmallInteger, nullable=False),
-                   sa.Column('branch', sa.String(256)),
-                   sa.Column('revision', sa.String(256)),
-                   sa.Column('revlink', sa.String(256)),
-                   sa.Column('when_timestamp', sa.Integer, nullable=False),
-                   sa.Column('category', sa.String(256)),
-                   )
+changes = sautils.Table(
+    'changes', metadata,
+    sa.Column('changeid', sa.Integer, autoincrement=False, primary_key=True),
+    sa.Column('author', sa.String(256), nullable=False),
+    sa.Column('comments', sa.String(1024), nullable=False),
+    sa.Column('is_dir', sa.SmallInteger, nullable=False),
+    sa.Column('branch', sa.String(256)),
+    sa.Column('revision', sa.String(256)),
+    sa.Column('revlink', sa.String(256)),
+    sa.Column('when_timestamp', sa.Integer, nullable=False),
+    sa.Column('category', sa.String(256)),
+)
 
-change_links = sa.Table('change_links', metadata,
-                        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
-                        sa.Column('link', sa.String(1024), nullable=False),
-                        )
+change_links = sautils.Table(
+    'change_links', metadata,
+    sa.Column('changeid', sa.Integer, sa.ForeignKey(
+        'changes.changeid'), nullable=False),
+    sa.Column('link', sa.String(1024), nullable=False),
+)
 
-change_files = sa.Table('change_files', metadata,
-                        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
-                        sa.Column('filename', sa.String(1024), nullable=False),
-                        )
+change_files = sautils.Table(
+    'change_files', metadata,
+    sa.Column('changeid', sa.Integer, sa.ForeignKey(
+        'changes.changeid'), nullable=False),
+    sa.Column('filename', sa.String(1024), nullable=False),
+)
 
-change_properties = sa.Table('change_properties', metadata,
-                             sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
-                             sa.Column('property_name', sa.String(256), nullable=False),
-                             sa.Column('property_value', sa.String(1024), nullable=False),
-                             )
+change_properties = sautils.Table(
+    'change_properties', metadata,
+    sa.Column('changeid', sa.Integer, sa.ForeignKey(
+        'changes.changeid'), nullable=False),
+    sa.Column('property_name', sa.String(256), nullable=False),
+    sa.Column('property_value', sa.String(1024), nullable=False),
+)
 
-schedulers = sa.Table("schedulers", metadata,
-                      sa.Column('schedulerid', sa.Integer, autoincrement=False, primary_key=True),
-                      sa.Column('name', sa.String(128), nullable=False),
-                      sa.Column('state', sa.String(1024), nullable=False),
-                      )
+schedulers = sautils.Table(
+    "schedulers", metadata,
+    sa.Column('schedulerid', sa.Integer,
+              autoincrement=False, primary_key=True),
+    sa.Column('name', sa.String(128), nullable=False),
+    sa.Column('state', sa.String(1024), nullable=False),
+)
 
-scheduler_changes = sa.Table('scheduler_changes', metadata,
-                             sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
-                             sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
-                             sa.Column('important', sa.SmallInteger),
-                             )
+scheduler_changes = sautils.Table(
+    'scheduler_changes', metadata,
+    sa.Column('schedulerid', sa.Integer,
+              sa.ForeignKey('schedulers.schedulerid')),
+    sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
+    sa.Column('important', sa.SmallInteger),
+)
 
-scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata,
-                                        sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
-                                        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.schedulerid')),
-                                        sa.Column('active', sa.SmallInteger),
-                                        )
+scheduler_upstream_buildsets = sautils.Table(
+    'scheduler_upstream_buildsets', metadata,
+    sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id')),
+    sa.Column('schedulerid', sa.Integer,
+              sa.ForeignKey('schedulers.schedulerid')),
+    sa.Column('active', sa.SmallInteger),
+)
 
-sourcestamps = sa.Table('sourcestamps', metadata,
-                        sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-                        sa.Column('branch', sa.String(256)),
-                        sa.Column('revision', sa.String(256)),
-                        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
-                        )
+sourcestamps = sautils.Table(
+    'sourcestamps', metadata,
+    sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
+    sa.Column('branch', sa.String(256)),
+    sa.Column('revision', sa.String(256)),
+    sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+)
 
-patches = sa.Table('patches', metadata,
-                   sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-                   sa.Column('patchlevel', sa.Integer, nullable=False),
-                   sa.Column('patch_base64', sa.Text, nullable=False),
-                   sa.Column('subdir', sa.Text),
-                   )
+patches = sautils.Table(
+    'patches', metadata,
+    sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
+    sa.Column('patchlevel', sa.Integer, nullable=False),
+    sa.Column('patch_base64', sa.Text, nullable=False),
+    sa.Column('subdir', sa.Text),
+)
 
-sourcestamp_changes = sa.Table('sourcestamp_changes', metadata,
-                               sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
-                               sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=False),
-                               )
+sourcestamp_changes = sautils.Table(
+    'sourcestamp_changes', metadata,
+    sa.Column('sourcestampid', sa.Integer, sa.ForeignKey(
+        'sourcestamps.id'), nullable=False),
+    sa.Column('changeid', sa.Integer, sa.ForeignKey(
+        'changes.changeid'), nullable=False),
+)
 
-buildsets = sa.Table('buildsets', metadata,
-                     sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-                     sa.Column('external_idstring', sa.String(256)),
-                     sa.Column('reason', sa.String(256)),
-                     sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
-                     sa.Column('submitted_at', sa.Integer, nullable=False),
-                     sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")),
-                     sa.Column('complete_at', sa.Integer),
-                     sa.Column('results', sa.SmallInteger),
-                     )
+buildsets = sautils.Table(
+    'buildsets', metadata,
+    sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
+    sa.Column('external_idstring', sa.String(256)),
+    sa.Column('reason', sa.String(256)),
+    sa.Column('sourcestampid', sa.Integer, sa.ForeignKey(
+        'sourcestamps.id'), nullable=False),
+    sa.Column('submitted_at', sa.Integer, nullable=False),
+    sa.Column('complete', sa.SmallInteger, nullable=False,
+              server_default=sa.DefaultClause("0")),
+    sa.Column('complete_at', sa.Integer),
+    sa.Column('results', sa.SmallInteger),
+)
 
-buildset_properties = sa.Table('buildset_properties', metadata,
-                               sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=False),
-                               sa.Column('property_name', sa.String(256), nullable=False),
-                               sa.Column('property_value', sa.String(1024), nullable=False),
-                               )
+buildset_properties = sautils.Table(
+    'buildset_properties', metadata,
+    sa.Column('buildsetid', sa.Integer, sa.ForeignKey(
+        'buildsets.id'), nullable=False),
+    sa.Column('property_name', sa.String(256), nullable=False),
+    sa.Column('property_value', sa.String(1024), nullable=False),
+)
 
-buildrequests = sa.Table('buildrequests', metadata,
-                         sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-                         sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"), nullable=False),
-                         sa.Column('buildername', sa.String(length=256), nullable=False),
-                         sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("0")),
-                         sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
-                         sa.Column('claimed_by_name', sa.String(length=256)),
-                         sa.Column('claimed_by_incarnation', sa.String(length=256)),
-                         sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")),
-                         sa.Column('results', sa.SmallInteger),
-                         sa.Column('submitted_at', sa.Integer, nullable=False),
-                         sa.Column('complete_at', sa.Integer),
-                         )
+buildrequests = sautils.Table(
+    'buildrequests', metadata,
+    sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
+    sa.Column('buildsetid', sa.Integer, sa.ForeignKey(
+        "buildsets.id"), nullable=False),
+    sa.Column('buildername', sa.String(length=256), nullable=False),
+    sa.Column('priority', sa.Integer, nullable=False,
+              server_default=sa.DefaultClause("0")),
+    sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
+    sa.Column('claimed_by_name', sa.String(length=256)),
+    sa.Column('claimed_by_incarnation', sa.String(length=256)),
+    sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")),
+    sa.Column('results', sa.SmallInteger),
+    sa.Column('submitted_at', sa.Integer, nullable=False),
+    sa.Column('complete_at', sa.Integer),
+)
 
-builds = sa.Table('builds', metadata,
-                  sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-                  sa.Column('number', sa.Integer, nullable=False),
-                  sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=False),
-                  sa.Column('start_time', sa.Integer, nullable=False),
-                  sa.Column('finish_time', sa.Integer),
-                  )
+builds = sautils.Table(
+    'builds', metadata,
+    sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
+    sa.Column('number', sa.Integer, nullable=False),
+    sa.Column('brid', sa.Integer, sa.ForeignKey(
+        'buildrequests.id'), nullable=False),
+    sa.Column('start_time', sa.Integer, nullable=False),
+    sa.Column('finish_time', sa.Integer),
+)
 
 
 def import_changes(migrate_engine):
@@ -204,7 +235,8 @@ def import_changes(migrate_engine):
 
             values = dict([(k, remove_none(v)) for k, v in iteritems(values)])
         except UnicodeDecodeError, e:
-            raise UnicodeError("Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py: %s" % str(e))
+            raise UnicodeError(
+                "Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py: %s" % str(e))
 
         migrate_engine.execute(changes.insert(), **values)
 
@@ -243,7 +275,8 @@ def import_changes(migrate_engine):
                            next_changeid=max_changeid + 1)
 
     # if not quiet:
-    #    print "moving changes.pck to changes.pck.old; delete it or keep it as a backup"
+    # print "moving changes.pck to changes.pck.old; delete it or keep it as a
+    # backup"
     os.rename(changes_pickle, changes_pickle + ".old")
 
 

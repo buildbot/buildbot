@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -28,27 +29,30 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         return self.tearDownMigrateTest()
 
     def _createTables_thd(self, conn, metadata):
-        objects = sa.Table("objects", metadata,
-                           sa.Column("id", sa.Integer, primary_key=True),
-                           sa.Column('name', sa.String(128), nullable=False),
-                           sa.Column('class_name', sa.String(128), nullable=False),
-                           )
+        objects = sautils.Table(
+            "objects", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column('name', sa.String(128), nullable=False),
+            sa.Column('class_name', sa.String(128), nullable=False),
+        )
         objects.create()
 
-        buildrequest_claims = sa.Table('buildrequest_claims', metadata,
-                                       sa.Column('brid', sa.Integer, index=True, unique=True),
-                                       sa.Column('objectid', sa.Integer, index=True, nullable=True),
-                                       sa.Column('claimed_at', sa.Integer, nullable=False),
-                                       )
+        buildrequest_claims = sautils.Table(
+            'buildrequest_claims', metadata,
+            sa.Column('brid', sa.Integer, index=True, unique=True),
+            sa.Column('objectid', sa.Integer, index=True, nullable=True),
+            sa.Column('claimed_at', sa.Integer, nullable=False),
+        )
         buildrequest_claims.create()
 
         sa.Index('buildrequest_claims_brids', buildrequest_claims.c.brid,
                  unique=True).create()
 
-        buildrequests = sa.Table('buildrequests', metadata,
-                                 sa.Column('id', sa.Integer, primary_key=True),
-                                 # ..
-                                 )
+        buildrequests = sautils.Table(
+            'buildrequests', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            # ..
+        )
         buildrequests.create()
 
     def test_empty_migration(self):

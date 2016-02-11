@@ -23,6 +23,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
+from buildbot.util import sautils
 from twisted.internet import defer
 from twisted.python import log
 
@@ -59,11 +60,12 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
 
         def setup_thd(conn):
             metadata = sa.MetaData()
-            table = sa.Table('migrate_version', metadata,
-                             sa.Column('repository_id', sa.String(250),
-                                       primary_key=True),
-                             sa.Column('repository_path', sa.Text),
-                             sa.Column('version', sa.Integer))
+            table = sautils.Table(
+                'migrate_version', metadata,
+                sa.Column('repository_id', sa.String(250), primary_key=True),
+                sa.Column('repository_path', sa.Text),
+                sa.Column('version', sa.Integer),
+            )
             table.create(bind=conn)
             conn.execute(table.insert(),
                          repository_id='Buildbot',
@@ -81,6 +83,18 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                 log.msg('upgrading to schema version %d' % (version + 1))
                 schema.runchange(version, change, 1)
         d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
+
+        def check_table_charsets_thd(engine):
+            # charsets are only a problem for MySQL
+            if engine.dialect.name != 'mysql':
+                return
+            dbs = [r[0] for r in engine.execute("show tables")]
+            for tbl in dbs:
+                r = engine.execute("show create table %s" % tbl)
+                create_table = r.fetchone()[1]
+                self.assertIn('DEFAULT CHARSET=utf8', create_table,
+                              "table %s does not have the utf8 charset" % tbl)
+        d.addCallback(lambda _: self.db.pool.do(check_table_charsets_thd))
 
         d.addCallback(lambda _: self.db.pool.do(verify_thd_cb))
         return d

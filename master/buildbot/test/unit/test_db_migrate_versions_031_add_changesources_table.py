@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -32,10 +33,11 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            sa.Table('masters', metadata,
-                     sa.Column('id', sa.Integer, primary_key=True),
-                     # ..
-                     ).create()
+            sautils.Table(
+                'masters', metadata,
+                sa.Column('id', sa.Integer, primary_key=True),
+                # ..
+            ).create()
 
         def verify_thd(conn):
             metadata = sa.MetaData()

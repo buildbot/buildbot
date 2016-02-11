@@ -20,52 +20,56 @@ from buildbot.db.types.json import JsonObject
 
 
 def _buildslaves_old_table(table_name, metadata, autoload=False):
-    return sa.Table(table_name, metadata,
-                    sa.Column("id", sa.Integer, primary_key=True),
-                    sa.Column("name", sa.String(50), nullable=False),
-                    sa.Column("info", JsonObject, nullable=False),
-                    autoload=autoload,
-                    )
+    return sautils.Table(
+        table_name, metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String(50), nullable=False),
+        sa.Column("info", JsonObject, nullable=False),
+        autoload=autoload,
+    )
 
 
 def _builds_old_table(table_name, metadata, autoload=False):
-    return sa.Table(table_name, metadata,
-                    sa.Column('id', sa.Integer, primary_key=True),
-                    sa.Column('number', sa.Integer, nullable=False),
-                    sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
-                    sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                              nullable=False),
-                    sa.Column('buildslaveid', sa.Integer),
-                    sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                              nullable=False),
-                    sa.Column('started_at', sa.Integer, nullable=False),
-                    sa.Column('complete_at', sa.Integer),
-                    sa.Column('state_string', sa.Text, nullable=False, server_default=''),
-                    sa.Column('results', sa.Integer),
-                    autoload=autoload,
-                    )
+    return sautils.Table(
+        table_name, metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('number', sa.Integer, nullable=False),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+        sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                  nullable=False),
+        sa.Column('buildslaveid', sa.Integer),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                  nullable=False),
+        sa.Column('started_at', sa.Integer, nullable=False),
+        sa.Column('complete_at', sa.Integer),
+        sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+        sa.Column('results', sa.Integer),
+        autoload=autoload,
+    )
 
 
 def _connected_buildslaves_old_table(table_name, metadata, autoload=False):
-    return sa.Table(table_name, metadata,
-                    sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                    sa.Column('masterid', sa.Integer,
-                              sa.ForeignKey('masters.id'), nullable=False),
-                    sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                              nullable=False),
-                    autoload=autoload,
-                    )
+    return sautils.Table(
+        table_name, metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id'), nullable=False),
+        sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                  nullable=False),
+        autoload=autoload,
+    )
 
 
 def _configured_buildslaves_old_table(table_name, metadata, autoload=False):
-    return sa.Table(table_name, metadata,
-                    sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                    sa.Column('buildermasterid', sa.Integer,
-                              sa.ForeignKey('builder_masters.id'), nullable=False),
-                    sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                              nullable=False),
-                    autoload=autoload,
-                    )
+    return sautils.Table(
+        table_name, metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('buildermasterid', sa.Integer,
+                  sa.ForeignKey('builder_masters.id'), nullable=False),
+        sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                  nullable=False),
+        autoload=autoload,
+    )
 
 
 def _rename_configured_buildslaves_to_old(migrate_engine):
@@ -131,17 +135,18 @@ def _create_configured_workers_table(migrate_engine):
     # (as done is some other migrations), I'm using autoloading
     # of the metadata from database.
     # Is this correct?
-    sa.Table('builder_masters', metadata, autoload=True)
-    sa.Table('workers', metadata, autoload=True)
+    sautils.Table('builder_masters', metadata, autoload=True)
+    sautils.Table('workers', metadata, autoload=True)
 
     # Create 'configured_workers' table.
-    configured_workers = sa.Table('configured_workers', metadata,
-                                  sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                  sa.Column('buildermasterid', sa.Integer,
-                                            sa.ForeignKey('builder_masters.id'), nullable=False),
-                                  sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
-                                            nullable=False),
-                                  )
+    configured_workers = sautils.Table(
+        'configured_workers', metadata,
+         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+         sa.Column('buildermasterid', sa.Integer,
+                   sa.ForeignKey('builder_masters.id'), nullable=False),
+         sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                   nullable=False),
+     )
     configured_workers.create()
 
     # Create indexes.
@@ -167,17 +172,18 @@ def _create_connected_workers_table(migrate_engine):
     # (as done is some other migrations), I'm using autoloading
     # of the metadata from database.
     # Is this correct?
-    sa.Table('masters', metadata, autoload=True)
-    sa.Table('workers', metadata, autoload=True)
+    sautils.Table('masters', metadata, autoload=True)
+    sautils.Table('workers', metadata, autoload=True)
 
     # Create 'connected_workers' table.
-    connected_workers = sa.Table('connected_workers', metadata,
-                                 sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                 sa.Column('masterid', sa.Integer,
-                                           sa.ForeignKey('masters.id'), nullable=False),
-                                 sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
-                                           nullable=False),
-                                 )
+    connected_workers = sautils.Table(
+        'connected_workers', metadata,
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id'), nullable=False),
+        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                  nullable=False),
+    )
     connected_workers.create()
 
     # Create indexes.
@@ -200,11 +206,12 @@ def _create_workers_table(migrate_engine):
     metadata.bind = migrate_engine
 
     # Create 'workers' table.
-    workers = sa.Table("workers", metadata,
-                       sa.Column("id", sa.Integer, primary_key=True),
-                       sa.Column("name", sa.String(50), nullable=False),
-                       sa.Column("info", JsonObject, nullable=False),
-                       )
+    workers = sautils.Table(
+        "workers", metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("name", sa.String(50), nullable=False),
+        sa.Column("info", JsonObject, nullable=False),
+    )
     workers.create()
 
     # Create indexes.
@@ -216,26 +223,27 @@ def _create_builds_table(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('builders', metadata, autoload=True)
-    sa.Table('buildrequests', metadata, autoload=True)
-    sa.Table('workers', metadata, autoload=True)
-    sa.Table('masters', metadata, autoload=True)
+    sautils.Table('builders', metadata, autoload=True)
+    sautils.Table('buildrequests', metadata, autoload=True)
+    sautils.Table('workers', metadata, autoload=True)
+    sautils.Table('masters', metadata, autoload=True)
 
     # Create 'builds' table.
-    builds = sa.Table('builds', metadata,
-                      sa.Column('id', sa.Integer, primary_key=True),
-                      sa.Column('number', sa.Integer, nullable=False),
-                      sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
-                      sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                                nullable=False),
-                      sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id')),
-                      sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                                nullable=False),
-                      sa.Column('started_at', sa.Integer, nullable=False),
-                      sa.Column('complete_at', sa.Integer),
-                      sa.Column('state_string', sa.Text, nullable=False, server_default=''),
-                      sa.Column('results', sa.Integer),
-                      )
+    builds = sautils.Table(
+        'builds', metadata,
+        sa.Column('id', sa.Integer, primary_key=True),
+        sa.Column('number', sa.Integer, nullable=False),
+        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+        sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                  nullable=False),
+        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id')),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                  nullable=False),
+        sa.Column('started_at', sa.Integer, nullable=False),
+        sa.Column('complete_at', sa.Integer),
+        sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+        sa.Column('results', sa.Integer),
+    )
     builds.create()
 
     # Create indexes.
@@ -261,7 +269,7 @@ def _migrate_workers_table_data(migrate_engine):
     metadata.bind = migrate_engine
 
     buildslaves_old = _buildslaves_old_table('buildslaves_old', metadata)
-    workers = sa.Table('workers', metadata, autoload=True)
+    workers = sautils.Table('workers', metadata, autoload=True)
 
     c = buildslaves_old.c
     q = sa.select([c.id, c.name, c.info])
@@ -278,7 +286,7 @@ def _migrate_configured_workers_table_data(migrate_engine):
 
     configured_buildslaves_old = _configured_buildslaves_old_table(
         'configured_buildslaves_old', metadata)
-    configured_workers = sa.Table(
+    configured_workers = sautils.Table(
         'configured_workers', metadata, autoload=True)
 
     c = configured_buildslaves_old.c
@@ -296,7 +304,7 @@ def _migrate_connected_workers_table_data(migrate_engine):
 
     connected_buildslaves_old = _connected_buildslaves_old_table(
         'connected_buildslaves_old', metadata)
-    connected_workers = sa.Table(
+    connected_workers = sautils.Table(
         'connected_workers', metadata, autoload=True)
 
     c = connected_buildslaves_old.c
@@ -313,7 +321,7 @@ def _migrate_builds_table_data(migrate_engine):
     metadata.bind = migrate_engine
 
     builds_old = _builds_old_table('builds_old', metadata)
-    builds = sa.Table('builds', metadata, autoload=True)
+    builds = sautils.Table('builds', metadata, autoload=True)
 
     c = builds_old.c
     q = sa.select([
@@ -380,8 +388,8 @@ def _validate_builds_buildslaves(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    builds = sa.Table('builds', metadata, autoload=True)
-    buildslaves = sa.Table('buildslaves', metadata, autoload=True)
+    builds = sautils.Table('builds', metadata, autoload=True)
+    buildslaves = sautils.Table('buildslaves', metadata, autoload=True)
 
     q = sa.select(
         [builds.c.id, builds.c.buildslaveid, buildslaves.c.id]

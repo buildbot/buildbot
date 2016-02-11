@@ -106,7 +106,8 @@ class Row(object):
         return '%s(**%r)' % (self.__class__.__name__, self.values)
 
     def nextId(self):
-        id, Row._next_id = Row._next_id, (Row._next_id or 1) + 1
+        id = Row._next_id if Row._next_id is not None else 1
+        Row._next_id = id + 1
         return id
 
     def hashColumns(self, *args):

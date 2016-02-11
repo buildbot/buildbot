@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from sqlalchemy.engine import reflection
 from twisted.python import log
 from twisted.trial import unittest
@@ -33,41 +34,44 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        self.buildsets = sa.Table('buildsets', metadata,
-                                  sa.Column('id', sa.Integer, primary_key=True),
-                                  sa.Column('external_idstring', sa.String(256)),
-                                  sa.Column('reason', sa.String(256)),
-                                  sa.Column('sourcestampid', sa.Integer,
-                                            nullable=False),  # NOTE: foreign key omitted
-                                  sa.Column('submitted_at', sa.Integer, nullable=False),
-                                  sa.Column('complete', sa.SmallInteger, nullable=False,
-                                            server_default=sa.DefaultClause("0")),
-                                  sa.Column('complete_at', sa.Integer),
-                                  sa.Column('results', sa.SmallInteger),
-                                  )
+        self.buildsets = sautils.Table(
+            'buildsets', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('external_idstring', sa.String(256)),
+            sa.Column('reason', sa.String(256)),
+            # NOTE: foreign key omitted:
+            sa.Column('sourcestampid', sa.Integer, nullable=False),
+            sa.Column('submitted_at', sa.Integer, nullable=False),
+            sa.Column('complete', sa.SmallInteger, nullable=False,
+                      server_default=sa.DefaultClause("0")),
+            sa.Column('complete_at', sa.Integer),
+            sa.Column('results', sa.SmallInteger),
+        )
         self.buildsets.create(bind=conn)
         sa.Index('buildsets_complete', self.buildsets.c.complete).create()
         sa.Index('buildsets_submitted_at', self.buildsets.c.submitted_at).create()
 
-        self.patches = sa.Table('patches', metadata,
-                                sa.Column('id', sa.Integer, primary_key=True),
-                                sa.Column('patchlevel', sa.Integer, nullable=False),
-                                sa.Column('patch_base64', sa.Text, nullable=False),
-                                sa.Column('patch_author', sa.Text, nullable=False),
-                                sa.Column('patch_comment', sa.Text, nullable=False),
-                                sa.Column('subdir', sa.Text),
-                                )
+        self.patches = sautils.Table(
+            'patches', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('patchlevel', sa.Integer, nullable=False),
+            sa.Column('patch_base64', sa.Text, nullable=False),
+            sa.Column('patch_author', sa.Text, nullable=False),
+            sa.Column('patch_comment', sa.Text, nullable=False),
+            sa.Column('subdir', sa.Text),
+        )
         self.patches.create(bind=conn)
 
-        self.sourcestamps = sa.Table('sourcestamps', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True),
-                                     sa.Column('branch', sa.String(256)),
-                                     sa.Column('revision', sa.String(256)),
-                                     sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
-                                     sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
-                                     sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
-                                     sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id')),
-                                     )
+        self.sourcestamps = sautils.Table(
+            'sourcestamps', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('branch', sa.String(256)),
+            sa.Column('revision', sa.String(256)),
+            sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+            sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id')),
+        )
         self.sourcestamps.create(bind=conn)
 
     def fill_tables_with_testdata(self, conn, testdata):
@@ -130,6 +134,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         for fk in fks:
             del fk['name']  # schema dependent
             del fk['referred_schema']  # idem
+            if 'options' in fk:
+                del fk['options']  # newer versions of sqlalchemy
 
         # finally, assert
         if fks != exp:

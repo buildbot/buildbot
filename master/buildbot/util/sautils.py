@@ -50,3 +50,11 @@ def sa_version():
                 return -1
         return tuple(map(tryint, sa.__version__.split('.')))
     return (0, 0, 0)  # "it's old"
+
+
+def Table(*args, **kwargs):
+    """Wrap table creation to add any necessary dialect-specific options"""
+    # work around the case where a database was created for us with
+    # a non-utf8 character set (mysql's default)
+    kwargs['mysql_character_set'] = 'utf8'
+    return sa.Table(*args, **kwargs)

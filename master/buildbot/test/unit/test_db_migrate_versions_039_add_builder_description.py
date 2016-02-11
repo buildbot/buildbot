@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -31,12 +32,14 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
 
-        builders = sa.Table('builders', metadata,
-                            sa.Column('id', sa.Integer, primary_key=True),
-                            # builder's name
-                            sa.Column('name', sa.Text, nullable=False),
-                            # sha1 of name; used for a unique index
-                            sa.Column('name_hash', sa.String(40), nullable=False),)
+        builders = sautils.Table(
+            'builders', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            # builder's name
+            sa.Column('name', sa.Text, nullable=False),
+            # sha1 of name; used for a unique index
+            sa.Column('name_hash', sa.String(40), nullable=False),
+        )
         builders.create()
 
         conn.execute(builders.insert(), [
