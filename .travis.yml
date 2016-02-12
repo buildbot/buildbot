@@ -7,23 +7,25 @@ python:
 env:
   - TEST_TARGET=master
   - TEST_TARGET=slave
+  - TEST_TARGET=javascript
 
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install libsasl2-dev libmysqlclient-dev libldap2-dev libssl-dev python-dev
-  - npm install -g grunt-cli
+  - if [ $TEST_TARGET = javascript]; then npm install -g grunt-cli; fi
 
 install:
-  - "pip install -e $TEST_TARGET"
-  - "pip install -v mock==1.0.1"
-  - "pip install -v pyflakes"
-  - "pip install -v coveralls"
-  - "cd www/"
-  - "npm install"
+  - pip install -e $TEST_TARGET
+  - pip install -v mock==1.0.1
+  - pip install -v pyflakes
+  - pip install -v coveralls
+  - if [ "$TEST_TARGET" = "javascript" ]; then cd www/; fi
+  - if [ "$TEST_TARGET" = "javascript" ]; then npm install; fi
 
 script:
-  - if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot ; else coverage run `which trial` buildslave ; fi
-  - grunt test --verbose --force
+  - if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot; fi
+  - if [ "$TEST_TARGET" = "slave" ]; then coverage run `which trial` buildslave; fi
+  - if [ "$TEST_TARGET" = "javascript" ]; then grunt test --verbose --force; fi
 
 after_success:
   - coveralls
