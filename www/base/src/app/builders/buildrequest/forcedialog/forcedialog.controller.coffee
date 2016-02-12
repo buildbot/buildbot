@@ -1,6 +1,6 @@
 class forceDialog extends Controller
     constructor: ($scope, $state, modal, schedulerid, $rootScope, builderid, dataService) ->
-        dataService.getForceschedulers(schedulerid, subscribe: false).then (schedulers) ->
+        dataService.getForceschedulers(schedulerid, subscribe: false).onChange = (schedulers) ->
             scheduler = schedulers[0]
             # prepare default values
             prepareFields = (fields) ->
