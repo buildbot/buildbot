@@ -121,7 +121,7 @@ define(function (require) {
             tags.clear();
             $.each(data, function eachBuilder(i, builder) {
                 var builderTags = rtBuilders.formatTags(builder.tags, branch_type);
-                tags = tags.add(builderTags);
+                tags.add(builderTags);
 
                 $.each(builder.tags, function eachBuilderTag(i, tag) {
                     // If we found a branch tag then add it
