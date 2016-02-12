@@ -234,8 +234,8 @@ define(function (require) {
                 return rtBuilders.tagVisibleForBranch(tag, branch_type)
             });
 
-            return rtBuilders.formatTags(filtered_tags, branch_type);
 
+            return  rtBuilders.formatTags(filtered_tags, branch_type).sort();
         },
         formatTags: function formatTags(tags, branch_type) {
             var formatTag = function (tag) {
