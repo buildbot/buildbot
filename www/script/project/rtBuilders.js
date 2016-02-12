@@ -2,7 +2,7 @@
 define(function (require) {
     "use strict";
 
-    var $ = require('jquery'),
+   var $ = require('jquery'),
         realtimePages = require('realtimePages'),
         helpers = require('helpers'),
         dt = require('project/datatables-extend'),
@@ -22,13 +22,11 @@ define(function (require) {
         NO_TAG = "No Tag",
         UNSTABLE_TAG = "Unstable",
         WIP_TAG = "WIP",
+        tagSeparator = " && ",
         extra_tags = [NO_TAG],
         MAIN_REPO = "unity_branch",
         hideUnstable = false,
-        $searchField,
-        maxTagsFilters = 2,
-        tagsFilterNumber = 1,
-        tagsFilters = [];
+        $searchField;
 
     require('libs/jquery.form');
 
@@ -41,44 +39,13 @@ define(function (require) {
             realtimePages.initRealtime(realtimeFunctions);
 
             $searchField = $(".dataTables_filter>label input");
-            var andTagsFilter = $("#btn-and-tag-select");
-            var orTagsFilter = $("#btn-or-tag-select");
-            orTagsFilter.hide();
-            orTagsFilter.click(function(e){
-                tagsFilters.forEach(function(e){ return e.remove(); })
-                tagsFilterNumber = 1;
-
-                $tagsSelect = $("[id^=tags-select]");
-
-                andTagsFilter.show();
-                orTagsFilter.hide();
-
-                $tbSorter.fnDraw();
-            });
-            andTagsFilter.click(function(event) {
-                var tagsSelect = $('<label><input class="col-md-2" type="hidden" id="tags-select'+tagsFilterNumber+'" placeholder="Filter tags"/></label>');
-                tagsFilters.push(tagsSelect);
-                andTagsFilter.before(tagsSelect);
-                tagsFilterNumber++;
-                tagsSelect.on("change", function change() {
-                    $tbSorter.fnDraw();
-                });
-                $tagsSelect = $("[id^=tags-select]");
-                rtBuilders.updateTagsForSelect2(false);
-                if(maxTagsFilters === tagsFilterNumber){
-                    andTagsFilter.hide();
-                    orTagsFilter.show();
-                }
-                $tbSorter.fnDraw();
-            });
 
             // Listen for history changes
             window.addEventListener('popstate', function (event) {
                 rtBuilders.loadStateFromURL();
             });
-        },
-        orCondition: function getFilterCondition(){
-           return tagsFilterNumber === 1;
+
+            helpers.tooltip($("[data-title]"));
         },
         realtimeFunctionsProcessBuilders: function (data) {
             if (initializedCodebaseOverview === false) {
@@ -102,31 +69,27 @@ define(function (require) {
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
 
-            //Setup tooltips
-            helpers.tooltip($("[data-title]"));
         },
         updateTagsForSelect2: function updateTagsForSelect2(allowInit) {
             if ($tagsSelect === undefined && allowInit) {
-                $tagsSelect = $("[id^=tags-select]");
+                $tagsSelect = $("#tags-select");
 
                 $tagsSelect.on("change", function change() {
                     $tbSorter.fnDraw();
                 });
             }
 
-            //savedTags : ['ABV, Unstable', 'WIP']
-
             if ($tagsSelect !== undefined) {
-                $.each(savedTags, function(index, el) {
-                    var ts = $tagsSelect[index];
-                    $(ts).val(el);
+                var str = "";
+                $.each(savedTags, function (i, tag) {
+                    str += tag + ",";
                 });
+                $tagsSelect.val(str);
 
                 $tagsSelect.select2({
                     multiple: true,
                     data: rtBuilders.parseTags()
                 });
-
                 $tbSorter.fnDraw();
             }
         },
@@ -157,7 +120,8 @@ define(function (require) {
 
             tags.clear();
             $.each(data, function eachBuilder(i, builder) {
-                tags = tags.add(rtBuilders.formatTags(builder.tags, branch_type));
+                var builderTags = rtBuilders.formatTags(builder.tags, branch_type);
+                tags = tags.add(builderTags);
 
                 $.each(builder.tags, function eachBuilderTag(i, tag) {
                     // If we found a branch tag then add it
@@ -165,19 +129,23 @@ define(function (require) {
                         branch_tags.add(tag.toLowerCase());
                     }
                 });
+
+                if (builderTags.length > 1){
+                    tags.add(builderTags.join(tagSeparator));
+                }
             });
 
             tags.add(extra_tags)
         },
         getSelectedTags: function getSelectedTags() {
             var selectedTags = [];
-
-            $.each($tagsSelect, function(index, el) {
-                var tag = $(el).val();
-                if(tag.length){
-                    selectedTags.push(tag.trim());
-                }
-            });
+            if ($tagsSelect !== undefined && $tagsSelect.val() !== undefined) {
+                $.each($tagsSelect.val().split(","), function (i, tag) {
+                    if (tag.length) {
+                        selectedTags.push(tag.trim());
+                    }
+                });
+            }
 
             return selectedTags;
         },
@@ -198,6 +166,7 @@ define(function (require) {
                 }
 
                 var filteredTags = rtBuilders.filterTags(builderTags, branch_type);
+
                 if (selectedTags.length == 0 && (builderTags.length > 0 && filteredTags.length === 0 || builderTags.length !== filteredTags.length)) {
                     return builderTags.some(hasBranch);
                 }
@@ -215,43 +184,16 @@ define(function (require) {
                     selectedTags.push(branch_type);
                 }
 
-                if (!selectedTags.length) {
-                    return result;
+                if(filteredTags.length > 1) {
+                    filteredTags.push(filteredTags.join(tagSeparator));
                 }
 
-                if (rtBuilders.orCondition()) {
-                    $.each(selectedTags[0].split(','), function eachSelectedTag(i, tag) {
-                            if ((tag === NO_TAG && filteredTags.length === 0 && builderTags.some(hasBranch)) || ($.inArray(tag, filteredTags) > -1)) {
-                                result = true;
-                                return false;
-                            }
-                        }
-                    );
-
-                } else {
-                    $.each(selectedTags, function eachSelectedSetTag(i, tagSet) {
-                        if (! tagSet){
-                            return false;
-                        }
-                        var subTags = tagSet.split(',');
-                        var subResult = true;
-                        $.each(subTags, function eachSelectedTag(i, tag) {
-                            if (tag === NO_TAG && filteredTags.length == 0 && builderTags.some(hasBranch)) {
-                                // Exit early we have found a builder with the branch as a tag
-                                return false;
-                            }
-
-                            else if ($.inArray(tag, filteredTags) === -1) {
-                                subResult = false;
-                                return false;
-                            }
-                        });
-                        if (subResult) {
-                            result = true;
-                            return false;
-                        }
-                    });
-                }
+                $.each(selectedTags, function eachSelectedTag(i, tag) {
+                    if ((tag === NO_TAG && filteredTags.length === 0 && builderTags.some(hasBranch)) || ($.inArray(tag, filteredTags) > -1)) {
+                        result = true;
+                        return false;
+                    }
+                });
                 return result;
             };
         },
