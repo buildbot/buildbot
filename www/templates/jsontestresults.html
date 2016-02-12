@@ -2,15 +2,14 @@
 
 {% block suites %}
    <div class="content container">
-    {% set suiteNum = 0 %}
     {% for suite in data.suites %}
         {% if suite.summary.result %}
             <div class="row">
                 <h4>Suite type: {{ suite.name }}</h4>
                 {% if data.utrPrefix %}
-                    <a class="label label-default collapse" data-target="#suiteCommand{{ suiteNum }}" href="#suiteCommand{{ suiteNum }}">Command to run locally</a>
+                    <a class="label label-default collapse" data-target="#suiteCommand{{ loop.index }}">Command to run locally</a>
 
-                    <div id="suiteCommand{{ suiteNum }}" class="report-command">
+                    <div id="suiteCommand{{ loop.index }}" class="report-command">
                         <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }}" onclick="this.select();" readonly/>
                     </div>
                 {% endif %}
@@ -64,15 +63,15 @@
                 </thead>
 
                 <tbody>
-                {% set i = 0 %}
+                {% set outer_loop = loop %}
                 {% for test in suite.tests %}
                     <tr>
                         <td class="txt-align-left">
                             <h5><strong>{{ test.name }}</strong></h5>
                             {% if data.utrPrefix %}
-                                <a class="label label-default collapse" data-target="#testCommand{{ suiteNum }}{{ i }}">Command to run locally</a>
+                                <a class="label label-default collapse" data-target="#testCommand{{ outer_loop.index }}{{ loop.index }}">Command to run locally</a>
 
-                                <div id="testCommand{{ suiteNum }}{{ i }}" class="report-command">
+                                <div id="testCommand{{ outer_loop.index }}{{ loop.index }}" class="report-command">
                                     <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
                                 </div>
                             {% endif %}
@@ -132,14 +131,11 @@
                             <td>&nbsp;</td>
                         </tr>
                     {% endif %}
-
-                    {% set i = i + 1 %}
                 {% endfor %}
                 </tbody>
             </table>
             <a class="back-top-top" href="#top">Back to top</a>
         </div>
-      {% set suiteNum = suiteNum + 1 %}
     {% endfor %}
 
 </div>
