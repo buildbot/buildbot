@@ -5,12 +5,16 @@ define(function (require) {
     var $ = require("jquery"),
         rtBuilders = require("rtBuilders"),
         helpers = require("helpers"),
+        tagSeparator = " && ",
         nightlyTag = "Nightly",
         abvTag = [
             ["ABV"]
         ],
         abvNightlyTag = [
             ["ABV", "Nightly"]
+        ],
+        abvNightlyTag_reversed = [
+            ["Nightly", "ABV"]
         ],
         trunk = [
             ["Trunk"]
@@ -30,6 +34,10 @@ define(function (require) {
         trunkWIPTags = [
           ["Trunk", "WIP"]
         ],
+
+        trunkWIPTags_reversed = [
+          ["WIP", "Trunk"]
+        ],
         unstableNightly = [
             ["Nightly", "Unstable"]
         ],
@@ -47,6 +55,17 @@ define(function (require) {
             noTags,
             abvNightlyTag,
             trunkWIPTags
+        ],
+        expandedBuilders_reversed = [
+            trunk,
+            trunkNightly,
+            unity46,
+            unity46Nightly,
+            trunkWIPTags,
+            trunkWIPTags_reversed,
+            noTags,
+            abvNightlyTag_reversed,
+            abvNightlyTag
         ],
         unstableBuilders = [
             abvTag,
@@ -89,17 +108,6 @@ define(function (require) {
                 rtBuilders.setHideUnstable(false);
             }
 
-            // Set filtering condition
-            if (test.and_condition === true) {
-                rtBuilders.orCondition = function(){
-                    return false;
-                };
-            } else {
-                 rtBuilders.orCondition = function(){
-                    return true;
-                };
-            }
-
             var result = $.grep(builders, function (a) {
                 return filter(undefined, undefined, undefined, {tags: a[0]});
             });
@@ -121,27 +129,6 @@ define(function (require) {
             testTagFilter(tests, simpleBuilders);
         });
 
-        it("are filtered - OR condition with AND enabled", function () {
-            var tests_and = [
-                {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV"], and_condition: true},
-                {branch: "", result: [abvNightlyTag], tags: ["Nightly"], and_condition: true},
-                {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV", "Nightly"], and_condition: true}
-            ];
-
-            testTagFilter(tests_and, simpleBuilders);
-
-        });
-
-        it("are filtered - AND condition", function () {
-            var tests_and = [
-                {branch: "", result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true},
-                {branch: "", result: [unstableNightly], tags: ["Nightly,Unstable"], and_condition: true},
-                {branch: "", result: [abvTag, abvNightlyTag, unstableNightly], tags: ["ABV", "Nightly,Unstable"], and_condition: true}
-            ];
-
-            testTagFilter(tests_and, unstableBuilders);
-        });
-
         it("are not filtered when no tags are selected", function () {
             var tests = [
                 {branch: "", result: expandedBuilders, tags: []},
@@ -153,16 +140,17 @@ define(function (require) {
             testTagFilter(tests, expandedBuilders);
         });
 
-        it("are not filtered when no tags are selected - OR condition with AND enabled", function () {
+        it("shows only 'No Tag' builders even if there are multiple tags selected", function () {
             var tests = [
-                {branch: "", result: expandedBuilders, tags: []},
-                {branch: "trunk", result: [trunk, trunkNightly, noTags, abvNightlyTag, trunkWIPTags], tags: [], and_condition: true},
-                {branch: "release/5.0/test", result: [trunk, trunkNightly, noTags, abvNightlyTag, trunkWIPTags], tags: [], and_condition: true},
-                {branch: "release/4.6/test", result: [unity46, unity46Nightly, noTags, abvNightlyTag], tags: [], and_condition: true}
+                {branch: "trunk", result: [trunk, noTags, abvNightlyTag], tags: [rtBuilders.noTag, "ABV"]},
+                {branch: "release/5.0/test", result: [trunk, noTags, abvNightlyTag], tags: [rtBuilders.noTag, "ABV"]},
+                {branch: "4.6/release/test", result: [unity46, noTags, abvNightlyTag], tags: [rtBuilders.noTag, "ABV"]},
+                {branch: "", result: [noTags, abvNightlyTag], tags: [rtBuilders.noTag, "ABV"]}
             ];
 
             testTagFilter(tests, expandedBuilders);
         });
+
 
         it("filters tags based on branch", function () {
             var noTagsTag = rtBuilders.noTag,
@@ -182,35 +170,18 @@ define(function (require) {
 
         });
 
-        it("filters tags based on branch - OR condition with AND enabled", function () {
-            var noTagsTag = rtBuilders.noTag,
-                tests = [
-                    {branch: "trunk", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag], and_condition: true},
-                    {branch: "release/4.6/test", result: [unity46Nightly, abvNightlyTag], tags: [nightlyTag], and_condition: true},
-                    {branch: "5.0/release/test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag], and_condition: true},
-                    {branch: "5.1/release/test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag], and_condition: true},
-                    {branch: "test", result: [trunkNightly, abvNightlyTag], tags: [nightlyTag], and_condition: true},
-                    {branch: undefined, result: [abvNightlyTag], tags: [nightlyTag], and_condition: true},
-                    {branch: undefined, result: expandedBuilders, tags: [], and_condition: true},
-                    {branch: undefined, result: [noTags], tags: [noTagsTag], and_condition: true},
-                    {branch: "trunk", result: [trunk, noTags], tags: [noTagsTag], and_condition: true}
+        it("filters tags based on branch extended tags options", function () {
+            var tests = [
+                    {branch: "trunk", result: [abvNightlyTag_reversed, abvNightlyTag], tags: [abvNightlyTag[0].join(tagSeparator)]},
+                    {branch: "release/4.6/test", result: [unity46Nightly, abvNightlyTag_reversed, abvNightlyTag], tags: [nightlyTag, abvNightlyTag[0].join(tagSeparator)]},
+                    {branch: "5.0/release/test", result: [abvNightlyTag_reversed, abvNightlyTag], tags: [abvNightlyTag[0].join(tagSeparator)]},
+                    {branch: "5.1/release/test", result: [abvNightlyTag_reversed, abvNightlyTag], tags: [abvNightlyTag[0].join(tagSeparator)]},
+                    {branch: "test", result: [abvNightlyTag_reversed, abvNightlyTag], tags: [abvNightlyTag[0].join(tagSeparator)]} ,
+                    {branch: "", result: [trunkWIPTags, trunkWIPTags_reversed], tags: [trunkWIPTags[0].join(tagSeparator)]}
                 ];
 
-            testTagFilter(tests, expandedBuilders);
-        });
+            testTagFilter(tests, expandedBuilders_reversed);
 
-        it("filters tags based on branch - AND condition", function () {
-            var noTagsTag = rtBuilders.noTag,
-                tests = [
-                    {branch: "trunk", result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true},
-                    {branch: "release/4.6/test", result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true},
-                    {branch: "5.0/release/test", result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true},
-                    {branch: "5.1/release/test", result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true},
-                    {branch: "test", result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true},
-                    {branch: undefined, result: [abvNightlyTag], tags: ["ABV,Nightly"], and_condition: true}
-                ];
-
-            testTagFilter(tests, expandedBuilders);
         });
 
         it("hides tags not for this branch", function () {
@@ -222,22 +193,6 @@ define(function (require) {
                 {tag: "NoBranch", branch_type: undefined, result: true},
                 {tag: "4.6", branch_type: "4.6", result: false},
                 {tag: "Trunk", branch_type: "Trunk", result: false}
-            ];
-
-            $.each(tags, function (i, dict) {
-                expect(rtBuilders.tagVisibleForBranch(dict.tag, dict.branch_type)).toEqual(dict.result);
-            });
-        });
-
-        it("hides tags not for this branch - OR condition with AND enabled", function () {
-            var tags = [
-                {tag: "ABV", branch_type: "4.6", result: true, and_condition: true},
-                {tag: "4.6-ABV", branch_type: "4.6", result: true, and_condition: true},
-                {tag: "Trunk-ABV", branch_type: "4.6", result: false, and_condition: true},
-                {tag: "Trunk-ABV", branch_type: "trunk", result: true, and_condition: true},
-                {tag: "NoBranch", branch_type: undefined, result: true, and_condition: true},
-                {tag: "4.6", branch_type: "4.6", result: false, and_condition: true},
-                {tag: "Trunk", branch_type: "Trunk", result: false, and_condition: true}
             ];
 
             $.each(tags, function (i, dict) {
@@ -259,20 +214,6 @@ define(function (require) {
             });
         });
 
-        it("format correctly - OR condition with AND enabled", function () {
-            var tags = [
-                {tag: "4.6-ABV", branch_type: "4.6", result: "ABV", and_condition: true},
-                {tag: "Trunk-ABV", branch_type: "trunk", result: "ABV", and_condition: true},
-                {tag: "ABV", branch_type: "trunk", result: "ABV", and_condition: true},
-                {tag: ["Nightly", "4.6-ABV"], branch_type: "4.6", result: ["Nightly", "ABV"], and_condition: true},
-                {tag: "4.6-ABV", branch_type: undefined, result: "4.6-ABV", and_condition: true}
-            ];
-
-            $.each(tags, function (i, dict) {
-                expect(rtBuilders.formatTags(dict.tag, dict.branch_type)).toEqual(dict.result);
-            });
-        });
-
         it("are filtered and hide unstable", function () {
             var tests = [
                 {branch: "", result: [trunk], tags: ["Trunk"], hide_unstable: true},
@@ -280,27 +221,6 @@ define(function (require) {
                 {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV"], hide_unstable: true},
                 {branch: "", result: [abvNightlyTag, unstableNightly], tags: ["Nightly"], hide_unstable: false},
                 {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV", "Nightly"], hide_unstable: true},
-            ];
-
-            testTagFilter(tests, unstableBuilders);
-        });
-
-         it("are filtered and hide unstable - OR condition with AND enabled", function () {
-            var tests = [
-                {branch: "", result: [trunk], tags: ["Trunk"], hide_unstable: true, and_condition: true},
-                {branch: "", result: [trunkWIPTags, trunk], tags: ["Trunk"], hide_unstable: false, and_condition: true},
-                {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV"], hide_unstable: true, and_condition: true},
-                {branch: "", result: [abvNightlyTag, unstableNightly], tags: ["Nightly"], hide_unstable: false, and_condition: true},
-                {branch: "", result: [abvTag, abvNightlyTag], tags: ["ABV", "Nightly"], hide_unstable: true, and_condition: true},
-            ];
-
-            testTagFilter(tests, unstableBuilders);
-        });
-
-        it("are filtered and hide unstable - AND condition", function () {
-            var tests = [
-                {branch: "", result: [], tags: ["Nightly,Unstable"], hide_unstable: true, and_condition: true},
-                {branch: "", result: [abvTag, abvNightlyTag], tags: ["Nightly,Unstable", "ABV"], hide_unstable: true, and_condition: true}
             ];
 
             testTagFilter(tests, unstableBuilders);
