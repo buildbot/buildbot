@@ -33,7 +33,7 @@
                             <li><b id="Error">Ignored </b><span>{{ ts.ignored }}</span></li>
                             <li><b id="Error">Skipped </b><span>{{ ts.skipped }}</span></li>
                             <li><b id="Error">Inconclusive </b><span>{{ ts.inconclusive }}</span></li>
-                            <li data-time="{{ ts.time }}"><b id="Time">Time(s) </b>{{ ts.time }}</li>
+                            <li data-time="{{ ts.time }}"><b id="Time">Time(s) </b></li>
                         </ul>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                             <td class="txt-align-left first-child "><span>{{ test.name }}</span></td>
                             <td class="{{ test.result }}">{{ test.result }}</td>
                             {% if test.time %}
-                                <td data-time="{{ test.time }}">{{ test.time }}</td>
+                                <td data-time="{{ test.time }}"></td>
                             {% else %}
                                 <td>N/A</td>
                             {% endif %}

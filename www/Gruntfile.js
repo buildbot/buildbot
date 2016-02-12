@@ -35,7 +35,7 @@ module.exports = function (grunt) {
                     dest: "prod/script/main.js",
                     include: [
                         "require.js",
-                        "testResults",
+                        "rtTestReport",
                         "buildLog",
                         "buildLogiFrame",
                         "login"
@@ -218,7 +218,7 @@ module.exports = function (grunt) {
         if (overrideTarget !== undefined) {
             target = overrideTarget;
         }
-        grunt.task.run(["fontelloUpdate", "sass", "cssmin", "handlebars:compile", "requirejs:" + target]);
+        grunt.task.run(["sass", "cssmin", "handlebars:compile", "requirejs:" + target]);
     });
     grunt.registerTask("test", ["karma:unit"]);
     grunt.registerTask("coverage", ["karma:coverage", "open:coverage"]);

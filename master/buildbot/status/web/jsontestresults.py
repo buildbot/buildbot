@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 import json
 from twisted.python import log
-from os.path import join
+from os.path import join, basename, splitext
 from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_builders, path_to_codebases, path_to_build
 
 
@@ -45,6 +45,8 @@ class JSONTestResource(HtmlResource):
         cxt['build_number'] = b.getNumber()
         cxt['path_to_artifacts'] = self.get_artifact_path(b)
         cxt['join'] = join
+        cxt['basename'] = basename
+        cxt['splitext'] = splitext
         cxt['selectedproject'] = project
 
         try:

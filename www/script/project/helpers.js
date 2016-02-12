@@ -28,7 +28,10 @@ define(function (require) {
             NOT_STARTED: [10, "not-started"],
             None: ""
         },
-        settings = {};
+        settings = {},
+        key_codes = {
+           ENTER : 13
+        };
 
     $.each(css_classes, function (key, val) {
         css_class_enum[key] = val[0];
@@ -651,7 +654,8 @@ define(function (require) {
               $.cookie('exthistorylist', cookie, {expires: 10000000000, path: "/"});
             }
           }              
-        }
+        },
+        keyCodes : key_codes
       };
 
     return helpers;
