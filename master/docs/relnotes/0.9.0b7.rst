@@ -1,16 +1,9 @@
-Release Notes for Buildbot |version|
-====================================
+Release Notes for Buildbot 0.9.0b7
+==================================
 
-..
-    Any change that adds a feature or fixes a bug should have an entry here.
-    Most simply need an additional bulleted list item, but more significant
-    changes can be given a subsection of their own.
 
-..
-    NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b{1,2,3,4,5}
-    into one single set of notes.  Also, link prominently to the migration guide.
-
-The following are the release notes for Buildbot |version|
+The following are the release notes for Buildbot 0.9.0b7
+This version was released on February 14, 2016.
 
 See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
@@ -23,8 +16,15 @@ Features
 Fixes
 ~~~~~
 
+* Fix incompatibility with MySQL-5.7 (:bug:`3421`)
+* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be catched by travis)
+* Fix regressions in forcescheduler UI (:bug:`3416`, :bug:`3418`, :bug:`3422`)
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The ``buildbot`` Python dist now (finally) requires SQLAlchemy-0.8.0 or later and SQLAlchemy-Migrate-0.9.0 or later.
+  While the old pinned versions (0.7.10 and 0.7.2, respectively) still work, this compatibility is no longer tested and this configuration should be considered deprecated.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +48,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0b7..master
+   git log v0.9.0b6..v0.9.0b7
 
 Older Versions
 --------------
@@ -59,7 +59,6 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
-    0.9.0b7
     0.9.0b6
     0.9.0b5
     0.9.0b4
