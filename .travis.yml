@@ -11,14 +11,19 @@ env:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install libsasl2-dev libmysqlclient-dev libldap2-dev libssl-dev python-dev
+  - npm install -g grunt-cli
 
 install:
   - "pip install -e $TEST_TARGET"
   - "pip install -v mock==1.0.1"
   - "pip install -v pyflakes"
   - "pip install -v coveralls"
+  - "cd www/"
+  - "npm install"
 
-script: if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot ; else coverage run `which trial` buildslave ; fi
+script:
+  - if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot ; else coverage run `which trial` buildslave ; fi
+  - grunt test --verbose --force
 
 after_success:
   - coveralls
