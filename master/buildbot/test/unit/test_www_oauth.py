@@ -87,7 +87,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
                "ogleapis.com%2Fauth%2Fuserinfo.profile&hd=example.com&redirect_uri=h%3A%2Fa%2Fb"
                "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
-        self.assert(res, exp)
+        self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_getGithubLoginURL(self):
