@@ -80,7 +80,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getGoogleLoginURLWithHD(self):
-        googleAuthWithHD = auth2.GoogleAuth(
+        googleAuthWithHD = oauth2.GoogleAuth(
             "ggclientID", "clientSECRET", False, "example.com")
         res = yield googleAuthWithHD.getLoginURL(None)
         exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
