@@ -15,10 +15,10 @@ before_install:
   - if [ $TEST_TARGET = javascript]; then npm install -g grunt-cli; fi
 
 install:
-  - pip install -e $TEST_TARGET
-  - pip install -v mock==1.0.1
-  - pip install -v pyflakes
-  - pip install -v coveralls
+  - if [ "$TEST_TARGET" != "javascript" ]; then pip install -e $TEST_TARGET; fi
+  - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v mock==1.0.1; fi
+  - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v pyflakes; fi
+  - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v coveralls; fi
   - if [ "$TEST_TARGET" = "javascript" ]; then cd www/; fi
   - if [ "$TEST_TARGET" = "javascript" ]; then npm install; fi
 
@@ -28,4 +28,4 @@ script:
   - if [ "$TEST_TARGET" = "javascript" ]; then grunt test --verbose --force; fi
 
 after_success:
-  - coveralls
+  - if [ "$TEST_TARGET" != "javascript" ]; then coveralls; fi
