@@ -274,6 +274,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             inspector = Inspector.from_engine(conn.engine)
 
             def check_name(name, table_name, item_type):
+                if not name:
+                    return
                 self.assertTrue(
                     u"slave" not in name.lower(),
                     msg=u"'slave'-named {type} in table '{table}': "
@@ -292,7 +294,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
                 # Check foreign key names.
                 for fk_info in inspector.get_foreign_keys(table_name):
-                    check_name(fk_info['name'] or u'', table_name, u"foreign key")
+                    check_name(fk_info['name'], table_name, u"foreign key")
 
                 # Check indexes names.
                 for index_info in inspector.get_indexes(table_name):
@@ -300,7 +302,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
                 # Check primary keys constraints names.
                 pk_info = inspector.get_pk_constraint(table_name)
-                check_name(pk_info.get('name', u''), table_name, u"primary key")
+                check_name(pk_info.get('name'), table_name, u"primary key")
 
             # Test that no "slave"-named items present in schema
             for name in inspector.get_schema_names():
