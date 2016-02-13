@@ -839,7 +839,8 @@ class TestRealDB(unittest.TestCase,
                          'change_properties', 'scheduler_changes', 'schedulers',
                          'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
                          'users', 'buildsets', 'workers', 'builders', 'masters',
-                         'buildrequests', 'builds', 'buildset_sourcestamps'])
+                         'buildrequests', 'builds', 'buildset_sourcestamps',
+                         'workers'])
 
         @d.addCallback
         def finish_setup(_):

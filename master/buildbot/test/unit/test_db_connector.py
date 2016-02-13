@@ -41,7 +41,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
             'changes', 'change_properties', 'change_files', 'patches',
             'sourcestamps', 'buildset_properties', 'buildsets',
             'sourcestampsets', 'builds', 'builders', 'masters',
-            'buildrequests'])
+            'buildrequests', 'workers'])
 
         self.master = fakemaster.make_master()
         self.master.config = config.MasterConfig()

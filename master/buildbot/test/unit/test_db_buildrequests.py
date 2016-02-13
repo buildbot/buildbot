@@ -737,7 +737,7 @@ class TestRealDB(unittest.TestCase,
             table_names=['patches', 'changes', 'builders',
                          'buildsets', 'buildset_properties', 'buildrequests',
                          'buildset_sourcestamps', 'masters', 'buildrequest_claims',
-                         'sourcestamps', 'sourcestampsets', 'builds'
+                         'sourcestamps', 'sourcestampsets', 'builds', 'workers',
                          ])
 
         @d.addCallback
