@@ -23,6 +23,14 @@ monkeypatches.patch_all(for_tests=True)
 import warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
 
+import sys
+if sys.version_info[:2] < (3, 2):
+    # Setup logging unhandled messages to stderr.
+    # Since Python 3.2 similar functionality implemented through
+    # logging.lastResort handler
+    import logging
+    logging.getLogger().addHandler(logging.StreamHandler())
+
 # import mock so we bail out early if it's not installed
 try:
     import mock

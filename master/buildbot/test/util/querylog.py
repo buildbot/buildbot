@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 
 import logging
+import contextlib
 
 from twisted.python import log
 
@@ -30,10 +31,53 @@ class PythonToTwistedHandler(logging.Handler):
         log.msg(record.getMessage())
 
 
-def log_from_engine(engine):
-    # add the handler *before* enabling logging, so that no "default" logger
-    # is added automatically, but only do so once.  This is important since
-    # logging's loggers are singletons
-    if not engine.logger.handlers:
-        engine.logger.addHandler(PythonToTwistedHandler())
-    engine.echo = True
+_handler = None
+
+
+def start_log_queries():
+    global _handler
+    if _handler is None:
+        _handler = PythonToTwistedHandler()
+
+    # In 'sqlalchemy.engine' logging namespace SQLAlchemy outputs SQL queries
+    # on INFO level, and SQL queries results on DEBUG level.
+    logger = logging.getLogger('sqlalchemy.engine')
+
+    # TODO: this is not documented field of logger, so it's probably private.
+    prev_level = logger.level
+    logger.setLevel(logging.INFO)
+
+    logger.addHandler(_handler)
+
+    # Do not propagate SQL echoing into ancestor handlers
+    prev_propagate = logger.propagate
+    logger.propagate = False
+
+    # Return previous values of settings, so they can be carefully restored
+    # later.
+    return prev_level, prev_propagate
+
+
+def stop_log_queries(level=None, propagate=None):
+    assert _handler is not None
+
+    logger = logging.getLogger('sqlalchemy.engine')
+    logger.removeHandler(_handler)
+
+    # Restore logger settings or set them to reasonable defaults.
+    if propagate is not None:
+        logger.propagate = propagate
+    else:
+        logger.propagate = True
+
+    if level is not None:
+        logger.setLevel(level)
+    else:
+        logger.setLevel(logging.NOTSET)
+
+
+@contextlib.contextmanager
+def log_queries():
+    level, propagate = start_log_queries()
+    yield
+    stop_log_queries(level=level, propagate=propagate)
