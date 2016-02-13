@@ -31,10 +31,21 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         return self.tearDownMigrateTest()
 
     def _define_old_tables(self, metadata):
-        self.buildrequests = sa.Table('buildrequests', metadata,
-                                      sa.Column('id', sa.Integer, primary_key=True),
-                                      # ...
-                                      )
+        self.buildrequests = sa.Table(
+            'buildrequests', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'),
+                      nullable=False),
+            # ...
+        )
+
+        self.buildsets = sa.Table(
+            'buildsets', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('parent_buildid', sa.Integer,
+                      sa.ForeignKey('builds.id', use_alter=True, name='parent_buildid')),
+            # ...
+        )
 
         self.builders = sa.Table('builders', metadata,
                                  sa.Column('id', sa.Integer, primary_key=True),
@@ -94,14 +105,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
         self._define_old_tables(metadata)
 
-        self.buildrequests.create()
-        self.builders.create()
-        self.builder_masters.create()
-        self.masters.create()
-        self.builds.create()
-        self.buildslaves.create()
-        self.configured_buildslaves.create()
-        self.connected_buildslaves.create()
+        metadata.create_all()
 
         sa.Index('builds_buildrequestid', self.builds.c.buildrequestid).create()
         sa.Index('builds_number',
@@ -155,9 +159,13 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 dict(id=10),
                 dict(id=11),
             ])
+            conn.execute(self.buildsets.insert(), [
+                dict(id=90),
+                dict(id=91),
+            ])
             conn.execute(self.buildrequests.insert(), [
-                dict(id=20),
-                dict(id=21),
+                dict(id=20, buildsetid=90),
+                dict(id=21, buildsetid=91),
             ])
             conn.execute(self.builders.insert(), [
                 dict(id=50)
