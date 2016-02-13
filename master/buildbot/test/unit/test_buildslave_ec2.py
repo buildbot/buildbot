@@ -118,8 +118,8 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',
-                                     ami=amis[0].id, 
-                                     subnet_id = subnet.id
+                                     ami=amis[0].id,
+                                     subnet_id=subnet.id
                                      )
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
