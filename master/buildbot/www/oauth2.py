@@ -157,6 +157,13 @@ class GoogleAuth(OAuth2Auth):
                                    'https://www.googleapis.com/auth/userinfo.profile'
                                    ]))
 
+    def __init__(self,
+                 clientId, clientSecret, autologin=False, hd=None, **kwargs):
+        if hd is not None:
+            self.hd = hd
+            self.authUriAdditionalParams["hd"] = self.hd
+        super(GoogleAuth,self).__init__(clientId, clientSecret, autologin=False, **kwargs)
+
     def getUserInfoFromOAuthClient(self, c):
         data = self.get(c, '/userinfo')
         return dict(full_name=data["name"],
