@@ -73,7 +73,7 @@ SQLAlchemy: http://www.sqlalchemy.org/
   Buildbot requires SQLAlchemy version 0.8.7 or higher.
   SQLAlchemy allows Buildbot to build database schemas and queries for a wide variety of database systems.
 
-SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
+SQLAlchemy-Migrate: https://sqlalchemy-migrate.readthedocs.org/en/latest/
 
   Buildbot requires SQLAlchemy-Migrate version 0.9.0 or higher.
   Buildbot uses SQLAlchemy-Migrate to manage schema upgrades from version to version.
