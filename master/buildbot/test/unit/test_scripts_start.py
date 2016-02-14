@@ -23,6 +23,7 @@ from buildbot.scripts import start
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import flaky
+from buildbot.test.util.decorators import skipIfPythonVersionIsLess
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
@@ -80,6 +81,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
+    @skipIfPythonVersionIsLess((2, 7))
     def test_start_no_daemon(self):
         d = self.runStart(nodaemon=True)
 
@@ -89,6 +91,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             print(res)
         return d
 
+    @skipIfPythonVersionIsLess((2, 7))
     def test_start_quiet(self):
         d = self.runStart(quiet=True)
 
