@@ -15,116 +15,8 @@
 
 import sqlalchemy as sa
 
-from buildbot.util import sautils
 from buildbot.db.types.json import JsonObject
-
-
-def _buildslaves_old_table(table_name, metadata, autoload=False):
-    return sautils.Table(
-        table_name, metadata,
-        sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("name", sa.String(50), nullable=False),
-        sa.Column("info", JsonObject, nullable=False),
-        autoload=autoload,
-    )
-
-
-def _builds_old_table(table_name, metadata, autoload=False):
-    return sautils.Table(
-        table_name, metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
-        sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                  nullable=False),
-        sa.Column('buildslaveid', sa.Integer),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                  nullable=False),
-        sa.Column('started_at', sa.Integer, nullable=False),
-        sa.Column('complete_at', sa.Integer),
-        sa.Column('state_string', sa.Text, nullable=False, server_default=''),
-        sa.Column('results', sa.Integer),
-        autoload=autoload,
-    )
-
-
-def _connected_buildslaves_old_table(table_name, metadata, autoload=False):
-    return sautils.Table(
-        table_name, metadata,
-        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('masterid', sa.Integer,
-                  sa.ForeignKey('masters.id'), nullable=False),
-        sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                  nullable=False),
-        autoload=autoload,
-    )
-
-
-def _configured_buildslaves_old_table(table_name, metadata, autoload=False):
-    return sautils.Table(
-        table_name, metadata,
-        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('buildermasterid', sa.Integer,
-                  sa.ForeignKey('builder_masters.id'), nullable=False),
-        sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                  nullable=False),
-        autoload=autoload,
-    )
-
-
-def _rename_configured_buildslaves_to_old(migrate_engine):
-    metadata = sa.MetaData()
-    metadata.bind = migrate_engine
-
-    configured_buildslaves = _configured_buildslaves_old_table(
-        'configured_buildslaves', metadata, autoload=True)
-
-    for index in configured_buildslaves.indexes:
-        index.drop()
-
-    # TODO: I believe there is a reason for doing "rename column" operation
-    # as "drop indices; rename table; create new table; migrate data;
-    # remove renamed table; create indexes"?
-    migrate_engine.execute('alter table configured_buildslaves '
-                           'rename to configured_buildslaves_old')
-
-
-def _rename_connected_buildslaves_to_old(migrate_engine):
-    metadata = sa.MetaData()
-    metadata.bind = migrate_engine
-
-    connected_buildslaves = _connected_buildslaves_old_table(
-        'connected_buildslaves', metadata, autoload=True)
-
-    for index in connected_buildslaves.indexes:
-        index.drop()
-    migrate_engine.execute('alter table connected_buildslaves '
-                           'rename to connected_buildslaves_old')
-
-
-def _rename_buildslaves_to_old(migrate_engine):
-    metadata = sa.MetaData()
-    metadata.bind = migrate_engine
-
-    buildslaves = _buildslaves_old_table(
-        'buildslaves', metadata, autoload=True)
-
-    for index in buildslaves.indexes:
-        index.drop()
-    migrate_engine.execute('alter table buildslaves '
-                           'rename to buildslaves_old')
-
-
-def _rename_builds_to_old(migrate_engine):
-    metadata = sa.MetaData()
-    metadata.bind = migrate_engine
-
-    builds = _builds_old_table('builds', metadata, autoload=True)
-
-    for index in builds.indexes:
-        index.drop()
-    migrate_engine.execute('alter table builds '
-                           'rename to builds_old')
+from buildbot.util import sautils
 
 
 def _create_configured_workers_table(migrate_engine):
@@ -141,12 +33,12 @@ def _create_configured_workers_table(migrate_engine):
     # Create 'configured_workers' table.
     configured_workers = sautils.Table(
         'configured_workers', metadata,
-         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-         sa.Column('buildermasterid', sa.Integer,
-                   sa.ForeignKey('builder_masters.id'), nullable=False),
-         sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
-                   nullable=False),
-     )
+        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+        sa.Column('buildermasterid', sa.Integer,
+                  sa.ForeignKey('builder_masters.id'), nullable=False),
+        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                  nullable=False),
+    )
     configured_workers.create()
 
     # Create indexes.
@@ -219,7 +111,7 @@ def _create_workers_table(migrate_engine):
     idx.create()
 
 
-def _create_builds_table(migrate_engine):
+def _add_workerid_fk_to_builds_table(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
@@ -228,39 +120,14 @@ def _create_builds_table(migrate_engine):
     sautils.Table('workers', metadata, autoload=True)
     sautils.Table('masters', metadata, autoload=True)
 
-    # Create 'builds' table.
-    builds = sautils.Table(
-        'builds', metadata,
-        sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
-        sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                  nullable=False),
-        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id')),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                  nullable=False),
-        sa.Column('started_at', sa.Integer, nullable=False),
-        sa.Column('complete_at', sa.Integer),
-        sa.Column('state_string', sa.Text, nullable=False, server_default=''),
-        sa.Column('results', sa.Integer),
-    )
-    builds.create()
+    builds = sautils.Table('builds', metadata, autoload=True)
+
+    workerid = sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'))
+    workerid.create(builds)
 
     # Create indexes.
-    idx = sa.Index('builds_buildrequestid', builds.c.buildrequestid)
-    idx.create()
-
-    idx = sa.Index('builds_number',
-                   builds.c.builderid, builds.c.number,
-                   unique=True)
-    idx.create()
-
     idx = sa.Index('builds_workerid',
                    builds.c.workerid)
-    idx.create()
-
-    idx = sa.Index('builds_masterid',
-                   builds.c.masterid)
     idx.create()
 
 
@@ -268,10 +135,10 @@ def _migrate_workers_table_data(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    buildslaves_old = _buildslaves_old_table('buildslaves_old', metadata)
+    buildslaves = sautils.Table('buildslaves', metadata, autoload=True)
     workers = sautils.Table('workers', metadata, autoload=True)
 
-    c = buildslaves_old.c
+    c = buildslaves.c
     q = sa.select([c.id, c.name, c.info])
 
     # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
@@ -284,12 +151,12 @@ def _migrate_configured_workers_table_data(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    configured_buildslaves_old = _configured_buildslaves_old_table(
-        'configured_buildslaves_old', metadata)
+    configured_buildslaves = sautils.Table(
+        'configured_buildslaves', metadata, autoload=True)
     configured_workers = sautils.Table(
         'configured_workers', metadata, autoload=True)
 
-    c = configured_buildslaves_old.c
+    c = configured_buildslaves.c
     q = sa.select([c.id, c.buildermasterid, c.buildslaveid.label('workerid')])
 
     # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
@@ -302,12 +169,12 @@ def _migrate_connected_workers_table_data(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    connected_buildslaves_old = _connected_buildslaves_old_table(
-        'connected_buildslaves_old', metadata)
+    connected_buildslaves = sautils.Table(
+        'connected_buildslaves', metadata, autoload=True)
     connected_workers = sautils.Table(
         'connected_workers', metadata, autoload=True)
 
-    c = connected_buildslaves_old.c
+    c = connected_buildslaves.c
     q = sa.select([c.id, c.masterid, c.buildslaveid.label('workerid')])
 
     # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
@@ -320,61 +187,44 @@ def _migrate_builds_table_data(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    builds_old = _builds_old_table('builds_old', metadata)
     builds = sautils.Table('builds', metadata, autoload=True)
 
-    c = builds_old.c
-    q = sa.select([
-        c.id,
-        c.number,
-        c.builderid,
-        c.buildrequestid,
-        c.buildslaveid.label('workerid'),
-        c.masterid,
-        c.started_at,
-        c.complete_at,
-        c.state_string,
-        c.results
-    ])
-
-    # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
-    # (this comment from 011_add_buildrequest_claims.py)
-    migrate_engine.execute(
-        str(sautils.InsertFromSelect(builds, q)))
+    s = builds.update().values(workerid=builds.c.buildslaveid)
+    migrate_engine.execute(s)
 
 
-def _drop_old_configured_buildslaves(migrate_engine):
+def _drop_configured_buildslaves(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    configured_buildslaves_old = _configured_buildslaves_old_table(
-        'configured_buildslaves_old', metadata)
-    configured_buildslaves_old.drop()
+    configured_buildslaves = sautils.Table(
+        'configured_buildslaves', metadata, autoload=True)
+    configured_buildslaves.drop()
 
 
-def _drop_old_connected_buildslaves(migrate_engine):
+def _drop_connected_buildslaves(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    connected_buildslaves_old = _connected_buildslaves_old_table(
-        'connected_buildslaves_old', metadata)
-    connected_buildslaves_old.drop()
+    connected_buildslaves = sautils.Table(
+        'connected_buildslaves', metadata, autoload=True)
+    connected_buildslaves.drop()
 
 
-def _drop_old_builds(migrate_engine):
+def _drop_buildslaveid_column_in_builds(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    builds_old = _builds_old_table('builds_old', metadata)
-    builds_old.drop()
+    builds = sautils.Table('builds', metadata, autoload=True)
+
+    builds.c.buildslaveid.drop()
 
 
-def _drop_old_buildslaves(migrate_engine):
+def _drop_buildslaves(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    buildslaves_old = _buildslaves_old_table(
-        'buildslaves_old', metadata)
+    buildslaves_old = sautils.Table('buildslaves', metadata, autoload=True)
     buildslaves_old.drop()
 
 
@@ -411,28 +261,66 @@ def _validate_builds_buildslaves(migrate_engine):
 
 
 def upgrade(migrate_engine):
+    # DB schema in version 044:
+    #
+    # buildslaves:
+    #     ...
+    #
+    # builds:
+    #     buildslaveid: Integer
+    #     ...
+    #
+    # configured_buildslaves:
+    #     buildslaveid: Integer, ForeignKey('buildslaves.id')
+    #     ...
+    #
+    # connected_buildslaves:
+    #     buildslaveid: Integer, ForeignKey('buildslaves.id')
+    #     ...
+    #
+    # Desired DB schema in version 045:
+    #
+    # workers:
+    #     ...
+    #
+    # builds:
+    #     workerid: Integer, ForeignKey('workers.id')
+    #     ...
+    #
+    # configured_workers:
+    #     workerid: Integer, ForeignKey('workers.id')
+    #     ...
+    #
+    # connected_workers:
+    #     workerid: Integer, ForeignKey('workers.id')
+    #     ...
+    #
+    # So we need to rename three tables, references to them, and add new
+    # foreign key (issue #3088).
+    # Plus indexes must be renamed/recreated.
+    #
+    # There is no external references on tables that being renamed
+    # (i.e. on 'buildslaves', 'configured_buildslaves',
+    # 'connected_buildslaves'), so we can safely recreate them without worrying
+    # that ForeignKey constraints will be violated.
+
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
     # Validate builds -> buildslaves relation.
     _validate_builds_buildslaves(migrate_engine)
 
-    _rename_configured_buildslaves_to_old(migrate_engine)
-    _rename_connected_buildslaves_to_old(migrate_engine)
-    _rename_buildslaves_to_old(migrate_engine)
-    _rename_builds_to_old(migrate_engine)
-
     _create_workers_table(migrate_engine)
     _create_configured_workers_table(migrate_engine)
     _create_connected_workers_table(migrate_engine)
-    _create_builds_table(migrate_engine)
+    _add_workerid_fk_to_builds_table(migrate_engine)
 
     _migrate_workers_table_data(migrate_engine)
     _migrate_configured_workers_table_data(migrate_engine)
     _migrate_connected_workers_table_data(migrate_engine)
     _migrate_builds_table_data(migrate_engine)
 
-    _drop_old_builds(migrate_engine)
-    _drop_old_connected_buildslaves(migrate_engine)
-    _drop_old_configured_buildslaves(migrate_engine)
-    _drop_old_buildslaves(migrate_engine)
+    _drop_buildslaveid_column_in_builds(migrate_engine)
+    _drop_connected_buildslaves(migrate_engine)
+    _drop_configured_buildslaves(migrate_engine)
+    _drop_buildslaves(migrate_engine)

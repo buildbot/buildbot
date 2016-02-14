@@ -17,6 +17,7 @@ import sqlalchemy as sa
 
 from buildbot.db.types.json import JsonObject
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from sqlalchemy.engine.reflection import Inspector
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -31,7 +32,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         return self.tearDownMigrateTest()
 
     def _define_old_tables(self, metadata):
-        self.buildrequests = sa.Table(
+        self.buildrequests = sautils.Table(
             'buildrequests', metadata,
             sa.Column('id', sa.Integer, primary_key=True),
             sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'),
@@ -39,7 +40,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # ...
         )
 
-        self.buildsets = sa.Table(
+        self.buildsets = sautils.Table(
             'buildsets', metadata,
             sa.Column('id', sa.Integer, primary_key=True),
             sa.Column('parent_buildid', sa.Integer,
@@ -47,57 +48,64 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # ...
         )
 
-        self.builders = sa.Table('builders', metadata,
-                                 sa.Column('id', sa.Integer, primary_key=True),
-                                 # ...
-                                 )
+        self.builders = sautils.Table(
+            'builders', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            # ...
+        )
 
-        self.builder_masters = sa.Table('builder_masters', metadata,
-                                        sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                        # ...
-                                        )
+        self.builder_masters = sautils.Table(
+            'builder_masters', metadata,
+            sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+            # ...
+        )
 
-        self.masters = sa.Table("masters", metadata,
-                                sa.Column('id', sa.Integer, primary_key=True),
-                                # ...
-                                )
+        self.masters = sautils.Table(
+            "masters", metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            # ...
+        )
 
-        self.builds = sa.Table('builds', metadata,
-                               sa.Column('id', sa.Integer, primary_key=True),
-                               sa.Column('number', sa.Integer, nullable=False),
-                               sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
-                               sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
-                                         nullable=False),
-                               sa.Column('buildslaveid', sa.Integer),
-                               sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
-                                         nullable=False),
-                               sa.Column('started_at', sa.Integer, nullable=False),
-                               sa.Column('complete_at', sa.Integer),
-                               sa.Column('state_string', sa.Text, nullable=False, server_default=''),
-                               sa.Column('results', sa.Integer),
-                               )
+        self.builds = sautils.Table(
+            'builds', metadata,
+            sa.Column('id', sa.Integer, primary_key=True),
+            sa.Column('number', sa.Integer, nullable=False),
+            sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+            sa.Column('buildrequestid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+                      nullable=False),
+            sa.Column('buildslaveid', sa.Integer),
+            sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+                      nullable=False),
+            sa.Column('started_at', sa.Integer, nullable=False),
+            sa.Column('complete_at', sa.Integer),
+            sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+            sa.Column('results', sa.Integer),
+        )
 
-        self.buildslaves = sa.Table("buildslaves", metadata,
-                                    sa.Column("id", sa.Integer, primary_key=True),
-                                    sa.Column("name", sa.String(50), nullable=False),
-                                    sa.Column("info", JsonObject, nullable=False),
-                                    )
+        self.buildslaves = sautils.Table(
+            "buildslaves", metadata,
+            sa.Column("id", sa.Integer, primary_key=True),
+            sa.Column("name", sa.String(50), nullable=False),
+            sa.Column("info", JsonObject, nullable=False),
+        )
 
-        self.configured_buildslaves = sa.Table('configured_buildslaves', metadata,
-                                               sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                               sa.Column('buildermasterid', sa.Integer,
-                                                         sa.ForeignKey('builder_masters.id'), nullable=False),
-                                               sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                                                         nullable=False),
-                                               )
+        self.configured_buildslaves = sautils.Table(
+            'configured_buildslaves', metadata,
+            sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+            sa.Column('buildermasterid', sa.Integer,
+                      sa.ForeignKey('builder_masters.id'), nullable=False),
+            sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                      nullable=False),
+        )
 
-        self.connected_buildslaves = sa.Table('connected_buildslaves', metadata,
-                                              sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-                                              sa.Column('masterid', sa.Integer,
-                                                        sa.ForeignKey('masters.id'), nullable=False),
-                                              sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
-                                                        nullable=False),
-                                              )
+        self.connected_buildslaves = sautils.Table(
+            'connected_buildslaves', metadata,
+            sa.Column('id', sa.Integer, primary_key=True, nullable=False),
+            sa.Column('masterid', sa.Integer,
+                      sa.ForeignKey('masters.id'), nullable=False),
+            sa.Column('buildslaveid', sa.Integer, sa.ForeignKey('buildslaves.id'),
+                      nullable=False),
+        )
 
     def _create_tables_thd(self, conn):
         metadata = sa.MetaData()
@@ -136,7 +144,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self._create_tables_thd(conn)
 
             conn.execute(self.masters.insert(), [dict(id=2)])
-            conn.execute(self.buildrequests.insert(), [dict(id=3)])
+            conn.execute(self.buildsets.insert(), [dict(id=5)])
+            conn.execute(self.buildrequests.insert(), [dict(id=3,
+                                                            buildsetid=5)])
             conn.execute(self.builds.insert(), [
                 dict(id=10,
                      number=1,
@@ -149,6 +159,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         d = self.do_test_migration(44, 45, setup_thd, lambda conn: None)
 
         # TODO: Is there a way to check exception message?
+        # This code should raise RuntimeError with message like
+        # "'builds' table has invalid references on 'buildslaves' table".
         yield self.failUnlessFailure(d, RuntimeError)
 
     def test_update(self):
@@ -229,7 +241,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # Verify database contents.
 
             # 'workers' table contents.
-            workers = sa.Table('workers', metadata, autoload=True)
+            workers = sautils.Table('workers', metadata, autoload=True)
             c = workers.c
             q = sa.select(
                 [c.id, c.name, c.info]
@@ -241,7 +253,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 ])
 
             # 'builds' table contents.
-            builds = sa.Table('builds', metadata, autoload=True)
+            builds = sautils.Table('builds', metadata, autoload=True)
             c = builds.c
             q = sa.select(
                 [c.id, c.number, c.builderid, c.buildrequestid, c.workerid,
@@ -255,7 +267,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 ])
 
             # 'configured_workers' table contents.
-            configured_workers = sa.Table('configured_workers', metadata, autoload=True)
+            configured_workers = sautils.Table('configured_workers', metadata, autoload=True)
             c = configured_workers.c
             q = sa.select(
                 [c.id, c.buildermasterid, c.workerid]
@@ -267,7 +279,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 ])
 
             # 'connected_workers' table contents.
-            connected_workers = sa.Table('connected_workers', metadata, autoload=True)
+            connected_workers = sautils.Table(
+                'connected_workers', metadata, autoload=True)
             c = connected_workers.c
             q = sa.select(
                 [c.id, c.masterid, c.workerid]
