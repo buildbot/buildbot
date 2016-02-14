@@ -143,25 +143,76 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def setup_thd(conn):
             self._create_tables_thd(conn)
 
-            conn.execute(self.masters.insert(), [dict(id=2)])
+            conn.execute(self.masters.insert(), [
+                dict(id=1),
+                dict(id=2),
+            ])
             conn.execute(self.buildsets.insert(), [dict(id=5)])
-            conn.execute(self.buildrequests.insert(), [dict(id=3,
-                                                            buildsetid=5)])
+            conn.execute(self.buildrequests.insert(), [
+                dict(id=3, buildsetid=5),
+                dict(id=4, buildsetid=5),
+
+            ])
+            conn.execute(self.buildslaves.insert(), [
+                dict(id=30,
+                     name='worker-1',
+                     info={}),
+                dict(id=31,
+                     name='worker-2',
+                     info={"a": 1}),
+            ])
             conn.execute(self.builds.insert(), [
                 dict(id=10,
-                     number=1,
+                     number=2,
                      buildrequestid=3,
                      buildslaveid=123,
-                     masterid=2,
+                     masterid=1,
                      started_at=0,
-                     state_string='state')])
+                     state_string='state'),
+                dict(id=11,
+                     number=1,
+                     buildrequestid=4,
+                     buildslaveid=31,
+                     masterid=2,
+                     started_at=1000,
+                     state_string='state2'),
+            ])
 
-        d = self.do_test_migration(44, 45, setup_thd, lambda conn: None)
+        def verify_thd(conn):
+            metadata = sa.MetaData()
+            metadata.bind = conn
 
-        # TODO: Is there a way to check exception message?
-        # This code should raise RuntimeError with message like
-        # "'builds' table has invalid references on 'buildslaves' table".
-        yield self.failUnlessFailure(d, RuntimeError)
+            # Verify database contents.
+
+            # 'workers' table contents.
+            workers = sautils.Table('workers', metadata, autoload=True)
+            c = workers.c
+            q = sa.select(
+                [c.id, c.name, c.info]
+            ).order_by(c.id)
+            self.assertEqual(
+                q.execute().fetchall(), [
+                    (30, u'worker-1', u'{}'),
+                    (31, u'worker-2', u'{"a": 1}'),
+                ])
+
+            # 'builds' table contents.
+            builds = sautils.Table('builds', metadata, autoload=True)
+            c = builds.c
+            q = sa.select(
+                [c.id, c.number, c.builderid, c.buildrequestid, c.workerid,
+                 c.masterid, c.started_at, c.complete_at, c.state_string,
+                 c.results]
+            ).order_by(c.id)
+            # Check that build with invalid reference to buildslaves now
+            # have no reference to it.
+            self.assertEqual(
+                q.execute().fetchall(), [
+                    (10, 2, None, 3, None, 1, 0, None, u'state', None),
+                    (11, 1, None, 4, 31, 2, 1000, None, u'state2', None),
+                ])
+
+        yield self.do_test_migration(44, 45, setup_thd, verify_thd)
 
     def test_update(self):
         def setup_thd(conn):

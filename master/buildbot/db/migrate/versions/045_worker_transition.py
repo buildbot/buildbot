@@ -18,6 +18,8 @@ import sqlalchemy as sa
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
 
+from twisted.python import log
+
 
 def _create_configured_workers_table(migrate_engine):
     metadata = sa.MetaData()
@@ -214,12 +216,11 @@ def _drop_buildslaves(migrate_engine):
     buildslaves_old.drop()
 
 
-def _validate_builds_buildslaves(migrate_engine):
-    # This is consistency check for issue #3088:
+def _remove_invalid_references_in_builds(migrate_engine):
     # 'buildslaveid' column of 'builds' table don't have Foreign Key
     # constraint on 'id' column of 'buildslaves' table, so it is
     # possible that that reference is invalid.
-    # TODO: Maybe just skip invalid references?
+    # Remove such invalid references for easier resolve of #3088 later.
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
@@ -237,13 +238,21 @@ def _validate_builds_buildslaves(migrate_engine):
 
     invalid_references = q.execute().fetchall()
     if invalid_references:
+        # Report invalid references.
         def format(res):
             return ("builds.id={id} builds.buildslaveid={buildslaveid} "
                     "(not present in 'buildslaves' table)").format(
                 id=res[0], buildslaveid=res[1])
-        raise RuntimeError(
+        log.msg(
             "'builds' table has invalid references on 'buildslaves' table:\n"
             "{0}".format("\n".join(map(format, invalid_references))))
+
+        # Remove invalid references.
+        for build_id, buildslave_id, none in invalid_references:
+            assert none is None
+            q = sa.update(builds).where(builds.c.id == build_id).values(
+                buildslaveid=None)
+            q.execute()
 
 
 def upgrade(migrate_engine):
@@ -293,8 +302,8 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    # Validate builds -> buildslaves relation.
-    _validate_builds_buildslaves(migrate_engine)
+    # Remove invalid references in builds -> buildslaves relation.
+    _remove_invalid_references_in_builds(migrate_engine)
 
     _create_workers_table(migrate_engine)
     _create_configured_workers_table(migrate_engine)
