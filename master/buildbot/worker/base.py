@@ -36,7 +36,7 @@ from buildbot.status.worker import WorkerStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import deprecatedWorkerClassAttribute
+from buildbot.worker_transition import deprecatedWorkerClassProperty
 
 
 class AbstractWorker(service.BuildbotService, object):
@@ -129,7 +129,7 @@ class AbstractWorker(service.BuildbotService, object):
     def workername(self):
         # workername is now an alias to twisted.Service's name
         return self.name
-    deprecatedWorkerClassAttribute(locals(), workername)
+    deprecatedWorkerClassProperty(locals(), workername)
 
     @property
     def botmaster(self):

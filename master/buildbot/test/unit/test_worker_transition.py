@@ -27,7 +27,7 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import _compat_name
 from buildbot.worker_transition import define_old_worker_method
-from buildbot.worker_transition import deprecatedWorkerClassAttribute
+from buildbot.worker_transition import deprecatedWorkerClassProperty
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
@@ -213,7 +213,7 @@ class test_deprecatedWorkerClassAttribute(unittest.TestCase):
             @property
             def workername(self):
                 return "name"
-            deprecatedWorkerClassAttribute(locals(), workername)
+            deprecatedWorkerClassProperty(locals(), workername)
 
         c = C()
 

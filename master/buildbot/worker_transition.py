@@ -223,8 +223,8 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
         module_name, compat_name)
 
 
-def deprecatedWorkerClassAttribute(scope, attribute, compat_name=None,
-                                   new_name=None):
+def deprecatedWorkerClassProperty(scope, attribute, compat_name=None,
+                                  new_name=None):
     """Define compatibility class static attribute.
 
     :param scope: class scope (locals() in the context of a scope)
