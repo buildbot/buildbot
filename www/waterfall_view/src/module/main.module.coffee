@@ -50,7 +50,7 @@ class Waterfall extends Controller
             buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
-        @$scope.builders = @builders = @dataAccessor.getBuilders()
+        @$scope.builders = @builders = @dataAccessor.getBuilders(order: 'builderid')
         @$scope.builders.queryExecutor.isFiltered = (v) ->
             return not v.masterids? or v.masterids.length > 0
         @buildLimit = @c.limit
@@ -285,8 +285,8 @@ class Waterfall extends Controller
             .attr('transform', 'rotate(90)')
             .attr('x1', 0)
             .attr('x2', 0)
-            .attr('y1', x.rangeBand() / 2)
-            .attr('y2', -x.rangeBand() / 2)
+            .attr('y1', x.rangeBand(1) / 2)
+            .attr('y2', -x.rangeBand(1) / 2)
             .attr('class', self.getResultClassFromThing)
             .classed('stroke', true)
 
@@ -389,7 +389,7 @@ class Waterfall extends Controller
         # Draw rectangle for each build
         builds.append('rect')
             .attr('class', self.getResultClassFromThing)
-            .attr('width', x.rangeBand())
+            .attr('width', x.rangeBand(1))
             .attr('height', (build) -> max(10, Math.abs(y(build.started_at) - y(build.complete_at))))
             .classed('fill', true)
 
@@ -397,14 +397,14 @@ class Waterfall extends Controller
         if @c.buildidBackground
             builds.append('rect')
                 .attr('y', -15)
-                .attr('width', x.rangeBand())
+                .attr('width', x.rangeBand(1))
                 .attr('height', 15)
                 .style('fill', '#ccc')
 
         # Draw text over builds
         builds.append('text')
             .attr('class', 'id')
-            .attr('x', x.rangeBand() / 2)
+            .attr('x', x.rangeBand(1) / 2)
             .attr('y', -3)
             .text((build) -> build.number)
 
