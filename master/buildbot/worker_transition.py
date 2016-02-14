@@ -33,7 +33,7 @@ from twisted.python.versions import Version
 
 __all__ = (
     "DeprecatedWorkerNameWarning",
-    "define_old_worker_method", "define_old_worker_func",
+    "define_old_worker_method",
     "WorkerAPICompatMixin",
     "setupWorkerTransition",
     "deprecatedWorkerModuleAttribute",
@@ -276,21 +276,6 @@ def define_old_worker_method(scope, method, compat_name=None):
     functools.update_wrapper(old_method, method)
 
     scope[compat_name] = old_method
-
-
-def define_old_worker_func(scope, func, compat_name=None):
-    """Define old-named function."""
-    compat_name = _compat_name(func.__name__, compat_name=compat_name)
-
-    def old_func(*args, **kwargs):
-        reportDeprecatedWorkerNameUsage(
-            "'{old}' function is deprecated, use '{new}' instead.".format(
-                new=func.__name__, old=compat_name))
-        return func(*args, **kwargs)
-
-    functools.update_wrapper(old_func, func)
-
-    scope[compat_name] = old_func
 
 
 class WorkerAPICompatMixin(object):

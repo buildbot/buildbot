@@ -27,8 +27,8 @@ from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
@@ -45,7 +45,7 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
             return workername == workerforbuilder.worker.workername
 
     return True
-define_old_worker_func(locals(), enforceChosenWorker)
+deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
 
 
 class Builder(util_service.ReconfigurableServiceMixin,

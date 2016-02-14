@@ -26,7 +26,6 @@ from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import _compat_name
-from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
 from buildbot.worker_transition import deprecatedWorkerClassAttribute
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
@@ -272,54 +271,6 @@ class MethodWrapper(unittest.TestCase):
 
         with assertProducesWarning(DeprecatedWorkerNameWarning):
             self.assertEqual(c.updateSlave("test"), "mocked")
-
-
-class FunctionWrapper(unittest.TestCase):
-
-    def test_function_wrapper(self):
-        def updateWorker(res):
-            return res
-        locals = {}
-        define_old_worker_func(locals, updateWorker)
-
-        self.assertIn("updateSlave", locals)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertEqual(updateWorker("test"), "test")
-
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
-            self.assertEqual(locals["updateSlave"]("test"), "test")
-
-    def test_func_meta(self):
-        def updateWorker(self, res):
-            """docstring"""
-            return res
-        locals = {}
-        define_old_worker_func(locals, updateWorker)
-
-        self.assertEqual(locals["updateSlave"].__module__,
-                         updateWorker.__module__)
-        self.assertEqual(locals["updateSlave"].__doc__,
-                         updateWorker.__doc__)
-
-    def test_module_reload(self):
-        # pylint: disable=function-redefined
-        locals = {}
-
-        def updateWorker(res):
-            return res
-
-        define_old_worker_func(locals, updateWorker)
-
-        self.assertIn("updateSlave", locals)
-
-        # "Reload" module
-        def updateWorker(res):
-            return res
-
-        define_old_worker_func(locals, updateWorker)
-
-        self.assertIn("updateSlave", locals)
 
 
 class AttributeMixin(unittest.TestCase):

@@ -327,15 +327,13 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertEqual(builderid, 13)
         fbi.assert_not_called()
 
-    def test_enforceChosenWorker_old_api(self):
-        from buildbot.process.builder import enforceChosenSlave
-
+    def test_enforceChosenSlave_deprecated(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'enforceChosenSlave' function is deprecated"):
-            breq = mock.Mock()
-            breq.properties = {}
-            enforceChosenSlave(mock.Mock(), mock.Mock(), breq)
+                message_pattern="enforceChosenSlave was deprecated"):
+            deprecated = builder.enforceChosenSlave
+
+        self.assertIdentical(deprecated, builder.enforceChosenWorker)
 
     def test_attaching_workers_old_api(self):
         bldr = builder.Builder('bldr', _addServices=False)
