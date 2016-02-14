@@ -343,7 +343,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 ])
 
             # Verify that there is no "slave"-named items in schema.
-            inspector = Inspector.from_engine(conn.engine)
+            inspector = Inspector(conn)
 
             def check_name(name, table_name, item_type):
                 if not name:
