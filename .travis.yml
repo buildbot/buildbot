@@ -89,6 +89,8 @@ install:
   # Install pyjade for custom templates tests
   # Install MySQL-python for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
+  # Install boto and moto for running EC2 tests
+  # Install txgithub to run buildbot.status.github module tests
   - |
       [ $TESTS = py3 ] || \
       pip install -e pkg \
@@ -97,11 +99,13 @@ install:
                   txrequests \
                   future \
                   pyjade \
-                  boto \
                   lz4 \
                   MySQL-python \
                   psycopg2 \
-                  pg8000
+                  pg8000 \
+                  boto \
+                  moto \
+                  txgithub
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS = py3 ] || pip install --pre buildbot_www"
 
