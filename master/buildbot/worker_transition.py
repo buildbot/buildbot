@@ -189,6 +189,9 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
     """This is similar to Twisted's deprecatedModuleAttribute, but for
     Worker API Rename warnings.
 
+    Can be used to create compatibility attributes for module-level classes,
+    functions and global variables.
+
     :param scope: module scope (locals() in the context of a module)
     :param attribute: module object (class, function, global variable)
     :param compat_name: optional compatibility name (will be generated if not
@@ -223,12 +226,15 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
         module_name, compat_name)
 
 
-def deprecatedWorkerClassProperty(scope, attribute, compat_name=None,
+def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
                                   new_name=None):
-    """Define compatibility class static attribute.
+    """Define compatibility class property.
+
+    Can be used to create compatibility attribute for class property.
 
     :param scope: class scope (locals() in the context of a scope)
-    :param attribute: class object (method, property, global variable)
+    :param prop: property object for which compatibility name should be
+    created.
     :param compat_name: optional compatibility name (will be generated if not
     specified)
     :param new_name: optional new name (will be used name of attribute object
@@ -237,7 +243,7 @@ def deprecatedWorkerClassProperty(scope, attribute, compat_name=None,
     """
 
     if new_name is None:
-        attribute_name = scope.keys()[scope.values().index(attribute)]
+        attribute_name = scope.keys()[scope.values().index(prop)]
     else:
         attribute_name = new_name
 
