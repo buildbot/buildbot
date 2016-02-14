@@ -160,12 +160,12 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.properties.getProperty('workername'), 'bot')
         self.assertEqual(bs.access, [])
 
-    def test_workername_old_api(self):
+    def test_slavename_deprecated(self):
         bs = ConcreteWorker('bot', 'pass')
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' attribute is deprecated"):
+                message_pattern="'slavename' property is deprecated"):
             old_name = bs.slavename
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):

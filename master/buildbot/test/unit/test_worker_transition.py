@@ -205,7 +205,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
         self.assertIdentical(S, Worker)
 
 
-class test_deprecatedWorkerClassAttribute(unittest.TestCase):
+class test_deprecatedWorkerClassProperty(unittest.TestCase):
 
     def test_produces_warning(self):
         class C(object):
@@ -222,7 +222,7 @@ class test_deprecatedWorkerClassAttribute(unittest.TestCase):
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' attribute is deprecated, "
+                message_pattern="'slavename' property is deprecated, "
                                 "use 'workername' instead"):
             self.assertEqual(c.slavename, "name")
 

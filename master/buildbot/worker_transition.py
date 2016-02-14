@@ -250,7 +250,7 @@ def deprecatedWorkerClassProperty(scope, attribute, compat_name=None,
 
     def get(self):
         reportDeprecatedWorkerNameUsage(
-            "'{old}' attribute is deprecated, "
+            "'{old}' property is deprecated, "
             "{advice}.".format(
                 old=compat_name, advice=advice_msg))
         return getattr(self, attribute_name)
