@@ -23,31 +23,31 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     # autoload the tables that are only referenced here
-    sa.Table('changes', metadata, autoload=True)
-    sa.Table('buildsets', metadata, autoload=True)
-    sa.Table("objects", metadata, autoload=True)
+    sautils.Table('changes', metadata, autoload=True)
+    sautils.Table('buildsets', metadata, autoload=True)
+    sautils.Table("objects", metadata, autoload=True)
 
     # drop all tables.  Schedulers will re-populate on startup
 
-    scheduler_changes_tbl = sa.Table('scheduler_changes', metadata,
-                                     sa.Column('schedulerid', sa.Integer),
-                                     # ...
-                                     )
+    scheduler_changes_tbl = sautils.Table('scheduler_changes', metadata,
+                                          sa.Column('schedulerid', sa.Integer),
+                                          # ...
+                                          )
     scheduler_changes_tbl.drop()
     metadata.remove(scheduler_changes_tbl)
 
-    scheduler_upstream_buildsets_tbl = sa.Table('scheduler_upstream_buildsets',
-                                                metadata,
-                                                sa.Column('buildsetid', sa.Integer),
-                                                # ...
-                                                )
+    scheduler_upstream_buildsets_tbl = sautils.Table('scheduler_upstream_buildsets',
+                                                     metadata,
+                                                     sa.Column('buildsetid', sa.Integer),
+                                                     # ...
+                                                     )
     scheduler_upstream_buildsets_tbl.drop()
     metadata.remove(scheduler_upstream_buildsets_tbl)
 
-    schedulers_tbl = sa.Table("schedulers", metadata,
-                              sa.Column('schedulerid', sa.Integer),
-                              # ...
-                              )
+    schedulers_tbl = sautils.Table("schedulers", metadata,
+                                   sa.Column('schedulerid', sa.Integer),
+                                   # ...
+                                   )
     schedulers_tbl.drop()
     metadata.remove(schedulers_tbl)
 

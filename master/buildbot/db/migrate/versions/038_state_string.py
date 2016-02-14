@@ -15,13 +15,15 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    steps_table = sa.Table('steps', metadata, autoload=True)
-    builds_table = sa.Table('builds', metadata, autoload=True)
+    steps_table = sautils.Table('steps', metadata, autoload=True)
+    builds_table = sautils.Table('builds', metadata, autoload=True)
 
     # no attempt is made here to move data from one table to the other, since
     # there was no released version of Buildbot with a 'steps' table yet.

@@ -74,35 +74,35 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     # a copy of the buildrequests table, but with the foreign keys stripped
-    buildrequests = sa.Table('buildrequests', metadata,
-                             sa.Column('id', sa.Integer, primary_key=True),
-                             sa.Column('buildsetid', sa.Integer, nullable=False),
-                             sa.Column('buildername', sa.String(length=256), nullable=False),
-                             sa.Column('priority', sa.Integer, nullable=False,
-                                       server_default=sa.DefaultClause("0")),
-                             sa.Column('claimed_at', sa.Integer,
-                                       server_default=sa.DefaultClause("0")),
-                             sa.Column('claimed_by_name', sa.String(length=256)),
-                             sa.Column('claimed_by_incarnation', sa.String(length=256)),
-                             sa.Column('complete', sa.Integer,
-                                       server_default=sa.DefaultClause("0")),
-                             sa.Column('results', sa.SmallInteger),
-                             sa.Column('submitted_at', sa.Integer, nullable=False),
-                             sa.Column('complete_at', sa.Integer),
-                             )
+    buildrequests = sautils.Table('buildrequests', metadata,
+                                  sa.Column('id', sa.Integer, primary_key=True),
+                                  sa.Column('buildsetid', sa.Integer, nullable=False),
+                                  sa.Column('buildername', sa.String(length=256), nullable=False),
+                                  sa.Column('priority', sa.Integer, nullable=False,
+                                            server_default=sa.DefaultClause("0")),
+                                  sa.Column('claimed_at', sa.Integer,
+                                            server_default=sa.DefaultClause("0")),
+                                  sa.Column('claimed_by_name', sa.String(length=256)),
+                                  sa.Column('claimed_by_incarnation', sa.String(length=256)),
+                                  sa.Column('complete', sa.Integer,
+                                            server_default=sa.DefaultClause("0")),
+                                  sa.Column('results', sa.SmallInteger),
+                                  sa.Column('submitted_at', sa.Integer, nullable=False),
+                                  sa.Column('complete_at', sa.Integer),
+                                  )
 
     # existing objects table, used as a foreign key
-    objects = sa.Table("objects", metadata,
-                       # unique ID for this object
-                       sa.Column("id", sa.Integer, primary_key=True),
-                       # object's user-given name
-                       sa.Column('name', sa.String(128), nullable=False),
-                       # object's class name, basically representing a "type" for the state
-                       sa.Column('class_name', sa.String(128), nullable=False),
+    objects = sautils.Table("objects", metadata,
+                            # unique ID for this object
+                            sa.Column("id", sa.Integer, primary_key=True),
+                            # object's user-given name
+                            sa.Column('name', sa.String(128), nullable=False),
+                            # object's class name, basically representing a "type" for the state
+                            sa.Column('class_name', sa.String(128), nullable=False),
 
-                       # prohibit multiple id's for the same object
-                       sa.UniqueConstraint('name', 'class_name', name='object_identity'),
-                       )
+                            # prohibit multiple id's for the same object
+                            sa.UniqueConstraint('name', 'class_name', name='object_identity'),
+                            )
 
     # and a new buildrequest_claims table
     buildrequest_claims = sautils.Table(

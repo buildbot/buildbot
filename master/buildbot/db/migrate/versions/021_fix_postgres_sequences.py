@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     # see bug #2119
@@ -40,7 +42,7 @@ def upgrade(migrate_engine):
 
     for col in to_fix:
         tbl_name, col_name = col.split('.')
-        tbl = sa.Table(tbl_name, metadata, autoload=True)
+        tbl = sautils.Table(tbl_name, metadata, autoload=True)
         col = tbl.c[col_name]
 
         res = migrate_engine.execute(sa.select([sa.func.max(col)]))

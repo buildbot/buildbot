@@ -58,7 +58,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildrequests = sa.Table('buildrequests', metadata, autoload=True)
+            buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
             q = sa.select([buildrequests.c.waited_for])
             for row in conn.execute(q):
                 # verify that the default value was set correctly

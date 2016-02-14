@@ -20,6 +20,7 @@ import sqlalchemy as sa
 from buildbot.db import base
 from buildbot.test.fake import fakedb
 from buildbot.test.util import connector_component
+from buildbot.util import sautils
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -28,9 +29,9 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         meta = sa.MetaData()
-        self.tbl = sa.Table('tbl', meta,
-                            sa.Column('str32', sa.String(length=32)),
-                            sa.Column('txt', sa.Text))
+        self.tbl = sautils.Table('tbl', meta,
+                                 sa.Column('str32', sa.String(length=32)),
+                                 sa.Column('txt', sa.Text))
         self.db = mock.Mock()
         self.db.pool.engine.dialect.name = 'mysql'
         self.comp = base.DBConnectorComponent(self.db)

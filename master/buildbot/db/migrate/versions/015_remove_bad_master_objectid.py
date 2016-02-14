@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -25,8 +27,8 @@ def upgrade(migrate_engine):
     # stored with objects named after each master itself, with class
     # BuildMaster.
 
-    objects_table = sa.Table('objects', metadata, autoload=True)
-    object_state_table = sa.Table('object_state', metadata, autoload=True)
+    objects_table = sautils.Table('objects', metadata, autoload=True)
+    object_state_table = sautils.Table('object_state', metadata, autoload=True)
 
     # get the old, unwanted ID
     q = sa.select([objects_table.c.id],

@@ -15,14 +15,16 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sourcestamps_table = sa.Table('sourcestamps', metadata, autoload=True)
-    changes_table = sa.Table('changes', metadata, autoload=True)
+    sourcestamps_table = sautils.Table('sourcestamps', metadata, autoload=True)
+    changes_table = sautils.Table('changes', metadata, autoload=True)
 
     # Add codebase to tables
     ss_codebase = sa.Column('codebase', sa.String(length=256), nullable=False,

@@ -54,7 +54,7 @@ def upgrade(migrate_engine):
     idx.create()
 
     # correlates change authors and user uids
-    sa.Table('changes', metadata, autoload=True)
+    sautils.Table('changes', metadata, autoload=True)
     change_users = sautils.Table(
         "change_users", metadata,
         sa.Column("changeid", sa.Integer, sa.ForeignKey('changes.changeid'),

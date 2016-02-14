@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -31,7 +33,7 @@ def upgrade(migrate_engine):
     if migrate_engine.dialect.name != 'sqlite':
         return
 
-    buildrequests = sa.Table('buildrequests', metadata, autoload=True)
+    buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
     sa.Index('buildrequests_buildsetid', buildrequests.c.buildsetid).create()
     sa.Index('buildrequests_buildername', buildrequests.c.buildername).create()
     sa.Index('buildrequests_complete', buildrequests.c.complete).create()

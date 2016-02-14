@@ -67,8 +67,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     def reload_tables_after_migration(self, conn):
         metadata = sa.MetaData()
         metadata.bind = conn
-        self.sourcestamps = sa.Table('sourcestamps', metadata, autoload=True)
-        self.changes = sa.Table('changes', metadata, autoload=True)
+        self.sourcestamps = sautils.Table('sourcestamps', metadata, autoload=True)
+        self.changes = sautils.Table('changes', metadata, autoload=True)
 
     def fill_tables_with_testdata(self, conn, testdata):
         for ssid, repo, codebase, cid in testdata:

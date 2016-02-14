@@ -43,7 +43,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            build_properties = sa.Table('build_properties', metadata, autoload=True)
+            build_properties = sautils.Table('build_properties', metadata, autoload=True)
 
             q = sa.select([build_properties.c.buildid,
                            build_properties.c.name,

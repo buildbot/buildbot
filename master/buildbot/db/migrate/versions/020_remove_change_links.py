@@ -15,10 +15,12 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    tbl = sa.Table('change_links', metadata, autoload=True)
+    tbl = sautils.Table('change_links', metadata, autoload=True)
     tbl.drop()

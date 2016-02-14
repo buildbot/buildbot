@@ -23,9 +23,9 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     # foreign keys
-    sa.Table('builds', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             )
+    sautils.Table('builds', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  )
 
     steps = sautils.Table(
         'steps', metadata,
