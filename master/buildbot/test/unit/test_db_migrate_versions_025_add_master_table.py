@@ -65,9 +65,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            masters = sa.Table('masters', metadata, autoload=True)
-            buildrequest_claims = sa.Table('buildrequest_claims', metadata,
-                                           autoload=True)
+            masters = sautils.Table('masters', metadata, autoload=True)
+            buildrequest_claims = sautils.Table('buildrequest_claims', metadata,
+                                                autoload=True)
 
             # both tables are empty
             res = conn.execute(masters.select())
@@ -117,9 +117,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            masters = sa.Table('masters', metadata, autoload=True)
-            buildrequest_claims = sa.Table('buildrequest_claims', metadata,
-                                           autoload=True)
+            masters = sautils.Table('masters', metadata, autoload=True)
+            buildrequest_claims = sautils.Table('buildrequest_claims', metadata,
+                                                autoload=True)
 
             # two masters (although we don't know which ids they will get)
             res = conn.execute(sa.select([masters.c.id,

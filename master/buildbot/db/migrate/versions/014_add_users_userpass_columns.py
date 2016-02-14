@@ -15,13 +15,15 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    users_table = sa.Table('users', metadata, autoload=True)
+    users_table = sautils.Table('users', metadata, autoload=True)
 
     username = sa.Column('bb_username', sa.String(128))
     username.create(users_table)

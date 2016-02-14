@@ -23,11 +23,11 @@ def rename_buildrequest_claims(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    buildrequest_claims = sa.Table("buildrequest_claims", metadata,
-                                   sa.Column('brid', sa.Integer, index=True, unique=True),
-                                   sa.Column('objectid', sa.Integer, index=True, nullable=True),
-                                   sa.Column('claimed_at', sa.Integer, nullable=False),
-                                   )
+    buildrequest_claims = sautils.Table("buildrequest_claims", metadata,
+                                        sa.Column('brid', sa.Integer, index=True, unique=True),
+                                        sa.Column('objectid', sa.Integer, index=True, nullable=True),
+                                        sa.Column('claimed_at', sa.Integer, nullable=False),
+                                        )
     for index in buildrequest_claims.indexes:
         index.drop()
     migrate_engine.execute('alter table buildrequest_claims '
@@ -38,16 +38,16 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('buildrequests', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             # ..
-             )
+    sautils.Table('buildrequests', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  # ..
+                  )
 
-    objects = sa.Table("objects", metadata,
-                       sa.Column("id", sa.Integer, primary_key=True),
-                       sa.Column('name', sa.String(128), nullable=False),
-                       sa.Column('class_name', sa.String(128), nullable=False),
-                       )
+    objects = sautils.Table("objects", metadata,
+                            sa.Column("id", sa.Integer, primary_key=True),
+                            sa.Column('name', sa.String(128), nullable=False),
+                            sa.Column('class_name', sa.String(128), nullable=False),
+                            )
 
     masters = sautils.Table(
         "masters", metadata,

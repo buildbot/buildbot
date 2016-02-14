@@ -100,11 +100,11 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                                       exp_sourcestamps=[]):
         metadata = sa.MetaData()
         metadata.bind = conn
-        tbl = sa.Table('buildsets', metadata, autoload=True)
+        tbl = sautils.Table('buildsets', metadata, autoload=True)
         res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
         got_buildsets = res.fetchall()
 
-        tbl = sa.Table('sourcestamps', metadata, autoload=True)
+        tbl = sautils.Table('sourcestamps', metadata, autoload=True)
         res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid],
                                      order_by=[tbl.c.sourcestampsetid, tbl.c.id]))
         got_sourcestamps = res.fetchall()
@@ -152,7 +152,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def verify_thd(conn):
             metadata = sa.MetaData()
             metadata.bind = conn
-            tbl = sa.Table('buildsets', metadata, autoload=True)
+            tbl = sautils.Table('buildsets', metadata, autoload=True)
             self.assertTrue(hasattr(tbl.c, 'sourcestampsetid'))
 
             self.thd_assertForeignKeys(conn, [{
@@ -178,7 +178,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def verify_thd(conn):
             metadata = sa.MetaData()
             metadata.bind = conn
-            tbl = sa.Table('sourcestamps', metadata, autoload=True)
+            tbl = sautils.Table('sourcestamps', metadata, autoload=True)
             self.assertTrue(hasattr(tbl.c, 'sourcestampsetid'))
 
             self.thd_assertForeignKeys(conn, [{
@@ -205,7 +205,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def verify_thd(conn):
             metadata = sa.MetaData()
             metadata.bind = conn
-            tbl = sa.Table('sourcestampsets', metadata, autoload=True)
+            tbl = sautils.Table('sourcestampsets', metadata, autoload=True)
             self.assertTrue(hasattr(tbl.c, 'id'))
             res = conn.execute(sa.select([tbl.c.id], order_by=[tbl.c.id]))
             got_sourcestampsets = res.fetchall()
@@ -226,19 +226,19 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
             # Test for the buildsets
-            tbl = sa.Table('buildsets', metadata, autoload=True)
+            tbl = sautils.Table('buildsets', metadata, autoload=True)
             res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
             got_buildsets = res.fetchall()
             self.assertEqual(got_buildsets, buildsetdata)
 
             # Test for the sourcestamps
-            tbl = sa.Table('sourcestamps', metadata, autoload=True)
+            tbl = sautils.Table('sourcestamps', metadata, autoload=True)
             res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid],
                                          order_by=[tbl.c.sourcestampsetid, tbl.c.id]))
             got_sourcestamps = res.fetchall()
             self.assertEqual(got_sourcestamps, sourcestampdata)
 
-            tbl = sa.Table('sourcestampsets', metadata, autoload=True)
+            tbl = sautils.Table('sourcestampsets', metadata, autoload=True)
             res = conn.execute(sa.select([tbl.c.id], order_by=[tbl.c.id]))
             got_sourcestampsets = res.fetchall()
             self.assertEqual(got_sourcestampsets, sourcestampsetdata)

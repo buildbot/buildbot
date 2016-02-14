@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
 from migrate import changeset
 
 
@@ -23,14 +24,15 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     # Specify what the new table should look like
-    schedulers = sa.Table("schedulers", metadata,
-                          # unique ID for scheduler
-                          sa.Column('schedulerid', sa.Integer, primary_key=True),  # TODO: rename to id
-                          # scheduler's name in master.cfg
-                          sa.Column('name', sa.String(128), nullable=False),
-                          # scheduler's class name, basically representing a "type" for the state
-                          sa.Column('class_name', sa.String(128), nullable=False),
-                          )
+    schedulers = sautils.Table(
+        "schedulers", metadata,
+        # unique ID for scheduler
+        sa.Column('schedulerid', sa.Integer, primary_key=True),  # TODO: rename to id
+        # scheduler's name in master.cfg
+        sa.Column('name', sa.String(128), nullable=False),
+        # scheduler's class name, basically representing a "type" for the state
+        sa.Column('class_name', sa.String(128), nullable=False),
+    )
 
     # Now drop column
     changeset.drop_column(

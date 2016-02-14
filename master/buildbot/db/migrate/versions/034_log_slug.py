@@ -22,15 +22,15 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    logchunks = sa.Table('logchunks', metadata, autoload=True)
+    logchunks = sautils.Table('logchunks', metadata, autoload=True)
     logchunks.drop()
-    logs = sa.Table('logs', metadata, autoload=True)
+    logs = sautils.Table('logs', metadata, autoload=True)
     logs.drop()
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('steps', metadata, autoload=True)
+    sautils.Table('steps', metadata, autoload=True)
     logs = sautils.Table(
         'logs', metadata,
         sa.Column('id', sa.Integer, primary_key=True),

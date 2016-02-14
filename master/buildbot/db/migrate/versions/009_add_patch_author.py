@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -27,7 +29,7 @@ def upgrade(migrate_engine):
     if migrate_engine.dialect.name != "mysql":
         defaults['server_default'] = sa.DefaultClause('')
 
-    patches = sa.Table('patches', metadata, autoload=True)
+    patches = sautils.Table('patches', metadata, autoload=True)
     patch_author = sa.Column('patch_author', sa.Text, nullable=False,
                              **defaults)
     patch_author.create(patches, populate_default=True)

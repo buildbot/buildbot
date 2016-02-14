@@ -87,7 +87,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildsets = sa.Table('buildsets', metadata, autoload=True)
+            buildsets = sautils.Table('buildsets', metadata, autoload=True)
             q = sa.select(
                 [buildsets.c.parent_buildid, buildsets.c.parent_relationship])
             num_rows = 0

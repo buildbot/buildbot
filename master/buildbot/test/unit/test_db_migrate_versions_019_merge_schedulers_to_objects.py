@@ -119,8 +119,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                     self.fail("%s table still exists" % tbl)
 
             # but scheduler_changes is not
-            s_c_tbl = sa.Table("scheduler_changes", metadata,
-                               autoload=True)
+            s_c_tbl = sautils.Table("scheduler_changes", metadata,
+                                    autoload=True)
             q = sa.select(
                 [s_c_tbl.c.objectid, s_c_tbl.c.changeid, s_c_tbl.c.important])
             self.assertEqual(conn.execute(q).fetchall(), [])

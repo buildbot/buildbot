@@ -25,9 +25,9 @@ def drop_builds(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    builds = sa.Table('builds', metadata,
-                      sa.Column('id', sa.Integer, primary_key=True),
-                      )
+    builds = sautils.Table('builds', metadata,
+                           sa.Column('id', sa.Integer, primary_key=True),
+                           )
     builds.drop()
 
 
@@ -36,15 +36,15 @@ def add_new_builds(migrate_engine):
     metadata.bind = migrate_engine
 
     # foreign keys
-    sa.Table('buildrequests', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             )
-    sa.Table('builders', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             )
-    sa.Table("masters", metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             )
+    sautils.Table('buildrequests', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  )
+    sautils.Table('builders', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  )
+    sautils.Table("masters", metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  )
 
     builds = sautils.Table(
         'builds', metadata,

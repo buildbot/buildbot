@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.util import sautils
+
 from migrate.changeset import constraint
 
 
@@ -24,8 +25,8 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sourcestamps_table = sa.Table('sourcestamps', metadata, autoload=True)
-    buildsets_table = sa.Table('buildsets', metadata, autoload=True)
+    sourcestamps_table = sautils.Table('sourcestamps', metadata, autoload=True)
+    buildsets_table = sautils.Table('buildsets', metadata, autoload=True)
 
     # Create the sourcestampset table
     # that defines a sourcestampset
@@ -45,7 +46,7 @@ def upgrade(migrate_engine):
     buildsets_table.c.sourcestampid.alter(name='sourcestampsetid')
 
     metadata.remove(buildsets_table)
-    buildsets_table = sa.Table('buildsets', metadata, autoload=True)
+    buildsets_table = sautils.Table('buildsets', metadata, autoload=True)
 
     cons = constraint.ForeignKeyConstraint([buildsets_table.c.sourcestampsetid], [
                                            sourcestampsets_table.c.id])

@@ -16,6 +16,7 @@
 import sqlalchemy as sa
 
 from buildbot.test.util import migration
+from buildbot.util import sautils
 from twisted.trial import unittest
 
 
@@ -35,7 +36,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildslaves = sa.Table('buildslaves', metadata, autoload=True)
+            buildslaves = sautils.Table('buildslaves', metadata, autoload=True)
 
             # table starts empty
             res = conn.execute(buildslaves.select())

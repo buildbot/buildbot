@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -29,12 +31,12 @@ def upgrade(migrate_engine):
     # but only for the sqlite dialect.
 
     if migrate_engine.dialect.name == 'sqlite':
-        schedulers = sa.Table('schedulers', metadata, autoload=True)
+        schedulers = sautils.Table('schedulers', metadata, autoload=True)
 
         sa.Index('name_and_class',
                  schedulers.c.name, schedulers.c.class_name).create()
 
-        changes = sa.Table('changes', metadata, autoload=True)
+        changes = sautils.Table('changes', metadata, autoload=True)
 
         sa.Index('changes_branch', changes.c.branch).create()
         sa.Index('changes_revision', changes.c.revision).create()
@@ -46,11 +48,11 @@ def upgrade(migrate_engine):
         # recognized as indexes on non-sqlite DB's.  So add them as explicit
         # indexes on sqlite.
 
-        objects = sa.Table('objects', metadata, autoload=True)
+        objects = sautils.Table('objects', metadata, autoload=True)
         sa.Index('object_identity', objects.c.name, objects.c.class_name,
                  unique=True).create()
 
-        object_state = sa.Table('object_state', metadata, autoload=True)
+        object_state = sautils.Table('object_state', metadata, autoload=True)
         sa.Index('name_per_object', object_state.c.objectid,
                  object_state.c.name, unique=True).create()
 
@@ -58,7 +60,7 @@ def upgrade(migrate_engine):
     # unique (on any DB).  SQLAlchemy-migrate does not provide an interface to
     # drop columns, so we fake it here.
 
-    users = sa.Table('users', metadata, autoload=True)
+    users = sautils.Table('users', metadata, autoload=True)
 
     dialect = migrate_engine.dialect.name
     if dialect in ('sqlite', 'postgresql'):

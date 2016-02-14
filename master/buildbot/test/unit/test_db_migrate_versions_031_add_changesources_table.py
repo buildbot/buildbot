@@ -43,9 +43,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            changesources = sa.Table('changesources', metadata, autoload=True)
-            changesource_masters = sa.Table('changesource_masters', metadata,
-                                            autoload=True)
+            changesources = sautils.Table('changesources', metadata, autoload=True)
+            changesource_masters = sautils.Table('changesource_masters', metadata,
+                                                 autoload=True)
 
             q = sa.select([changesources.c.id, changesources.c.name,
                            changesources.c.name_hash])

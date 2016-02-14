@@ -57,7 +57,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            steps = sa.Table('steps', metadata, autoload=True)
+            steps = sautils.Table('steps', metadata, autoload=True)
             self.assertIsInstance(steps.c.hidden.type, sa.SmallInteger)
 
             q = sa.select([steps.c.name, steps.c.hidden])

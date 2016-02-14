@@ -54,7 +54,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            builders = sa.Table('builders', metadata, autoload=True)
+            builders = sautils.Table('builders', metadata, autoload=True)
             self.assertIsInstance(builders.c.tags.type, sa.Text)
 
             q = sa.select([builders.c.name, builders.c.tags])

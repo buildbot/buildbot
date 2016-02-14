@@ -22,7 +22,7 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    builders = sa.Table('builders', metadata, autoload=True)
+    builders = sautils.Table('builders', metadata, autoload=True)
     # drop the tags column
     builders.c.tags.drop()
 

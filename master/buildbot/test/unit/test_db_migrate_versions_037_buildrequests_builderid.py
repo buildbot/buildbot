@@ -105,8 +105,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildrequests = sa.Table('buildrequests', metadata, autoload=True)
-            builders = sa.Table('builders', metadata, autoload=True)
+            buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
+            builders = sautils.Table('builders', metadata, autoload=True)
 
             self.assertFalse(hasattr(buildrequests.c, 'buildername'))
             self.assertTrue(hasattr(buildrequests.c, 'builderid'))

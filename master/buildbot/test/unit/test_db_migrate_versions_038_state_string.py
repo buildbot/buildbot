@@ -71,12 +71,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            steps = sa.Table('steps', metadata, autoload=True)
+            steps = sautils.Table('steps', metadata, autoload=True)
             self.failIf(hasattr(steps.c, 'state_strings_json'))
             self.failUnless(hasattr(steps.c, 'state_string'))
             self.assertIsInstance(steps.c.state_string.type, sa.Text)
 
-            builds = sa.Table('builds', metadata, autoload=True)
+            builds = sautils.Table('builds', metadata, autoload=True)
             self.failIf(hasattr(builds.c, 'state_strings_json'))
             self.failUnless(hasattr(builds.c, 'state_string'))
             self.assertIsInstance(builds.c.state_string.type, sa.Text)

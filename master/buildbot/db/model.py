@@ -837,8 +837,8 @@ class Model(base.DBConnectorComponent):
 
                 # drop the no-longer-required version table, using a dummy
                 # metadata entry
-                table = sa.Table('version', self.metadata,
-                                 sa.Column('x', sa.Integer))
+                table = sautils.Table('version', self.metadata,
+                                      sa.Column('x', sa.Integer))
                 table.drop(bind=engine)
 
                 # clear the dummy metadata entry

@@ -15,12 +15,14 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    buildrequests_table = sa.Table('buildrequests', metadata, autoload=True)
+    buildrequests_table = sautils.Table('buildrequests', metadata, autoload=True)
 
     # boolean indicating whether there is a step blocking, waiting for this
     # request to complete

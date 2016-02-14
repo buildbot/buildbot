@@ -24,21 +24,21 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('builder_masters', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             # ..
-             )
+    sautils.Table('builder_masters', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  # ..
+                  )
 
-    sa.Table('masters', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             # ..
-             )
+    sautils.Table('masters', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  # ..
+                  )
 
-    buildslaves = sa.Table("buildslaves", metadata,
-                           sa.Column("id", sa.Integer, primary_key=True),
-                           sa.Column("name", sa.String(256), nullable=False),
-                           sa.Column("info", JsonObject, nullable=False),
-                           )
+    buildslaves = sautils.Table("buildslaves", metadata,
+                                sa.Column("id", sa.Integer, primary_key=True),
+                                sa.Column("name", sa.String(256), nullable=False),
+                                sa.Column("info", JsonObject, nullable=False),
+                                )
 
     configured_buildslaves = sautils.Table(
         'configured_buildslaves', metadata,
