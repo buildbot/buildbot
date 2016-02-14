@@ -5,13 +5,14 @@ class ScaleService extends Factory
 
             # Returns x scale
             getX: (builders, width) ->
+                builders.map (builder) -> builder.builderid
                 @d3.scale.ordinal()
                     .domain(builders.map (builder) -> builder.builderid)
-                    .rangeRoundBands([0, width], width / (builders.length * 400))
+                    .rangeRoundBands([0, width], 0.05)  # 5% padding
 
             # Returns y scale
             getY: (groups, gap, height) ->
-                H = height;
+                H = height
                 I = H - (groups.length - 1) * gap
                 T = 0
                 T += (group.max - group.min) for group in groups
