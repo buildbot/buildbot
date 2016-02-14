@@ -23,10 +23,6 @@ def _create_configured_workers_table(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    # TODO: instead of specifying table definition every time
-    # (as done is some other migrations), I'm using autoloading
-    # of the metadata from database.
-    # Is this correct?
     sautils.Table('builder_masters', metadata, autoload=True)
     sautils.Table('workers', metadata, autoload=True)
 
@@ -60,10 +56,6 @@ def _create_connected_workers_table(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    # TODO: instead of specifying table definition every time
-    # (as done is some other migrations), I'm using autoloading
-    # of the metadata from database.
-    # Is this correct?
     sautils.Table('masters', metadata, autoload=True)
     sautils.Table('workers', metadata, autoload=True)
 
@@ -141,8 +133,6 @@ def _migrate_workers_table_data(migrate_engine):
     c = buildslaves.c
     q = sa.select([c.id, c.name, c.info])
 
-    # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
-    # (this comment from 011_add_buildrequest_claims.py)
     migrate_engine.execute(
         str(sautils.InsertFromSelect(workers, q)))
 
@@ -159,8 +149,6 @@ def _migrate_configured_workers_table_data(migrate_engine):
     c = configured_buildslaves.c
     q = sa.select([c.id, c.buildermasterid, c.buildslaveid.label('workerid')])
 
-    # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
-    # (this comment from 011_add_buildrequest_claims.py)
     migrate_engine.execute(
         str(sautils.InsertFromSelect(configured_workers, q)))
 
@@ -177,8 +165,6 @@ def _migrate_connected_workers_table_data(migrate_engine):
     c = connected_buildslaves.c
     q = sa.select([c.id, c.masterid, c.buildslaveid.label('workerid')])
 
-    # TODO: this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
-    # (this comment from 011_add_buildrequest_claims.py)
     migrate_engine.execute(
         str(sautils.InsertFromSelect(connected_workers, q)))
 
