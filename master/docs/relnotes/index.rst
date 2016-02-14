@@ -30,7 +30,6 @@ Deprecations, Removals, and Non-Compatible Changes
   See :bug:`3421` for status and to help out.
 
 * The ``buildbot`` Python dist now (finally) requires SQLAlchemy-0.8.0 or later and SQLAlchemy-Migrate-0.9.0 or later.
-  While the old pinned versions (0.7.10 and 0.7.2, respectively) still work, this compatibility is no longer tested and this configuration should be considered deprecated.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

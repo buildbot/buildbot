@@ -808,39 +808,47 @@ What you need in your config file is something like::
     from buildbot.plugins import schedulers, util
 
     sch = schedulers.ForceScheduler(
-                 name="force",
-                 builderNames=["my-builder"],
+        name="force",
+        builderNames=["my-builder"],
 
-                 # will generate a combo box
-                 branch=util.ChoiceStringParameter(name="branch",
-                                                   choices=["main","devel"],
-                                                   default="main"),
-                 # will generate a text input
-                 reason=util.StringParameter(name="reason",
-                                             label="reason:<br>",
-                                             required=True, size=80),
+        codebases=[
+            util.CodebaseParameter(
+                "",
+                name="Main repository",
+                # will generate a combo box
+                branch=util.ChoiceStringParameter(
+                    name="branch",
+                    choices=["master", "hest", primaryBranch],
+                    default="master"),
 
-                 # will generate nothing in the form, but revision, repository,
-                 # and project are needed by buildbot scheduling system so we
-                 # need to pass a value ("")
-                 revision=util.FixedParameter(name="revision", default=""),
-                 repository=util.FixedParameter(name="repository", default=""),
-                 project=util.FixedParameter(name="project", default=""),
+                # will generate nothing in the form, but revision, repository,
+                # and project are needed by buildbot scheduling system so we
+                # need to pass a value ("")
+                revision=util.FixedParameter(name="revision", default=""),
+                repository=util.FixedParameter(name="repository", default=""),
+                project=util.FixedParameter(name="project", default=""),
+            ),
+        ],
 
-                 # in case you dont require authentication this will display
-                 # input for user to type his name
-                 username=util.UserNameParameter(label="your name:<br>",
-                                                 size=80),
-                 # A completely customized property list.  The name of the
-                 # property is the name of the parameter
-                 properties=[
-                    util.BooleanParameter(name="force_build_clean",
-                                          label="force a make clean",
-                                          default=False),
-                    util.StringParameter(name="pull_url",
-                                         label="optionally give a public Git pull url:<br>",
-                                         default="", size=80)
-                 ])
+        # will generate a text input
+        reason=util.StringParameter(name="reason",
+                                    label="reason:<br>",
+                                    required=True, size=80),
+
+        # in case you dont require authentication this will display
+        # input for user to type his name
+        username=util.UserNameParameter(label="your name:<br>",
+                                        size=80),
+        # A completely customized property list.  The name of the
+        # property is the name of the parameter
+        properties=[
+           util.BooleanParameter(name="force_build_clean",
+                                 label="force a make clean",
+                                 default=False),
+           util.StringParameter(name="pull_url",
+                                label="optionally give a public Git pull url:<br>",
+                                default="", size=80)
+        ])
     c['schedulers'].append(sch)
 
 Authorization

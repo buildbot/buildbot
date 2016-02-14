@@ -1899,8 +1899,3 @@ To run tests with MySQL:
    # Start interesting tests
    BUILDBOT_TEST_DB_URL=mysql+mysqldb://root:password@127.0.0.1:13306/mysql \
        trial buildbot.test
-
-.. note::
-
-   Currently Buildbot doesn't work with MySQL 5.7 Docker image, see issue
-   :bug:`3421`.

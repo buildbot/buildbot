@@ -26,9 +26,9 @@
   }
 }
 
-/* hack to make modal work with ng-animate */
-.modal {
-  display: block !important;
+/* make the sidebar be on the back when dialog is open */
+.modal-open .sidebar {
+    z-index: 0;
 }
 
 /* button bar inside the breadcrum, used for forcesched buttons */

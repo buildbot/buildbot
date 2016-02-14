@@ -1,8 +1,12 @@
 # Travis CI configuration file
 # http://about.travis-ci.org/docs/
 
+addons:
+  postgresql: "9.4"
+
 services:
   - mysql
+  - postgresql
 
 language: python
 
@@ -24,6 +28,9 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
   # Configuration that runs tests with real MySQL database
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
+  # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
 
 cache:
   directories:
@@ -81,6 +88,7 @@ install:
   # Install python-future for py2/3 compatability
   # Install pyjade for custom templates tests
   # Install MySQL-python for tests that uses real MySQL
+  # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
       [ $TESTS = py3 ] || \
       pip install -e pkg \
@@ -91,7 +99,9 @@ install:
                   pyjade \
                   boto \
                   lz4 \
-                  MySQL-python
+                  MySQL-python \
+                  psycopg2 \
+                  pg8000
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS = py3 ] || pip install --pre buildbot_www"
 
@@ -119,6 +129,8 @@ install:
 before_script:
   # create real MySQL database for tests
   - mysql -e 'create database bbtest;'
+  # create real PostgreSQL database for tests
+  - psql -c 'create database bbtest;' -U postgres
 
 # Tests running commands
 script:
