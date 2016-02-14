@@ -89,6 +89,16 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             if not os.path.isabs(u.database[0]):
                 u.database = os.path.join(kwargs['basedir'], u.database)
 
+        else:
+            # For in-memory database SQLAlchemy will SingletonThreadPool and
+            # we will run connection creation and all queries in the single
+            # thread.
+            # However connection destruction will be run from the main
+            # thread, which is safe in our case, but not safe in general,
+            # so SQLite will emit warning about it.
+            # Silence that warning.
+            kwargs.setdefault('connect_args', {})['check_same_thread'] = False
+
         # in-memory databases need exactly one connection
         if not u.database:
             kwargs['pool_size'] = 1
