@@ -227,7 +227,7 @@ class test_deprecatedWorkerClassProperty(unittest.TestCase):
             self.assertEqual(c.slavename, "name")
 
 
-class MethodWrapper(unittest.TestCase):
+class test_deprecatedWorkerClassMethod(unittest.TestCase):
 
     def test_method_wrapper(self):
         class C(object):
