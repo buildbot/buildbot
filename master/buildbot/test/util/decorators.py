@@ -17,6 +17,7 @@ Various decorators for test cases
 """
 
 import os
+import sys
 
 from twisted.python import runtime
 
@@ -50,5 +51,15 @@ def skipUnlessPlatformIs(platform):
     def closure(test):
         if runtime.platformType != platform:
             test.skip = "not a %s platform" % platform
+        return test
+    return closure
+
+
+def skipIfPythonVersionIsLess(min_version_info):
+    assert isinstance(min_version_info, tuple)
+
+    def closure(test):
+        if sys.version_info < min_version_info:
+            test.skip = "requires Python >= {0}".format(min_version_info)
         return test
     return closure
