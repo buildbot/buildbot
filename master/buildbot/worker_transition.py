@@ -33,7 +33,7 @@ from twisted.python.versions import Version
 
 __all__ = (
     "DeprecatedWorkerNameWarning",
-    "define_old_worker_method",
+    "deprecatedWorkerClassMethod",
     "WorkerAPICompatMixin",
     "setupWorkerTransition",
     "deprecatedWorkerModuleAttribute",
@@ -265,7 +265,7 @@ def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
     scope[compat_name] = property(get)
 
 
-def define_old_worker_method(scope, method, compat_name=None):
+def deprecatedWorkerClassMethod(scope, method, compat_name=None):
     """Define old-named method inside class."""
     method_name = method.__name__
 

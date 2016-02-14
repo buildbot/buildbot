@@ -56,7 +56,7 @@ from buildbot.process.results import worst_status
 from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class BuildStepFailed(Exception):
@@ -349,7 +349,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setWorker(self, worker):
         self.worker = worker
-    define_old_worker_method(locals(), setWorker, compat_name="setBuildSlave")
+    deprecatedWorkerClassMethod(locals(), setWorker, compat_name="setBuildSlave")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
@@ -696,7 +696,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def workerVersion(self, command, oldversion=None):
         return self.build.getWorkerCommandVersion(command, oldversion)
-    define_old_worker_method(locals(), workerVersion)
+    deprecatedWorkerClassMethod(locals(), workerVersion)
 
     def workerVersionIsOlderThan(self, command, minversion):
         sv = self.build.getWorkerCommandVersion(command, None)
@@ -705,17 +705,17 @@ class BuildStep(results.ResultComputingConfigMixin,
         if map(int, sv.split(".")) < map(int, minversion.split(".")):
             return True
         return False
-    define_old_worker_method(locals(), workerVersionIsOlderThan)
+    deprecatedWorkerClassMethod(locals(), workerVersionIsOlderThan)
 
     def checkWorkerHasCommand(self, command):
         if not self.workerVersion(command):
             message = "worker is too old, does not know about %s" % command
             raise WorkerTooOldError(message)
-    define_old_worker_method(locals(), checkWorkerHasCommand)
+    deprecatedWorkerClassMethod(locals(), checkWorkerHasCommand)
 
     def getWorkerName(self):
         return self.build.getWorkerName()
-    define_old_worker_method(locals(), getWorkerName)
+    deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     def addLog(self, name, type='s', logEncoding=None):
         d = self.master.data.updates.addLog(self.stepid,

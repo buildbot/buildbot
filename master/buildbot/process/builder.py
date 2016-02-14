@@ -27,7 +27,7 @@ from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.application import internet
 from twisted.application import service
@@ -203,7 +203,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 ['added', 'latent', worker.workername])
             self.workers.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
-    define_old_worker_method(locals(), addLatentWorker)
+    deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
     def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
@@ -302,14 +302,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
-    define_old_worker_method(locals(), getAvailableWorkers)
+    deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
     def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in self.config.locks]
         return Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
-    define_old_worker_method(locals(), canStartWithWorkerForBuilder,
-                             compat_name="canStartWithSlavebuilder")
+    deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
+                                compat_name="canStartWithSlavebuilder")
 
     def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):

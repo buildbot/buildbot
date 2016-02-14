@@ -18,7 +18,7 @@ import sqlalchemy as sa
 
 from buildbot.db import base
 from buildbot.util import identifiers
-from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import deprecatedWorkerClassMethod
 from twisted.internet import defer
 
 
@@ -184,7 +184,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
-    define_old_worker_method(locals(), getWorkers, compat_name="getBuildslaves")
+    deprecatedWorkerClassMethod(locals(), getWorkers, compat_name="getBuildslaves")
 
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):

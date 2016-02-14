@@ -26,7 +26,7 @@ from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import _compat_name
-from buildbot.worker_transition import define_old_worker_method
+from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerClassProperty
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -234,7 +234,7 @@ class MethodWrapper(unittest.TestCase):
 
             def updateWorker(self, res):
                 return res
-            define_old_worker_method(locals(), updateWorker)
+            deprecatedWorkerClassMethod(locals(), updateWorker)
 
         c = C()
 
@@ -250,7 +250,7 @@ class MethodWrapper(unittest.TestCase):
             def updateWorker(self, res):
                 """docstring"""
                 return res
-            define_old_worker_method(locals(), updateWorker)
+            deprecatedWorkerClassMethod(locals(), updateWorker)
 
         self.assertEqual(C.updateSlave.__module__, C.updateWorker.__module__)
         self.assertEqual(C.updateSlave.__doc__, C.updateWorker.__doc__)
@@ -260,7 +260,7 @@ class MethodWrapper(unittest.TestCase):
 
             def updateWorker(self, res):
                 return res
-            define_old_worker_method(locals(), updateWorker)
+            deprecatedWorkerClassMethod(locals(), updateWorker)
 
         c = C()
 
