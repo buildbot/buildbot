@@ -528,6 +528,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             time.sleep(0.01)
             if check():
                 return
+        import subprocess # temporary - bug 3454
+        log.msg("ps auxwwf:\n" + subprocess.check_output(["ps", "auxwwf"]))
         self.fail("pid %d still alive after %ds" % (pid, timeout))
 
     # tests
