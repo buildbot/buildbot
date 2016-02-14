@@ -28,7 +28,7 @@ from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import _compat_name
 from buildbot.worker_transition import define_old_worker_func
 from buildbot.worker_transition import define_old_worker_method
-from buildbot.worker_transition import define_old_worker_property
+from buildbot.worker_transition import deprecatedWorkerClassAttribute
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
@@ -206,22 +206,25 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
         self.assertIdentical(S, Worker)
 
 
-class PropertyWrapper(unittest.TestCase):
+class test_deprecatedWorkerClassAttribute(unittest.TestCase):
 
-    def test_property_wrapper(self):
+    def test_produces_warning(self):
         class C(object):
 
             @property
             def workername(self):
                 return "name"
-            define_old_worker_property(locals(), "workername")
+            deprecatedWorkerClassAttribute(locals(), workername)
 
         c = C()
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(c.workername, "name")
 
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavename' attribute is deprecated, "
+                                "use 'workername' instead"):
             self.assertEqual(c.slavename, "name")
 
 

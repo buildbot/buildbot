@@ -33,7 +33,6 @@ from twisted.python.versions import Version
 
 __all__ = (
     "DeprecatedWorkerNameWarning",
-    "define_old_worker_property",
     "define_old_worker_method", "define_old_worker_func",
     "WorkerAPICompatMixin",
     "setupWorkerTransition",
@@ -224,17 +223,39 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
         module_name, compat_name)
 
 
-def define_old_worker_property(scope, new_name, compat_name=None):
-    """Define old-named property inside class."""
-    compat_name = _compat_name(new_name, compat_name=compat_name)
-    assert compat_name not in scope
+def deprecatedWorkerClassAttribute(scope, attribute, compat_name=None,
+                                   new_name=None):
+    """Define compatibility class static attribute.
+
+    :param scope: class scope (locals() in the context of a scope)
+    :param attribute: class object (method, property, global variable)
+    :param compat_name: optional compatibility name (will be generated if not
+    specified)
+    :param new_name: optional new name (will be used name of attribute object
+    in the module is not specified). If empty string is specified, then no
+    new name is assumed for this attribute.
+    """
+
+    if new_name is None:
+        attribute_name = scope.keys()[scope.values().index(attribute)]
+    else:
+        attribute_name = new_name
+
+    compat_name = _compat_name(attribute_name, compat_name=compat_name)
+
+    if attribute_name:
+        advice_msg = "use '{0}' instead".format(attribute_name)
+    else:
+        advice_msg = "don't use it"
 
     def get(self):
         reportDeprecatedWorkerNameUsage(
-            "'{old}' attribute is deprecated, use '{new}' instead.".format(
-                new=new_name, old=compat_name))
-        return getattr(self, new_name)
+            "'{old}' attribute is deprecated, "
+            "{advice}.".format(
+                old=compat_name, advice=advice_msg))
+        return getattr(self, attribute_name)
 
+    assert compat_name not in scope
     scope[compat_name] = property(get)
 
 
