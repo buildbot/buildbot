@@ -343,7 +343,7 @@ anyway.
      - :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
 
 
-API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback):
+API changes between 0.9.0b7 and 0.9.0b8 (done without providing fallback):
 
 .. todo::
 
@@ -875,7 +875,7 @@ List of database-related changes in API (fallback for old API is provided):
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
      - :py:attr:`buildbot.db.connector.DBConnector.workers`
 
-API changes between 0.9.0b6 and 0.9.0b7 (done without providing fallback).
+API changes between 0.9.0b7 and 0.9.0b8 (done without providing fallback).
 
 .. todo::
 
