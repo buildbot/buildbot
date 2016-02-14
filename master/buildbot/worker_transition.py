@@ -41,17 +41,6 @@ __all__ = (
     "reportDeprecatedWorkerModuleUsage",
 )
 
-# TODO:
-# * Properly name classes and methods.
-# * Aliases are defined even they usage will be forbidden later.
-# * function wrapper is almost identical to method wrapper (they are both
-#   just functions from Python side of view), probably method wrapper should
-#   be dropped.
-# * At some point old API support will be dropped and this module will be
-#   removed. It's good to think now how this can be gracefully done later.
-#   For example, if I explicitly configure warnings in buildbot.tac template
-#   now, later generated from such template buildbot.tac files will break.
-
 
 _WORKER_WARNING_MARK = "[WORKER]"
 
