@@ -1865,6 +1865,12 @@ To use other database set ``BUILDBOT_TEST_DB_URL`` environment variable to
 value in `SQLAlchemy database URL specification
 <http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls>`_.
 
+For example, to run tests with file-based SQLite database you can start 
+tests in the following way:
+
+.. code-block:: bash
+
+   BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite trial buildbot.test
 
 Run databases in Docker
 ~~~~~~~~~~~~~~~~~~~~~~~
