@@ -89,7 +89,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            changes = sa.Table('changes', metadata, autoload=True)
+            changes = sautils.Table('changes', metadata, autoload=True)
             self.assertIsInstance(changes.c.parent_changeids.type, sa.Integer)
 
         return self.do_test_migration(42, 43, setup_thd, verify_thd)

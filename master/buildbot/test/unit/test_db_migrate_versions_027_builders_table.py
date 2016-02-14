@@ -42,9 +42,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            builders = sa.Table('builders', metadata, autoload=True)
-            builder_masters = sa.Table('builder_masters', metadata,
-                                       autoload=True)
+            builders = sautils.Table('builders', metadata, autoload=True)
+            builder_masters = sautils.Table('builder_masters', metadata,
+                                            autoload=True)
 
             q = sa.select([builders.c.id, builders.c.name,
                            builders.c.name_hash])

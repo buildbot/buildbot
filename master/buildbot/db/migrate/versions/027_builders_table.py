@@ -22,10 +22,10 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('masters', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             # ..
-             )
+    sautils.Table('masters', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  # ..
+                  )
 
     builders = sautils.Table(
         'builders', metadata,

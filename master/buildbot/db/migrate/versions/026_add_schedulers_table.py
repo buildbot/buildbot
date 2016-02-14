@@ -26,11 +26,11 @@ def upgrade(migrate_engine):
 
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
-    scheduler_changes = sa.Table('scheduler_changes', metadata,
-                                 sa.Column('objectid', sa.Integer),
-                                 sa.Column('changeid', sa.Integer),
-                                 # ..
-                                 )
+    scheduler_changes = sautils.Table('scheduler_changes', metadata,
+                                      sa.Column('objectid', sa.Integer),
+                                      sa.Column('changeid', sa.Integer),
+                                      # ..
+                                      )
 
     idx = sa.Index('scheduler_changes_objectid', scheduler_changes.c.objectid)
     idx.drop()
@@ -47,15 +47,15 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('masters', metadata,
-             sa.Column('id', sa.Integer, primary_key=True),
-             # ..
-             )
+    sautils.Table('masters', metadata,
+                  sa.Column('id', sa.Integer, primary_key=True),
+                  # ..
+                  )
 
-    sa.Table('changes', metadata,
-             sa.Column('changeid', sa.Integer, primary_key=True),
-             # ..
-             )
+    sautils.Table('changes', metadata,
+                  sa.Column('changeid', sa.Integer, primary_key=True),
+                  # ..
+                  )
 
     schedulers = sautils.Table(
         'schedulers', metadata,

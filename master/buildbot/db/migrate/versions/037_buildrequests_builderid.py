@@ -16,16 +16,18 @@
 import hashlib
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 from migrate import changeset
 
 
 def add_new_schema_parts(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
-    sa.Table('builders', metadata, autoload=True)
-    sa.Table('buildsets', metadata, autoload=True)
+    sautils.Table('builders', metadata, autoload=True)
+    sautils.Table('buildsets', metadata, autoload=True)
 
-    buildrequests = sa.Table('buildrequests', metadata, autoload=True)
+    buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
 
     builderid = sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'))
     builderid.create(buildrequests)
@@ -40,8 +42,8 @@ def migrate_data(migrate_engine):
     metadata.bind = migrate_engine
 
     # set up the tables we'll need to migrate
-    buildrequests = sa.Table('buildrequests', metadata, autoload=True)
-    builders = sa.Table('builders', metadata, autoload=True)
+    buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
+    builders = sautils.Table('builders', metadata, autoload=True)
 
     bName2bID = dict()
     q = sa.select([builders.c.id, builders.c.name])
@@ -84,9 +86,9 @@ def remove_buildername(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('builders', metadata, autoload=True)
-    sa.Table('buildsets', metadata, autoload=True)
-    buildrequests = sa.Table('buildrequests', metadata, autoload=True)
+    sautils.Table('builders', metadata, autoload=True)
+    sautils.Table('buildsets', metadata, autoload=True)
+    buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
 
     # Specify what the new table should look like
     buildrequests.c.buildername.drop()

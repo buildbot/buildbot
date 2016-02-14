@@ -91,7 +91,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
             # Verify that the columns have been upate to the Text type.
             for table, column in self.table_columns:
-                tbl = sa.Table(table, metadata, autoload=True)
+                tbl = sautils.Table(table, metadata, autoload=True)
                 self.assertIsInstance(getattr(tbl.c, column).type, sa.Text)
 
         return self.do_test_migration(22, 23, setup_thd, verify_thd)

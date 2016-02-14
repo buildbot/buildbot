@@ -88,7 +88,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            logs = sa.Table('logs', metadata, autoload=True)
+            logs = sautils.Table('logs', metadata, autoload=True)
             # check for presence of both columns
             logs.c.name
             logs.c.slug

@@ -60,12 +60,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildslaves = sa.Table('buildslaves',
-                                   metadata, autoload=True)
-            configured_buildslaves = sa.Table('configured_buildslaves',
-                                              metadata, autoload=True)
-            connected_buildslaves = sa.Table('connected_buildslaves',
-                                             metadata, autoload=True)
+            buildslaves = sautils.Table('buildslaves',
+                                        metadata, autoload=True)
+            configured_buildslaves = sautils.Table('configured_buildslaves',
+                                                   metadata, autoload=True)
+            connected_buildslaves = sautils.Table('connected_buildslaves',
+                                                  metadata, autoload=True)
 
             q = sa.select([buildslaves])
             self.assertEqual(map(dict, conn.execute(q).fetchall()), [

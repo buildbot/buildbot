@@ -15,10 +15,12 @@
 
 import os
 import sqlalchemy as sa
+
 import time
 
 from buildbot.db import pool
 from buildbot.test.util import db
+from buildbot.util import sautils
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -164,7 +166,7 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
     def tearDown(self):
         # try to delete the 'native_tests' table
         meta = sa.MetaData()
-        native_tests = sa.Table("native_tests", meta)
+        native_tests = sautils.Table("native_tests", meta)
 
         def thd(conn):
             native_tests.drop(bind=self.db_engine, checkfirst=True)
@@ -175,8 +177,8 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
 
     def test_ddl_and_queries(self):
         meta = sa.MetaData()
-        native_tests = sa.Table("native_tests", meta,
-                                sa.Column('name', sa.String(length=200)))
+        native_tests = sautils.Table("native_tests", meta,
+                                     sa.Column('name', sa.String(length=200)))
 
         # perform a DDL operation and immediately try to access that table;
         # this has caused problems in the past, so this is basically a

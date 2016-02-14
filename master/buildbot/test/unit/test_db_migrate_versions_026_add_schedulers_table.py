@@ -67,11 +67,11 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            schedulers = sa.Table('schedulers', metadata, autoload=True)
-            scheduler_masters = sa.Table('scheduler_masters', metadata,
-                                         autoload=True)
-            scheduler_changes = sa.Table('scheduler_changes', metadata,
-                                         autoload=True)
+            schedulers = sautils.Table('schedulers', metadata, autoload=True)
+            scheduler_masters = sautils.Table('scheduler_masters', metadata,
+                                              autoload=True)
+            scheduler_changes = sautils.Table('scheduler_changes', metadata,
+                                              autoload=True)
 
             q = sa.select([schedulers.c.id, schedulers.c.name,
                            schedulers.c.name_hash])

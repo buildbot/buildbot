@@ -15,10 +15,12 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
-    steps_table = sa.Table('steps', metadata, autoload=True)
+    steps_table = sautils.Table('steps', metadata, autoload=True)
     hidden = sa.Column('hidden', sa.SmallInteger, nullable=False, server_default='0')
     hidden.create(steps_table)

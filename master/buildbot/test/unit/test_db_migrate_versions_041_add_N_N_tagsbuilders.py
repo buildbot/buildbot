@@ -56,7 +56,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            builders = sa.Table('builders', metadata, autoload=True)
+            builders = sautils.Table('builders', metadata, autoload=True)
             q = sa.select([builders])
             num_rows = 0
             for row in conn.execute(q):
@@ -64,9 +64,9 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 num_rows += 1
             self.assertEqual(num_rows, 1)
 
-            tags = sa.Table('tags', metadata, autoload=True)
-            builders_tags = sa.Table('builders_tags', metadata,
-                                     autoload=True)
+            tags = sautils.Table('tags', metadata, autoload=True)
+            builders_tags = sautils.Table('builders_tags', metadata,
+                                          autoload=True)
 
             q = sa.select([tags.c.id, tags.c.name,
                            tags.c.name_hash])

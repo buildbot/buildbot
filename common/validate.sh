@@ -96,6 +96,20 @@ check_relnotes() {
         return 0
     fi
 }
+
+check_sa_Table() {
+    local bad_files=$(git grep -l 'sa\.Table(' | grep '\.py$' | grep -v '^master/buildbot/util/sautils\.py$')
+    if [ -n "${bad_files}" ]; then
+        echo "${YELLOW}Source files found containing 'sa.Table':${NORM}"
+        for f in $bad_files; do
+            echo " ${YELLOW}*${NORM} $f"
+        done
+        echo "${YELLOW}import buildbot.util.sautils and use sautils.Table instead.${NORM}"
+        return 1
+    fi
+    return 0
+}
+
 run_tests() {
     if [ -n "${TRIALTMP}" ]; then
         TEMP_DIRECTORY_OPT="--temp-directory ${TRIALTMP}"
@@ -155,6 +169,9 @@ status "checking formatting"
 check_tabs && not_ok "$REVRANGE adds tabs"
 check_long_lines && warning "$REVRANGE adds long lines"
 check_yield_defer_returnValue && not_ok "$REVRANGE yields defer.returnValue"
+
+status "checking for use of sa.Table"
+check_sa_Table || warning "use (buildbot.util.)sautils.Table instead of sa.Table"
 
 status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"

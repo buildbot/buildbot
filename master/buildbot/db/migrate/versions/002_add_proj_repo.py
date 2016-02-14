@@ -15,6 +15,8 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
@@ -27,5 +29,5 @@ def upgrade(migrate_engine):
         project = sa.Column('project', sa.String(512), nullable=False, server_default=sa.DefaultClause(''))
         project.create(table, populate_default=True)
 
-    add_cols(sa.Table('changes', metadata, autoload=True))
-    add_cols(sa.Table('sourcestamps', metadata, autoload=True))
+    add_cols(sautils.Table('changes', metadata, autoload=True))
+    add_cols(sautils.Table('sourcestamps', metadata, autoload=True))

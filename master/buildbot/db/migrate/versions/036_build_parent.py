@@ -15,13 +15,15 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    sa.Table('builds', metadata, autoload=True)
-    buildsets_table = sa.Table('buildsets', metadata, autoload=True)
+    sautils.Table('builds', metadata, autoload=True)
+    buildsets_table = sautils.Table('buildsets', metadata, autoload=True)
 
     # optional parent build
     parentbuildid = sa.Column('parent_buildid', sa.Integer,

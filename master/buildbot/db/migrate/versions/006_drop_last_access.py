@@ -15,10 +15,12 @@
 
 import sqlalchemy as sa
 
+from buildbot.util import sautils
+
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
 
-    table = sa.Table('last_access', metadata, autoload=True)
+    table = sautils.Table('last_access', metadata, autoload=True)
     table.drop()
