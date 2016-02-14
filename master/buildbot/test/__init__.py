@@ -27,9 +27,16 @@ import sys
 if sys.version_info[:2] < (3, 2):
     # Setup logging unhandled messages to stderr.
     # Since Python 3.2 similar functionality implemented through
-    # logging.lastResort handler
+    # logging.lastResort handler.
+    # Significant difference between this approach and Python 3.2 last resort
+    # approach is that in the current approach only records with log level
+    # equal or above to the root logger log level will be printed (WARNING by
+    # default). For example, there still will be warnings about missing
+    # handler for log if INFO or DEBUG records will be logged (but at least
+    # WARNINGs and ERRORs will be printed).
     import logging
-    logging.getLogger().addHandler(logging.StreamHandler())
+    _handler = logging.StreamHandler()
+    logging.getLogger().addHandler(_handler)
 
 # import mock so we bail out early if it's not installed
 try:

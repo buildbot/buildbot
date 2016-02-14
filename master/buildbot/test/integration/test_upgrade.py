@@ -117,12 +117,11 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
         self.db.setServiceParent(master)
         yield self.db.setup(check_version=False)
 
-        self._log_level, self._log_propagate = querylog.start_log_queries()
+        self._sql_log_handler = querylog.start_log_queries()
 
     @defer.inlineCallbacks
     def tearDownUpgradeTest(self):
-        querylog.stop_log_queries(level=self._log_level,
-                                  propagate=self._log_propagate)
+        querylog.stop_log_queries(self._sql_log_handler)
 
         if self.use_real_db:
             yield self.tearDownRealDatabase()
