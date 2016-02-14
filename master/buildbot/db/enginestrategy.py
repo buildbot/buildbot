@@ -79,7 +79,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         if u.database:
 
             # Use NullPool instead of the sqlalchemy-0.6.8-default
-            # SingletonThreadpool for sqlite to suppress the error in
+            # SingletonThreadPool for sqlite to suppress the error in
             # http://groups.google.com/group/sqlalchemy/msg/f8482e4721a89589,
             # which also explains that NullPool is the new default in
             # sqlalchemy 0.7 for non-memory SQLite databases.
@@ -90,8 +90,8 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
                 u.database = os.path.join(kwargs['basedir'], u.database)
 
         else:
-            # For in-memory database SQLAlchemy will SingletonThreadPool and
-            # we will run connection creation and all queries in the single
+            # For in-memory database SQLAlchemy will use SingletonThreadPool
+            # and we will run connection creation and all queries in the single
             # thread.
             # However connection destruction will be run from the main
             # thread, which is safe in our case, but not safe in general,
