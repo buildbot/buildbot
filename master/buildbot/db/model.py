@@ -275,7 +275,7 @@ class Model(base.DBConnectorComponent):
     )
 
     # link workers to the masters they are currently connected to
-    connected_workers = sa.Table(
+    connected_workers = sautils.Table(
         'connected_workers', metadata,
         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
         sa.Column('masterid', sa.Integer,
