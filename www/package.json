@@ -20,8 +20,10 @@
     "karma-coverage": "~0.2.4",
     "karma-jasmine": "~0.2.2",
     "karma-junit-reporter": "~0.2.2",
+    "karma-phantomjs-launcher": "^1.0.0",
     "karma-requirejs": "~0.2.2",
     "node-sass": "^3.4.2",
+    "phantomjs-prebuilt": "^2.1.4",
     "requirejs": "~2.1.14"
   }
 }
