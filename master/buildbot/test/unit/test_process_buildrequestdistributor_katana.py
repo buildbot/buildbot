@@ -44,9 +44,9 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         yield self.insertTestData(breqs + breqsclaims)
 
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': False}, startSlavenames={'slave-02': True})
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
 
-        self.assertEquals(builder.name, 'bldr2')
+        self.assertEquals((builder.name, brid, slavepool[0].name) , ('bldr2', 2,'slave-02'))
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderResumeQueue(self):
@@ -63,13 +63,13 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         yield self.insertTestData(breqs + breqsclaims)
 
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': True}, startSlavenames={'slave-02': False})
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
 
-        self.assertEquals(builder.name, 'bldr2')
+        self.assertEquals((builder.name, brid, slavepool[0].name) , ('bldr2', 2,'slave-01'))
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnknownBuilder(self):
-        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",priority=20, submitted_at=1449578391),
+        breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1", priority=20, submitted_at=1449578391),
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2", priority=50, submitted_at=1450171039)]
 
         yield self.insertTestData(breqs)
@@ -85,17 +85,17 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
 
         self.patch(log, 'msg', addLog)
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
         # builder could be removed from master after reconfiguration
         # in this case brd should pick next high priority builder and a message should be added to log
-        self.assertEquals(builder.name, 'bldr1')
+        self.assertEquals((builder.name, brid, slavepool[0].name) , ('bldr1', 1, 'slave-02'))
         self.assertEquals(self.log, self.expectedLog)
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderEmptyQueue(self):
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
         self.assertEquals(builder, None)
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
         self.assertEquals(builder, None)
 
     @defer.inlineCallbacks
@@ -114,9 +114,9 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
 
         yield self.insertTestData(breqs + breqsclaims)
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
 
-        self.assertEquals(builder.name, "bldr2")
+        self.assertEquals((builder.name, brid, slavepool[0].name) , ('bldr2', 1, 'slave-01'))
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderNotAvailableSlavesToProcessRequests(self):
@@ -135,10 +135,10 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
 
         yield self.insertTestData(breqs + breqsclaims)
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
         self.assertEquals(builder, None)
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
         self.assertEquals(builder, None)
 
     @defer.inlineCallbacks
@@ -157,14 +157,14 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False, 'slave-02': True})
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': True, 'slave-02': True})
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
         # selected slave not available pick next builder
-        self.assertEquals(builder.name, "bldr2")
+        self.assertEquals((builder.name, brid, slavepool[0].name), ("bldr2", 1, 'slave-02'))
 
         # selected slave available
         self.slaves['slave-01'].isAvailable.return_value = True
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
-        self.assertEquals(builder.name, "bldr1")
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.assertEquals((builder.name, brid, slavepool[0].name), ("bldr1", 2, 'slave-02'))
 
         # Unclaim queue should ignored selected slave
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
@@ -172,7 +172,8 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': True, 'slave-02': True},
                            startSlavenames={'slave-03': True})
 
-        self.assertEquals(builder.name, "bldr1")
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.assertEquals((builder.name, brid, slavepool[0].name), ("bldr1", 2, 'slave-03'))
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderSelectedSlaveResumeQueue(self):
@@ -195,13 +196,13 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
                            startSlavenames={'slave-03': True})
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
         # selected slave not available pick next builder
-        self.assertEquals(builder.name, "bldr2")
+        self.assertEquals((builder.name, brid, slavepool[0].name), ("bldr2", 1, 'slave-02'))
         # selected slave is available
         self.slaves['slave-01'].isAvailable.return_value = True
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
-        self.assertEquals(builder.name, "bldr1")
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.assertEquals((builder.name, brid, slavepool[0].name), ("bldr1", 2, 'slave-02'))
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderIgnoreSelectedSlaveResumeQueue(self):
@@ -225,8 +226,8 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
                            startSlavenames={'slave-03': True})
 
-        builder = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
-        self.assertEquals(builder.name,  "bldr1")
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.assertEquals((builder.name, brid, slavepool[0].name), ("bldr1", 2, 'slave-03'))
 
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):
@@ -234,10 +235,14 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpComponents()
+        self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
+        self.brd.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.tearDownComponents()
+        if self.brd.running:
+            yield self.brd.stopService()
 
     @defer.inlineCallbacks
     def instertTestDataPopNextBuild(self, slavepool):
@@ -288,9 +293,10 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
                                               slavenames={'slave-01': False},
                                               startSlavenames={'slave-02': True})
 
-        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
-
         yield self.insertTestDataUnclaimedBreqs()
+
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(builder, brid, slavepool, self.master)
 
         slave, breq = yield self.buildChooser.popNextBuild()
 
@@ -302,13 +308,13 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
                                               slavenames={'slave-01': False, 'slave-02': True},
                                               startSlavenames={'slave-03': True})
 
-        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
-
         yield self.instertTestDataPopNextBuild(slavepool=Slavepool.startSlavenames)
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, brid, slavepool, self.master)
 
         slave, breq = yield self.buildChooser.popNextBuildToResume()
 
-        self.assertEquals((slave.name, breq.id), ('slave-03', breq.id))
+        self.assertEquals((slave.name, breq.id), ('slave-03', 2))
 
     @defer.inlineCallbacks
     def test_popNextBuildToResumeShouldCheckSelectedSlave(self):
@@ -316,21 +322,20 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
                                               slavenames={'slave-01': False, 'slave-02': True},
                                               startSlavenames={'slave-03': True})
 
-        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
-
         yield self.instertTestDataPopNextBuild(slavepool=Slavepool.slavenames)
+
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(builder, brid, slavepool, self.master)
 
         slave, breq = yield self.buildChooser.popNextBuildToResume()
 
-        self.assertEquals((slave, breq), (None, None))
+        self.assertEquals((slave.name, breq.id), ('slave-02', 1))
 
     @defer.inlineCallbacks
     def test_fetchResumeBrdictsSortedByPriority(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
-                                              slavenames={'slave-01': False},
+                                              slavenames={'slave-01': True},
                                               startSlavenames={'slave-02': False})
-
-        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
 
         breqs = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
                                     priority=100, submitted_at=1450171039),
@@ -350,28 +355,36 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
 
         yield self.insertTestData(breqs + breqsclaims)
 
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.resume)
+        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(builder, brid, slavepool, self.master)
+
         breqs = yield self.buildChooser._fetchResumeBrdicts()
 
-        self.assertEquals([br['brid'] for br in breqs], [3, 2])
+        self.assertEquals([br['brid'] for br in breqs], [3])
 
     @defer.inlineCallbacks
     def test_fetchUnclaimedBrdictsSortedByPriority(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
                                               slavenames={'slave-01': False},
-                                              startSlavenames={'slave-02': False})
-
-        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(self.bldr, self.master)
+                                              startSlavenames={'slave-02': True})
 
         yield self.insertTestDataUnclaimedBreqs()
 
+        builder, brid, slavepool = yield self.brd._getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.buildChooser = buildrequestdistributor.KatanaBuildChooser(builder, brid, slavepool, self.master)
+
         breqs = yield self.buildChooser._fetchUnclaimedBrdicts()
 
-        self.assertEquals([br['brid'] for br in breqs], [3, 2, 1])
+        self.assertEquals([br['brid'] for br in breqs], [3])
 
 
-class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
+class TestKatanaMaybeStartBuildsOnBuilder(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
+        yield self.setUpComponents()
+        self.setUpKatanaBuildRequestDistributor()
+        '''
         self.botmaster = mock.Mock(name='botmaster')
         self.botmaster.builders = {}
         self.master = self.botmaster.master = mock.Mock(name='master')
@@ -384,12 +397,13 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
         self.master.caches = fakemaster.FakeCaches()
         self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
         self.brd.startService()
-
+        '''
         self.startedBuilds = []
 
         # TODO: this is a terrible way to detect the "end" of the test -
         # it regularly completes too early after a simple modification of
         # a test.  Is there a better way?
+        '''
         self.quiet_deferred = defer.Deferred()
         def _quiet():
             if self.quiet_deferred:
@@ -398,7 +412,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
             else:
                 self.fail("loop has already gone quiet once")
         self.brd._quiet = _quiet
-
+        '''
         self.bldr = self.createBuilder('A')
 
         self.base_rows = [fakedb.SourceStampSet(id=1),
@@ -428,9 +442,11 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
                                  fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
                                                      priority=13, submitted_at=1300305712, results=-1)]
 
+    @defer.inlineCallbacks
     def tearDown(self):
+        yield self.tearDownComponents()
         if self.brd.running:
-            return self.brd.stopService()
+            yield self.brd.stopService()
 
     def createBuilder(self, name):
 
@@ -440,10 +456,20 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
         bldr.building = []
 
         def maybeStartBuild(slave, builds):
-            self.startedBuilds.append((slave.name, builds))
-            self.bldr.building = [ mock.Mock()]
-            self.bldr.building[0].requests = []
-            self.bldr.building[0].requests.extend(builds)
+            build = mock.Mock()
+            if not bldr.building:
+                self.bldr.building = [build]
+            else:
+                self.bldr.building.append(build)
+
+            build.build_status = mock.Mock()
+            build.build_status.number = len(bldr.building)
+            self.bldr.building[-1].requests = []
+            self.bldr.building[-1].requests.extend(builds)
+            slave.isAvailable.return_value = False
+
+            self.startedBuilds.append((slave.name, build))
+
             return defer.succeed(True)
 
         bldr.maybeStartBuild = maybeStartBuild
@@ -479,8 +505,8 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
     def assertBuildsStarted(self, exp):
         # munge builds_started into (slave, [brids])
         builds_started = [
-                (slave, [br.id for br in breqs])
-                for (slave, breqs) in self.startedBuilds ]
+                (slave, [br.id for br in build.requests])
+                for (slave, build) in self.startedBuilds ]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     def assertBuildingRequets(self, exp):
@@ -488,12 +514,10 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     @defer.inlineCallbacks
-    def do_test_maybeStartBuildsOnBuilder(self, rows=[], exp_claims=[], exp_brids=None, exp_builds=[]):
-        yield self.master.db.insertTestData(rows)
+    def do_test_maybeStartBuildsOnBuilder(self, rows=[], exp_brids=None, exp_builds=[]):
+        yield self.insertTestData(rows)
 
-        yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
-
-        self.master.db.buildrequests.assertMyClaims(exp_claims)
+        yield self.brd._callMaybeStartBuildsOnBuilder()
 
         if exp_brids:
                 self.assertBuildingRequets(exp_brids)
@@ -518,48 +542,44 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
                                  fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
                                                      submitted_at=1300305712, priority=75, results=-1)]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[2], exp_builds=[('slave-01', [2])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[2], exp_builds=[('slave-01', [2])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_mergeBuilding(self):
-        self.addSlaves({'slave-01':1})
+        self.addSlaves({'slave-01': 1})
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=self.base_rows, exp_claims=[1], exp_brids=[1])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=self.base_rows, exp_brids=[1])
 
-        self.master.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
-        self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
-                                                                       branch="az", repository="xz", revision="ww")])
-        self.master.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
-        self.master.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="A",
-                                                                  submitted_at=130000)])
+        yield self.insertTestData([fakedb.SourceStampSet(id=2),
+                                   fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
+                                                      branch="az", repository="xz", revision="ww"),
+                                   fakedb.Buildset(id=2, reason='because', sourcestampsetid=2),
+                                   fakedb.BuildRequest(id=2, buildsetid=2, buildername="A", submitted_at=130000)])
 
-        yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[1, 2], exp_brids=[1, 2])
+        yield self.do_test_maybeStartBuildsOnBuilder(exp_brids=[1, 2], exp_builds=[('slave-01', [1, 2])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_mergeBuildingCouldNotMerge(self):
-        self.addSlaves({'slave-01':1})
+        self.addSlaves({'slave-01': 1})
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=self.base_rows, exp_claims=[1], exp_brids=[1])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=self.base_rows, exp_brids=[1])
 
-        self.master.db.sourcestampsets.insertTestData([fakedb.SourceStampSet(id=2)])
-        self.master.db.sourcestamps.insertTestData([fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
-                                                                       branch="az", repository="xz", revision="bb")])
-        self.master.db.buildsets.insertTestData([fakedb.Buildset(id=2, reason='because', sourcestampsetid=2)])
-        self.master.db.buildrequests.insertTestData([fakedb.BuildRequest(id=2, buildsetid=2, buildername="A",
-                                                                  submitted_at=130000)])
+        yield self.insertTestData([fakedb.SourceStampSet(id=2),
+                                   fakedb.SourceStamp(id=2, sourcestampsetid=2, codebase='c',
+                                                      branch="az", repository="xz", revision="bb"),
+                                   fakedb.Buildset(id=2, reason='because', sourcestampsetid=2),
+                                   fakedb.BuildRequest(id=2, buildsetid=2, buildername="A", submitted_at=130000)])
 
-        yield self.do_test_maybeStartBuildsOnBuilder(exp_claims=[1, 2], exp_brids=[2])
+        yield self.do_test_maybeStartBuildsOnBuilder(exp_brids=[1], exp_builds=[('slave-01', [1])])
 
     @defer.inlineCallbacks
     def test_maybeStartBuild_selectedSlave(self):
         self.addSlaves({'slave-01': 1, 'slave-02': 1, 'slave-03': 1, 'slave-04': 1})
 
         rows = self.base_rows + [fakedb.BuildsetProperty(buildsetid=1, property_name='selected_slave',
-                                        property_value='["slave-03", "Force Build Form"]')]
+                                                         property_value='["slave-03", "Force Build Form"]')]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1], exp_builds=[('slave-03', [1])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[1], exp_builds=[('slave-03', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchSelectedSlave(self):
@@ -569,8 +589,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
                                                                 property_name='selected_slave',
                                                                 property_value='["slave-02", "Force Build Form"]')]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1], exp_builds=[('slave-02', [1])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[1], exp_builds=[('slave-02', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchForceRebuild(self):
@@ -580,8 +599,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
                                                                 property_name='force_rebuild',
                                                                 property_value='[true, "Force Build Form"]')]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1], exp_builds=[('slave-01', [1])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[1], exp_builds=[('slave-01', [1])])
 
 
     @defer.inlineCallbacks
@@ -592,8 +610,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
                                                                 property_name='force_chain_rebuild',
                                                                 property_value='[true, "Force Build Form"]')]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1], exp_builds=[('slave-01', [1])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[1], exp_builds=[('slave-01', [1])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebasesMatchBuildLatestRev(self):
@@ -602,8 +619,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
         rows = self.pending_requests + [fakedb.BuildsetProperty(buildsetid=1, property_name='buildLatestRev',
                                         property_value='[true, "Force Build Form"]')]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1, 2], exp_builds=[('slave-01', [1, 2])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[1, 2], exp_builds=[('slave-01', [1, 2])])
 
     @defer.inlineCallbacks
     def test_mergePending_CodebaseDoesNotMatch(self):
@@ -624,5 +640,4 @@ class TestKatanaMaybeStartBuildsOnBuilder(unittest.TestCase):
                 fakedb.BuildRequest(id=2, buildsetid=2, buildername='A',
                     priority=13, submitted_at=1300305712, results=-1)]
 
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                exp_claims=[1], exp_builds=[('slave-01', [1])])
+        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows, exp_brids=[1], exp_builds=[('slave-01', [1])])

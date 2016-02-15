@@ -209,7 +209,7 @@ class BasicBuildChooser(BuildChooserBase):
         self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
 
     @defer.inlineCallbacks
-    def _pickUpSlave(self, slave, breq, slavepool=None):
+    def _pickUpSlave(self, slave, breq):
 
         #  3. make sure slave+ is usable for the breq
         recycledSlaves = []
@@ -219,7 +219,7 @@ class BasicBuildChooser(BuildChooserBase):
                 break
             # try a different slave
             recycledSlaves.append(slave)
-            slave = yield self._popNextSlave(slavepool)
+            slave = yield self._popNextSlave()
 
         # recycle the slaves that we didnt use to the head of the queue
         # this helps ensure we run 'nextSlave' only once per slave choice
@@ -305,27 +305,24 @@ class BasicBuildChooser(BuildChooserBase):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
-    def _popNextSlave(self, slavepool=None):
+    def _popNextSlave(self):
         # use 'preferred' slaves first, if we have some ready
-        if slavepool is None:
-            slavepool = self.slavepool
-
         if self.preferredSlaves:
             slave = self.preferredSlaves.pop(0)
             defer.returnValue(slave)
             return
         
-        while slavepool:
+        while self.slavepool:
             try:
-                slave = yield self.nextSlave(self.bldr, slavepool)
+                slave = yield self.nextSlave(self.bldr, self.slavepool)
             except Exception:
                 slave = None
             
-            if not slave or slave not in slavepool:
+            if not slave or slave not in self.slavepool:
                 # bad slave or no slave returned
                 break
 
-            slavepool.remove(slave)
+            self.slavepool.remove(slave)
             
             canStart = yield self.bldr.canStartWithSlavebuilder(slave)
             if canStart:
@@ -353,9 +350,24 @@ class BasicBuildChooser(BuildChooserBase):
 
 class KatanaBuildChooser(BasicBuildChooser):
 
-    def __init__(self, bldr, master):
-        BasicBuildChooser.__init__(self, bldr, master)
-        self.resumeSlavePool = self.bldr.getAvailableSlavesToResume()
+    def __init__(self, bldr, brid, slavepool, master):
+        # By default katana  merges Requests
+        if bldr.config.mergeRequests is None:
+            bldr.config.mergeRequests = True
+        BuildChooserBase.__init__(self, bldr, master)
+
+        self.nextSlave = self.bldr.config.nextSlave
+        if not self.nextSlave:
+            self.nextSlave = lambda _,slaves: random.choice(slaves) if slaves else None
+
+        self.preferredSlaves = []
+        self.rejectedSlaves = []
+
+        self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
+
+        # katana initialized it from build request distributor
+        self.slavepool = slavepool
+        self.nextBrid = brid
 
     @defer.inlineCallbacks
     def claimBuildRequests(self, breqs):
@@ -396,15 +408,15 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
-    def buildHasSelectedSlave(self, breq, slavepool):
+    def buildHasSelectedSlave(self, breq):
         if self.buildRequestHasSelectedSlave(breq):
             slavebuilder = self.getSelectedSlaveFromBuildRequest(breq)
 
-            if not slavebuilder or slavebuilder.isAvailable() is False or slavebuilder not in slavepool:
+            if not slavebuilder or slavebuilder.isAvailable() is False or slavebuilder not in self.slavepool:
                 defer.returnValue(None)
                 return
 
-            slavepool.remove(slavebuilder)
+            self.slavepool.remove(slavebuilder)
 
             canStart = yield self.bldr.canStartWithSlavebuilder(slavebuilder)
             if canStart:
@@ -425,18 +437,8 @@ class KatanaBuildChooser(BasicBuildChooser):
             defer.returnValue(None)
             return
 
-        if self.nextBuild:
-            # nextBuild expects BuildRequest objects
-            breqs = yield self._getUnclaimedBuildRequests()
-            try:
-                nextBreq = yield self.nextBuild(self.bldr, breqs)
-                if nextBreq not in breqs:
-                    nextBreq = None
-            except Exception:
-                nextBreq = None
-        else:
-            # otherwise just return the first build
-            nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts)
+        # return the first build
+        nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts)
 
         defer.returnValue(nextBreq)
 
@@ -543,7 +545,10 @@ class KatanaBuildChooser(BasicBuildChooser):
     def _fetchUnclaimedBrdicts(self):
         if self.unclaimedBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                    buildername=self.bldr.name, claimed=False, sorted=True)
+                    buildername=self.bldr.name,
+                    brids=[self.nextBrid],
+                    claimed=False,
+                    sorted=True)
             self.unclaimedBrdicts = brdicts
         defer.returnValue(self.unclaimedBrdicts)
 
@@ -553,9 +558,13 @@ class KatanaBuildChooser(BasicBuildChooser):
         # since the status is not in the db
         if self.resumeBrdicts is None:
             brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                    buildername=self.bldr.name, claimed="mine",
-                    complete=False, results=RESUME,
-                    mergebrids="exclude", sorted=True)
+                    buildername=self.bldr.name,
+                    brids=[self.nextBrid],
+                    claimed="mine",
+                    complete=False,
+                    results=RESUME,
+                    mergebrids="exclude",
+                    sorted=True)
             self.resumeBrdicts = brdicts
         defer.returnValue(self.resumeBrdicts)
 
@@ -570,12 +579,6 @@ class KatanaBuildChooser(BasicBuildChooser):
         nextBreq = yield self._chooseBuildRequest(self.resumeBrdicts)
         defer.returnValue(nextBreq)
 
-    def getResumeSlavepool(self, selectedSlavepool):
-        if selectedSlavepool == Slavepool.startSlavenames:
-            return self.slavepool
-
-        return self.resumeSlavePool
-
     @defer.inlineCallbacks
     def popNextBuildToResume(self):
         nextBuild = (None, None)
@@ -586,11 +589,9 @@ class KatanaBuildChooser(BasicBuildChooser):
         if not breq:
             defer.returnValue(nextBuild)
 
-        slavepool = self.getResumeSlavepool(breq.slavepool)
-
         # run the build on a specific slave
-        if breq.slavepool != Slavepool.startSlavenames and self.buildRequestHasSelectedSlave(breq):
-            slavebuilder = yield self.buildHasSelectedSlave(breq, slavepool)
+        if breq.slavepool and breq.slavepool != Slavepool.startSlavenames and self.buildRequestHasSelectedSlave(breq):
+            slavebuilder = yield self.buildHasSelectedSlave(breq)
             if slavebuilder is not None:
                 nextBuild = (slavebuilder, breq)
 
@@ -599,10 +600,10 @@ class KatanaBuildChooser(BasicBuildChooser):
             return
 
         #  2. pick a slave
-        slave = yield self._popNextSlave(slavepool)
+        slave = yield self._popNextSlave()
 
         #  3. make sure slave+ is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq, slavepool) if slave else None
+        slave = yield self._pickUpSlave(slave, breq) if slave else None
 
         #  4. done? otherwise we will try another build
         if slave:
@@ -699,7 +700,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         # check if should run the build on a specific slave
         if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
-            slavebuilder = yield self.buildHasSelectedSlave(breq, self.slavepool)
+            slavebuilder = yield self.buildHasSelectedSlave(breq)
             if slavebuilder is not None:
                 nextBuild = (slavebuilder, breq)
 
@@ -708,10 +709,10 @@ class KatanaBuildChooser(BasicBuildChooser):
             return
 
         #  2. pick a slave
-        slave = yield self._popNextSlave(self.slavepool)
+        slave = yield self._popNextSlave()
 
         #  3. make sure slave+ is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq, self.slavepool) if slave else None
+        slave = yield self._pickUpSlave(slave, breq) if slave else None
 
         #  4. done? otherwise we will try another build
         if slave:
@@ -1066,25 +1067,28 @@ class KatanaBuildRequestDistributor(service.Service):
 
                 continue
 
-            buildRequestShouldUseSelectedSlave = br["selected_slave"] \
+            buildRequestShouldUseSelectedSlave = "selected_slave" in br and br["selected_slave"] \
                                         and br['results'] == BEGINNING and bldr.shouldUseSelectedSlave()
 
-            resumingBuildRequestShouldUseSelectedSlave = br["selected_slave"] \
+            resumingBuildRequestShouldUseSelectedSlave = "selected_slave" in br and br["selected_slave"] \
                                         and br['results'] == RESUME and br['slavepool'] != Slavepool.startSlavenames
+
+            def nextBuilder():
+                return (bldr, br['brid'], availableSlaves)
 
             if buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave:
                 if bldr.slaveIsAvailable(slavename=br["selected_slave"]):
-                    defer.returnValue(bldr)
+                    defer.returnValue(nextBuilder())
                     return
 
                 # slave not available check next br
                 continue
 
             # bldr can start the build on any available slave
-            defer.returnValue(bldr)
+            defer.returnValue(nextBuilder())
             return
 
-        defer.returnValue(None)
+        defer.returnValue((None, None, None))
 
     def timerLogFinished(self, msg, timer):
         log.msg(msg + " started at %s finished at %s elapsed %s" %
@@ -1104,7 +1108,7 @@ class KatanaBuildRequestDistributor(service.Service):
         # get the actual builder object that should start running new builds
         timer = self.timerLogStart(msg="_callMaybeStartBuildsOnBuilder starting _getNextPriorityBuilder",
                                    function_name="KatanaBuildRequestDistributor._callMaybeStartBuildsOnBuilder()")
-        bldr = yield self._getNextPriorityBuilder(queue=Queue.unclaimed)
+        bldr, brid, slavepool = yield self._getNextPriorityBuilder(queue=Queue.unclaimed)
         self.timerLogFinished(msg="_callMaybeStartBuildsOnBuilder _getNextPriorityBuilder finished", timer=timer)
 
         if bldr is None:
@@ -1113,7 +1117,7 @@ class KatanaBuildRequestDistributor(service.Service):
 
         try:
             log.msg("_maybeStartBuildsOnBuilder:  %s" % bldr.name)
-            yield self._maybeStartBuildsOnBuilder(bldr)
+            yield self._maybeStartBuildsOnBuilder(bldr, brid, slavepool)
 
         except Exception:
             log.err(Failure(), "from maybeStartBuild for builder '%s'" % (bldr.name,))
@@ -1125,7 +1129,7 @@ class KatanaBuildRequestDistributor(service.Service):
         # get the actual builder object that should start running new builds
         timer = self.timerLogStart(msg="_callMaybeResumeBuildsOnBuilder starting _getNextPriorityBuilder",
                                    function_name="KatanaBuildRequestDistributor._callMaybeResumeBuildsOnBuilder()")
-        bldr = yield self._getNextPriorityBuilder(queue=Queue.resume)
+        bldr, brid, slavepool = yield self._getNextPriorityBuilder(queue=Queue.resume)
         self.timerLogFinished(msg="_callMaybeResumeBuildsOnBuilder _getNextPriorityBuilder finished", timer=timer)
 
         if bldr is None:
@@ -1134,7 +1138,7 @@ class KatanaBuildRequestDistributor(service.Service):
 
         try:
             log.msg("_maybeResumeBuildsOnBuilder:  %s" % bldr.name)
-            yield self._maybeResumeBuildsOnBuilder(bldr)
+            yield self._maybeResumeBuildsOnBuilder(bldr, brid, slavepool)
 
         except Exception:
             log.err(Failure(), "from maybeStartBuild for builder '%s'" % (bldr.name,))
@@ -1193,8 +1197,6 @@ class KatanaBuildRequestDistributor(service.Service):
         msg = "_maybeResumeBuildOnBuilder is resuming build"
 
         if not buildStarted:
-            bc.resumeSlavePool = bldr.getAvailableSlavesToResume()
-            bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
             self.botmaster.maybeStartBuildsForBuilder(bldr.name)
             msg = "_maybeResumeBuildOnBuilder could not resume build"
@@ -1217,7 +1219,6 @@ class KatanaBuildRequestDistributor(service.Service):
         msg = "_maybeStartNewBuildsOnBuilder is starting build"
 
         if not buildStarted:
-            bc.slavepool = bldr.getAvailableSlaves()
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
             # and try starting builds again.  If we still have a working slave,
             # then this may re-claim the same buildrequests
@@ -1227,11 +1228,11 @@ class KatanaBuildRequestDistributor(service.Service):
         self.logResumeOrStartBuildStatus(msg, slave, breqs)
 
     @defer.inlineCallbacks
-    def _maybeResumeBuildsOnBuilder(self, bldr):
+    def _maybeResumeBuildsOnBuilder(self, bldr, brid, slavepool):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
 
-        bc = self.createBuildChooser(bldr, self.master)
+        bc = self.createBuildChooser(bldr, brid, slavepool, self.master)
 
         try:
             if isinstance(bc, KatanaBuildChooser):
@@ -1241,11 +1242,11 @@ class KatanaBuildRequestDistributor(service.Service):
             log.msg(Failure(), "from _maybeResumeBuildsOnBuilder for builder '%s'" % bldr.name)
                 
     @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr):
+    def _maybeStartBuildsOnBuilder(self, bldr, brid, slavepool):
         # create a chooser to give us our next builds
         # this object is temporary and will go away when we're done
 
-        bc = self.createBuildChooser(bldr, self.master)
+        bc = self.createBuildChooser(bldr, brid, slavepool, self.master)
 
         try:
             yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
@@ -1253,9 +1254,9 @@ class KatanaBuildRequestDistributor(service.Service):
         except Exception:
             log.msg(Failure(), "from _maybeStartBuildsOnBuilder for builder '%s'" % bldr.name)
 
-    def createBuildChooser(self, bldr, master):
+    def createBuildChooser(self, bldr, brid, slavepool, master):
         # just instantiate the build chooser requested
-        return self.BuildChooser(bldr, master)
+        return self.BuildChooser(bldr, brid, slavepool, master)
             
     def _quiet(self):
         # shim for tests

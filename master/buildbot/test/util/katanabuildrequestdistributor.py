@@ -68,7 +68,7 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
         pr.enable()
         res = yield func(**kwargs)
         pr.disable()
-        ps = pstats.Stats(pr).sort_stats('time')
+        ps = pstats.Stats(pr).sort_stats('cumtime')
         ps.print_stats()
         # TODO: we should collect the profile data and compare timing
         # expected_total_tt is a reference time

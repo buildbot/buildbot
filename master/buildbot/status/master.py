@@ -189,7 +189,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
 
-            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number) \
+            buildbotURL = bmdict['buildbotURL'] if bmdict and 'buildbotURL' in bmdict else ''
+            if not buildbotURL:
+                log.msg("Did not find buildbotURL for buildrequest self.master.db.mastersconfig.getMasterURL(%d)"
+                        % brid)
+
+            url['path'] = buildbotURL + self.getBuildersPath(builder_name, build_number) \
                           + getCodebasesArg(sourcestamps=sourcestamps)
             url['text'] = self.getURLText(name, build_number)
             return url

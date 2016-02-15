@@ -155,13 +155,6 @@ class Builder(config.ReconfigurableServiceMixin,
         slave_builder = self.getSlaveBuilder(slavename=slavename)
         return slave_builder.isAvailable() if slave_builder else False
 
-    def getAvailableSlavesToProcessBuildRequests(self, slavepool):
-        getSlavesFunc = self.getAvailableSlaves if slavepool == Slavepool.startSlavenames \
-            else self.getAvailableSlavesToResume if slavepool == Slavepool.slavenames \
-            else lambda: None
-
-        return getSlavesFunc()
-
     def reclaimAllBuilds(self):
         brids = set()
         for b in self.building:
@@ -318,10 +311,6 @@ class Builder(config.ReconfigurableServiceMixin,
         except Exception:
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
-    def getAvailableSlavesToResume(self):
-        return [sb for sb in self.slaves
-                if sb.isAvailable()]
-
     def getAvailableSlaves(self):
         if self.config.startSlavenames:
             return [sb for sb in self.startSlaves
@@ -329,6 +318,12 @@ class Builder(config.ReconfigurableServiceMixin,
 
         return [sb for sb in self.slaves
                 if sb.isAvailable()]
+
+    def getAvailableSlavesToProcessBuildRequests(self, slavepool):
+        slavelist = self.startSlaves if (self.config.startSlavenames and slavepool == Slavepool.startSlavenames) \
+            else self.slaves
+
+        return [sb for sb in slavelist if sb.isAvailable()]
 
     def canStartWithSlavebuilder(self, slavebuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
