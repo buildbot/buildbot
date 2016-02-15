@@ -142,7 +142,7 @@ module.exports = function (grunt) {
         karma: {
             options: {
                 configFile: "script/karma.config.js",
-                browsers: ["Chrome"],
+                browsers: ["PhantomJS"],
                 singleRun: true,
                 runnerPort: 9876
             },
@@ -220,7 +220,7 @@ module.exports = function (grunt) {
         }
         grunt.task.run(["fontelloUpdate", "sass", "cssmin", "handlebars:compile", "requirejs:" + target]);
     });
-    grunt.registerTask("test", ["karma:unit"]);
+    grunt.registerTask("test", ["handlebars:compile", "karma:unit"]);
     grunt.registerTask("coverage", ["karma:coverage", "open:coverage"]);
     grunt.registerTask("default", ["build", "watch"]);
 

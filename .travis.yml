@@ -25,7 +25,7 @@ install:
 script:
   - if [ "$TEST_TARGET" = "master" ]; then coverage run `which trial` buildbot; fi
   - if [ "$TEST_TARGET" = "slave" ]; then coverage run `which trial` buildslave; fi
-  - if [ "$TEST_TARGET" = "javascript" ]; then karma start script/karma.config.js --single-run; fi
+  - if [ "$TEST_TARGET" = "javascript" ]; then grunt test; fi
 
 after_success:
   - if [ "$TEST_TARGET" != "javascript" ]; then coveralls; fi
