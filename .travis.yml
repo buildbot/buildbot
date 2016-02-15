@@ -14,6 +14,9 @@ before_install:
   - sudo apt-get install libsasl2-dev libmysqlclient-dev libldap2-dev libssl-dev python-dev
   - if [ $TEST_TARGET = javascript]; then npm install -g grunt-cli; fi
 
+before_script:
+  - if [ "$TEST_TARGET" = "javascript" ]; then export TZ=Europe/Copenhagen; fi
+
 install:
   - if [ "$TEST_TARGET" != "javascript" ]; then pip install -e $TEST_TARGET; fi
   - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v mock==1.0.1; fi
