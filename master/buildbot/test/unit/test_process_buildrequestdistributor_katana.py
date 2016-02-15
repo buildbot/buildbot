@@ -384,35 +384,8 @@ class TestKatanaMaybeStartBuildsOnBuilder(KatanaBuildRequestDistributorTestSetup
     def setUp(self):
         yield self.setUpComponents()
         self.setUpKatanaBuildRequestDistributor()
-        '''
-        self.botmaster = mock.Mock(name='botmaster')
-        self.botmaster.builders = {}
-        self.master = self.botmaster.master = mock.Mock(name='master')
-        self.master.db = fakedb.FakeDBConnector(self)
-        class getCache(object):
-            def get_cache(self):
-                return self
-            def get(self, name):
-                return
-        self.master.caches = fakemaster.FakeCaches()
-        self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
-        self.brd.startService()
-        '''
         self.startedBuilds = []
 
-        # TODO: this is a terrible way to detect the "end" of the test -
-        # it regularly completes too early after a simple modification of
-        # a test.  Is there a better way?
-        '''
-        self.quiet_deferred = defer.Deferred()
-        def _quiet():
-            if self.quiet_deferred:
-                d, self.quiet_deferred = self.quiet_deferred, None
-                d.callback(None)
-            else:
-                self.fail("loop has already gone quiet once")
-        self.brd._quiet = _quiet
-        '''
         self.bldr = self.createBuilder('A')
 
         self.base_rows = [fakedb.SourceStampSet(id=1),
