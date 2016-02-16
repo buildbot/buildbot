@@ -121,19 +121,19 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', 'pass', '-c', 'p4_client1',
-                                 'client', '-i'],
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'client', '-i'],
                         initialStdin=client_spec)
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', 'pass', '-c', 'p4_client1',
-                                 'sync', '//depot...@100'])
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'sync', '//depot...@100'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', 'pass', '-c', 'p4_client1',
-                                 'changes', '-m1', '#have'])
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -154,21 +154,21 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', 'pass', '-c', 'p4_client1',
-                                 'client', '-i'],
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'client', '-i'],
                         initialStdin=client_stdin,)
             + 0,
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=(['p4', '-p', 'localhost:12000', '-u', 'user',
-                                  '-P', 'pass', '-c', 'p4_client1']
+                                  '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', 'p4_client1']
                                  + extra_args + ['sync']))
             + 0,
             ExpectShell(workdir=workdir,
                         timeout=timeout,
                         command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', 'pass', '-c', 'p4_client1',
-                                 'changes', '-m1', '#have'])
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -451,13 +451,13 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', 'pass', '-c', p4client, 'client',
-                                 '-i'],
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
+                                 '-c', p4client, 'client', '-i'],
                         initialStdin=client_stdin)
             + 0,
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', 'pass', '-c', p4client]
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', p4client]
                         + extra_args
                         + ['sync', '#none'])
             + 0,
@@ -467,13 +467,13 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', 'pass', '-c', p4client]
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', p4client]
                         + extra_args + ['sync'])
             + 0,
             ExpectShell(workdir=workdir,
                         command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', 'pass', '-c', p4client, 'changes',
-                                 '-m1', '#have'])
+                                 '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', p4client,
+                                 'changes', '-m1', '#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
