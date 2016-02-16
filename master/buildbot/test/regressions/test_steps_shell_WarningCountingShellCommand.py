@@ -17,6 +17,7 @@ from twisted.trial import unittest
 
 import re
 
+
 from buildbot.steps.shell import WarningCountingShellCommand
 
 
@@ -48,3 +49,10 @@ class TestWarningCountingShellCommand(unittest.TestCase):
         # list of warnings
         expectedWarnings = 0
         self.assertEquals(len(warnings), expectedWarnings)
+
+    # To test if we can catch the exception when and return an error
+    # the suppressionFile does not exist or no right to access the file.
+    def testWithNotExistSuppressionFile(self):
+        # Use a filename which doesn't exist
+        w = WarningCountingShellCommand(
+            suppressionFile='impossiblefilename.txt')
