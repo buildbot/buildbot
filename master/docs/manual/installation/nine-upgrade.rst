@@ -117,7 +117,7 @@ See the reporter index for the full, current list.
 
 A few notes on changes to the configuration of these reporters:
 
-* :bb:reporter:`MailNotifier` argument ``messageFormatter`` should now be a :py:class:`~buildbot.status.message.MessageFormatter`, due to the removal of the status classes (see above), such formatters must be re-implemented using the Data API.
+* :bb:reporter:`MailNotifier` argument ``messageFormatter`` should now be a :py:class:`buildbot.reporter.message.MessageFormatter`, due to the removal of the status classes (see above), such formatters must be re-implemented using the Data API.
 
 * :bb:reporter:`MailNotifier` argument ``previousBuildGetter`` is not supported anymore
 
@@ -127,7 +127,7 @@ A few notes on changes to the configuration of these reporters:
 
 * :bb:reporter:`GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
-* :py:class:`~buildbot.status.builder.Results` and the constants :py:class:`~buildbot.status.results.SUCCESS` should be imported from the :py:class:`~buildbot.process.results` module instead.
+* :py:class:`buildbot.status.builder.Results` and the constants :py:class:`buildbot.status.results.SUCCESS` should be imported from the :py:class:`buildbot.process.results` module instead.
 
 Steps
 -----
