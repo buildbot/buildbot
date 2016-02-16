@@ -102,7 +102,8 @@
                                 <div class="formatted-text"><pre>{{ test.reason }}</pre></div>
                             {% endif %}
                         </td>
-                        <td class="{{ results[test.state] }}">{{ results[test.state] }}</td>
+                        {% set test_state = results[test.state] if test.state in results else 'unknown'%}
+                        <td class="{{ test_state }}">{{ test_state }}</td>
                         {% if test.time %}
                             <td data-time="{{ test.time }}" data-time-unit="ms"></td>
                         {% else %}

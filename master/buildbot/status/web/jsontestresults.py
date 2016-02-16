@@ -77,6 +77,7 @@ class JSONTestResource(HtmlResource):
 
             cxt['results'] = {
                 0: 'Inconclusive',
+                1: 'NotRunnable',
                 2: 'Skipped',
                 3: 'Ignored',
                 4: 'Success',
