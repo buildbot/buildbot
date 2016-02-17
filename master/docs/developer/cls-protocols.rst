@@ -121,12 +121,6 @@ All the objects that are referenced from the slaves for remote calls have an ``I
 
 On slave sides, those proxy objects are replaced by a proxy object having a single method to call master side methodss:
 
-.. py:class:: SlaveProxyObject()
-
-    .. py:method:: callRemote(message, *args, **kw)
-
-        calls the method ``"remote_" + message`` on master side
-
 .. py:class:: RemoteCommandImpl()
 
     Represents a RemoteCommand status controller
