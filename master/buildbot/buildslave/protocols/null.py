@@ -19,6 +19,8 @@ from buildbot.buildslave.protocols import base
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.worker_rename import define_old_worker_method
+
 
 class Listener(base.Listener):
     pass
@@ -68,8 +70,9 @@ class Connection(base.Connection):
     def remotePrint(self, message):
         return defer.maybeDeferred(self.buildslave.bot.remote_print, message)
 
-    def remoteGetSlaveInfo(self):
+    def remoteGetWorkerInfo(self):
         return defer.maybeDeferred(self.buildslave.bot.remote_getSlaveInfo)
+    define_old_worker_method(locals(), remoteGetWorkerInfo)
 
     def remoteSetBuilderList(self, builders):
         return defer.maybeDeferred(self.buildslave.bot.remote_setBuilderList, builders)

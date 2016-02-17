@@ -124,7 +124,7 @@ class BuildslaveManager(MeasuredBuildbotServiceManager):
 
         try:
             yield conn.remotePrint(message="attached")
-            info = yield conn.remoteGetSlaveInfo()
+            info = yield conn.remoteGetWorkerInfo()
             log.msg("Got slaveinfo from '%s'" % buildslaveName)
         except Exception as e:
             log.msg("Failed to communicate with slave '%s'\n"

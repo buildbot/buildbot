@@ -21,6 +21,8 @@ from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
 
+from buildbot.worker_rename import define_old_worker_method
+
 
 class Listener(base.Listener):
     name = "pbListener"
@@ -170,12 +172,18 @@ class Connection(base.Connection, pb.Avatar):
         return self.mind.callRemote('print', message=message)
 
     @defer.inlineCallbacks
-    def remoteGetSlaveInfo(self):
+    def remoteGetWorkerInfo(self):
         info = {}
         try:
-            info = yield self.mind.callRemote('getSlaveInfo')
-        except pb.NoSuchMethod:
-            log.msg("BuildSlave.getSlaveInfo is unavailable - ignoring")
+            info = yield self.mind.callRemote('getWorkerInfo')
+            info["slave_commands"] = info["worker_commands"]
+        #except pb.NoSuchMethod: # TODO!
+        except pb.RemoteError:
+            try:
+                info = yield self.mind.callRemote('getSlaveInfo')
+                info["worker_commands"] = info["slave_commands"]
+            except pb.NoSuchMethod:
+                log.msg("BuildWorker.getWorkerInfo is unavailable - ignoring")
 
         # newer slaves send all info in one command
         if "slave_commands" in info:
@@ -191,6 +199,7 @@ class Connection(base.Connection, pb.Avatar):
             log.msg("BuildSlave.getVersion is unavailable - ignoring")
 
         defer.returnValue(info)
+    define_old_worker_method(locals(), remoteGetWorkerInfo)
 
     def remoteSetBuilderList(self, builders):
         d = self.mind.callRemote('setBuilderList', builders)

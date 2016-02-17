@@ -130,13 +130,18 @@ class FileUpload(_TransferBuildStep):
 
         # default arguments
         args = {
-            'slavesrc': source,
             'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'keepstamp': self.keepstamp,
         }
+
+        if self.slaveVersion("uploadFile") >= "3.0":  # TODO: proper version comparison
+            args['workersrc'] = source
+        else:
+            # buildslave
+            args['slavesrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runTransferCommand(cmd, fileWriter)
@@ -383,13 +388,18 @@ class FileDownload(_TransferBuildStep):
 
         # default arguments
         args = {
-            'slavedest': slavedest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
             'workdir': self.workdir,
             'mode': self.mode,
         }
+
+        if self.slaveVersion("downloadFile") >= "3.0":  # TODO: proper version comparison
+            args['workerdest'] = slavedest
+        else:
+            # buildslave
+            args['slavedest'] = slavedest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runTransferCommand(cmd)
