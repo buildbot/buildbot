@@ -55,7 +55,7 @@ class NatsStatusPush(StatusPush):
         self.lastPushWasSuccessful = True
         self.subject = subject
         self.maxPushSize = maxPushSize
-        self.c = None
+        self.client = None
 
         if maxDiskItems != 0:
             # The queue directory is determined by the server url.
@@ -137,12 +137,12 @@ class NatsStatusPush(StatusPush):
 
         # Trigger the PUSH
         try:
-            if self.c is None:
-                self.c = pynats.Connection(self.serverUrl, verbose=True)
-                self.c.connect()
+            if self.client is None:
+                self.client = pynats.Connection(self.serverUrl, verbose=True)
+                self.client.connect()
 
-            self.c.publish(self.subject, packets)
+            self.client.publish(self.subject, packets)
             Success()
         except pynats.connection.SocketError as e:
-            self.c = None
+            self.client = None
             Failure(e)
