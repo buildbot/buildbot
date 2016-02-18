@@ -20,6 +20,7 @@
 
 from buildbot import config
 import pynats
+import json
 
 from buildbot.status.status_queue import QueuedStatusPush
 
@@ -43,13 +44,16 @@ class NatsStatusPush(QueuedStatusPush):
         # Use the unbounded method.
         QueuedStatusPush.__init__(self, **kwargs)
 
-    def pushData(self, packets):
+    def pushData(self, _, items):
         try:
             if self.client is None:
                 self.client = pynats.Connection(self.serverUrl, verbose=True)
                 self.client.connect()
 
-            self.client.publish(self.subject, packets)
+            for item in items:
+                json_str = json.dumps(item, separators=(',', ':'))
+                self.client.publish('%s.%s' % (self.subject, item.get('event', 'unknown')), json_str)
+
             return True, None
         except pynats.connection.SocketError as e:
             self.client = None

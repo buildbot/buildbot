@@ -127,7 +127,7 @@ class QueuedStatusPush(StatusPush):
             return self.queueNextServerPush()
 
         # Trigger the PUSH
-        result, reason = self.pushData(packets)
+        result, reason = self.pushData(packets, items)
         if result:
             Success()
         else:
