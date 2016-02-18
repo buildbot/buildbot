@@ -6,6 +6,11 @@ class Buildrequest extends Controller
                 findBuilds $scope,
                     $scope.buildrequest.buildrequestid,
                     $stateParams.redirect_to_build
+                # when a build is discovered, force the tab to go to that build
+                savedNew = $scope.builds.onNew
+                $scope.builds.onNew = (build) ->
+                    build.active = true
+                    savedNew(build)
 
         doCancel = ->
             $scope.is_cancelling = true
@@ -47,11 +52,10 @@ class Buildrequest extends Controller
             data.getBuilders(buildrequest.builderid).onNew = (builder) ->
                 $scope.builder = builder
                 breadcrumb = [
-                        caption: "buildrequests"
-                        sref: "buildrequests"
-                    ,
                         caption: builder.name
                         sref: "builder({builder:#{buildrequest.builderid}})"
+                    ,
+                        caption: "buildrequests"
                     ,
                         caption: buildrequest.buildrequestid
                         sref: "buildrequest({buildrequest:#{buildrequest.buildrequestid}})"
@@ -59,5 +63,7 @@ class Buildrequest extends Controller
 
                 glBreadcrumbService.setBreadcrumb(breadcrumb)
 
-            data.getBuildsets(buildrequest.buildsetid).onNew = (buildsets) ->
-                $scope.buildset = publicFieldsFilter(buildsets[0])
+            data.getBuildsets(buildrequest.buildsetid).onNew = (buildset) ->
+                $scope.buildset = publicFieldsFilter(buildset)
+                buildset.getProperties().onNew  = (properties) ->
+                    $scope.properties = publicFieldsFilter(properties)

@@ -1,16 +1,16 @@
 .container
   .row
-      .col-sm-5
-          h3 Associated builds:
-          .row(ng-repeat="build in builds")
-              buildsummary(buildid="build.buildid", condensed='1')
-      .col-sm-7
-          tabset(justified="true")
-              tab(heading="build {{build.number}}", ng-repeat="build in builds")
-                  rawdata(data="build")
-              tab(heading="buildrequest")
-                  rawdata(data="buildrequest")
-              tab(heading="properties")
-                  rawdata(data="buildset.properties")
-              tab(heading="buildset")
-                  rawdata(data="buildset")
+      tabset(justified="left")
+          tab(heading="build {{build.number}}", active="build.active", ng-repeat="build in builds")
+              buildsummary(build="build")
+          tab(heading="properties")
+              properties(properties="properties")
+          tab(heading="Debug")
+              h4 Buildrequest
+              rawdata(data="buildrequest")
+              h4 Buildset
+              rawdata(data="buildset")
+              h4 Builder
+              rawdata(data="builder")
+              h4 Builds
+              rawdata(data="builds")

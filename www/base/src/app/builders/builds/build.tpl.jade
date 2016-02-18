@@ -13,25 +13,13 @@
             span.badge-status(ng-class="results2class(nextbuild, 'pulse')") &rarr;
         span(ng-if="last_build") Next &rarr;
   .row
-    .col-sm-5
-      buildsummary(ng-if="build", buildid="build.buildid")
-    .col-sm-7
-      .row(ng-if="buildset.parent_buildid")
-          buildsummary(buildid="buildset.parent_buildid", condensed="1", prefix="{{buildset.parent_relationship}}:")
       tabset
+          tab(heading="Build steps")
+              buildsummary(ng-if="build", build="build", parentbuild="parent_build",
+                           parentrelationship="buildset.parent_relationship")
           tab(heading="Build Properties")
-            table.table.table-hover.table-striped.table-condensed
-              thead
-                tr
-                  th.text-left Name
-                  th.text-center Value
-                  th.text-right Source
-              tbody
-                tr(ng-repeat="(name, value) in properties[0] | publicFields")
-                  td.text-left {{ name }}
-                  td.text-center {{ value[0] }}
-                  td.text-right {{ value[1] }}
-          tab(heading="{{worker.name}}")
+              properties(properties="properties")
+          tab(heading="Worker: {{worker.name}}")
             table.table.table-hover.table-striped.table-condensed
               tbody
                   tr
@@ -49,3 +37,10 @@
                         | {{ author }}
           tab(heading="Changes")
               changelist(changes="changes")
+          tab(heading="Debug")
+              h4
+                  a(ui-sref="buildrequest({buildrequest:buildrequest.buildrequestid})")
+                     | Buildrequest:
+              rawdata(data="buildrequest")
+              h4 Buildset:
+              rawdata(data="buildset")
