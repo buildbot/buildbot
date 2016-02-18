@@ -32,7 +32,7 @@ class NatsStatusPush(StatusPush):
     """Event streamer to a Nats server."""
 
     def __init__(self, serverUrl, subject="katana", debug=None, maxMemoryItems=None,
-                 maxDiskItems=None, chunkSize=200, maxPushSize=2 ** 20, extra_post_params=None, **kwargs):
+                 maxDiskItems=None, chunkSize=200, maxPushSize=2 ** 20, **kwargs):
         """
         @serverUrl: The Nats server to be used to push events notifications to.
         @subject: The subject to use when publishing data
@@ -49,7 +49,6 @@ class NatsStatusPush(StatusPush):
 
         # Parameters.
         self.serverUrl = serverUrl
-        self.extra_post_params = extra_post_params or {}
         self.debug = debug
         self.chunkSize = chunkSize
         self.lastPushWasSuccessful = True
