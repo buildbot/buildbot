@@ -773,7 +773,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building.remove(sb.builder_name)
         if not self.building:
             if self.build_wait_timeout == 0:
-                d = self.insubstantiate()
+                d = self._soft_disconnect()
                 # try starting builds for this slave after insubstantiating;
                 # this will cause the slave to re-substantiate immediately if
                 # there are pending build requests.
