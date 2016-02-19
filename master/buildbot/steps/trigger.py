@@ -38,7 +38,8 @@ class Trigger(BuildStep):
         'schedulerNames',
         'set_properties',
         'sourceStamps',
-        'updateSourceStamp'
+        'updateSourceStamp',
+        'waitForFinish'
     ]
 
     flunkOnFailure = True
