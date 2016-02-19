@@ -36,6 +36,7 @@ from twisted.trial import unittest
 
 
 class FakeResponse(object):
+
     def __init__(self, _json):
         self.json = lambda: _json
         self.content = json.dumps(_json)
@@ -74,6 +75,17 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
                "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
                "ogleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=h%3A%2Fa%2Fb"
+               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_getGoogleLoginURLWithHD(self):
+        googleAuthWithHD = oauth2.GoogleAuth(
+            "ggclientID", "clientSECRET", False, "example.com")
+        res = yield googleAuthWithHD.getLoginURL(None)
+        exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
+               "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
+               "ogleapis.com%2Fauth%2Fuserinfo.profile&hd=example.com&redirect_uri=h%3A%2Fa%2Fb"
                "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
         self.assertEqual(res, exp)
 
@@ -174,14 +186,17 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
         if "OAUTHCONF" not in os.environ:
-            raise unittest.SkipTest("Need to pass OAUTHCONF path to json file via environ to run this e2e test")
+            raise unittest.SkipTest(
+                "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
         from buildbot.www import oauth2
         import json
         config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
-        self.auth = getattr(oauth2, self.authClass)(config["CLIENTID"], config["CLIENTSECRET"])
+        self.auth = getattr(oauth2, self.authClass)(
+            config["CLIENTID"], config["CLIENTSECRET"])
 
-        # 5000 has to be hardcoded, has oauth clientids are bound to a fully classified web site
+        # 5000 has to be hardcoded, has oauth clientids are bound to a fully
+        # classified web site
         master = self.make_master(url='http://localhost:5000/', auth=self.auth)
         self.auth.reconfigAuth(master, master.config)
 
@@ -209,10 +224,11 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
                 return "<html><script>setTimeout(close,1000)</script><body>WORKED: %s</body></html>" % (info)
 
         class MySite(Site):
+
             def makeSession(self):
-                    uid = self._mkuid()
-                    session = self.sessions[uid] = self.sessionFactory(self, uid)
-                    return session
+                uid = self._mkuid()
+                session = self.sessions[uid] = self.sessionFactory(self, uid)
+                return session
         root = Resource()
         root.putChild("", HomePage())
         auth = Resource()

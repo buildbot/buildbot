@@ -57,7 +57,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
                  spot_instance=False, max_spot_price=1.6, volumes=None,
-                 placement=None, price_multiplier=1.2, tags=None, retry=1,
+                 placement=None, subnet_id=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX',
                  **kwargs):
 
@@ -149,6 +149,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 self.conn = boto.ec2.connect_to_region(region,
                                                        aws_access_key_id=identifier,
                                                        aws_secret_access_key=secret_identifier)
+                if subnet_id is not None:
+                    self.vpc_api_conn = boto.vpc.VPCConnection(region=region_found,
+                                                               aws_access_key_id=identifier,
+                                                               aws_secret_access_key=secret_identifier)
             else:
                 raise ValueError(
                     'The specified region does not exist: ' + region)
@@ -214,6 +218,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if elastic_ip is not None:
             elastic_ip = self.conn.get_all_addresses([elastic_ip])[0]
         self.elastic_ip = elastic_ip
+        # Make sure the subnet id is valid on the onset, else the vpc subnet does not exist and is invalid
+        if subnet_id is not None:
+            assert self.vpc_api_conn.get_all_subnets([subnet_id])[0]
+        self.subnet_id = subnet_id
         self.tags = tags
 
     def get_image(self):
@@ -282,7 +290,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         reservation = image.run(
             key_name=self.keypair_name, security_groups=[self.security_name],
             instance_type=self.instance_type, user_data=self.user_data,
-            placement=self.placement)
+            placement=self.placement, subnet_id=self.subnet_id)
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(
             reservation)
@@ -376,7 +384,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                                                         security_groups=[self.security_name],
                                                         instance_type=self.instance_type,
                                                         user_data=self.user_data,
-                                                        placement=self.placement)
+                                                        placement=self.placement,
+                                                        subnet_id=self.subnet_id)
         request, success = self._wait_for_request(reservations[0])
         if not success:
             return request, None, None, False

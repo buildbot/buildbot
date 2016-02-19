@@ -58,6 +58,12 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         c.terminate_instances([instance.id])
         return c
 
+    def subnetSetup(self):
+        vpc_c = boto.connect_vpc()
+        vpc = vpc_c.create_vpc("10.0.0.0/16")
+        subnet = vpc_c.create_subnet(vpc.id, "10.0.0.0/18")
+        return subnet
+
     @mock_ec2
     def test_constructor_minimal(self):
         c = self.botoSetup()
@@ -103,6 +109,28 @@ class TestEC2LatentBuildSlave(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].tags, {})
+
+    @mock_ec2
+    def test_start_instance_with_subnet_id(self):
+        c = self.botoSetup()
+        subnet = self.subnetSetup()
+        amis = c.get_all_images()
+        bs = ec2.EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                     identifier='publickey',
+                                     secret_identifier='privatekey',
+                                     ami=amis[0].id,
+                                     subnet_id=subnet.id
+                                     )
+        instance_id, image_id, start_time = bs._start_instance()
+        self.assertTrue(instance_id.startswith('i-'))
+        self.assertTrue(image_id.startswith('r-'))
+        self.assertTrue(start_time > 0)
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].tags, {})
+        self.assertEqual(instances[0].subnet_id, subnet.id)
 
     @mock_ec2
     def test_start_instance_tags(self):
