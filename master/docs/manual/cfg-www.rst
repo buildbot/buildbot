@@ -323,7 +323,7 @@ Currently only one provider is available:
             )
             c['www'] = dict(port=PORT, allowed_origins=["*"],
                             url=c['buildbotURL'],
-                            auth=util.RemoteUserAuth(userInfoProvider),
+                            auth=util.RemoteUserAuth(userInfoProvider=userInfoProvider),
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 
