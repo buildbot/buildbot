@@ -75,13 +75,13 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
         d.addCallback(lambda _: self.db.pool.do(setup_thd))
 
         def upgrade_thd(engine):
-            querylog.log_from_engine(engine)
-            schema = migrate.versioning.schema.ControlledSchema(engine,
-                                                                self.db.model.repo_path)
-            changeset = schema.changeset(target_version)
-            for version, change in changeset:
-                log.msg('upgrading to schema version %d' % (version + 1))
-                schema.runchange(version, change, 1)
+            with querylog.log_queries():
+                schema = migrate.versioning.schema.ControlledSchema(
+                    engine, self.db.model.repo_path)
+                changeset = schema.changeset(target_version)
+                for version, change in changeset:
+                    log.msg('upgrading to schema version %d' % (version + 1))
+                    schema.runchange(version, change, 1)
         d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
 
         def check_table_charsets_thd(engine):
