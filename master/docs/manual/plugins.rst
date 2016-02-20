@@ -50,10 +50,16 @@ Web interface plugins are not used directly: as described in :doc:`web server co
     As a result, all listed above components will be available for use.
     This is what sample ``master.cfg`` file uses.
 
+Finding Plugins
+===============
+
+Buildbot maintains a list of plugins at http://trac.buildbot.net/wiki/Plugins.
+
 Developing Plugins
 ==================
 
 :ref:`Plugin-Module` contains all necesary information for you to develop new plugins.
+Please edit http://trac.buildbot.net/wiki/Plugins to add a link to your plugin!
 
 Plugins of note
 ===============

@@ -15,25 +15,75 @@
 
 from __future__ import absolute_import
 
+import contextlib
 import logging
 
 from twisted.python import log
 
-# this class bridges Python's `logging` module into Twisted's log system.
-# SqlAlchemy query logging uses `logging`, so this provides a way to enter
-# queries into the Twisted log file.
+# These routines provides a way to dump SQLAlchemy SQL commands and their
+# results into Twisted's log.
+# Logging wrappers are not re-entrant.
 
 
-class PythonToTwistedHandler(logging.Handler):
+class _QueryToTwistedHandler(logging.Handler):
+
+    def __init__(self, log_query_result=False):
+        logging.Handler.__init__(self)
+
+        self._log_query_result = log_query_result
 
     def emit(self, record):
-        log.msg(record.getMessage())
+        if record.levelno == logging.DEBUG:
+            if self._log_query_result:
+                log.msg("{name}:{thread}:result: {msg}".format(
+                    name=record.name,
+                    thread=record.threadName,
+                    msg=record.getMessage()))
+        else:
+            log.msg("{name}:{thread}:query:  {msg}".format(
+                name=record.name,
+                thread=record.threadName,
+                msg=record.getMessage()))
 
 
-def log_from_engine(engine):
-    # add the handler *before* enabling logging, so that no "default" logger
-    # is added automatically, but only do so once.  This is important since
-    # logging's loggers are singletons
-    if not engine.logger.handlers:
-        engine.logger.addHandler(PythonToTwistedHandler())
-    engine.echo = True
+def start_log_queries(log_query_result=False):
+    handler = _QueryToTwistedHandler(log_query_result=log_query_result)
+
+    # In 'sqlalchemy.engine' logging namespace SQLAlchemy outputs SQL queries
+    # on INFO level, and SQL queries results on DEBUG level.
+    logger = logging.getLogger('sqlalchemy.engine')
+
+    # TODO: this is not documented field of logger, so it's probably private.
+    handler.prev_level = logger.level
+    logger.setLevel(logging.DEBUG)
+
+    logger.addHandler(handler)
+
+    # Do not propagate SQL echoing into ancestor handlers
+    handler.prev_propagate = logger.propagate
+    logger.propagate = False
+
+    # Return previous values of settings, so they can be carefully restored
+    # later.
+    return handler
+
+
+def stop_log_queries(handler):
+    assert isinstance(handler, _QueryToTwistedHandler)
+
+    logger = logging.getLogger('sqlalchemy.engine')
+    logger.removeHandler(handler)
+
+    # Restore logger settings or set them to reasonable defaults.
+    logger.propagate = handler.prev_propagate
+
+    logger.setLevel(handler.prev_level)
+
+
+@contextlib.contextmanager
+def log_queries():
+    handler = start_log_queries()
+    try:
+        yield
+    finally:
+        stop_log_queries(handler)
