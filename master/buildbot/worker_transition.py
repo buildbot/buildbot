@@ -53,11 +53,12 @@ def _compat_name(new_name, compat_name=None):
     >>> assert _compat_name("SomeWorker", compat_name="SomeBuildSlave") == \
         "SomeBuildSlave"
 
-    If `name` is not specified old name is construct by replacing:
+    If `compat_name` is not specified old name is construct by replacing in
+    `new_name`:
         "worker" -> "slave",
         "Worker" -> "Slave".
 
-    For the sake of simplicity of usage if `name` argument is specified
+    For the sake of simplicity of usage if `compat_name` argument is specified
     it will returned as the result.
     """
 
