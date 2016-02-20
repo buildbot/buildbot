@@ -281,7 +281,7 @@ In this case the username provided by oauth2 will be used, and all other informa
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfos.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
+.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
 
         :param uri: uri of the ldap server
         :param bind_user: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)

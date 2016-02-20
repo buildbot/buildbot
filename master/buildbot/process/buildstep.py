@@ -655,6 +655,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
+        # New-style classes implement 'run'.
+        # Old-style classes implemented 'start'. Advise them to do 'run' instead.
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
