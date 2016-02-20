@@ -1518,7 +1518,6 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
         return d
 
 
-# TODO: Is all cases of property usage handled?
 class TestDeprecatedProperties(unittest.TestCase):
 
     def setUp(self):
