@@ -1056,13 +1056,13 @@ Changed REST endpoints:
      - ``/masters/n:masterid/workers``
 
    * - ``/masters/n:masterid/buildslaves/n:buildslaveid``
-     - ``/masters/n:masterid/workers/n:workersid``
+     - ``/masters/n:masterid/workers/n:workerid``
 
    * - ``/masters/n:masterid/builders/n:builderid/buildslaves``
      - ``/masters/n:masterid/builders/n:builderid/workers``
 
    * - ``/masters/n:masterid/builders/n:builderid/buildslaves/n:buildslaveid``
-     - ``/masters/n:masterid/builders/n:builderid/workers/n:workersid``
+     - ``/masters/n:masterid/builders/n:builderid/workers/n:workerid``
 
    * - ``/builders/n:builderid/buildslaves``
      - ``/builders/n:builderid/workers``
