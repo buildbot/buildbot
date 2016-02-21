@@ -177,11 +177,10 @@ class SetProperty(BuildStep):
         self.property = property
         self.value = value
 
-    @defer.inlineCallbacks
     def run(self):
         properties = self.build.getProperties()
         properties.setProperty(self.property, self.value, self.name, runtime=True)
-        defer.returnValue(SUCCESS)
+        return defer.succeed(SUCCESS)
 
 
 class LogRenderable(BuildStep):
