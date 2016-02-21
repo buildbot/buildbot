@@ -152,9 +152,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.db.schedulers.assertClassifications(
                 self.SCHEDULERID, {20: True})
             self.assertTrue(sched.timer_started)
-            self.assertEqual(sched.getPendingBuildTimes(), [10])
             self.clock.advance(10)
-            self.assertEqual(sched.getPendingBuildTimes(), [])
         d.addCallback(check)
         d.addCallback(lambda _: sched.deactivate())
         return d
@@ -246,7 +244,6 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.makeFakeChange(branch='master', number=1, when=2220),
             True)
         self.assertEqual(self.events, [])
-        self.assertEqual(sched.getPendingBuildTimes(), [2229])
         self.db.schedulers.assertClassifications(self.SCHEDULERID, {1: True})
 
         # but another (unimportant) change arrives before then
@@ -257,7 +254,6 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.makeFakeChange(branch='master', number=2, when=2226),
             False)
         self.assertEqual(self.events, [])
-        self.assertEqual(sched.getPendingBuildTimes(), [2235])
         self.db.schedulers.assertClassifications(
             self.SCHEDULERID, {1: True, 2: False})
 
@@ -272,7 +268,6 @@ class BaseBasicScheduler(CommonStuffMixin,
             self.makeFakeChange(branch='master', number=3, when=2232),
             True)
         self.assertEqual(self.events, [])
-        self.assertEqual(sched.getPendingBuildTimes(), [2241])
         self.db.schedulers.assertClassifications(
             self.SCHEDULERID, {1: True, 2: False, 3: True})
 
@@ -282,7 +277,6 @@ class BaseBasicScheduler(CommonStuffMixin,
         # finally, time to start the build!
         self.clock.advance(6)  # to 2241
         self.assertEqual(self.events, ['B[1,2,3]@2241'])
-        self.assertEqual(sched.getPendingBuildTimes(), [])
         self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
 
         yield sched.deactivate()
@@ -484,21 +478,15 @@ class AnyBranchScheduler(CommonStuffMixin,
         d.addCallback(lambda _:
                       sched.gotChange(mkch(branch='master', number=13), True))
         d.addCallback(lambda _:
-                      self.assertEqual(sched.getPendingBuildTimes(), [10]))
-        d.addCallback(lambda _:
                       self.clock.advance(1))  # time is now 1
         d.addCallback(lambda _:
                       sched.gotChange(mkch(branch='master', number=14), False))
-        d.addCallback(lambda _:
-                      self.assertEqual(sched.getPendingBuildTimes(), [11]))
         d.addCallback(lambda _:
                       sched.gotChange(mkch(branch='boring', number=15), False))
         d.addCallback(lambda _:
                       self.clock.pump([1] * 4))  # time is now 5
         d.addCallback(lambda _:
                       sched.gotChange(mkch(branch='devel', number=16), True))
-        d.addCallback(lambda _:
-                      self.assertEqual(sorted(sched.getPendingBuildTimes()), [11, 15]))
         d.addCallback(lambda _:
                       self.clock.pump([1] * 10))  # time is now 15
 

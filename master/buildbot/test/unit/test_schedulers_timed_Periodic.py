@@ -179,15 +179,3 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.getNextBuildTime(20)
         d.addCallback(lambda t: self.assertEqual(t, 33))
         return d
-
-    def test_getPendingBuildTimes(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'],
-                                   periodicBuildTimer=13)
-        self.state['last_build'] = self.clock.seconds() - 10  # so next build should start in 3s
-
-        sched.activate()
-        self.clock.advance(0)  # let it schedule the first build
-        self.assertEqual(sched.getPendingBuildTimes(), [3.0])
-
-        d = sched.deactivate()
-        return d
