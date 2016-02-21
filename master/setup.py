@@ -344,7 +344,7 @@ setup_args = {
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth']),
             ('buildbot.www.ldapuserinfos', ['LdapUserInfo']),
             ('buildbot.www.oauth2', [
-                'GoogleAuth', 'GitHubAuth']),
+                'GoogleAuth', 'GitHubAuth', 'GitLabAuth']),
             ('buildbot.db.dbconfig', [
                 'DbConfig']),
             ('buildbot.www.authz', [
