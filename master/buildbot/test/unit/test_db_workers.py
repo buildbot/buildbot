@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 import mock
 
-from buildbot.db import worker
+from buildbot.db import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
@@ -565,7 +565,7 @@ class TestRealDB(unittest.TestCase,
         @d.addCallback
         def finish_setup(_):
             self.db.workers = \
-                worker.WorkersConnectorComponent(self.db)
+                workers.WorkersConnectorComponent(self.db)
         return d
 
     def tearDown(self):
@@ -578,17 +578,17 @@ class TestWorkerTransition(unittest.TestCase):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
                 message_pattern="BuildslavesConnectorComponent was deprecated"):
-            from buildbot.db.buildslave import BuildslavesConnectorComponent
+            from buildbot.db.buildslaves import BuildslavesConnectorComponent
 
         self.assertIdentical(BuildslavesConnectorComponent,
-                             worker.WorkersConnectorComponent)
+                             workers.WorkersConnectorComponent)
 
     def test_getWorkers_old_api(self):
         method = mock.Mock(return_value='dummy')
         with mock.patch(
-                'buildbot.db.worker.WorkersConnectorComponent.getWorkers',
+                'buildbot.db.workers.WorkersConnectorComponent.getWorkers',
                 method):
-            m = worker.WorkersConnectorComponent(mock.Mock())
+            m = workers.WorkersConnectorComponent(mock.Mock())
             with assertProducesWarning(
                     DeprecatedWorkerNameWarning,
                     message_pattern="'getBuildslaves' method is deprecated"):

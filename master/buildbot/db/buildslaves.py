@@ -23,7 +23,7 @@ reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.db.worker' module instead".format(old=__name__))
 
-from buildbot.db.worker import WorkersConnectorComponent as _WorkersConnectorComponent
+from buildbot.db.workers import WorkersConnectorComponent as _WorkersConnectorComponent
 
 deprecatedWorkerModuleAttribute(locals(), _WorkersConnectorComponent,
                                 compat_name="BuildslavesConnectorComponent",

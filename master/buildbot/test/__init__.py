@@ -75,8 +75,8 @@ with assertProducesWarning(
 
 with assertProducesWarning(
         DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.db\.buildslave' module is deprecated"):
-    import buildbot.db.buildslave as _  # noqa
+        message_pattern=r"'buildbot\.db\.buildslaves' module is deprecated"):
+    import buildbot.db.buildslaves as _  # noqa
 
 with assertProducesWarning(
         DeprecatedWorkerModuleWarning,

@@ -860,16 +860,16 @@ List of database-related changes in API (fallback for old API is provided):
    * - Old name
      - New name
 
-   * - :py:mod:`buildbot.db.buildslave`
-     - :py:mod:`~buildbot.db.worker`
+   * - :py:mod:`buildbot.db.buildslaves`
+     - :py:mod:`~buildbot.db.workers`
 
 
-   * - :py:class:`buildbot.db.buildslave.BuildslavesConnectorComponent`
-     - :py:class:`buildbot.db.worker.WorkersConnectorComponent`
+   * - :py:class:`buildbot.db.buildslaves.BuildslavesConnectorComponent`
+     - :py:class:`buildbot.db.workers.WorkersConnectorComponent`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslaves`
        (rewritten in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorkers`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.getWorkers`
 
 
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
@@ -888,10 +888,10 @@ API changes between 0.9.0b7 and 0.9.0b8 (done without providing fallback).
    * - Old name
      - New name
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslaves`
        (rewritten in nine)
        and
-       :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
+       :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslave`
        (introduced in nine)
        results uses instead of ``'slaveinfo'`` key
      - ``'workerinfo'`` key
@@ -922,50 +922,50 @@ API changes between 0.9.0b7 and 0.9.0b8 (done without providing fallback).
      - ``worker``
 
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.findBuildslaveId`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.findBuildslaveId`
        (introduced in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.findWorkerId`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.findWorkerId`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.deconfigureAllBuidslavesForMaster`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.deconfigureAllBuidslavesForMaster`
        (introduced in nine, note typo ``Buidslaves``)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.deconfigureAllWorkersForMaster`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.deconfigureAllWorkersForMaster`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveConfigured`
        (introduced in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConfigured`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.workerConfigured`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConfigured`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveConfigured`
        method argument ``buildslaveid`` was renamed
        (introduced in nine)
      - ``workerid``
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslave`
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.getWorker`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslave`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.getWorker`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.getBuildslaves`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.getBuildslaves`
        method argument ``_buildslaveid`` was renamed
        (introduced in nine)
      - ``_workerid``
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveConnected`
        (introduced in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerConnected`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.workerConnected`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveConnected`
        method argument ``slaveinfo`` was renamed
        (introduced in nine)
      - ``workerinfo``
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveConnected`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveConnected`
        method argument ``buildslaveid`` was renamed
        (introduced in nine)
      - ``workerid``
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveDisconnected`
        (introduced in nine)
-     - :py:meth:`buildbot.db.worker.WorkersConnectorComponent.workerDisconnected`
+     - :py:meth:`buildbot.db.workers.WorkersConnectorComponent.workerDisconnected`
 
-   * - :py:meth:`buildbot.db.buildslave.BuildslavesConnectorComponent.buildslaveDisconnected`
+   * - :py:meth:`buildbot.db.buildslaves.BuildslavesConnectorComponent.buildslaveDisconnected`
        method argument ``buildslaveid`` was renamed
        (introduced in nine)
      - ``workerid``
