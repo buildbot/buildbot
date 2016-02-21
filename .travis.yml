@@ -7,7 +7,8 @@ addons:
   artifacts:
     paths:
       # XXX: debug
-      - $(find master/docs/_build/html/ | tr "\n" ":")
+      #- $(find master/docs/_build/html/ | tr "\n" ":")
+      - master/docs/_build/html/
     debug: true
   s3_region: "us-east-1"
 
