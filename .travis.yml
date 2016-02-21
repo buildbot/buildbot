@@ -9,7 +9,7 @@ addons:
     paths:
       - $(if [ $TESTS == docs ]; then echo -n master/docs/_build/html/; fi)
     # Uncomment to see what is being uploaded and where.
-    # debug: true
+    debug: true
   s3_region: "us-east-1"
 
 services:
