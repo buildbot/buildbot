@@ -162,7 +162,7 @@ script:
 ##  - "[ $TESTS != lint ] || make flake8"
 ##  - "[ $TESTS != docs ] || make docs"
 ##  - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
-  - "[ $TESTS != trial ] || echo "Testing..."
+  - "[ $TESTS != trial ] || echo Testing..."
   - "[ $TESTS != docs ] || make docs"
 
 notifications:
