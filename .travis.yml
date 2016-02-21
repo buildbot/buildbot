@@ -169,6 +169,7 @@ notifications:
 
 after_success:
 #  - "[ $TESTS != coverage ] || codecov"
+  - echo "To see built documentation visit https://s3.amazonaws.com/pr-docs.buildbot.net/buildbot/buildbot/$TRAVIS_JOB_ID/$TRAVIS_JOB_NUMBER/index.html"
 sudo: false
 git:
   depth: 300
