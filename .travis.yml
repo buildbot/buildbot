@@ -84,7 +84,7 @@ cache:
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
 # Dependencies installation commands
-##install:
+install:
 ##  # codecov is the interface to codecov.io; see after_success
 ##  - "echo 'travis_fold:start:codecov'; pip install codecov; echo 'travis_fold:end:codecov'"
 ##  - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
