@@ -8,7 +8,7 @@ addons:
     paths:
       # XXX: debug
       #- $(find master/docs/_build/html/ | tr "\n" ":")
-      - master/docs/_build/html/
+      - $(if [ $TESTS == docs ]; then echo -n master/docs/_build/html/; fi)
     debug: true
   s3_region: "us-east-1"
 
@@ -54,8 +54,8 @@ cache:
     - www/waterfall_view/libs
     - www/nestedexample/libs
 
-##matrix:
-##  include:
+matrix:
+  include:
 ##    # Test different versions of SQLAlchemy
 ##    - python: "2.7"
 ##      env: TWISTED=15.5.0 SQLALCHEMY=0.6.0 TESTS=trial
@@ -67,8 +67,8 @@ cache:
 ##      env: TWISTED=15.5.0 SQLALCHEMY=0.7.4 TESTS=trial
 ##    - python: "2.7"
 ##      env: TWISTED=15.5.0 SQLALCHEMY=0.7.8 TESTS=trial
-##    - python: "2.7"
-##      env: TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
+    - python: "2.7"
+      env: TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
 ##
 ##    # add extra tests in separate jobs
 ##    - python: "2.7"
@@ -77,8 +77,8 @@ cache:
 ##      env: TWISTED=latest SQLALCHEMY=latest TESTS=lint
 ##    - python: "2.7"
 ##      env: TWISTED=latest SQLALCHEMY=latest TESTS=js
-##    - python: "2.7"
-##      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     # python 3 tests
 #    - python: "3.4"
@@ -162,14 +162,15 @@ script:
 ##  - "[ $TESTS != lint ] || make flake8"
 ##  - "[ $TESTS != docs ] || make docs"
 ##  - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
-  - make docs
+  - "[ $TESTS != trial ] || echo "Testing..."
+  - "[ $TESTS != docs ] || make docs"
 
 notifications:
   email: false
 
 after_success:
 #  - "[ $TESTS != coverage ] || codecov"
-  - echo "To see built documentation visit http://pr-docs.buildbot.net/buildbot/buildbot/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER/index.html"
+  - "[ $TESTS != docs ] || echo To see built documentation visit http://pr-docs.buildbot.net/buildbot/buildbot/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER/index.html"
 sudo: false
 git:
   depth: 300
