@@ -21,6 +21,7 @@ Features
 ~~~~~~~~
 
 * :class:`GitPoller` now has a ``buildPushesWithNoCommits`` option to allow the rebuild of already known commits on new branches.
+* Add GitLab authentication plugin for web UI. See :class:`buildbot.www.oauth2.GitLabAuth`.
 
 Fixes
 ~~~~~
