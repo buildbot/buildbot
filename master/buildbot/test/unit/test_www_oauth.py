@@ -206,11 +206,19 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 #     "CLIENTID": "XX",
 #     "CLIENTSECRET": "XX"
 #  }
+#  "GitLabAuth": {
+#     "INSTANCEURI": "XX",
+#     "CLIENTID": "XX",
+#     "CLIENTSECRET": "XX"
+#  }
 #  }
 
 
 class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
     authClass = "GitHubAuth"
+
+    def _instantiateAuth(self, cls, config):
+        return cls(config["CLIENTID"], config["CLIENTSECRET"])
 
     def setUp(self):
         if requests is None:
@@ -219,10 +227,10 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
         if "OAUTHCONF" not in os.environ:
             raise unittest.SkipTest("Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
-        from buildbot.www import oauth2
         import json
         config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
-        self.auth = getattr(oauth2, self.authClass)(config["CLIENTID"], config["CLIENTSECRET"])
+        from buildbot.www import oauth2
+        self.auth = self._instantiateAuth(getattr(oauth2, self.authClass), config)
 
         # 5000 has to be hardcoded, has oauth clientids are bound to a fully classified web site
         master = self.make_master(url='http://localhost:5000/', auth=self.auth)
@@ -279,3 +287,10 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
 class OAuth2AuthGoogleE2E(OAuth2AuthGitHubE2E):
     authClass = "GoogleAuth"
+
+
+class OAuth2AuthGitLabE2E(OAuth2AuthGitHubE2E):
+    authClass = "GitLabAuth"
+
+    def _instantiateAuth(self, cls, config):
+        return cls(config["INSTANCEURI"], config["CLIENTID"], config["CLIENTSECRET"])
