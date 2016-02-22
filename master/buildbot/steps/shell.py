@@ -108,6 +108,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
         if command:
             self.setCommand(command)
 
+        # command must be set either on class level (e.g. when specific
+        # subclass with fixed command is used), or in constructor.
+        # If anyone wishes to set command manually later, e.g. in run(),
+        # he should set it to dummy or default value.
+        assert self.command, "ShellCommand's `command' must is not set"
+
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
         # workdir is here first positional argument, but it belongs to BuildStep parent
