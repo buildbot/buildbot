@@ -534,3 +534,12 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
         self.assertEqual(pending_dict, [pendingBuildRequestDict(1),
                                         pendingBuildRequestDict(2),
                                         pendingBuildRequestDict(3)])
+
+
+class TestAliveJsonResource(unittest.TestCase):
+    def test_alive(self):
+        '''
+        Tests the alive check for online status.
+        '''
+        alive_json = status_json.AliveJsonResource(None)
+        self.assertEqual(alive_json.asDict(None), {'alive' : 'yes'})

@@ -406,6 +406,15 @@ class HelpResource(HtmlResource):
         return template.render(**cxt)
 
 
+class AliveJsonResource(JsonResource):
+    help = """Used to check if sevrer is running.
+"""
+    pageTitle = 'Alive'
+
+    def asDict(self, request):
+        return {'alive' : 'yes'}
+
+
 class BuilderPendingBuildsJsonResource(JsonResource):
     help = """Describe pending builds for a builder.
 """
@@ -1210,6 +1219,7 @@ For help on any sub directory, use url /child/help
     def __init__(self, status):
         JsonResource.__init__(self, status)
         self.level = 1
+        self.putChild('alive', AliveJsonResource(status))
         self.putChild('builders', BuildersJsonResource(status))
         self.putChild('change_sources', ChangeSourcesJsonResource(status))
         self.putChild('project', ProjectJsonResource(status))
