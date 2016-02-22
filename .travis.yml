@@ -19,7 +19,7 @@ before_script:
 
 install:
   - if [ "$TEST_TARGET" != "javascript" ]; then pip install -e $TEST_TARGET; fi
-  - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v mock==1.0.1; fi
+  - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v mock; fi
   - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v pyflakes; fi
   - if [ "$TEST_TARGET" != "javascript" ]; then pip install -v coveralls; fi
   - if [ "$TEST_TARGET" = "javascript" ]; then cd www/; fi
