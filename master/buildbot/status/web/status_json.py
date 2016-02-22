@@ -407,12 +407,12 @@ class HelpResource(HtmlResource):
 
 
 class AliveJsonResource(JsonResource):
-    help = """Used to check if sevrer is running.
+    help = """Used to check if server is running.
 """
     pageTitle = 'Alive'
 
     def asDict(self, request):
-        return {'alive' : 'yes'}
+        return 1
 
 
 class BuilderPendingBuildsJsonResource(JsonResource):

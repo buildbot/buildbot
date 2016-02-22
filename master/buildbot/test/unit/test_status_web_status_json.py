@@ -542,4 +542,4 @@ class TestAliveJsonResource(unittest.TestCase):
         Tests the alive check for online status.
         '''
         alive_json = status_json.AliveJsonResource(None)
-        self.assertEqual(alive_json.asDict(None), {'alive' : 'yes'})
+        self.assertEqual(alive_json.asDict(None), 1)
