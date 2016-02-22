@@ -56,11 +56,11 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
         self.googleAuth = oauth2.GoogleAuth("ggclientID", "clientSECRET")
         self.githubAuth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
-        master = self.make_master(url='h:/a/b/', auth=self.googleAuth)
-        self.googleAuth.reconfigAuth(master, master.config)
-        self.master = master = self.make_master(
-            url='h:/a/b/', auth=self.githubAuth)
-        self.githubAuth.reconfigAuth(master, master.config)
+        self.gitlabAuth = oauth2.GitLabAuth("https://gitlab.test/", "glclientID", "clientSECRET")
+
+        for auth in [self.googleAuth, self.githubAuth, self.gitlabAuth]:
+            self._master = master = self.make_master(url='h:/a/b/', auth=auth)
+            auth.reconfigAuth(master, master.config)
 
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
@@ -86,6 +86,22 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         res = yield self.githubAuth.getLoginURL(None)
         exp = ("https://github.com/login/oauth/authorize?redirect_uri="
                "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_getGitLabLoginURL(self):
+        res = yield self.gitlabAuth.getLoginURL('http://redir')
+        exp = ("https://gitlab.test/oauth/authorize"
+               "?state=redirect%3Dhttp%253A%252F%252Fredir"
+               "&redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin"
+               "&response_type=code"
+               "&client_id=glclientID")
+        self.assertEqual(res, exp)
+        res = yield self.gitlabAuth.getLoginURL(None)
+        exp = ("https://gitlab.test/oauth/authorize"
+               "?redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin"
+               "&response_type=code"
+               "&client_id=glclientID")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
@@ -120,6 +136,31 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
+    def test_GitlabVerifyCode(self):
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.gitlabAuth.get = mock.Mock(side_effect=[
+            {  # /user
+                "name": "Foo Bar",
+                "username": "fbar",
+                "id": 5,
+                "avatar_url": "https://avatar/fbar.png",
+                "email": "foo@bar",
+                "twitter": "fb",
+            },
+            [  # /groups
+                {"id": 10, "name": "Hello", "path": "hello"},
+                {"id": 20, "name": "Group", "path": "grp"},
+            ]])
+        res = yield self.gitlabAuth.verifyCode("code!")
+        self.assertEqual({"full_name": "Foo Bar",
+                          "username": "fbar",
+                          "email": "foo@bar",
+                          "avatar_url": "https://avatar/fbar.png",
+                          "groups": ["hello", "grp"]}, res)
+
+    @defer.inlineCallbacks
     def test_loginResource(self):
         class fakeAuth(object):
             homeUri = "://me"
@@ -147,6 +188,8 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                                                            'name': 'GitHub', 'oauth2': True})
         self.assertEqual(self.googleAuth.getConfigDict(), {'fa_icon': 'fa-google-plus', 'autologin': False,
                                                            'name': 'Google', 'oauth2': True})
+        self.assertEqual(self.gitlabAuth.getConfigDict(), {'fa_icon': 'fa-git', 'autologin': False,
+                                                           'name': 'GitLab', 'oauth2': True})
 
 # unit tests are not very usefull to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
