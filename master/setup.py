@@ -385,9 +385,9 @@ if 'a' in version or 'b' in version:
 
 if sys.version_info[:2] == (2, 6):
     # Twisted-15.4.0 doesn't support Python 2.6 anymore
-    twisted_req = "Twisted >= 12.1.0, < 15.4.0"
+    twisted_ver = ">= 12.1.0, < 15.4.0"
 else:
-    twisted_req = "Twisted >= 12.1.0"
+    twisted_ver = ">= 12.1.0"
 
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
@@ -398,7 +398,7 @@ except ImportError:
 else:
     # dependencies
     setup_args['install_requires'] = [
-        twisted_req,
+        'Twisted ' + twisted_ver,
         'Jinja2 >= 2.1',
         'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
         'future',
@@ -418,7 +418,10 @@ else:
         'bundle': [
             'buildbot-www',
             'buildbot-slave'
-        ]
+        ],
+        'tls': [
+            'Twisted[tls] ' + twisted_ver,
+        ],
     }
 
     if os.getenv('NO_INSTALL_REQS'):

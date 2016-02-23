@@ -91,11 +91,10 @@ install:
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   # Install boto and moto for running EC2 tests
   # Install txgithub to run buildbot.status.github module tests
-  # Install service_identity to silence Twisted's warnings
   - |
       [ $TESTS = py3 ] || \
       pip install -e pkg \
-                  -e master \
+                  -e master[tls] \
                   -e slave \
                   txrequests \
                   future \
@@ -106,8 +105,7 @@ install:
                   pg8000 \
                   boto \
                   moto \
-                  txgithub \
-                  service_identity
+                  txgithub
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS = py3 ] || pip install --pre buildbot_www"
 
