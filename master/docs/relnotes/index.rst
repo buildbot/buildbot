@@ -29,6 +29,8 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Deprecated ``workdir`` was removed, ``builddir`` property should be used instead.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

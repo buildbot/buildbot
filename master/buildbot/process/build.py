@@ -222,7 +222,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 workerforbuilder.worker.worker_basedir,
                 self.builder.config.workerbuilddir)
             self.setProperty("builddir", builddir, "worker")
-            self.setProperty("workdir", builddir, "worker (deprecated)")
 
         self.workername = workerforbuilder.worker.workername
         self._registerOldWorkerAttr("workername")
