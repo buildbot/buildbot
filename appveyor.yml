@@ -1,0 +1,16 @@
+# AppVeyor CI
+# https://www.appveyor.com/docs
+
+environment:
+  matrix:
+    # For Python versions available on AppVeyor, see
+    # http://www.appveyor.com/docs/installed-software#python
+    - PYTHON: "C:\\Python27"
+
+install:
+  - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave"
+
+build: false
+
+test_script:
+  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test"
