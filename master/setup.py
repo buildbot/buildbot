@@ -349,7 +349,7 @@ setup_args = {
             ('buildbot.www.avatar', ['AvatarGravatar']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth']),
-            ('buildbot.www.ldapuserinfos', ['LdapUserInfo']),
+            ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth']),
             ('buildbot.db.dbconfig', [

@@ -67,7 +67,7 @@ Becomes ::
     def run(self):  ## new style
         cmd = remotecommand.RemoteCommand('stat', {'file': self.file })
         yield self.runCommand(cmd)
-        yield self.convertResult(cmd)
+        defer.returnValue(self.convertResult(cmd))
 
 Newly Asynchronous Methods
 ++++++++++++++++++++++++++

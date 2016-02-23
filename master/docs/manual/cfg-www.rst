@@ -281,11 +281,11 @@ In this case the username provided by oauth2 will be used, and all other informa
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfos.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
+.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
 
         :param uri: uri of the ldap server
-        :param bind_user: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
-        :param bind_pw: password of the ``bindUser``
+        :param bindUser: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
+        :param bindPw: password of the ``bindUser``
         :param accountBase: the base dn (distinguished name)of the user database
         :param groupBase: the base dn of the groups database
         :param accountPattern: the pattern for searching in the account database.
@@ -309,8 +309,8 @@ Currently only one provider is available:
             # we use it for user info, and avatars
             userInfoProvider = util.LdapUserInfo(
                 uri='ldap://ldap.mycompany.com:3268',
-                bind_user='ldap_user',
-                bind_pw='p4$$wd',
+                bindUser='ldap_user',
+                bindPw='p4$$wd',
                 accountBase='dc=corp,dc=mycompany,dc=com',
                 groupBase='dc=corp,dc=mycompany,dc=com',
                 accountPattern='(&(objectClass=person)(sAMAccountName=%(username)s))',
@@ -323,7 +323,7 @@ Currently only one provider is available:
             )
             c['www'] = dict(port=PORT, allowed_origins=["*"],
                             url=c['buildbotURL'],
-                            auth=util.RemoteUserAuth(userInfoProvider),
+                            auth=util.RemoteUserAuth(userInfoProvider=userInfoProvider),
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 
