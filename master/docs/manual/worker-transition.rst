@@ -3,18 +3,11 @@ Transition to "worker" terminology
 
 .. todo::
 
-    * ReStructured text formatting should be reviewed in scope of using
-      Buildbot-specific directives.
-
     * This page may be split in parts or merged with other pages.
 
     * This page should be placed in a proper place in the TOC.
 
     * Links on this page should be added, e.g. from 0.9.0 changelog.
-
-    * Is all changes are done only for functionality that was in eight branch?
-      If something is introduced in nine branch, it can be safely changed
-      without providing fallback (for example, Docker stuff).
 
 Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated
 in favor of "worker"-based terminology.
