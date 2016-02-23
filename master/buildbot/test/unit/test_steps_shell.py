@@ -71,11 +71,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             lambda: shell.ShellCommand(workdir='build', command="echo Hello World",
                                        wrongArg1=1, wrongArg2='two'))
 
-    def test_getLegacySummary_no_command(self):
-        step = shell.ShellCommand(workdir='build')
-        step.rendered = True
-        self.assertLegacySummary(step, None)
-
     def test_getLegacySummary_from_empty_command(self):
         # this is more of a regression test for a potential failure, really
         step = shell.ShellCommand(workdir='build', command=' ')
