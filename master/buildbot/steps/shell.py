@@ -410,7 +410,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         ShellCommand.__init__(self, **kwargs)
 
         if self.__class__ is WarningCountingShellCommand:
-            # ShellCommand class is directly instantiated.
+            # WarningCountingShellCommand class is directly instantiated.
             # Explicitly check that command is set to prevent runtime error
             # later.
             assert kwargs.get('command'), \
