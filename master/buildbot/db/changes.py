@@ -198,6 +198,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                        change['parent_changeids']):
                     # For the moment, a Change only have 1 parent.
                     change = yield self.master.db.changes.getChange(change['parent_changeids'][0])
+                    # http://trac.buildbot.net/ticket/3461 sometimes, parent_changeids could be corrupted
+                    if change is None:
+                        break
                     changes.append(change)
         defer.returnValue(changes)
 
