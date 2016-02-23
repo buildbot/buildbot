@@ -108,11 +108,11 @@ class ShellCommand(buildstep.LoggingBuildStep):
         if command:
             self.setCommand(command)
 
-        if self.__class__ is ShellCommand:
+        if self.__class__ is ShellCommand and not command:
             # ShellCommand class is directly instantiated.
             # Explicitly check that command is set to prevent runtime error
             # later.
-            assert command, "ShellCommand's `command' argument not specified"
+            config.error("ShellCommand's `command' argument is not specified")
 
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
@@ -409,13 +409,13 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
 
-        if self.__class__ is WarningCountingShellCommand:
+        if self.__class__ is WarningCountingShellCommand and \
+                not kwargs.get('command'):
             # WarningCountingShellCommand class is directly instantiated.
             # Explicitly check that command is set to prevent runtime error
             # later.
-            assert kwargs.get('command'), \
-                "WarningCountingShellCommand's `command' argument not " \
-                "specified"
+            config.error("WarningCountingShellCommand's `command' argument "
+                         "is not specified")
 
         self.suppressions = []
         self.directoryStack = []
