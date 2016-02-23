@@ -154,6 +154,19 @@ The following fields are identifiers:
 * builder name (20-character)
 * step name (50-character)
 
+Transition to "worker" terminology
+----------------------------------
+
+Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated
+in favor of "worker"-based terminology.
+
+All identifiers, messages and documentation were updated to use "worker"
+instead of "slave".
+Old API names are still available, but deprecated.
+
+For details about changed API and how to control generated warnings see
+:ref:`Transition-to-worker-terminology`.
+
 Other Config Settings
 ---------------------
 
