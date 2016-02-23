@@ -14,8 +14,7 @@ in favor of "worker"-based terminology.
 
 API change is done in backward compatible way, so old "slave"-containing
 classes, functions and attributes are still available and can be used.
-Complete removal of "slave"-containing terminology is planned in version
-**TODO**.
+Old API support will be removed in the future versions of Buildbot.
 
 Rename of API introduced in beta versions of Buildbot 0.9.0 done without
 providing fallback.
