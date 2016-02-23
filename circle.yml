@@ -1,12 +1,9 @@
 # Circle CI configuration file
 # https://circleci.com/docs/
 
-dependencies:
-  override:
-    - pip install -e pkg -e master -e slave
-
 test:
   override:
+    - pip install -e pkg -e master -e slave
     - make docs
 
 general:
