@@ -3,12 +3,6 @@
 Transition to "worker" terminology
 ==================================
 
-.. todo::
-
-    * This page should be placed in a proper place in the TOC.
-
-    * Links on this page should be added, e.g. from 0.9.0 changelog.
-
 Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated
 in favor of "worker"-based terminology.
 
@@ -49,27 +43,6 @@ Changed API
 
 In general "Slave" and "Buildslave" parts in identifiers and messages were
 replaced with "Worker"; "SlaveBuilder" with "WorkerForBuilder".
-
-.. todo::
-
-    * This list will be updated along with actual changing of the API.
-
-    * Most of this list can be generated/verified by grepping use of
-      ``worker_transition`` helpers.
-
-    * Some of attribute/methods that were renamed may be actually private.
-      If they are private, then no fallback should be provided and they
-      change shouldn't be documented.
-
-    * Test that module reloading works and doesn't produce more warnings than
-      it should.
-
-    * Some classes are marked as ``(private?)`` because they are not mentioned
-      in the documentation, but in my opinion may be used by
-      end users (so they either should be documented, or fallback for them
-      should be removed).
-      If some identifiers don't need fallback for old name, then it should be
-      removed.
 
 Below is the list of changed API (use of old names from this list will work).
 Note that some of these symbols are not included in Buildbot's public API.
