@@ -240,7 +240,6 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             re.compile("encountered a SyntaxError while parsing config file:"),
             lambda: config.MasterConfig.loadConfig(
                 self.basedir, self.filename))
-        self.assertEqual(len(self.flushLoggedErrors(SyntaxError)), 1)
 
     def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
