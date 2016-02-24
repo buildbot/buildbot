@@ -68,6 +68,8 @@ Setting this parameter ensures that connections are closed and re-opened after t
 If you see errors such as ``_mysql_exceptions.OperationalError: (2006, 'MySQL server has gone away')``, this means your ``max_idle`` setting is probably too high.
 ``show global variables like 'wait_timeout';`` will show what the currently configured ``wait_timeout`` is on your MySQL server.
 
+When using MySQL 5.x, if you see errors such as  ``BLOB, TEXT, GEOMETRY or JSON column state_string can not have a default value`` make sure to add  ``sql_mode='MYSQL40'`` in your configuration cnf file.
+
 Buildbot requires ``use_unique=True`` and ``charset=utf8``, and will add them automatically, so they do not need to be specified in ``db_url``.
 
 MySQL defaults to the MyISAM storage engine, but this can be overridden with the ``storage_engine`` URL argument.
