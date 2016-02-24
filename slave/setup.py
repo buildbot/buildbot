@@ -127,6 +127,7 @@ else:
     ]
     setup_args['extras_require'] = {
         'test': [
+            'setuptools_trial',
             'mock',
             'pep8',
             'pylint==1.1.0',
