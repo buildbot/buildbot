@@ -18,8 +18,8 @@ from future.utils import itervalues
 import os
 import re
 import sys
-import warnings
 import traceback
+import warnings
 
 from buildbot import interfaces
 from buildbot import locks
