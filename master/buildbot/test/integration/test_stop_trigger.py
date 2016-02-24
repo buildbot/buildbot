@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
+import textwrap
+
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -65,11 +68,24 @@ def setupTriggerConfiguration(triggeredFactory, nextBuild=None):
 
 def triggerRunsForever():
     f2 = BuildFactory()
-    f2.addStep(steps.ShellCommand(command="\n".join(['while :',
-                                                     'do',
-                                                     ' echo "sleeping";',
-                                                     ' sleep 1;'
-                                                     'done'])))
+
+    # Infinite sleep command.
+    if sys.platform == 'win32':
+        # Ping localhost infinitely.
+        # There are other options, however their either doesn't work in
+        # non-interactive mode (e.g. 'pause'), or doesn't available on all
+        # Windows versions (e.g. 'timeout' or 'choice' only from Windows 7).
+        cmd = 'ping -t 127.0.0.1'.split()
+    else:
+        cmd = textwrap.dedent("""\
+            while :
+            do
+              echo "sleeping";
+              sleep 1;
+            done
+            """)
+
+    f2.addStep(steps.ShellCommand(command=cmd))
 
     return setupTriggerConfiguration(f2)
 
