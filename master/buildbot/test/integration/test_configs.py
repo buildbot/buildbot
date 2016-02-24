@@ -17,6 +17,10 @@ import os
 from buildbot import config
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.python import util
 from twisted.trial import unittest
 
@@ -33,17 +37,49 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
 
     def test_sample_config(self):
         filename = util.sibpath(runner.__file__, 'sample.cfg')
-        config.MasterConfig.loadConfig(self.basedir, filename)
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            config.MasterConfig.loadConfig(self.basedir, filename)
+
+    def test_0_9_0b5_api_renamed_config(self):
+        with open(self.filename, "w") as f:
+            f.write(sample_0_9_0b5_api_renamed)
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
+
+    def test_0_9_0b5_config(self):
+        with open(self.filename, "w") as f:
+            f.write(sample_0_9_0b5)
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
+                    r"'slavenames' keyword argument is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
 
     def test_0_7_12_config(self):
         with open(self.filename, "w") as f:
             f.write(sample_0_7_12)
-        config.MasterConfig.loadConfig(self.basedir, self.filename)
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"BuildSlave was deprecated",
+                    r"c\['slavePortnum'\] key is deprecated",
+                    r"'slavename' keyword argument is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
 
     def test_0_7_6_config(self):
         with open(self.filename, "w") as f:
             f.write(sample_0_7_6)
-        config.MasterConfig.loadConfig(self.basedir, self.filename)
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"BuildSlave was deprecated",
+                    r"c\['slavePortnum'\] key is deprecated",
+                    r"'slavename' keyword argument is deprecated",
+                    r"c\['slaves'\] key is deprecated"]):
+            config.MasterConfig.loadConfig(self.basedir, self.filename)
 
 
 # sample.cfg from various versions, with comments stripped.  Adjustments made
@@ -123,4 +159,106 @@ c['status'] = []
 c['projectName'] = "Buildbot"
 c['projectURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"
+"""
+
+# Template for master configuration just before worker renaming.
+sample_0_9_0b5 = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['slaves'] = [buildslave.BuildSlave("example-slave", "pass")]
+
+c['protocols'] = {'pb': {'port': 9989}}
+
+c['change_source'] = []
+c['change_source'].append(changes.GitPoller(
+        'git://github.com/buildbot/pyflakes.git',
+        workdir='gitpoller-workdir', branch='master',
+        pollinterval=300))
+
+c['schedulers'] = []
+c['schedulers'].append(schedulers.SingleBranchScheduler(
+                            name="all",
+                            change_filter=util.ChangeFilter(branch='master'),
+                            treeStableTimer=None,
+                            builderNames=["runtests"]))
+c['schedulers'].append(schedulers.ForceScheduler(
+                            name="force",
+                            builderNames=["runtests"]))
+
+factory = util.BuildFactory()
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+
+c['builders'] = []
+c['builders'].append(
+    util.BuilderConfig(name="runtests",
+      slavenames=["example-slave"],
+      factory=factory))
+
+c['status'] = []
+
+c['title'] = "Pyflakes"
+c['titleURL'] = "https://launchpad.net/pyflakes"
+
+c['buildbotURL'] = "http://localhost:8020/"
+
+c['www'] = dict(port=8020,
+                plugins=dict(waterfall_view={}, console_view={}))
+
+c['db'] = {
+    'db_url' : "sqlite:///state.sqlite",
+}
+"""
+
+# Template for master configuration just before worker after renaming.
+sample_0_9_0b5_api_renamed = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['workers'] = [worker.Worker("example-worker", "pass")]
+
+c['protocols'] = {'pb': {'port': 9989}}
+
+c['change_source'] = []
+c['change_source'].append(changes.GitPoller(
+        'git://github.com/buildbot/pyflakes.git',
+        workdir='gitpoller-workdir', branch='master',
+        pollinterval=300))
+
+c['schedulers'] = []
+c['schedulers'].append(schedulers.SingleBranchScheduler(
+                            name="all",
+                            change_filter=util.ChangeFilter(branch='master'),
+                            treeStableTimer=None,
+                            builderNames=["runtests"]))
+c['schedulers'].append(schedulers.ForceScheduler(
+                            name="force",
+                            builderNames=["runtests"]))
+
+factory = util.BuildFactory()
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+
+c['builders'] = []
+c['builders'].append(
+    util.BuilderConfig(name="runtests",
+      workernames=["example-worker"],
+      factory=factory))
+
+c['status'] = []
+
+c['title'] = "Pyflakes"
+c['titleURL'] = "https://launchpad.net/pyflakes"
+
+c['buildbotURL'] = "http://localhost:8020/"
+
+c['www'] = dict(port=8020,
+                plugins=dict(waterfall_view={}, console_view={}))
+
+c['db'] = {
+    'db_url' : "sqlite:///state.sqlite",
+}
 """

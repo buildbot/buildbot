@@ -6,9 +6,9 @@ Installing the code
 The Buildbot Packages
 ~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot comes in several parts: ``buildbot`` (the buildmaster), ``buildbot-slave`` (the buildslave), ``buildbot-www``, and several web plugins such as ``buildbot-waterfall-view``.
+Buildbot comes in several parts: ``buildbot`` (the buildmaster), ``buildbot-slave`` (the worker), ``buildbot-www``, and several web plugins such as ``buildbot-waterfall-view``.
 
-The buildslave and buildmaster can be installed individually or together.
+The worker and buildmaster can be installed individually or together.
 The base web (``buildbot.www``) and web plugins are required to run a master with a web interface (the common configuration).
 
 Installation From PyPI
@@ -21,7 +21,7 @@ For the master:
 
     pip install buildbot
 
-and for the slave:
+and for the worker:
 
 .. code-block:: bash
 

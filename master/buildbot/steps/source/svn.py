@@ -78,10 +78,10 @@ class SVN(Source):
 
         # if the version is new enough, and the password is set, then obfuscate it
         if self.password is not None:
-            if not self.slaveVersionIsOlderThan('shell', '2.16'):
+            if not self.workerVersionIsOlderThan('shell', '2.16'):
                 self.password = ('obfuscated', self.password, 'XXXXXX')
             else:
-                log.msg("Slave does not understand obfuscation; "
+                log.msg("Worker does not understand obfuscation; "
                         "svn password will be logged")
 
         d = self.checkSvn()
@@ -89,7 +89,7 @@ class SVN(Source):
         @d.addCallback
         def checkInstall(svnInstalled):
             if not svnInstalled:
-                raise buildstep.BuildStepFailed("SVN is not installed on slave")
+                raise buildstep.BuildStepFailed("SVN is not installed on worker")
             return 0
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
@@ -349,7 +349,7 @@ class SVN(Source):
             if len(files) == 0:
                 d = defer.succeed(0)
             else:
-                if self.slaveVersionIsOlderThan('rmdir', '2.14'):
+                if self.workerVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
                     d = self.runRmdir(files, abandonOnFailure=False)

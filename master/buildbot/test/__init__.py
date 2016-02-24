@@ -23,6 +23,21 @@ monkeypatches.patch_all(for_tests=True)
 import warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
 
+import sys
+if sys.version_info[:2] < (3, 2):
+    # Setup logging unhandled messages to stderr.
+    # Since Python 3.2 similar functionality implemented through
+    # logging.lastResort handler.
+    # Significant difference between this approach and Python 3.2 last resort
+    # approach is that in the current approach only records with log level
+    # equal or above to the root logger log level will be printed (WARNING by
+    # default). For example, there still will be warnings about missing
+    # handler for log if INFO or DEBUG records will be logged (but at least
+    # WARNINGs and ERRORs will be printed).
+    import logging
+    _handler = logging.StreamHandler()
+    logging.getLogger().addHandler(_handler)
+
 # import mock so we bail out early if it's not installed
 try:
     import mock
@@ -34,3 +49,52 @@ except ImportError:
 if LooseVersion(mock.__version__) < LooseVersion("0.8"):
     raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
                       "higher; try 'pip install -U mock'")
+
+# Force loading of deprecated modules and check that appropriate warnings
+# were emitted.
+# Without explicit load of deprecated modules it's hard to predict when
+# they will be imported and when warning should be catched.
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave' module is deprecated"):
+    import buildbot.buildslave as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.steps\.slave' module is deprecated"):
+    import buildbot.steps.slave as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.process\.slavebuilder' module is deprecated"):
+    import buildbot.process.slavebuilder as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.db\.buildslaves' module is deprecated"):
+    import buildbot.db.buildslaves as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave\.ec2' module is deprecated"):
+    import buildbot.buildslave.ec2 as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave\.libvirt' module is deprecated"):
+    import buildbot.buildslave.libvirt as _  # noqa
+
+with assertProducesWarning(
+        DeprecatedWorkerModuleWarning,
+        message_pattern=r"'buildbot\.buildslave\.openstack' module is deprecated"):
+    import buildbot.buildslave.openstack as _  # noqa
+
+# All deprecated modules should be loaded, consider future
+# DeprecatedWorkerModuleWarning in tests as errors.
+# All DeprecatedWorkerNameWarning warnings should be explicitly catched too,
+# so fail on any DeprecatedWorkerAPIWarning.
+warnings.filterwarnings('error', category=DeprecatedWorkerAPIWarning)

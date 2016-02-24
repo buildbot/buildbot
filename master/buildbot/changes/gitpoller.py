@@ -14,7 +14,8 @@
 # Copyright Buildbot Team Members
 
 from future.moves.urllib.parse import quote as urlquote
-from future.utils import itervalues, iterkeys
+from future.utils import iterkeys
+from future.utils import itervalues
 
 import itertools
 import os

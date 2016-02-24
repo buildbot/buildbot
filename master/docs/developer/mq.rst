@@ -129,7 +129,7 @@ Wamp
             'builderid': 10,
             'buildid': 1,
             'buildrequestid': 13,
-            'buildslaveid': 20,
+            'workerid': 20,
             'complete': False,
             'complete_at': None,
             'masterid': 824,
@@ -144,7 +144,7 @@ Wamp
 .. py:class:: WampConnector
 
     The :py:class:`WampConnector` class implements a buildbot service for wamp.
-    It is managed outside of the mq module as this protocol can also be reused for slave protocol.
+    It is managed outside of the mq module as this protocol can also be reused for worker protocol.
     The connector support queuing of requests until the wamp connection is created, but do not support disconnection and reconnection.
     Reconnection will be supported as part of a next release of AutobahnPython (https://github.com/tavendo/AutobahnPython/issues/295).
     There is a chicken and egg problem at the buildbot initialization phasis, so the produce messages are actually not sent with deferred.

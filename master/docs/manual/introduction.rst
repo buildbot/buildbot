@@ -14,14 +14,14 @@ Developers get immediate (and potentially public) feedback about their changes, 
 
 Features:
 
-* run builds on a variety of slave platforms
+* run builds on a variety of worker platforms
 * arbitrary build process: handles projects using C, Python, whatever
 * minimal host requirements: Python and Twisted
-* slaves can be behind a firewall if they can still do checkout
+* workers can be behind a firewall if they can still do checkout
 * status delivery through web page, email, IRC, other protocols
 * track builds in progress, provide estimated completion time
 * flexible configuration by subclassing generic build process classes
-* debug tools to force a new build, submit fake :class:`Change`\s, query slave status
+* debug tools to force a new build, submit fake :class:`Change`\s, query worker status
 * released under the `GPL <http://opensource.org/licenses/gpl-2.0.php>`_
 
 .. _History-and-Philosophy:
@@ -44,17 +44,17 @@ When everyone can see the status of the project, developers are encouraged to ke
 Unit tests that aren't run on a regular basis tend to suffer from bitrot just like code does: exercising them on a regular basis helps to keep them functioning and useful.
 
 The current version of the Buildbot is additionally targeted at distributed free-software projects, where resources and platforms are only available when provided by interested volunteers.
-The buildslaves are designed to require an absolute minimum of configuration, reducing the effort a potential volunteer needs to expend to be able to contribute a new test environment to the project.
-The goal is for anyone who wishes that a given project would run on their favorite platform should be able to offer that project a buildslave, running on that platform, where they can verify that their portability code works, and keeps working.
+The workers are designed to require an absolute minimum of configuration, reducing the effort a potential volunteer needs to expend to be able to contribute a new test environment to the project.
+The goal is for anyone who wishes that a given project would run on their favorite platform should be able to offer that project a worker, running on that platform, where they can verify that their portability code works, and keeps working.
 
 .. _System-Architecture:
 
 System Architecture
 -------------------
 
-The Buildbot consists of a single *buildmaster* and one or more *buildslaves*, connected in a star topology.
+The Buildbot consists of a single *buildmaster* and one or more *workers*, connected in a star topology.
 The buildmaster makes all decisions about what, when, and how to build.
-It sends commands to be run on the build slaves, which simply execute the commands and return the results.
+It sends commands to be run on the workers, which simply execute the commands and return the results.
 (certain steps involve more local decision making, where the overhead of sending a lot of commands back and forth would be inappropriate, but in general the buildmaster is responsible for everything).
 
 The buildmaster is usually fed :class:`Change`\s by some sort of version control system (:ref:`change-sources`), which may cause builds to be run.
@@ -64,26 +64,26 @@ As the builds are performed, various status messages are produced, which are the
    :alt: Overview Diagram
 
 The buildmaster is configured and maintained by the *buildmaster admin*, who is generally the project team member responsible for build process issues.
-Each buildslave is maintained by a *buildslave admin*, who do not need to be quite as involved.
-Generally slaves are run by anyone who has an interest in seeing the project work well on their favorite platform.
+Each worker is maintained by a *worker admin*, who do not need to be quite as involved.
+Generally workers are run by anyone who has an interest in seeing the project work well on their favorite platform.
 
-.. _BuildSlave-Connections:
+.. Worker-Connections:
 
-BuildSlave Connections
-~~~~~~~~~~~~~~~~~~~~~~
+Worker Connections
+~~~~~~~~~~~~~~~~~~
 
-The buildslaves are typically run on a variety of separate machines, at least one per platform of interest.
+The workers are typically run on a variety of separate machines, at least one per platform of interest.
 These machines connect to the buildmaster over a TCP connection to a publically-visible port.
-As a result, the buildslaves can live behind a NAT box or similar firewalls, as long as they can get to buildmaster.
-The TCP connections are initiated by the buildslave and accepted by the buildmaster, but commands and results travel both ways within this connection.
-The buildmaster is always in charge, so all commands travel exclusively from the buildmaster to the buildslave.
+As a result, the workers can live behind a NAT box or similar firewalls, as long as they can get to buildmaster.
+The TCP connections are initiated by the worker and accepted by the buildmaster, but commands and results travel both ways within this connection.
+The buildmaster is always in charge, so all commands travel exclusively from the buildmaster to the worker.
 
-To perform builds, the buildslaves must typically obtain source code from a CVS/SVN/etc repository.
+To perform builds, the workers must typically obtain source code from a CVS/SVN/etc repository.
 Therefore they must also be able to reach the repository.
 The buildmaster provides instructions for performing builds, but does not provide the source code itself.
 
 .. image:: _images/slaves.*
-   :alt: BuildSlave Connections
+   :alt: Worker Connections
 
 .. _Buildmaster-Architecture:
 
@@ -103,39 +103,39 @@ Change Sources
 
 Schedulers
     Which decide when builds should be performed.
-    They collect :class:`Change`\s into :class:`BuildRequest`\s, which are then queued for delivery to :class:`Builders` until a buildslave is available.
+    They collect :class:`Change`\s into :class:`BuildRequest`\s, which are then queued for delivery to :class:`Builders` until a worker is available.
 
 Builders
     Which control exactly *how* each build is performed (with a series of :class:`BuildStep`\s, configured in a :class:`BuildFactory`).
-    Each :class:`Build` is run on a single buildslave.
+    Each :class:`Build` is run on a single worker.
 
 Status plugins
     Which deliver information about the build results through protocols like HTTP, mail, and IRC.
 
-Each :class:`Builder` is configured with a list of :class:`BuildSlave`\s that it will use for its builds.
-These buildslaves are expected to behave identically: the only reason to use multiple :class:`BuildSlave`\s for a single :class:`Builder` is to provide a measure of load-balancing.
+Each :class:`Builder` is configured with a list of :class:`Worker`\s that it will use for its builds.
+These workers are expected to behave identically: the only reason to use multiple :class:`Worker`\s for a single :class:`Builder` is to provide a measure of load-balancing.
 
-Within a single :class:`BuildSlave`, each :class:`Builder` creates its own :class:`SlaveBuilder` instance.
-These :class:`SlaveBuilder`\s operate independently from each other.
+Within a single :class:`Worker`, each :class:`Builder` creates its own :class:`WorkerForBuilder` instance.
+These :class:`WorkerForBuilder`\s operate independently from each other.
 Each gets its own base directory to work in.
-It is quite common to have many :class:`Builder`\s sharing the same buildslave.
-For example, there might be two buildslaves: one for i386, and a second for PowerPC.
+It is quite common to have many :class:`Builder`\s sharing the same worker.
+For example, there might be two workers: one for i386, and a second for PowerPC.
 There may then be a pair of :class:`Builder`\s that do a full compile/test run, one for each architecture, and a lone :class:`Builder` that creates snapshot source tarballs if the full builders complete successfully.
-The full builders would each run on a single buildslave, whereas the tarball creation step might run on either buildslave (since the platform doesn't matter when creating source tarballs).
+The full builders would each run on a single worker, whereas the tarball creation step might run on either worker (since the platform doesn't matter when creating source tarballs).
 In this case, the mapping would look like:
 
 .. code-block:: none
 
-    Builder(full-i386)  ->  BuildSlaves(slave-i386)
-    Builder(full-ppc)   ->  BuildSlaves(slave-ppc)
-    Builder(source-tarball) -> BuildSlaves(slave-i386, slave-ppc)
+    Builder(full-i386)  ->  Workers(worker-i386)
+    Builder(full-ppc)   ->  Workers(worker-ppc)
+    Builder(source-tarball) -> Workers(worker-i386, worker-ppc)
 
-and each :class:`BuildSlave` would have two :class:`SlaveBuilders` inside it, one for a full builder, and a second for the source-tarball builder.
+and each :class:`Worker` would have two :class:`WorkerForBuilder`\s inside it, one for a full builder, and a second for the source-tarball builder.
 
-Once a :class:`SlaveBuilder` is available, the :class:`Builder` pulls one or more :class:`BuildRequest`\s off its incoming queue.
+Once a :class:`WorkerForBuilder` is available, the :class:`Builder` pulls one or more :class:`BuildRequest`\s off its incoming queue.
 (It may pull more than one if it determines that it can merge the requests together; for example, there may be multiple requests to build the current *HEAD* revision).
 These requests are merged into a single :class:`Build` instance, which includes the :class:`SourceStamp` that describes what exact version of the source code should be used for the build.
-The :class:`Build` is then randomly assigned to a free :class:`SlaveBuilder` and the build begins.
+The :class:`Build` is then randomly assigned to a free :class:`WorkerForBuilder` and the build begins.
 
 The behaviour when :class:`BuildRequest`\s are merged can be customized, :ref:`Collapsing-Build-Requests`.
 
@@ -160,8 +160,8 @@ The status plugins can also subscribe to hear about new :class:`Build`\s as they
 The :class:`Status` object records the status of old builds on disk in the buildmaster's base directory.
 This allows it to return information about historical builds.
 
-There are also status objects that correspond to :class:`Scheduler`\s and :class:`BuildSlave`\s.
-These allow status plugins to report information about upcoming builds, and the online/offline status of each buildslave.
+There are also status objects that correspond to :class:`Scheduler`\s and :class:`Worker`\s.
+These allow status plugins to report information about upcoming builds, and the online/offline status of each worker.
 
 .. _Control-Flow:
 
@@ -178,13 +178,13 @@ A day in the life of the buildbot:
 * The buildmaster distributes this change to all of its configured schedulers.
   Any ``important`` changes cause the ``tree-stable-timer`` to be started, and the :class:`Change` is added to a list of those that will go into a new :class:`Build`.
   When the timer expires, a :class:`Build` is started on each of a set of configured Builders, all compiling/testing the same source code.
-  Unless configured otherwise, all :class:`Build`\s run in parallel on the various buildslaves.
+  Unless configured otherwise, all :class:`Build`\s run in parallel on the various workers.
 
 * The :class:`Build` consists of a series of :class:`Step`\s.
-  Each :class:`Step` causes some number of commands to be invoked on the remote buildslave associated with that :class:`Builder`.
+  Each :class:`Step` causes some number of commands to be invoked on the remote worker associated with that :class:`Builder`.
   The first step is almost always to perform a checkout of the appropriate revision from the same VC system that produced the :class:`Change`.
   The rest generally perform a compile and run unit tests.
-  As each :class:`Step` runs, the buildslave reports back command output and return status to the buildmaster.
+  As each :class:`Step` runs, the worker reports back command output and return status to the buildmaster.
 
 * As the :class:`Build` runs, status messages like "Build Started", "Step Started", "Build Finished", etc, are published to a collection of Status Targets.
   One of these targets is usually the HTML ``Waterfall`` display, which shows a chronological list of events, and summarizes the results of the most recent build at the top of each column.

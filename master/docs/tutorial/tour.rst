@@ -271,7 +271,7 @@ Further down, look for the WebStatus configuration::
        # options
        auth=auth.BasicAuth([("pyflakes","pyflakes")]),
        gracefulShutdown = False,
-       forceBuild = 'auth', # use this to test your slave once it is set up
+       forceBuild = 'auth',  # use this to test your worker once it is set up
        forceAllBuilds = False,
        pingBuilder = False,
        stopBuild = False,
@@ -331,10 +331,10 @@ After restarting the master, you can ssh into the master and get an interactive 
 
         pip install pyasn1-0.0.13b
 
-If you wanted to check which slaves are connected and what builders those slaves are assigned to you could do::
+If you wanted to check which workers are connected and what builders those workers are assigned to you could do::
 
-  >>> master.buildslaves.slaves
-  {'example-slave': <BuildSlave 'example-slave', current builders: runtests>}
+  >>> master.workers.workers
+  {'example-worker': <Worker 'example-worker', current builders: runtests>}
 
 Objects can be explored in more depth using `dir(x)` or the helper function `show(x)`.
 

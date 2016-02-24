@@ -2,7 +2,7 @@ Configuring Buildbot
 ====================
 
 The buildbot's behavior is defined by the *config file*, which normally lives in the :file:`master.cfg` file in the buildmaster's base directory (but this can be changed with an option to the :command:`buildbot create-master` command).
-This file completely specifies which :class:`Builder`\s are to be run, which slaves they should use, how :class:`Change`\s should be tracked, and where the status information is to be sent.
+This file completely specifies which :class:`Builder`\s are to be run, which workers they should use, how :class:`Change`\s should be tracked, and where the status information is to be sent.
 The buildmaster's :file:`buildbot.tac` file names the base directory; everything else comes from the config file.
 
 A sample config file was installed for you when you created the buildmaster, but you will need to edit it before your buildbot will do anything useful.
@@ -96,9 +96,9 @@ If you have errors in your configuration file, checkconfig will let you know:
 
     % buildbot checkconfig master.cfg
     Configuration Errors:
-    c['slaves'] must be a list of BuildSlave instances
-    no slaves are configured
-    builder 'smoketest' uses unknown slaves 'linux-002'
+    c['workers'] must be a list of Worker instances
+    no workers are configured
+    builder 'smoketest' uses unknown workers 'linux-002'
 
 If the config file is simply broken, that will be caught too:
 

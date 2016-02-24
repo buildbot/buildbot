@@ -543,9 +543,9 @@ This lets the administrator control who may initiate these `trial` builds, which
 
 The scheduler has various means to accept build requests.
 All of them enforce more security than the usual buildmaster ports do.
-Any source code being built can be used to compromise the buildslave accounts, but in general that code must be checked out from the VC repository first, so only people with commit privileges can get control of the buildslaves.
-The usual force-build control channels can waste buildslave time but do not allow arbitrary commands to be executed by people who don't have those commit privileges.
-However, the source code patch that is provided with the trial build does not have to go through the VC system first, so it is important to make sure these builds cannot be abused by a non-committer to acquire as much control over the buildslaves as a committer has.
+Any source code being built can be used to compromise the worker accounts, but in general that code must be checked out from the VC repository first, so only people with commit privileges can get control of the workers.
+The usual force-build control channels can waste worker time but do not allow arbitrary commands to be executed by people who don't have those commit privileges.
+However, the source code patch that is provided with the trial build does not have to go through the VC system first, so it is important to make sure these builds cannot be abused by a non-committer to acquire as much control over the workers as a committer has.
 Ideally, only developers who have commit access to the VC repository would be able to start trial builds, but unfortunately the buildmaster does not, in general, have access to VC system's user list.
 
 As a result, the try scheduler requires a bit more configuration.
@@ -564,7 +564,7 @@ There are currently two ways to set this up:
     If they are on different machines, this will be much more of a hassle.
     It may also involve granting developer accounts on a machine that would not otherwise require them.
 
-    To implement this, the buildslave invokes :samp:`ssh -l {username} {host} buildbot tryserver {ARGS}`, passing the patch contents over stdin.
+    To implement this, the worker invokes :samp:`ssh -l {username} {host} buildbot tryserver {ARGS}`, passing the patch contents over stdin.
     The arguments must include the inlet directory and the revision information.
 
 ``user+password`` (PB)
@@ -606,7 +606,7 @@ Be sure to watch the :file:`twistd.log` file (:ref:`Logfiles`) as you start usin
 
 To use the username/password form of authentication, create a :class:`Try_Userpass` instance instead.
 It takes the same ``builderNames`` argument as the :class:`Try_Jobdir` form, but accepts an additional ``port`` argument (to specify the TCP port to listen on) and a ``userpass`` list of username/password pairs to accept.
-Remember to use good passwords for this: the security of the buildslave accounts depends upon it::
+Remember to use good passwords for this: the security of the worker accounts depends upon it::
 
     from buildbot.plugins import schedulers
     s = schedulers.Try_Userpass(name="try2",
@@ -632,7 +632,7 @@ The :bb:sched:`Triggerable` scheduler waits to be triggered by a :bb:step:`Trigg
 That step can optionally wait for the scheduler's builds to complete.
 This provides two advantages over :bb:sched:`Dependent` schedulers.
 First, the same scheduler can be triggered from multiple builds.
-Second, the ability to wait for :bb:sched:`Triggerable`'s builds to complete provides a form of "subroutine call", where one or more builds can "call" a scheduler to perform some work for them, perhaps on other buildslaves.
+Second, the ability to wait for :bb:sched:`Triggerable`'s builds to complete provides a form of "subroutine call", where one or more builds can "call" a scheduler to perform some work for them, perhaps on other workers.
 The :bb:sched:`Triggerable` scheduler supports multiple codebases.
 The scheduler filters out all codebases from :bb:step:`Trigger` steps that are not configured in the scheduler.
 
@@ -1127,14 +1127,14 @@ Example::
                 required = True),
                 ])
 
-.. bb:sched:: BuildslaveChoiceParameter
+.. bb:sched:: WorkerChoiceParameter
 
-BuildslaveChoiceParameter
-#########################
+WorkerChoiceParameter
+#####################
 
-This parameter allows a scheduler to require that a build is assigned to the chosen buildslave.
-The choice is assigned to the `slavename` property for the build.
-The :py:class:`~buildbot.builder.enforceChosenSlave` functor must be assigned to the ``canStartBuild`` parameter for the ``Builder``.
+This parameter allows a scheduler to require that a build is assigned to the chosen worker.
+The choice is assigned to the `workername` property for the build.
+The :py:class:`~buildbot.builder.enforceChosenWorker` functor must be assigned to the ``canStartBuild`` parameter for the ``Builder``.
 
 Example::
 
@@ -1144,14 +1144,14 @@ Example::
     ForceScheduler(
         # ...
         properties=[
-            BuildslaveChoiceParameter(),
+            WorkerChoiceParameter(),
         ]
     )
 
     # builders:
     BuilderConfig(
         # ...
-        canStartBuild=util.enforceChosenSlave,
+        canStartBuild=util.enforceChosenWorker,
     )
 
 AnyPropertyParameter

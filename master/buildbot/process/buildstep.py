@@ -38,7 +38,7 @@ from zope.interface import implements
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
 from buildbot.process import properties
@@ -55,6 +55,8 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import worst_status
 from buildbot.util import debounce
 from buildbot.util import flatten
+from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class BuildStepFailed(Exception):
@@ -238,7 +240,8 @@ class BuildStepStatus(object):
 
 
 class BuildStep(results.ResultComputingConfigMixin,
-                properties.PropertiesMixin):
+                properties.PropertiesMixin,
+                WorkerAPICompatMixin):
 
     implements(interfaces.IBuildStep)
 
@@ -294,7 +297,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
     build = None
-    buildslave = None
     step_status = None
     progress = None
     logEncoding = None
@@ -305,6 +307,9 @@ class BuildStep(results.ResultComputingConfigMixin,
     _run_finished_hook = lambda self: None  # for tests
 
     def __init__(self, **kwargs):
+        self.worker = None
+        self._registerOldWorkerAttr("worker", name="buildslave")
+
         for p in self.__class__.parms:
             if p in kwargs:
                 setattr(self, p, kwargs.pop(p))
@@ -342,8 +347,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.build = build
         self.master = self.build.master
 
-    def setBuildSlave(self, buildslave):
-        self.buildslave = buildslave
+    def setWorker(self, worker):
+        self.worker = worker
+    deprecatedWorkerClassMethod(locals(), setWorker, compat_name="setBuildSlave")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
@@ -454,9 +460,9 @@ class BuildStep(results.ResultComputingConfigMixin,
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in self.locks]
-        # then narrow SlaveLocks down to the slave that this build is being
+        # then narrow WorkerLocks down to the worker that this build is being
         # run on
-        self.locks = [(l.getLock(self.build.slavebuilder.slave), la)
+        self.locks = [(l.getLock(self.build.workerforbuilder.worker), la)
                       for l, la in self.locks]
 
         for l, la in self.locks:
@@ -527,7 +533,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             # that this should just be exception due to interrupt
             # At the same time we must respect RETRY status because it's used
             # to retry interrupted build due to some other issues for example
-            # due to slave lost
+            # due to worker lost
             if self.results != CANCELLED:
                 self.results = EXCEPTION
 
@@ -655,6 +661,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
+        # New-style classes implement 'run'.
+        # Old-style classes implemented 'start'. Advise them to do 'run' instead.
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
@@ -688,24 +696,28 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     # utility methods that BuildSteps may find useful
 
-    def slaveVersion(self, command, oldversion=None):
-        return self.build.getSlaveCommandVersion(command, oldversion)
+    def workerVersion(self, command, oldversion=None):
+        return self.build.getWorkerCommandVersion(command, oldversion)
+    deprecatedWorkerClassMethod(locals(), workerVersion)
 
-    def slaveVersionIsOlderThan(self, command, minversion):
-        sv = self.build.getSlaveCommandVersion(command, None)
+    def workerVersionIsOlderThan(self, command, minversion):
+        sv = self.build.getWorkerCommandVersion(command, None)
         if sv is None:
             return True
         if map(int, sv.split(".")) < map(int, minversion.split(".")):
             return True
         return False
+    deprecatedWorkerClassMethod(locals(), workerVersionIsOlderThan)
 
-    def checkSlaveHasCommand(self, command):
-        if not self.slaveVersion(command):
-            message = "slave is too old, does not know about %s" % command
-            raise BuildSlaveTooOldError(message)
+    def checkWorkerHasCommand(self, command):
+        if not self.workerVersion(command):
+            message = "worker is too old, does not know about %s" % command
+            raise WorkerTooOldError(message)
+    deprecatedWorkerClassMethod(locals(), checkWorkerHasCommand)
 
-    def getSlaveName(self):
-        return self.build.getSlaveName()
+    def getWorkerName(self):
+        return self.build.getWorkerName()
+    deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     def addLog(self, name, type='s', logEncoding=None):
         d = self.master.data.updates.addLog(self.stepid,
@@ -798,7 +810,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def runCommand(self, command):
         self.cmd = command
-        command.buildslave = self.buildslave
+        command.worker = self.worker
         try:
             res = yield command.run(self, self.remote, self.build.builder.name)
         finally:
@@ -1116,17 +1128,17 @@ class ShellMixin(object):
 
         # check for the usePTY flag
         if kwargs['usePTY'] != 'slave-config':
-            if self.slaveVersionIsOlderThan("shell", "2.7"):
+            if self.workerVersionIsOlderThan("shell", "2.7"):
                 if stdio is not None:
                     yield stdio.addHeader(
-                        "NOTE: slave does not allow master to override usePTY\n")
+                        "NOTE: worker does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
-        if kwargs["interruptSignal"] and self.slaveVersionIsOlderThan("shell", "2.15"):
+        if kwargs["interruptSignal"] and self.workerVersionIsOlderThan("shell", "2.15"):
             if stdio is not None:
                 yield stdio.addHeader(
-                    "NOTE: slave does not allow master to specify interruptSignal\n")
+                    "NOTE: worker does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
 
         # lazylogfiles are handled below

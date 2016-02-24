@@ -136,7 +136,7 @@ class Master(base.ResourceType):
         log.msg("doing housekeeping for master %d %s" % (masterid, name))
 
         # common code for deactivating a master
-        yield self.master.data.rtypes.buildslave._masterDeactivated(
+        yield self.master.data.rtypes.worker._masterDeactivated(
             masterid=masterid)
         yield self.master.data.rtypes.builder._masterDeactivated(
             masterid=masterid)

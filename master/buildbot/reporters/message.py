@@ -1,13 +1,13 @@
 import jinja2
 import os
 
-from buildbot.reporters import utils
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import statusToString
+from buildbot.reporters import utils
 
 
 class MessageFormatter(object):
@@ -116,7 +116,7 @@ class MessageFormatter(object):
         cxt = dict(results=build['results'],
                    mode=mode,
                    buildername=buildername,
-                   slavename=build['properties'].get('slavename', ["<unknown>"])[0],
+                   workername=build['properties'].get('workername', ["<unknown>"])[0],
                    buildset=buildset,
                    build=build,
                    projects=self.getProjects(ss_list, master),

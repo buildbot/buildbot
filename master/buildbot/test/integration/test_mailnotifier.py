@@ -20,7 +20,7 @@ from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
 
 
-# This integration test creates a master and slave environment,
+# This integration test creates a master and worker environment,
 # with one builders and a shellcommand step, and a MailNotifier
 class MailMaster(RunMasterBase):
 
@@ -83,7 +83,7 @@ def masterConfig():
     f.addStep(steps.ShellCommand(command='echo hello'))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      slavenames=["local1"],
+                      workernames=["local1"],
                       factory=f)]
     c['services'] = [reporters.MailNotifier("bot@foo.com", mode="all")]
     return c

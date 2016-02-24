@@ -46,11 +46,11 @@ class TestPBChangeSource(
 
         return d
 
-    def test_registration_no_slaveport(self):
+    def test_registration_no_workerport(self):
         return self._test_registration(None, exp_ConfigErrors=True,
                                        user='alice', passwd='sekrit')
 
-    def test_registration_global_slaveport(self):
+    def test_registration_global_workerport(self):
         return self._test_registration(self.EXP_DEFAULT_REGISTRATION,
                                        **self.DEFAULT_CONFIG)
 
@@ -60,7 +60,7 @@ class TestPBChangeSource(
 
     def test_registration_no_userpass(self):
         return self._test_registration(('9939', 'change', 'changepw'),
-                                       slavePort='9939')
+                                       workerPort='9939')
 
     def test_registration_no_userpass_no_global(self):
         return self._test_registration(None, exp_ConfigErrors=True)
@@ -92,9 +92,9 @@ class TestPBChangeSource(
 
     @defer.inlineCallbacks
     def _test_registration(self, exp_registration, exp_ConfigErrors=False,
-                           slavePort=None, **constr_kwargs):
+                           workerPort=None, **constr_kwargs):
         cfg = mock.Mock()
-        cfg.protocols = {'pb': {'port': slavePort}}
+        cfg.protocols = {'pb': {'port': workerPort}}
         self.attachChangeSource(pb.PBChangeSource(**constr_kwargs))
 
         self.startChangeSource()

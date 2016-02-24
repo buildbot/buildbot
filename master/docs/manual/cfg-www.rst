@@ -212,6 +212,27 @@ The available classes are described here:
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
 
+.. py:class:: buildbot.www.oauth2.GitLabAuth(instanceUri, clientId, clientSecret)
+
+    :param instanceUri: The URI of your GitLab instance
+    :param clientId: The client ID of your buildbot application
+    :param clientSecret: The client secret of your buildbot application
+
+    This class implements an authentication with GitLab_ single sign-on.
+    It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
+
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
+
+    Example::
+
+        from buildbot.plugins import util
+        c['www'] = {
+            # ...
+            'auth': util.GitLabAuth("https://gitlab.com", "clientid", clientsecret"),
+        }
+
+.. _GitLab: http://doc.gitlab.com/ce/integration/oauth_provider.html
+
 .. py:class:: buildbot.www.auth.RemoteUserAuth
 
     :param header: header to use to get the username (defaults to ``REMOTE_USER``)
@@ -281,11 +302,11 @@ In this case the username provided by oauth2 will be used, and all other informa
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfos.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
+.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
 
         :param uri: uri of the ldap server
-        :param bind_user: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
-        :param bind_pw: password of the ``bindUser``
+        :param bindUser: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
+        :param bindPw: password of the ``bindUser``
         :param accountBase: the base dn (distinguished name)of the user database
         :param groupBase: the base dn of the groups database
         :param accountPattern: the pattern for searching in the account database.
@@ -309,8 +330,8 @@ Currently only one provider is available:
             # we use it for user info, and avatars
             userInfoProvider = util.LdapUserInfo(
                 uri='ldap://ldap.mycompany.com:3268',
-                bind_user='ldap_user',
-                bind_pw='p4$$wd',
+                bindUser='ldap_user',
+                bindPw='p4$$wd',
                 accountBase='dc=corp,dc=mycompany,dc=com',
                 groupBase='dc=corp,dc=mycompany,dc=com',
                 accountPattern='(&(objectClass=person)(sAMAccountName=%(username)s))',
@@ -323,7 +344,7 @@ Currently only one provider is available:
             )
             c['www'] = dict(port=PORT, allowed_origins=["*"],
                             url=c['buildbotURL'],
-                            auth=util.RemoteUserAuth(userInfoProvider),
+                            auth=util.RemoteUserAuth(userInfoProvider=userInfoProvider),
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 

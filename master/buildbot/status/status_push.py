@@ -351,20 +351,20 @@ class StatusPush(StatusReceiverMultiService):
         d = self.push('changeAdded', change=change)
         d.addErrback(log.err, 'while pushing status message')
 
-    def slaveConnected(self, slavename):
-        d = self.push('slaveConnected', slave=self.status.getSlave(slavename))
+    def workerConnected(self, workername):
+        d = self.push('workerConnected', worker=self.status.getWorker(workername))
         d.addErrback(log.err, 'while pushing status message')
 
-    def slaveDisconnected(self, slavename):
-        d = self.push('slaveDisconnected', slavename=slavename)
+    def workerDisconnected(self, workername):
+        d = self.push('workerDisconnected', workername=workername)
         d.addErrback(log.err, 'while pushing status message')
 
-    def slavePaused(self, slavename):
-        d = self.push('slavePaused', slavename=slavename)
+    def workerPaused(self, workername):
+        d = self.push('workerPaused', workername=workername)
         d.addErrback(log.err, 'while pushing status message')
 
-    def slaveUnpaused(self, slavename):
-        d = self.push('slaveUnpaused', slavename=slavename)
+    def workerUnpaused(self, workername):
+        d = self.push('workerUnpaused', workername=workername)
         d.addErrback(log.err, 'while pushing status message')
 
 

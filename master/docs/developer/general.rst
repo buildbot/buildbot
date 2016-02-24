@@ -21,7 +21,7 @@ This section gives some general information about Buildbot development.
     www-md_base-app
     auth
     authz
-    master-slave
+    master-worker
     br-claiming
     encodings
     metrics

@@ -8,7 +8,7 @@ class Endpoints extends Constant
             'builders'
             'builds'
             'buildrequests'
-            'buildslaves'
+            'workers'
             'buildsets'
             'changes'
             'changesources'

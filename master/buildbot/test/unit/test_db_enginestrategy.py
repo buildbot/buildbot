@@ -88,7 +88,9 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
                          ["sqlite://", 1,  # only one conn at a time
                           dict(basedir='my-base-dir',
                                # note: no poolclass= argument
-                               pool_size=1)])  # extra in-memory args
+                               # extra in-memory args
+                               pool_size=1,
+                               connect_args=dict(check_same_thread=False))])
 
     def test_mysql_simple(self):
         u = url.make_url("mysql://host/dbname")

@@ -14,13 +14,13 @@ When a new build request is created, it is added to the ``buildrequests`` table 
 Distributing
 ------------
 
-Each master distributes build requests among its builders by examining the list of available build requests, available slaves, and accounting for user configuration for build request priority, slave priority, and so on.
+Each master distributes build requests among its builders by examining the list of available build requests, available workers, and accounting for user configuration for build request priority, worker priority, and so on.
 This distribution process is re-run whenever an event occurs that may allow a new build to start.
 
 Such events can be signalled to master with
 
 * :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForBuilder` when a single builder is affected;
-* :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForSlave` when a single slave is affected; or
+* :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForWorker` when a single worker is affected; or
 * :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForAllBuilders` when all builders may be affected.
 
 In particular, when a master receives a new-build-request message, it performs the equivalent of :py:meth:`~buildbot.process.botmaster.BotMaster.maybeStartBuildsForBuilder` for the affected builder.
@@ -37,7 +37,7 @@ If the claim fails, then another master has claimed the affected build requests,
 If the claim succeeds, then the master sends a message indicating that it has claimed the request.
 This message can be used by other masters to abandon their attempts to claim this request, although this is not yet implemented.
 
-If the build request is later abandoned (as can happen if, for example, the buildslave has disappeared), then master will send a message indicating that the request is again unclaimed; like a new-buildrequest message, this message indicates that other masters should try to distribute it once again.
+If the build request is later abandoned (as can happen if, for example, the worker has disappeared), then master will send a message indicating that the request is again unclaimed; like a new-buildrequest message, this message indicates that other masters should try to distribute it once again.
 
 The One That Got Away
 ---------------------

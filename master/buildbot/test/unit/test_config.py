@@ -20,11 +20,11 @@ import os
 import re
 import textwrap
 
-from buildbot import buildslave
 from buildbot import config
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import revlinks
+from buildbot import worker
 from buildbot.changes import base as changes_base
 from buildbot.process import factory
 from buildbot.process import properties
@@ -32,10 +32,15 @@ from buildbot.schedulers import base as schedulers_base
 from buildbot.status import base as status_base
 from buildbot.test.util import dirs
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implements
+
 
 global_defaults = dict(
     title='Buildbot',
@@ -180,7 +185,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             caches=dict(Changes=10, Builds=15),
             schedulers={},
             builders=[],
-            slaves=[],
+            workers=[],
             change_sources=[],
             status=[],
             user_managers=[],
@@ -264,7 +269,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                               lambda: config.MasterConfig.loadConfig(
                                   self.basedir, self.filename))
         self.assertEqual(e.errors, ['oh noes!', 'noes too!',
-                                    'no slaves are configured',
+                                    'no workers are configured',
                                     'no builders are configured'])
 
     def test_loadConfig_no_BuildmasterConfig(self):
@@ -308,7 +313,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.failUnless(rv.load_caches.called)
         self.failUnless(rv.load_schedulers.called)
         self.failUnless(rv.load_builders.called)
-        self.failUnless(rv.load_slaves.called)
+        self.failUnless(rv.load_workers.called)
         self.failUnless(rv.load_change_sources.called)
         self.failUnless(rv.load_status.called)
         self.failUnless(rv.load_user_managers.called)
@@ -394,8 +399,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors, "c['protocols'] must be dict")
 
     def test_load_global_when_slavePortnum_and_protocols_set(self):
-        self.cfg.load_global(self.filename,
-                             dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
+            self.cfg.load_global(self.filename,
+                                 dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
         self.assertConfigError(self.errors,
                                "Both c['slavePortnum'] and c['protocols']['pb']['port']"
                                " defined, recommended to remove slavePortnum and leave"
@@ -513,12 +521,18 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(self.errors, "must be a callable")
 
     def test_load_global_slavePortnum_int(self):
-        self.do_test_load_global(dict(slavePortnum=123),
-                                 protocols={'pb': {'port': 'tcp:123'}})
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
+            self.do_test_load_global(dict(slavePortnum=123),
+                                     protocols={'pb': {'port': 'tcp:123'}})
 
     def test_load_global_slavePortnum_str(self):
-        self.do_test_load_global(dict(slavePortnum='udp:123'),
-                                 protocols={'pb': {'port': 'udp:123'}})
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
+            self.do_test_load_global(dict(slavePortnum='udp:123'),
+                                     protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_protocols_str(self):
         self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),
@@ -716,20 +730,20 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
-                                    factory=factory.BuildFactory(), slavename='x')
+                                    factory=factory.BuildFactory(), workername='x')
         self.cfg.load_builders(self.filename,
                                dict(builders=[bldr]))
         self.assertResults(builders=[bldr])
 
     def test_load_builders_dict(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x')
+        bldr = dict(name='x', factory=factory.BuildFactory(), workername='x')
         self.cfg.load_builders(self.filename,
                                dict(builders=[bldr]))
         self.assertIsInstance(self.cfg.builders[0], config.BuilderConfig)
         self.assertEqual(self.cfg.builders[0].name, 'x')
 
     def test_load_builders_abs_builddir(self):
-        bldr = dict(name='x', factory=factory.BuildFactory(), slavename='x',
+        bldr = dict(name='x', factory=factory.BuildFactory(), workername='x',
                     builddir=os.path.abspath('.'))
         self.cfg.load_builders(self.filename,
                                dict(builders=[bldr]))
@@ -737,55 +751,86 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             len(self.flushWarnings([self.cfg.load_builders])),
             1)
 
-    def test_load_slaves_defaults(self):
-        self.cfg.load_slaves(self.filename, {})
-        self.assertResults(slaves=[])
+    def test_load_workers_defaults(self):
+        self.cfg.load_workers(self.filename, {})
+        self.assertResults(workers=[])
 
-    def test_load_slaves_not_list(self):
-        self.cfg.load_slaves(self.filename,
-                             dict(slaves=dict()))
+    def test_load_workers_not_list(self):
+        self.cfg.load_workers(self.filename,
+                              dict(workers=dict()))
         self.assertConfigError(self.errors, "must be a list")
 
-    def test_load_slaves_not_instance(self):
-        self.cfg.load_slaves(self.filename,
-                             dict(slaves=[mock.Mock()]))
+    def test_load_workers_not_instance(self):
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[mock.Mock()]))
         self.assertConfigError(self.errors, "must be a list of")
 
-    def test_load_slaves_reserved_names(self):
+    def test_load_workers_reserved_names(self):
         for name in 'debug', 'change', 'status':
-            self.cfg.load_slaves(self.filename,
-                                 dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+            self.cfg.load_workers(self.filename,
+                                  dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is reserved")
             self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves_not_identifiers(self):
+    def test_load_workers_not_identifiers(self):
         for name in (u"123 no initial digits", u"spaces not allowed",
                      u'a/b', u'\N{SNOWMAN}', u"a.b.c.d", u"a-b_c.d9",):
-            self.cfg.load_slaves(self.filename,
-                                 dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+            self.cfg.load_workers(self.filename,
+                                  dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is not an identifier")
             self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves_too_long(self):
+    def test_load_workers_too_long(self):
         name = u"a" * 51
-        self.cfg.load_slaves(self.filename,
-                             dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[worker.Worker(name, 'x')]))
         self.assertConfigError(self.errors, "is longer than")
         self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves_empty(self):
+    def test_load_workers_empty(self):
         name = u""
-        self.cfg.load_slaves(self.filename,
-                             dict(slaves=[buildslave.BuildSlave(name, 'x')]))
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[worker.Worker(name, 'x')]))
         self.errors.errors[:] = self.errors.errors[1:2]  # only get necessary error
         self.assertConfigError(self.errors, "cannot be an empty string")
         self.errors.errors[:] = []  # clear out the errors
 
-    def test_load_slaves(self):
-        sl = buildslave.BuildSlave('foo', 'x')
-        self.cfg.load_slaves(self.filename,
-                             dict(slaves=[sl]))
-        self.assertResults(slaves=[sl])
+    def test_load_workers(self):
+        sl = worker.Worker('foo', 'x')
+        self.cfg.load_workers(self.filename,
+                              dict(workers=[sl]))
+        self.assertResults(workers=[sl])
+
+    def test_load_workers_old_api(self):
+        w = worker.Worker("name", 'x')
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slaves'\] key is deprecated, "
+                                r"use c\['workers'\] instead"):
+            self.cfg.load_workers(self.filename, dict(slaves=[w]))
+        self.assertResults(workers=[w])
+
+    def test_load_workers_new_api(self):
+        w = worker.Worker("name", 'x')
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.cfg.load_workers(self.filename, dict(workers=[w]))
+        self.assertResults(workers=[w])
+
+    def test_load_workers_old_and_new_api(self):
+        w1 = worker.Worker("name1", 'x')
+        w2 = worker.Worker("name2", 'x')
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"c\['slaves'\] key is deprecated, "
+                                r"use c\['workers'\] instead"):
+            self.cfg.load_workers(self.filename, dict(slaves=[w1],
+                                                      workers=[w2]))
+
+        self.assertConfigError(
+            self.errors,
+            "Use of c['workers'] and c['slaves'] at the same time "
+            "is not supported")
+        self.errors.errors[:] = []  # clear out the errors
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})
@@ -955,7 +1000,7 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         b2.name = 'b2'
 
         self.cfg.schedulers = dict(sch=sch)
-        self.cfg.slaves = [mock.Mock()]
+        self.cfg.workers = [mock.Mock()]
         self.cfg.builders = [b1, b2]
 
     def setup_builder_locks(self,
@@ -1010,11 +1055,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_single_master()
         self.assertConfigError(self.errors, "no builders are configured")
 
-    def test_check_single_master_no_slaves(self):
+    def test_check_single_master_no_workers(self):
         self.setup_basic_attrs()
-        self.cfg.slaves = []
+        self.cfg.workers = []
         self.cfg.check_single_master()
-        self.assertConfigError(self.errors, "no slaves are configured")
+        self.assertConfigError(self.errors, "no workers are configured")
 
     def test_check_single_master_unsch_builder(self):
         self.setup_basic_attrs()
@@ -1067,21 +1112,21 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_locks()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_builders_unknown_slave(self):
+    def test_check_builders_unknown_worker(self):
         sl = mock.Mock()
-        sl.slavename = 'xyz'
-        self.cfg.slaves = [sl]
+        sl.workername = 'xyz'
+        self.cfg.workers = [sl]
 
-        b1 = FakeBuilder(slavenames=['xyz', 'abc'], builddir='x', name='b1')
+        b1 = FakeBuilder(workernames=['xyz', 'abc'], builddir='x', name='b1')
         self.cfg.builders = [b1]
 
         self.cfg.check_builders()
         self.assertConfigError(self.errors,
-                               "builder 'b1' uses unknown slaves 'abc'")
+                               "builder 'b1' uses unknown workers 'abc'")
 
     def test_check_builders_duplicate_name(self):
-        b1 = FakeBuilder(slavenames=[], name='b1', builddir='1')
-        b2 = FakeBuilder(slavenames=[], name='b1', builddir='2')
+        b1 = FakeBuilder(workernames=[], name='b1', builddir='1')
+        b2 = FakeBuilder(workernames=[], name='b1', builddir='2')
         self.cfg.builders = [b1, b2]
 
         self.cfg.check_builders()
@@ -1089,8 +1134,8 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                                "duplicate builder name 'b1'")
 
     def test_check_builders_duplicate_builddir(self):
-        b1 = FakeBuilder(slavenames=[], name='b1', builddir='dir')
-        b2 = FakeBuilder(slavenames=[], name='b2', builddir='dir')
+        b1 = FakeBuilder(workernames=[], name='b1', builddir='dir')
+        b2 = FakeBuilder(workernames=[], name='b2', builddir='dir')
         self.cfg.builders = [b1, b2]
 
         self.cfg.check_builders()
@@ -1099,11 +1144,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
     def test_check_builders(self):
         sl = mock.Mock()
-        sl.slavename = 'a'
-        self.cfg.slaves = [sl]
+        sl.workername = 'a'
+        self.cfg.workers = [sl]
 
-        b1 = FakeBuilder(slavenames=['a'], name='b1', builddir='dir1')
-        b2 = FakeBuilder(slavenames=['a'], name='b2', builddir='dir2')
+        b1 = FakeBuilder(workernames=['a'], name='b1', builddir='dir1')
+        b2 = FakeBuilder(workernames=['a'], name='b2', builddir='dir2')
         self.cfg.builders = [b1, b2]
 
         self.cfg.check_builders()
@@ -1140,17 +1185,36 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_ports()
         self.assertNoConfigErrors(self.errors)
 
-    def test_check_ports_protocols_not_set_slaves(self):
-        self.cfg.slaves = [mock.Mock()]
+    def test_check_ports_protocols_not_set_workers(self):
+        self.cfg.workers = [mock.Mock()]
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
-                               "slaves are configured, but c['protocols'] not")
+                               "workers are configured, but c['protocols'] not")
 
     def test_check_ports_protocols_port_duplication(self):
         self.cfg.protocols = {"pb": {"port": 123}, "amp": {"port": 123}}
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                                "Some of ports in c['protocols'] duplicated")
+
+
+class MasterConfig_old_worker_api(unittest.TestCase):
+
+    filename = "test.cfg"
+
+    def setUp(self):
+        self.cfg = config.MasterConfig()
+
+    def test_worker_old_api(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern=r"'slaves' attribute is deprecated, "
+                                r"use 'workers' instead"):
+            self.assertEqual(self.cfg.slaves, [])
+
+    def test_workers_new_api(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            self.assertEqual(self.cfg.workers, [])
 
 
 class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
@@ -1171,110 +1235,110 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertRaisesConfigError(
             "builder's name is required",
             lambda: config.BuilderConfig(
-                factory=self.factory, slavenames=['a']))
+                factory=self.factory, workernames=['a']))
 
     def test_reserved_name(self):
         self.assertRaisesConfigError(
             "builder names must not start with an underscore: '_a'",
             lambda: config.BuilderConfig(name='_a',
-                                         factory=self.factory, slavenames=['a']))
+                                         factory=self.factory, workernames=['a']))
 
     def test_utf8_name(self):
         self.assertRaisesConfigError(
             "builder names must be unicode or ASCII",
             lambda: config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
-                                         factory=self.factory, slavenames=['a']))
+                                         factory=self.factory, workernames=['a']))
 
     def test_no_factory(self):
         self.assertRaisesConfigError(
             "builder 'a' has no factory",
             lambda: config.BuilderConfig(
-                name='a', slavenames=['a']))
+                name='a', workernames=['a']))
 
     def test_wrong_type_factory(self):
         self.assertRaisesConfigError(
             "builder 'a's factory is not",
             lambda: config.BuilderConfig(
-                factory=[], name='a', slavenames=['a']))
+                factory=[], name='a', workernames=['a']))
 
-    def test_no_slavenames(self):
+    def test_no_workernames(self):
         self.assertRaisesConfigError(
-            "builder 'a': at least one slavename is required",
+            "builder 'a': at least one workername is required",
             lambda: config.BuilderConfig(
                 name='a', factory=self.factory))
 
-    def test_bogus_slavenames(self):
+    def test_bogus_workernames(self):
         self.assertRaisesConfigError(
-            "slavenames must be a list or a string",
+            "workernames must be a list or a string",
             lambda: config.BuilderConfig(
-                name='a', slavenames={1: 2}, factory=self.factory))
+                name='a', workernames={1: 2}, factory=self.factory))
 
-    def test_bogus_slavename(self):
+    def test_bogus_workername(self):
         self.assertRaisesConfigError(
-            "slavename must be a string",
+            "workername must be a string",
             lambda: config.BuilderConfig(
-                name='a', slavename=1, factory=self.factory))
+                name='a', workername=1, factory=self.factory))
 
     def test_bogus_category(self):
         self.assertRaisesConfigError(
             "category must be a string",
             lambda: config.BuilderConfig(category=13,
-                                         name='a', slavenames=['a'], factory=self.factory))
+                                         name='a', workernames=['a'], factory=self.factory))
 
     def test_tags_must_be_list(self):
         self.assertRaisesConfigError(
             "tags must be a list",
             lambda: config.BuilderConfig(tags='abc',
-                                         name='a', slavenames=['a'], factory=self.factory))
+                                         name='a', workernames=['a'], factory=self.factory))
 
     def test_tags_must_be_list_of_str(self):
         self.assertRaisesConfigError(
             "tags list contains something that is not a string",
             lambda: config.BuilderConfig(tags=['abc', 13],
-                                         name='a', slavenames=['a'], factory=self.factory))
+                                         name='a', workernames=['a'], factory=self.factory))
 
     def test_tags_no_categories_too(self):
         self.assertRaisesConfigError(
             "categories are deprecated and replaced by tags; you should only specify tags",
             lambda: config.BuilderConfig(tags=['abc'],
                                          category='def',
-                                         name='a', slavenames=['a'], factory=self.factory))
+                                         name='a', workernames=['a'], factory=self.factory))
 
-    def test_inv_nextSlave(self):
+    def test_inv_nextWorker(self):
         self.assertRaisesConfigError(
-            "nextSlave must be a callable",
-            lambda: config.BuilderConfig(nextSlave="foo",
-                                         name="a", slavenames=['a'], factory=self.factory))
+            "nextWorker must be a callable",
+            lambda: config.BuilderConfig(nextWorker="foo",
+                                         name="a", workernames=['a'], factory=self.factory))
 
     def test_inv_nextBuild(self):
         self.assertRaisesConfigError(
             "nextBuild must be a callable",
             lambda: config.BuilderConfig(nextBuild="foo",
-                                         name="a", slavenames=['a'], factory=self.factory))
+                                         name="a", workernames=['a'], factory=self.factory))
 
     def test_inv_canStartBuild(self):
         self.assertRaisesConfigError(
             "canStartBuild must be a callable",
             lambda: config.BuilderConfig(canStartBuild="foo",
-                                         name="a", slavenames=['a'], factory=self.factory))
+                                         name="a", workernames=['a'], factory=self.factory))
 
     def test_inv_env(self):
         self.assertRaisesConfigError(
             "builder's env must be a dictionary",
             lambda: config.BuilderConfig(env="foo",
-                                         name="a", slavenames=['a'], factory=self.factory))
+                                         name="a", workernames=['a'], factory=self.factory))
 
     def test_defaults(self):
         cfg = config.BuilderConfig(
-            name='a b c', slavename='a', factory=self.factory)
+            name='a b c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
                               name='a b c',
-                              slavenames=['a'],
+                              workernames=['a'],
                               builddir='a_b_c',
-                              slavebuilddir='a_b_c',
+                              workerbuilddir='a_b_c',
                               tags=[],
-                              nextSlave=None,
+                              nextWorker=None,
                               locks=[],
                               env={},
                               properties={},
@@ -1283,24 +1347,24 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_unicode_name(self):
         cfg = config.BuilderConfig(
-            name=u'a \N{SNOWMAN} c', slavename='a', factory=self.factory)
+            name=u'a \N{SNOWMAN} c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
                               name=u'a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(
-            name='b', slavename='s1', slavenames='s2', builddir='bd',
-            slavebuilddir='sbd', factory=self.factory, category='c',
-            nextSlave=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
+            name='b', workername='s1', workernames='s2', builddir='bd',
+            workerbuilddir='sbd', factory=self.factory, category='c',
+            nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
                               name='b',
-                              slavenames=['s2', 's1'],
+                              workernames=['s2', 's1'],
                               builddir='bd',
-                              slavebuilddir='sbd',
+                              workerbuilddir='sbd',
                               tags=['c'],
                               locks=['l'],
                               env={'x': 10},
@@ -1312,9 +1376,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         ns = lambda: 'ns'
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
-            name='b', slavename='s1', slavenames='s2', builddir='bd',
-            slavebuilddir='sbd', factory=self.factory, tags=['c'],
-            nextSlave=ns, nextBuild=nb, locks=['l'],
+            name='b', workername='s1', workernames='s2', builddir='bd',
+            workerbuilddir='sbd', factory=self.factory, tags=['c'],
+            nextWorker=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
         self.assertEqual(cfg.getConfigDict(), {'builddir': 'bd',
@@ -1326,23 +1390,154 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'collapseRequests': 'cr',
                                                'name': 'b',
                                                'nextBuild': nb,
-                                               'nextSlave': ns,
+                                               'nextWorker': ns,
                                                'properties': {'y': 20},
-                                               'slavebuilddir': 'sbd',
-                                               'slavenames': ['s2', 's1'],
+                                               'workerbuilddir': 'sbd',
+                                               'workernames': ['s2', 's1'],
                                                })
 
     def test_getConfigDict_collapseRequests(self):
         for cr in (False, lambda a, b, c: False):
             cfg = config.BuilderConfig(name='b', collapseRequests=cr,
-                                       factory=self.factory, slavename='s1')
+                                       factory=self.factory, workername='s1')
             self.assertEqual(cfg.getConfigDict(), {'builddir': 'b',
                                                    'collapseRequests': cr,
                                                    'name': 'b',
-                                                   'slavebuilddir': 'b',
+                                                   'workerbuilddir': 'b',
                                                    'factory': self.factory,
-                                                   'slavenames': ['s1'],
+                                                   'workernames': ['s1'],
                                                    })
+
+    def test_init_workername_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workername_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavename' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', slavename='a', factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workername_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', 'a', factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workernames_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workernames=['a'], factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workernames_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavenames' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', slavenames=['a'], factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_init_workernames_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', None, ['a'], factory=self.factory)
+
+        self.assertEqual(cfg.workernames, ['a'])
+
+    def test_workernames_old_api(self):
+        cfg = config.BuilderConfig(
+            name='a b c', workername='a', factory=self.factory)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            names_new = cfg.workernames
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavenames' attribute is deprecated"):
+            names_old = cfg.slavenames
+
+        self.assertEqual(names_old, ['a'])
+        self.assertIdentical(names_new, names_old)
+
+    def test_init_workerbuilddir_new_api_no_warns(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                workerbuilddir="dir")
+
+        self.assertEqual(cfg.workerbuilddir, 'dir')
+
+    def test_init_workerbuilddir_old_api_warns(self):
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slavebuilddir' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                slavebuilddir='dir')
+
+        self.assertEqual(cfg.workerbuilddir, 'dir')
+
+    def test_init_workerbuilddir_positional(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', 'a', None, None, 'dir', factory=self.factory)
+
+        self.assertEqual(cfg.workerbuilddir, 'dir')
+
+    def test_next_worker_old_api(self):
+        f = lambda: None
+        cfg = config.BuilderConfig(
+            name='a b c', workername='a', factory=self.factory,
+            nextWorker=f)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            new = cfg.nextWorker
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'nextSlave' attribute is deprecated"):
+            old = cfg.nextSlave
+
+        self.assertIdentical(old, f)
+        self.assertIdentical(new, old)
+
+    def test_init_next_worker_new_api_no_warns(self):
+        f = lambda: None
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                nextWorker=f)
+
+        self.assertEqual(cfg.nextWorker, f)
+
+    def test_init_next_worker_old_api_warns(self):
+        f = lambda: None
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'nextSlave' keyword argument is deprecated"):
+            cfg = config.BuilderConfig(
+                name='a b c', workername='a', factory=self.factory,
+                nextSlave=f)
+
+        self.assertEqual(cfg.nextWorker, f)
+
+    def test_init_next_worker_positional(self):
+        f = lambda: None
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cfg = config.BuilderConfig(
+                'a b c', 'a', None, None, None, self.factory, None, None, f)
+
+        self.assertEqual(cfg.nextWorker, f)
 
 
 class FakeService(service.ReconfigurableServiceMixin,

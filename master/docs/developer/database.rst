@@ -231,7 +231,7 @@ builds
 
     This class handles builds.
     One build record is created for each build performed by a master.
-    This record contains information on the status of the build, as well as links to the resources used in the build: builder, master, slave, etc.
+    This record contains information on the status of the build, as well as links to the resources used in the build: builder, master, worker, etc.
 
     An instance of this class is available at ``master.db.builds``.
 
@@ -243,7 +243,7 @@ builds
     * ``number`` (the build number, unique only within the builder)
     * ``builderid`` (the ID of the builder that performed this build)
     * ``buildrequestid`` (the ID of the build request that caused this build)
-    * ``buildslaveid`` (the ID of the slave on which this build was performed)
+    * ``workerid`` (the ID of the worker on which this build was performed)
     * ``masterid`` (the ID of the master on which this build was performed)
     * ``started_at`` (datetime at which this build began)
     * ``complete_at`` (datetime at which this build finished, or None if it is ongoing)
@@ -286,11 +286,11 @@ builds
         Get a list of builds, in the format described above.
         Each of the parameters limit the resulting set of builds.
 
-    .. py:method:: addBuild(builderid, buildrequestid, buildslaveid, masterid, state_string)
+    .. py:method:: addBuild(builderid, buildrequestid, workerid, masterid, state_string)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: build request id
-        :param integer slaveid: slave performing the build
+        :param integer workerid: worker performing the build
         :param integer masterid: master performing the build
         :param unicode state_string: initial state of the build
         :returns: tuple of build ID and build number, via Deferred
@@ -664,96 +664,96 @@ buildsets
         Note that this method does not distinguish a nonexistent buildset from
         a buildset with no properties, and returns ``{}`` in either case.
 
-buildslaves
-~~~~~~~~~~~
+workers
+~~~~~~~
 
-.. py:module:: buildbot.db.buildslaves
+.. py:module:: buildbot.db.workers
 
-.. index:: double: BuildSlaves; DB Connector Component
+.. index:: double: Workers; DB Connector Component
 
-.. py:class:: BuildslavesConnectorComponent
+.. py:class:: WorkersConnectorComponent
 
-    This class handles Buildbot's notion of buildslaves.
-    The buildslave information is returned as a dictionary:
+    This class handles Buildbot's notion of workers.
+    The worker information is returned as a dictionary:
 
     * ``id``
-    * ``name`` - the name of the buildslave
-    * ``slaveinfo`` - buildslave information as dictionary
-    * ``connected_to`` - a list of masters, by ID, to which this buildslave is currently connected.
-      This list will typically contain only one master, but in unusual circumstances the same bulidslave may appear to be connected to multiple masters simultaneously.
-    * ``configured_on`` - a list of master-builder pairs, on which this buildslave is configured.
+    * ``name`` - the name of the worker
+    * ``workerinfo`` - worker information as dictionary
+    * ``connected_to`` - a list of masters, by ID, to which this worker is currently connected.
+      This list will typically contain only one master, but in unusual circumstances the same worker may appear to be connected to multiple masters simultaneously.
+    * ``configured_on`` - a list of master-builder pairs, on which this worker is configured.
       Each pair is represented by a dictionary with keys ``buliderid`` and ``masterid``.
 
-    The buildslave information can be any JSON-able object.
-    See :bb:rtype:`buildslave` for more detail.
+    The worker information can be any JSON-able object.
+    See :bb:rtype:`worker` for more detail.
 
-    .. py:method:: findBuildslaveId(name=name)
+    .. py:method:: findWorkerId(name=name)
 
-        :param name: buildslave name
+        :param name: worker name
         :type name: 50-character identifier
-        :returns: builslave ID via Deferred
+        :returns: worker ID via Deferred
 
-        Get the ID for a buildslave, adding a new buildslave to the database if necessary.
-        The slave information for a new buildslave is initialized to an empty dictionary.
+        Get the ID for a worker, adding a new worker to the database if necessary.
+        The worker information for a new worker is initialized to an empty dictionary.
 
-    .. py:method:: getBuildslaves(masterid=None, builderid=None)
+    .. py:method:: getWorkers(masterid=None, builderid=None)
 
-        :param integer masterid: limit to slaves configured on this master
-        :param integer builderid: limit to slaves configured on this builder
-        :returns: list of buildslave dictionaries, via Deferred
+        :param integer masterid: limit to workers configured on this master
+        :param integer builderid: limit to workers configured on this builder
+        :returns: list of worker dictionaries, via Deferred
 
-        Get a list of buildslaves.
-        If either or both of the filtering parameters either specified, then the result is limited to buildslaves configured to run on that master or builder.
+        Get a list of workers.
+        If either or both of the filtering parameters either specified, then the result is limited to workers configured to run on that master or builder.
         The ``configured_on`` results are limited by the filtering parameters as well.
         The ``connected_to`` results are limited by the ``masterid`` parameter.
 
-    .. py:method:: getBuildslave(slaveid=None, name=None, masterid=None, builderid=None)
+    .. py:method:: getWorker(workerid=None, name=None, masterid=None, builderid=None)
 
-        :param string name: the name of the buildslave to retrieve
-        :param integer buildslaveid: the ID of the buildslave to retrieve
-        :param integer masterid: limit to slaves configured on this master
-        :param integer builderid: limit to slaves configured on this builder
+        :param string name: the name of the worker to retrieve
+        :param integer workerid: the ID of the worker to retrieve
+        :param integer masterid: limit to workers configured on this master
+        :param integer builderid: limit to workers configured on this builder
         :returns: info dictionary or None, via Deferred
 
-        Looks up the buildslave with the given name or ID, returning ``None`` if no matching buildslave is found.
-        The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getBuildslaves`.
+        Looks up the worker with the given name or ID, returning ``None`` if no matching worker is found.
+        The ``masterid`` and ``builderid`` arguments function as they do for :py:meth:`getWorkers`.
 
-    .. py:method:: buildslaveConnected(buildslaveid, masterid, slaveinfo)
+    .. py:method:: workerConnected(workerid, masterid, workerinfo)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer workerid: the ID of the worker
         :param integer masterid: the ID of the master to which it connected
-        :param slaveinfo: the new buildslave information dictionary
-        :type slaveinfo: dict
+        :param workerinfo: the new worker information dictionary
+        :type workerinfo: dict
         :returns: Deferred
 
-        Record the given buildslave as attached to the given master, and update its cached slave information.
+        Record the given worker as attached to the given master, and update its cached worker information.
         The supplied information completely replaces any existing information.
 
-    .. py:method:: buildslaveDisconnected(buildslaveid, masterid)
+    .. py:method:: workerDisconnected(workerid, masterid)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer workerid: the ID of the worker
         :param integer masterid: the ID of the master to which it connected
         :returns: Deferred
 
-        Record the given buildslave as no longer attached to the given master.
+        Record the given worker as no longer attached to the given master.
 
-    .. py:method:: buildslaveConfigured(buildslaveid, masterid, builderids)
+    .. py:method:: workerConfigured(workerid, masterid, builderids)
 
-        :param integer buildslaveid: the ID of the buildslave
+        :param integer workerid: the ID of the worker
         :param integer masterid: the ID of the master to which it configured
         :param list of integer builderids: the ID of the builders to which it is configured
         :returns: Deferred
 
-        Record the given buildslave as being configured on the given master and for given builders.
-        This method will also remove any other builder that were configured previously for same (slave, master) combination.
+        Record the given worker as being configured on the given master and for given builders.
+        This method will also remove any other builder that were configured previously for same (worker, master) combination.
 
 
-    .. py:method:: deconfigureAllBuidslavesForMaster(masterid)
+    .. py:method:: deconfigureAllWorkersForMaster(masterid)
 
         :param integer masterid: the ID of the master to which it configured
         :returns: Deferred
 
-        Unregister all the slaves configured to a master for given builders.
+        Unregister all the workers configured to a master for given builders.
         This shall happen when master disabled or before reconfiguration
 
 changes

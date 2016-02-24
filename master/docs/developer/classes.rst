@@ -12,7 +12,7 @@ The sections contained here document classes that can be used or subclassed.
     :maxdepth: 1
 
     cls-build
-    cls-buildslave
+    cls-worker
     cls-buildfactory
     cls-buildsetsummarynotifiermixin
     cls-changesources
@@ -24,7 +24,7 @@ The sections contained here document classes that can be used or subclassed.
     cls-iproperties
     cls-resultspec
     cls-protocols
-    cls-bslavemanager
+    cls-workermanager
     cls-log
     cls-logobserver
     cls-auth

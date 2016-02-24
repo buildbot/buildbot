@@ -7,7 +7,12 @@ First Buildbot run with Docker
 .. note::
 
     Docker can be tricky to get working correctly if you haven't used it before.
-    If you're having trouble, first determine whether it is a Buildbot issue or a Docker issue by running docker run ubuntu:12.04 apt-get update.
+    If you're having trouble, first determine whether it is a Buildbot issue or a Docker issue by running:
+
+    .. code-block:: bash
+
+      docker run ubuntu:12.04 apt-get update
+
     If that fails, look for help with your Docker install.
     On the other hand, if that succeeds, then you may have better luck getting help from members of the Buildbot community.
 

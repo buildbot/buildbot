@@ -44,14 +44,14 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=14, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=15, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=5),
         ])
 
@@ -123,14 +123,14 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=14, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=78, masterid=88, buildslaveid=12,
+            fakedb.Build(id=15, builderid=78, masterid=88, workerid=12,
                          buildrequestid=83, number=5, complete_at=1),
         ])
 
@@ -157,8 +157,8 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
-    def test_get_buildslave(self):
-        builds = yield self.callGet(('buildslaves', 13, 'builds'))
+    def test_get_worker(self):
+        builds = yield self.callGet(('workers', 13, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
@@ -182,7 +182,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     new_build_event = {'builderid': 10,
                        'buildid': 100,
                        'buildrequestid': 13,
-                       'buildslaveid': 20,
+                       'workerid': 20,
                        'complete': False,
                        'complete_at': None,
                        'masterid': 824,
@@ -218,14 +218,14 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         @self.assertArgSpecMatches(
             self.master.data.updates.addBuild,  # fake
             self.rtype.addBuild)  # real
-        def newBuild(self, builderid, buildrequestid, buildslaveid):
+        def newBuild(self, builderid, buildrequestid, workerid):
             pass
 
     def test_newBuild(self):
         return self.do_test_callthrough('addBuild', self.rtype.addBuild,
-                                        builderid=10, buildrequestid=13, buildslaveid=20,
+                                        builderid=10, buildrequestid=13, workerid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
-                                                        buildslaveid=20, masterid=self.master.masterid,
+                                                        workerid=20, masterid=self.master.masterid,
                                                         state_string=u'created'))
 
     def test_newBuildEvent(self):
@@ -237,10 +237,10 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
             defer.returnValue(None)
 
         return self.do_test_event(addBuild,
-                                  builderid=10, buildrequestid=13, buildslaveid=20,
+                                  builderid=10, buildrequestid=13, workerid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
                                               (('builds', '100', 'new'), self.new_build_event),
-                                              (('buildslaves', '20', 'builds', '100', 'new'), self.new_build_event)])
+                                              (('workers', '20', 'builds', '100', 'new'), self.new_build_event)])
 
     def test_signature_setBuildStateString(self):
         @self.assertArgSpecMatches(

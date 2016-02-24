@@ -20,7 +20,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.config import ConfigErrors
-from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.results import SUCCESS
@@ -101,8 +101,8 @@ class Mercurial(Source):
         @d.addCallback
         def checkInstall(hgInstalled):
             if not hgInstalled:
-                raise BuildSlaveTooOldError(
-                    "Mercurial is not installed on slave")
+                raise WorkerTooOldError(
+                    "Mercurial is not installed on worker")
             return 0
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
@@ -312,7 +312,7 @@ class Mercurial(Source):
             if len(files) == 0:
                 d = defer.succeed(0)
             else:
-                if self.slaveVersionIsOlderThan('rmdir', '2.14'):
+                if self.workerVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
                     cmd = remotecommand.RemoteCommand('rmdir', {'dir': files,

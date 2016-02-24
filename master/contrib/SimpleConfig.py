@@ -201,7 +201,7 @@ class SimpleConfig(dict):
         # FIXME: get slot from masterjson
         slot = 0
         self.__http_port = 8010 + slot
-        self['slavePortnum'] = 9010 + slot
+        self['protocols'] = {'pb': {'port': 9010 + slot}}
 
         # SECRETS
         # Avoid checking secrets into git by keeping them in a json file.
@@ -307,7 +307,7 @@ class SimpleConfig(dict):
 
         self['builders'].append(
             BuilderConfig(name=buildername,
-                          slavenames=self._os2slaves[sos],
+                          workernames=self._os2slaves[sos],
                           factory=factory,
                           category=category))
 

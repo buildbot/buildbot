@@ -179,3 +179,24 @@ class GitHubAuth(OAuth2Auth):
                     email=user['email'],
                     username=user['login'],
                     groups=[org['login'] for org in orgs])
+
+
+class GitLabAuth(OAuth2Auth):
+    name = "GitLab"
+    faIcon = "fa-git"
+
+    def __init__(self, instanceUri, clientId, clientSecret, **kwargs):
+        uri = instanceUri.rstrip("/")
+        self.authUri = "%s/oauth/authorize" % uri
+        self.tokenUri = "%s/oauth/token" % uri
+        self.resourceEndpoint = "%s/api/v3" % uri
+        super(GitLabAuth, self).__init__(clientId, clientSecret, **kwargs)
+
+    def getUserInfoFromOAuthClient(self, c):
+        user = self.get(c, "/user")
+        groups = self.get(c, "/groups")
+        return dict(full_name=user["name"],
+                    username=user["username"],
+                    email=user["email"],
+                    avatar_url=user["avatar_url"],
+                    groups=[g["path"] for g in groups])

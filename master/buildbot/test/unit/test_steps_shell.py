@@ -256,7 +256,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_run_env(self):
         self.setupStep(
             shell.ShellCommand(workdir='build', command="echo hello"),
-            slave_env=dict(DEF='HERE'))
+            worker_env=dict(DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                         usePTY="slave-config",
@@ -270,7 +270,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.setupStep(
             shell.ShellCommand(workdir='build', env={'ABC': '123'},
                                command="echo hello"),
-            slave_env=dict(ABC='XXX', DEF='HERE'))
+            worker_env=dict(ABC='XXX', DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
                         usePTY="slave-config",
@@ -292,11 +292,11 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_run_usePTY_old_slave(self):
+    def test_run_usePTY_old_worker(self):
         self.setupStep(
             shell.ShellCommand(workdir='build', command="echo hello",
                                usePTY=True),
-            slave_version=dict(shell='1.1'))
+            worker_version=dict(shell='1.1'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello')
             + 0

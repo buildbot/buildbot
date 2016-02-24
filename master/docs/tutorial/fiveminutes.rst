@@ -20,11 +20,11 @@ Here I'm trying to clarify the concepts only, and will not go into the details o
 Installation
 ------------
 
-I won't cover the installation; both Buildbot master and slave are available as packages for the major distributions, and in any case the instructions in the official documentation are fine.
+I won't cover the installation; both Buildbot master and worker are available as packages for the major distributions, and in any case the instructions in the official documentation are fine.
 This document will refer to Buildbot 0.8.5 which was current at the time of writing, but hopefully the concepts are not too different in other versions.
 All the code shown is of course python code, and has to be included in the master.cfg master configuration file.
 
-We won't cover the basic things such as how to define the slaves, project names, or other administrative information that is contained in that file; for that, again the official documentation is fine.
+We won't cover the basic things such as how to define the workers, project names, or other administrative information that is contained in that file; for that, again the official documentation is fine.
 
 Builders: the workhorses
 ------------------------
@@ -33,8 +33,8 @@ Since Buildbot is a tool whose goal is the automation of software builds, it mak
 
 Simply put, a builder is an element that is in charge of performing some action or sequence of actions, normally something related to building software (for example, checking out the source, or ``make all``), but it can also run arbitrary commands.
 
-A builder is configured with a list of slaves that it can use to carry out its task.
-The other fundamental piece of information that a builder needs is, of course, the list of things it has to do (which will normally run on the chosen slave).
+A builder is configured with a list of workers that it can use to carry out its task.
+The other fundamental piece of information that a builder needs is, of course, the list of things it has to do (which will normally run on the chosen worker).
 In Buildbot, this list of things is represented as a ``BuildFactory`` object, which is essentially a sequence of steps, each one defining a certain operation or command.
 
 Enough talk, let's see an example.
@@ -66,7 +66,7 @@ A step can be a shell command object, or a dedicated object that checks out the 
 
     # first, let's create the individual step objects
 
-    # step 1: make clean; this fails if the slave has no local copy, but
+    # step 1: make clean; this fails if the worker has no local copy, but
     # is harmless and will only happen the first time
     makeclean = steps.ShellCommand(name="make clean",
                                    command=["make", "clean"],
@@ -93,7 +93,7 @@ A step can be a shell command object, or a dedicated object that checks out the 
                                       description="make packages")
 
     # step 5: upload packages to central server. This needs passwordless ssh
-    # from the slave to the server (set it up in advance as part of slave setup)
+    # from the worker to the server (set it up in advance as part of worker setup)
     uploadpackages = steps.ShellCommand(name="upload packages",
                                         description="upload packages",
                                         command="scp packages/*.rpm packages/*.deb packages/*.tgz someuser@somehost:/repository",
@@ -109,10 +109,10 @@ A step can be a shell command object, or a dedicated object that checks out the 
 
     # finally, declare the list of builders. In this case, we only have one builder
     c['builders'] = [
-        util.BuilderConfig(name="simplebuild", slavenames=['slave1', 'slave2', 'slave3'], factory=f_simplebuild)
+        util.BuilderConfig(name="simplebuild", workernames=['worker1', 'worker2', 'worker3'], factory=f_simplebuild)
     ]
 
-So our builder is called ``simplebuild`` and can run on either of ``slave1``, ``slave2`` and ``slave3``.
+So our builder is called ``simplebuild`` and can run on either of ``worker1``, ``worker2`` and ``worker3``.
 If our repository has other branches besides trunk, we could create another one or more builders to build them; in the example, only the checkout step would be different, in that it would need to check out the specific branch.
 Depending on how exactly those branches have to be built, the shell commands may be recycled, or new ones would have to be created if they are different in the branch.
 You get the idea.

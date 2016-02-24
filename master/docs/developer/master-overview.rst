@@ -32,9 +32,9 @@ The master has a number of useful attributes:
     PB connections, potentially on multiple ports, and dispatching those
     connections to appropriate components based on the supplied username.
 
-``master.buildslaves``
-    A :py:class:`buildbot.buildslave.manager.BuildslaveManager` instance that
-    provides wrapper around multiple master-slave protocols(e.g. PB) to unify
+``master.workers``
+    A :py:class:`buildbot.worker.manager.WorkerManager` instance that
+    provides wrapper around multiple master-worker protocols(e.g. PB) to unify
     calls for them from higher level code 
 
 ``master.change_svc``
@@ -44,12 +44,12 @@ The master has a number of useful attributes:
 
 ``master.botmaster``
     A :py:class:`buildbot.process.botmaster.BotMaster` instance that manages
-    all of the slaves and builders as child services.
+    all of the workers and builders as child services.
 
     The botmaster acts as the parent service for a
     :py:class:`buildbot.process.botmaster.BuildRequestDistributor` instance (at
-    ``master.botmaster.brd``) as well as all active slaves
-    (:py:class:`buildbot.buildslave.AbstractBuildSlave` instances) and builders
+    ``master.botmaster.brd``) as well as all active workers
+    (:py:class:`buildbot.worker.AbstractWorker` instances) and builders
     (:py:class:`buildbot.process.builder.Builder` instances).
 
 ``master.scheduler_manager``

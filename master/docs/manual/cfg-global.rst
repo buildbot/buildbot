@@ -167,9 +167,9 @@ It is possible to configure buildbot to have multiple master processes that shar
 This has been well tested using a MySQL database.
 There are several benefits of Multi-master mode:
 
-* You can have large numbers of build slaves handling the same queue of build requests.
-  A single master can only handle so many slaves (the number is based on a number of factors including type of builds, number of builds, and master and slave IO and CPU capacity--there is no fixed formula).
-  By adding another master which shares the queue of build requests, you can attach more slaves to this additional master, and increase your build throughput.
+* You can have large numbers of workers handling the same queue of build requests.
+  A single master can only handle so many workers (the number is based on a number of factors including type of builds, number of builds, and master and worker IO and CPU capacity--there is no fixed formula).
+  By adding another master which shares the queue of build requests, you can attach more workers to this additional master, and increase your build throughput.
 * You can shut one master down to do maintenance, and other masters will continue to do builds.
 
 State that is shared in the database includes:
@@ -300,7 +300,7 @@ One place these changes are displayed is on the waterfall page.
 This parameter defaults to 0, which means keep all changes indefinitely.
 
 The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept on disk.
-The :bb:cfg:`eventHorizon` specifies the minimum number of events to keep--events mostly describe connections and disconnections of slaves, and are seldom helpful to developers.
+The :bb:cfg:`eventHorizon` specifies the minimum number of events to keep--events mostly describe connections and disconnections of workers, and are seldom helpful to developers.
 The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
 Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 
@@ -418,18 +418,18 @@ For that purpose, see :ref:`Prioritizing-Builds`.
 
 .. bb:cfg:: protocols
 
-.. _Setting-the-PB-Port-for-Slaves:
+.. _Setting-the-PB-Port-for-Workers:
 
-Setting the PB Port for Slaves
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Setting the PB Port for Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
     c['protocols'] = {"pb": {"port": 10000}}
 
-The buildmaster will listen on a TCP port of your choosing for connections from buildslaves.
+The buildmaster will listen on a TCP port of your choosing for connections from workers.
 It can also use this port for connections from remote Change Sources, status clients, and debug tools.
-This port should be visible to the outside world, and you'll need to tell your buildslave admins about your choice.
+This port should be visible to the outside world, and you'll need to tell your worker admins about your choice.
 
 It does not matter which port you pick, as long it is externally visible; however, you should probably use something larger than 1024, since most operating systems don't allow non-root processes to bind to low-numbered ports.
 If your buildmaster is behind a firewall or a NAT box of some sort, you may have to configure your firewall to permit inbound connections to this port.
@@ -442,7 +442,7 @@ This means that you can have the buildmaster listen on a localhost-only port by 
 
    c['protocols'] = {"pb": {"port": "tcp:10000:interface=127.0.0.1"}}
 
-This might be useful if you only run buildslaves on the same machine, and they are all configured to contact the buildmaster at ``localhost:10000``.
+This might be useful if you only run workers on the same machine, and they are all configured to contact the buildmaster at ``localhost:10000``.
 
 .. note::
 
@@ -495,7 +495,7 @@ Two of them use a username+password combination to grant access, one of them use
 
 `manhole.TelnetManhole`
     This accepts regular unencrypted telnet connections, and asks for a username/password pair before providing access.
-    Because this username/password is transmitted in the clear, and because Manhole access to the buildmaster is equivalent to granting full shell privileges to both the buildmaster and all the buildslaves (and to all accounts which then run code produced by the buildslaves), it is  highly recommended that you use one of the SSH manholes instead.
+    Because this username/password is transmitted in the clear, and because Manhole access to the buildmaster is equivalent to granting full shell privileges to both the buildmaster and all the workers (and to all accounts which then run code produced by the workers), it is  highly recommended that you use one of the SSH manholes instead.
 
 ::
 
@@ -879,7 +879,7 @@ Input Validation
     }
 
 This option configures the validation applied to user inputs of various types.
-This validation is important since these values are often included in command-line arguments executed on slaves.
+This validation is important since these values are often included in command-line arguments executed on workers.
 Allowing arbitrary input from untrusted users may raise security concerns.
 
 The keys describe the type of input validated; the values are compiled regular expressions against which the input will be matched.

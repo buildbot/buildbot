@@ -134,7 +134,7 @@ class MaildirService(service.AsyncMultiService):
         elif runtime.platformType == "win32":
             # do this backwards under windows, because you can't move a file
             # that somebody is holding open. This was causing a Permission
-            # Denied error on bear's win32-twisted1.3 buildslave.
+            # Denied error on bear's win32-twisted1.3 worker.
             os.rename(os.path.join(self.newdir, filename),
                       os.path.join(self.curdir, filename))
             path = os.path.join(self.curdir, filename)

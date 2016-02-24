@@ -135,7 +135,7 @@ Steps
 Buildbot-0.8.9 introduced "new-style steps", with an asynchronous ``run`` method.
 In the remaining 0.8.x releases, use of new-style and old-style steps were supported side-by-side.
 In 0.9.x, old-style steps are emulated using a collection of hacks to allow asynchronous calls to be called from synchronous code.
-This emulation is imperfect, and you are strongly encouraged to rewrite any custom steps as new-style steps.
+This emulation is imperfect, and you are strongly encouraged to rewrite any custom steps as :doc:`../new-style-steps`.
 
 Note that new-style steps now "push" their status when it changes, so the ``describe`` method no longer exists.
 
@@ -150,7 +150,7 @@ Unfortunately, many existing names do not fit this pattern.
 
 The following fields are identifiers:
 
-* buildslave name (50-character)
+* worker name (50-character)
 * builder name (20-character)
 * step name (50-character)
 
@@ -159,7 +159,7 @@ Other Config Settings
 
 The default master.cfg file contains some new changes, which you should look over:
 
-* ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the buildslaves)
+* ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the workers)
 * Waterfall View: requires installation (``pip install buildbot-waterfall-view``) and configuration (``c['www'] = { ..., 'plugins': {'waterfall_view': {} }``).
 
 Build History

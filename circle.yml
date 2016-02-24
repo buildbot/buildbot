@@ -1,0 +1,19 @@
+# Circle CI configuration file
+# https://circleci.com/docs/
+
+machine:
+  python:
+    version: 2.7.11
+
+dependencies:
+  override:
+    - pyenv global 2.7.11
+    - pip install -e pkg -e master -e slave
+
+test:
+  override:
+    - make docs
+
+general:
+  artifacts:
+    - "master/docs/_build/html/"

@@ -1,0 +1,25 @@
+.container
+    .row
+        table.table.table-hover.table-striped.table-condensed
+            tr
+                th WorkerName
+                th Status
+                th Builders
+                th Infos
+            tr(ng-repeat='worker in workers',
+               ng-show="settings.show_old_workers.value || worker.configured_on.length > 0")
+                td {{worker.name}}
+                td {{worker.connected_to.length}} connection
+                td
+                    span(ng-repeat="buildermaster in worker.configured_on")
+                        a(ui-sref="builder({builder: buildermaster.builderid})")
+                            | {{ builders.get(buildermaster.builderid).name +
+                            |    maybeGetMasterNameFromBuilderMaster(buildermaster)}}
+                        | &nbsp;
+                td
+                    rawdata(data='worker.workerinfo')
+    .row
+        .form-group
+            label.checkbox-inline
+                input(type="checkbox" name="{{settings.show_old_workers.name}}" ng-model="settings.show_old_workers.value")
+                | {{settings.show_old_workers.caption}}

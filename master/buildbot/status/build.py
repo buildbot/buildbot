@@ -43,7 +43,6 @@ class BuildStatus(styles.Versioned):
     currentStep = None
     text = []
     results = None
-    slavename = "???"
 
     # these lists/dicts are defined here so that unserialized instances have
     # (empty) values. They are set in __init__ to new objects to make sure
@@ -67,6 +66,7 @@ class BuildStatus(styles.Versioned):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
+        self.workername = "???"
 
     def __repr__(self):
         return "<%s #%s>" % (self.__class__.__name__, self.number)
@@ -154,8 +154,8 @@ class BuildStatus(styles.Versioned):
     def getResults(self):
         return self.results
 
-    def getSlavename(self):
-        return self.slavename
+    def getWorkername(self):
+        return self.workername
 
     def getTestResults(self):
         return self.testResults
@@ -222,8 +222,8 @@ class BuildStatus(styles.Versioned):
         # the world about us
         self.builder.buildStarted(self)
 
-    def setSlavename(self, slavename):
-        self.slavename = slavename
+    def setWorkername(self, workername):
+        self.workername = workername
 
     def setText(self, text):
         assert isinstance(text, (list, tuple))
@@ -401,7 +401,7 @@ class BuildStatus(styles.Versioned):
         result['times'] = self.getTimes()
         result['text'] = self.getText()
         result['results'] = self.getResults()
-        result['slave'] = self.getSlavename()
+        result['worker'] = self.getWorkername()
         # TODO(maruel): Add.
         # result['test_results'] = self.getTestResults()
         result['logs'] = [[l.getName(),

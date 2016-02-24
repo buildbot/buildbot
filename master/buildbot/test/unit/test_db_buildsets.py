@@ -573,7 +573,7 @@ class TestRealDB(unittest.TestCase,
             table_names=['patches', 'buildsets', 'buildset_properties',
                          'objects', 'buildrequests', 'sourcestamps',
                          'buildset_sourcestamps', 'builders',
-                         'builds', 'masters'])
+                         'builds', 'masters', 'workers'])
 
         @d.addCallback
         def finish_setup(_):

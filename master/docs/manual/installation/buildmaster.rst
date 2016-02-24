@@ -52,8 +52,8 @@ You can also type ``buildbot create-master --help`` for an up-to-the-moment summ
 
 .. option:: --no-logrotate
 
-    This disables internal buildslave log management mechanism.
-    With this option buildslave does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
+    This disables internal worker log management mechanism.
+    With this option worker does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
 
 .. option:: --relocatable
 
@@ -99,7 +99,7 @@ The ``upgrade-master`` command is idempotent.
 It is safe to run it multiple times.
 After each upgrade of the buildbot code, you should use ``upgrade-master`` on all your buildmasters.
 
-In general, Buildbot slaves and masters can be upgraded independently, although some new features will not be available, depending on the master and slave versions.
+In general, Buildbot workers and masters can be upgraded independently, although some new features will not be available, depending on the master and worker versions.
 
 Beyond this general information, read all of the sections below that apply to versions through which you are upgrading.
 

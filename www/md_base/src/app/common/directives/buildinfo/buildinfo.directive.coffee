@@ -47,10 +47,8 @@ class _BuildInfo extends Controller
         display = {}
         display.owners = @change_owners || @processOwners(raw.owners?.value || [])
         display.revision = (raw.got_revision?.value || raw.revision?.value || '')[0..20]
-        display.slave = raw.slavename?.value
+        display.worker = raw.workername?.value
         display.scheduler = raw.scheduler?.value
         display.dir = raw.builddir?.value || raw.worddir?.value
 
         @properties = display
-
-

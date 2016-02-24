@@ -9,5 +9,5 @@ Installation
    installation
    nine-upgrade
    buildmaster
-   buildslave
+   worker
    misc

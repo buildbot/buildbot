@@ -42,7 +42,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             res = conn.execute(buildslaves.select())
             self.assertEqual(res.fetchall(), [])
 
-            # and buildslave name is unique, so we'll get an error here
+            # and worker name is unique, so we'll get an error here
             exc = sa.exc.IntegrityError
             if conn.dialect.driver == 'pg8000':
                 # Constraint validation is an IntegrityError, see

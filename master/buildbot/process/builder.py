@@ -19,13 +19,16 @@ import weakref
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.process import buildrequest
-from buildbot.process import slavebuilder
+from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
-from buildbot.process.slavebuilder import BUILDING
+from buildbot.process.workerforbuilder import BUILDING
 from buildbot.status.builder import RETRY
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
+from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import deprecatedWorkerClassMethod
+from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
@@ -35,19 +38,21 @@ from twisted.python import log
 from zope.interface import implements
 
 
-def enforceChosenSlave(bldr, slavebuilder, breq):
-    if 'slavename' in breq.properties:
-        slavename = breq.properties['slavename']
-        if isinstance(slavename, basestring):
-            return slavename == slavebuilder.slave.slavename
+def enforceChosenWorker(bldr, workerforbuilder, breq):
+    if 'workername' in breq.properties:
+        workername = breq.properties['workername']
+        if isinstance(workername, basestring):
+            return workername == workerforbuilder.worker.workername
 
     return True
+deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
 
 
 class Builder(util_service.ReconfigurableServiceMixin,
-              service.MultiService):
+              service.MultiService,
+              WorkerAPICompatMixin):
 
-    # reconfigure builders before slaves
+    # reconfigure builders before workers
     reconfig_priority = 196
 
     def __init__(self, name, _addServices=True):
@@ -65,14 +70,16 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # old_building holds active builds that were stolen from a predecessor
         self.old_building = weakref.WeakKeyDictionary()
 
-        # buildslaves which have connected but which are not yet available.
+        # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
-        self.attaching_slaves = []
+        self.attaching_workers = []
+        self._registerOldWorkerAttr("attaching_workers")
 
-        # buildslaves at our disposal. Each SlaveBuilder instance has a
+        # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
-        self.slaves = []
+        self.workers = []
+        self._registerOldWorkerAttr("workers")
 
         self.config = None
         self.builder_status = None
@@ -117,14 +124,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         self.builder_status.setDescription(builder_config.description)
         self.builder_status.setTags(builder_config.tags)
-        self.builder_status.setSlavenames(self.config.slavenames)
+        self.builder_status.setWorkernames(self.config.workernames)
         self.builder_status.setCacheSize(new_config.caches['Builds'])
 
-        # if we have any slavebuilders attached which are no longer configured,
+        # if we have any workers attached which are no longer configured,
         # drop them.
-        new_slavenames = set(builder_config.slavenames)
-        self.slaves = [s for s in self.slaves
-                       if s.slave.slavename in new_slavenames]
+        new_workernames = set(builder_config.workernames)
+        self.workers = [w for w in self.workers
+                        if w.worker.workername in new_workernames]
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
@@ -185,37 +192,38 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 return b
         return None
 
-    def addLatentSlave(self, slave):
-        assert interfaces.ILatentBuildSlave.providedBy(slave)
-        for s in self.slaves:
-            if s == slave:
+    def addLatentWorker(self, worker):
+        assert interfaces.ILatentWorker.providedBy(worker)
+        for w in self.workers:
+            if w == worker:
                 break
         else:
-            sb = slavebuilder.LatentSlaveBuilder(slave, self)
+            sb = workerforbuilder.LatentWorkerForBuilder(worker, self)
             self.builder_status.addPointEvent(
-                ['added', 'latent', slave.slavename])
-            self.slaves.append(sb)
+                ['added', 'latent', worker.workername])
+            self.workers.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
+    deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
-    def attached(self, slave, commands):
-        """This is invoked by the BuildSlave when the self.slavename bot
+    def attached(self, worker, commands):
+        """This is invoked by the Worker when the self.workername bot
         registers their builder.
 
-        @type  slave: L{buildbot.buildslave.BuildSlave}
-        @param slave: the BuildSlave that represents the buildslave as a whole
+        @type  worker: L{buildbot.worker.Worker}
+        @param worker: the Worker that represents the worker as a whole
         @type  commands: dict: string -> string, or None
-        @param commands: provides the slave's version of each RemoteCommand
+        @param commands: provides the worker's version of each RemoteCommand
 
         @rtype:  L{twisted.internet.defer.Deferred}
-        @return: a Deferred that fires (with 'self') when the slave-side
+        @return: a Deferred that fires (with 'self') when the worker-side
                  builder is fully attached and ready to accept commands.
         """
-        for s in self.attaching_slaves + self.slaves:
-            if s.slave == slave:
+        for w in self.attaching_workers + self.workers:
+            if w.worker == worker:
                 # already attached to them. This is fairly common, since
                 # attached() gets called each time we receive the builder
-                # list from the slave, and we ask for it each time we add or
-                # remove a builder. So if the slave is hosting builders
+                # list from the worker, and we ask for it each time we add or
+                # remove a builder. So if the worker is hosting builders
                 # A,B,C, and the config file changes A, we'll remove A and
                 # re-add it, triggering two builder-list requests, getting
                 # two redundant calls to attached() for B, and another two
@@ -225,57 +233,57 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 # just ignore it.
                 return defer.succeed(self)
 
-        sb = slavebuilder.SlaveBuilder()
+        sb = workerforbuilder.WorkerForBuilder()
         sb.setBuilder(self)
-        self.attaching_slaves.append(sb)
-        d = sb.attached(slave, commands)
+        self.attaching_workers.append(sb)
+        d = sb.attached(worker, commands)
         d.addCallback(self._attached)
-        d.addErrback(self._not_attached, slave)
+        d.addErrback(self._not_attached, worker)
         return d
 
     def _attached(self, sb):
-        self.builder_status.addPointEvent(['connect', sb.slave.slavename])
-        self.attaching_slaves.remove(sb)
-        self.slaves.append(sb)
+        self.builder_status.addPointEvent(['connect', sb.worker.workername])
+        self.attaching_workers.remove(sb)
+        self.workers.append(sb)
 
         self.updateBigStatus()
 
         return self
 
-    def _not_attached(self, why, slave):
-        # already log.err'ed by SlaveBuilder._attachFailure
-        # TODO: remove from self.slaves (except that detached() should get
+    def _not_attached(self, why, worker):
+        # already log.err'ed by WorkerForBuilder._attachFailure
+        # TODO: remove from self.workers (except that detached() should get
         #       run first, right?)
-        log.err(why, 'slave failed to attach')
+        log.err(why, 'worker failed to attach')
         self.builder_status.addPointEvent(['failed', 'connect',
-                                           slave.slavename])
+                                           worker.workername])
         # TODO: add an HTMLLogFile of the exception
 
-    def detached(self, slave):
+    def detached(self, worker):
         """This is called when the connection to the bot is lost."""
-        for sb in self.attaching_slaves + self.slaves:
-            if sb.slave == slave:
+        for wfb in self.attaching_workers + self.workers:
+            if wfb.worker == worker:
                 break
         else:
             log.msg("WEIRD: Builder.detached(%s) (%s)"
-                    " not in attaching_slaves(%s)"
-                    " or slaves(%s)" % (slave, slave.slavename,
-                                        self.attaching_slaves,
-                                        self.slaves))
+                    " not in attaching_workers(%s)"
+                    " or workers(%s)" % (worker, worker.workername,
+                                         self.attaching_workers,
+                                         self.workers))
             return
-        if sb.state == BUILDING:
+        if wfb.state == BUILDING:
             # the Build's .lostRemote method (invoked by a notifyOnDisconnect
             # handler) will cause the Build to be stopped, probably right
             # after the notifyOnDisconnect that invoked us finishes running.
             pass
 
-        if sb in self.attaching_slaves:
-            self.attaching_slaves.remove(sb)
-        if sb in self.slaves:
-            self.slaves.remove(sb)
+        if wfb in self.attaching_workers:
+            self.attaching_workers.remove(wfb)
+        if wfb in self.workers:
+            self.workers.remove(wfb)
 
-        self.builder_status.addPointEvent(['disconnect', slave.slavename])
-        sb.detached()  # inform the SlaveBuilder that their slave went away
+        self.builder_status.addPointEvent(['disconnect', worker.workername])
+        wfb.detached()  # inform the WorkerForBuilder that their worker went away
         self.updateBigStatus()
 
     def updateBigStatus(self):
@@ -283,7 +291,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # Catch exceptions here, since this is called in a LoopingCall.
             if not self.builder_status:
                 return
-            if not self.slaves:
+            if not self.workers:
                 self.builder_status.setBigState("offline")
             elif self.building or self.old_building:
                 self.builder_status.setBigState("building")
@@ -292,21 +300,24 @@ class Builder(util_service.ReconfigurableServiceMixin,
         except Exception:
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
-    def getAvailableSlaves(self):
-        return [sb for sb in self.slaves if sb.isAvailable()]
+    def getAvailableWorkers(self):
+        return [wfb for wfb in self.workers if wfb.isAvailable()]
+    deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
-    def canStartWithSlavebuilder(self, slavebuilder):
+    def canStartWithWorkerForBuilder(self, workerforbuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in self.config.locks]
-        return Build.canStartWithSlavebuilder(locks, slavebuilder)
+        return Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
+    deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
+                                compat_name="canStartWithSlavebuilder")
 
-    def canStartBuild(self, slavebuilder, breq):
+    def canStartBuild(self, workerforbuilder, breq):
         if callable(self.config.canStartBuild):
-            return defer.maybeDeferred(self.config.canStartBuild, self, slavebuilder, breq)
+            return defer.maybeDeferred(self.config.canStartBuild, self, workerforbuilder, breq)
         return defer.succeed(True)
 
     @defer.inlineCallbacks
-    def _startBuildFor(self, slavebuilder, buildrequests):
+    def _startBuildFor(self, workerforbuilder, buildrequests):
         # Build a stack of cleanup functions so that, at any point, we can
         # abort this operation and unwind the commitments made so far.
         cleanups = []
@@ -325,14 +336,14 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
-        log.msg("starting build %s using slave %s" % (build, slavebuilder))
+        log.msg("starting build %s using worker %s" % (build, workerforbuilder))
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(slavebuilder.slave.releaseLocks)
+        cleanups.append(workerforbuilder.worker.releaseLocks)
 
         if len(self.config.env) > 0:
-            build.setSlaveEnvironment(self.config.env)
+            build.setWorkerEnvironment(self.config.env)
 
         # append the build to self.building
         self.building.append(build)
@@ -342,51 +353,51 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
         try:
-            ready = yield slavebuilder.prepare(self.builder_status, build)
+            ready = yield workerforbuilder.prepare(self.builder_status, build)
         except Exception:
-            log.err(failure.Failure(), 'while preparing slavebuilder:')
+            log.err(failure.Failure(), 'while preparing workerforbuilder:')
             ready = False
 
         # If prepare returns True then it is ready and we start a build
         # If it returns false then we don't start a new build.
         if not ready:
-            log.msg("slave %s can't build %s after all; re-queueing the "
-                    "request" % (build, slavebuilder))
+            log.msg("worker %s can't build %s after all; re-queueing the "
+                    "request" % (build, workerforbuilder))
             run_cleanups()
             defer.returnValue(False)
             return
 
-        # ping the slave to make sure they're still there. If they've
+        # ping the worker to make sure they're still there. If they've
         # fallen off the map (due to a NAT timeout or something), this
         # will fail in a couple of minutes, depending upon the TCP
         # timeout.
         #
         # TODO: This can unnecessarily suspend the starting of a build, in
-        # situations where the slave is live but is pushing lots of data to
+        # situations where the worker is live but is pushing lots of data to
         # us in a build.
-        log.msg("starting build %s.. pinging the slave %s"
-                % (build, slavebuilder))
+        log.msg("starting build %s.. pinging the worker %s"
+                % (build, workerforbuilder))
         try:
-            ping_success = yield slavebuilder.ping()
+            ping_success = yield workerforbuilder.ping()
         except Exception:
-            log.err(failure.Failure(), 'while pinging slave before build:')
+            log.err(failure.Failure(), 'while pinging worker before build:')
             ping_success = False
 
         if not ping_success:
-            log.msg("slave ping failed; re-queueing the request")
+            log.msg("worker ping failed; re-queueing the request")
             run_cleanups()
             defer.returnValue(False)
             return
 
-        # The buildslave is ready to go. slavebuilder.buildStarted() sets its
+        # The worker is ready to go. workerforbuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
-        slavebuilder.buildStarted()
-        cleanups.append(lambda: slavebuilder.buildFinished())
+        workerforbuilder.buildStarted()
+        cleanups.append(lambda: workerforbuilder.buildFinished())
 
         # tell the remote that it's starting a build, too
         try:
-            yield slavebuilder.slave.conn.remoteStartBuild(build.builder.name)
+            yield workerforbuilder.worker.conn.remoteStartBuild(build.builder.name)
         except Exception:
             log.err(failure.Failure(), 'while calling remote startBuild:')
             run_cleanups()
@@ -398,12 +409,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # IMPORTANT: no yielding is allowed from here to the startBuild call!
 
-        # it's possible that we lost the slave remote between the ping above
+        # it's possible that we lost the worker remote between the ping above
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not slavebuilder.slave.conn:  # TODO: replace with isConnected()
-            log.msg("slave disappeared before build could start")
+        if not workerforbuilder.worker.conn:  # TODO: replace with isConnected()
+            log.msg("worker disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
             return
@@ -420,9 +431,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # raised by startBuild are treated as deferred errbacks (see
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
-                                bs, self.expectations, slavebuilder)
-        d.addCallback(lambda _: self.buildFinished(build, slavebuilder))
-        # this shouldn't happen. if it does, the slave will be wedged
+                                bs, self.expectations, workerforbuilder)
+        d.addCallback(lambda _: self.buildFinished(build, workerforbuilder))
+        # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
 
@@ -439,12 +450,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
                                   self.config.properties[propertyname],
                                   "Builder")
 
-    def buildFinished(self, build, sb):
+    def buildFinished(self, build, wfb):
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
 
-        # by the time we get here, the Build has already released the slave,
+        # by the time we get here, the Build has already released the worker,
         # which will trigger a check for any now-possible build requests
         # (maybeStartBuilds)
 
@@ -464,8 +475,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
 
-        if sb.slave:
-            sb.slave.releaseLocks()
+        if wfb.worker:
+            wfb.worker.releaseLocks()
 
         self.updateBigStatus()
 
@@ -482,9 +493,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
     # Build Creation
 
     @defer.inlineCallbacks
-    def maybeStartBuild(self, slavebuilder, breqs, _reactor=reactor):
+    def maybeStartBuild(self, workerforbuilder, breqs, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
-        # start a set of buildrequests on a slave. Do not call this method
+        # start a set of buildrequests on a worker. Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
         # the other similar methods if more appropriate
 
@@ -495,10 +506,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
             defer.returnValue(False)
             return
 
-        # If the build fails from here on out (e.g., because a slave has failed),
+        # If the build fails from here on out (e.g., because a worker has failed),
         # it will be handled outside of this function. TODO: test that!
 
-        build_started = yield self._startBuildFor(slavebuilder, breqs)
+        build_started = yield self._startBuildFor(workerforbuilder, breqs)
         defer.returnValue(build_started)
 
     # a few utility functions to make the maybeStartBuild a bit shorter and
@@ -556,12 +567,12 @@ class BuilderControl:
         return self.original.getBuild(number)
 
     def ping(self):
-        if not self.original.slaves:
-            self.original.builder_status.addPointEvent(["ping", "no slave"])
-            return defer.succeed(False)  # interfaces.NoSlaveError
+        if not self.original.workers:
+            self.original.builder_status.addPointEvent(["ping", "no worker"])
+            return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
-        for s in self.original.slaves:
-            dl.append(s.ping(self.original.builder_status))
+        for w in self.original.workers:
+            dl.append(w.ping(self.original.builder_status))
         d = defer.DeferredList(dl)
         d.addCallback(self._gatherPingResults)
         return d

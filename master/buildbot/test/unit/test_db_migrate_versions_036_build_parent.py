@@ -47,7 +47,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 sa.Column('buildrequestid', sa.Integer, nullable=False),
                 # slave which performed this build
                 # TODO: ForeignKey to buildslaves table, named buildslaveid
-                # TODO: keep nullable to support slave-free
+                # TODO: keep nullable to support worker-free
                 # builds
                 sa.Column('buildslaveid', sa.Integer),
                 # master which controlled this build

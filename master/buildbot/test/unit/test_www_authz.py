@@ -80,16 +80,16 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         self.master.db.insertTestData([
             fakedb.Builder(id=77, name="mybuilder"),
             fakedb.Master(id=88),
-            fakedb.Buildslave(id=13, name='sl'),
+            fakedb.Worker(id=13, name='sl'),
             fakedb.Buildset(id=8822),
             fakedb.BuildsetProperty(buildsetid=8822, property_name='owner',
                                     property_value='["user@nine.com", "force"]'),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
-            fakedb.Build(id=13, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=3),
-            fakedb.Build(id=14, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=14, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=4),
-            fakedb.Build(id=15, builderid=77, masterid=88, buildslaveid=13,
+            fakedb.Build(id=15, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=5),
         ])
 

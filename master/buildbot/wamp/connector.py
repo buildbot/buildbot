@@ -129,7 +129,7 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
         # This is not a good idea to allow people to switch the router via reconfig
         # how would we continue the current transactions ?
-        # how would we tell the slaves to switch router ?
+        # how would we tell the workers to switch router ?
         if self.app is not None and self.router_url != router_url:
             raise ValueError("Cannot use different wamp router url when reconfiguring")
         if router_url is None:

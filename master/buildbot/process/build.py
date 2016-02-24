@@ -35,11 +35,13 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import worst_status
 from buildbot.util.eventual import eventually
+from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
-class Build(properties.PropertiesMixin):
+class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
-    """I represent a single build by a single slave. Specialized Builders can
+    """I represent a single build by a single worker. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
 
@@ -82,7 +84,7 @@ class Build(properties.PropertiesMixin):
         self.reason = requests[0].mergeReasons(requests[1:])
 
         self.currentStep = None
-        self.slaveEnvironment = {}
+        self.workerEnvironment = {}
         self.buildid = None
         self.number = None
 
@@ -106,10 +108,10 @@ class Build(properties.PropertiesMixin):
         self.locks = [(self.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in lockList]
 
-    def setSlaveEnvironment(self, env):
+    def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
         # e.g., old-style steps (ShellMixin pulls the environment out of the builder directly)
-        self.slaveEnvironment = env
+        self.workerEnvironment = env
 
     def getSourceStamp(self, codebase=''):
         for source in self.sources:
@@ -166,11 +168,12 @@ class Build(properties.PropertiesMixin):
 
     useProgress = True
 
-    def getSlaveCommandVersion(self, command, oldversion=None):
-        return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
+    def getWorkerCommandVersion(self, command, oldversion=None):
+        return self.workerforbuilder.getWorkerCommandVersion(command, oldversion)
 
-    def getSlaveName(self):
-        return self.slavebuilder.slave.slavename
+    def getWorkerName(self):
+        return self.workerforbuilder.worker.workername
+    deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     def setupProperties(self):
         props = interfaces.IProperties(self)
@@ -205,31 +208,32 @@ class Build(properties.PropertiesMixin):
 
         self.builder.setupProperties(props)
 
-    def setupSlaveBuilder(self, slavebuilder):
-        self.slavebuilder = slavebuilder
+    def setupWorkerForBuilder(self, workerforbuilder):
+        self.workerforbuilder = workerforbuilder
 
-        self.path_module = slavebuilder.slave.path_module
+        self.path_module = workerforbuilder.worker.path_module
 
-        # navigate our way back to the L{buildbot.buildslave.BuildSlave}
+        # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        buildslave_properties = slavebuilder.slave.properties
-        self.getProperties().updateFromProperties(buildslave_properties)
-        if slavebuilder.slave.slave_basedir:
+        worker_properties = workerforbuilder.worker.properties
+        self.getProperties().updateFromProperties(worker_properties)
+        if workerforbuilder.worker.worker_basedir:
             builddir = self.path_module.join(
-                slavebuilder.slave.slave_basedir,
-                self.builder.config.slavebuilddir)
-            self.setProperty("builddir", builddir, "slave")
-            self.setProperty("workdir", builddir, "slave (deprecated)")
+                workerforbuilder.worker.worker_basedir,
+                self.builder.config.workerbuilddir)
+            self.setProperty("builddir", builddir, "worker")
+            self.setProperty("workdir", builddir, "worker (deprecated)")
 
-        self.slavename = slavebuilder.slave.slavename
-        self.build_status.setSlavename(self.slavename)
+        self.workername = workerforbuilder.worker.workername
+        self._registerOldWorkerAttr("workername")
+        self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks
-    def startBuild(self, build_status, expectations, slavebuilder):
+    def startBuild(self, build_status, expectations, workerforbuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
-        slave = slavebuilder.slave
+        worker = workerforbuilder.worker
 
         # we are taking responsibility for watching the connection to the
         # remote. This responsibility was held by the Builder until our
@@ -246,7 +250,7 @@ class Build(properties.PropertiesMixin):
             yield self.master.data.updates.addBuild(
                 builderid=(yield self.builder.getBuilderId()),
                 buildrequestid=brid,
-                buildslaveid=slave.buildslaveid)
+                workerid=worker.workerid)
 
         self.stopBuildConsumer = yield self.master.mq.startConsuming(self.stopBuild,
                                                                      ("control", "builds",
@@ -256,13 +260,13 @@ class Build(properties.PropertiesMixin):
 
         # now that we have a build_status, we can set properties
         self.setupProperties()
-        self.setupSlaveBuilder(slavebuilder)
-        slave.updateSlaveStatus(buildStarted=self)
+        self.setupWorkerForBuilder(workerforbuilder)
+        worker.updateWorkerStatus(buildStarted=self)
 
-        # then narrow SlaveLocks down to the right slave
-        self.locks = [(l.getLock(self.slavebuilder.slave), a)
+        # then narrow WorkerLocks down to the right worker
+        self.locks = [(l.getLock(self.workerforbuilder.worker), a)
                       for l, a in self.locks]
-        self.conn = slavebuilder.slave.conn
+        self.conn = workerforbuilder.worker.conn
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
         metrics.MetricCountEvent.log('active_builds', 1)
@@ -303,14 +307,14 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.finishBuild(self.buildid, self.results)
 
         # mark the build as finished
-        self.slavebuilder.buildFinished()
-        slave.updateSlaveStatus(buildFinished=self)
+        self.workerforbuilder.buildFinished()
+        worker.updateWorkerStatus(buildFinished=self)
 
     @staticmethod
-    def canStartWithSlavebuilder(lockList, slavebuilder):
+    def canStartWithWorkerForBuilder(lockList, workerforbuilder):
         for lock, access in lockList:
-            slave_lock = lock.getLock(slavebuilder.slave)
-            if not slave_lock.isAvailable(None, access):
+            worker_lock = lock.getLock(workerforbuilder.worker)
+            if not worker_lock.isAvailable(None, access):
                 return False
         return True
 
@@ -351,7 +355,7 @@ class Build(properties.PropertiesMixin):
         for factory in step_factories:
             step = factory.buildStep()
             step.setBuild(self)
-            step.setBuildSlave(self.slavebuilder.slave)
+            step.setWorker(self.workerforbuilder.worker)
             self.setUniqueStepName(step)
             steps.append(step)
 
@@ -461,7 +465,7 @@ class Build(properties.PropertiesMixin):
         return terminate
 
     def lostRemote(self, conn=None):
-        # the slave went away. There are several possible reasons for this,
+        # the worker went away. There are several possible reasons for this,
         # and they aren't necessarily fatal. For now, kill the build, but
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
@@ -484,7 +488,7 @@ class Build(properties.PropertiesMixin):
         # they realized they committed a bug and they don't want to waste
         # the time building something that they know will fail. Another
         # reason might be to abandon a stuck build. We want to mark the
-        # build as failed quickly rather than waiting for the slave's
+        # build as failed quickly rather than waiting for the worker's
         # timeout to kill it on its own.
 
         log.msg(" %s: stopping build: %s %s" % (self, reason, cbParams))

@@ -25,6 +25,7 @@ import re
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
@@ -176,11 +177,10 @@ class SetProperty(BuildStep):
         self.property = property
         self.value = value
 
-    def start(self):
+    def run(self):
         properties = self.build.getProperties()
         properties.setProperty(self.property, self.value, self.name, runtime=True)
-        self.step_status.setText(self.describe(done=True))
-        self.finished(SUCCESS)
+        return defer.succeed(SUCCESS)
 
 
 class LogRenderable(BuildStep):
