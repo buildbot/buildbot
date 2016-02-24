@@ -26,6 +26,8 @@ Features
 Fixes
 ~~~~~
 
+* Fix loading :class:`~buildbot.ldapuserinfo.LdapUserInfo` plugin and its documentation (:bug:`3371`).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
