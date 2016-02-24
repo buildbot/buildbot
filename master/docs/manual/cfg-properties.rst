@@ -82,10 +82,10 @@ The following build properties are set when the build is started, and are availa
 ``scheduler``
     If the build was started from a scheduler, then this property will contain the name of that scheduler.
 
-``workdir``
+``builddir``
     The absolute path of the base working directory on the worker, of the current builder.
 
-.. index:: single: Properties; workdir
+.. index:: single: Properties; builddir
 
 For single codebase builds, where the codebase is `''`, the following :ref:`Source-Stamp-Attributes` are also available as properties: ``branch``, ``revision``, ``repository``, and ``project`` .
 

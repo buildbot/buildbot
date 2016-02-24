@@ -274,8 +274,7 @@ class TestBuild(unittest.TestCase):
         expected_path = '/srv/buildbot/worker/test'
 
         b.setProperty.assert_has_calls(
-            [call('workdir', expected_path, 'worker (deprecated)'),
-             call('builddir', expected_path, 'worker')],
+            [call('builddir', expected_path, 'worker')],
             any_order=True)
 
     def testBuildLocksAcquired(self):

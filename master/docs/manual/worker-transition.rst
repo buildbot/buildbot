@@ -740,10 +740,6 @@ Worker Manager changes
 Properties
 ----------
 
-* ``builddir`` property source changed from ``"slave"`` to ``"worker"``;
-  ``workdir`` property source from ``"slave (deprecated)"`` to
-  ``"worker (deprecated)"``.
-
 * ``slavename`` property is deprecated in favor of ``workername`` property.
   Render of deprecated property will produce warning.
 
