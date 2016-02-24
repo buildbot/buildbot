@@ -420,6 +420,11 @@ else:
         'autobahn ' + autobahn_ver,
     ]
 
+    if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
+        setup_args['setup_requires'] = [
+            'setuptools_trial',
+        ]
+
     setup_args['extras_require'] = {
         'test': [
             'mock',

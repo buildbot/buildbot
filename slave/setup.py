@@ -133,6 +133,9 @@ else:
             'pyflakes',
         ],
     }
+    setup_args['setup_requires'] = [
+        'setuptools_trial',
+    ]
 
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
