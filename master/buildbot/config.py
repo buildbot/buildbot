@@ -201,7 +201,7 @@ class MasterConfig(util.ComparableMixin):
                     error(err)
                 raise errors
             except SyntaxError:
-                error("encountered a SyntaxError while parsing config file:\n%s "%
+                error("encountered a SyntaxError while parsing config file:\n%s " %
                     (traceback.format_exc(),),
                     )
                 raise errors
