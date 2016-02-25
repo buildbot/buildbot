@@ -289,7 +289,7 @@ class BuildRequestControl:
     def cancel(self):
         d = self.original_request.cancelBuildRequest()
 
-        if self.original_request.results== RESUME:
+        if self.original_request.results== RESUME and self.original_builder:
             brs = BuildRequestStatus(self.original_builder.name, self.brid, self.original_builder.master.status)
             brsdict = yield brs.asDict_async()
             if 'lastBuildNumber' in brsdict and brsdict['lastBuildNumber']:
