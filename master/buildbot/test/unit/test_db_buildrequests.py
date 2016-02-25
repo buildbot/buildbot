@@ -1278,7 +1278,8 @@ class TestBuildsetsConnectorComponent(
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
                                      priority=50, submitted_at=1450171039),
                  fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr2",
-                                     priority=100, submitted_at=1449668061),
+                                     priority=100, submitted_at=1449668061,
+                                     startbrid=1),
                  fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr1",
                                      priority=20,submitted_at=1449579016,
                                      results=RESUME, complete=0),
@@ -1315,33 +1316,36 @@ class TestBuildsetsConnectorComponent(
         d = self.insertTestData(breqs + breqsclaims + breqsprop)
         return d
 
-    def fakePrioritzedRequest(self, brid, buildername, priority, submitted_at, selected_slave, results, slavepool):
+    def fakePrioritzedRequest(self, brid, buildername, priority, submitted_at,
+                              selected_slave, results, slavepool, startbrid=None):
         return {'brid': brid,
                 'buildername': buildername,
                 'priority': priority,
                 'submitted_at': epoch2datetime(submitted_at),
                 'selected_slave': selected_slave,
                 'results': results,
-                'slavepool': slavepool
+                'slavepool': slavepool,
+                'startbrid': startbrid
                 }
 
     def test_getPrioritizedBuildRequestsInUnclaimedQueue(self):
         expectedBreqs = [self.fakePrioritzedRequest(brid=9, results=-1,
-                                     buildername='bldr1', priority=100,
-                                     submitted_at=1449579016,
-                                     selected_slave=None, slavepool=None),
+                                                    buildername='bldr1', priority=100,
+                                                    submitted_at=1449579016,
+                                                    selected_slave=None, slavepool=None),
                          self.fakePrioritzedRequest(brid=3, results=-1,
-                                     buildername='bldr2', priority=100,
-                                     submitted_at=1449668061,
-                                     selected_slave=None, slavepool=None),
+                                                    buildername='bldr2', priority=100,
+                                                    submitted_at=1449668061,
+                                                    selected_slave=None,
+                                                    slavepool=None, startbrid=1),
                          self.fakePrioritzedRequest(brid=2, results=-1,
-                                     buildername='bldr1', priority=50,
-                                     submitted_at=1450171039,
-                                     selected_slave="build-slave-03", slavepool=None),
+                                                    buildername='bldr1', priority=50,
+                                                    submitted_at=1450171039,
+                                                    selected_slave="build-slave-03", slavepool=None),
                          self.fakePrioritzedRequest(brid=1, results=-1,
-                                     buildername='bldr1', priority=20,
-                                     submitted_at=1450171024,
-                                     selected_slave=None, slavepool=None)]
+                                                    buildername='bldr1', priority=20,
+                                                    submitted_at=1450171024,
+                                                    selected_slave=None, slavepool=None)]
 
         d = self.insertPrioritizedBreqs()
         d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.unclaimed))

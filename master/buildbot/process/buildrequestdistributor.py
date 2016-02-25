@@ -23,7 +23,7 @@ from twisted.application import service
 from buildbot.process import metrics
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.status.results import RESUME, BEGINNING
-from buildbot.db.buildrequests import AlreadyClaimedError, Queue
+from buildbot.db.buildrequests import AlreadyClaimedError, UnsupportedQueueError, Queue
 from buildbot.process.builder import Slavepool
 from buildbot import util
 
@@ -111,7 +111,7 @@ class BuildChooserBase(object):
     
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
-        # Turn a brdict into a BuildRequest into a brdict. This is useful 
+        # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
         breq = self.breqCache.get(brdict['brid'])
@@ -350,11 +350,19 @@ class BasicBuildChooser(BuildChooserBase):
 
 class KatanaBuildChooser(BasicBuildChooser):
 
-    def __init__(self, bldr, brid, slavepool, master):
+    def __init__(self, builders, master):
         # By default katana  merges Requests
+        self.bldr = None
+        self.master = master
+        self.breqCache = {}
+        self.builders = builders
+
+    def setupNextBuildRequest(self, bldr, breq):
+        # by default katana merges buildrequests
         if bldr.config.mergeRequests is None:
             bldr.config.mergeRequests = True
-        BuildChooserBase.__init__(self, bldr, master)
+
+        self.bldr = bldr
 
         self.nextSlave = self.bldr.config.nextSlave
         if not self.nextSlave:
@@ -366,8 +374,16 @@ class KatanaBuildChooser(BasicBuildChooser):
         self.mergeRequestsFn = self.bldr.getMergeRequestsFn()
 
         # katana initialized it from build request distributor
-        self.slavepool = slavepool
-        self.nextBrid = brid
+        self.nextBreq = breq
+
+    def initializeBreqCache(self):
+        self.breqCache = {}
+
+    def cleanupNextBuildRequest(self):
+        self.bldr = None
+        self.nextBreq = None
+        self.nextSlave = None
+        self.mergeRequestsFn = None
 
     @defer.inlineCallbacks
     def claimBuildRequests(self, breqs):
@@ -377,6 +393,134 @@ class KatanaBuildChooser(BasicBuildChooser):
             log.msg("merge pending buildrequest %s with %s " % (brids[0], brids[1:]))
         else:
             yield self.master.db.buildrequests.claimBuildRequests(brids)
+
+    def _removeBuildRequests(self, breqs):
+        # Remove a BuildrRequest object (and its brdict)
+        # from the caches
+        for breq in breqs:
+            if breq.id in self.breqCache:
+                del self.breqCache[breq.id]
+
+    @defer.inlineCallbacks
+    def _getBuildRequestForBrdict(self, brdict):
+        # Turn a brdict into a BuildRequest into a brdict. This is useful
+        # for API like 'nextBuild', which operate on BuildRequest objects.
+
+        breq = self.breqCache.get(brdict['brid'])
+        if not breq:
+            breq = yield BuildRequest.fromBrdict(self.master, brdict)
+            if breq:
+                self.breqCache[brdict['brid']] = breq
+        defer.returnValue(breq)
+
+    @defer.inlineCallbacks
+    def getBuildRequest(self, queue, br):
+        if queue == Queue.unclaimed:
+            brdict = yield self.master.db.buildrequests.getBuildRequests(buildername=br["buildername"],
+                                                                         brids=[br["brid"]],
+                                                                         claimed=False)
+        elif queue == Queue.resume:
+            brdict = yield self.master.db.buildrequests.getBuildRequests(buildername=br["buildername"],
+                                                                          brids=[br["brid"]],
+                                                                          claimed="mine",
+                                                                          complete=False,
+                                                                          results=RESUME,
+                                                                          mergebrids="exclude")
+        else:
+            raise UnsupportedQueueError
+
+        if not brdict:
+            defer.returnValue(None)
+            return
+
+        nextBrdict = brdict[0]
+        breq = yield self._getBuildRequestForBrdict(nextBrdict)
+        defer.returnValue(breq)
+
+
+    # Katana's gets the next priority builder from the DB instead of keeping a local list
+    @defer.inlineCallbacks
+    def getNextPriorityBuilder(self, queue):
+        """
+        Finds the next builder that should start running builds
+        selecting the one with the higher priority and oldest submitted time.
+
+        it will return None if there are no slaves available for the task.
+
+        @param queue: None will select the higher priority overall pending buids,
+        if queue is 'unclaimed' will select only the pending builds and if queue='resume'
+        it will select only builds pending to be resume
+        @returns: a build request dictionary or None via Deferred
+        """
+        unavailableBuilderNames = []
+        builderSlavepool = {}
+
+        # TODO: For performance reasons we may need to limit the searches but  we need to load test it first
+        buildrequestQueue = yield self.master.db.buildrequests \
+            .getPrioritizedBuildRequestsInQueue(queue=queue)
+
+        log.msg("getNextPriorityBuilder found %d buildrequests in the '%s' Queue" % (len(buildrequestQueue), queue))
+
+        for br in buildrequestQueue:
+            buildername = br['buildername']
+
+            bldr = self.builders.get(buildername)
+
+            if not bldr:
+                log.msg("BuildRequest %d uses unknown builder %s" % (br['brid'], buildername))
+                continue
+
+            if buildername in unavailableBuilderNames and not bldr.building and br['startbrid'] is None:
+                continue
+
+            breq = yield self.getBuildRequest(queue, br)
+
+            self.setupNextBuildRequest(bldr, breq)
+            if (yield self.mergeCompatibleBuildRequests(breq, queue)):
+                continue
+
+            def getSlavepool():
+                if queue == Queue.unclaimed:
+                    return Slavepool.startSlavenames
+                elif queue == Queue.resume and br['slavepool']:
+                    return br['slavepool']
+                return Slavepool.slavenames
+
+            slavepool = getSlavepool()
+
+            if buildername not in builderSlavepool:
+                builderSlavepool[buildername] = bldr.getAvailableSlavesToProcessBuildRequests(slavepool=slavepool)
+
+            if not builderSlavepool[buildername]:
+                unavailableBuilderNames.append(buildername)
+                log.msg("Not available slaves in '%s' list to process buildrequest.id %d for builder %s"
+                        % (slavepool, br['brid'], buildername))
+
+                continue
+
+            self.slavepool = builderSlavepool[buildername]
+
+            buildRequestShouldUseSelectedSlave = "selected_slave" in br and br["selected_slave"] \
+                                                 and br['results'] == BEGINNING and bldr.shouldUseSelectedSlave()
+
+            resumingBuildRequestShouldUseSelectedSlave = "selected_slave" in br and br["selected_slave"] \
+                                                         and br['results'] == RESUME \
+                                                         and br['slavepool'] != Slavepool.startSlavenames
+
+            if buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave:
+                if bldr.slaveIsAvailable(slavename=br["selected_slave"]):
+                    defer.returnValue(breq)
+                    return
+
+                # slave not available check next br
+                continue
+
+            # bldr can start the build on any available slave
+            defer.returnValue(breq)
+            return
+
+        self.cleanupNextBuildRequest()
+        defer.returnValue(None)
 
     def getSelectedSlaveFromBuildRequest(self, breq):
         """
@@ -396,16 +540,6 @@ class KatanaBuildChooser(BasicBuildChooser):
         """
 
         return breq.properties.hasProperty("selected_slave")
-
-    @defer.inlineCallbacks
-    def _chooseBuildRequest(self, buildrequests):
-        nextBreq = None
-
-        brdict = buildrequests[0] if buildrequests else None
-
-        if brdict:
-            nextBreq = yield self._getBuildRequestForBrdict(brdict)
-        defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
     def buildHasSelectedSlave(self, breq):
@@ -428,19 +562,6 @@ class KatanaBuildChooser(BasicBuildChooser):
                 self.rejectedSlaves.append(slavebuilder)
 
         defer.returnValue(None)
-
-    @defer.inlineCallbacks
-    def _getNextUnclaimedBuildRequest(self):
-        # ensure the cache is there
-        yield self._fetchUnclaimedBrdicts()
-        if not self.unclaimedBrdicts:
-            defer.returnValue(None)
-            return
-
-        # return the first build
-        nextBreq = yield self._chooseBuildRequest(self.unclaimedBrdicts)
-
-        defer.returnValue(nextBreq)
 
     @defer.inlineCallbacks
     def fetchPreviouslyMergedBuildRequests(self, breqs):
@@ -531,6 +652,9 @@ class KatanaBuildChooser(BasicBuildChooser):
                                                                             brids,
                                                                             b.build_status.number,
                                                                             queue=queue)
+                    if b.finished:
+                        yield self.master.db.buildrequests.completeBuildRequests(brids=brids,
+                                                                                 results=b.build_status.getResults())
                 except:
                     raise
 
@@ -542,52 +666,10 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def _fetchUnclaimedBrdicts(self):
-        if self.unclaimedBrdicts is None:
-            brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                    buildername=self.bldr.name,
-                    brids=[self.nextBrid],
-                    claimed=False,
-                    sorted=True)
-            self.unclaimedBrdicts = brdicts
-        defer.returnValue(self.unclaimedBrdicts)
-
-    @defer.inlineCallbacks
-    def _fetchResumeBrdicts(self):
-        # we need to resume builds that are claimed by this master
-        # since the status is not in the db
-        if self.resumeBrdicts is None:
-            brdicts = yield self.master.db.buildrequests.getBuildRequests(
-                    buildername=self.bldr.name,
-                    brids=[self.nextBrid],
-                    claimed="mine",
-                    complete=False,
-                    results=RESUME,
-                    mergebrids="exclude",
-                    sorted=True)
-            self.resumeBrdicts = brdicts
-        defer.returnValue(self.resumeBrdicts)
-
-    @defer.inlineCallbacks
-    def _getNextBuildToResume(self):
-        yield self._fetchResumeBrdicts()
-
-        if not self.resumeBrdicts:
-            defer.returnValue(None)
-            return
-
-        nextBreq = yield self._chooseBuildRequest(self.resumeBrdicts)
-        defer.returnValue(nextBreq)
-
-    @defer.inlineCallbacks
     def popNextBuildToResume(self):
         nextBuild = (None, None)
 
-        # 1. pick a request
-        breq = yield self._getBuildRequest(queue=Queue.resume)
-
-        if not breq:
-            defer.returnValue(nextBuild)
+        breq = self.nextBreq
 
         # run the build on a specific slave
         if breq.slavepool and breq.slavepool != Slavepool.startSlavenames and self.buildRequestHasSelectedSlave(breq):
@@ -612,20 +694,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(nextBuild)
 
     @defer.inlineCallbacks
-    def _getBuildRequest(self, queue):
-
-        getNextBuildRequestFunc = self._getNextUnclaimedBuildRequest \
-            if queue==Queue.unclaimed else self._getNextBuildToResume
-
-        def getPendingBrdict():
-            return self.unclaimedBrdicts if queue == Queue.unclaimed else self.resumeBrdicts
-
-        # 1. pick a build request
-        breq = yield getNextBuildRequestFunc()
-
-        if not breq:
-            defer.returnValue(breq)
-            return
+    def mergeCompatibleBuildRequests(self, breq, queue):
 
         # 2. try merge this build with a compatible running build
         if breq and self.bldr.building:
@@ -639,7 +708,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     yield self.bldr.maybeUpdateMergedBuilds(brid=build.requests[0].id,
                                                             buildnumber=build.build_status.number,
                                                             brids=brids)
-                    defer.returnValue(None)
+                    defer.returnValue(True)
                     return
 
             except Exception:
@@ -647,16 +716,16 @@ class KatanaBuildChooser(BasicBuildChooser):
                 log.msg("mergeBuildingRequests skipped: merge brids %s with building request failed" % brids)
 
         # 3. try merge with compatible finished build in the same chain
-        brdict = self._getBrdictForBuildRequest(breq, getPendingBrdict())
-        if breq and 'startbrid' in brdict.keys() and brdict['startbrid'] is not None:
+        # brdict = self._getBrdictForBuildRequest(breq, getPendingBrdict())
+        if breq and breq.buildChainID and breq.buildChainID != breq.id:
             #check if can be merged with finished build
             finished_br = yield self.master.db.buildrequests\
-                .findCompatibleFinishedBuildRequest(self.bldr.name, brdict['startbrid'])
+                .findCompatibleFinishedBuildRequest(self.bldr.name, breq.buildChainID)
             if finished_br:
                 breqs = yield self.mergeRequests(breq, queue=queue)
                 brids = [br.id for br in breqs]
                 merged_brids = yield self.master.db.buildrequests\
-                    .getRequestsCompatibleToMerge(self.bldr.name, brdict['startbrid'], brids)
+                    .getRequestsCompatibleToMerge(self.bldr.name, breq.buildChainID, brids)
                 merged_breqs = []
 
                 for br in breqs:
@@ -677,7 +746,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],
                                                             buildnumber=buildnumber,
                                                             brids=brids)
-                    defer.returnValue(None)
+                    defer.returnValue(True)
                     return
 
                 except Exception:
@@ -685,18 +754,13 @@ class KatanaBuildChooser(BasicBuildChooser):
                     log.msg("mergeFinishedBuildRequest skipped: merge finished buildresquest %s with %s failed"
                             % (finished_br, totalBrids))
 
-        defer.returnValue(breq)
+        defer.returnValue(False)
 
     @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
 
-        #1. pick a buildrequest
-        breq = yield self._getBuildRequest(queue=Queue.unclaimed)
-
-        if not breq:
-            defer.returnValue(nextBuild)
-            return
+        breq = self.nextBreq
 
         # check if should run the build on a specific slave
         if self.bldr.shouldUseSelectedSlave() and self.buildRequestHasSelectedSlave(breq):
@@ -979,6 +1043,7 @@ class KatanaBuildRequestDistributor(service.Service):
         self.check_new_builds = True
         self.check_resume_builds = True
         self._pendingMSBOCalls = []
+        self.katanaBuildChooser = self.createBuildChooser(builders=self.botmaster.builders, master=self.master)
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -1021,75 +1086,6 @@ class KatanaBuildRequestDistributor(service.Service):
         if not self.active:
             yield self._procesBuildRequestsActivityLoop()
 
-    # Katana's gets the next priority builder from the DB instead of keeping a local list
-    @defer.inlineCallbacks
-    def _getNextPriorityBuilder(self, queue):
-        """
-        Finds the next builder that should start running builds
-        selecting the one with the higher priority and oldest submitted time.
-
-        it will return None if there are no slaves available for the task.
-
-        @param queue: None will select the higher priority overall pending buids,
-        if queue is 'unclaimed' will select only the pending builds and if queue='resume'
-        it will select only builds pending to be resume
-        @returns: a build request dictionary or None via Deferred
-        """
-        unavailableBuilderNames = []
-
-        # TODO: For performance reasons we may need to limit the searches but  we need to load test it first
-        buildrequestQueue = yield self.master.db.buildrequests \
-            .getPrioritizedBuildRequestsInQueue(queue=queue)
-
-        log.msg("_getNextPriorityBuilder found %d buildrequests in the '%s' Queue" % (len(buildrequestQueue), queue))
-
-        for br in buildrequestQueue:
-
-            if br["buildername"] in unavailableBuilderNames:
-                continue
-
-            bldr = self.botmaster.builders.get(br["buildername"])
-
-            def getSlavepool():
-                if queue == Queue.unclaimed:
-                    return Slavepool.startSlavenames
-                elif queue == Queue.resume and br['slavepool']:
-                    return br['slavepool']
-                return Slavepool.slavenames
-
-            slavepool = getSlavepool()
-            availableSlaves = bldr.getAvailableSlavesToProcessBuildRequests(slavepool=slavepool) if bldr else None
-
-            if not availableSlaves:
-                unavailableBuilderNames.append(br["buildername"])
-                log.msg("Not available slaves in '%s' list to process buildrequest.id %d for builder %s"
-                        % (slavepool, br['brid'], br["buildername"]))
-
-                continue
-
-            buildRequestShouldUseSelectedSlave = "selected_slave" in br and br["selected_slave"] \
-                                        and br['results'] == BEGINNING and bldr.shouldUseSelectedSlave()
-
-            resumingBuildRequestShouldUseSelectedSlave = "selected_slave" in br and br["selected_slave"] \
-                                        and br['results'] == RESUME and br['slavepool'] != Slavepool.startSlavenames
-
-            def nextBuilder():
-                return (bldr, br['brid'], availableSlaves)
-
-            if buildRequestShouldUseSelectedSlave or resumingBuildRequestShouldUseSelectedSlave:
-                if bldr.slaveIsAvailable(slavename=br["selected_slave"]):
-                    defer.returnValue(nextBuilder())
-                    return
-
-                # slave not available check next br
-                continue
-
-            # bldr can start the build on any available slave
-            defer.returnValue(nextBuilder())
-            return
-
-        defer.returnValue((None, None, None))
-
     def timerLogFinished(self, msg, timer):
         log.msg(msg + " started at %s finished at %s elapsed %s" %
                 (util.epoch2datetime(timer.started),
@@ -1104,46 +1100,25 @@ class KatanaBuildRequestDistributor(service.Service):
         return timer
 
     @defer.inlineCallbacks
-    def _callMaybeStartBuildsOnBuilder(self):
+    def _selectNextBuildRequest(self, queue, asyncFunc):
         # get the actual builder object that should start running new builds
-        timer = self.timerLogStart(msg="_callMaybeStartBuildsOnBuilder starting _getNextPriorityBuilder",
-                                   function_name="KatanaBuildRequestDistributor._callMaybeStartBuildsOnBuilder()")
-        bldr, brid, slavepool = yield self._getNextPriorityBuilder(queue=Queue.unclaimed)
-        self.timerLogFinished(msg="_callMaybeStartBuildsOnBuilder _getNextPriorityBuilder finished", timer=timer)
+        timer = self.timerLogStart(msg="_selectNextBuildRequest starting _getNextPriorityBuilder queue %s" % queue,
+                                   function_name="KatanaBuildRequestDistributor._selectNextBuildRequest()")
+        breq = yield self.katanaBuildChooser.getNextPriorityBuilder(queue=queue)
+        self.timerLogFinished(msg="_selectNextBuildRequest _getNextPriorityBuilder finished", timer=timer)
 
-        if bldr is None:
-            defer.returnValue(bldr)
+        if breq is None:
+            defer.returnValue(breq)
             return
 
         try:
-            log.msg("_maybeStartBuildsOnBuilder:  %s" % bldr.name)
-            yield self._maybeStartBuildsOnBuilder(bldr, brid, slavepool)
+            log.msg("_nextBuilder:  %s, queue: %s" % (breq.buildername, queue))
+            yield asyncFunc()
 
         except Exception:
-            log.err(Failure(), "from maybeStartBuild for builder '%s'" % (bldr.name,))
+            log.err(Failure(), "from _selectNextBuildRequest for builder '%s' queue '%s'" % (breq.buildername, queue))
 
-        defer.returnValue(bldr)
-
-    @defer.inlineCallbacks
-    def _callMaybeResumeBuildsOnBuilder(self):
-        # get the actual builder object that should start running new builds
-        timer = self.timerLogStart(msg="_callMaybeResumeBuildsOnBuilder starting _getNextPriorityBuilder",
-                                   function_name="KatanaBuildRequestDistributor._callMaybeResumeBuildsOnBuilder()")
-        bldr, brid, slavepool = yield self._getNextPriorityBuilder(queue=Queue.resume)
-        self.timerLogFinished(msg="_callMaybeResumeBuildsOnBuilder _getNextPriorityBuilder finished", timer=timer)
-
-        if bldr is None:
-            defer.returnValue(bldr)
-            return
-
-        try:
-            log.msg("_maybeResumeBuildsOnBuilder:  %s" % bldr.name)
-            yield self._maybeResumeBuildsOnBuilder(bldr, brid, slavepool)
-
-        except Exception:
-            log.err(Failure(), "from maybeStartBuild for builder '%s'" % (bldr.name,))
-
-        defer.returnValue(bldr)
+        defer.returnValue(breq)
 
     @defer.inlineCallbacks
     def _procesBuildRequestsActivityLoop(self):
@@ -1156,11 +1131,13 @@ class KatanaBuildRequestDistributor(service.Service):
             yield self.activity_lock.acquire()
 
             # continue checking new builds if we have pending builders
-            nextBuilder = yield self._callMaybeStartBuildsOnBuilder()
+            nextBuilder = yield self._selectNextBuildRequest(queue=Queue.unclaimed,
+                                                             asyncFunc=self._maybeStartBuildsOnBuilder)
             check_new_builds = nextBuilder is not None
 
             # continue checking resume builds if we have pending builders to resume
-            nextResumeBuilder = yield self._callMaybeResumeBuildsOnBuilder()
+            nextResumeBuilder = yield self._selectNextBuildRequest(queue=Queue.resume,
+                                                                   asyncFunc=self._maybeResumeBuildsOnBuilder)
             check_resume_builds = nextResumeBuilder is not None
 
             self.active = self.running and (check_new_builds or check_resume_builds)
@@ -1172,7 +1149,7 @@ class KatanaBuildRequestDistributor(service.Service):
                 break
 
         self.timerLogFinished(msg="KatanaBuildRequestDistributor._procesBuildRequestsActivityLoop finished", timer=timer)
-
+        self.katanaBuildChooser.initializeBreqCache()
         self._quiet()
 
     def logResumeOrStartBuildStatus(self, msg, slave, breqs):
@@ -1183,38 +1160,43 @@ class KatanaBuildRequestDistributor(service.Service):
                      breqs[0].bsid))
 
     @defer.inlineCallbacks
-    def _maybeResumeBuildOnBuilder(self, bc, bldr):
-        slave, buildnumber, breqs = yield bc.chooseNextBuildToResume()
+    def _maybeResumeBuildsOnBuilder(self):
+        slave, buildnumber, breqs = yield self.katanaBuildChooser.chooseNextBuildToResume()
 
         if not slave or not breqs:
+            defer.returnValue(False)
             return
 
         brids = [br.id for br in breqs]
         yield self.master.db.buildrequests.updateBuildRequests(brids, results=BEGINNING)
 
-        buildStarted = yield bldr.maybeResumeBuild(slave, buildnumber, breqs)
+        buildStarted = yield self.katanaBuildChooser.bldr.maybeResumeBuild(slave, buildnumber, breqs)
 
         msg = "_maybeResumeBuildOnBuilder is resuming build"
 
         if not buildStarted:
             yield self.master.db.buildrequests.updateBuildRequests(brids, results=RESUME)
-            self.botmaster.maybeStartBuildsForBuilder(bldr.name)
+            self.botmaster.maybeStartBuildsForBuilder(self.katanaBuildChooser.bldr.name)
             msg = "_maybeResumeBuildOnBuilder could not resume build"
+        else:
+            self.katanaBuildChooser._removeBuildRequests(breqs)
 
         self.logResumeOrStartBuildStatus(msg, slave, breqs)
+        defer.returnValue(buildStarted)
 
     @defer.inlineCallbacks
-    def _maybeStartNewBuildsOnBuilder(self, bc, bldr):
-        slave, breqs = yield bc.chooseNextBuild()
+    def _maybeStartBuildsOnBuilder(self):
+        slave, breqs = yield self.katanaBuildChooser.chooseNextBuild()
 
         if not slave or not breqs:
+            defer.returnValue(False)
             return
 
         # claim brid's
         brids = [br.id for br in breqs]
-        yield bc.claimBuildRequests(breqs)
+        yield self.katanaBuildChooser.claimBuildRequests(breqs)
 
-        buildStarted = yield bldr.maybeStartBuild(slave, breqs)
+        buildStarted = yield self.katanaBuildChooser.bldr.maybeStartBuild(slave, breqs)
 
         msg = "_maybeStartNewBuildsOnBuilder is starting build"
 
@@ -1222,41 +1204,17 @@ class KatanaBuildRequestDistributor(service.Service):
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
             # and try starting builds again.  If we still have a working slave,
             # then this may re-claim the same buildrequests
-            self.botmaster.maybeStartBuildsForBuilder(bldr.name)
+            self.botmaster.maybeStartBuildsForBuilder(self.katanaBuildChooser.bldr.name)
             msg = "_maybeStartNewBuildsOnBuilder could not start build"
+        else:
+            self.katanaBuildChooser._removeBuildRequests(breqs)
 
         self.logResumeOrStartBuildStatus(msg, slave, breqs)
+        defer.returnValue(buildStarted)
 
-    @defer.inlineCallbacks
-    def _maybeResumeBuildsOnBuilder(self, bldr, brid, slavepool):
-        # create a chooser to give us our next builds
-        # this object is temporary and will go away when we're done
-
-        bc = self.createBuildChooser(bldr, brid, slavepool, self.master)
-
-        try:
-            if isinstance(bc, KatanaBuildChooser):
-                 yield self._maybeResumeBuildOnBuilder(bc, bldr)
-
-        except Exception:
-            log.msg(Failure(), "from _maybeResumeBuildsOnBuilder for builder '%s'" % bldr.name)
-                
-    @defer.inlineCallbacks
-    def _maybeStartBuildsOnBuilder(self, bldr, brid, slavepool):
-        # create a chooser to give us our next builds
-        # this object is temporary and will go away when we're done
-
-        bc = self.createBuildChooser(bldr, brid, slavepool, self.master)
-
-        try:
-            yield self._maybeStartNewBuildsOnBuilder(bc, bldr)
-
-        except Exception:
-            log.msg(Failure(), "from _maybeStartBuildsOnBuilder for builder '%s'" % bldr.name)
-
-    def createBuildChooser(self, bldr, brid, slavepool, master):
+    def createBuildChooser(self, builders, master):
         # just instantiate the build chooser requested
-        return self.BuildChooser(bldr, brid, slavepool, master)
+        return self.BuildChooser(builders, master)
             
     def _quiet(self):
         # shim for tests

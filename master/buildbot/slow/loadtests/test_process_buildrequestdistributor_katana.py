@@ -156,21 +156,25 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnclaimedQueueUnderLoad(self):
         yield self.generateBuildLoadCalculateNextPriorityBuilder()
-        builder, brid, slavepool = yield self.profileAsyncFunc(0.5, self.brd._getNextPriorityBuilder,
-                                                               queue=Queue.unclaimed)
-        self.assertEqual(builder.name, 'bldr16')
+        breq = yield self.profileAsyncFunc(12, self.brd._selectNextBuildRequest,
+                                           queue=Queue.unclaimed,
+                                           asyncFunc=self.brd._maybeStartBuildsOnBuilder)
+        self.assertEqual(breq.buildername, 'bldr16')
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderResumeQueueUnderLoad(self):
         yield self.generateBuildLoadCalculateNextPriorityBuilder()
-        builder, brid, slavepool =  yield self.profileAsyncFunc(1, self.brd._getNextPriorityBuilder, queue=Queue.resume)
-        self.assertEquals(builder.name, 'bldr16')
+        breq =  yield self.profileAsyncFunc(25, self.brd._selectNextBuildRequest,
+                                            queue=Queue.resume,
+                                            asyncFunc=self.brd._maybeResumeBuildsOnBuilder)
+
+        self.assertEquals(breq.buildername, 'bldr16')
 
     @defer.inlineCallbacks
     def test_maybeStartOrResumeBuildsOnUnderLoad(self):
         yield self.generateBuildLoadStartOrResumeBuilds()
 
-        yield self.profileAsyncFunc(15, self.brd._maybeStartOrResumeBuildsOn,
+        yield self.profileAsyncFunc(25, self.brd._maybeStartOrResumeBuildsOn,
                                     new_builders=self.botmaster.builders.keys())
 
         self.checkBRDCleanedUp()
@@ -183,7 +187,7 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     def test_maybeStartOrResumeBuildsOnUnderLoadBusyBuildFarm(self):
         yield self.generateBuildLoadStartOrResumeBuilds(slaves_available=False)
 
-        yield self.profileAsyncFunc(0.6, self.brd._maybeStartOrResumeBuildsOn,
+        yield self.profileAsyncFunc(8.2, self.brd._maybeStartOrResumeBuildsOn,
                                     new_builders=self.botmaster.builders.keys())
 
         self.checkBRDCleanedUp()
