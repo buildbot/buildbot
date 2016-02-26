@@ -16,3 +16,12 @@ build: false
 
 test_script:
   - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test"
+
+on_failure:
+  # Store _trial_temp directory as artifact on build failure.
+  # See <https://www.appveyor.com/docs/packaging-artifacts#pushing-artifacts-from-scripts>
+  - ps: |
+          $root = Resolve-Path _trial_temp;
+          [IO.Directory]::GetFiles($root.Path, '*.*', 'AllDirectories') | % {
+              Push-AppveyorArtifact $_ -FileName $_.Substring($root.Path.Length + 1) -DeploymentName trial-log
+            }
