@@ -27,7 +27,7 @@
                 <div class="clearfix"></div>
                 {% for artifact in suite.artifacts %}
                     <div class="artifact">
-                        <a target="_blank" href="{{ join(path_to_artifacts, artifact) }}">{{ basename(artifact) }}</a>
+                        <a target="_blank" href="{{ join(path_to_artifacts, artifact).replace("\\","/") }}">{{ basename(artifact.replace("\\","/")) }}</a>
                     </div>
                 {% endfor %}
             </div>
@@ -81,8 +81,8 @@
                                     {% for artifact in test.artifacts %}
                                         {% if artifact.lower().endswith(('.png', '.jpg', '.jpeg')) %}
                                             <div class="test-image">
-                                                <div class="test-image-title">{{ basename(artifact) }}</div>
-                                                <img src="{{ join(path_to_artifacts, artifact) }}" alt="Description"/>
+                                                <div class="test-image-title">{{ basename(artifact.replace("\\","/")) }}</div>
+                                                <img src="{{ join(path_to_artifacts, artifact).replace("\\","/") }}" alt="Description"/>
                                             </div>
                                         {% endif %}
                                     {% endfor %}
@@ -112,7 +112,7 @@
                         <td class="txt-align-left first-child ">
                             {% for artifact in test.artifacts %}
                                 <div class="artifact">
-                                    <a target="_blank" href="{{ join(path_to_artifacts, artifact) }}">{{ basename(artifact) }}</a>
+                                    <a target="_blank" href="{{ join(path_to_artifacts, artifact).replace("\\","/") }}">{{ basename(artifact.replace("\\","/")) }}</a>
                                 </div>
                             {% endfor %}
                         </td>
