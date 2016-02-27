@@ -45,7 +45,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             bm_tbl = self.db.model.builder_masters
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
-            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j])
+            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             buildermasterids = [row['buildermasterid'] for row in conn.execute(q)]
             if buildermasterids:
@@ -73,7 +73,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
-            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j])
+            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
             oldbuildermasterids = set([row['buildermasterid'] for row in conn.execute(q)])

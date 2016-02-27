@@ -483,6 +483,23 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
+    def test_workerConfiguredMany(self):
+        manyWorkers = [
+            fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
+        ] + [
+            fakedb.ConfiguredWorker(
+                id=n+3000, workerid=n, buildermasterid=1000)
+            for n in range(1000)
+        ]
+        yield self.insertTestData(self.baseRows + manyWorkers)
+
+        # should succesfully remove all ConfiguredWorker rows
+        yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
+
+        w = yield self.db.workers.getWorker(30)
+        self.assertEqual(sorted(w['configured_on']), [])
+
+    @defer.inlineCallbacks
     def test_workerReConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
