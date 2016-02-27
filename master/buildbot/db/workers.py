@@ -37,6 +37,17 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 info={},
             ))
 
+    def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids):
+        cfg_tbl = self.db.model.configured_workers
+        # batch deletes to avoid using too many variables
+        buildermasterids = list(buildermasterids)
+        while buildermasterids:
+            toDelete, buildermasterids = \
+                    buildermasterids[:100], buildermasterids[100:]
+            q = cfg_tbl.delete()
+            q = q.where(cfg_tbl.c.buildermasterid.in_(toDelete))
+            conn.execute(q)
+
     def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and worker
@@ -48,10 +59,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             buildermasterids = [row['buildermasterid'] for row in conn.execute(q)]
-            if buildermasterids:
-                q = cfg_tbl.delete()
-                q = q.where(cfg_tbl.c.buildermasterid.in_(buildermasterids))
-                conn.execute(q)
+            self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
         return self.db.pool.do(thd)
 
@@ -81,11 +89,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
             toinsertbuildermasterids = buildermasterids - oldbuildermasterids
             transaction = conn.begin()
-            if todeletebuildermasterids:
-                # delete the buildermasterids that were configured previously, but not configured now
-                q = cfg_tbl.delete()
-                q = q.where(cfg_tbl.c.buildermasterid.in_(list(todeletebuildermasterids)))
-                conn.execute(q)
+            self._deleteFromConfiguredWorkers_thd(conn, todeletebuildermasterids)
 
             # and insert the new ones
             if toinsertbuildermasterids:

@@ -602,7 +602,6 @@ class TestRealDB(unittest.TestCase,
         # should succesfully remove all ConfiguredWorker rows
         with self.assertNoMaxVariables():
             yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
-        print self._logEvents
         w = yield self.db.workers.getWorker(30)
         self.assertEqual(sorted(w['configured_on']), [])
 
