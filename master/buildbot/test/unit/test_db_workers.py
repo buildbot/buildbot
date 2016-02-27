@@ -19,6 +19,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
+from buildbot.test.util import querylog
 from buildbot.test.util import validation
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
@@ -483,23 +484,6 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 22, 'masterid': 10}]))
 
     @defer.inlineCallbacks
-    def test_workerConfiguredMany(self):
-        manyWorkers = [
-            fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
-        ] + [
-            fakedb.ConfiguredWorker(
-                id=n+3000, workerid=n, buildermasterid=1000)
-            for n in range(1000)
-        ]
-        yield self.insertTestData(self.baseRows + manyWorkers)
-
-        # should succesfully remove all ConfiguredWorker rows
-        yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
-
-        w = yield self.db.workers.getWorker(30)
-        self.assertEqual(sorted(w['configured_on']), [])
-
-    @defer.inlineCallbacks
     def test_workerReConfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
@@ -571,7 +555,7 @@ class TestFakeDB(unittest.TestCase, Tests):
 
 class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
-                 RealTests):
+                 RealTests, querylog.SqliteMaxVariableMixin):
 
     def setUp(self):
         d = self.setUpConnectorComponent(
@@ -584,6 +568,43 @@ class TestRealDB(unittest.TestCase,
             self.db.workers = \
                 workers.WorkersConnectorComponent(self.db)
         return d
+
+    @defer.inlineCallbacks
+    def test_workerConfiguredMany(self):
+        manyWorkers = [
+            fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
+        ] + [
+            fakedb.ConfiguredWorker(
+                id=n + 3000, workerid=n, buildermasterid=1000)
+            for n in range(1000)
+        ]
+        yield self.insertTestData(self.baseRows + manyWorkers)
+
+        # should succesfully remove all ConfiguredWorker rows
+        with self.assertNoMaxVariables():
+            yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
+
+        w = yield self.db.workers.getWorker(30)
+        self.assertEqual(sorted(w['configured_on']), [])
+
+    @defer.inlineCallbacks
+    def test_workerConfiguredManyBuilders(self):
+        manyWorkers = [
+            fakedb.BuilderMaster(id=1000 + n, builderid=20 + n, masterid=10)
+            for n in range(1000)
+        ] + [
+            fakedb.ConfiguredWorker(
+                id=n + 3000, workerid=n, buildermasterid=1000 + n / 10)
+            for n in range(10000)
+        ]
+        yield self.insertTestData(self.baseRows + manyWorkers)
+
+        # should succesfully remove all ConfiguredWorker rows
+        with self.assertNoMaxVariables():
+            yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
+        print self._logEvents
+        w = yield self.db.workers.getWorker(30)
+        self.assertEqual(sorted(w['configured_on']), [])
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
