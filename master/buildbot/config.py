@@ -18,6 +18,7 @@ from future.utils import itervalues
 import os
 import re
 import sys
+import traceback
 import warnings
 
 from buildbot import interfaces
@@ -204,6 +205,11 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             except ConfigErrors as e:
                 for err in e.errors:
                     error(err)
+                raise errors
+            except SyntaxError:
+                error("encountered a SyntaxError while parsing config file:\n%s " %
+                      (traceback.format_exc(),),
+                      )
                 raise errors
             except Exception:
                 log.err(failure.Failure(), 'error while parsing config file:')

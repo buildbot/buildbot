@@ -87,7 +87,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
         res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
-        self.assertInStdout("error while parsing config")
+        self.assertInStdout("encountered a SyntaxError while parsing config file:")
         # config logs an error via log.err, we must eat it or trial will complain
         self.flushLoggedErrors()
 
