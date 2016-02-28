@@ -46,9 +46,9 @@ class TransferStepsMasterPb(RunMasterBase):
         dirContents = self.readMasterDirContents("dir")
         self.assertEqual(
             dirContents,
-            {'dir/file1.txt': 'filecontent',
-             'dir/file2.txt': 'filecontent2',
-             'dir/file3.txt': 'filecontent2'})
+            {os.path.join('dir', 'file1.txt'): 'filecontent',
+             os.path.join('dir', 'file2.txt'): 'filecontent2',
+             os.path.join('dir', 'file3.txt'): 'filecontent2'})
 
         # cleanup our mess (worker is cleaned up by parent class)
         shutil.rmtree("dir")
