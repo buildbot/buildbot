@@ -14,11 +14,18 @@ install:
   # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
   # install third-party SQLite.
   #- "%PYTHON%\\python.exe -m pip install pysqlite"
+
   # TODO: There is no binary wheel for pysqlite and building on Windows is
   # painful. Let's just substitude sqlite3.dll with never version.
-  - "curl -O https://www.sqlite.org/2016/sqlite-dll-win64-x64-3110000.zip"
-  - "7z x sqlite-dll-win64-x64-3110000.zip"
-  - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
+  #- "curl -O https://www.sqlite.org/2016/sqlite-dll-win64-x64-3110000.zip"
+  #- "7z x sqlite-dll-win64-x64-3110000.zip"
+  #- "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
+  
+  # TODO: Replacing sqlite3.dll doesn't work: SQLAlchemy starts to complain
+  # that pysqlite is not installed.
+  # Just install third-party pysqlite wheel.
+  # TODO: This is a temporary link on target file! It will rot soon.
+  - "%PYTHON%\\python.exe -m pip install http://www.lfd.uci.edu/~gohlke/pythonlibs/tugyrhqo/pysqlite-2.8.1-cp27-cp27m-win_amd64.whl"
 
   - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave"
 
