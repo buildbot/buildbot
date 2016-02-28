@@ -255,6 +255,7 @@ def _remove_invalid_references_in_builds(migrate_engine):
             q.execute()
 
 
+@sautils.withoutSqliteForeignKeysDecorator
 def upgrade(migrate_engine):
     # DB schema in version 044:
     #

@@ -322,6 +322,7 @@ def drop_old_schema_parts(migrate_engine):
         idx.create()
 
 
+@sautils.withoutSqliteForeignKeysDecorator
 def upgrade(migrate_engine):
     # Begin by renaming the sourcestamps table to sourcestamps_old.  The new
     # table has the same columns (except sourcestampsetid), but has a unique

@@ -69,6 +69,7 @@ def drop_columns(metadata, buildrequests):
     buildrequests.c.claimed_by_incarnation.drop()
 
 
+@sautils.withoutSqliteForeignKeysDecorator
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine

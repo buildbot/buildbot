@@ -14,10 +14,12 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from functools import wraps
 
 from sqlalchemy.ext import compiler
 from sqlalchemy.sql.expression import ClauseElement
 from sqlalchemy.sql.expression import Executable
+from contextlib import contextmanager
 
 # from http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct
 # _execution_options per http://docs.sqlalchemy.org/en/rel_0_7/core/compiler.html#enabling-compiled-autocommit
@@ -58,3 +60,25 @@ def Table(*args, **kwargs):
     # a non-utf8 character set (mysql's default)
     kwargs['mysql_character_set'] = 'utf8'
     return sa.Table(*args, **kwargs)
+
+
+@contextmanager
+def withoutSqliteForeignKeys(engine):
+    if engine.dialect.name == 'sqlite':
+        engine.execute('pragma foreign_keys=OFF')
+    try:
+        yield
+    finally:
+        if engine.dialect.name == 'sqlite':
+            engine.execute('pragma foreign_keys=ON')
+
+
+# sqlite migration engine does not work well with foreign keys
+# in particular, it renames tables without dropping fk constraints
+# leaving the metadata with bad constraints
+def withoutSqliteForeignKeysDecorator(f):
+    @wraps(f)
+    def wrapped(engine):
+        with withoutSqliteForeignKeys(engine):
+            f(engine)
+    return wrapped
