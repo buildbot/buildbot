@@ -10,9 +10,16 @@ environment:
 install:
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "%PYTHON%\\python.exe -m pip install pypiwin32"
+
   # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
   # install third-party SQLite.
-  - "%PYTHON%\\python.exe -m pip install pysqlite"
+  #- "%PYTHON%\\python.exe -m pip install pysqlite"
+  # TODO: There is no binary wheel for pysqlite and building on Windows is
+  # painful. Let's just substitude sqlite3.dll with never version.
+  - "curl -O https://www.sqlite.org/2016/sqlite-dll-win64-x64-3110000.zip"
+  - "7z x sqlite-dll-win64-x64-3110000.zip"
+  - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
+
   - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave"
 
 build: false
