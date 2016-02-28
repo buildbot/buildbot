@@ -574,8 +574,11 @@ class TestRealDB(unittest.TestCase,
         manyWorkers = [
             fakedb.BuilderMaster(id=1000, builderid=20, masterid=10),
         ] + [
+            fakedb.Worker(id=50 + n, name='zero' + str(n))
+            for n in range(1000)
+        ] + [
             fakedb.ConfiguredWorker(
-                id=n + 3000, workerid=n, buildermasterid=1000)
+                id=n + 3000, workerid=50 + n, buildermasterid=1000)
             for n in range(1000)
         ]
         yield self.insertTestData(self.baseRows + manyWorkers)
@@ -590,12 +593,18 @@ class TestRealDB(unittest.TestCase,
     @defer.inlineCallbacks
     def test_workerConfiguredManyBuilders(self):
         manyWorkers = [
-            fakedb.BuilderMaster(id=1000 + n, builderid=20 + n, masterid=10)
+            fakedb.Builder(id=100 + n, name=u'a' + str(n))
+            for n in range(1000)
+        ] + [
+            fakedb.Worker(id=50 + n, name='zero' + str(n))
+            for n in range(2000)
+        ] + [
+            fakedb.BuilderMaster(id=1000 + n, builderid=100 + n, masterid=10)
             for n in range(1000)
         ] + [
             fakedb.ConfiguredWorker(
-                id=n + 3000, workerid=n, buildermasterid=1000 + n / 10)
-            for n in range(10000)
+                id=n + 3000, workerid=50 + n, buildermasterid=1000 + n / 2)
+            for n in range(2000)
         ]
         yield self.insertTestData(self.baseRows + manyWorkers)
 
