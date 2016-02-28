@@ -40,12 +40,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids):
         cfg_tbl = self.db.model.configured_workers
         # batch deletes to avoid using too many variables
-        buildermasterids = list(buildermasterids)
-        while buildermasterids:
-            toDelete, buildermasterids = \
-                    buildermasterids[:100], buildermasterids[100:]
+        for batch in self.doBatch(buildermasterids, 100):
             q = cfg_tbl.delete()
-            q = q.where(cfg_tbl.c.buildermasterid.in_(toDelete))
+            q = q.where(cfg_tbl.c.buildermasterid.in_(batch))
             conn.execute(q)
 
     def deconfigureAllWorkersForMaster(self, masterid):
