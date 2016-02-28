@@ -18,7 +18,6 @@ import sqlalchemy as sa
 from buildbot.util import sautils
 
 
-@sautils.withoutSqliteForeignKeysDecorator
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine

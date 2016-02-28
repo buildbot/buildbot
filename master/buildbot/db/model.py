@@ -802,7 +802,8 @@ class Model(base.DBConnectorComponent):
             for version, change in changeset:
                 log.msg('migrating schema version %s -> %d'
                         % (version, version + 1))
-                schema.runchange(version, change, 1)
+                with sautils.withoutSqliteForeignKeys(engine):
+                    schema.runchange(version, change, 1)
 
         def check_sqlalchemy_migrate_version():
             # sqlalchemy-migrate started including a version number in 0.7; we

@@ -81,7 +81,8 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                 changeset = schema.changeset(target_version)
                 for version, change in changeset:
                     log.msg('upgrading to schema version %d' % (version + 1))
-                    schema.runchange(version, change, 1)
+                    with sautils.withoutSqliteForeignKeys(engine):
+                        schema.runchange(version, change, 1)
         d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
 
         def check_table_charsets_thd(engine):
