@@ -10,6 +10,9 @@ environment:
 install:
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "%PYTHON%\\python.exe -m pip install pypiwin32"
+  # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
+  # install third-party SQLite.
+  - "%PYTHON%\\python.exe -m pip install pysqlite"
   - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave"
 
 build: false
