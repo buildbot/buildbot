@@ -64,10 +64,10 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
             f.write(textwrap.dedent("""
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
-                c['db_url'] = "{dburl}"
+                c['db_url'] = {dburl}
                 c['multiMaster'] = True  # dont complain for no builders
                 {extraconfig}
-            """.format(dburl=os.environ.get("BUILDBOT_TEST_DB_URL"),
+            """.format(dburl=repr(os.environ["BUILDBOT_TEST_DB_URL"]),
                        extraconfig=extraconfig)))
 
     @defer.inlineCallbacks
