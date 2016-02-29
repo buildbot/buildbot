@@ -72,9 +72,10 @@ def triggerRunsForever():
     # Infinite sleep command.
     if sys.platform == 'win32':
         # Ping localhost infinitely.
-        # There are other options, however their either doesn't work in
+        # There are other options, however they either don't work in
         # non-interactive mode (e.g. 'pause'), or doesn't available on all
-        # Windows versions (e.g. 'timeout' or 'choice' only from Windows 7).
+        # Windows versions (e.g. 'timeout' and 'choice' are available
+        # starting from Windows 7).
         cmd = 'ping -t 127.0.0.1'.split()
     else:
         cmd = textwrap.dedent("""\
