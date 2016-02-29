@@ -20,6 +20,7 @@ Support for running 'shell commands'
 from future.utils import iteritems
 
 import os
+import pprint
 import re
 import signal
 import stat
@@ -518,7 +519,7 @@ class RunProcess(object):
             env_names = sorted(self.environ.keys())
             for name in env_names:
                 msg += "  %s=%s\n" % (name, self.environ[name])
-            log.msg(" environment: %s" % (self.environ,))
+            log.msg(" environment:\n%s" % (pprint.pformat(self.environ),))
             self._addToBuffers('header', msg)
 
         if self.initialStdin:
