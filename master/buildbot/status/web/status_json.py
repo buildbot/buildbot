@@ -952,7 +952,8 @@ class QueueJsonResource(JsonResource):
         #Call the yield after to run async calls
         for d in defers:
             r = yield d
-            output.append(r)
+            if r:
+                output.append(r)
 
         defer.returnValue(output)
 
