@@ -970,7 +970,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     def getOldestBuildRequestInQueue(self, buildername):
         return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
 
-    def getBuildRequestInQueue(self, buildername, sorted=True):
+    def getBuildRequestInQueue(self, buildername=None, sorted=True, limit=None):
         return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
 
     def claimBuildRequests(self, brids, claimed_at=None):
