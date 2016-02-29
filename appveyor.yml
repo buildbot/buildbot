@@ -21,12 +21,6 @@ install:
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
   
-  # TODO: Replacing sqlite3.dll doesn't work: SQLAlchemy starts to complain
-  # that pysqlite is not installed.
-  # Just install third-party pysqlite wheel.
-  # TODO: This is a temporary link on target file! It will rot soon.
-  #- "%PYTHON%\\python.exe -m pip install http://www.lfd.uci.edu/~gohlke/pythonlibs/tugyrhqo/pysqlite-2.8.1-cp27-cp27m-win_amd64.whl"
-
   - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave"
 
 build: false
