@@ -200,11 +200,23 @@ class Mercurial(Source):
         if self.purgeExcludePattern:
             for pattern in self.purgeExcludePattern:
                 command.extend(['-X', pattern])
+
+    def _checkPurge(self, cmd):
+        errors = ['abort: integrity check failed on']
+
+        if cmd.didFail() and self.checkExpectedFailure(cmd, errors):
+            log.msg("Purge step failed while running command %s" % cmd)
+            raise buildstep.BuildStepFailed()
+
+        return cmd.rc
  
     def clean(self, _):
         command = ['--config', 'extensions.purge=', 'purge']
-        d =  self._dovccmd(command)
         self.applyPurgePattern(command)
+
+        d = self._dovccmd(command, collectStdout=True, collectStderr=True, evaluateCommandFunc=self._checkPurge)
+        d.addCallback(lambda rc: self.clobber(rc) if rc != SUCCESS else SUCCESS)
+
         d.addCallback(self._pullUpdate)
         return d
 
@@ -284,7 +296,9 @@ class Mercurial(Source):
     def fresh(self, _):
         command = ['--config', 'extensions.purge=', 'purge', '--all']
         self.applyPurgePattern(command)
-        d = self._dovccmd(command)
+        d = self._dovccmd(command, collectStdout=True, collectStderr=True, evaluateCommandFunc=self._checkPurge)
+        d.addCallback(lambda rc: self.clobber(rc) if rc != SUCCESS else SUCCESS)
+
         d.addCallback(self._pullUpdate)
         return d
 
