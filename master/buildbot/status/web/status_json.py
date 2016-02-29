@@ -946,7 +946,8 @@ class QueueJsonResource(JsonResource):
         for br_dict in unclaimed_brq:
             br = BuildRequestStatus(br_dict['buildername'], br_dict['brid'], self.status)
             brstatus_dict = yield br.asDict_async()
-            output.append(brstatus_dict)
+            if brstatus_dict:
+                output.append(brstatus_dict)
 
         defer.returnValue(output)
 
