@@ -1799,7 +1799,9 @@ Postgres, add them to ``implied_indexes`` in
 
 Foreign key checking
 --------------------
-All supported db backends are checking the foreign keys consistancy.
+PostgreSQL and SQlite db backends are checking the foreign keys consistancy.
+:bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
+
 To maintain consistency with real db, fakedb can check the foreign key consistancy of your test data. for this, just enable it with::
 
     self.db = fakedb.FakeDBConnector(self.master, self)

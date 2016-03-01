@@ -64,6 +64,8 @@ def Table(*args, **kwargs):
 @contextmanager
 def withoutSqliteForeignKeys(engine):
     if engine.dialect.name == 'sqlite':
+        # This context is not re-entrant. Ensure it.
+        assert not getattr(engine, 'fk_disabled', False)
         engine.fk_disabled = True
         engine.execute('pragma foreign_keys=OFF')
     try:
