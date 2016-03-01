@@ -1799,19 +1799,21 @@ Postgres, add them to ``implied_indexes`` in
 
 Foreign key checking
 --------------------
-Non sqlite db backends are checking the foreign keys consistancy. As sqlite is much
-easier to install, most of the developer would only test against sqlite, and then get
-errors on metabuildbot. In order to avoid that the fakedb can check the foreign key
-consistancy of your test data. for this, just enable it with::
+All supported db backends are checking the foreign keys consistancy.
+To maintain consistency with real db, fakedb can check the foreign key consistancy of your test data. for this, just enable it with::
 
     self.db = fakedb.FakeDBConnector(self.master, self)
     self.db.checkForeignKeys = True
 
-Note that tests that only use fakedb do not really need foreign key consistency, even
-if this is a good practice to enable it in new code.
+Note that tests that only use fakedb do not really need foreign key consistency, even if this is a good practice to enable it in new code.
 
-For RealDB tests, please ensure you have recent version of sqlite.
-Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help a lot for testing foreign keys constraint in a developer friendly environment.
+
+.. note:
+
+    Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help a lot for testing foreign keys constraint in a developer friendly environment.
+    For compat reason, they decided to disable foreign key checks by default.
+    Since 0.9.0b8, buildbot now enforces by default the foreign key checking, and is now dependent on sqlite3 >3.6.19, which was released in 2009.
+    One consequence of default disablement is that sqlalchemy-migrate backend for sqlite is not well prepared for foreign key checks, and we have to disable them in the migration scripts.
 
 
 Database Compatibility Notes
@@ -1897,7 +1899,7 @@ When you hit this problem, you will get error like the following:
     sqlalchemy.exc.OperationalError: (OperationalError) too many SQL variables
     u'DELETE FROM scheduler_changes WHERE scheduler_changes.changeid IN (?, ?, ?, ......tons of ?? and IDs .... 9363, 9362, 9361)
 
-You can use the method :py:meth:`doBatch` in order to write batching code in a consitent manner.
+You can use the method :py:meth:`doBatch` in order to write batching code in a consistent manner.
 
 Testing migrations with real databases
 --------------------------------------

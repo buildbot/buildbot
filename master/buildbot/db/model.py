@@ -759,17 +759,6 @@ class Model(base.DBConnectorComponent):
             return db_version == repo_version
         return self.db.pool.do_with_engine(thd)
 
-    def enableForeignKeys(self):
-        # foreign keys is a recent feature of sqlite3, it is still disabled by default
-        # https://www.sqlite.org/pragma.html#pragma_foreign_key_check
-
-        # As most of the tests are run on sqlite3, its better to enable foreign keys, and avoid
-        # having our code crash with pg or mysql for silly foreign key issues
-        def thd(conn):
-            if conn.engine.dialect.name == 'sqlite':
-                conn.execute('pragma foreign_keys=ON')
-        return self.db.pool.do(thd)
-
     def create(self):
         # this is nice and simple, but used only for tests
         def thd(engine):

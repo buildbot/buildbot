@@ -125,8 +125,6 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
                     log.msg(l)
                 raise exceptions.DatabaseNotReadyError()
 
-        yield self.model.enableForeignKeys()
-
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks
         assert self.configured_url == new_config.db['db_url']
