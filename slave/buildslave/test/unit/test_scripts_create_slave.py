@@ -15,6 +15,7 @@
 
 import mock
 import os
+import re
 
 from buildslave.scripts import create_slave
 from buildslave.test.util import misc
@@ -318,7 +319,8 @@ class TestMakeInfoFiles(misc.LoggingMixin,
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertLogged("mkdir %s" % os.path.join("bdir", "info"))
+            self.assertLogged(
+                re.escape("mkdir %s" % os.path.join("bdir", "info")))
 
     def testMkdirError(self):
         """
@@ -368,8 +370,8 @@ class TestMakeInfoFiles(misc.LoggingMixin,
             self.assertWasQuiet()
         else:
             self.assertLogged(
-                "Creating %s, you need to edit it appropriately." %
-                os.path.join("info", "admin"))
+                re.escape("Creating %s, you need to edit it appropriately." %
+                          os.path.join("info", "admin")))
 
     def testOpenError(self):
         """
@@ -432,14 +434,15 @@ class TestMakeInfoFiles(misc.LoggingMixin,
             self.assertWasQuiet()
         else:
             self.assertLogged(
-                "mkdir %s" % info_path,
-                "Creating %s, you need to edit it appropriately."
-                % os.path.join("info", "admin"),
-                "Creating %s, you need to edit it appropriately."
-                % os.path.join("info", "host"),
-                "Not creating %s - add it if you wish"
-                % os.path.join("info", "access_ur"),
-                "Please edit the files in %s appropriately." % info_path
+                re.escape("mkdir %s" % info_path),
+                re.escape("Creating %s, you need to edit it appropriately." %
+                          os.path.join("info", "admin")),
+                re.escape("Creating %s, you need to edit it appropriately." %
+                          os.path.join("info", "host")),
+                re.escape("Not creating %s - add it if you wish" %
+                          os.path.join("info", "access_ur")),
+                re.escape("Please edit the files in %s appropriately." %
+                          info_path)
             )
 
     def testCreatedSuccessfully(self):

@@ -31,20 +31,23 @@ from twisted.python import runtime
 from twisted.trial import unittest
 
 
+_COMSPEC_ENV = 'COMSPEC'
+
+
 class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         if runtime.platformType == 'win32':
-            self.comspec = os.environ.get('COMPSPEC')
-            os.environ['COMSPEC'] = r'C:\WINDOWS\system32\cmd.exe'
+            self.comspec = os.environ.get(_COMSPEC_ENV)
+            os.environ[_COMSPEC_ENV] = r'C:\WINDOWS\system32\cmd.exe'
         return self.setUpBuildStep()
 
     def tearDown(self):
         if runtime.platformType == 'win32':
             if self.comspec:
-                os.environ['COMSPEC'] = self.comspec
+                os.environ[_COMSPEC_ENV] = self.comspec
             else:
-                del os.environ['COMSPEC']
+                del os.environ[_COMSPEC_ENV]
         return self.tearDownBuildStep()
 
     def patchSpawnProcess(self, exp_cmd, exp_argv, exp_path, exp_usePTY,

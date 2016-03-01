@@ -15,6 +15,7 @@
 
 import io
 import os
+import re
 import sys
 
 from buildslave.scripts import base
@@ -38,8 +39,10 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
 
     def assertReadErrorMessage(self, strerror):
 
-        self.assertLogged("error reading '%s': %s" % (self.tac_file_path, strerror),
-                          "invalid buildslave directory 'testdir'")
+        self.assertLogged(
+            re.escape("error reading '%s': %s" % (
+                self.tac_file_path, strerror)),
+            "invalid buildslave directory 'testdir'")
 
     def test_open_error(self):
         """Test that open() errors are handled."""
@@ -81,9 +84,10 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
         self.assertFalse(base.isBuildslaveDir("testdir"))
 
         # check that correct error message was printed to the log
-        self.assertLogged("unexpected content in '%s'" % self.tac_file_path,
-                         "invalid buildslave directory 'testdir'",
-                         "unexpected error message on stdout")
+        self.assertLogged(
+            re.escape("unexpected content in '%s'" % self.tac_file_path),
+            "invalid buildslave directory 'testdir'",
+            "unexpected error message on stdout")
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 

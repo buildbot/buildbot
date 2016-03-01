@@ -20,6 +20,7 @@ Support for running 'shell commands'
 from future.utils import iteritems
 
 import os
+import pprint
 import re
 import signal
 import stat
@@ -36,6 +37,7 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
+from twisted.python import failure
 from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
 
@@ -421,7 +423,7 @@ class RunProcess(object):
         try:
             self._startCommand()
         except Exception:
-            log.err("error in RunProcess._startCommand")
+            log.err(failure.Failure(), "error in RunProcess._startCommand")
             self._addToBuffers('stderr', "error in RunProcess._startCommand\n")
             self._addToBuffers('stderr', traceback.format_exc())
             self._sendBuffers()
@@ -517,7 +519,7 @@ class RunProcess(object):
             env_names = sorted(self.environ.keys())
             for name in env_names:
                 msg += "  %s=%s\n" % (name, self.environ[name])
-            log.msg(" environment: %s" % (self.environ,))
+            log.msg(" environment:\n%s" % (pprint.pformat(self.environ),))
             self._addToBuffers('header', msg)
 
         if self.initialStdin:
