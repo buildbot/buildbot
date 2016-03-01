@@ -120,7 +120,9 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         if u.database:
             def connect_listener(connection, record):
                 connection.execute("pragma checkpoint_fullfsync = off")
-                connection.execute('pragma foreign_keys=ON')
+                # fk must be enabled for all connections
+                if not getattr(engine, "fk_disabled", False):
+                    connection.execute('pragma foreign_keys=ON')
 
             sa.event.listen(engine.pool, 'connect', connect_listener)
 

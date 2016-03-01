@@ -788,10 +788,10 @@ class Model(base.DBConnectorComponent):
         def upgrade(engine):
             schema = ControlledSchema(engine, self.repo_path)
             changeset = schema.changeset(None)
-            for version, change in changeset:
-                log.msg('migrating schema version %s -> %d'
-                        % (version, version + 1))
-                with sautils.withoutSqliteForeignKeys(engine):
+            with sautils.withoutSqliteForeignKeys(engine):
+                for version, change in changeset:
+                    log.msg('migrating schema version %s -> %d'
+                            % (version, version + 1))
                     schema.runchange(version, change, 1)
 
         def check_sqlalchemy_migrate_version():

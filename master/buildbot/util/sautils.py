@@ -64,9 +64,11 @@ def Table(*args, **kwargs):
 @contextmanager
 def withoutSqliteForeignKeys(engine):
     if engine.dialect.name == 'sqlite':
+        engine.fk_disabled = True
         engine.execute('pragma foreign_keys=OFF')
     try:
         yield
     finally:
         if engine.dialect.name == 'sqlite':
+            engine.fk_disabled = False
             engine.execute('pragma foreign_keys=ON')
