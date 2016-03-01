@@ -14,7 +14,6 @@ include docs/manual/*.rst
 include docs/manual/_images/*.svg
 include docs/manual/_images/*.png
 include docs/manual/_images/*.txt
-include docs/manual/_images/*.ai
 include docs/manual/_images/icon.blend
 include docs/manual/_images/Makefile
 include docs/bbdocs/*.py
