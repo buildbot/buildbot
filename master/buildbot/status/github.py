@@ -86,21 +86,26 @@ class GitHubStatus(StatusReceiverMultiService):
         self._github = GitHubAPI(oauth2_token=token, baseURL=baseURL)
 
         self._status = None
+        self._builder_status = None
 
     def startService(self):
         StatusReceiverMultiService.startService(self)
         self._status = self.parent.getStatus()
+        self._builder_status = []
         self._status.subscribe(self)
 
     def stopService(self):
         StatusReceiverMultiService.stopService(self)
+        for builder in self._builder_status:
+            builder.unsubscribe(self)
         self._status.unsubscribe(self)
 
-    def builderAdded(self, name_, builder_):
+    def builderAdded(self, name_, builder_status):
         """
         Subscribe to all builders.
         """
-        return self
+        builder_status.subscribe(self)
+        self._builder_status.append(builder_status)
 
     def buildStarted(self, builderName, build):
         """
