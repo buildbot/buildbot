@@ -71,11 +71,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             lambda: shell.ShellCommand(workdir='build', command="echo Hello World",
                                        wrongArg1=1, wrongArg2='two'))
 
-    def test_getLegacySummary_no_command(self):
-        step = shell.ShellCommand(workdir='build')
-        step.rendered = True
-        self.assertLegacySummary(step, None)
-
     def test_getLegacySummary_from_empty_command(self):
         # this is more of a regression test for a potential failure, really
         step = shell.ShellCommand(workdir='build', command=' ')
@@ -322,6 +317,12 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_run_decodeRC_defaults_0_is_failure(self):
         return self.test_run_decodeRC(0, FAILURE, extra_text=" (failure)")
+
+    def test_missing_command_error(self):
+        # this checks that an exception is raised for invalid arguments
+        self.assertRaisesConfigError(
+            "ShellCommand's `command' argument is not specified",
+            lambda: shell.ShellCommand())
 
 
 class TreeSize(steps.BuildStepMixin, unittest.TestCase):
@@ -649,7 +650,8 @@ class Configure(unittest.TestCase):
         self.assertEqual(step.command, ['./configure'])
 
 
-class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
+class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
+                                  configmixin.ConfigErrorsMixin):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -912,6 +914,13 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase):
             ('foo:123:text', '(.*):(.*):(.*)', 'foo', 123, 'text')
         self.assertEqual(we(step, line, re.match(pat, line)),
                          (exp_file, exp_lineNo, exp_text))
+
+    def test_missing_command_error(self):
+        # this checks that an exception is raised for invalid arguments
+        self.assertRaisesConfigError(
+            "WarningCountingShellCommand's `command' argument is not "
+            "specified",
+            lambda: shell.WarningCountingShellCommand())
 
 
 class Compile(steps.BuildStepMixin, unittest.TestCase):

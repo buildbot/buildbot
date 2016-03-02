@@ -28,7 +28,8 @@ class TestWarningCountingShellCommand(unittest.TestCase):
         # Use a warningExtractor that does not provide line
         # information
         w = WarningCountingShellCommand(
-            warningExtractor=WarningCountingShellCommand.warnExtractWholeLine)
+            warningExtractor=WarningCountingShellCommand.warnExtractWholeLine,
+            command="echo")
 
         # Add suppression manually instead of using suppressionFile
         fileRe = None
