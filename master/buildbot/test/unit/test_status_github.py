@@ -170,11 +170,28 @@ class TestGitHubStatus(unittest.TestCase, logging.LoggingMixin,
 
         self.status._status.subscribe.assert_called_with(self.status)
 
+    def test_stopService(self):
+        """
+        When stopped it will unsubscribe from all statuses.
+        """
+        builderstatus = FakeBuilderStatus()
+
+        result = self.status.builderAdded('builder-name', builderstatus)
+
+        self.status.stopService()
+
+        self.assertEqual(
+            0,
+            self.builderstatus.subscribe_count,
+            'There are still %d outstanding subscriptions'
+            % self.builderstatus.subscribe_count,
+        )
+
     def test_builderAdded(self):
         """
         Status is attached to every builder.
         """
-        result = self.status.builderAdded('builder-name', None)
+        result = self.status.builderAdded('builder-name', FakeBuilderStatus())
 
         self.assertEqual(self.status, result)
 
@@ -546,3 +563,15 @@ class TestGitHubStatus2(TestGitHubStatus):
         result = self.successResultOf(d)
 
         self.assertEqual({}, result)
+
+
+class FakeBuilderStatus(object):
+
+    def __init__(self):
+        self.subscribe_count = 0
+
+    def subscribe(self, _):
+        self.subscribe_count += 1
+
+    def unsubscribe(self, _):
+        self.subscribe_count -= 1
