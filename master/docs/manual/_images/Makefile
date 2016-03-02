@@ -4,7 +4,7 @@ SVGS = $(patsubst %_src.svg,%.svg,$(SOURCES))
 PNGS = $(patsubst %_src.svg,%.png,$(SOURCES))
 EPSS = $(patsubst %_src.svg,%.eps,$(SOURCES))
 
-.PHONY: images-png images-eps
+.PHONY: images-svg images-png images-eps
 all: $(SVGS) $(PNGS) $(EPSS)
 images-svg: $(SVGS)
 images-png: $(PNGS)
