@@ -152,8 +152,6 @@ class RealDatabaseMixin(object):
             raise
 
     def __thd_create_tables(self, conn, table_names):
-        if conn.engine.dialect.name == 'sqlite':
-            conn.execute('pragma foreign_keys=ON')
         table_names_set = set(table_names)
         tables = [t for t in model.Model.metadata.tables.values()
                   if t.name in table_names_set]
