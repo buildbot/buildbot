@@ -18,8 +18,12 @@ images-eps: $(EPSS)
 # "PT Sans" font can be downloaded from developer official site:
 # <http://www.paratype.com/public/> or from Google Fonts collection.
 %.svg: %_src.svg
-	cp $< $@
-	inkscape $@ --verb EditSelectAll --verb=ObjectToPath --verb FileSave --verb FileQuit
+	cp $< _tmp.svg
+	# Render text as path.
+	inkscape _tmp.svg --verb EditSelectAll --verb=ObjectToPath --verb FileSave --verb FileQuit
+	# Cleanup SVG to reduce its size.
+	scour --enable-comment-stripping --remove-metadata -i _tmp.svg -o $@
+	rm -f _tmp.svg
 %.png: %.svg
 	inkscape -b white --export-png $@ $<
 	mogrify -trim +repage $@
