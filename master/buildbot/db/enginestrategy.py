@@ -113,9 +113,6 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
     def set_up_sqlite_engine(self, u, engine):
         """Special setup for sqlite engines"""
-        import sqlite3
-        if sqlite3.sqlite_version_info < (3, 6, 19):
-            raise RuntimeError("Please use sqlite version > 3.6.19")
         # try to enable WAL logging
         if u.database:
             def connect_listener(connection, record):
