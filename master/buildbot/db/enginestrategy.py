@@ -113,13 +113,16 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
     def set_up_sqlite_engine(self, u, engine):
         """Special setup for sqlite engines"""
+        def connect_listener_enable_fk(connection, record):
+            # fk must be enabled for all connections
+            if not getattr(engine, "fk_disabled", False):
+                connection.execute('pragma foreign_keys=ON')
+
+        sa.event.listen(engine.pool, 'connect', connect_listener_enable_fk)
         # try to enable WAL logging
         if u.database:
             def connect_listener(connection, record):
                 connection.execute("pragma checkpoint_fullfsync = off")
-                # fk must be enabled for all connections
-                if not getattr(engine, "fk_disabled", False):
-                    connection.execute('pragma foreign_keys=ON')
 
             sa.event.listen(engine.pool, 'connect', connect_listener)
 
