@@ -114,17 +114,20 @@ class Build extends Controller
                     link: "#/builders/#{$scope.builder.builderid}/builds/#{$scope.build.number}"
                     caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
-                $scope.properties = build.getProperties()
+                build.getProperties().onNew = (properties) ->
+                    $scope.properties = properties
                 $scope.changes = build.getChanges()
                 $scope.responsibles = {}
                 $scope.changes.onNew = (change) ->
-                    console.log change
                     $scope.responsibles[change.author_name] = change.author_email
 
-                data.getWorkers(build.workerid).onChange = (workers) ->
-                    $scope.worker = publicFieldsFilter(workers[0])
+                data.getWorkers(build.workerid).onNew = (worker) ->
+                    $scope.worker = publicFieldsFilter(worker)
 
-                data.getBuildrequests(build.buildrequestid).onChange = (buildrequests) ->
-                    $scope.buildrequest = buildrequest = buildrequests[0]
-                    data.getBuildsets(buildrequest.buildsetid).onChange = (buildsets) ->
-                        $scope.buildset = buildsets[0]
+                data.getBuildrequests(build.buildrequestid).onNew = (buildrequest) ->
+                    $scope.buildrequest = buildrequest
+                    data.getBuildsets(buildrequest.buildsetid).onNew = (buildset) ->
+                        $scope.buildset = buildset
+                        if buildset.parent_buildid
+                            data.getBuilds(buildset.parent_buildid).onNew = (build) ->
+                                $scope.parent_build = build

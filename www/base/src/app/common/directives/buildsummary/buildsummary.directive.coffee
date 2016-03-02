@@ -4,16 +4,15 @@ class Buildsummary extends Directive('common')
             replace: true
             restrict: 'E'
             scope: {}
-            bindToController: {buildid: '=', condensed: '=', prefix: "@"}
+            bindToController: {buildid: '=', build: '=', condensed: '=', parentbuild: '=', parentrelationship: '='}
             templateUrl: 'views/buildsummary.html'
             compile: RecursionHelper.compile
             controller: '_buildsummaryController'
             controllerAs: 'buildsummary'
         }
-
 class _buildsummary extends Controller('common')
     constructor: ($scope, dataService, resultsService, $urlMatcherFactory, $location, $interval, RESULTS) ->
-        self = @
+        self = this
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
 
@@ -39,6 +38,15 @@ class _buildsummary extends Controller('common')
         @toggleDetails = ->
             details = (details + 1) % 3
 
+        @levelOfDetails = ->
+            switch details
+                when NONE
+                    "None"
+                when ONLY_NOT_SUCCESS
+                    "Problems"
+                when EVERYTHING
+                    "All"
+
         @isStepDisplayed = (step) ->
             if details == EVERYTHING
                 !step.hidden
@@ -56,22 +64,38 @@ class _buildsummary extends Controller('common')
         @isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
+        @toggleFullDisplay = ->
+            @fulldisplay = !@fulldisplay
+            if @fullDisplay
+                details = EVERYTHING
+            for step in @steps
+                step.fulldisplay = @fulldisplay
+
         data = dataService.open().closeOnDestroy($scope)
         $scope.$watch (=> @buildid), (buildid) ->
             if not buildid? then return
             data.getBuilds(buildid).onNew = (build) ->
                 self.build = build
-                data.getBuilders(build.builderid).onNew = (builder) ->
-                    self.builder = builder
 
-                self.steps = build.getSteps()
+        $scope.$watch (=> @build), (build) ->
+            if not build? then return
+            if @builder then return
 
-                self.steps.onNew = (step) ->
-                    step.loadLogs()
-                    # onUpdate is only called onUpdate, not onNew, but we need to update our additional needed attributes
-                    self.steps.onUpdate(step)
+            data.getBuilders(build.builderid).onNew = (builder) ->
+                self.builder = builder
 
-                self.steps.onUpdate = (step) ->
-                    step.fulldisplay = step.complete == 0 || step.results > 0
-                    if step.complete
-                        step.duration = step.complete_at - step.started_at
+            self.steps = build.getSteps()
+
+            self.steps.onNew = (step) ->
+                step.loadLogs()
+                # onUpdate is only called onUpdate, not onNew, but we need to update our additional needed attributes
+                self.steps.onUpdate(step)
+
+            self.steps.onUpdate = (step) ->
+                step.fulldisplay = step.complete == 0 || step.results > 0
+                if step.complete
+                    step.duration = step.complete_at - step.started_at
+        $scope.$watch (=> @parentbuild), (build,o) ->
+            if not build? then return
+            data.getBuilders(build.builderid).onNew = (builder) ->
+                self.parentbuilder = builder

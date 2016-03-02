@@ -25,6 +25,7 @@ describe 'buildrequest controller', ->
     beforeEach(inject(injected))
 
     it 'should query for buildrequest', ->
+        dataService.when('buildsets/1/properties', [{a: ['a','b']}])
         dataService.when('buildrequests/1', [{buildrequestid: 1, builderid: 1, buildsetid: 1}])
         dataService.when('builders/1', [{builderid: 1}])
         dataService.when('buildsets/1', [{buildsetid: 1}])
@@ -39,6 +40,7 @@ describe 'buildrequest controller', ->
         expect($scope.builds[0]).toBeDefined()
 
     it 'should query for builds again if first query returns 0', ->
+        dataService.when('buildsets/1/properties', [{a: ['a','b']}])
         dataService.when('buildrequests/1', [{buildrequestid: 1, builderid: 1, buildsetid: 1}])
         dataService.when('builders/1', [{builderid: 1}])
         dataService.when('buildsets/1', [{buildsetid: 1}])
@@ -55,6 +57,7 @@ describe 'buildrequest controller', ->
         expect($scope.builds.length).toBe(2)
 
     it 'should go to build page if build started', ->
+        dataService.when('buildsets/1/properties', [{a: ['a','b']}])
         dataService.when('buildrequests/1', [{buildrequestid: 1, builderid: 3, buildsetid: 1}])
         dataService.when('builders/3', [{builderid: 3}])
         dataService.when('buildsets/1', [{buildsetid: 1}])
