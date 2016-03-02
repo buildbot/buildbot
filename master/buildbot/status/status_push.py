@@ -53,6 +53,8 @@ class StatusPush(StatusReceiverMultiService):
     shutdown so they can be pushed back when the master is restarted.
     """
 
+    master = None
+
     def __init__(self, serverPushCb, queue=None, path=None, filter=True,
                  bufferDelay=1, retryDelay=5, blackList=None):
         """
