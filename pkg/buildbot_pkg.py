@@ -104,8 +104,14 @@ def build_js(cmd):
         npm_bin = check_output("npm bin").strip()
         assert npm_version != "", "need nodejs and npm installed in current PATH"
         assert LooseVersion(npm_version) >= LooseVersion("1.4"), "npm < 1.4 (%s)" % (npm_version)
-        cmd.spawn(['npm', 'install'])
-        cmd.spawn([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
+        npm_cmd = ['npm', 'install']
+        gulp_cmd = [os.path.join(npm_bin, "gulp"), 'prod', '--notests']
+        if os.name == 'nt':
+            subprocess.call(npm_cmd, shell=True)
+            subprocess.call(gulp_cmd, shell=True)
+        else:
+            cmd.spawn(npm_cmd)
+            cmd.spawn(gulp_cmd)
 
     cmd.copy_tree(os.path.join(package, 'static'), os.path.join("build", "lib", package, "static"))
 
