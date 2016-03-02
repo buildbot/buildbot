@@ -1,7 +1,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.python import log
-from buildbot.test.fake import fakedb, fakemaster
+from buildbot.test.fake import fakedb
 from buildbot.process import buildrequestdistributor
 from buildbot.process.buildrequestdistributor import Slavepool
 from buildbot.process import builder, factory
@@ -10,43 +10,33 @@ import mock
 from buildbot.db.buildrequests import Queue
 from buildbot.status.results import RESUME
 from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
+from buildbot.test.util import compat
+from buildbot.db.buildrequests import AlreadyClaimedError
 
-
-class TestKatanaBuildRequestDistributor(unittest.TestCase,
+class TestKatanaBuildRequestDistributorGetNextPriorityBuilder(unittest.TestCase,
                                         KatanaBuildRequestDistributorTestSetup):
 
     @defer.inlineCallbacks
     def setUp(self):
         yield self.setUpComponents()
-        self.brd = buildrequestdistributor.KatanaBuildRequestDistributor(self.botmaster)
-        self.brd.startService()
+        yield self.setUpKatanaBuildRequestDistributor()
 
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.tearDownComponents()
-        if self.brd.running:
-            yield self.brd.stopService()
+        yield self.stopKatanaBuildRequestDistributor()
 
     # getNextPriorityBuilder Tests
-
-    def getBuildSetTestData(self, xrange):
-        testdata = [fakedb.Buildset(id=idx,
-                                          sourcestampsetid=idx) for idx in xrange]
-
-        testdata += [fakedb.SourceStamp(sourcestampsetid=idx,
-                                             branch='branch_%d' % idx)
-                          for idx in xrange]
-        return testdata
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnclaimedQueue(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
-                                 priority=20, submitted_at=1449578391),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
-                                 priority=50, submitted_at=1450171039),
-                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
-                                     priority=100,submitted_at=1449578391,
-                                     results=RESUME, complete=0)]
+                                        priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                        priority=50, submitted_at=1450171039),
+                    fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                        priority=100,submitted_at=1449578391,
+                                        results=RESUME, complete=0)]
 
         testdata += [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1449578391)]
         testdata += self.getBuildSetTestData(xrange=xrange(1, 4))
@@ -61,14 +51,14 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderResumeQueue(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
-                                 priority=20, submitted_at=1449578391, results=RESUME, complete=0),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
-                                 priority=50, submitted_at=1450171039, results=RESUME, complete=0),
-                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
-                                     priority=100,submitted_at=1449578391)]
+                                        priority=20, submitted_at=1449578391, results=RESUME, complete=0),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                        priority=50, submitted_at=1450171039, results=RESUME, complete=0),
+                    fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                        priority=100,submitted_at=1449578391)]
 
         testdata += [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
-                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+                     fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
 
         testdata += self.getBuildSetTestData(xrange=xrange(1, 4))
 
@@ -82,7 +72,7 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnknownBuilder(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1", priority=20, submitted_at=1449578391),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2", priority=50, submitted_at=1450171039)]
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2", priority=50, submitted_at=1450171039)]
 
         testdata += self.getBuildSetTestData(xrange=xrange(1, 3))
 
@@ -114,13 +104,13 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderCheckAvailableSlavesInPool(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
-                                     priority=20, submitted_at=1449578391, slavepool=Slavepool.slavenames),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
-                                     priority=50, submitted_at=1450171039, slavepool=Slavepool.startSlavenames,
-                                     results=RESUME, complete=0)]
+                                        priority=20, submitted_at=1449578391, slavepool=Slavepool.slavenames),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                        priority=50, submitted_at=1450171039, slavepool=Slavepool.startSlavenames,
+                                        results=RESUME, complete=0)]
 
         testdata += [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
-                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+                     fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
 
         testdata += self.getBuildSetTestData(xrange(1, 3))
 
@@ -136,12 +126,12 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderNotAvailableSlavesToProcessRequests(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
-                                 priority=20, submitted_at=1449578391),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
-                                 priority=50, submitted_at=1450171039),
-                 fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
-                                     priority=100,submitted_at=1449578391,
-                                     results=RESUME, complete=0)]
+                                        priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",
+                                        priority=50, submitted_at=1450171039),
+                    fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                        priority=100,submitted_at=1449578391,
+                                        results=RESUME, complete=0)]
 
         testdata += [fakedb.BuildRequestClaim(brid=3, objectid=self.MASTER_ID, claimed_at=1449578391)]
 
@@ -161,7 +151,7 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderSelectedSlaveUnclaimQueue(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2",
-                                     priority=2, submitted_at=1450171024),
+                                        priority=2, submitted_at=1450171024),
                  fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
                                      priority=50, submitted_at=1450171039)]
 
@@ -197,10 +187,10 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderSelectedSlaveResumeQueue(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
-                                     priority=20, submitted_at=1449578391),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
-                                     priority=50, submitted_at=1450171039,
-                                     results=RESUME, complete=0)]
+                                        priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                        priority=50, submitted_at=1450171039,
+                                        results=RESUME, complete=0)]
 
         testdata += [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
                        fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
@@ -213,9 +203,9 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
 
         yield self.insertTestData(testdata)
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
-                           startSlavenames={'slave-03': True})
+                                  startSlavenames={'slave-03': True})
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
-                           startSlavenames={'slave-03': True})
+                                  startSlavenames={'slave-03': True})
 
         breq = yield self.brd.katanaBuildChooser.getNextPriorityBuilder(queue=Queue.resume)
         # selected slave not available pick next builder
@@ -228,13 +218,13 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderIgnoreSelectedSlaveResumeQueue(self):
         testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
-                                     priority=20, submitted_at=1449578391),
-                 fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
-                                     priority=50, submitted_at=1450171039,
-                                     results=RESUME, complete=0, slavepool=Slavepool.startSlavenames)]
+                                        priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                        priority=50, submitted_at=1450171039,
+                                        results=RESUME, complete=0, slavepool=Slavepool.startSlavenames)]
 
         testdata += [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
-                       fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+                     fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
 
         testdata += [fakedb.BuildsetProperty(buildsetid=2,
                                              property_name='selected_slave',
@@ -245,12 +235,126 @@ class TestKatanaBuildRequestDistributor(unittest.TestCase,
         yield self.insertTestData(testdata)
 
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
-                           startSlavenames={'slave-03': True})
+                                  startSlavenames={'slave-03': True})
         self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
-                           startSlavenames={'slave-03': True})
+                                  startSlavenames={'slave-03': True})
 
         breq = yield self.brd.katanaBuildChooser.getNextPriorityBuilder(queue=Queue.resume)
         self.assertEquals((breq.buildername, breq.id), ("bldr1", 2))
+
+
+class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def generateResumeBuilds(self, slave=None, buildnumber=None, breqs=None):
+        testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr2", results=RESUME, complete=0,
+                                        priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                        priority=50, submitted_at=1450171039,
+                                        results=RESUME, complete=0, slavepool=Slavepool.startSlavenames)]
+
+        testdata += [fakedb.BuildRequestClaim(brid=1, objectid=self.MASTER_ID, claimed_at=1449578391),
+                     fakedb.BuildRequestClaim(brid=2, objectid=self.MASTER_ID, claimed_at=1450171039)]
+
+        testdata += [fakedb.BuildsetProperty(buildsetid=2,
+                                             property_name='selected_slave',
+                                             property_value='["slave-01", "Force Build Form"]')]
+
+        testdata += self.getBuildSetTestData(xrange(1, 3))
+
+        yield self.insertTestData(testdata)
+        defer.returnValue(True)
+
+    @defer.inlineCallbacks
+    def generateUnclaimBuilds(self, slave=None, buildnumber=None, breqs=None):
+        if self.insertData:
+            testdata = [fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                            priority=20, submitted_at=1449578391),
+                        fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr2",
+                                            priority=50, submitted_at=1450171039)]
+
+            testdata += self.getBuildSetTestData(xrange=xrange(3, 5))
+
+            yield self.insertTestData(testdata)
+            self.insertData = False
+        defer.returnValue(True)
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        yield self.setUpComponents()
+        yield self.setUpKatanaBuildRequestDistributor()
+        self.insertData = True
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tearDownComponents()
+        yield self.stopKatanaBuildRequestDistributor()
+
+    def test_maybeStartBuildsOnCheckNewBuilds(self):
+
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},
+                                  startSlavenames={'slave-03': True},
+                                  maybeResumeBuild=self.generateUnclaimBuilds)
+        self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': False, 'slave-02': True},
+                                  startSlavenames={'slave-04': True},
+                                  maybeResumeBuild=self.generateUnclaimBuilds)
+
+        d = self.generateResumeBuilds()
+        d.addCallback(lambda _: self.brd.maybeStartBuildsOn(['bldr1', 'bldr2']))
+
+        def check(_):
+            self.checkBRDCleanedUp()
+            self.assertEquals(self.processedBuilds, [('slave-04', [4]), ('slave-03', [3])])
+
+        self.quiet_deferred.addCallback(check)
+        return self.quiet_deferred
+
+    def test_maybeStartBuildsOnCheckResumeBuilds(self):
+
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-03': True}, maybeStartBuild=self.generateResumeBuilds)
+        self.setupBuilderInMaster(name='bldr2', slavenames={'slave-02': True},
+                                  startSlavenames={'slave-04': True},
+                                  maybeStartBuild=self.generateResumeBuilds)
+
+        d = self.generateUnclaimBuilds()
+        d.addCallback(lambda _: self.brd.maybeStartBuildsOn(['bldr1', 'bldr2']))
+
+        def check(_):
+            self.checkBRDCleanedUp()
+            self.assertEquals(self.processedBuilds,  [('slave-03', [2]), ('slave-02', [1])])
+
+        self.quiet_deferred.addCallback(check)
+        return self.quiet_deferred
+
+    @compat.usesFlushLoggedErrors
+    def test_maybeStartBuildsOnHandleExceptionsDuringClaim(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True})
+
+        self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-03': True})
+
+        d = self.generateUnclaimBuilds()
+        d.addCallback(lambda _: self.brd.maybeStartBuildsOn(['bldr1', 'bldr2']))
+
+        funct = self.brd.katanaBuildChooser.claimBuildRequests
+
+        @defer.inlineCallbacks
+        def claimBuildRequests(breqs):
+            yield funct(breqs)
+            if breqs[0].id == 4:
+                yield funct(breqs) # generate AlreadyClaimedError
+
+        self.brd.katanaBuildChooser.claimBuildRequests = claimBuildRequests
+
+        def check(_):
+            self.checkBRDCleanedUp()
+            self.assertEquals(self.processedBuilds, [('slave-02', [3])])
+            self.assertEqual(len(self.flushLoggedErrors(AlreadyClaimedError)), 1)
+
+        self.quiet_deferred.addCallback(check)
+        return self.quiet_deferred
 
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):

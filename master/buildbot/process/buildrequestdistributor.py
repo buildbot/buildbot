@@ -1040,8 +1040,6 @@ class KatanaBuildRequestDistributor(service.Service):
         # method invoked.
         self.activity_lock = defer.DeferredLock()
         self.active = False
-        self.check_new_builds = True
-        self.check_resume_builds = True
         self._pendingMSBOCalls = []
         self.katanaBuildChooser = self.createBuildChooser(builders=self.botmaster.builders, master=self.master)
 

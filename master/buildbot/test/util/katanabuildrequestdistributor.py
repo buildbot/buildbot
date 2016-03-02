@@ -6,6 +6,7 @@ from buildbot.db import buildrequests, buildsets, sourcestamps, builds
 from buildbot.test.util import connector_component
 from buildbot.process import buildrequestdistributor
 from buildbot.process import cache
+from buildbot.test.fake import fakedb
 import cProfile, pstats
 
 
@@ -100,7 +101,7 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
     def createSlaveList(self, available,  xrange):
         return {'build-slave-%d' % id: available for id in xrange}
 
-    def createBuilder(self, name, slavenames=None, startSlavenames=None):
+    def createBuilder(self, name, slavenames=None, startSlavenames=None, maybeStartBuild=None, maybeResumeBuild=None):
         bldr = builder.Builder(name, _addServices=False)
         build_factory = factory.BuildFactory()
 
@@ -117,14 +118,26 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
             config_args['startSlavenames'] = getSlaves(startSlavenames)
 
         bldr.config = config.BuilderConfig(**config_args)
-        bldr.maybeStartBuild = lambda slavebuilder, breqs: self.addProcessedBuilds(slavebuilder, breqs)
-        bldr.maybeResumeBuild = lambda slavebuilder, buildnumber, breqs: self.addProcessedBuilds(slavebuilder, breqs)
+        bldr.maybeStartBuild = maybeStartBuild if maybeStartBuild \
+            else lambda slavebuilder, breqs: self.addProcessedBuilds(slavebuilder, breqs)
+        bldr.maybeResumeBuild = maybeResumeBuild if maybeResumeBuild \
+            else lambda slavebuilder, buildnumber, breqs: self.addProcessedBuilds(slavebuilder, breqs)
 
         self.addSlavesToList(bldr.slaves, slavenames)
         self.addSlavesToList(bldr.startSlaves, startSlavenames)
         return bldr
 
-    def setupBuilderInMaster(self, name, slavenames=None, startSlavenames=None):
-        bldr = self.createBuilder(name, slavenames, startSlavenames)
+    def setupBuilderInMaster(self, name, slavenames=None, startSlavenames=None,
+                             maybeStartBuild=None, maybeResumeBuild=None):
+        bldr = self.createBuilder(name, slavenames, startSlavenames, maybeStartBuild, maybeResumeBuild)
         self.botmaster.builders[name] = bldr
         return bldr
+
+    def getBuildSetTestData(self, xrange):
+        testdata = [fakedb.Buildset(id=idx,
+                                          sourcestampsetid=idx) for idx in xrange]
+
+        testdata += [fakedb.SourceStamp(sourcestampsetid=idx,
+                                             branch='branch_%d' % idx)
+                          for idx in xrange]
+        return testdata
