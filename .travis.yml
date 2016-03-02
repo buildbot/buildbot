@@ -94,7 +94,7 @@ install:
   - |
       [ $TESTS = py3 ] || \
       pip install -e pkg \
-                  -e master \
+                  -e master[tls] \
                   -e slave \
                   txrequests \
                   future \

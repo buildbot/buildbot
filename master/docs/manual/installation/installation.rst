@@ -30,6 +30,12 @@ and for the worker:
 When using ``pip`` to install instead of distribution specific package manangers, e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants to use.
 It may however be easier to install via distribution specific package mangers but note that they may provide an earlier version than what is available via ``pip``.
 
+If you plan to use TLS or SSL in master configuration (e.g. to fetch resources over HTTPS using ``twisted.web.client``), you need to install Buildbot with ``tls`` extras:
+
+.. code-block:: bash
+
+    pip install buildbot[tls]
+
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
