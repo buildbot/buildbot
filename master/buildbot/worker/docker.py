@@ -60,8 +60,7 @@ class DockerLatentWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                 masterFQDN=None, hostconfig=None, networking_config='bridge'
-                 **kwargs):
+                 masterFQDN=None, hostconfig=None, networking_config='bridge', **kwargs):
 
         if not client:
             config.error("The python module 'docker-py>=1.4' is needed to use a"
