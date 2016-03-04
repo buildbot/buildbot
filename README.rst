@@ -34,4 +34,4 @@ Related repositories:
 .. |codecov-badge| image:: http://codecov.io/github/buildbot/buildbot/coverage.svg?branch=master
 .. _codecov-badge: http://codecov.io/github/buildbot/buildbot?branch=master
 .. |readthedocs-badge| image:: https://readthedocs.org/projects/buildbot/badge/?version=latest
-.. _readthedocs-badge: https://buildbot.readthedocs.org/en/latest/
+.. _readthedocs-badge: https://readthedocs.org/projects/buildbot/builds/
