@@ -321,6 +321,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, reqs_tbl.c.priority,
                                  reqs_tbl.c.submitted_at, reqs_tbl.c.results,
+                                 reqs_tbl.c.buildsetid,
                                  buildset_properties_tbl.c.property_value,
                                  reqs_tbl.c.slavepool, reqs_tbl.c.startbrid],
                                 from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
@@ -333,6 +334,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             resumebuilds = sa.select([reqs_tbl.c.id,
                                       reqs_tbl.c.buildername, reqs_tbl.c.priority,
                                       reqs_tbl.c.submitted_at, reqs_tbl.c.results,
+                                      reqs_tbl.c.buildsetid,
                                       buildset_properties_tbl.c.property_value,
                                       reqs_tbl.c.slavepool, reqs_tbl.c.startbrid],
                                      from_obj=reqs_tbl.join(claims_tbl,
@@ -370,6 +372,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                    priority=row.priority,
                                    submitted_at=mkdt(row.submitted_at),
                                    results=row.results,
+                                   buildsetid=row.buildsetid,
                                    selected_slave=getSelectedSlave(row),
                                    slavepool=row.slavepool,
                                    startbrid=row.startbrid))

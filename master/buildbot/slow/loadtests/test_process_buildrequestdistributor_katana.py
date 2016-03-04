@@ -154,7 +154,7 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnclaimedQueueUnderLoad(self):
         yield self.generateBuildLoadCalculateNextPriorityBuilder()
-        breq = yield self.profileAsyncFunc(0.218, self.brd._selectNextBuildRequest,
+        breq = yield self.profileAsyncFunc(0.319, self.brd._selectNextBuildRequest,
                                            queue=Queue.unclaimed,
                                            asyncFunc=self.brd._maybeStartBuildsOnBuilder)
         self.assertEqual(breq.buildername, 'bldr16')
@@ -162,7 +162,7 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderResumeQueueUnderLoad(self):
         yield self.generateBuildLoadCalculateNextPriorityBuilder()
-        breq =  yield self.profileAsyncFunc(12, self.brd._selectNextBuildRequest,
+        breq =  yield self.profileAsyncFunc(9, self.brd._selectNextBuildRequest,
                                             queue=Queue.resume,
                                             asyncFunc=self.brd._maybeResumeBuildsOnBuilder)
 
@@ -172,7 +172,7 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     def test_maybeStartOrResumeBuildsOnUnderLoad(self):
         yield self.generateBuildLoadStartOrResumeBuilds()
 
-        yield self.profileAsyncFunc(14, self.brd._maybeStartOrResumeBuildsOn,
+        yield self.profileAsyncFunc(10.6, self.brd._maybeStartOrResumeBuildsOn,
                                     new_builders=self.botmaster.builders.keys())
 
         self.checkBRDCleanedUp()
@@ -185,7 +185,7 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     def test_maybeStartOrResumeBuildsOnUnderLoadBusyBuildFarm(self):
         yield self.generateBuildLoadStartOrResumeBuilds(slaves_available=False)
 
-        yield self.profileAsyncFunc(6, self.brd._maybeStartOrResumeBuildsOn,
+        yield self.profileAsyncFunc(3.8, self.brd._maybeStartOrResumeBuildsOn,
                                     new_builders=self.botmaster.builders.keys())
 
         self.checkBRDCleanedUp()

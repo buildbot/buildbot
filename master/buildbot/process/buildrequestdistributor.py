@@ -423,28 +423,9 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
-    def getBuildRequest(self, queue, br):
-        if queue == Queue.unclaimed:
-            brdict = yield self.master.db.buildrequests.getBuildRequests(buildername=br["buildername"],
-                                                                         brids=[br["brid"]],
-                                                                         claimed=False)
-        elif queue == Queue.resume:
-            brdict = yield self.master.db.buildrequests.getBuildRequests(buildername=br["buildername"],
-                                                                          brids=[br["brid"]],
-                                                                          claimed="mine",
-                                                                          complete=False,
-                                                                          results=RESUME,
-                                                                          mergebrids="exclude")
-        else:
-            raise UnsupportedQueueError
-
-        if not brdict:
-            defer.returnValue(None)
-            return
-
-        nextBrdict = brdict[0]
-        breq = yield self._getBuildRequestForBrdict(nextBrdict)
-        breq.queueBrdict = br
+    def getBuildRequest(self, queue, brdict):
+        breq = yield self._getBuildRequestForBrdict(brdict)
+        breq.queueBrdict = brdict
         defer.returnValue(breq)
 
     @defer.inlineCallbacks

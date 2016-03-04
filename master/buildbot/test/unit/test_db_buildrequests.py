@@ -1319,6 +1319,7 @@ class TestBuildsetsConnectorComponent(
     def fakePrioritzedRequest(self, brid, buildername, priority, submitted_at,
                               selected_slave, results, slavepool, startbrid=None):
         return {'brid': brid,
+                'buildsetid': brid,
                 'buildername': buildername,
                 'priority': priority,
                 'submitted_at': epoch2datetime(submitted_at),
