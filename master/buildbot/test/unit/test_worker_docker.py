@@ -54,7 +54,6 @@ class TestDockerLatentWorker(unittest.TestCase):
         bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', 'worker', networking_config='host')
         self.assertEqual(bs.networking_config, 'host')
 
-
     def test_constructor_minimal(self):
         # Minimal set of parameters
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
