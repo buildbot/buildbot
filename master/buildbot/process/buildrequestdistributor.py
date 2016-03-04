@@ -26,6 +26,7 @@ from buildbot.status.results import RESUME, BEGINNING
 from buildbot.db.buildrequests import AlreadyClaimedError, UnsupportedQueueError, Queue
 from buildbot.process.builder import Slavepool
 from buildbot import util
+from buildbot.util import lru
 
 import random
 
@@ -354,8 +355,13 @@ class KatanaBuildChooser(BasicBuildChooser):
         # By default katana  merges Requests
         self.bldr = None
         self.master = master
-        self.breqCache = {}
+        self.initializeBreqCache()
         self.builders = builders
+        self.initializedBuildRequestQueue()
+
+    def initializedBuildRequestQueue(self):
+        self.unclaimedBrdicts = None
+        self.resumeBrdicts = None
 
     def setupNextBuildRequest(self, bldr, breq):
         # by default katana merges buildrequests
@@ -377,7 +383,8 @@ class KatanaBuildChooser(BasicBuildChooser):
         self.nextBreq = breq
 
     def initializeBreqCache(self):
-        self.breqCache = {}
+        self.breqCache = lru.AsyncLRUCache(BuildRequest.fromBrdict, 6000)
+        self.breqCache.fn_uses_key = False
 
     def cleanupNextBuildRequest(self):
         self.bldr = None
@@ -397,20 +404,22 @@ class KatanaBuildChooser(BasicBuildChooser):
     def _removeBuildRequests(self, breqs):
         # Remove a BuildrRequest object (and its brdict)
         # from the caches
+
         for breq in breqs:
-            if breq.id in self.breqCache:
-                del self.breqCache[breq.id]
+            if hasattr(breq, 'queueBrdict') and breq.queueBrdict:
+                if self.unclaimedBrdicts and breq.queueBrdict in self.unclaimedBrdicts:
+                    self.unclaimedBrdicts.remove(breq.queueBrdict)
+                if  self.resumeBrdicts and breq.queueBrdict in self.resumeBrdicts:
+                    self.resumeBrdicts.remove(breq.queueBrdict)
+
+            self.breqCache.remove(breq.id)
 
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
-        breq = self.breqCache.get(brdict['brid'])
-        if not breq:
-            breq = yield BuildRequest.fromBrdict(self.master, brdict)
-            if breq:
-                self.breqCache[brdict['brid']] = breq
+        breq = yield self.breqCache.get(brdict['brid'], master=self.master, brdict=brdict)
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
@@ -435,8 +444,23 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         nextBrdict = brdict[0]
         breq = yield self._getBuildRequestForBrdict(nextBrdict)
+        breq.queueBrdict = br
         defer.returnValue(breq)
 
+    @defer.inlineCallbacks
+    def _getBuildRequestQueue(self, queue):
+        if queue == Queue.unclaimed:
+            if not self.unclaimedBrdicts:
+                self.unclaimedBrdicts = yield self.master.db.buildrequests\
+                    .getPrioritizedBuildRequestsInQueue(queue=queue)
+            defer.returnValue(self.unclaimedBrdicts)
+            return
+
+        if queue == Queue.resume:
+            if not self.resumeBrdicts:
+                self.resumeBrdicts = yield self.master.db.buildrequests\
+                    .getPrioritizedBuildRequestsInQueue(queue=queue)
+            defer.returnValue(self.resumeBrdicts)
 
     # Katana's gets the next priority builder from the DB instead of keeping a local list
     @defer.inlineCallbacks
@@ -456,8 +480,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         builderSlavepool = {}
 
         # TODO: For performance reasons we may need to limit the searches but  we need to load test it first
-        buildrequestQueue = yield self.master.db.buildrequests \
-            .getPrioritizedBuildRequestsInQueue(queue=queue)
+        buildrequestQueue = yield self._getBuildRequestQueue(queue)
 
         log.msg("getNextPriorityBuilder found %d buildrequests in the '%s' Queue" % (len(buildrequestQueue), queue))
 
@@ -716,7 +739,6 @@ class KatanaBuildChooser(BasicBuildChooser):
                 log.msg("mergeBuildingRequests skipped: merge brids %s with building request failed" % brids)
 
         # 3. try merge with compatible finished build in the same chain
-        # brdict = self._getBrdictForBuildRequest(breq, getPendingBrdict())
         if breq and breq.buildChainID and breq.buildChainID != breq.id:
             #check if can be merged with finished build
             finished_br = yield self.master.db.buildrequests\
@@ -1084,11 +1106,15 @@ class KatanaBuildRequestDistributor(service.Service):
         # start the activity loop, if we aren't already
         #  working on that.
         yield self.activity_lock.acquire()
-        self.check_new_builds = True
-        self.check_resume_builds = True
+        self._checkBuildRequests()
         self.activity_lock.release()
         if not self.active:
             yield self._procesBuildRequestsActivityLoop()
+
+    def _checkBuildRequests(self):
+        self.check_new_builds = True
+        self.check_resume_builds = True
+        self.katanaBuildChooser.initializedBuildRequestQueue()
 
     def timerLogFinished(self, msg, timer):
         log.msg(msg + " started at %s finished at %s elapsed %s" %

@@ -576,6 +576,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(KatanaBuildRequestDistributorTestSetup
     def do_test_maybeStartBuildsOnBuilder(self, rows=[], exp_brids=None, exp_builds=[]):
         yield self.insertTestData(rows)
 
+        self.brd._checkBuildRequests()
         yield self.brd._selectNextBuildRequest(queue=Queue.unclaimed, asyncFunc=self.brd._maybeStartBuildsOnBuilder)
 
         if exp_brids:
