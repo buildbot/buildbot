@@ -276,6 +276,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
             testdata += self.getBuildSetTestData(xrange=xrange(3, 5))
 
             yield self.insertTestData(testdata)
+            self.brd.maybeStartBuildsOn(["bldr1", "bldr2"])
             self.insertData = False
         defer.returnValue(True)
 

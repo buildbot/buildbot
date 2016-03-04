@@ -7,6 +7,7 @@ from buildbot.test.util import connector_component
 from buildbot.process import buildrequestdistributor
 from buildbot.process import cache
 from buildbot.test.fake import fakedb
+from buildbot.status.results import RESUME, BEGINNING
 import cProfile, pstats
 
 
@@ -141,3 +142,43 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
                                              branch='branch_%d' % idx)
                           for idx in xrange]
         return testdata
+
+    def initialized(self):
+        self.lastbrid = 0
+        self.lastbuilderid = 0
+        self.testdata = []
+
+    def insertBuildrequests(self, buildername, priority, xrange, submitted_at=1449578391,
+                            results=BEGINNING, selected_slave=None, complete=0, sources=None):
+        self.testdata += [fakedb.BuildRequest(id=self.lastbrid+idx,
+                                              buildsetid=self.lastbrid+idx,
+                                              buildername=buildername,
+                                              priority=priority,
+                                              results=results,
+                                              complete=complete,
+                                              submitted_at=submitted_at) for idx in xrange]
+
+        if results == RESUME:
+            breqsclaim = [fakedb.BuildRequestClaim(brid=self.lastbrid+idx,
+                                                   objectid=self.MASTER_ID, claimed_at=1449578391) for idx in xrange]
+            self.testdata += breqsclaim
+
+        if selected_slave:
+            self.testdata += [fakedb.BuildsetProperty(buildsetid=self.lastbrid+idx,
+                                                      property_name='selected_slave',
+                                                      property_value='["%s", "Force Build Form"]' % selected_slave)
+                              for idx in xrange]
+
+        self.testdata += [fakedb.Buildset(id=self.lastbrid+idx,
+                                          sourcestampsetid=self.lastbrid+idx) for idx in xrange]
+
+        if not sources:
+            self.testdata += [fakedb.SourceStamp(sourcestampsetid=self.lastbrid+idx,
+                                                 branch='branch_%d' % (self.lastbrid+idx))
+                              for idx in xrange]
+
+        else:
+            print "insert sources here, check how we fill the sources by default"
+            # TODO: insert sources here
+
+        self.lastbrid += len(xrange)

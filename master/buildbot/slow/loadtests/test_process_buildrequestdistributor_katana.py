@@ -1,8 +1,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.test.fake import fakedb
 from buildbot.db.buildrequests import Queue
-from buildbot.status.results import RESUME, BEGINNING
+from buildbot.status.results import RESUME
 from buildbot.process.buildrequest import Priority
 from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
 
@@ -18,40 +17,6 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
     def tearDown(self):
         yield self.tearDownComponents()
         self.stopKatanaBuildRequestDistributor()
-
-    def initialized(self):
-        self.lastbrid = 0
-        self.lastbuilderid = 0
-        self.testdata = []
-
-    def insertBuildrequests(self, buildername, priority, xrange, submitted_at=1449578391, results=BEGINNING, selected_slave=None, complete=0):
-        self.testdata += [fakedb.BuildRequest(id=self.lastbrid+idx,
-                                              buildsetid=self.lastbrid+idx,
-                                              buildername=buildername,
-                                              priority=priority,
-                                              results=results,
-                                              complete=complete,
-                                              submitted_at=submitted_at) for idx in xrange]
-
-        if results == RESUME:
-            breqsclaim = [fakedb.BuildRequestClaim(brid=self.lastbrid+idx,
-                                                   objectid=self.MASTER_ID, claimed_at=1449578391) for idx in xrange]
-            self.testdata += breqsclaim
-
-        if selected_slave:
-            self.testdata += [fakedb.BuildsetProperty(buildsetid=self.lastbrid+idx,
-                                                      property_name='selected_slave',
-                                                      property_value='["%s", "Force Build Form"]' % selected_slave)
-                              for idx in xrange]
-
-        self.testdata += [fakedb.Buildset(id=self.lastbrid+idx,
-                                          sourcestampsetid=self.lastbrid+idx) for idx in xrange]
-
-        self.testdata += [fakedb.SourceStamp(sourcestampsetid=self.lastbrid+idx,
-                                             branch='branch_%d' % (self.lastbrid+idx))
-                          for idx in xrange]
-
-        self.lastbrid += len(xrange)
 
     def createBuildersWithLoad(self, priority, slavenames, startSlavenames,
                                builders_xrange, breqs_xrange, selected_slave=None):
@@ -154,6 +119,39 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
         yield self.insertTestData(self.testdata)
 
     @defer.inlineCallbacks
+    def generateLoadBusyBuildFarmResumeBuilds(self):
+        self.initialized()
+
+        slavenames = self.createSlaveList(available=False, xrange=xrange(0, 100))
+        startSlavenames = self.createSlaveList(available=True, xrange=xrange(100, 120))
+
+        self.createBuildersWithLoad(priority=Priority.Emergency,
+                                    slavenames={'slave-01': False},
+                                    startSlavenames={'slave-02': False},
+                                    builders_xrange=xrange(1, 3),
+                                    breqs_xrange=xrange(1, 3))
+
+        self.createBuildersWithLoad(priority=Priority.Emergency,
+                                    slavenames={'slave-03': False},
+                                    startSlavenames={'slave-04': False},
+                                    builders_xrange=xrange(1, 3),
+                                    breqs_xrange=xrange(1, 3))
+
+        self.createBuildersWithLoad(priority=Priority.VeryHigh,
+                                    slavenames=slavenames,
+                                    startSlavenames=startSlavenames,
+                                    builders_xrange=xrange(1, 50),
+                                    breqs_xrange=xrange(1, 70))
+
+        self.createBuildersWithLoad(priority=Priority.Default,
+                                    slavenames=slavenames,
+                                    startSlavenames=startSlavenames,
+                                    builders_xrange=xrange(1, 50),
+                                    breqs_xrange=xrange(1, 70))
+
+        yield self.insertTestData(self.testdata)
+
+    @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnclaimedQueueUnderLoad(self):
         yield self.generateBuildLoadCalculateNextPriorityBuilder()
         breq = yield self.profileAsyncFunc(12, self.brd._selectNextBuildRequest,
@@ -195,3 +193,15 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
         self.assertEquals(self.processedBuilds[1], ('slave-03', [11]))
         self.assertEquals(len(self.slaves), 406)
         self.assertEquals(len(self.processedBuilds), 3)
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnBusyBuildFarmResumeBuilds(self):
+        yield self.generateLoadBusyBuildFarmResumeBuilds()
+
+        yield self.profileAsyncFunc(15, self.brd._maybeStartOrResumeBuildsOn,
+                                    new_builders=self.botmaster.builders.keys())
+
+        self.checkBRDCleanedUp()
+        self.assertEquals(len(self.processedBuilds), 20)
+        self.assertTrue(True)
+

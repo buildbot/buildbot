@@ -1041,6 +1041,8 @@ class KatanaBuildRequestDistributor(service.Service):
         self.activity_lock = defer.DeferredLock()
         self.active = False
         self._pendingMSBOCalls = []
+        self.check_new_builds = True
+        self.check_resume_builds = True
         self.katanaBuildChooser = self.createBuildChooser(builders=self.botmaster.builders, master=self.master)
 
     @defer.inlineCallbacks
@@ -1081,6 +1083,10 @@ class KatanaBuildRequestDistributor(service.Service):
     def _maybeStartOrResumeBuildsOn(self, new_builders):
         # start the activity loop, if we aren't already
         #  working on that.
+        yield self.activity_lock.acquire()
+        self.check_new_builds = True
+        self.check_resume_builds = True
+        self.activity_lock.release()
         if not self.active:
             yield self._procesBuildRequestsActivityLoop()
 
@@ -1129,16 +1135,18 @@ class KatanaBuildRequestDistributor(service.Service):
             yield self.activity_lock.acquire()
 
             # continue checking new builds if we have pending builders
-            nextBuilder = yield self._selectNextBuildRequest(queue=Queue.unclaimed,
-                                                             asyncFunc=self._maybeStartBuildsOnBuilder)
-            check_new_builds = nextBuilder is not None
+            if self.check_new_builds:
+                nextBuilder = yield self._selectNextBuildRequest(queue=Queue.unclaimed,
+                                                                 asyncFunc=self._maybeStartBuildsOnBuilder)
+                self.check_new_builds = nextBuilder is not None
 
             # continue checking resume builds if we have pending builders to resume
-            nextResumeBuilder = yield self._selectNextBuildRequest(queue=Queue.resume,
-                                                                   asyncFunc=self._maybeResumeBuildsOnBuilder)
-            check_resume_builds = nextResumeBuilder is not None
+            if  self.check_resume_builds:
+                nextResumeBuilder = yield self._selectNextBuildRequest(queue=Queue.resume,
+                                                                       asyncFunc=self._maybeResumeBuildsOnBuilder)
+                self.check_resume_builds = nextResumeBuilder is not None
 
-            self.active = self.running and (check_new_builds or check_resume_builds)
+            self.active = self.running and (self.check_new_builds or self.check_resume_builds)
 
             self.activity_lock.release()
 
