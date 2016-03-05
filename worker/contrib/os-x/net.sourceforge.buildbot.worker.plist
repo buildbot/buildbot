@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
          <key>Label</key>
-         <string>net.sourceforge.buildbot.slave</string>
+         <string>net.sourceforge.buildbot.worker</string>
 
          <!-- Change this to the user you want to run buildbot as -->
          <key>UserName</key>
@@ -12,7 +12,7 @@
 
          <!-- Change this to your buildbot working directory -->
          <key>WorkingDirectory</key>
-         <string>/Users/buildbot/Buildbot_Slave</string>
+         <string>/Users/buildbot/Buildbot_Worker</string>
 
          <key>ProgramArguments</key>
          <array>
@@ -20,7 +20,7 @@
                  <string>--nodaemon</string>
                  <string>--python=buildbot.tac</string>
                  <string>--logfile=buildbot.log</string>
-                 <string>--prefix=slave</string>
+                 <string>--prefix=worker</string>
          </array>
 
          <key>KeepAlive</key>
