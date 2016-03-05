@@ -20,7 +20,7 @@ from twisted.python import log
 slaveTACTemplate = ["""
 import os
 
-from buildslave.bot import BuildSlave
+from buildbot_worker.bot import BuildSlave
 from twisted.application import service
 
 basedir = %(basedir)r
