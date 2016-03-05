@@ -429,6 +429,10 @@ else:
         'tls': [
             'Twisted[tls] ' + twisted_ver,
         ],
+        'docs': [
+            'sphinxcontrib-blockdiag',
+            'docutils>=0.8',
+        ],
     }
 
     if os.getenv('NO_INSTALL_REQS'):

@@ -128,8 +128,11 @@ install:
   # astroid > 1.4 is incompatible with pylint 1.1.0
   - "[ $TESTS != lint ] || pip install pylint==1.1.0 pep8==1.5.7 flake8  astroid==1.3.8"
   # TODO: Pin Sphinx version to workaround http://trac.buildbot.net/ticket/3408
-  - "[ $TESTS != docs ] || pip install sphinx==1.3.3"
-
+  - |
+      [ $TESTS != docs ] || \
+      pip install sphinx==1.3.3 \
+                  sphinxcontrib-blockdiag \
+                  docutils>=0.8 \
 before_script:
   # create real MySQL database for tests
   - mysql -e 'create database bbtest;'
