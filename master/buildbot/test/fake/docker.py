@@ -22,7 +22,7 @@ class Client(object):
     def images(self):
         return self._images
 
-    def start(self, *args, **kwargs):
+    def start(self, container):
         pass
 
     def stop(self, id):
@@ -41,6 +41,9 @@ class Client(object):
             for line in logs:
                 yield line
             self._images.append({'RepoTags': [tag + ':latest']})
+
+    def create_host_config(self, *args, **kwargs):
+        pass
 
     def create_container(self, image, *args, **kwargs):
         return {'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
