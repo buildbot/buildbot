@@ -62,10 +62,11 @@ def Table(*args, **kwargs):
 
 
 @contextmanager
-def withoutSqliteForeignKeys(engine):
-    conn = None
+def withoutSqliteForeignKeys(engine, connection=None):
+    conn = connection
     if engine.dialect.name == 'sqlite':
-        conn = engine.connect()
+        if conn is None:
+            conn = engine.connect()
         # This context is not re-entrant. Ensure it.
         assert not getattr(engine, 'fk_disabled', False)
         engine.fk_disabled = True
@@ -76,4 +77,5 @@ def withoutSqliteForeignKeys(engine):
         if engine.dialect.name == 'sqlite':
             engine.fk_disabled = False
             conn.execute('pragma foreign_keys=ON')
-            conn.close()
+            if connection is None:
+                conn.close()

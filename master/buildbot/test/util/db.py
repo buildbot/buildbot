@@ -18,7 +18,8 @@ import os
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import pool
-from buildbot.util.sautils import sa_version, withoutSqliteForeignKeys
+from buildbot.util.sautils import sa_version
+from buildbot.util.sautils import withoutSqliteForeignKeys
 from sqlalchemy.schema import MetaData
 from twisted.internet import defer
 from twisted.python import log
@@ -137,7 +138,7 @@ class RealDatabaseMixin(object):
             # SQLAlchemy wouldn't be able to break circular references.
             # Sqlalchemy fk support with sqlite is not yet perfect, so we must deactivate fk during that
             # operation, even though we made our possible to use use_alter
-            with withoutSqliteForeignKeys(conn.engine):
+            with withoutSqliteForeignKeys(conn.engine, conn):
                 meta.drop_all()
 
         except Exception:
