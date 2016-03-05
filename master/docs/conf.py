@@ -21,6 +21,17 @@ import textwrap
 sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
+# Check if sphinx is installed
+try:
+    import sphinxcontrib.blockdiag
+    import pkg_resources
+    pkg_resources.require('docutils>=0.8')
+except DistributionNotFound:
+    print("Please run this command to install the dependencies first "
+        "- pip install buildbot[docs]")
+except VersionConflict:
+    print("The version of docutils is not supported. Run this command "
+        "to install the required version - pip install buildbot[docs]")
 
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.0'

@@ -10,8 +10,6 @@ TAR_TRANSFORM := $(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--tr
 docs.tgz: clean html singlehtml images-png
 	sed -e 's!href="index.html#!href="#!g' < _build/singlehtml/index.html > _build/html/full.html
 	tar -C _build $(TAR_TRANSFORM) -zcf $@ html
-pipdeps:
-	pip install sphinxcontrib-blockdiag 'docutils>=0.8'
 
 images:
 	$(MAKE) -C images all
