@@ -1,9 +1,9 @@
-#compdef buildslave
+#compdef buildbot-worker
 #
-# This is the ZSH completion file for 'buildslave' command. It calls
-# 'buildslave' command with the special "--_shell-completion" option which is
-# handled by twisted.python.usage. t.p.usage then generates zsh code on stdout
-# to handle the completions.
+# This is the ZSH completion file for 'buildbot-worker' command. It calls
+# 'buildbot-worker' command with the special "--_shell-completion" option 
+# which is handled by twisted.python.usage. t.p.usage then generates zsh code 
+# on stdout to handle the completions.
 #
 # This file is derived from twisted/python/twisted-completion.zsh from twisted
 # distribution.
