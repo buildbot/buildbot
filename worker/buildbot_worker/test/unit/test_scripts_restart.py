@@ -27,7 +27,7 @@ class TestRestart(misc.IsBuildslaveDirMixin,
                   unittest.TestCase):
 
     """
-    Test buildslave.scripts.restart.restart()
+    Test buildbot_worker.scripts.restart.restart()
     """
     config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
 

@@ -30,7 +30,7 @@ class TestStopSlave(misc.FileIOMixin,
                     unittest.TestCase):
 
     """
-    Test buildslave.scripts.stop.stopSlave()
+    Test buildbot_worker.scripts.stop.stopSlave()
     """
     PID = 9876
 
@@ -88,7 +88,7 @@ class TestStop(misc.IsBuildslaveDirMixin,
                unittest.TestCase):
 
     """
-    Test buildslave.scripts.stop.stop()
+    Test buildbot_worker.scripts.stop.stop()
     """
     config = {"basedir": "dummy", "quiet": False}
 

@@ -33,7 +33,7 @@ def _regexp_path(name, *names):
 class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave._makeBaseDir()
+    Test buildbot_worker.scripts.create_slave._makeBaseDir()
     """
 
     def setUp(self):
@@ -125,7 +125,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
                           unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave._makeBuildbotTac()
+    Test buildbot_worker.scripts.create_slave._makeBuildbotTac()
     """
 
     def setUp(self):
@@ -288,7 +288,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
                         unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave._makeInfoFiles()
+    Test buildbot_worker.scripts.create_slave._makeInfoFiles()
     """
 
     def setUp(self):
@@ -474,7 +474,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
 class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.create_slave.createSlave()
+    Test buildbot_worker.scripts.create_slave.createSlave()
     """
     # default options and required arguments
     options = {

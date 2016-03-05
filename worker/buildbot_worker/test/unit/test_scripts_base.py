@@ -25,7 +25,7 @@ from twisted.trial import unittest
 
 class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
 
-    """Test buildslave.scripts.base.isBuildslaveDir()"""
+    """Test buildbot_worker.scripts.base.isBuildslaveDir()"""
 
     def setUp(self):
         # capture output to stdout

@@ -82,7 +82,7 @@ class BaseDirTestsMixin(object):
 class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.MakerBase class.
+    Test buildbot_worker.scripts.runner.MakerBase class.
     """
     options_class = runner.MakerBase
 
@@ -90,7 +90,7 @@ class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
 class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.StopOptions class.
+    Test buildbot_worker.scripts.runner.StopOptions class.
     """
     options_class = runner.StopOptions
 
@@ -102,7 +102,7 @@ class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.StartOptions class.
+    Test buildbot_worker.scripts.runner.StartOptions class.
     """
     options_class = runner.StartOptions
 
@@ -120,7 +120,7 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.RestartOptions class.
+    Test buildbot_worker.scripts.runner.RestartOptions class.
     """
     options_class = runner.RestartOptions
 
@@ -138,7 +138,7 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.UpgradeSlaveOptions class.
+    Test buildbot_worker.scripts.runner.UpgradeSlaveOptions class.
     """
     options_class = runner.UpgradeSlaveOptions
 
@@ -150,7 +150,7 @@ class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
 class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.CreateSlaveOptions class.
+    Test buildbot_worker.scripts.runner.CreateSlaveOptions class.
     """
 
     req_args = ["bdir", "mstr:5678", "name", "pswd"]
@@ -306,7 +306,7 @@ class TestCreateSlaveOptions(OptionsMixin, unittest.TestCase):
 class TestOptions(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.Options class.
+    Test buildbot_worker.scripts.runner.Options class.
     """
 
     def setUp(self):
@@ -340,7 +340,7 @@ functionPlaceholder = None
 class TestRun(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.run()
+    Test buildbot_worker.scripts.runner.run()
     """
 
     def setUp(self):

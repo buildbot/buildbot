@@ -23,7 +23,7 @@ from twisted.trial import unittest
 class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
 
     """
-    Test buildslave.scripts.startup.startCommand()
+    Test buildbot_worker.scripts.startup.startCommand()
     """
 
     def test_start_command_bad_basedir(self):

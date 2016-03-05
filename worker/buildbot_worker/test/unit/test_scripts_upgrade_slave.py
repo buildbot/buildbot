@@ -41,7 +41,7 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
                        unittest.TestCase):
 
     """
-    Test buildslave.scripts.runner.upgradeSlave()
+    Test buildbot_worker.scripts.runner.upgradeSlave()
     """
     config = {"basedir": "dummy"}
 

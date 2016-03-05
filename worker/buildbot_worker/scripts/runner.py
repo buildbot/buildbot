@@ -66,7 +66,7 @@ class MakerBase(usage.Options):
 
 
 class StartOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.start.startCommand"
+    subcommandFunction = "buildbot_worker.scripts.start.startCommand"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
@@ -77,14 +77,14 @@ class StartOptions(MakerBase):
 
 
 class StopOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.stop.stop"
+    subcommandFunction = "buildbot_worker.scripts.stop.stop"
 
     def getSynopsis(self):
         return "Usage:    buildslave stop [<basedir>]"
 
 
 class RestartOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.restart.restart"
+    subcommandFunction = "buildbot_worker.scripts.restart.restart"
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
@@ -95,7 +95,7 @@ class RestartOptions(MakerBase):
 
 
 class UpgradeSlaveOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.upgrade_slave.upgradeSlave"
+    subcommandFunction = "buildbot_worker.scripts.upgrade_slave.upgradeSlave"
     optFlags = [
     ]
     optParameters = [
@@ -111,7 +111,7 @@ class UpgradeSlaveOptions(MakerBase):
 
 
 class CreateSlaveOptions(MakerBase):
-    subcommandFunction = "buildslave.scripts.create_slave.createSlave"
+    subcommandFunction = "buildbot_worker.scripts.create_slave.createSlave"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",

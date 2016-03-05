@@ -67,7 +67,7 @@ class Expect(object):
 class FakeRunProcess(object):
 
     """
-    A fake version of L{buildslave.runprocess.RunProcess} which will
+    A fake version of L{buildbot_worker.runprocess.RunProcess} which will
     simulate running external processes without actually running them (which is
     very fragile in tests!)
 
