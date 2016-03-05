@@ -71,7 +71,7 @@ class our_sdist(sdist):
 setup_args = {
     'name': "buildbot-worker",
     'version': version,
-    'description': "Buildbot Slave Daemon",
+    'description': "Buildbot Worker Daemon",
     'long_description': "See the 'buildbot' package for details",
     'author': "Brian Warner",
     'author_email': "warner-buildbot@lothar.com",
