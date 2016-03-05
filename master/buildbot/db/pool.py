@@ -15,10 +15,7 @@
 from __future__ import print_function
 
 import inspect
-import os
-import shutil
 import sqlalchemy as sa
-import tempfile
 import time
 import traceback
 
