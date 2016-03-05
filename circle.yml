@@ -9,6 +9,7 @@ dependencies:
   override:
     - pyenv global 2.7.11
     - pip install -e pkg -e master -e slave
+    - pip install -e master[docs]
 
 test:
   override:
