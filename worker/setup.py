@@ -69,7 +69,7 @@ class our_sdist(sdist):
         open(dst_fn, 'w').write(src)
 
 setup_args = {
-    'name': "buildbot-slave",
+    'name': "buildbot-worker",
     'version': version,
     'description': "Buildbot Slave Daemon",
     'long_description': "See the 'buildbot' package for details",
