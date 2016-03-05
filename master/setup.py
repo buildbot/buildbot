@@ -426,9 +426,16 @@ else:
             'buildbot-www',
             'buildbot-slave'
         ],
+<<<<<<< HEAD
         'tls': [
             'Twisted[tls] ' + twisted_ver,
         ],
+=======
+        'docs': [
+            'sphinxcontrib-blockdiag',
+            'docutils>=0.8',
+        ]
+>>>>>>> Install docs dependencies in setup.py
     }
 
     if os.getenv('NO_INSTALL_REQS'):
