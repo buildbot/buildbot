@@ -521,14 +521,14 @@ def DetermineRunner(bbdir):
     '''Checks if the given directory is a buildbot worker or a master and 
     returns the appropriate run function.'''
     try:
-        import buildslave.scripts.runner
+        import buildbot_worker.scripts.runner
         tacfile = os.path.join(bbdir, 'buildbot.tac')
 
         if os.path.exists(tacfile):
             with open(tacfile, 'r') as f:
                 contents = f.read()
                 if 'import BuildSlave' in contents:
-                    return buildslave.scripts.runner.run
+                    return buildbot_worker.scripts.runner.run
 
     except ImportError:
         # Use the default
