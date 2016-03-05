@@ -1,0 +1,50 @@
+#
+# This file installs BASH completions for 'buildslave' command.
+#
+
+_buildslave()
+{
+    local buildslave_subcommands="
+        create-slave upgrade-slave start stop restart"
+
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local subcommand=
+    local subcommand_args=
+    local i=1
+
+    #
+    # 'parse' the command line so far
+    # figure out if we have subcommand specified and any arguments to it
+    #
+
+    # skip global options
+    while [[ "${COMP_WORDS[$i]}" == -* ]];
+    do
+        i=$(($i+1))
+    done
+
+    # save subcommand
+    subcommand=${COMP_WORDS[$i]}
+    i=$(($i+1))
+
+    # skip subcommand options
+    while [[ "${COMP_WORDS[$i]}" == -* ]];
+    do
+        i=$(($i+1))
+    done
+
+    # save subcommand arguments
+    subcommand_args=${COMP_WORDS[@]:$i:${#COMP_WORDS[@]}}
+
+    if [ "$cur" == "$subcommand" ]; then
+        # suggest buildbot subcommands
+        COMPREPLY=( $(compgen -W "$buildslave_subcommands" $cur) )
+    elif [ "$cur" == "$subcommand_args" ]; then
+        # we are at first subcommand argument
+        # all subcommands can have slave base directory as first argument
+        # suggest directories
+	COMPREPLY=( $(compgen -A directory $cur) )
+    fi
+}
+
+complete -F _buildslave buildslave
