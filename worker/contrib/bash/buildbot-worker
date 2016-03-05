@@ -1,10 +1,10 @@
 #
-# This file installs BASH completions for 'buildslave' command.
+# This file installs BASH completions for 'buildbot-worker' command.
 #
 
-_buildslave()
+_buildbot_worker()
 {
-    local buildslave_subcommands="
+    local buildbot_worker_subcommands="
         create-slave upgrade-slave start stop restart"
 
     local cur=${COMP_WORDS[COMP_CWORD]}
@@ -38,13 +38,13 @@ _buildslave()
 
     if [ "$cur" == "$subcommand" ]; then
         # suggest buildbot subcommands
-        COMPREPLY=( $(compgen -W "$buildslave_subcommands" $cur) )
+        COMPREPLY=( $(compgen -W "$buildbot_worker_subcommands" $cur) )
     elif [ "$cur" == "$subcommand_args" ]; then
         # we are at first subcommand argument
-        # all subcommands can have slave base directory as first argument
+        # all subcommands can have worker base directory as first argument
         # suggest directories
 	COMPREPLY=( $(compgen -A directory $cur) )
     fi
 }
 
-complete -F _buildslave buildslave
+complete -F _buildbot_worker buildbot-worker
