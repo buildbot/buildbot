@@ -430,6 +430,7 @@ else:
             'Twisted[tls] ' + twisted_ver,
         ],
         'docs': [
+            'sphinx',
             'sphinxcontrib-blockdiag',
             'docutils>=0.8',
         ],
