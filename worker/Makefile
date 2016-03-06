@@ -1,6 +1,6 @@
 # developer utilities
 pylint:
-	pylint --rcfile=../common/pylintrc buildslave
+	pylint --rcfile=../common/pylintrc buildbot_worker
 
-pyflakes:
-	pyflakes buildslave
+flake8:
+	flake8 --config=../common/flake8rc buildbot_worker
