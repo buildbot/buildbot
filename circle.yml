@@ -7,8 +7,10 @@ machine:
 
 dependencies:
   override:
+    # Cicle CI fails for fork PR due to some virtualenv conflicts.
+    # Try to deactivate virtualenv if we have any.
+    - deactivate || true
     - pyenv global 2.7.11
-    # Test that Cicle CI fails for fork PR
     - pip install -e pkg -e master -e slave
 
 test:
