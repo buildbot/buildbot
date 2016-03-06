@@ -21,12 +21,12 @@ install:
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
   
-  - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave"
+  - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave -e worker"
 
 build: false
 
 test_script:
-  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test"
+  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
