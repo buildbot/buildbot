@@ -13,12 +13,12 @@
 .\" 
 .\" Copyright Buildbot Team Members
 
-.TH BUILDSLAVE "1" "August 2010" "Buildbot" "User Commands"
+.TH BUILDBOT-WORKER "1" "August 2010" "Buildbot" "User Commands"
 .SH NAME
-buildslave \- a tool for managing buildbot slave instances
+buildbot-worker \- a tool for managing buildbot worker instances
 .SH SYNOPSIS
 .PP
-.B buildslave
+.B buildbot-worker
 [
 .BR "global options"
 ]
@@ -27,7 +27,7 @@ buildslave \- a tool for managing buildbot slave instances
 .BR "command options"
 ]
 .PP
-.B buildslave
+.B buildbot-worker
 create-slave
 [
 .BR \-q | \-\-quiet
@@ -69,7 +69,7 @@ create-slave
 .I USERNAME
 .I PASSWORD
 .PP
-.B buildslave
+.B buildbot-worker
 [
 .BR \-\-verbose
 ]
@@ -80,7 +80,7 @@ create-slave
 .I PATH
 ]
 .PP
-.B buildslave
+.B buildbot-worker
 [
 .BR \-\-verbose
 ]
@@ -88,27 +88,27 @@ create-slave
 .BR \-\-help | \-\-version
 }
 .PP
-.B buildslave
+.B buildbot-worker
 .I command
 .BR \-h | \-\-help
 .SH DESCRIPTION
 .\" Putting a newline after each sentence can generate better output.
-The `buildslave' command-line tool can be used to start or stop a
-buildslave or create a new buildslave instance.
+The `buildbot-worker' command-line tool can be used to start or stop a
+Buildbot worker or create a new worker instance.
 .SH OPTIONS
 .SS Commands
 .TP
 .BR create-slave
-Create and populate a directory for a new buildslave
+Create and populate a directory for a new worker
 .TP
 .BR start
-Start a buildslave
+Start a worker
 .TP
 .BR stop
-Stop a buildslave
+Stop a worker
 .TP
 .BR restart
-Restart a buildslave
+Restart a worker
 .SS Global options
 .TP
 .BR \-h | \-\-help
@@ -116,7 +116,7 @@ Print the list of available commands and global options.
 All subsequent commands are ignored.
 .TP
 .BR --version
-Print twistd and buildslave version.
+Print twistd and buildbot-worker version.
 All subsequent commands are ignored.
 .TP
 .BR --verbose
@@ -148,7 +148,7 @@ Do not emit the commands being run.
 Create a relocatable buildbot.tac.
 .TP
 .BR \-n | \-\-no-logrotate
-Do not permit buildslave rotate logs by itself.
+Do not permit worker rotate logs by itself.
 .TP
 .BR \-s | \-\-log-size
 Set size at which twisted lof file is rotated to
@@ -157,7 +157,7 @@ bytes.
 Default value is 1000000 bytes.
 .TP
 .BR \-\-umask
-Set umask for files created by buildslave.
+Set umask for files created by worker.
 Default value is 077 which means only owner can access the files.
 See
 .BR umask (2)
@@ -169,7 +169,7 @@ pty).
 Default value is 0.
 .TP
 .I PATH
-Path to buildslave base directory.
+Path to worker base directory.
 .TP
 .I MASTER
 Set the host and port of buildbot master to attach to in form
@@ -177,11 +177,11 @@ Set the host and port of buildbot master to attach to in form
 This should be provided by buildmaster administrator.
 .TP
 .I USERNAME
-Buildslave name to connect with.
+Worker name to connect with.
 This should be provided by buildmaster administrator.
 .TP
 .I PASSWORD
-Buildslave password to connect with.
+Worker password to connect with.
 This should be provided by buildmaster administrator.
 .SH "SEE ALSO"
 .BR buildbot (1),
