@@ -34,7 +34,7 @@ extensions = [
     'bbdocs.ext',
     'sphinxcontrib.blockdiag'
 ]
-todo_include_todos=True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

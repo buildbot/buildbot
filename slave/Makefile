@@ -2,5 +2,5 @@
 pylint:
 	pylint --rcfile=../common/pylintrc buildslave
 
-pyflakes:
-	pyflakes buildslave
+flake8:
+	flake8 --config=../common/flake8rc buildslave
