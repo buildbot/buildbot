@@ -1,0 +1,192 @@
+.\" This file is part of Buildbot.  Buildbot is free software: you can
+.\" redistribute it and/or modify it under the terms of the GNU General Public
+.\" License as published by the Free Software Foundation, version 2.
+.\" 
+.\" This program is distributed in the hope that it will be useful, but WITHOUT
+.\" ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+.\" FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+.\" details.
+.\" 
+.\" You should have received a copy of the GNU General Public License along with
+.\" this program; if not, write to the Free Software Foundation, Inc., 51
+.\" Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+.\" 
+.\" Copyright Buildbot Team Members
+
+.TH BUILDBOT-WORKER "1" "August 2010" "Buildbot" "User Commands"
+.SH NAME
+buildbot-worker \- a tool for managing buildbot worker instances
+.SH SYNOPSIS
+.PP
+.B buildbot-worker
+[
+.BR "global options"
+]
+.I command
+[
+.BR "command options"
+]
+.PP
+.B buildbot-worker
+create-slave
+[
+.BR \-q | \-\-quiet
+]
+[
+.BR \-f | \-\-force
+]
+[
+.BR \-r | \-\-relocatable
+]
+[
+.BR \-n | \-\-no-logrotate
+]
+[
+.BR \-k | \-\-keepalive
+.I TIME
+]
+[
+.BR --usepty
+{0|1}
+]
+[
+.BR \-\-umask
+.I UMASK
+]
+[
+.BR \-s | \-\-log-size
+.I SIZE
+]
+[
+.BR \-l | \-\-log-count
+.I COUNT
+]
+[
+.BR \-\-verbose
+]
+.I PATH
+.I MASTER
+.I USERNAME
+.I PASSWORD
+.PP
+.B buildbot-worker
+[
+.BR \-\-verbose
+]
+{
+.BR start | stop | restart
+}
+[
+.I PATH
+]
+.PP
+.B buildbot-worker
+[
+.BR \-\-verbose
+]
+{
+.BR \-\-help | \-\-version
+}
+.PP
+.B buildbot-worker
+.I command
+.BR \-h | \-\-help
+.SH DESCRIPTION
+.\" Putting a newline after each sentence can generate better output.
+The `buildbot-worker' command-line tool can be used to start or stop a
+Buildbot worker or create a new worker instance.
+.SH OPTIONS
+.SS Commands
+.TP
+.BR create-slave
+Create and populate a directory for a new worker
+.TP
+.BR start
+Start a worker
+.TP
+.BR stop
+Stop a worker
+.TP
+.BR restart
+Restart a worker
+.SS Global options
+.TP
+.BR \-h | \-\-help
+Print the list of available commands and global options.
+All subsequent commands are ignored.
+.TP
+.BR --version
+Print twistd and buildbot-worker version.
+All subsequent commands are ignored.
+.TP
+.BR --verbose
+Verbose output.
+.SS create-slave command options
+.TP
+.BR \-f | \-\-force
+Re-use an existing directory.
+.TP
+.BR \-h | \-\-help
+Show help for current command and exit.
+All subsequent commands are ignored.
+.TP
+.BR \-k | \-\-keepalive
+Send keepalive requests to buildmaster every
+.I TIME
+seconds.
+Default value is 600 seconds.
+.TP
+.BR \-l | \-\-log-count
+Limit the number of kept old twisted log files to
+.IR COUNT .
+All files are kept by default.
+.TP
+.BR \-q | \-\-quiet
+Do not emit the commands being run.
+.TP
+.BR \-r | \-\-relocatable
+Create a relocatable buildbot.tac.
+.TP
+.BR \-n | \-\-no-logrotate
+Do not permit worker rotate logs by itself.
+.TP
+.BR \-s | \-\-log-size
+Set size at which twisted lof file is rotated to
+.I SIZE
+bytes.
+Default value is 1000000 bytes.
+.TP
+.BR \-\-umask
+Set umask for files created by worker.
+Default value is 077 which means only owner can access the files.
+See
+.BR umask (2)
+for more details.
+.TP
+.BR \-\-usepty
+Set wether child processes should be run in a pty (0 means do not run in a
+pty).
+Default value is 0.
+.TP
+.I PATH
+Path to worker base directory.
+.TP
+.I MASTER
+Set the host and port of buildbot master to attach to in form
+.IR HOST:PORT .
+This should be provided by buildmaster administrator.
+.TP
+.I USERNAME
+Worker name to connect with.
+This should be provided by buildmaster administrator.
+.TP
+.I PASSWORD
+Worker password to connect with.
+This should be provided by buildmaster administrator.
+.SH "SEE ALSO"
+.BR buildbot (1),
+.BR umask (2),
+.PP
+The complete documentation is available in texinfo format. To use it, run
+.BR "info buildbot" .
+
