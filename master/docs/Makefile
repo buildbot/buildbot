@@ -1,25 +1,17 @@
 all: docs.tgz
 
-.PHONY: images images-png images-eps tutorial manual pipdeps
+.PHONY: tutorial manual pipdeps
 
 VERSION := $(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
 TAR_VERSION := $(shell tar --version)
 TAR_TRANSFORM := $(if $(filter bsdtar,$(TAR_VERSION)),-s /^html/$(VERSION)/,--transform s/^html/$(VERSION)/)
 
-docs.tgz: clean html singlehtml images-png
+docs.tgz: clean html singlehtml
 	sed -e 's!href="index.html#!href="#!g' < _build/singlehtml/index.html > _build/html/full.html
 	tar -C _build $(TAR_TRANSFORM) -zcf $@ html
 pipdeps:
 	pip install sphinxcontrib-blockdiag 'docutils>=0.8'
-
-images:
-	$(MAKE) -C images all
-images-png:
-	# rule disabled, since the .png's are in git
-	#$(MAKE) -C images images-png
-images-eps:
-	$(MAKE) -C images images-eps
 
 # -- Makefile for Sphinx documentation --
 
