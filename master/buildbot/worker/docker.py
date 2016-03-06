@@ -60,7 +60,7 @@ class DockerLatentWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                 masterFQDN=None,
+                 masterFQDN=None, hostconfig=None,
                  **kwargs):
 
         if not client:
@@ -99,6 +99,7 @@ class DockerLatentWorker(AbstractLatentWorker):
         if masterFQDN is None:
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
+        self.hostconfig = hostconfig or {}
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
@@ -156,7 +157,8 @@ class DockerLatentWorker(AbstractLatentWorker):
                 'Image "%s" not found on docker host.' % image
             )
 
-        host_conf = docker_client.create_host_config(binds=self.binds)
+        self.hostconfig['binds'] = self.binds
+        host_conf = docker_client.create_host_config(**self.hostconfig)
 
         instance = docker_client.create_container(
             image,

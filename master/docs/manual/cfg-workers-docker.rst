@@ -216,6 +216,10 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     Address of the master the worker should connect to. Use if you master machine does not have proper fqdn.
     This value is passed to the docker image via environment variable ``BUILDMASTER``
 
+``hostconfig``
+    (optional)
+    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <http://docker-py.readthedocs.org/en/latest/hostconfig/>`_ for all the supported options.
+
 Setting up Volumes
 ..................
 
