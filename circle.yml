@@ -8,6 +8,7 @@ machine:
 dependencies:
   override:
     - pyenv global 2.7.11
+    # Test that Cicle CI fails for fork PR
     - pip install -e pkg -e master -e slave
 
 test:
