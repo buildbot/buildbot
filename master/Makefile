@@ -3,7 +3,7 @@ pylint:
 	pylint --rcfile=../common/pylintrc buildbot
 tutorial:
 	cd docs/tutorial; $(MAKE) html
-pyflakes:
-	pyflakes buildbot
+flake8:
+	flake8 --config=../common/flake8rc buildbot
 rmpyc:
 	make -C .. rmpyc
