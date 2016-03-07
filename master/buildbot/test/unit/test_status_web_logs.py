@@ -15,9 +15,9 @@
 from buildbot.status.web.jsontestresults import JSONTestResource
 
 from buildbot.status.buildstep import BuildStepStatus
+from buildbot.status.build import BuildStatus
 from buildbot.status.logfile import HTMLLogFile, LogFile
 from buildbot.status.web.logs import LogsResource
-from buildbot.status.web.base import IHTMLLog
 
 import mock
 from buildbot.status.web.xmltestresults import XMLTestResource
@@ -42,6 +42,15 @@ class TestLogsResource(unittest.TestCase):
         self.logs.append(log)
 
         return st
+
+    def setupBuildStepStatus(self):
+        step = mock.Mock(BuildStepStatus)
+        step.build = mock.Mock(BuildStatus)
+        builder = mock.Mock()
+        builder.basedir = "dir"
+        step.build.builder = builder
+        step.build.builder.master = mock.Mock()
+        return step
 
     def test_log_resource_json(self):
         st = self.setupStatus("test", "", True, "json")
@@ -97,3 +106,9 @@ class TestLogsResource(unittest.TestCase):
         res = logs_resource.getChild("test1", "")
 
         self.assertIsInstance(res, NoResource)
+
+    def test_log_initialize_attribute(self):
+        step = self.setupBuildStepStatus()
+        htmllog = HTMLLogFile(step, "example", "test file", "test html")
+
+        self.assertEquals(htmllog.content_type, "")

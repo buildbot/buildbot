@@ -669,6 +669,7 @@ class HTMLLogFile(styles.Versioned, LogFile):
 
     def __init__(self, parent, name, logfilename, html):
         LogFile.__init__(self, parent, name, logfilename)
+        self.content_type = ''
         self.addStderr(html)
         self.finish()
 
