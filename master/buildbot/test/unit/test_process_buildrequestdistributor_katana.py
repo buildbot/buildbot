@@ -8,7 +8,7 @@ from buildbot.process import builder, factory
 from buildbot import config
 import mock
 from buildbot.db.buildrequests import Queue
-from buildbot.status.results import RESUME
+from buildbot.status.results import RESUME, BEGINNING
 from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
 from buildbot.test.util import compat
 from buildbot.db.buildrequests import AlreadyClaimedError
@@ -355,6 +355,60 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
             self.assertEqual(len(self.flushLoggedErrors(AlreadyClaimedError)), 1)
 
         self.quiet_deferred.addCallback(check)
+        return self.quiet_deferred
+
+    @defer.inlineCallbacks
+    def generateMergableBuilds(self, results=BEGINNING):
+        self.initialized()
+        sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
+        sources2 = [{'repository': 'repo2', 'codebase': 'cb2', 'branch': 'develop', 'revision': 'asz3114'}]
+        sources3 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'develop', 'revision': 'asz3115'}]
+        self.insertBuildrequests("bldr1", 75, xrange(1, 11), results=results, sources=sources1)
+        self.insertBuildrequests("bldr1", 10, xrange(1, 11), results=results,
+                                 selected_slave='slave-01',
+                                 sources=sources1)
+        self.insertBuildrequests("bldr1", 50, xrange(1, 6), results=results, sources=sources1+sources2)
+        self.insertBuildrequests("bldr1", 50, xrange(1, 6), results=results, sources=sources3)
+        if results == RESUME:
+            self.insertBuildrequests("bldr1", 50, xrange(1, 6), artifactbrid=3, mergebrid=3,
+                                     results=RESUME, sources=sources1)
+            self.insertBuildrequests("bldr1", 50, xrange(1, 6), artifactbrid=10, mergebrid=10,
+                                     results=RESUME, sources=sources1)
+        yield self.insertTestData(self.testdata)
+
+    def checkMerges(self, output, expetedBuilds):
+        self.checkBRDCleanedUp()
+        self.assertEquals(self.processedBuilds, expetedBuilds)
+
+    def test_maybeStartBuildsOnProcessBuildsMergesUnclaimedBuilds(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True})
+
+        d = self.generateMergableBuilds()
+        d.addCallback(lambda _: self.brd.maybeStartBuildsOn(['bldr1', 'bldr2']))
+
+        # selected slave skips merges
+        self.quiet_deferred.addCallback(self.checkMerges, [('slave-02', [idx for idx in xrange(1, 11)])])
+        return self.quiet_deferred
+
+    def test_maybeStartBuildsOnProcessBuildsMergesResumeBuilds(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True})
+
+        mergesBrids = [idx for idx in xrange(1, 11)]
+        previousMergesBrids = [idx for idx in xrange(31, 41)]
+
+        def checkMergedBrid(brdicts, brid):
+            self.assertTrue(all([br['artifactbrid'] == brid and br['mergebrid'] == brid for br in brdicts]))
+
+        d = self.generateMergableBuilds(results=RESUME)
+        d.addCallback(lambda _: self.master.db.buildrequests.getBuildRequests(brids=[31, 35]))
+        d.addCallback(checkMergedBrid, brid=3)
+        d.addCallback(lambda _: self.brd.maybeStartBuildsOn(['bldr1', 'bldr2']))
+        self.quiet_deferred.addCallback(self.checkMerges, [('slave-01', mergesBrids + previousMergesBrids)])
+        self.quiet_deferred.addCallback(lambda _: self.master.db.buildrequests.getBuildRequests(brids=[31, 40]))
+        self.quiet_deferred.addCallback(checkMergedBrid, brid=1)
+
         return self.quiet_deferred
 
 

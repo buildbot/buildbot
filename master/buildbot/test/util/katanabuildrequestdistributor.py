@@ -149,13 +149,17 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
         self.testdata = []
 
     def insertBuildrequests(self, buildername, priority, xrange, submitted_at=1449578391,
-                            results=BEGINNING, selected_slave=None, complete=0, sources=None):
+                            results=BEGINNING, complete=0,
+                            mergebrid=None,artifactbrid=None,
+                            selected_slave=None, sources=None):
         self.testdata += [fakedb.BuildRequest(id=self.lastbrid+idx,
                                               buildsetid=self.lastbrid+idx,
                                               buildername=buildername,
                                               priority=priority,
                                               results=results,
                                               complete=complete,
+                                              mergebrid=mergebrid,
+                                              artifactbrid=artifactbrid,
                                               submitted_at=submitted_at) for idx in xrange]
 
         if results == RESUME:
@@ -178,7 +182,12 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
                               for idx in xrange]
 
         else:
-            print "insert sources here, check how we fill the sources by default"
-            # TODO: insert sources here
+            self.testdata += [fakedb.SourceStampSet(id=self.lastbrid+idx) for idx in xrange]
+            for ss in sources:
+                self.testdata += [fakedb.SourceStamp(sourcestampsetid=self.lastbrid+idx,
+                                                     repository=ss['repository'],
+                                                     codebase=ss['codebase'],
+                                                     branch=ss['branch'],
+                                                     revision=ss['revision']) for idx in xrange]
 
         self.lastbrid += len(xrange)
