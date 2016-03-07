@@ -152,6 +152,8 @@ script:
   - "[ $TESTS != lint ] || make pylint"
   - "[ $TESTS != lint ] || make flake8"
   - "[ $TESTS != docs ] || make docs"
+  # Runs Sphinx' external link checker
+  - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-q linkcheck"
   - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
 notifications:
