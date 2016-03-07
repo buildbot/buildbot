@@ -141,6 +141,8 @@ extlinks = {
     'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None)
 }
 
+linkcheck_ignore = [r'^http://localhost.*']
+
 # -- Options for HTML output ---------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
