@@ -64,7 +64,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                  **kwargs):
 
         if not client:
-            config.error("The python module 'docker-py' is needed to use a"
+            config.error("The python module 'docker-py>=1.4' is needed to use a"
                          " DockerLatentWorker")
         if not image and not dockerfile:
             config.error("DockerLatentWorker: You need to specify at least"
@@ -156,12 +156,15 @@ class DockerLatentWorker(AbstractLatentWorker):
                 'Image "%s" not found on docker host.' % image
             )
 
+        host_conf = docker_client.create_host_config(binds=self.binds)
+
         instance = docker_client.create_container(
             image,
             self.command,
             name='%s_%s' % (self.workername, id(self)),
             volumes=self.volumes,
-            environment=self.createEnvironment()
+            environment=self.createEnvironment(),
+            host_config=host_conf
         )
 
         if instance.get('Id') is None:
@@ -173,7 +176,7 @@ class DockerLatentWorker(AbstractLatentWorker):
         log.msg('Container created, Id: %s...' % (shortid,))
         instance['image'] = image
         self.instance = instance
-        docker_client.start(instance, binds=self.binds)
+        docker_client.start(instance)
         log.msg('Container started')
         if self.followStartupLogs:
             logs = docker_client.attach(container=instance, stdout=True, stderr=True, stream=True)
