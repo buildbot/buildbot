@@ -25,14 +25,14 @@ sys.path.append(os.path.abspath('.'))
 # Check if [docs] dependencies are installed
 try:
     import sphinxcontrib.blockdiag
-    import pkg_resources
+except ImportError:
+    raise RuntimeError("sphinxcontrib.blockdiag is not installed. Please install documentation dependencies with `pip install buildbot[docs]`") 
+import pkg_resources
+try:
     pkg_resources.require('docutils>=0.8')
-except DistributionNotFound:
-    print("Please run this command to install the dependencies first "
-        "- pip install buildbot[docs]")
-except VersionConflict:
-    print("The version of docutils is not supported. Run this command "
-        "to install the required version - pip install buildbot[docs]")
+except resources.ResolutionError:
+    raise RuntimeError("docutils is not installed or has an incompatible version. Please install documentation dependencies with `pip install buildbot[docs]`")
+
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.0'
 
@@ -45,7 +45,7 @@ extensions = [
     'bbdocs.ext',
     'sphinxcontrib.blockdiag'
 ]
-todo_include_todos=True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

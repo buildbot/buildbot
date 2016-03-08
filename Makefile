@@ -20,7 +20,10 @@ pylint:
 
 # flake8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 flake8:
-	flake8 --config=common/flake8rc master/buildbot slave/buildslave www/*/buildbot_*/ www/*/setup.py
+	$(MAKE) -C master flake8
+	$(MAKE) -C slave flake8
+	flake8 --config=common/flake8rc www/*/buildbot_*/
+	flake8 --config=common/flake8rc www/*/setup.py
 
 # rebuild front-end from source
 frontend:

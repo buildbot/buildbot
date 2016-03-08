@@ -848,7 +848,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         s.build.getWorkerCommandVersion.return_value = 1
         ss = Mock()
         ss.asDict.return_value = dict(revision="12345")
-        s.build.getSourceStamp.return_value = ss
+        s.build.getAllSourceStamps.return_value = [ss]
 
         s.worker = Mock()
         s.remote = Mock()
@@ -864,7 +864,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
                 self.assertEquals(
-                    data, json.dumps(dict(sourcestamp=ss.asDict(), properties={'key1': 'value1'})))
+                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
                 break
         else:
             self.assert_(False, "No downloadFile command found")
