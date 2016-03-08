@@ -116,6 +116,9 @@ class DockerLatentWorker(AbstractLatentWorker):
             result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
         return result
 
+    def createHostConfig(self, docker_client):
+        return docker_client.create_host_config(binds=self.binds)
+
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
@@ -156,7 +159,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                 'Image "%s" not found on docker host.' % image
             )
 
-        host_conf = docker_client.create_host_config(binds=self.binds)
+        host_conf = self.createHostConfig(docker_client)
 
         instance = docker_client.create_container(
             image,
