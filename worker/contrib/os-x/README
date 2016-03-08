@@ -1,8 +1,8 @@
 Mark Pauley contributed the two launchd plist files for OS-X (10.4+) to start
-a buildmaster or buildslave automatically at startup:
+a Buildbot master or worker automatically at startup:
 
  contrib/OS-X/net.sourceforge.buildbot.master.plist
- contrib/OS-X/net.sourceforge.buildbot.slave.plist
+ contrib/OS-X/net.sourceforge.buildbot.worker.plist
 
 His email message is as follows:
 

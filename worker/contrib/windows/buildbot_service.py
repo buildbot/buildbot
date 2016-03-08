@@ -3,7 +3,7 @@
 # * Install and configure buildbot as per normal (ie, running
 #  'setup.py install' from the source directory).
 #
-# * Configure any number of build-bot directories (slaves or masters), as
+# * Configure any number of build-bot directories (workers or masters), as
 #   per the buildbot instructions.  Test these directories normally by
 #   using the (possibly modified) "buildbot.bat" file and ensure everything
 #   is working as expected.
@@ -104,7 +104,7 @@ CHILDCAPTURE_MAX_BLOCKS = 200
 class BBService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'BuildBot'
     _svc_display_name_ = _svc_name_
-    _svc_description_ = 'Manages local buildbot slaves and masters - ' \
+    _svc_description_ = 'Manages local buildbot workers and masters - ' \
                         'see http://buildbot.sourceforge.net'
 
     def __init__(self, args):
@@ -504,7 +504,7 @@ def _RunChild(runfn):
         # py2exe sets this env vars that may screw our child process - reset
         del os.environ["PYTHONPATH"]
 
-    # Start the buildbot/buildslave app
+    # Start the buildbot/buildbot-worker app
     runfn()
     print "Service child process terminating normally."
 
@@ -518,17 +518,17 @@ def _WaitForShutdown(h):
 
 
 def DetermineRunner(bbdir):
-    '''Checks if the given directory is a buildslave or a master and returns the
-    appropriate run function.'''
+    '''Checks if the given directory is a buildbot worker or a master and 
+    returns the appropriate run function.'''
     try:
-        import buildslave.scripts.runner
+        import buildbot_worker.scripts.runner
         tacfile = os.path.join(bbdir, 'buildbot.tac')
 
         if os.path.exists(tacfile):
             with open(tacfile, 'r') as f:
                 contents = f.read()
                 if 'import BuildSlave' in contents:
-                    return buildslave.scripts.runner.run
+                    return buildbot_worker.scripts.runner.run
 
     except ImportError:
         # Use the default
@@ -545,7 +545,7 @@ def HandleCommandLine():
         # Special command-line created by the service to execute the
         # child-process.
         # First arg is the handle to wait on
-        # Fourth arg is the config directory to use for the buildbot/slave
+        # Fourth arg is the config directory to use for the buildbot worker
         _RunChild(DetermineRunner(sys.argv[5]))
     else:
         win32serviceutil.HandleCommandLine(BBService,
