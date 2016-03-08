@@ -313,11 +313,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getPrioritizedBuildRequestsInQueue(self, queue, _master_objectid=None):
+    def getPrioritizedBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None, order=True,
+                                           _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
             buildset_properties_tbl = self.db.model.buildset_properties
+            sourcestamps_tbl = self.db.model.sourcestamps
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            buildsets_tbl = self.db.model.buildsets
 
             pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, reqs_tbl.c.priority,
                                  reqs_tbl.c.submitted_at, reqs_tbl.c.results,
@@ -356,8 +360,22 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             else:
                 raise UnsupportedQueueError
 
+            if buildername:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.buildername == buildername)
+
+            if sourcestamps is not None and sourcestamps:
+                stmt = self.selectBuildSetsExactlyMatchesSourcestamps(sourcestamps=sourcestamps,
+                                                                      sourcestamps_tbl=sourcestamps_tbl,
+                                                                      sourcestampsets_tbl=sourcestampsets_tbl,
+                                                                      buildsets_tbl=buildsets_tbl)
+
+                buildersqueue = buildersqueue.where(reqs_tbl.c.buildsetid.in_(stmt))
+
+            if order:
+                buildersqueue = buildersqueue.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
+
             # TODO: for performance we may need to limit the result
-            res = conn.execute(buildersqueue.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at)))
+            res = conn.execute(buildersqueue)
 
             rows = res.fetchall()
             rv = []

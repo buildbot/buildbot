@@ -401,18 +401,20 @@ class KatanaBuildChooser(BasicBuildChooser):
         else:
             yield self.master.db.buildrequests.claimBuildRequests(brids)
 
+    def _removeBreq(self, breq):
+        if hasattr(breq, 'brdict') and breq.brdict:
+            if self.unclaimedBrdicts and breq.brdict in self.unclaimedBrdicts:
+                self.unclaimedBrdicts.remove(breq.brdict)
+            if self.resumeBrdicts and breq.brdict in self.resumeBrdicts:
+                self.resumeBrdicts.remove(breq.brdict)
+        self.breqCache.remove(breq.id)
+
     def _removeBuildRequests(self, breqs):
         # Remove a BuildrRequest object (and its brdict)
         # from the caches
 
         for breq in breqs:
-            if hasattr(breq, 'queueBrdict') and breq.queueBrdict:
-                if self.unclaimedBrdicts and breq.queueBrdict in self.unclaimedBrdicts:
-                    self.unclaimedBrdicts.remove(breq.queueBrdict)
-                if  self.resumeBrdicts and breq.queueBrdict in self.resumeBrdicts:
-                    self.resumeBrdicts.remove(breq.queueBrdict)
-
-            self.breqCache.remove(breq.id)
+            self._removeBreq(breq)
 
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
@@ -420,12 +422,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         # for API like 'nextBuild', which operate on BuildRequest objects.
 
         breq = yield self.breqCache.get(brdict['brid'], master=self.master, brdict=brdict)
-        defer.returnValue(breq)
-
-    @defer.inlineCallbacks
-    def getBuildRequest(self, queue, brdict):
-        breq = yield self._getBuildRequestForBrdict(brdict)
-        breq.queueBrdict = brdict
+        breq.brdict = brdict
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
@@ -477,7 +474,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             if buildername in unavailableBuilderNames and not bldr.building and br['startbrid'] is None:
                 continue
 
-            breq = yield self.getBuildRequest(queue, br)
+            breq = yield self._getBuildRequestForBrdict(br)
 
             self.setupNextBuildRequest(bldr, breq)
             if (yield self.mergeCompatibleBuildRequests(breq, queue)):
@@ -585,17 +582,10 @@ class KatanaBuildChooser(BasicBuildChooser):
             sourcestamps.append({'b_codebase': ss.codebase, 'b_revision': ss.revision,
                                  'b_branch': ss.branch, 'b_sourcestampsetid': ss.sourcestampsetid})
 
-        if queue == Queue.unclaimed:
-            brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
-                                                                          claimed=False,
-                                                                          sourcestamps=sourcestamps)
-        elif queue == Queue.resume:
-            brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
-                                                                          claimed="mine",
-                                                                          complete=False,
-                                                                          results=RESUME,
-                                                                          mergebrids="exclude",
-                                                                          sourcestamps=sourcestamps)
+        brdicts = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=queue,
+                                                                                        buildername=self.bldr.name,
+                                                                                        sourcestamps=sourcestamps,
+                                                                                        order=False)
 
         for brdict in brdicts:
             req = yield self._getBuildRequestForBrdict(brdict)
@@ -644,7 +634,17 @@ class KatanaBuildChooser(BasicBuildChooser):
     # notify the master that the buildrequests were removed from queue
     def notifyRequestsRemoved(self, buildrequests):
         for br in buildrequests:
+            self._removeBreq(br)
             self.master.buildRequestRemoved(br.bsid, br.id, self.bldr.name)
+
+    @defer.inlineCallbacks
+    def _completeMergedBuildsets(self, requests):
+        # inform the master that we may have completed a number of buildsets
+        for br in requests:
+            yield self.master.maybeBuildsetComplete(br.bsid)
+            # notify the master that the buildrequest was remove from queue
+            self.master.buildRequestRemoved(br.bsid, br.id, self.bldr.name)
+            self._removeBreq(br)
 
     @defer.inlineCallbacks
     def mergeBuildingRequests(self, brids, breqs, queue):
@@ -743,7 +743,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     yield self.master.db.buildrequests.mergeFinishedBuildRequest(finished_br,
                                                                                  totalBrids,
                                                                                  queue=queue)
-                    yield self.bldr._maybeBuildsetsComplete(totalBreqs, requestRemoved=True)
+                    yield self._completeMergedBuildsets(totalBreqs)
 
                     buildnumber = yield self.master.db.builds.getBuildNumberForRequest(finished_br['brid'])
                     yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],

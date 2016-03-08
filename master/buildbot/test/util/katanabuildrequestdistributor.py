@@ -32,6 +32,8 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
         self.master.db = self.db
         self.master.caches = cache.CacheManager()
         self.processedBuilds = []
+        self.mergedBuilds = []
+        self.addRunningBuilds = False
         self.slaves = {}
 
     def setUpQuietDeferred(self):
@@ -41,8 +43,6 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
             if self.quiet_deferred:
                 d, self.quiet_deferred = self.quiet_deferred, None
                 d.callback(None)
-            else:
-                self.fail("loop has already gone quiet once")
         self.brd._quiet = _quiet
 
     def setUpKatanaBuildRequestDistributor(self):
@@ -94,17 +94,37 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
             slavelist.append(sb)
             self.slaves[name] = sb
 
+    def mockRunningBuilds(self, bldr, breqs):
+        build = mock.Mock()
+        build.finished = False
+        build.requests = breqs
+        bldr.building.append(build)
+        build.build_status = mock.Mock()
+        build.build_status.number = len(bldr.building)
+
     def addProcessedBuilds(self, slavebuilder, breqs):
+        bldr = self.brd.katanaBuildChooser.bldr
+        if self.addRunningBuilds:
+            self.mockRunningBuilds(bldr, breqs)
         self.slaves[slavebuilder.name].isAvailable.return_value = False
         self.processedBuilds.append((slavebuilder.name, [br.id for br in breqs]))
+        return defer.succeed(True)
+
+    def addMergedBuilds(self, brid, buildnumber, brids):
+        self.mergedBuilds.append((brid, brids))
         return defer.succeed(True)
 
     def createSlaveList(self, available,  xrange):
         return {'build-slave-%d' % id: available for id in xrange}
 
-    def createBuilder(self, name, slavenames=None, startSlavenames=None, maybeStartBuild=None, maybeResumeBuild=None):
+    def createBuilder(self, name, slavenames=None, startSlavenames=None,
+                      maybeStartBuild=None,
+                      maybeResumeBuild=None,
+                      addRunningBuilds=False):
         bldr = builder.Builder(name, _addServices=False)
         build_factory = factory.BuildFactory()
+
+        self.addRunningBuilds = addRunningBuilds
 
         def getSlaves(param):
             return param.keys() if list and isinstance(param, dict) else []
@@ -119,18 +139,22 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
             config_args['startSlavenames'] = getSlaves(startSlavenames)
 
         bldr.config = config.BuilderConfig(**config_args)
-        bldr.maybeStartBuild = maybeStartBuild if maybeStartBuild \
-            else lambda slavebuilder, breqs: self.addProcessedBuilds(slavebuilder, breqs)
+        bldr.maybeStartBuild = maybeStartBuild if maybeStartBuild else self.addProcessedBuilds
         bldr.maybeResumeBuild = maybeResumeBuild if maybeResumeBuild \
             else lambda slavebuilder, buildnumber, breqs: self.addProcessedBuilds(slavebuilder, breqs)
+
+        bldr.maybeUpdateMergedBuilds = self.addMergedBuilds
 
         self.addSlavesToList(bldr.slaves, slavenames)
         self.addSlavesToList(bldr.startSlaves, startSlavenames)
         return bldr
 
     def setupBuilderInMaster(self, name, slavenames=None, startSlavenames=None,
-                             maybeStartBuild=None, maybeResumeBuild=None):
-        bldr = self.createBuilder(name, slavenames, startSlavenames, maybeStartBuild, maybeResumeBuild)
+                             maybeStartBuild=None, maybeResumeBuild=None, addRunningBuilds=False):
+        bldr = self.createBuilder(name, slavenames, startSlavenames,
+                                  maybeStartBuild, maybeResumeBuild,
+                                  addRunningBuilds)
+
         self.botmaster.builders[name] = bldr
         return bldr
 

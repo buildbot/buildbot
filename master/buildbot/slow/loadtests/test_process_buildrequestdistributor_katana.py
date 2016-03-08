@@ -203,5 +203,3 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
 
         self.checkBRDCleanedUp()
         self.assertEquals(len(self.processedBuilds), 20)
-        self.assertTrue(True)
-

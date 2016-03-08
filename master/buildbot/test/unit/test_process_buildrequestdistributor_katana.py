@@ -380,7 +380,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.checkBRDCleanedUp()
         self.assertEquals(self.processedBuilds, expetedBuilds)
 
-    def test_maybeStartBuildsOnProcessBuildsMergesUnclaimedBuilds(self):
+    def test_maybeStartBuildsOnMergesUnclaimedBuilds(self):
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
                                   startSlavenames={'slave-02': True})
 
@@ -391,7 +391,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.quiet_deferred.addCallback(self.checkMerges, [('slave-02', [idx for idx in xrange(1, 11)])])
         return self.quiet_deferred
 
-    def test_maybeStartBuildsOnProcessBuildsMergesResumeBuilds(self):
+    def test_maybeStartBuildsOnMergesResumeBuilds(self):
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
                                   startSlavenames={'slave-02': True})
 
@@ -410,6 +410,25 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.quiet_deferred.addCallback(checkMergedBrid, brid=1)
 
         return self.quiet_deferred
+
+    @defer.inlineCallbacks
+    def generateNewBuilds(self):
+        self.testdata = []
+        sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
+        self.insertBuildrequests("bldr1", 50, xrange(1, 6), results=BEGINNING, sources=sources1)
+        yield self.insertTestData(self.testdata)
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnMergesRunningBuilds(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True}, addRunningBuilds=True)
+        self.initialized()
+        yield self.generateNewBuilds()
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.processedBuilds, [('slave-02', [1, 2, 3, 4, 5])])
+        yield self.generateNewBuilds()
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.mergedBuilds, [(1, [6, 7, 8, 9, 10])])
 
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):

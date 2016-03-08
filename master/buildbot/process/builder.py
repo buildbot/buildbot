@@ -590,13 +590,10 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
-    def _maybeBuildsetsComplete(self, requests, requestRemoved=False, results=None):
+    def _maybeBuildsetsComplete(self, requests, results=None):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
             yield self.master.maybeBuildsetComplete(br.bsid)
-            # notify the master that the buildrequest was remove from queue
-            if requestRemoved:
-                self.master.buildRequestRemoved(br.bsid, br.id, self.name)
 
             if results and results == RESUME:
                 self.master.buildRequestAdded(br.bsid, br.id, self.name)
