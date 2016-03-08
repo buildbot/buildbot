@@ -565,10 +565,12 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(None)
 
     @defer.inlineCallbacks
-    def fetchPreviouslyMergedBuildRequests(self, breqs):
+    def fetchPreviouslyMergedBuildRequests(self, breqs, queue):
         brids = [breq.id for breq in breqs]
-        brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername=self.bldr.name,
-                                                                      mergebrids=brids)
+        brdicts = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=queue,
+                                                                                        buildername=self.bldr.name,
+                                                                                        mergebrids=brids,
+                                                                                        order=False)
         merged_breqs = yield defer.gatherResults([self._getBuildRequestForBrdict(brdict)
                                                   for brdict in brdicts])
         defer.returnValue(breqs + merged_breqs)
@@ -604,16 +606,17 @@ class KatanaBuildChooser(BasicBuildChooser):
             return
 
         buildnumber = yield self.master.db.builds.getBuildNumberForRequest(breq.id)
+        queue = Queue.resume
 
-        newBreqs = yield self.mergeRequests(breq, queue=Queue.resume)
+        newBreqs = yield self.mergeRequests(breq, queue=queue)
         if len(newBreqs) > 1:
             brids = [br.id for br in newBreqs]
             log.msg("merge pending buildrequest to resume %s with %s " % (breq.id, brids[1:]))
             yield self.master.db.buildrequests.mergePendingBuildRequests(brids,
                                                                          artifactbrid=breq.id,
-                                                                         queue=Queue.resume)
+                                                                         queue=queue)
 
-        breqs = yield self.fetchPreviouslyMergedBuildRequests([breq])
+        breqs = yield self.fetchPreviouslyMergedBuildRequests([breq], queue=queue)
 
         defer.returnValue((slave, buildnumber, breqs))
 
@@ -703,7 +706,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         # 2. try merge this build with a compatible running build
         if breq and self.bldr.building:
             breqs = yield self.mergeRequests(breq, queue=queue)
-            totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(breqs)
+            totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(breqs, queue=queue)
             brids = [br.id for br in totalBreqs]
 
             try:
@@ -735,7 +738,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     if br.id in merged_brids:
                         merged_breqs.append(br)
 
-                totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(merged_breqs)
+                totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(merged_breqs, queue=queue)
                 totalBrids = [br.id for br in totalBreqs]
 
                 try:

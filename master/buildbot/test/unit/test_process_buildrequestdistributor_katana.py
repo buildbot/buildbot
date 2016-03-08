@@ -412,10 +412,14 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         return self.quiet_deferred
 
     @defer.inlineCallbacks
-    def generateNewBuilds(self):
+    def generateNewBuilds(self, mergebrid=None, results=BEGINNING):
         self.testdata = []
         sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
-        self.insertBuildrequests("bldr1", 50, xrange(1, 6), results=BEGINNING, sources=sources1)
+        self.insertBuildrequests("bldr1", 50, xrange(1, 6), results=results, sources=sources1)
+        if mergebrid:
+            self.insertBuildrequests("bldr1", 50, xrange(1, 3), artifactbrid=mergebrid, mergebrid=mergebrid,
+                                     results=RESUME, sources=sources1)
+
         yield self.insertTestData(self.testdata)
 
     @defer.inlineCallbacks
@@ -429,6 +433,19 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         yield self.generateNewBuilds()
         yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
         self.assertEquals(self.mergedBuilds, [(1, [6, 7, 8, 9, 10])])
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnMergesResumeRunningBuilds(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True}, addRunningBuilds=True)
+
+        self.initialized()
+        yield self.generateNewBuilds(results=RESUME)
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.processedBuilds, [('slave-01', [1, 2, 3, 4, 5])])
+        yield self.generateNewBuilds(mergebrid=6, results=RESUME)
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.mergedBuilds, [(1, [6, 7, 8, 9, 10, 11, 12])])
 
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):

@@ -313,8 +313,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getPrioritizedBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None, order=True,
-                                           _master_objectid=None):
+    def getPrioritizedBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None,
+                                           mergebrids=None, order=True, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -348,8 +348,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                                 (buildset_properties_tbl.c.buildsetid == reqs_tbl.c.buildsetid)
                                                 & (buildset_properties_tbl.c.property_name == 'selected_slave'))) \
                 .where(reqs_tbl.c.complete == 0) \
-                .where(reqs_tbl.c.results == RESUME) \
-                .where(reqs_tbl.c.mergebrid == None)
+                .where(reqs_tbl.c.results == RESUME)
 
             if queue == Queue.unclaimed:
                 buildersqueue = pending
@@ -370,6 +369,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                                                       buildsets_tbl=buildsets_tbl)
 
                 buildersqueue = buildersqueue.where(reqs_tbl.c.buildsetid.in_(stmt))
+
+            if mergebrids is not None and mergebrids:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.mergebrid.in_(mergebrids))
+            else:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.mergebrid == None)
 
             if order:
                 buildersqueue = buildersqueue.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
