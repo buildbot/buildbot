@@ -174,8 +174,9 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
 
     def insertBuildrequests(self, buildername, priority, xrange, submitted_at=1449578391,
                             results=BEGINNING, complete=0,
-                            mergebrid=None,artifactbrid=None,
-                            selected_slave=None, sources=None):
+                            mergebrid=None, artifactbrid=None,
+                            startbrid=None, selected_slave=None,
+                            sources=None):
         self.testdata += [fakedb.BuildRequest(id=self.lastbrid+idx,
                                               buildsetid=self.lastbrid+idx,
                                               buildername=buildername,
@@ -184,6 +185,7 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
                                               complete=complete,
                                               mergebrid=mergebrid,
                                               artifactbrid=artifactbrid,
+                                              startbrid=startbrid,
                                               submitted_at=submitted_at) for idx in xrange]
 
         if results == RESUME:

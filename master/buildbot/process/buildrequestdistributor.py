@@ -751,7 +751,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     buildnumber = yield self.master.db.builds.getBuildNumberForRequest(finished_br['brid'])
                     yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],
                                                             buildnumber=buildnumber,
-                                                            brids=brids)
+                                                            brids=totalBrids)
                     defer.returnValue(True)
                     return
 
