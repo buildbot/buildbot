@@ -866,7 +866,7 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
         self.props[s][n] = v
 
     def test_sourcestamp_properties_not_set(self):
-        self.build.setupProperties()
+        self.build.setupOwnProperties()
         self.assertTrue("codebase" not in self.props["Build"])
         self.assertTrue("revision" not in self.props["Build"])
         self.assertTrue("branch" not in self.props["Build"])
@@ -908,27 +908,27 @@ class TestSetupProperties_SingleSource(unittest.TestCase):
         self.props[s][n] = v
 
     def test_properties_codebase(self):
-        self.build.setupProperties()
+        self.build.setupOwnProperties()
         codebase = self.props["Build"]["codebase"]
         self.assertEqual(codebase, "A")
 
     def test_properties_repository(self):
-        self.build.setupProperties()
+        self.build.setupOwnProperties()
         repository = self.props["Build"]["repository"]
         self.assertEqual(repository, "http://svn-repo-A")
 
     def test_properties_revision(self):
-        self.build.setupProperties()
+        self.build.setupOwnProperties()
         revision = self.props["Build"]["revision"]
         self.assertEqual(revision, "12345")
 
     def test_properties_branch(self):
-        self.build.setupProperties()
+        self.build.setupOwnProperties()
         branch = self.props["Build"]["branch"]
         self.assertEqual(branch, "develop")
 
     def test_property_project(self):
-        self.build.setupProperties()
+        self.build.setupOwnProperties()
         project = self.props["Build"]["project"]
         self.assertEqual(project, '')
 

@@ -336,6 +336,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
+        build.setupProperties()
         log.msg("starting build %s using worker %s" % (build, workerforbuilder))
 
         # set up locks
