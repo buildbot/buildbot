@@ -576,7 +576,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(breqs + merged_breqs)
 
     @defer.inlineCallbacks
-    def mergeRequests(self, breq, queue):
+    def mergeRequests(self, breq, queue, startbrid=None):
         mergedRequests = [breq]
 
         sourcestamps = []
@@ -587,6 +587,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         brdicts = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=queue,
                                                                                         buildername=self.bldr.name,
                                                                                         sourcestamps=sourcestamps,
+                                                                                        startbrid=startbrid,
                                                                                         order=False)
 
         for brdict in brdicts:
@@ -731,17 +732,9 @@ class KatanaBuildChooser(BasicBuildChooser):
             finishedBreq = yield self._getBuildRequestForBrdict(finished_br) if finished_br else None
 
             if finishedBreq and self.mergeRequestsFn(self.bldr, finishedBreq, breq):
-                breqs = yield self.mergeRequests(breq, queue=queue)
-                brids = [br.id for br in breqs]
-                merged_brids = yield self.master.db.buildrequests\
-                    .getRequestsCompatibleToMerge(self.bldr.name, breq.buildChainID, brids)
-                merged_breqs = []
-
-                for br in breqs:
-                    if br.id in merged_brids:
-                        merged_breqs.append(br)
-
-                totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(merged_breqs, queue=queue)
+                # get buildrequest in queue in the same buildchain
+                breqs = yield self.mergeRequests(breq, queue=queue, startbrid=breq.buildChainID)
+                totalBreqs = yield self.fetchPreviouslyMergedBuildRequests(breqs, queue=queue)
                 totalBrids = [br.id for br in totalBreqs]
 
                 try:

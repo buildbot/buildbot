@@ -1,7 +1,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db.buildrequests import Queue
-from buildbot.status.results import RESUME
+from buildbot.status.results import RESUME, BEGINNING
 from buildbot.process.buildrequest import Priority
 from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
 
@@ -152,6 +152,45 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
         yield self.insertTestData(self.testdata)
 
     @defer.inlineCallbacks
+    def generateBuildLoadWithDifferentMerges(self):
+        self.initialized()
+
+        slavenames = self.createSlaveList(available=True, xrange=xrange(0, 200))
+        startSlavenames = self.createSlaveList(available=True, xrange=xrange(200, 400))
+
+        self.initialized()
+        sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
+        sources2 = [{'repository': 'repo2', 'codebase': 'cb2', 'branch': 'develop', 'revision': 'asz3114'}]
+
+        for id in xrange(1, 200):
+            buildername = 'bldr%d' % (self.lastbuilderid+id)
+            if buildername not in self.botmaster.builders.keys():
+                self.setupBuilderInMaster(name=buildername, slavenames=slavenames,
+                                          startSlavenames=startSlavenames, addRunningBuilds=True)
+
+                # merges pending build
+                self.insertBuildrequests(buildername, Priority.High, xrange(1, 30),
+                                         results=BEGINNING, sources=sources1)
+                # merges with finished builds
+                self.insertBuildrequests(buildername, 50, xrange(1, 2),
+                                         complete=1, results=0, startbrid=1, sources=sources2)
+                self.insertBuildrequests(buildername, Priority.Default, xrange(1, 20),
+                                         results=BEGINNING, sources=sources2, startbrid=1)
+
+        yield self.insertTestData(self.testdata)
+
+    @defer.inlineCallbacks
+    def generateNewBuildsToBeMerged(self):
+        self.testdata = []
+        sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
+        for buildername in self.botmaster.builders.keys():
+            # merges with running builds
+            self.insertBuildrequests(buildername, Priority.VeryHigh,
+                                     xrange(1, 20), results=BEGINNING, sources=sources1)
+
+        yield self.insertTestData(self.testdata)
+
+    @defer.inlineCallbacks
     def test_getNextPriorityBuilderUnclaimedQueueUnderLoad(self):
         yield self.generateBuildLoadCalculateNextPriorityBuilder()
         breq = yield self.profileAsyncFunc(0.319, self.brd._selectNextBuildRequest,
@@ -203,3 +242,19 @@ class TestKatanaBuildRequestDistributorUnderLoad(unittest.TestCase,
 
         self.checkBRDCleanedUp()
         self.assertEquals(len(self.processedBuilds), 20)
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsUnderLoadHandleMerges(self):
+        yield self.generateBuildLoadWithDifferentMerges()
+
+        yield self.profileAsyncFunc(42, self.brd._maybeStartOrResumeBuildsOn,
+                                    new_builders=self.botmaster.builders.keys())
+
+        self.checkBRDCleanedUp()
+        yield  self.generateNewBuildsToBeMerged()
+
+        yield self.profileAsyncFunc(18, self.brd._maybeStartOrResumeBuildsOn,
+                                    new_builders=self.botmaster.builders.keys())
+        self.assertEquals(len(self.processedBuilds), 199)
+        self.assertEquals(len(self.mergedBuilds), 388)
+

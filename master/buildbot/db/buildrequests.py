@@ -314,7 +314,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def getPrioritizedBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None,
-                                           mergebrids=None, order=True, _master_objectid=None):
+                                           mergebrids=None, startbrid=None,
+                                           order=True, _master_objectid=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -374,6 +375,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 buildersqueue = buildersqueue.where(reqs_tbl.c.mergebrid.in_(mergebrids))
             else:
                 buildersqueue = buildersqueue.where(reqs_tbl.c.mergebrid == None)
+
+            if startbrid:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.startbrid == startbrid)
 
             if order:
                 buildersqueue = buildersqueue.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
@@ -605,24 +609,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rv = self._brdictFromRow(row, None)
             res.close()
             return rv
-
-        return self.db.pool.do(thd)
-
-    def getRequestsCompatibleToMerge(self, buildername, startbrid, compatible_brids):
-        def thd(conn):
-            buildrequests_tbl = self.db.model.buildrequests
-
-            stmt = sa.select([buildrequests_tbl.c.id]) \
-                .where(buildrequests_tbl.c.id.in_(compatible_brids)) \
-                .where(buildrequests_tbl.c.buildername == buildername) \
-                .where(buildrequests_tbl.c.startbrid == startbrid)
-
-            res = conn.execute(stmt)
-            rows = res.fetchall()
-            merged_brids = [row.id for row in rows]
-
-            res.close()
-            return merged_brids
 
         return self.db.pool.do(thd)
 

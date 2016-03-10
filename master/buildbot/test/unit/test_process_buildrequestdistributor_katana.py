@@ -510,7 +510,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
 
     @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
-    def test_maybeStartOrResumeBuildsOnHandleFailuresWhenMergingFinishedBuilds(self):
+    def test_maybeStartOrResumeBuildsOnHandleDBFailuresWhenMergingFinishedBuilds(self):
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
                                   startSlavenames={'slave-02': True}, addRunningBuilds=True)
 
@@ -524,7 +524,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
 
     @defer.inlineCallbacks
     @compat.usesFlushLoggedErrors
-    def test_maybeStartOrResumeBuildsOnHandleFailuresWhenMergingFinishedBuilds2(self):
+    def test_maybeStartOrResumeBuildsOnHandleFailuresWhenMergingFinishedBuilds(self):
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
                                   startSlavenames={'slave-02': True}, addRunningBuilds=True)
 

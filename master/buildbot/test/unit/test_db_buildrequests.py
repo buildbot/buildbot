@@ -985,21 +985,6 @@ class TestBuildsetsConnectorComponent(
                 fakedb.BuildRequest(id=6, buildsetid=6, buildername="builder", startbrid=1),
                 fakedb.BuildRequest(id=7, buildsetid=7, buildername="builder", startbrid=1)]
 
-    def test_getRequestsCompatibleToMerge(self):
-        breqs = self.mergeBuildRequestFinishedBuild()
-
-        d = self.insertTestData(breqs)
-
-        def checkBuildRequests(brids):
-            self.assertEqual(brids, [2, 6, 7])
-
-        d.addCallback(lambda _:
-                      self.db.buildrequests.getRequestsCompatibleToMerge(buildername='builder', startbrid=1,
-                                                                         compatible_brids=[2, 4, 5, 6, 7]))
-
-        d.addCallback(checkBuildRequests)
-        return d
-
     def test_mergeFinishedBuildRequest(self):
         breqs = self.mergeBuildRequestFinishedBuild()
 
