@@ -653,7 +653,7 @@ class KatanaBuildChooser(BasicBuildChooser):
     def mergeBuildingRequests(self, brids, breqs, queue):
         # check only the first br others will be compatible to merge
         for b in self.bldr.building:
-            if self.bldr._defaultMergeRequestFn(b.requests[0], breqs[0]):
+            if self.mergeRequestsFn(self.bldr, b.requests[0], breqs[0]):
                 try:
                     yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
                                                                             brids,
@@ -727,7 +727,10 @@ class KatanaBuildChooser(BasicBuildChooser):
             #check if can be merged with finished build
             finished_br = yield self.master.db.buildrequests\
                 .findCompatibleFinishedBuildRequest(self.bldr.name, breq.buildChainID)
-            if finished_br:
+
+            finishedBreq = yield self._getBuildRequestForBrdict(finished_br) if finished_br else None
+
+            if finishedBreq and self.mergeRequestsFn(self.bldr, finishedBreq, breq):
                 breqs = yield self.mergeRequests(breq, queue=queue)
                 brids = [br.id for br in breqs]
                 merged_brids = yield self.master.db.buildrequests\

@@ -420,7 +420,18 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
             self.insertBuildrequests("bldr1", 50, xrange(1, 3), artifactbrid=mergebrid, mergebrid=mergebrid,
                                      results=results, sources=sources1)
 
+        # unmergable builds
+        self.insertUnmergableBuildRequests(results, sources1)
+
         yield self.insertTestData(self.testdata)
+
+    def insertUnmergableBuildRequests(self, results, sources1, startbrid=None):
+        sources2 = [{'repository': 'repo2', 'codebase': 'cb2', 'branch': 'develop', 'revision': 'asz3114'}]
+        sources3 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'develop', 'revision': 'asz3115'}]
+        self.insertBuildrequests("bldr1", 25, xrange(1, 2), results=results, startbrid=startbrid, sources=sources2)
+        self.insertBuildrequests("bldr1", 25, xrange(1, 2), results=results, startbrid=startbrid, sources=sources3)
+        self.insertBuildrequests("bldr1", 25, xrange(1, 2), results=results, startbrid=startbrid,
+                                 selected_slave='slave-01', sources=sources1)
 
     @defer.inlineCallbacks
     def test_maybeStartOrResumeBuildsOnMergesRunningBuilds(self):
@@ -432,7 +443,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.assertEquals(self.processedBuilds, [('slave-02', [1, 2, 3, 4, 5])])
         yield self.generateNewBuilds()
         yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
-        self.assertEquals(self.mergedBuilds, [(1, [6, 7, 8, 9, 10])])
+        self.assertEquals(self.mergedBuilds, [(1, [9, 10, 11, 12, 13])])
 
     @defer.inlineCallbacks
     def test_maybeStartOrResumeBuildsOnMergesResumeRunningBuilds(self):
@@ -445,7 +456,7 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.assertEquals(self.processedBuilds, [('slave-01', [1, 2, 3, 4, 5])])
         yield self.generateNewBuilds(mergebrid=6, results=RESUME)
         yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
-        self.assertEquals(self.mergedBuilds, [(1, [6, 7, 8, 9, 10, 11, 12])])
+        self.assertEquals(self.mergedBuilds, [(1, [9, 10, 11, 12, 13])])
 
     @defer.inlineCallbacks
     def generateFinishedBuilds(self, mergebrid=None, results=BEGINNING):
@@ -459,6 +470,8 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
             self.insertBuildrequests("bldr1", 50, xrange(1, 3), artifactbrid=mergebrid, mergebrid=mergebrid,
                                      results=results, sources=sources1)
 
+        # unmergable builds
+        self.insertUnmergableBuildRequests(results, sources1, startbrid=1)
 
         yield self.insertTestData(self.testdata)
 
