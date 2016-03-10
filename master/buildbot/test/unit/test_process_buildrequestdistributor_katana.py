@@ -454,9 +454,9 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         yield self.generateNewBuilds(results=RESUME)
         yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
         self.assertEquals(self.processedBuilds, [('slave-01', [1, 2, 3, 4, 5])])
-        yield self.generateNewBuilds(mergebrid=6, results=RESUME)
+        yield self.generateNewBuilds(mergebrid=9, results=RESUME)
         yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
-        self.assertEquals(self.mergedBuilds, [(1, [9, 10, 11, 12, 13])])
+        self.assertEquals(self.mergedBuilds, [(1, [9, 10, 11, 12, 13, 14, 15])])
 
     @defer.inlineCallbacks
     def generateFinishedBuilds(self, mergebrid=None, results=BEGINNING):
@@ -476,6 +476,21 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         yield self.insertTestData(self.testdata)
 
     @defer.inlineCallbacks
+    @compat.usesFlushLoggedErrors
+    def test_maybeStartOrResumeBuildsOnHandleFailuresWhenMergingRuningBuilds(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True, 'slave-03': True}, addRunningBuilds=True)
+        self.initialized()
+        yield self.generateNewBuilds()
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        yield self.generateNewBuilds()
+
+        self.brd.katanaBuildChooser.mergeBuildingRequests = mock.Mock(side_effect=Exception('something went wrong'))
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(len(self.processedBuilds), 2)
+        self.assertTrue(not self.mergedBuilds)
+
+    @defer.inlineCallbacks
     def test_maybeStartOrResumeBuildsOnMergesFinishedBuilds(self):
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
                                   startSlavenames={'slave-02': True})
@@ -492,6 +507,34 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         yield self.generateFinishedBuilds(mergebrid=6, results=RESUME)
         yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
         self.assertEquals(self.mergedBuilds, [(2, [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])])
+
+    @defer.inlineCallbacks
+    @compat.usesFlushLoggedErrors
+    def test_maybeStartOrResumeBuildsOnHandleFailuresWhenMergingFinishedBuilds(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True}, addRunningBuilds=True)
+
+        yield self.generateFinishedBuilds()
+        self.brd.katanaBuildChooser.master.db.buildrequests.mergeFinishedBuildRequest = \
+            mock.Mock(side_effect=Exception('something went wrong'))
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+
+        self.assertEquals(self.processedBuilds, [('slave-02', [3, 4, 5, 6, 7, 8, 9, 10, 11])])
+        self.assertTrue(not self.mergedBuilds)
+
+    @defer.inlineCallbacks
+    @compat.usesFlushLoggedErrors
+    def test_maybeStartOrResumeBuildsOnHandleFailuresWhenMergingFinishedBuilds2(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True}, addRunningBuilds=True)
+
+        yield self.generateFinishedBuilds()
+        self.brd.katanaBuildChooser._completeMergedBuildsets = \
+            mock.Mock(side_effect=Exception('something went wrong'))
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.flushLoggedErrors()
+        self.assertEquals(self.processedBuilds, [('slave-02', [12])])
+        self.assertTrue(not self.mergedBuilds)
 
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):

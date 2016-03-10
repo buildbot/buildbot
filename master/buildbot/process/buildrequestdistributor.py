@@ -357,9 +357,9 @@ class KatanaBuildChooser(BasicBuildChooser):
         self.master = master
         self.initializeBreqCache()
         self.builders = builders
-        self.initializedBuildRequestQueue()
+        self.initializeBuildRequestQueue()
 
-    def initializedBuildRequestQueue(self):
+    def initializeBuildRequestQueue(self):
         self.unclaimedBrdicts = None
         self.resumeBrdicts = None
 
@@ -1101,7 +1101,7 @@ class KatanaBuildRequestDistributor(service.Service):
     def _checkBuildRequests(self):
         self.check_new_builds = True
         self.check_resume_builds = True
-        self.katanaBuildChooser.initializedBuildRequestQueue()
+        self.katanaBuildChooser.initializeBuildRequestQueue()
 
     def timerLogFinished(self, msg, timer):
         log.msg(msg + " started at %s finished at %s elapsed %s" %
@@ -1133,6 +1133,7 @@ class KatanaBuildRequestDistributor(service.Service):
             yield asyncFunc()
 
         except Exception:
+            self.katanaBuildChooser.initializeBuildRequestQueue()
             log.err(Failure(), "from _selectNextBuildRequest for builder '%s' queue '%s'" % (breq.buildername, queue))
 
         defer.returnValue(breq)
