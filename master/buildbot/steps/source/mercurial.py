@@ -498,7 +498,8 @@ class Mercurial(Source):
         elif self.branchType == 'inrepo':
             command += ['--rev', self.update_branch]
 
-        errors = ['path ends in directory separator: .hglf']
+        errors = ['path ends in directory separator: .hglf',
+                  'file or directory is corrupted and unreadable']
 
         def checkUpdated(cmd):
             if cmd.didFail() and self.checkExpectedFailure(cmd, errors):
