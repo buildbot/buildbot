@@ -22,11 +22,13 @@ Features
 
 * :class:`GitPoller` now has a ``buildPushesWithNoCommits`` option to allow the rebuild of already known commits on new branches.
 * Add GitLab authentication plugin for web UI. See :class:`buildbot.www.oauth2.GitLabAuth`.
+* :class:`DockerLatentWorker` now has a ``hostconfig`` parameter that can be used to setup host configuration when creating a new container.
 
 Fixes
 ~~~~~
 
 * Fix loading :class:`~buildbot.ldapuserinfo.LdapUserInfo` plugin and its documentation (:bug:`3371`).
+* Fix deprecation warnings seen with docker-py >= 1.4 when passing arguments to ``docker_client.start()``.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

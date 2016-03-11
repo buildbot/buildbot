@@ -61,7 +61,9 @@ class TestDockerLatentWorker(unittest.TestCase):
 
     def test_constructor_all_docker_parameters(self):
         # Volumes have their own tests
-        bs = self.ConcreteWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img', ['/bin/sh'], dockerfile="FROM ubuntu", version='1.9', tls=True)
+        bs = self.ConcreteWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img', ['/bin/sh'],
+                                 dockerfile="FROM ubuntu", version='1.9', tls=True,
+                                 hostconfig={'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.image, 'worker_img')
@@ -70,6 +72,7 @@ class TestDockerLatentWorker(unittest.TestCase):
         self.assertEqual(bs.volumes, [])
         self.assertEqual(bs.binds, {})
         self.assertEqual(bs.client_args, {'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
+        self.assertEqual(bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
 
     def test_volume_no_suffix(self):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
