@@ -37,6 +37,7 @@ gitJsonPayload = """
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
   "repository": {
     "url": "http://github.com/defunkt/github",
+    "html_url": "http://github.com/defunkt/github",
     "name": "github",
     "full_name": "defunkt/github",
     "description": "You're lookin' at it.",
@@ -84,6 +85,7 @@ gitJsonPayloadNonBranch = """
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
   "repository": {
     "url": "http://github.com/defunkt/github",
+    "html_url": "http://github.com/defunkt/github",
     "name": "github",
     "full_name": "defunkt/github",
     "description": "You're lookin' at it.",
@@ -244,6 +246,7 @@ gitJsonPayloadEmpty = """
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
   "repository": {
     "url": "http://github.com/defunkt/github",
+    "html_url": "http://github.com/defunkt/github",
     "name": "github",
     "full_name": "defunkt/github",
     "description": "You're lookin' at it.",
@@ -459,7 +462,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEquals(len(self.changeHook.master.addedChanges), 1)
         change = self.changeHook.master.addedChanges[0]
         self.assertEquals(change["repository"],
-                          "https://github.com/defunkt/github.git")
+                          "https://github.com/defunkt/github")
         self.assertEquals(timegm(change["when_timestamp"].utctimetuple()),
                           1412899790)
         self.assertEquals(change["author"],

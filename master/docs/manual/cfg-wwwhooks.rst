@@ -124,6 +124,11 @@ Note that not using ``change_hook_auth`` can expose you to security risks.
 
 Patches are welcome to implement: https://developer.github.com/webhooks/securing/
 
+.. note::
+
+   When using a :ref:`ChangeFilter<Change-Filters>` with a GitHub webhook ensure that your filter matches all desired requests as fields such as ``repository`` and ``project`` may differ in different events.
+
+
 BitBucket hook
 ++++++++++++++
 
