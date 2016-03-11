@@ -12,6 +12,7 @@ from buildbot.status.results import RESUME, BEGINNING
 from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
 from buildbot.test.util import compat
 from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.process.buildrequest import Priority
 
 class TestKatanaBuildRequestDistributorGetNextPriorityBuilder(unittest.TestCase,
                                         KatanaBuildRequestDistributorTestSetup):
@@ -412,6 +413,37 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         return self.quiet_deferred
 
     @defer.inlineCallbacks
+    def generateMultipleCodebasesMerges(self):
+        sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
+        sources2 = [{'repository': 'repo2', 'codebase': 'cb2', 'branch': 'develop', 'revision': 'asz3114'}]
+        sources3 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'develop', 'revision': 'bsz3115'}]
+        sources4 = [{'repository': 'repo2', 'codebase': 'cb2', 'branch': 'master', 'revision': 'zsz3116'}]
+
+        self.initialized()
+        self.insertBuildrequests('bldr1', Priority.High, xrange(1, 10),
+                                 results=BEGINNING, sources=sources1+sources2)
+        self.insertBuildrequests('bldr2', Priority.VeryHigh, xrange(1, 10),
+                                 results=RESUME, sources=sources3+sources4)
+
+        yield self.insertTestData(self.testdata)
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnMergesMultipleCodebasesBuilds(self):
+        self.setupBuilderInMaster(name='bldr1',
+                                  slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True})
+        self.setupBuilderInMaster(name='bldr2',
+                                  slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True})
+
+        yield self.generateMultipleCodebasesMerges()
+
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.processedBuilds,
+                          [('slave-02', [1, 2, 3, 4, 5, 6, 7, 8, 9]),
+                           ('slave-01', [10, 11, 12, 13, 14, 15, 16, 17, 18])])
+
+    @defer.inlineCallbacks
     def generateNewBuilds(self, mergebrid=None, results=BEGINNING):
         self.testdata = []
         sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
@@ -535,6 +567,40 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.flushLoggedErrors()
         self.assertEquals(self.processedBuilds, [('slave-02', [12])])
         self.assertTrue(not self.mergedBuilds)
+
+    @defer.inlineCallbacks
+    def generateBuildsWithDifferentPriorities(self):
+        slavenames = self.createSlaveList(available=True, xrange=xrange(0, 10))
+        startSlavenames = self.createSlaveList(available=True, xrange=xrange(10, 20))
+
+        sources1 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'}]
+        sources2 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'develop', 'revision': 'asz3114'}]
+        sources3 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'develop', 'revision': 'bsz3115'}]
+        sources4 = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'zsz3116'}]
+
+        self.initialized()
+        for idx in xrange(1, 4):
+            buildername = 'bldr%d' % idx
+            self.setupBuilderInMaster(name=buildername,
+                                      slavenames=slavenames,
+                                      startSlavenames=startSlavenames)
+            self.insertBuildrequests(buildername, Priority.High, xrange(1, 2),
+                                     results=BEGINNING, sources=sources1)
+            self.insertBuildrequests(buildername, Priority.VeryHigh, xrange(1, 2),
+                                     results=RESUME, sources=sources3)
+            self.insertBuildrequests(buildername, Priority.Medium, xrange(1, 2),
+                                     results=BEGINNING, sources=sources2)
+            self.insertBuildrequests(buildername, Priority.Low, xrange(1, 2),
+                                     results=RESUME, sources=sources4)
+
+        yield self.insertTestData(self.testdata)
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnQueueProcessingOrder(self):
+        yield self.generateBuildsWithDifferentPriorities()
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals([brid[0] for (slave, brid) in self.processedBuilds],
+                          [1, 2, 5, 6, 9, 10, 3, 4, 7, 8, 11, 12])
 
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):
