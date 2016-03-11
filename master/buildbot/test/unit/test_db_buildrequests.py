@@ -1362,6 +1362,45 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda queue: self.assertEqual(queue, expectedBreqs))
         return d
 
+    @defer.inlineCallbacks
+    def test_getPrioritizedBuildRequestsInUnclaimedQueueUsesFilters(self):
+        sources = [{'repository': 'repo1', 'codebase': 'cb1', 'branch': 'master', 'revision': 'asz3113'},
+                   {'repository': 'repo2', 'codebase': 'cb2', 'branch': 'develop', 'revision': 'asz3114'}]
+
+        sourcestamps = []
+        testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                        priority=20, submitted_at=1450171024),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr1",
+                                        priority=20, submitted_at=1450171024, mergebrid=1),
+                    fakedb.BuildRequest(id=3, buildsetid=3, buildername="bldr1",
+                                        priority=20, submitted_at=1450171024),
+                    fakedb.BuildRequest(id=4, buildsetid=4, buildername="bldr2",
+                                        priority=20, submitted_at=1450171024)]
+
+        testdata += [fakedb.Buildset(id=2, sourcestampsetid=2)]
+        testdata += [fakedb.SourceStampSet(id=2)]
+
+        for ss in sources:
+            testdata += [fakedb.SourceStamp(sourcestampsetid=2,
+                                            repository=ss['repository'],
+                                            codebase=ss['codebase'],
+                                            branch=ss['branch'],
+                                            revision=ss['revision'])]
+
+            sourcestamps.append({'b_codebase': ss['codebase'],
+                                 'b_revision': ss['revision'],
+                                 'b_branch': ss['branch'],
+                                 'b_sourcestampsetid': 1})
+
+        self.insertTestData(testdata)
+        result = yield self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.unclaimed,
+                                                                                buildername='bldr1',
+                                                                                mergebrids=[1],
+                                                                                sourcestamps=sourcestamps)
+        self.assertTrue(len(result) == 1)
+        self.assertTrue(result[0]['brid'] ==  2)
+
+
     def checkCanceledBuildRequests(self, brlist, complete=True, results=CANCELED):
         self.assertTrue(all([br['complete'] == complete and br['results'] == results
                              and (br['complete_at'] is not None if complete else br['complete_at'] is None)
