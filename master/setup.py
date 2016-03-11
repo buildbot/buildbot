@@ -295,6 +295,7 @@ setup_args = {
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
+            ('buildbot.reporters.github', ['GitHubStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
 
         ]),
