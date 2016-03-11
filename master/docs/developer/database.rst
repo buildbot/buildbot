@@ -1547,6 +1547,26 @@ The DB Connector and Components
         ``self.db.model``.  In the unusual case that a connector component
         needs access to the master, the easiest path is ``self.db.master``.
 
+    .. py:method:: checkLength(col, value)
+
+        For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table column from the model.
+        Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite)
+
+    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None)
+
+        Find (using C{whereclause}) or add (using C{insert_values) a row to
+        C{table}, and return the resulting ID.
+
+    .. py:method:: hashColumns(*args)
+
+        Hash the given values in a consistent manner: None is represented as \xf5, an invalid unicode byte; strings are converted to utf8; and integers are represented by their decimal expansion.
+        The values are then joined by '\0' and hashed with sha1.
+
+    .. py:method:: doBatch(batch, batch_n=500)
+
+        returns an Iterator that batches stuff in order to not push to many thing in a single request.
+        Especially sqlite has 999 limit on argument it can take in a requests.
+
 Direct Database Access
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1779,16 +1799,24 @@ Postgres, add them to ``implied_indexes`` in
 
 Foreign key checking
 --------------------
-Non sqlite db backends are checking the foreign keys consistancy. As sqlite is much
-easier to install, most of the developer would only test against sqlite, and then get
-errors on metabuildbot. In order to avoid that the fakedb can check the foreign key
-consistancy of your test data. for this, just enable it with::
+PostgreSQL and SQlite db backends are checking the foreign keys consistancy.
+:bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
+
+To maintain consistency with real db, fakedb can check the foreign key consistancy of your test data. for this, just enable it with::
 
     self.db = fakedb.FakeDBConnector(self.master, self)
     self.db.checkForeignKeys = True
 
-Note that tests that only use fakedb do not really need foreign key consistency, even
-if this is a good practice to enable it in new code.
+Note that tests that only use fakedb do not really need foreign key consistency, even if this is a good practice to enable it in new code.
+
+
+.. note:
+
+    Since version `3.6.19 <https://www.sqlite.org/releaselog/3_6_19.html>`_, sqlite can do `foreignkey checks <https://www.sqlite.org/pragma.html#pragma_foreign_key_check>`_, which help a lot for testing foreign keys constraint in a developer friendly environment.
+    For compat reason, they decided to disable foreign key checks by default.
+    Since 0.9.0b8, buildbot now enforces by default the foreign key checking, and is now dependent on sqlite3 >3.6.19, which was released in 2009.
+    One consequence of default disablement is that sqlalchemy-migrate backend for sqlite is not well prepared for foreign key checks, and we have to disable them in the migration scripts.
+
 
 Database Compatibility Notes
 ----------------------------
@@ -1856,6 +1884,25 @@ id.
 If this weakness has a significant performance impact, it would be acceptable to
 conditionalize use of the subquery on the database dialect.
 
+Too Many Variables in SQLite
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. index:: single: SQLite; limitations
+
+Sqlite has a limitation on the number of variables it can use.
+This limitation is usually `SQLITE_LIMIT_VARIABLE_NUMBER=999 <http://www.sqlite.org/c3ref/c_limit_attached.html#sqlitelimitvariablenumber>`_.
+There is currently no way with pysqlite to query the value of this limit.
+The C-api ``sqlite_limit`` is just not bound to the python.
+
+When you hit this problem, you will get error like the following:
+
+.. code-block:: none
+
+    sqlalchemy.exc.OperationalError: (OperationalError) too many SQL variables
+    u'DELETE FROM scheduler_changes WHERE scheduler_changes.changeid IN (?, ?, ?, ......tons of ?? and IDs .... 9363, 9362, 9361)
+
+You can use the method :py:meth:`doBatch` in order to write batching code in a consistent manner.
+
 Testing migrations with real databases
 --------------------------------------
 
@@ -1865,7 +1912,7 @@ To use other database set ``BUILDBOT_TEST_DB_URL`` environment variable to
 value in `SQLAlchemy database URL specification
 <http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls>`_.
 
-For example, to run tests with file-based SQLite database you can start 
+For example, to run tests with file-based SQLite database you can start
 tests in the following way:
 
 .. code-block:: bash

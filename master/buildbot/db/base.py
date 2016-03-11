@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import hashlib
+import itertools
 import sqlalchemy as sa
 
 
@@ -43,12 +44,7 @@ class DBConnectorComponent(object):
     _isCheckLengthNecessary = None
 
     def checkLength(self, col, value):
-        # for use by subclasses to check that 'value' will fit in 'col', where
-        # 'col' is a table column from the model.
 
-        # ignore this check for database engines that either provide this error
-        # themselves (postgres) or that do not enforce maximum-length
-        # restrictions (sqlite)
         if not self._isCheckLengthNecessary:
             if self.db.pool.engine.dialect.name == 'mysql':
                 self._isCheckLengthNecessary = True
@@ -65,8 +61,6 @@ class DBConnectorComponent(object):
 
     def findSomethingId(self, tbl, whereclause, insert_values,
                         _race_hook=None):
-        """Find (using C{whereclause}) or add (using C{insert_values) a row to
-        C{table}, and return the resulting ID."""
         def thd(conn, no_recurse=False):
             # try to find the master
             q = sa.select([tbl.c.id],
@@ -93,12 +87,6 @@ class DBConnectorComponent(object):
         return self.db.pool.do(thd)
 
     def hashColumns(self, *args):
-        """
-        Hash the given values in a consistent manner: None is represented as
-        \xf5, an invalid unicode byte; strings are converted to utf8; and
-        integers are represented by their decimal expansion.  The values are
-        then joined by '\0' and hashed with sha1.
-        """
         def encode(x):
             try:
                 return x.encode('utf8')
@@ -108,6 +96,14 @@ class DBConnectorComponent(object):
                 return str(x)
 
         return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
+
+    def doBatch(self, batch, batch_n=500):
+        iterator = iter(batch)
+        while True:
+            batch = list(itertools.islice(iterator, batch_n))
+            if not batch:
+                break
+            yield batch
 
 
 class CachedMethod(object):
