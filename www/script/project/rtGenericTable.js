@@ -404,7 +404,7 @@ define(function (require) {
             options.aoColumnDefs = [
                 cellFunc.buildID(0),
                 cellFunc.shortTime(1, function (data) {
-                    return data.times[0];
+                    return data.times[1];
                 }),
                 cellFunc.revision(2, "sourceStamps", hideBranches,latestRevDictFunc),
                 cellFunc.buildStatus(3),

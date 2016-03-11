@@ -162,10 +162,11 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                               buildrequests_tbl.c.results)
 
             q = q.where(buildrequests_tbl.c.mergebrid == None)\
-                .where(builds_tbl.c.slavename == slavename)\
+                .where(buildrequests_tbl.c.complete == 1)\
                 .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
+                .where(builds_tbl.c.slavename == slavename)\
                 .distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
-                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+                .order_by(sa.desc(buildrequests_tbl.c.complete_at)).limit(maxSearch)
 
             res = conn.execute(q)
 
@@ -201,7 +202,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                                           & (builds_tbl.c.finish_time != None))).\
                 where(buildrequests_tbl.c.mergebrid == None)\
                 .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
-                .where(buildrequests_tbl.c.buildername == buildername)
+                .where(buildrequests_tbl.c.buildername == buildername)\
+                .where(buildrequests_tbl.c.complete == 1)
 
             #TODO: support filter by RETRY result
             if results:
@@ -213,6 +215,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     where(buildrequests_tbl.c.mergebrid == None)\
                     .where(buildrequests_tbl.c.buildername == buildername)\
                     .where(buildrequests_tbl.c.results.in_(results))\
+                    .where(buildrequests_tbl.c.complete == 1)\
                     .group_by(buildrequests_tbl.c.id, buildrequests_tbl.c.results)
 
             q = maybeFilterBuildRequestsBySourceStamps(query=q,
@@ -223,7 +226,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                                        sourcestampsets_tbl=sourcestampsets_tbl)
 
             q = q.distinct(builds_tbl.c.number)\
-                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+                .order_by(sa.desc(buildrequests_tbl.c.complete_at)).limit(maxSearch)
 
             res = conn.execute(q)
 
@@ -235,7 +238,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             res.close()
 
-            return sorted(lastBuilds, reverse=True)
+            return lastBuilds
 
         return self.db.pool.do(thd)
 

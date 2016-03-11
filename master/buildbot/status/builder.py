@@ -904,18 +904,11 @@ class BuilderStatus(styles.Versioned):
             return self.latestBuildCache and k in self.latestBuildCache and 'build' in self.latestBuildCache[k] and \
                 self.latestBuildCache[k]["build"] and cache["build"] is None
 
-        def buildCacheAlreadyHasLastBuild():
-            return self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k] and\
-                self.latestBuildCache[k]["build"] and self.latestBuildCache[k]["build"] > cache["build"]
-
         def keyHasMultipleCodebasesAndEmptyBuild():
             codebases = [key for key in k.split(';') if key]
             return not cache["build"] and len(codebases) > 1
 
         if nonEmptyCacheUpdateToEmptyBuild():
-            return
-
-        if buildCacheAlreadyHasLastBuild():
             return
 
         if keyHasMultipleCodebasesAndEmptyBuild():

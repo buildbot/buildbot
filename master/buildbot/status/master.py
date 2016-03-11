@@ -372,11 +372,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         all_builds = []
         for bn in builder_names:
             b = self.getBuilder(bn)
-            finished_builds = yield b.getFinishedBuildsByNumbers(buildnumbers=sorted(lastBuilds[bn], reverse=True),
-                                                                  results=results)
+            finished_builds = yield b.getFinishedBuildsByNumbers(buildnumbers=lastBuilds[bn],
+                                                                 results=results)
             all_builds.extend(finished_builds)
 
-        sorted_builds = sorted(all_builds, key=lambda build: build.started, reverse=True)
+        sorted_builds = sorted(all_builds, key=lambda build: build.finished, reverse=True)
         defer.returnValue(sorted_builds)
 
     def generateFinishedBuilds(self, builders=[], branches=[],
