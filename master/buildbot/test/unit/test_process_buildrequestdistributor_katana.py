@@ -653,17 +653,21 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
                 fakedb.Buildset(id=2, sourcestampsetid=2),
                 fakedb.Buildset(id=3, sourcestampsetid=3)]
 
+        breqsprop = [fakedb.BuildsetProperty(buildsetid=3,
+                                             property_name='selected_slave',
+                                             property_value='["slave-01", "Force Build Form"]')]
+
         sstamp = [fakedb.SourceStamp(sourcestampsetid=1, branch='branch_A'),
                   fakedb.SourceStamp(sourcestampsetid=2, branch='branch_B'),
                   fakedb.SourceStamp(sourcestampsetid=3, branch='branch_C')]
 
-        yield self.insertTestData(breqs + bset + sstamp)
+        yield self.insertTestData(breqs + bset + sstamp + breqsprop)
 
 
     @defer.inlineCallbacks
     def test_popNextBuild(self):
         self.bldr = self.setupBuilderInMaster(name='bldr1',
-                                              slavenames={'slave-01': False},
+                                              slavenames={'slave-01': True},
                                               startSlavenames={'slave-02': True})
 
         yield self.insertTestDataUnclaimedBreqs()
@@ -675,6 +679,21 @@ class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.Te
         slave, breq = yield self.brd.katanaBuildChooser.popNextBuild()
 
         self.assertEquals((slave.name, breq.id), ('slave-02', 3))
+
+    @defer.inlineCallbacks
+    def test_popNextBuildUsesSelectedSlave(self):
+        self.bldr = self.setupBuilderInMaster(name='bldr1',
+                                              slavenames={'slave-01': True, 'slave-02': True})
+
+        yield self.insertTestDataUnclaimedBreqs()
+
+        breq = yield self.brd.katanaBuildChooser.getNextPriorityBuilder(queue=Queue.unclaimed)
+        self.assertEquals(breq.id, 3)
+
+        slave, breq = yield self.brd.katanaBuildChooser.popNextBuild()
+
+        self.assertEquals((slave.name, breq.id), ('slave-01', 3))
+
 
     @defer.inlineCallbacks
     def test_popNextBuildToResumeShouldSkipSelectedSlave(self):
