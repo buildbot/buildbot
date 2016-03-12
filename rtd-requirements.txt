@@ -4,7 +4,4 @@
 -e master/
 
 # Install docs dependencies.
-# When issue 3435 will be resolved, instead of these lines
-# `[docs]` extras should be added to master installation.
-sphinxcontrib-blockdiag
-docutils>=0.8
+-e master[docs]
