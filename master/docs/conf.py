@@ -26,12 +26,14 @@ sys.path.append(os.path.abspath('.'))
 try:
     import sphinxcontrib.blockdiag
 except ImportError:
-    raise RuntimeError("sphinxcontrib.blockdiag is not installed. Please install documentation dependencies with `pip install buildbot[docs]`") 
+    raise RuntimeError("sphinxcontrib.blockdiag is not installed. "
+        "Please install documentation dependencies with `pip install buildbot[docs]`")
 import pkg_resources
 try:
     pkg_resources.require('docutils>=0.8')
-except resources.ResolutionError:
-    raise RuntimeError("docutils is not installed or has an incompatible version. Please install documentation dependencies with `pip install buildbot[docs]`")
+except pkg_resources.ResolutionError:
+    raise RuntimeError("docutils is not installed or has an incompatible version. "
+        "Please install documentation dependencies with `pip install buildbot[docs]`")
 
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.0'
