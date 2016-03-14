@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot_worker.base import BuildSlaveBase
+from buildbot_worker.base import WorkerBase
 from twisted.internet import defer
 
 
-class LocalBuildSlave(BuildSlaveBase):
+class LocalWorker(WorkerBase):
 
     @defer.inlineCallbacks
     def startService(self):
@@ -25,7 +25,7 @@ class LocalBuildSlave(BuildSlaveBase):
         # requires buildot version >= 0.9.0b5
         from buildbot.worker.protocols.null import Connection
 
-        yield BuildSlaveBase.startService(self)
+        yield WorkerBase.startService(self)
         # TODO: This is a workaround for using worker with "slave"-api with
         # updated master.  Later buildbot-slave package will be replaced with
         # buildbot-worker package which will be "slave"-free, and this patch

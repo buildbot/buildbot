@@ -343,7 +343,7 @@ class BotBase(service.MultiService):
         reactor.callLater(0.2, reactor.stop)
 
 
-class BuildSlaveBase(service.MultiService):
+class WorkerBase(service.MultiService):
     Bot = BotBase
 
     def __init__(self, name, basedir,
@@ -362,7 +362,7 @@ class BuildSlaveBase(service.MultiService):
         # first, apply all monkeypatches
         monkeypatches.patch_all()
 
-        log.msg("Starting BuildSlave -- version: %s" % buildbot_worker.version)
+        log.msg("Starting Worker -- version: %s" % buildbot_worker.version)
 
         if self.umask is not None:
             os.umask(self.umask)

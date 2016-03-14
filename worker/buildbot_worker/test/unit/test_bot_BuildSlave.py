@@ -106,18 +106,18 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
     def test_constructor_minimal(self):
         # only required arguments
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False)
 
     def test_constructor_083_tac(self):
         # invocation as made from default 083 tac files
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                       umask=0o123, maxdelay=10)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                   umask=0o123, maxdelay=10)
 
     def test_constructor_full(self):
         # invocation with all args
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                       umask=0o123, maxdelay=10, keepaliveTimeout=10,
-                       unicode_encoding='utf8', allow_shutdown=True)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                   umask=0o123, maxdelay=10, keepaliveTimeout=10,
+                   unicode_encoding='utf8', allow_shutdown=True)
 
     def test_buildslave_print(self):
         d = defer.Deferred()
@@ -131,9 +131,9 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         # start up the master and slave
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
+        self.buildslave = bot.Worker("127.0.0.1", port,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
+                                     keepalive=0, usePTY=False, umask=0o22)
         self.buildslave.startService()
 
         # and wait for the result of the print
@@ -142,9 +142,9 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
     def test_recordHostname_uname(self):
         self.patch_os_uname(lambda: [0, 'test-hostname.domain.com'])
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
+        self.buildslave = bot.Worker("127.0.0.1", 9999,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
+                                     keepalive=0, usePTY=False, umask=0o22)
         self.buildslave.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
@@ -155,9 +155,9 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         self.patch_os_uname(missing)
         self.patch(socket, "getfqdn", lambda: 'test-hostname.domain.com')
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
+        self.buildslave = bot.Worker("127.0.0.1", 9999,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
+                                     keepalive=0, usePTY=False, umask=0o22)
         self.buildslave.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
@@ -186,9 +186,9 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_shutdown)
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
+        self.buildslave = bot.Worker("127.0.0.1", port,
                                          "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
+                                     keepalive=0, usePTY=False, umask=0o22)
 
         self.buildslave.startService()
 
@@ -202,10 +202,10 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         """Test watching an existing shutdown_file results in gracefulShutdown
         being called."""
 
-        buildslave = bot.BuildSlave("127.0.0.1", 1234,
+        buildslave = bot.Worker("127.0.0.1", 1234,
                                     "testy", "westy", self.basedir,
-                                    keepalive=0, usePTY=False, umask=0o22,
-                                    allow_shutdown='file')
+                                keepalive=0, usePTY=False, umask=0o22,
+                                allow_shutdown='file')
 
         # Mock out gracefulShutdown
         buildslave.gracefulShutdown = Mock()
