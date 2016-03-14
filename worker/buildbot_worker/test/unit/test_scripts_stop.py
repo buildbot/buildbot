@@ -48,8 +48,8 @@ class TestStopSlave(misc.FileIOMixin,
         # patch open() to raise 'file not found' exception
         self.setUpOpenError(2)
 
-        # check that stop() raises SlaveNotRunning exception
-        self.assertRaises(stop.SlaveNotRunning,
+        # check that stop() raises WorkerNotRunning exception
+        self.assertRaises(stop.WorkerNotRunning,
                           stop.stopWorker, None, False)
 
     @compat.skipUnlessPlatformIs("posix")
@@ -116,7 +116,7 @@ class TestStop(misc.IsWorkerDirMixin,
         self.setupUpIsWorkerDir(True)
 
         # patch stopWorker() to raise an exception
-        mock_stopSlave = mock.Mock(side_effect=stop.SlaveNotRunning())
+        mock_stopSlave = mock.Mock(side_effect=stop.WorkerNotRunning())
         self.patch(stop, "stopWorker", mock_stopSlave)
 
         stop.stop(self.config)
