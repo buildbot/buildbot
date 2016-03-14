@@ -237,7 +237,7 @@ class BotBase(service.MultiService):
     """I represent the slave-side bot."""
     usePTY = None
     name = "bot"
-    SlaveBuilder = WorkerForBuilderBase
+    WorkerForBuilder = WorkerForBuilderBase
 
     def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
@@ -272,7 +272,7 @@ class BotBase(service.MultiService):
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = self.SlaveBuilder(name)
+                b = self.WorkerForBuilder(name)
                 b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
