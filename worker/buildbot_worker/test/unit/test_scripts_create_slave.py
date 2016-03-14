@@ -595,8 +595,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                    logfile_mock)
 
         # mock Worker class
-        buildslave_mock = mock.Mock()
-        buildslave_class_mock = mock.Mock(return_value=buildslave_mock)
+        worker_mock = mock.Mock()
+        buildslave_class_mock = mock.Mock(return_value=worker_mock)
         self.patch(buildbot_worker.bot, "Worker", buildslave_class_mock)
 
         expected_tac_contents = \
@@ -625,7 +625,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
             allow_shutdown=options["allow-shutdown"])
 
         # check that Worker instance attached to application
-        self.assertEqual(buildslave_mock.method_calls,
+        self.assertEqual(worker_mock.method_calls,
                          [mock.call.setServiceParent(application_mock)])
 
         # .tac file must define global variable "application", instance of
