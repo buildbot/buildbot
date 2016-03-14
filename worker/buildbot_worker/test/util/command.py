@@ -84,7 +84,7 @@ class CommandTestMixin(object):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir=self.basedir)
+        b = self.builder = slavebuilder.FakeWorkerForBuilder(basedir=self.basedir)
         self.cmd = cmdclass(b, 'fake-stepid', args)
 
         return self.cmd
