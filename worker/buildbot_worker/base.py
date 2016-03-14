@@ -305,7 +305,7 @@ class BotBase(service.MultiService):
         log.msg("message from master:", message)
 
     def remote_getSlaveInfo(self):
-        """This command retrieves data from the files in SLAVEDIR/info/* and
+        """This command retrieves data from the files in WORKERDIR/info/* and
         sends the contents to the buildmaster. These are used to describe
         the worker and its configuration, and should be created and
         maintained by the worker administrator. They will be retrieved each
