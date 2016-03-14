@@ -20,7 +20,7 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
+class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
 
     """
     Test buildbot_worker.scripts.startup.startCommand()
