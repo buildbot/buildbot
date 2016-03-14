@@ -88,10 +88,10 @@ def startCommand(config):
     if not base.isWorkerDir(basedir):
         return 1
 
-    return startSlave(basedir, config['quiet'], config['nodaemon'])
+    return startWorker(basedir, config['quiet'], config['nodaemon'])
 
 
-def startSlave(basedir, quiet, nodaemon):
+def startWorker(basedir, quiet, nodaemon):
     """
     Start slave process.
 

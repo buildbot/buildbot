@@ -35,4 +35,4 @@ def restart(config):
     if not quiet:
         log.msg("now restarting buildslave process..")
 
-    return start.startSlave(basedir, quiet, config['nodaemon'])
+    return start.startWorker(basedir, quiet, config['nodaemon'])
