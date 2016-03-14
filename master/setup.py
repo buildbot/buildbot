@@ -423,8 +423,10 @@ else:
             'pyflakes',
         ],
         'bundle': [
-            'buildbot-www',
-            'buildbot-slave'
+            "buildbot-www==0.9.0b7",
+            "buildbot-slave==0.9.0b7",
+            "buildbot-waterfall-view==0.9.0b7",
+            "buildbot-console-view==0.9.0b7",
         ],
         'tls': [
             'Twisted[tls] ' + twisted_ver,
