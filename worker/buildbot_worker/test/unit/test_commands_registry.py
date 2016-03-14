@@ -23,7 +23,7 @@ class Registry(unittest.TestCase):
 
     def test_getFactory(self):
         factory = registry.getFactory('shell')
-        self.assertEqual(factory, shell.SlaveShellCommand)
+        self.assertEqual(factory, shell.WorkerShellCommand)
 
     def test_getFactory_KeyError(self):
         self.assertRaises(KeyError, lambda: registry.getFactory('nosuchcommand'))

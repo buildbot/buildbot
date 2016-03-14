@@ -196,7 +196,7 @@ class Command(object):
         this matters."""
         pass
 
-    # utility methods, mostly used by SlaveShellCommand and the like
+    # utility methods, mostly used by WorkerShellCommand and the like
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):
