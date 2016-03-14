@@ -596,8 +596,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
         # mock Worker class
         worker_mock = mock.Mock()
-        buildslave_class_mock = mock.Mock(return_value=worker_mock)
-        self.patch(buildbot_worker.bot, "Worker", buildslave_class_mock)
+        worker_class_mock = mock.Mock(return_value=worker_mock)
+        self.patch(buildbot_worker.bot, "Worker", worker_class_mock)
 
         expected_tac_contents = \
             "".join(create_slave.slaveTACTemplate) % options
@@ -611,7 +611,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         application_class_mock.assert_called_once_with("buildslave")
 
         # check that Worker created with passed options
-        buildslave_class_mock.assert_called_once_with(
+        worker_class_mock.assert_called_once_with(
             options["host"],
             options["port"],
             options["name"],
