@@ -185,7 +185,7 @@ class WorkerForBuilderBase(service.Service):
             return
         # the update[1]=0 comes from the leftover 'updateNum', which the
         # master still expects to receive. Provide it to avoid significant
-        # interoperability issues between new slaves and old masters.
+        # interoperability issues between new workers and old masters.
         if self.remoteStep:
             update = [data, 0]
             updates = [update]
@@ -338,7 +338,7 @@ class BotBase(service.MultiService):
         log.msg("worker shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
-        # resilinet to slaves dropping their connections, so there is no harm
+        # resilinet to workers dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 

@@ -253,7 +253,7 @@ class SourceBaseCommand(Command):
         - ['retry']:    If not None, this is a tuple of (delay, repeats)
                         which means that any failed VC updates should be
                         reattempted, up to REPEATS times, after a delay of
-                        DELAY seconds. This is intended to deal with slaves
+                        DELAY seconds. This is intended to deal with workers
                         that experience transient network failures.
     """
 
