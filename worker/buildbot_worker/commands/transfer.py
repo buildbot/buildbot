@@ -245,7 +245,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         return TransferCommand.finished(self, res)
 
 
-class SlaveFileDownloadCommand(TransferCommand):
+class WorkerFileDownloadCommand(TransferCommand):
 
     """
     Download a file from master to slave
@@ -273,7 +273,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveFileDownloadCommand starting')
+            log.msg('WorkerFileDownloadCommand starting')
 
         # Open file
         self.path = os.path.join(self.builder.basedir,
@@ -337,7 +337,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileDownloadCommand._readBlock(): end')
+                log.msg('WorkerFileDownloadCommand._readBlock(): end')
             return True
 
         length = self.blocksize
@@ -357,7 +357,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def _writeData(self, data):
         if self.debug:
-            log.msg('SlaveFileDownloadCommand._readBlock(): readlen=%d' %
+            log.msg('WorkerFileDownloadCommand._readBlock(): readlen=%d' %
                     len(data))
         if len(data) == 0:
             return True

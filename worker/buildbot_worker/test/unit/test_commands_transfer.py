@@ -401,7 +401,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = test_data = '1234' * 13
         assert(len(self.fakemaster.data) == 52)
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
             slavedest='data',
             reader=FakeRemote(self.fakemaster),
@@ -428,7 +428,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def test_mkdir(self):
         self.fakemaster.data = test_data = 'hi'
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='workdir',
             slavedest=os.path.join('subdir', 'data'),
             reader=FakeRemote(self.fakemaster),
@@ -454,7 +454,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = 'hi'
 
         os.makedirs(os.path.join(self.basedir, 'dir'))
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
             slavedest='dir',  # but that's a directory!
             reader=FakeRemote(self.fakemaster),
@@ -478,7 +478,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
     def test_truncated(self):
         self.fakemaster.data = test_data = 'tenchars--' * 10
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
             slavedest='data',
             reader=FakeRemote(self.fakemaster),
@@ -506,7 +506,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.data = 'tenchars--' * 100  # 1k
         self.fakemaster.delay_read = True  # read veery slowly
 
-        self.make_command(transfer.SlaveFileDownloadCommand, dict(
+        self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
             slavedest='data',
             reader=FakeRemote(self.fakemaster),
