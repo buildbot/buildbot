@@ -32,7 +32,7 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         """
 
         # patch isWorkerDir() to fail
-        self.setupUpIsBuildslaveDir(False)
+        self.setupUpIsWorkerDir(False)
 
         # call startCommand() and check that correct exit code is returned
         config = {"basedir": "dummy"}
@@ -47,7 +47,7 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         """
 
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch startSlave() to do nothing
         mocked_startSlave = mock.Mock(return_value=0)

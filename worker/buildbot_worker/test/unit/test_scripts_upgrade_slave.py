@@ -57,7 +57,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         test calling upgradeSlave() with bad base directory
         """
         # override isWorkerDir() to always fail
-        self.setupUpIsBuildslaveDir(False)
+        self.setupUpIsWorkerDir(False)
 
         # call upgradeSlave() and check that correct exit code is returned
         self.assertEqual(upgrade_slave.upgradeSlave(self.config), 1,
@@ -72,7 +72,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         upgraded
         """
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch open() to return a modern buildbot.tac file
         self.setUpOpen(MODERN_BUILDBOT_TAC)
@@ -97,7 +97,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         be updated
         """
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
         # patch open() to return older buildbot.tac file
         self.setUpOpen(OLD_BUILDBOT_TAC)

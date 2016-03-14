@@ -55,7 +55,7 @@ class IsWorkerDirMixin(object):
     Mixin for setting up mocked base.isWorkerDir() function
     """
 
-    def setupUpIsBuildslaveDir(self, return_value):
+    def setupUpIsWorkerDir(self, return_value):
         self.isBuildslaveDir = mock.Mock(return_value=return_value)
         self.patch(base, "isWorkerDir", self.isBuildslaveDir)
 
