@@ -116,7 +116,7 @@ class TestBot(unittest.TestCase):
         def check(builders):
             self.assertEqual(list(builders), ['mybld'])
             self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-            # note that we test the SlaveBuilder instance below
+            # note that we test the WorkerForBuilder instance below
         d.addCallback(check)
         return d
 
@@ -145,7 +145,7 @@ class TestBot(unittest.TestCase):
                 self.assertEqual(sorted(builders.keys()), sorted(['mybld', 'yourbld']))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                # 'my' should still be the same slavebuilder object
+                # 'my' should still be the same WorkerForBuilder object
                 self.assertEqual(id(workerforbuilders['my']), id(builders['mybld']))
                 workerforbuilders['your'] = builders['yourbld']
             d.addCallback(check)
@@ -162,7 +162,7 @@ class TestBot(unittest.TestCase):
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
-                # 'your' should still be the same slavebuilder object
+                # 'your' should still be the same WorkerForBuilder object
                 self.assertEqual(id(workerforbuilders['your']), id(builders['yourbld']))
             d.addCallback(check)
             return d
@@ -226,7 +226,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot = base.BotBase(self.basedir, False)
         self.bot.startService()
 
-        # get a SlaveBuilder object from the bot and wrap it as a fake remote
+        # get a WorkerForBuilder object from the bot and wrap it as a fake remote
         builders = yield self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = FakeRemote(builders['sb'])
 
@@ -246,7 +246,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         return self.sb.callRemote("print", "Hello, WorkerForBuilder.")
 
     def test_setMaster(self):
-        # not much to check here - what the SlaveBuilder does with the
+        # not much to check here - what the WorkerForBuilder does with the
         # master is not part of the interface (and, in fact, it does very little)
         return self.sb.callRemote("setMaster", mock.Mock())
 
