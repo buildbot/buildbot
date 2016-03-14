@@ -89,9 +89,9 @@ class WorkerForBuilderBase(service.Service):
     def activity(self):
         bot = self.parent
         if bot:
-            bslave = bot.parent
-            if bslave and self.bf:
-                bf = bslave.bf
+            bworker = bot.parent
+            if bworker and self.bf:
+                bf = bworker.bf
                 bf.activity()
 
     def remote_setMaster(self, remote):
