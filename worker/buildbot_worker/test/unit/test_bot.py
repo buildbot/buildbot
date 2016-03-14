@@ -243,7 +243,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_print(self):
-        return self.sb.callRemote("print", "Hello, SlaveBuilder.")
+        return self.sb.callRemote("print", "Hello, WorkerForBuilder.")
 
     def test_setMaster(self):
         # not much to check here - what the SlaveBuilder does with the
