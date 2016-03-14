@@ -212,7 +212,7 @@ c['db'] = {
 }
 """
 
-# Template for master configuration just before worker after renaming.
+# Template for master configuration just after worker renaming.
 sample_0_9_0b5_api_renamed = """\
 from buildbot.plugins import *
 
