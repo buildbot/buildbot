@@ -60,9 +60,9 @@ class TestRestart(misc.IsWorkerDirMixin,
         # patch basedir check to always succeed
         self.setupUpIsWorkerDir(True)
 
-        # patch stopSlave() to raise an exception
+        # patch stopWorker() to raise an exception
         mock_stopSlave = mock.Mock(side_effect=stop.SlaveNotRunning())
-        self.patch(stop, "stopSlave", mock_stopSlave)
+        self.patch(stop, "stopWorker", mock_stopSlave)
 
         # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
@@ -80,9 +80,9 @@ class TestRestart(misc.IsWorkerDirMixin,
         # patch basedir check to always succeed
         self.setupUpIsWorkerDir(True)
 
-        # patch stopSlave() to do nothing
+        # patch stopWorker() to do nothing
         mock_stopSlave = mock.Mock()
-        self.patch(stop, "stopSlave", mock_stopSlave)
+        self.patch(stop, "stopWorker", mock_stopSlave)
 
         # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
