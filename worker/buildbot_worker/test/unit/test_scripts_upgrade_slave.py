@@ -41,7 +41,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
                        unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.runner.upgradeSlave()
+    Test buildbot_worker.scripts.runner.upgradeWorker()
     """
     config = {"basedir": "dummy"}
 
@@ -54,13 +54,13 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
 
     def test_upgradeSlave_bad_basedir(self):
         """
-        test calling upgradeSlave() with bad base directory
+        test calling upgradeWorker() with bad base directory
         """
         # override isWorkerDir() to always fail
         self.setupUpIsWorkerDir(False)
 
-        # call upgradeSlave() and check that correct exit code is returned
-        self.assertEqual(upgrade_slave.upgradeSlave(self.config), 1,
+        # call upgradeWorker() and check that correct exit code is returned
+        self.assertEqual(upgrade_slave.upgradeWorker(self.config), 1,
                          "unexpected exit code")
 
         # check that isWorkerDir was called with correct argument
@@ -68,7 +68,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
 
     def test_upgradeSlave_no_changes(self):
         """
-        test calling upgradeSlave() on a buildbot.tac that don't need to be
+        test calling upgradeWorker() on a buildbot.tac that don't need to be
         upgraded
         """
         # patch basedir check to always succeed
@@ -77,8 +77,8 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         # patch open() to return a modern buildbot.tac file
         self.setUpOpen(MODERN_BUILDBOT_TAC)
 
-        # call upgradeSlave() and check the success exit code is returned
-        self.assertEqual(upgrade_slave.upgradeSlave(self.config), 0,
+        # call upgradeWorker() and check the success exit code is returned
+        self.assertEqual(upgrade_slave.upgradeWorker(self.config), 0,
                          "unexpected exit code")
 
         # check message to the log
@@ -93,7 +93,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
 
     def test_upgradeSlave_updated(self):
         """
-        test calling upgradeSlave() on an older buildbot.tac, that need to
+        test calling upgradeWorker() on an older buildbot.tac, that need to
         be updated
         """
         # patch basedir check to always succeed
@@ -102,8 +102,8 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
         # patch open() to return older buildbot.tac file
         self.setUpOpen(OLD_BUILDBOT_TAC)
 
-        # call upgradeSlave() and check the success exit code is returned
-        self.assertEqual(upgrade_slave.upgradeSlave(self.config), 0,
+        # call upgradeWorker() and check the success exit code is returned
+        self.assertEqual(upgrade_slave.upgradeWorker(self.config), 0,
                          "unexpected exit code")
 
         # check message to the log
