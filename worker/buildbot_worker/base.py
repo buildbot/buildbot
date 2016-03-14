@@ -161,7 +161,7 @@ class WorkerForBuilderBase(service.Service):
 
     def stopCommand(self):
         """Make any currently-running command die, with no further status
-        output. This is used when the buildslave is shutting down or the
+        output. This is used when the worker is shutting down or the
         connection to the master has been lost. Interrupt the command,
         silence it, and then forget about it."""
         if not self.command:

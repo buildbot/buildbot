@@ -20,7 +20,7 @@ from twisted.python import log
 
 def isWorkerDir(dir):
     def print_error(error_message):
-        log.msg("%s\ninvalid buildslave directory '%s'" % (error_message, dir))
+        log.msg("%s\ninvalid worker directory '%s'" % (error_message, dir))
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:

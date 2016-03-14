@@ -325,7 +325,7 @@ class TestOptions(misc.LoggingMixin, unittest.TestCase):
     def test_version(self):
         exception = self.assertRaises(SystemExit, self.parse, '--version')
         self.assertEqual(exception.code, 0, "unexpected exit code")
-        self.assertLogged('Buildslave version:')
+        self.assertLogged('worker version:')
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())
@@ -368,7 +368,7 @@ class TestRun(misc.LoggingMixin, unittest.TestCase):
 
     def test_run_good(self):
         """
-        Test successful invocation of buildslave command.
+        Test successful invocation of worker command.
         """
 
         self.patch(sys, "argv", ["command", 'test', '--test-opt'])

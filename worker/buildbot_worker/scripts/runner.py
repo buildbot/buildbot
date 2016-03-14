@@ -105,7 +105,7 @@ class UpgradeWorkerOptions(MakerBase):
         return "Usage:    buildslave upgrade-slave [<basedir>]"
 
     longdesc = """
-    This command takes an existing buildslave working directory and
+    This command takes an existing worker working directory and
     upgrades it to the current version.
     """
 
@@ -137,7 +137,7 @@ class CreateWorkerOptions(MakerBase):
          "limit the number of kept old twisted log files "
          "(None for unlimited)"],
         ["allow-shutdown", "a", None,
-         "Allows the buildslave to initiate a graceful shutdown. One of "
+         "Allows the worker to initiate a graceful shutdown. One of "
          "'signal' or 'file'"]
     ]
 
@@ -233,18 +233,18 @@ class Options(usage.Options):
     subCommands = [
         # the following are all admin commands
         ['create-slave', None, CreateWorkerOptions,
-         "Create and populate a directory for a new buildslave"],
+         "Create and populate a directory for a new worker"],
         ['upgrade-slave', None, UpgradeWorkerOptions,
-         "Upgrade an existing buildslave directory for the current version"],
-        ['start', None, StartOptions, "Start a buildslave"],
-        ['stop', None, StopOptions, "Stop a buildslave"],
+         "Upgrade an existing worker directory for the current version"],
+        ['start', None, StartOptions, "Start a worker"],
+        ['stop', None, StopOptions, "Stop a worker"],
         ['restart', None, RestartOptions,
-         "Restart a buildslave"],
+         "Restart a worker"],
     ]
 
     def opt_version(self):
         import buildbot_worker
-        log.msg("Buildslave version: %s" % buildbot_worker.version)
+        log.msg("worker version: %s" % buildbot_worker.version)
         usage.Options.opt_version(self)
 
     def opt_verbose(self):

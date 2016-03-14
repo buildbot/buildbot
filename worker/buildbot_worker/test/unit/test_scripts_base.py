@@ -42,7 +42,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
         self.assertLogged(
             re.escape("error reading '%s': %s" % (
                 self.tac_file_path, strerror)),
-            "invalid buildslave directory 'testdir'")
+            "invalid worker directory 'testdir'")
 
     def test_open_error(self):
         """Test that open() errors are handled."""
@@ -86,13 +86,13 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
         # check that correct error message was printed to the log
         self.assertLogged(
             re.escape("unexpected content in '%s'" % self.tac_file_path),
-            "invalid buildslave directory 'testdir'",
+            "invalid worker directory 'testdir'",
             "unexpected error message on stdout")
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 
     def test_workerdir_good(self):
-        """Test checking valid buildslave directory."""
+        """Test checking valid worker directory."""
 
         # patch open() to return file with valid buildslave tac contents
         self.setUpOpen("Application('buildslave')")

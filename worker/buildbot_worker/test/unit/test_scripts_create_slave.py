@@ -537,7 +537,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
 
     def testCreateError(self):
         """
-        test that errors while creating buildslave directory are handled
+        test that errors while creating worker directory are handled
         correctly by createWorker()
         """
         # patch _make*() functions to raise an exception
@@ -549,7 +549,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
 
         # check that correct error message was printed the the log
         self.assertLogged("err-msg",
-                          "failed to configure buildslave in bdir")
+                          "failed to configure worker in bdir")
 
     def testMinArgs(self):
         """
@@ -570,7 +570,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
                                       self.options["quiet"])
 
         # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        self.assertLogged("worker configured in bdir")
 
     def assertTACFileContents(self, options):
         """
@@ -724,7 +724,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
                                       self.options["quiet"])
 
         # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        self.assertLogged("worker configured in bdir")
 
     def testWithOpts(self):
         """
@@ -751,7 +751,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
                                       options["quiet"])
 
         # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        self.assertLogged("worker configured in bdir")
 
     def testQuiet(self):
         """

@@ -70,8 +70,8 @@ class TestRestart(misc.IsWorkerDirMixin,
                                                  self.config["quiet"],
                                                  self.config["nodaemon"])
 
-        self.assertLogged("no old buildslave process found to stop")
-        self.assertLogged("now restarting buildslave process..")
+        self.assertLogged("no old worker process found to stop")
+        self.assertLogged("now restarting worker process..")
 
     def test_restart(self):
         """
@@ -89,4 +89,4 @@ class TestRestart(misc.IsWorkerDirMixin,
         self.startWorker.assert_called_once_with(self.config["basedir"],
                                                  self.config["quiet"],
                                                  self.config["nodaemon"])
-        self.assertLogged("now restarting buildslave process..")
+        self.assertLogged("now restarting worker process..")

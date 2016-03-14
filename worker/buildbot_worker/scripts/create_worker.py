@@ -32,7 +32,7 @@ if basedir == '.':
     import os.path
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-# note: this line is matched against to check that this is a buildslave
+# note: this line is matched against to check that this is a worker
 # directory; do not edit it.
 application = service.Application('buildslave')
 """,
@@ -72,15 +72,15 @@ s.setServiceParent(application)
 class CreateWorkerError(Exception):
 
     """
-    Raised on errors while setting up buildslave directory.
+    Raised on errors while setting up worker directory.
     """
 
 
 def _makeBaseDir(basedir, quiet):
     """
-    Make buildslave base directory if needed.
+    Make worker base directory if needed.
 
-    @param basedir: buildslave base directory relative path
+    @param basedir: worker base directory relative path
     @param   quiet: if True, don't print info messages
 
     @raise CreateWorkerError: on error making base directory
@@ -105,7 +105,7 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
     Create buildbot.tac file. If buildbot.tac file already exists with
     different contents, create buildbot.tac.new instead.
 
-    @param basedir: buildslave base directory relative path
+    @param basedir: worker base directory relative path
     @param tac_file_contents: contents of buildbot.tac file to write
     @param quiet: if True, don't print info messages
 
@@ -145,7 +145,7 @@ def _makeInfoFiles(basedir, quiet):
     """
     Create info/* files inside basedir.
 
-    @param basedir: buildslave base directory relative path
+    @param basedir: worker base directory relative path
     @param   quiet: if True, don't print info messages
 
     @raise CreateWorkerError: on error making info directory or
@@ -219,11 +219,11 @@ def createWorker(config):
         _makeBuildbotTac(basedir, contents, quiet)
         _makeInfoFiles(basedir, quiet)
     except CreateWorkerError as exception:
-        log.msg("%s\nfailed to configure buildslave in %s" %
+        log.msg("%s\nfailed to configure worker in %s" %
                 (exception, config['basedir']))
         return 1
 
     if not quiet:
-        log.msg("buildslave configured in %s" % basedir)
+        log.msg("worker configured in %s" % basedir)
 
     return 0

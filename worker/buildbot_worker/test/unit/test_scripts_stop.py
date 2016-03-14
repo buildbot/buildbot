@@ -80,7 +80,7 @@ class TestStopWorker(misc.FileIOMixin,
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
 
-        self.assertLogged("buildslave process %s is dead" % self.PID)
+        self.assertLogged("worker process %s is dead" % self.PID)
 
 
 class TestStop(misc.IsWorkerDirMixin,
@@ -121,7 +121,7 @@ class TestStop(misc.IsWorkerDirMixin,
 
         stop.stop(self.config)
 
-        self.assertLogged("buildslave not running")
+        self.assertLogged("worker not running")
 
     def test_successful_stop(self):
         """

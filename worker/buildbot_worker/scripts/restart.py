@@ -31,8 +31,8 @@ def restart(config):
         stop.stopWorker(basedir, quiet)
     except stop.WorkerNotRunning:
         if not quiet:
-            log.msg("no old buildslave process found to stop")
+            log.msg("no old worker process found to stop")
     if not quiet:
-        log.msg("now restarting buildslave process..")
+        log.msg("now restarting worker process..")
 
     return start.startWorker(basedir, quiet, config['nodaemon'])
