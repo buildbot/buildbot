@@ -200,7 +200,9 @@ else:
         'python-dateutil==1.5',
         'autobahn',
         'python-ldap',
-        'mysql-python'
+        'mysql-python',
+        # alternative MySQL driver, that works under pypy
+        'pymysql==0.7.1'
     ]
     setup_args['tests_require'] = [
         'mock',
