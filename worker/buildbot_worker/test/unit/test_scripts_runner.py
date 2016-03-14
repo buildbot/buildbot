@@ -135,7 +135,7 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
                                 basedir=self.ABSPATH_PREFIX + self.MY_BASEDIR))
 
 
-class TestUpgradeSlaveOptions(BaseDirTestsMixin, unittest.TestCase):
+class TestUpgradeWorkerOptions(BaseDirTestsMixin, unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.UpgradeWorkerOptions class.
