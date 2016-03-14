@@ -281,7 +281,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return d
 
 
-class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
+class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpCommand()
