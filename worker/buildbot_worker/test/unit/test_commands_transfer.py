@@ -129,7 +129,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_simple(self):
         self.fakemaster.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),
@@ -152,7 +152,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_truncated(self):
         self.fakemaster.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),
@@ -174,7 +174,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_missing(self):
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
             slavesrc='data-nosuch',
             writer=FakeRemote(self.fakemaster),
@@ -200,7 +200,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.fakemaster.write_out_of_space_at = 70
         self.fakemaster.count_writes = True    # get actual byte counts
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),
@@ -224,7 +224,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_interrupted(self):
         self.fakemaster.delay_write = True  # write veery slowly
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),
@@ -259,7 +259,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         timestamp = (os.path.getatime(self.datafile),
                      os.path.getmtime(self.datafile))
 
-        self.make_command(transfer.SlaveFileUploadCommand, dict(
+        self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),
@@ -305,7 +305,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
     def test_simple(self, compress=None):
         self.fakemaster.keep_data = True
 
-        self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
+        self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),
@@ -352,7 +352,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         self.fakemaster.keep_data = True
         self.fakemaster.unpack_fail = True
 
-        self.make_command(transfer.SlaveDirectoryUploadCommand, dict(
+        self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
             workdir='workdir',
             slavesrc='data',
             writer=FakeRemote(self.fakemaster),

@@ -48,7 +48,7 @@ class TransferCommand(Command):
         # when it sees self.interrupted set.
 
 
-class SlaveFileUploadCommand(TransferCommand):
+class WorkerFileUploadCommand(TransferCommand):
 
     """
     Upload a file from slave to build master
@@ -76,7 +76,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveFileUploadCommand started')
+            log.msg('WorkerFileUploadCommand started')
 
         # Open file
         self.path = os.path.join(self.builder.basedir,
@@ -149,7 +149,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileUploadCommand._writeBlock(): end')
+                log.msg('WorkerFileUploadCommand._writeBlock(): end')
             return True
 
         length = self.blocksize
@@ -166,7 +166,7 @@ class SlaveFileUploadCommand(TransferCommand):
             data = self.fp.read(length)
 
         if self.debug:
-            log.msg('SlaveFileUploadCommand._writeBlock(): ' +
+            log.msg('WorkerFileUploadCommand._writeBlock(): ' +
                     'allowed=%d readlen=%d' % (length, len(data)))
         if len(data) == 0:
             log.msg("EOF: callRemote(close)")
@@ -180,7 +180,7 @@ class SlaveFileUploadCommand(TransferCommand):
         return d
 
 
-class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
+class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
     debug = False
     requiredArgs = ['workdir', 'slavesrc', 'writer', 'blocksize']
 
@@ -196,7 +196,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveDirectoryUploadCommand started')
+            log.msg('WorkerDirectoryUploadCommand started')
 
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
