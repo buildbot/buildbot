@@ -71,7 +71,7 @@ class MasterRealm(object):
         return self.mind.broker.transport.loseConnection()
 
 
-class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
+class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
     def setUp(self):
         self.realm = None
