@@ -119,7 +119,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
                    umask=0o123, maxdelay=10, keepaliveTimeout=10,
                    unicode_encoding='utf8', allow_shutdown=True)
 
-    def test_buildslave_print(self):
+    def test_worker_print(self):
         d = defer.Deferred()
 
         # set up to call print when we are attached, and chain the results onto
