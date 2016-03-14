@@ -64,7 +64,7 @@ class TestUpgradeSlave(misc.IsWorkerDirMixin,
                          "unexpected exit code")
 
         # check that isWorkerDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with("dummy")
+        self.isWorkerDir.assert_called_once_with("dummy")
 
     def test_upgradeSlave_no_changes(self):
         """

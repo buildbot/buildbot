@@ -39,7 +39,7 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         self.assertEqual(start.startCommand(config), 1, "unexpected exit code")
 
         # check that isWorkerDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with("dummy")
+        self.isWorkerDir.assert_called_once_with("dummy")
 
     def test_start_command_good(self):
         """
@@ -58,7 +58,7 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
 
         # check that isWorkerDir() and startSlave() were called
         # with correct argument
-        self.isBuildslaveDir.assert_called_once_with("dummy")
+        self.isWorkerDir.assert_called_once_with("dummy")
         mocked_startSlave.assert_called_once_with(config["basedir"],
                                                   config["quiet"],
                                                   config["nodaemon"])

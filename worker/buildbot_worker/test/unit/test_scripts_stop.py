@@ -104,7 +104,7 @@ class TestStop(misc.IsWorkerDirMixin,
         self.assertEqual(stop.stop(self.config), 1, "unexpected exit code")
 
         # check that isWorkerDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with(self.config["basedir"])
+        self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
     def test_no_slave_running(self):
         """
