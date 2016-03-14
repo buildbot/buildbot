@@ -27,7 +27,7 @@ from twisted.spread import pb
 
 from buildbot_worker.base import BotBase
 from buildbot_worker.base import BuildSlaveBase
-from buildbot_worker.base import SlaveBuilderBase
+from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.pbutil import ReconnectingPBClientFactory
 
 
@@ -35,12 +35,12 @@ class UnknownCommand(pb.Error):
     pass
 
 
-class SlaveBuilderPb(SlaveBuilderBase, pb.Referenceable):
+class WorkerForBuilderPb(WorkerForBuilderBase, pb.Referenceable):
     pass
 
 
 class BotPb(BotBase, pb.Referenceable):
-    SlaveBuilder = SlaveBuilderPb
+    SlaveBuilder = WorkerForBuilderPb
 
 
 class BotFactory(ReconnectingPBClientFactory):
