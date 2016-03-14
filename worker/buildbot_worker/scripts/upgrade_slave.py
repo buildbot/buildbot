@@ -23,7 +23,7 @@ from buildbot_worker.scripts import base
 def upgradeSlave(config):
     basedir = os.path.expanduser(config['basedir'])
 
-    if not base.isBuildslaveDir(basedir):
+    if not base.isWorkerDir(basedir):
         return 1
 
     buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()

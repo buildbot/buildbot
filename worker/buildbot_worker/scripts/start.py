@@ -85,7 +85,7 @@ stop it, fix the config file, and restart.
 
 def startCommand(config):
     basedir = config['basedir']
-    if not base.isBuildslaveDir(basedir):
+    if not base.isWorkerDir(basedir):
         return 1
 
     return startSlave(basedir, config['quiet'], config['nodaemon'])

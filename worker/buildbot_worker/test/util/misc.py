@@ -52,12 +52,12 @@ class BasedirMixin(object):
 class IsBuildslaveDirMixin(object):
 
     """
-    Mixin for setting up mocked base.isBuildslaveDir() function
+    Mixin for setting up mocked base.isWorkerDir() function
     """
 
     def setupUpIsBuildslaveDir(self, return_value):
         self.isBuildslaveDir = mock.Mock(return_value=return_value)
-        self.patch(base, "isBuildslaveDir", self.isBuildslaveDir)
+        self.patch(base, "isWorkerDir", self.isBuildslaveDir)
 
 
 class PatcherMixin(object):

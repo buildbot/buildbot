@@ -56,14 +56,14 @@ class TestUpgradeSlave(misc.IsBuildslaveDirMixin,
         """
         test calling upgradeSlave() with bad base directory
         """
-        # override isBuildslaveDir() to always fail
+        # override isWorkerDir() to always fail
         self.setupUpIsBuildslaveDir(False)
 
         # call upgradeSlave() and check that correct exit code is returned
         self.assertEqual(upgrade_slave.upgradeSlave(self.config), 1,
                          "unexpected exit code")
 
-        # check that isBuildslaveDir was called with correct argument
+        # check that isWorkerDir was called with correct argument
         self.isBuildslaveDir.assert_called_once_with("dummy")
 
     def test_upgradeSlave_no_changes(self):

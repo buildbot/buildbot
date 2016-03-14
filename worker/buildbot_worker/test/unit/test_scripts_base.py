@@ -25,7 +25,7 @@ from twisted.trial import unittest
 
 class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
 
-    """Test buildbot_worker.scripts.base.isBuildslaveDir()"""
+    """Test buildbot_worker.scripts.base.isWorkerDir()"""
 
     def setUp(self):
         # capture output to stdout
@@ -50,8 +50,8 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
         # patch open() to raise IOError
         self.setUpOpenError(1, "open-error", "dummy")
 
-        # check that isBuildslaveDir() flags directory as invalid
-        self.assertFalse(base.isBuildslaveDir("testdir"))
+        # check that isWorkerDir() flags directory as invalid
+        self.assertFalse(base.isWorkerDir("testdir"))
 
         # check that correct error message was printed to stdout
         self.assertReadErrorMessage("open-error")
@@ -65,8 +65,8 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
         # patch open() to return file object that raises IOError on read()
         self.setUpReadError(1, "read-error", "dummy")
 
-        # check that isBuildslaveDir() flags directory as invalid
-        self.assertFalse(base.isBuildslaveDir("testdir"))
+        # check that isWorkerDir() flags directory as invalid
+        self.assertFalse(base.isWorkerDir("testdir"))
 
         # check that correct error message was printed to stdout
         self.assertReadErrorMessage("read-error")
@@ -80,8 +80,8 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
         # patch open() to return file with unexpected contents
         self.setUpOpen("dummy-contents")
 
-        # check that isBuildslaveDir() flags directory as invalid
-        self.assertFalse(base.isBuildslaveDir("testdir"))
+        # check that isWorkerDir() flags directory as invalid
+        self.assertFalse(base.isWorkerDir("testdir"))
 
         # check that correct error message was printed to the log
         self.assertLogged(
@@ -97,8 +97,8 @@ class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase
         # patch open() to return file with valid buildslave tac contents
         self.setUpOpen("Application('buildslave')")
 
-        # check that isBuildslaveDir() flags directory as good
-        self.assertTrue(base.isBuildslaveDir("testdir"))
+        # check that isWorkerDir() flags directory as good
+        self.assertTrue(base.isWorkerDir("testdir"))
 
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)

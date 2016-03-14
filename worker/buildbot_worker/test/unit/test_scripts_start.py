@@ -31,14 +31,14 @@ class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
         test calling startCommand() with invalid basedir path
         """
 
-        # patch isBuildslaveDir() to fail
+        # patch isWorkerDir() to fail
         self.setupUpIsBuildslaveDir(False)
 
         # call startCommand() and check that correct exit code is returned
         config = {"basedir": "dummy"}
         self.assertEqual(start.startCommand(config), 1, "unexpected exit code")
 
-        # check that isBuildslaveDir was called with correct argument
+        # check that isWorkerDir was called with correct argument
         self.isBuildslaveDir.assert_called_once_with("dummy")
 
     def test_start_command_good(self):
@@ -56,7 +56,7 @@ class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):
         config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
         self.assertEqual(start.startCommand(config), 0, "unexpected exit code")
 
-        # check that isBuildslaveDir() and startSlave() were called
+        # check that isWorkerDir() and startSlave() were called
         # with correct argument
         self.isBuildslaveDir.assert_called_once_with("dummy")
         mocked_startSlave.assert_called_once_with(config["basedir"],
