@@ -115,7 +115,7 @@ class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
                    mock.Mock(side_effect=OSError(0, "dummy-error")))
 
         # check that correct exception was raised
-        self.assertRaisesRegexp(create_worker.CreateSlaveError,
+        self.assertRaisesRegexp(create_worker.CreateWorkerError,
                                 "error creating directory dummy: dummy-error",
                                 create_worker._makeBaseDir, "dummy", False)
 
@@ -149,7 +149,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
 
         # call _makeBuildbotTac() and check that correct exception is raised
         expected_message = "error reading %s: dummy-msg" % self.tac_file_path
-        self.assertRaisesRegexp(create_worker.CreateSlaveError,
+        self.assertRaisesRegexp(create_worker.CreateWorkerError,
                                 expected_message,
                                 create_worker._makeBuildbotTac,
                                 "bdir", "contents", False)
@@ -164,7 +164,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
 
         # call _makeBuildbotTac() and check that correct exception is raised
         expected_message = "error reading %s: dummy-msg" % self.tac_file_path
-        self.assertRaisesRegexp(create_worker.CreateSlaveError,
+        self.assertRaisesRegexp(create_worker.CreateWorkerError,
                                 expected_message,
                                 create_worker._makeBuildbotTac,
                                 "bdir", "contents", False)
@@ -179,7 +179,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
 
         # call _makeBuildbotTac() and check that correct exception is raised
         expected_message = "could not write %s: dummy-msg" % self.tac_file_path
-        self.assertRaisesRegexp(create_worker.CreateSlaveError,
+        self.assertRaisesRegexp(create_worker.CreateWorkerError,
                                 expected_message,
                                 create_worker._makeBuildbotTac,
                                 "bdir", "contents", False)
@@ -309,7 +309,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
         self.patch(os, "mkdir", mock.Mock(side_effect=OSError(0, "err-msg")))
 
         # call _makeInfoFiles() and check that correct exception is raised
-        self.assertRaisesRegexp(create_worker.CreateSlaveError,
+        self.assertRaisesRegexp(create_worker.CreateWorkerError,
                                 "error creating directory %s: err-msg" %
                                 _regexp_path("bdir", "info"),
                                 create_worker._makeInfoFiles,
@@ -359,7 +359,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
             self.fail("unexpected error_type '%s'" % error_type)
 
         # call _makeInfoFiles() and check that correct exception is raised
-        self.assertRaisesRegexp(create_worker.CreateSlaveError,
+        self.assertRaisesRegexp(create_worker.CreateWorkerError,
                                 "could not write %s: info-err-msg" %
                                 _regexp_path("bdir", "info", "admin"),
                                 create_worker._makeInfoFiles,
@@ -541,7 +541,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         correctly by createWorker()
         """
         # patch _make*() functions to raise an exception
-        self.setUpMakeFunctions(create_worker.CreateSlaveError("err-msg"))
+        self.setUpMakeFunctions(create_worker.CreateWorkerError("err-msg"))
 
         # call createWorker() and check that we get error exit code
         self.assertEquals(create_worker.createWorker(self.options), 1,
