@@ -57,7 +57,7 @@ with:
 
 .. code-block:: python
 
-    c['www'] = dict(port=8020,
+    c['www'] = dict(port=8010,
                     plugins=dict(waterfall_view={},
                     console_view={}))
 

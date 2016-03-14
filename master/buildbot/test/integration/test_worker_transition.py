@@ -74,7 +74,7 @@ c['status'] = []
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
 
-c['buildbotURL'] = "http://localhost:8020/"
+c['buildbotURL'] = "http://localhost:8010/"
 
 c['db'] = {
     'db_url' : "sqlite:///state.sqlite",
@@ -122,7 +122,7 @@ c['status'] = []
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
 
-c['buildbotURL'] = "http://localhost:8020/"
+c['buildbotURL'] = "http://localhost:8010/"
 
 c['db'] = {
     'db_url' : "sqlite:///state.sqlite",
