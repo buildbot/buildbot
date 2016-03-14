@@ -19,6 +19,7 @@ from buildbot.db import builds
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
+from buildbot.status.results import SUCCESS
 
 class TestBuildsConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -53,17 +54,17 @@ class TestBuildsConnectorComponent(
     ]
 
     last_builds = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="builder",
-                                    complete=1, results=0,
-                                    submitted_at=SUBMITTED_AT_EPOCH,
-                                    complete_at=COMPLETE_AT_EPOCH),
-                fakedb.Buildset(id=1, sourcestampsetid=1),
-                fakedb.SourceStampSet(id=1),
-                fakedb.SourceStamp(id=1, revision='a', codebase='1',
-                                   sourcestampsetid=1, branch='master', repository='z'),
-                fakedb.SourceStamp(id=2, revision='b', codebase='2', sourcestampsetid=1,
-                                   branch='staging', repository='w'),
-                fakedb.Build(id=1, number=4, brid=1, start_time=SUBMITTED_AT_EPOCH,
-                             finish_time=COMPLETE_AT_EPOCH, slavename='slave-01')]
+                                       complete=1, results=0,
+                                       submitted_at=SUBMITTED_AT_EPOCH,
+                                       complete_at=COMPLETE_AT_EPOCH),
+                   fakedb.Buildset(id=1, sourcestampsetid=1),
+                   fakedb.SourceStampSet(id=1),
+                   fakedb.SourceStamp(id=1, revision='a', codebase='1',
+                                      sourcestampsetid=1, branch='master', repository='z'),
+                   fakedb.SourceStamp(id=2, revision='b', codebase='2', sourcestampsetid=1,
+                                      branch='staging', repository='w'),
+                   fakedb.Build(id=1, number=4, brid=1, start_time=SUBMITTED_AT_EPOCH,
+                                finish_time=COMPLETE_AT_EPOCH, slavename='slave-01')]
 
     # tests
 
@@ -265,6 +266,55 @@ class TestBuildsConnectorComponent(
         self.assertEqual(lastBuildNumber, [4, 3])
 
     @defer.inlineCallbacks
+    def insertRecentBuilds(self):
+        builds = [{'buildername': "builder",
+                   'submitted_at': 1457706077,
+                   'complete_at': 1457706089,
+                   'revision': 'abzdewf',
+                   'slavename': 'slave-02'},
+                  {'buildername': "builder",
+                   'submitted_at': 1457895804,
+                   'complete_at': 1457895819,
+                   'revision': 'zbzdewf',
+                   'slavename': 'slave-01'},
+                  {'buildername': "builder-01",
+                   'submitted_at': 1457895804,
+                   'complete_at': 1457895819,
+                   'revision': 'zbzdewf',
+                   'slavename': 'slave-01'},
+                  {'buildername': "builder",
+                   'submitted_at': self.SUBMITTED_AT_EPOCH,
+                   'complete_at': self.COMPLETE_AT_EPOCH,
+                   'revision': 'fwbzdeif',
+                   'slavename': 'slave-01'}]
+
+        recent_builds = []
+
+        for idx, b in enumerate(builds):
+            rowid = idx + 1
+            recent_builds += [fakedb.BuildRequest(id=rowid, buildsetid=rowid, buildername=b['buildername'],
+                                                 complete=1, results=SUCCESS,
+                                                 submitted_at=b['submitted_at'],
+                                                 complete_at=b['complete_at']),
+                             fakedb.Buildset(id=rowid, sourcestampsetid=rowid),
+                             fakedb.SourceStampSet(id=rowid),
+                             fakedb.SourceStamp(id=rowid, revision=b['revision'], codebase='1',
+                                                sourcestampsetid=rowid, branch='master', repository='z'),
+                            fakedb.Build(id=rowid, number=rowid, brid=rowid,
+                                         start_time=b['submitted_at'],
+                                         finish_time=b['complete_at'],
+                                         slavename=b['slavename'])
+                             ]
+        yield  self.insertTestData(recent_builds)
+
+    @defer.inlineCallbacks
+    def test_getLastBuildsNumbersOrderByCompleted(self):
+        yield self.insertRecentBuilds()
+
+        builds = yield self.db.builds.getLastBuildsNumbers(buildername="builder")
+        self.assertEquals([2, 1, 4], builds)
+
+    @defer.inlineCallbacks
     def test_getLastsBuildsNumbersBySlave(self):
         builds = [fakedb.BuildRequest(id=2, buildsetid=2, buildername="builder1",
                                        complete=1, results=0,
@@ -319,3 +369,10 @@ class TestBuildsConnectorComponent(
 
         lastBuildNumber = yield self.db.builds.getLastsBuildsNumbersBySlave(slavename='slave-02', results=[7])
         self.assertEqual(lastBuildNumber, {'builder2': [5]})
+
+    @defer.inlineCallbacks
+    def test_getLastsBuildsNumbersBySlaveOrderByCompleted(self):
+        yield self.insertRecentBuilds()
+
+        builds = yield self.db.builds.getLastsBuildsNumbersBySlave(slavename="slave-01")
+        self.assertEquals(builds, {'builder-01': [3], 'builder': [2, 4]})

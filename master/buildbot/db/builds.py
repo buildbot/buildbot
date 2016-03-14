@@ -184,7 +184,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, results=None, num_builds=1):
+    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, results=None, num_builds=15):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
