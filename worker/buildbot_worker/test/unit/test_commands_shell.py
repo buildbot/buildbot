@@ -20,7 +20,7 @@ from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util.command import CommandTestMixin
 
 
-class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
+class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpCommand()
