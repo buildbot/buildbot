@@ -62,8 +62,8 @@ numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
 
 s = Worker(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               numcpus=numcpus, allow_shutdown=allow_shutdown)
+           keepalive, usepty, umask=umask, maxdelay=maxdelay,
+           numcpus=numcpus, allow_shutdown=allow_shutdown)
 s.setServiceParent(application)
 
 """]
