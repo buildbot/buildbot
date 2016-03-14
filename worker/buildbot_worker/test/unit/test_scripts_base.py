@@ -23,7 +23,7 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
+class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
 
     """Test buildbot_worker.scripts.base.isWorkerDir()"""
 
