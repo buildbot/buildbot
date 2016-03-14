@@ -132,7 +132,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
         self.worker = bot.Worker("127.0.0.1", port,
-                                         "testy", "westy", self.basedir,
+                                 "testy", "westy", self.basedir,
                                  keepalive=0, usePTY=False, umask=0o22)
         self.worker.startService()
 
@@ -143,7 +143,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.patch_os_uname(lambda: [0, 'test-hostname.domain.com'])
 
         self.worker = bot.Worker("127.0.0.1", 9999,
-                                         "testy", "westy", self.basedir,
+                                 "testy", "westy", self.basedir,
                                  keepalive=0, usePTY=False, umask=0o22)
         self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
@@ -156,7 +156,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.patch(socket, "getfqdn", lambda: 'test-hostname.domain.com')
 
         self.worker = bot.Worker("127.0.0.1", 9999,
-                                         "testy", "westy", self.basedir,
+                                 "testy", "westy", self.basedir,
                                  keepalive=0, usePTY=False, umask=0o22)
         self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
@@ -187,7 +187,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         port = self.start_master(persp, on_attachment=call_shutdown)
 
         self.worker = bot.Worker("127.0.0.1", port,
-                                         "testy", "westy", self.basedir,
+                                 "testy", "westy", self.basedir,
                                  keepalive=0, usePTY=False, umask=0o22)
 
         self.worker.startService()
@@ -203,9 +203,9 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         being called."""
 
         worker = bot.Worker("127.0.0.1", 1234,
-                                    "testy", "westy", self.basedir,
-                                keepalive=0, usePTY=False, umask=0o22,
-                                allow_shutdown='file')
+                            "testy", "westy", self.basedir,
+                            keepalive=0, usePTY=False, umask=0o22,
+                            allow_shutdown='file')
 
         # Mock out gracefulShutdown
         worker.gracefulShutdown = Mock()
