@@ -290,9 +290,9 @@ class WorkerFileDownloadCommand(TransferCommand):
                 log.msg("Opened '%s' for download" % self.path)
             if self.mode is not None:
                 # note: there is a brief window during which the new file
-                # will have the buildslave's default (umask) mode before we
+                # will have the worker's default (umask) mode before we
                 # set the new one. Don't use this mode= feature to keep files
-                # private: use the buildslave's umask for that instead. (it
+                # private: use the worker's umask for that instead. (it
                 # is possible to call os.umask() before and after the open()
                 # call, but cleaning up from exceptions properly is more of a
                 # nuisance that way).

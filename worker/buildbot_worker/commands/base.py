@@ -261,7 +261,7 @@ class SourceBaseCommand(Command):
 
     def setup(self, args):
         # if we need to parse the output, use this environment. Otherwise
-        # command output will be in whatever the buildslave's native language
+        # command output will be in whatever the worker's native language
         # has been set to.
         self.env = os.environ.copy()
         self.env['LC_MESSAGES'] = "C"
