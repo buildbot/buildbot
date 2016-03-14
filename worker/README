@@ -1,0 +1,37 @@
+
+Buildbot: build/test automation
+  http://buildbot.net
+  Brian Warner <warner-buildbot @ lothar . com>
+  Dustin J. Mitchell <dustin@v.igoro.us>
+
+
+Buildbot is a continuous integration system designed to automate the
+build/test cycle. By automatically rebuilding and testing the tree each time
+something has changed, build problems are pinpointed quickly, before other
+developers are inconvenienced by the failure.  Features
+
+* Buildbot is easy to set up, but very extensible and customizable.  It
+  supports arbitrary build processes, and is not limited to common build
+  processes for particular languages (e.g., autotools or ant)
+
+* Buildbot supports building and testing on a variety of platforms.
+  Developers, who do not have the facilities to test their changes everywhere
+  before committing, will know shortly afterwards whether they have broken the
+  build or not.
+
+* Buildbot has minimal requirements for workers: using virtualenv, only a
+  Python installation is required.
+
+* Workers can be run behind a NAT firewall and communicate with the master
+
+* Buildbot has a variety of status-reporting tools to get information about
+  builds in front of developers in a timely manner.
+
+
+Worker:
+
+This package contains only the Buildbot worker implementation.  The `buildbot`
+package contains the buildmaster as well as a complete set of documentation.
+
+See http://buildbot.net for more information and for an online version of the
+Buildbot documentation.
