@@ -127,7 +127,7 @@
 # By default, the absolute repository path (e.g., "/home/hg/repos/myrepo") will
 # be used.  The webview will in this case simply append the path to its own
 # hostname in order to create a link to that change (e.g.,
-# "http://localhost:8020/home/hg/repos/myrepo").
+# "http://localhost:8010/home/hg/repos/myrepo").
 #
 # You can alternatively strip some of the repo path's components and prepend
 # a custom base URL instead.  For example, if you want to create an URL like
