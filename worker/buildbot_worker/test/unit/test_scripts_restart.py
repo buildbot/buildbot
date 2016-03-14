@@ -55,7 +55,7 @@ class TestRestart(misc.IsWorkerDirMixin,
 
     def test_no_worker_running(self):
         """
-        test calling restart() when no slave is running
+        test calling restart() when no worker is running
         """
         # patch basedir check to always succeed
         self.setupUpIsWorkerDir(True)
@@ -75,7 +75,7 @@ class TestRestart(misc.IsWorkerDirMixin,
 
     def test_restart(self):
         """
-        test calling restart() when slave is running
+        test calling restart() when worker is running
         """
         # patch basedir check to always succeed
         self.setupUpIsWorkerDir(True)

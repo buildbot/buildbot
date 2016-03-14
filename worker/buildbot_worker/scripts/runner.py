@@ -48,7 +48,7 @@ class MakerBase(usage.Options):
         # only set completion suggestion if running with
         # twisted version (>=11.1.0) that supports it
         compData = usage.Completions(
-            extraActions=[usage.CompleteDirs(descr="slave base directory")])
+            extraActions=[usage.CompleteDirs(descr="worker base directory")])
 
     opt_h = usage.Options.opt_help
 

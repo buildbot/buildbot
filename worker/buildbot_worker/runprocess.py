@@ -233,7 +233,7 @@ class RunProcessPP(protocol.ProcessProtocol):
 class RunProcess(object):
 
     """
-    This is a helper class, used by slave commands to run programs in a child
+    This is a helper class, used by worker commands to run programs in a child
     shell.
     """
 

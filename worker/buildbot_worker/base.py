@@ -227,14 +227,14 @@ class WorkerForBuilderBase(service.Service):
             self.remoteStep = None
 
     def remote_shutdown(self):
-        log.msg("slave shutting down on command from master")
+        log.msg("worker shutting down on command from master")
         log.msg("NOTE: master is using deprecated WorkerForBuilder.shutdown method")
         reactor.stop()
 
 
 class BotBase(service.MultiService):
 
-    """I represent the slave-side bot."""
+    """I represent the worker-side bot."""
     usePTY = None
     name = "bot"
     WorkerForBuilder = WorkerForBuilderBase
@@ -307,9 +307,9 @@ class BotBase(service.MultiService):
     def remote_getSlaveInfo(self):
         """This command retrieves data from the files in SLAVEDIR/info/* and
         sends the contents to the buildmaster. These are used to describe
-        the slave and its configuration, and should be created and
-        maintained by the slave administrator. They will be retrieved each
-        time the master-slave connection is established.
+        the worker and its configuration, and should be created and
+        maintained by the worker administrator. They will be retrieved each
+        time the master-worker connection is established.
         """
 
         files = {}
@@ -335,7 +335,7 @@ class BotBase(service.MultiService):
         return buildbot_worker.version
 
     def remote_shutdown(self):
-        log.msg("slave shutting down on command from master")
+        log.msg("worker shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
         # resilinet to slaves dropping their connections, so there is no harm

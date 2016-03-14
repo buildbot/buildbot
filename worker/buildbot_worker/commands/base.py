@@ -78,7 +78,7 @@ class Command(object):
     implements(IWorkerCommand)
 
     """This class defines one command that can be invoked by the build master.
-    The command is executed on the slave side, and always sends back a
+    The command is executed on the worker side, and always sends back a
     completion message when it finishes. It may also send intermediate status
     as it runs (by calling builder.sendStatus). Some commands can be
     interrupted (either by the build master or a local timeout), in which
@@ -86,7 +86,7 @@ class Command(object):
     indicates an error occurred.
 
     These commands are used by BuildSteps on the master side. Each kind of
-    BuildStep uses a single Command. The slave must implement all the
+    BuildStep uses a single Command. The worker must implement all the
     Commands required by the set of BuildSteps used for any given build:
     this is checked at startup time.
 
