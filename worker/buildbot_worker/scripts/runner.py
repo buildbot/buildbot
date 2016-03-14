@@ -110,7 +110,7 @@ class UpgradeWorkerOptions(MakerBase):
     """
 
 
-class CreateSlaveOptions(MakerBase):
+class CreateWorkerOptions(MakerBase):
     subcommandFunction = "buildbot_worker.scripts.create_worker.createWorker"
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
@@ -232,7 +232,7 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, CreateSlaveOptions,
+        ['create-slave', None, CreateWorkerOptions,
          "Create and populate a directory for a new buildslave"],
         ['upgrade-slave', None, UpgradeWorkerOptions,
          "Upgrade an existing buildslave directory for the current version"],
