@@ -202,13 +202,13 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         """Test watching an existing shutdown_file results in gracefulShutdown
         being called."""
 
-        buildslave = bot.Worker("127.0.0.1", 1234,
+        worker = bot.Worker("127.0.0.1", 1234,
                                     "testy", "westy", self.basedir,
                                 keepalive=0, usePTY=False, umask=0o22,
                                 allow_shutdown='file')
 
         # Mock out gracefulShutdown
-        buildslave.gracefulShutdown = Mock()
+        worker.gracefulShutdown = Mock()
 
         # Mock out os.path methods
         exists = Mock()
@@ -221,24 +221,24 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         mtime.return_value = 0
         exists.return_value = False
 
-        buildslave._checkShutdownFile()
+        worker._checkShutdownFile()
 
         # We shouldn't have called gracefulShutdown
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 0)
+        self.assertEquals(worker.gracefulShutdown.call_count, 0)
 
         # Pretend that the file exists now, with an mtime of 2
         exists.return_value = True
         mtime.return_value = 2
-        buildslave._checkShutdownFile()
+        worker._checkShutdownFile()
 
         # Now we should have changed gracefulShutdown
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 1)
+        self.assertEquals(worker.gracefulShutdown.call_count, 1)
 
         # Bump the mtime again, and make sure we call shutdown again
         mtime.return_value = 3
-        buildslave._checkShutdownFile()
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+        worker._checkShutdownFile()
+        self.assertEquals(worker.gracefulShutdown.call_count, 2)
 
         # Try again, we shouldn't call shutdown another time
-        buildslave._checkShutdownFile()
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+        worker._checkShutdownFile()
+        self.assertEquals(worker.gracefulShutdown.call_count, 2)
