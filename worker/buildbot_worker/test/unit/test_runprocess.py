@@ -32,7 +32,7 @@ from twisted.trial import unittest
 from buildbot_worker import runprocess
 from buildbot_worker import util as bsutil
 from buildbot_worker.exceptions import AbandonChain
-from buildbot_worker.test.fake.slavebuilder import FakeWorkerForBuilder
+from buildbot_worker.test.fake.workerforbuilder import FakeWorkerForBuilder
 from buildbot_worker.test.util import compat
 from buildbot_worker.test.util.misc import BasedirMixin
 from buildbot_worker.test.util.misc import nl
