@@ -43,7 +43,7 @@ class Follower(object):
     def _failure(self, why):
         from twisted.internet import reactor
         from buildbot_worker.scripts.logwatcher import BuildmasterTimeoutError, \
-            ReconfigError, WorkerTimeoutError, BuildSlaveDetectedError
+            ReconfigError, WorkerTimeoutError, WorkerDetectedError
         if why.check(BuildmasterTimeoutError):
             log.msg("""
 The buildslave took more than 10 seconds to start, so we were unable to
@@ -69,7 +69,7 @@ The buildslave appears to have encountered an error in the master.cfg config
 file during startup. It is probably running with an empty configuration right
 now. Please inspect and fix master.cfg, then restart the buildslave.
 """)
-        elif why.check(BuildSlaveDetectedError):
+        elif why.check(WorkerDetectedError):
             log.msg("""
 Buildslave is starting up, not following logfile.
 """)
