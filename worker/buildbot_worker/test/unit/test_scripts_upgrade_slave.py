@@ -52,7 +52,7 @@ class TestUpgradeWorker(misc.IsWorkerDirMixin,
         self.buildbot_tac = os.path.join(self.config["basedir"],
                                          "buildbot.tac")
 
-    def test_upgradeSlave_bad_basedir(self):
+    def test_upgradeWorker_bad_basedir(self):
         """
         test calling upgradeWorker() with bad base directory
         """
@@ -66,7 +66,7 @@ class TestUpgradeWorker(misc.IsWorkerDirMixin,
         # check that isWorkerDir was called with correct argument
         self.isWorkerDir.assert_called_once_with("dummy")
 
-    def test_upgradeSlave_no_changes(self):
+    def test_upgradeWorker_no_changes(self):
         """
         test calling upgradeWorker() on a buildbot.tac that don't need to be
         upgraded
@@ -91,7 +91,7 @@ class TestUpgradeWorker(misc.IsWorkerDirMixin,
         self.assertFalse(self.fileobj.write.called,
                          "unexpected write to buildbot.tac file")
 
-    def test_upgradeSlave_updated(self):
+    def test_upgradeWorker_updated(self):
         """
         test calling upgradeWorker() on an older buildbot.tac, that need to
         be updated
