@@ -471,7 +471,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
         self.assertWasQuiet()
 
 
-class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
+class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.create_worker.createWorker()
