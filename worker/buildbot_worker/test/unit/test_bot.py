@@ -214,7 +214,7 @@ class FakeStep(object):
         self.finished_d.callback(None)
 
 
-class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
+class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
