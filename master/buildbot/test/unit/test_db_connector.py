@@ -63,12 +63,11 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         yield self.db.reconfigServiceWithBuildbotConfig(self.master.config)
 
     # tests
+    @defer.inlineCallbacks
     def test_doCleanup_service(self):
-        d = self.startService()
+        yield self.startService()
 
-        @d.addCallback
-        def check(_):
-            self.assertTrue(self.db.cleanup_timer.running)
+        self.assertTrue(self.db.cleanup_timer.running)
 
     def test_doCleanup_unconfigured(self):
         self.db.changes.pruneChanges = mock.Mock(

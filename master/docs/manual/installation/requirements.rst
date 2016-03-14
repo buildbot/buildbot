@@ -56,8 +56,11 @@ Note that all of these requirements aside from SQLite can easily be installed fr
 sqlite3: http://www.sqlite.org
 
   Buildbot requires a database to store its state, and by default uses SQLite.
-  Version 3.7.0 or higher is recommended, although Buildbot will run against earlier versions -- at the risk of "Database is locked" errors.
+  Version 3.7.0 or higher is recommended, although Buildbot will run down to 3.6.16 -- at the risk of "Database is locked" errors.
   The minimum version is 3.4.0, below which parallel database queries and schema introspection fail.
+
+  Please note that Python ships with sqlite3 by default since python 2.6.
+  Python2.6 for Windows ships with sqlite 3.6.2, thus you will not be able to run buildbot with sqlite on Windows and python 2.6.
 
   If you configure a different database engine, then SQLite is not required.
   however note that Buildbot's own unit tests require SQLite.
@@ -86,4 +89,3 @@ Python-Dateutil: http://labix.org/python-dateutil
 Autobahn:
 
   The master requires Autobahn version 0.10.2 or higher
-

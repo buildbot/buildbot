@@ -21,7 +21,11 @@ install:
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
   
-  - "%PYTHON%\\python.exe -m pip install -e pkg -e master[test] -e slave -e worker"
+  - "%PYTHON%\\python.exe -m pip install -e pkg"
+  - "%PYTHON%\\python.exe -m pip install -e master[test]"
+  - "%PYTHON%\\python.exe -m pip install -e slave"
+  - "%PYTHON%\\python.exe -m pip install -e worker"
+  - "%PYTHON%\\python.exe -m pip list"
 
 build: false
 

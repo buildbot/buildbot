@@ -15,10 +15,7 @@
 from __future__ import print_function
 
 import inspect
-import os
-import shutil
 import sqlalchemy as sa
-import tempfile
 import time
 import traceback
 
@@ -88,14 +85,6 @@ class DBThreadPool(threadpool.ThreadPool):
 
     running = False
 
-    # Some versions of SQLite incorrectly cache metadata about which tables are
-    # and are not present on a per-connection basis.  This cache can be flushed
-    # by querying the sqlite_master table.  We currently assume all versions of
-    # SQLite have this bug, although it has only been observed in 3.4.2.  A
-    # dynamic check for this bug would be more appropriate.  This is documented
-    # in bug #1810.
-    __broken_sqlite = None
-
     def __init__(self, engine, verbose=False):
         # verbose is used by upgrade scripts, and if it is set we should print
         # messages about versions and other warnings
@@ -126,15 +115,10 @@ class DBThreadPool(threadpool.ThreadPool):
                 log_msg("NOTE: this old version of SQLite does not support "
                         "WAL journal mode; a busy master may encounter "
                         "'Database is locked' errors.  Consider upgrading.")
-                if vers < (3, 4):
+                if vers < (3, 6, 19):
                     log_msg("NOTE: this old version of SQLite is not "
                             "supported.")
                     raise RuntimeError("unsupported SQLite version")
-            if self.__broken_sqlite is None:
-                self.__class__.__broken_sqlite = self.detect_bug1810()
-            brkn = self.__broken_sqlite
-            if brkn:
-                log_msg("Applying SQLite workaround from Buildbot bug #1810")
         self._start_evt = reactor.callWhenRunning(self._start)
 
         # patch the do methods to do verbose logging if necessary
@@ -185,8 +169,6 @@ class DBThreadPool(threadpool.ThreadPool):
             else:
                 arg = self.engine.contextual_connect()
 
-            if self.__broken_sqlite:  # see bug #1810
-                arg.execute("select * from sqlite_master")
             try:
                 try:
                     rv = callable(arg, *args, **kwargs)
@@ -231,67 +213,6 @@ class DBThreadPool(threadpool.ThreadPool):
         return threads.deferToThreadPool(reactor, self,
                                          self.__thd, True, callable, args, kwargs)
 
-    def detect_bug1810(self):
-        # detect buggy SQLite implementations; call only for a known-sqlite
-        # dialect
-        try:
-            import pysqlite2.dbapi2 as sqlite
-            sqlite = sqlite
-        except ImportError:
-            import sqlite3 as sqlite
-
-        tmpdir = tempfile.mkdtemp()
-        dbfile = os.path.join(tmpdir, "detect_bug1810.db")
-
-        def test(select_from_sqlite_master=False):
-            conn1 = None
-            conn2 = None
-            try:
-                conn1 = sqlite.connect(dbfile)
-                curs1 = conn1.cursor()
-                curs1.execute("PRAGMA table_info('foo')")
-
-                conn2 = sqlite.connect(dbfile)
-                curs2 = conn2.cursor()
-                curs2.execute("CREATE TABLE foo ( a integer )")
-
-                if select_from_sqlite_master:
-                    curs1.execute("SELECT * from sqlite_master")
-                curs1.execute("SELECT * from foo")
-            finally:
-                if conn1:
-                    conn1.close()
-                if conn2:
-                    conn2.close()
-                os.unlink(dbfile)
-
-        try:
-            test()
-        except sqlite.OperationalError:
-            # this is the expected error indicating it's broken
-            shutil.rmtree(tmpdir)
-            return True
-
-        # but this version should not fail..
-        test(select_from_sqlite_master=True)
-        shutil.rmtree(tmpdir)
-        return False  # not broken - no workaround required
-
     def get_sqlite_version(self):
-        engine = sa.create_engine('sqlite://')
-        conn = engine.contextual_connect()
-
-        try:
-            r = conn.execute("SELECT sqlite_version()")
-            vers_row = r.fetchone()
-            r.close()
-        except Exception:
-            return (0,)
-
-        if vers_row:
-            try:
-                return tuple(map(int, vers_row[0].split('.')))
-            except (TypeError, ValueError):
-                return (0,)
-        else:
-            return (0,)
+        import sqlite3
+        return sqlite3.sqlite_version_info

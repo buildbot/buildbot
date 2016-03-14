@@ -578,7 +578,7 @@ class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
 
         self.s = json.dumps(dict(
             properties=props,
-            sourcestamp=self.build.getSourceStamp().asDict(),
+            sourcestamps=[ss.asDict() for ss in self.build.getAllSourceStamps()],
         ),
         )
         return self.super_class.start(self)

@@ -60,11 +60,11 @@ class DockerLatentWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                 masterFQDN=None,
+                 masterFQDN=None, hostconfig=None,
                  **kwargs):
 
         if not client:
-            config.error("The python module 'docker-py' is needed to use a"
+            config.error("The python module 'docker-py>=1.4' is needed to use a"
                          " DockerLatentWorker")
         if not image and not dockerfile:
             config.error("DockerLatentWorker: You need to specify at least"
@@ -99,6 +99,7 @@ class DockerLatentWorker(AbstractLatentWorker):
         if masterFQDN is None:
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
+        self.hostconfig = hostconfig or {}
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
@@ -156,12 +157,16 @@ class DockerLatentWorker(AbstractLatentWorker):
                 'Image "%s" not found on docker host.' % image
             )
 
+        self.hostconfig['binds'] = self.binds
+        host_conf = docker_client.create_host_config(**self.hostconfig)
+
         instance = docker_client.create_container(
             image,
             self.command,
             name='%s_%s' % (self.workername, id(self)),
             volumes=self.volumes,
-            environment=self.createEnvironment()
+            environment=self.createEnvironment(),
+            host_config=host_conf
         )
 
         if instance.get('Id') is None:
@@ -173,7 +178,7 @@ class DockerLatentWorker(AbstractLatentWorker):
         log.msg('Container created, Id: %s...' % (shortid,))
         instance['image'] = image
         self.instance = instance
-        docker_client.start(instance, binds=self.binds)
+        docker_client.start(instance)
         log.msg('Container started')
         if self.followStartupLogs:
             logs = docker_client.attach(container=instance, stdout=True, stderr=True, stream=True)

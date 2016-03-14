@@ -20,7 +20,6 @@ from buildbot.db import builders
 from buildbot.db import buildrequests
 from buildbot.db import builds
 from buildbot.db import buildsets
-from buildbot.db import workers
 from buildbot.db import changes
 from buildbot.db import changesources
 from buildbot.db import enginestrategy
@@ -35,6 +34,7 @@ from buildbot.db import state
 from buildbot.db import steps
 from buildbot.db import tags
 from buildbot.db import users
+from buildbot.db import workers
 from buildbot.util import service
 from buildbot.worker_transition import WorkerAPICompatMixin
 from twisted.application import internet
@@ -105,6 +105,7 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
         self.cleanup_timer.setServiceParent(self)
         return d
 
+    @defer.inlineCallbacks
     def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']
 
@@ -118,18 +119,11 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
-            d = self.model.is_current()
-
-            @d.addCallback
-            def check_current(res):
-                if not res:
-                    for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):
-                        log.msg(l)
-                    raise exceptions.DatabaseNotReadyError()
-        else:
-            d = defer.succeed(None)
-
-        return d
+            current = yield self.model.is_current()
+            if not current:
+                for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):
+                    log.msg(l)
+                raise exceptions.DatabaseNotReadyError()
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks
