@@ -95,7 +95,7 @@ class RestartOptions(MakerBase):
 
 
 class UpgradeWorkerOptions(MakerBase):
-    subcommandFunction = "buildbot_worker.scripts.upgrade_slave.upgradeWorker"
+    subcommandFunction = "buildbot_worker.scripts.upgrade_worker.upgradeWorker"
     optFlags = [
     ]
     optParameters = [
