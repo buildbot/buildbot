@@ -162,7 +162,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
-    def test_buildslave_graceful_shutdown(self):
+    def test_worker_graceful_shutdown(self):
         """Test that running the build slave's gracefulShutdown method results
         in a call to the master's shutdown method"""
         d = defer.Deferred()
