@@ -20,7 +20,7 @@
 from zope.interface import Interface
 
 
-class ISlaveCommand(Interface):
+class IWorkerCommand(Interface):
 
     """This interface is implemented by all of the buildslave's Command
     subclasses. It specifies how the buildslave can start, interrupt, and

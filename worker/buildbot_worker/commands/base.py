@@ -32,7 +32,7 @@ from buildbot_worker import runprocess
 from buildbot_worker import util
 from buildbot_worker.commands import utils
 from buildbot_worker.exceptions import AbandonChain
-from buildbot_worker.interfaces import ISlaveCommand
+from buildbot_worker.interfaces import IWorkerCommand
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -75,7 +75,7 @@ command_version = "2.16"
 
 
 class Command(object):
-    implements(ISlaveCommand)
+    implements(IWorkerCommand)
 
     """This class defines one command that can be invoked by the build master.
     The command is executed on the slave side, and always sends back a
