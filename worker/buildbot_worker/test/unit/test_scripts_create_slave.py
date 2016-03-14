@@ -474,7 +474,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
 class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     """
-    Test buildbot_worker.scripts.create_worker.createSlave()
+    Test buildbot_worker.scripts.create_worker.createWorker()
     """
     # default options and required arguments
     options = {
@@ -538,13 +538,13 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
     def testCreateError(self):
         """
         test that errors while creating buildslave directory are handled
-        correctly by createSlave()
+        correctly by createWorker()
         """
         # patch _make*() functions to raise an exception
         self.setUpMakeFunctions(create_worker.CreateSlaveError("err-msg"))
 
-        # call createSlave() and check that we get error exit code
-        self.assertEquals(create_worker.createSlave(self.options), 1,
+        # call createWorker() and check that we get error exit code
+        self.assertEquals(create_worker.createWorker(self.options), 1,
                           "unexpected exit code")
 
         # check that correct error message was printed the the log
@@ -553,13 +553,13 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     def testMinArgs(self):
         """
-        test calling createSlave() with only required arguments
+        test calling createWorker() with only required arguments
         """
         # patch _make*() functions to do nothing
         self.setUpMakeFunctions()
 
-        # call createSlave() and check that we get success exit code
-        self.assertEquals(create_worker.createSlave(self.options), 0,
+        # call createWorker() and check that we get success exit code
+        self.assertEquals(create_worker.createWorker(self.options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
@@ -712,8 +712,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # patch _make*() functions to do nothing
         self.setUpMakeFunctions()
 
-        # call createSlave() and check that we get success exit code
-        self.assertEquals(create_worker.createSlave(options), 0,
+        # call createWorker() and check that we get success exit code
+        self.assertEquals(create_worker.createWorker(options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
@@ -728,7 +728,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     def testWithOpts(self):
         """
-        test calling createSlave() with --relocatable and --allow-shutdown
+        test calling createWorker() with --relocatable and --allow-shutdown
         options specified.
         """
         options = self.options.copy()
@@ -738,8 +738,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # patch _make*() functions to do nothing
         self.setUpMakeFunctions()
 
-        # call createSlave() and check that we get success exit code
-        self.assertEquals(create_worker.createSlave(options), 0,
+        # call createWorker() and check that we get success exit code
+        self.assertEquals(create_worker.createWorker(options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
@@ -755,7 +755,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     def testQuiet(self):
         """
-        test calling createSlave() with --quiet flag
+        test calling createWorker() with --quiet flag
         """
         options = self.options.copy()
         options["quiet"] = True
@@ -763,8 +763,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         # patch _make*() functions to do nothing
         self.setUpMakeFunctions()
 
-        # call createSlave() and check that we get success exit code
-        self.assertEquals(create_worker.createSlave(options), 0,
+        # call createWorker() and check that we get success exit code
+        self.assertEquals(create_worker.createWorker(options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
