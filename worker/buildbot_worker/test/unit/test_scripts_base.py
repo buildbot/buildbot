@@ -91,7 +91,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 
-    def test_slavedir_good(self):
+    def test_workerdir_good(self):
         """Test checking valid buildslave directory."""
 
         # patch open() to return file with valid buildslave tac contents
