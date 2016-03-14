@@ -64,7 +64,7 @@ class WorkerForBuilderBase(service.Service):
         self.setName(name)
 
     def __repr__(self):
-        return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
+        return "<WorkerForBuilder '%s' at %d>" % (self.name, id(self))
 
     def setServiceParent(self, parent):
         service.Service.setServiceParent(self, parent)
@@ -99,7 +99,7 @@ class WorkerForBuilderBase(service.Service):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
+        log.msg("WorkerForBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
 
     def lostRemote(self, remote):
@@ -191,7 +191,7 @@ class WorkerForBuilderBase(service.Service):
             updates = [update]
             d = self.remoteStep.callRemote("update", updates)
             d.addCallback(self.ackUpdate)
-            d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
+            d.addErrback(self._ackFailed, "WorkerForBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
         self.activity()  # update the "last activity" timer
@@ -200,13 +200,13 @@ class WorkerForBuilderBase(service.Service):
         self.activity()  # update the "last activity" timer
 
     def _ackFailed(self, why, where):
-        log.msg("SlaveBuilder._ackFailed:", where)
+        log.msg("WorkerForBuilder._ackFailed:", where)
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def commandComplete(self, failure):
         if failure:
-            log.msg("SlaveBuilder.commandFailed", self.command)
+            log.msg("WorkerForBuilder.commandFailed", self.command)
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -214,7 +214,7 @@ class WorkerForBuilderBase(service.Service):
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("SlaveBuilder.commandComplete", self.command)
+            log.msg("WorkerForBuilder.commandComplete", self.command)
         self.command = None
         if not self.running:
             log.msg(" but we weren't running, quitting silently")
@@ -228,7 +228,7 @@ class WorkerForBuilderBase(service.Service):
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
-        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
+        log.msg("NOTE: master is using deprecated WorkerForBuilder.shutdown method")
         reactor.stop()
 
 

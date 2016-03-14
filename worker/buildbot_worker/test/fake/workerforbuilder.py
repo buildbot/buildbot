@@ -19,7 +19,7 @@ import pprint
 class FakeWorkerForBuilder(object):
 
     """
-    Simulates a SlaveBuilder, but just records the updates from sendUpdate
+    Simulates a WorkerForBuilder, but just records the updates from sendUpdate
     in its updates attribute.  Call show() to get a pretty-printed string
     showing the updates.  Set debug to True to show updates as they happen.
     """
