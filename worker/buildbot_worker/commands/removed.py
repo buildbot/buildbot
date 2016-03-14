@@ -25,7 +25,7 @@ class RemovedSourceCommand(base.SourceBaseCommand):
         self.sendStatus(
             {"header":
              "worker-side source checkout for '{0}' is no longer supported by "
-             "build slave of version {1}\n"
+             "worker of version {1}\n"
              "\n"
              "Since BuildBot 0.9 old source checkout method with logic on worker-side\n"
              "buildbot.steps.source.{0} was removed (deprecated since BuildBot 0.8)\n"
