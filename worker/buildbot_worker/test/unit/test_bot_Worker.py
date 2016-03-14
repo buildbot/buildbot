@@ -128,7 +128,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
             print_d = mind.callRemote("print", "Hi, worker.")
             print_d.addCallbacks(d.callback, d.errback)
 
-        # start up the master and slave
+        # start up the master and worker
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
         self.worker = bot.Worker("127.0.0.1", port,

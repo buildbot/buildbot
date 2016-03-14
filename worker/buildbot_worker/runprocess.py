@@ -290,8 +290,8 @@ class RunProcess(object):
                 return w
             command = [obfus(w) for w in command]
         # We need to take unicode commands and arguments and encode them using
-        # the appropriate encoding for the slave.  This is mostly platform
-        # specific, but can be overridden in the slave's buildbot.tac file.
+        # the appropriate encoding for the worker.  This is mostly platform
+        # specific, but can be overridden in the worker's buildbot.tac file.
         #
         # Encoding the command line here ensures that the called executables
         # receive arguments as bytestrings encoded with an appropriate
@@ -340,7 +340,7 @@ class RunProcess(object):
                 return os.environ.get(match.group(1), "")
             newenv = {}
             for key in os.environ:
-                # setting a key to None will delete it from the slave environment
+                # setting a key to None will delete it from the worker environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
             for key, v in iteritems(environ):

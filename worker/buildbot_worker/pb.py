@@ -53,7 +53,7 @@ class BotFactory(ReconnectingPBClientFactory):
     # of such (although this could take several minutes).
     keepaliveInterval = None  # None = do not use keepalives
 
-    # 'maxDelay' determines the maximum amount of time the slave will wait
+    # 'maxDelay' determines the maximum amount of time the worker will wait
     # between connection retries
     maxDelay = 300
 
