@@ -35,10 +35,10 @@ from buildbot.slave.bot import BuildSlave
 """
 
 
-class TestUpgradeSlave(misc.IsWorkerDirMixin,
-                       misc.FileIOMixin,
-                       misc.LoggingMixin,
-                       unittest.TestCase):
+class TestUpgradeWorker(misc.IsWorkerDirMixin,
+                        misc.FileIOMixin,
+                        misc.LoggingMixin,
+                        unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.upgradeWorker()
