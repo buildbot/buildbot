@@ -25,9 +25,9 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestStopSlave(misc.FileIOMixin,
-                    misc.LoggingMixin,
-                    unittest.TestCase):
+class TestStopWorker(misc.FileIOMixin,
+                     misc.LoggingMixin,
+                     unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.stop.stopWorker()
