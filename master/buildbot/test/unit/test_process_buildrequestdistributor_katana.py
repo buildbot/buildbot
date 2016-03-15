@@ -602,6 +602,20 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.assertEquals([brid[0] for (slave, brid) in self.processedBuilds],
                           [1, 2, 5, 6, 9, 10, 3, 4, 7, 8, 11, 12])
 
+    def test_maybeStartBuildsOnParallel(self):
+
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True},
+                                  startSlavenames={'slave-02': True})
+
+        for idx in xrange(1, 300):
+            self.brd.maybeStartBuildsOn(['bldr1', 'bldr2'])
+
+        def check(_):
+            self.checkBRDCleanedUp()
+
+        self.quiet_deferred.addCallback(check)
+        return self.quiet_deferred
+
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):
 

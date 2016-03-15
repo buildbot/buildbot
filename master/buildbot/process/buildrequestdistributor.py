@@ -1085,11 +1085,12 @@ class KatanaBuildRequestDistributor(service.Service):
     def _maybeStartOrResumeBuildsOn(self, new_builders):
         # start the activity loop, if we aren't already
         #  working on that.
-        yield self.activity_lock.acquire()
-        self._checkBuildRequests()
-        self.activity_lock.release()
-        if not self.active:
-            yield self._procesBuildRequestsActivityLoop()
+        if not self.activity_lock.waiting:
+            yield self.activity_lock.acquire()
+            self._checkBuildRequests()
+            self.activity_lock.release()
+            if not self.active:
+                yield self._procesBuildRequestsActivityLoop()
 
     def _checkBuildRequests(self):
         self.check_new_builds = True
