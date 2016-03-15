@@ -196,7 +196,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             maxSearch = num_builds if num_builds < 200 else 200
             resumeBuilds = [9, -1]
 
-            q = sa.select(columns=[buildrequests_tbl.c.id, builds_tbl.c.number],
+            q = sa.select(columns=[buildrequests_tbl.c.id, sa.func.max(builds_tbl.c.number).label("number")],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
                                                           & (builds_tbl.c.finish_time != None))).\
@@ -204,7 +204,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
                 .where(buildrequests_tbl.c.buildername == buildername)\
                 .where(buildrequests_tbl.c.complete == 1)\
-                .group_by(buildrequests_tbl.c.id, builds_tbl.c.number)
+                .group_by(buildrequests_tbl.c.id)
 
             #TODO: support filter by RETRY result
             if results:
