@@ -1,7 +1,4 @@
 # Requirements list for building documentation on ReadTheDocs.
 
-# Install master.
--e master/
-
-# Install docs dependencies.
+# Install master with the docs dependencies
 -e master[docs]
