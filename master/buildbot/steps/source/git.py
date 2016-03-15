@@ -404,7 +404,8 @@ class Git(Source):
         # it will not do it.
         if self.submodules:
             d.addCallback(lambda _: self._dovccmd(['submodule', 'update',
-                                                   '--init', '--recursive'],
+                                                   '--init', '--recursive',
+                                                   '--force'],
                                                   shallowClone))
         return d
 
@@ -451,7 +452,7 @@ class Git(Source):
 
     def _updateSubmodule(self, _):
         if self.submodules:
-            return self._dovccmd(['submodule', 'update', '--init', '--recursive'])
+            return self._dovccmd(['submodule', 'update', '--init', '--recursive', '--force'])
         else:
             return defer.succeed(0)
 
