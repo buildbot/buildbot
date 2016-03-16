@@ -181,11 +181,11 @@ class Trigger(LoggingBuildStep):
             return
 
         was_exception = was_failure = False
-        brids = {}
+        brids = []
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, some_brids = results
-                brids.update(some_brids)
+                brids.extend(some_brids.items())
 
             if not was_cb:
                 was_exception = True
@@ -207,7 +207,7 @@ class Trigger(LoggingBuildStep):
 
             def add_links(res):
                 # reverse the dictionary lookup for brid to builder name
-                brid_to_bn = dict((_brid, _bn) for _bn, _brid in brids.iteritems())
+                brid_to_bn = dict((bt[1], bt[0]) for bt in brids)
 
                 for was_cb, builddicts in res:
                     if was_cb:
@@ -218,7 +218,7 @@ class Trigger(LoggingBuildStep):
                             url = master.status.getURLForBuild(bn, num)
                             self.step_status.addURL("%s #%d" % (bn, num), url)
 
-            builddicts = [master.db.builds.getBuildsForRequest(br) for br in brids.values()]
+            builddicts = [master.db.builds.getBuildsForRequest(br[1]) for br in brids]
             res = yield defer.DeferredList(builddicts, consumeErrors=1)
             add_links(res)
 
