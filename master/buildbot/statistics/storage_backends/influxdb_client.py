@@ -34,6 +34,7 @@ class InfluxStorageService(StatsStorageBase):
                  name="InfluxStorageService"):
         if not InfluxDBClient:
             config.error("Python client for InfluxDB not installed.")
+            return
         self.url = url
         self.port = port
         self.user = user
@@ -43,7 +44,7 @@ class InfluxStorageService(StatsStorageBase):
 
         self.captures = captures
         self.client = InfluxDBClient(self.url, self.port, self.user,
-                                     self.password, self.db)
+                                         self.password, self.db)
         self._inited = True
 
     def thd_postStatsValue(self, post_data, series_name, context=None):
