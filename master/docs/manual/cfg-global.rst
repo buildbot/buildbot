@@ -725,8 +725,6 @@ Capture Classes
    Instance of this class declares build durations to be recorded for all builders.
    It takes the following arguments:
 
-   ``builder_name``
-     The name of builder whose times are to be recorded.
    ``report_in='seconds'``
      Can be one of three: ``'seconds'``, ``'minutes'``, or ``'hours'``.
      This is the units in which the build time will be reported.
