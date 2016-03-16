@@ -391,10 +391,13 @@ if 'a' in version or 'b' in version:
             raise RuntimeError(VERSION_MSG)
 
 if sys.version_info[:2] == (2, 6):
-    # Twisted-15.4.0 doesn't support Python 2.6 anymore
+    # Twisted-15.4.0 and autobahn 0.13.0 don't support Python 2.6 anymore
     twisted_ver = ">= 12.1.0, < 15.4.0"
+    autobahn_ver = ">= 0.10.2, < 0.13.0"
+
 else:
     twisted_ver = ">= 12.1.0"
+    autobahn_ver = ">= 0.10.2"
 
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
@@ -412,7 +415,7 @@ else:
         'sqlalchemy>=0.8.0',
         'sqlalchemy-migrate>=0.9',
         'python-dateutil>=1.5',
-        'autobahn >= 0.10.2',
+        'autobahn ' + autobahn_ver,
     ]
 
     setup_args['extras_require'] = {
