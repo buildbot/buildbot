@@ -22,7 +22,7 @@ sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 try:
-    import sphinxcontrib.blockdiag  # noqa
+    import sphinxcontrib.blockdiag as _  # noqa
 except ImportError:
     raise RuntimeError("sphinxcontrib.blockdiag is not installed. "
         "Please install documentation dependencies with `pip install buildbot[docs]`")
