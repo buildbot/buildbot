@@ -65,7 +65,7 @@ Now that we are ready, we need to install buildbot:
 
 .. code-block:: bash
 
-  ./bin/pip install buildbot
+  ./bin/pip install buildbot[bundle]
 
 Now that buildbot is installed, it's time to create the master:
 

@@ -396,6 +396,8 @@ if sys.version_info[:2] == (2, 6):
 else:
     twisted_ver = ">= 12.1.0"
 
+bundle_version = version.split("-")[0]
+
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
@@ -423,8 +425,10 @@ else:
             'pyflakes',
         ],
         'bundle': [
-            'buildbot-www',
-            'buildbot-slave'
+            "buildbot-www=={0}".format(bundle_version),
+            "buildbot-slave=={0}".format(bundle_version),
+            "buildbot-waterfall-view=={0}".format(bundle_version),
+            "buildbot-console-view=={0}".format(bundle_version),
         ],
         'tls': [
             'Twisted[tls] ' + twisted_ver,
