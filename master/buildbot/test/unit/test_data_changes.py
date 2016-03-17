@@ -16,6 +16,7 @@
 import mock
 
 from buildbot.data import changes
+from buildbot.data import resultspec
 from buildbot.process.users import users
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -83,16 +84,39 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get(self):
-        d = self.callGet(('changes',))
+        changes = yield self.callGet(('changes',))
 
-        @d.addCallback
-        def check(changes):
-            self.validateData(changes[0])
-            self.assertEqual(changes[0]['changeid'], 13)
-            self.validateData(changes[1])
-            self.assertEqual(changes[1]['changeid'], 14)
-        return d
+        self.validateData(changes[0])
+        self.assertEqual(changes[0]['changeid'], 13)
+        self.validateData(changes[1])
+        self.assertEqual(changes[1]['changeid'], 14)
+
+    @defer.inlineCallbacks
+    def test_getRecentChanges(self):
+        resultSpec = resultspec.ResultSpec(limit=1, order=['-changeid'])
+        changes = yield self.callGet(('changes',), resultSpec=resultSpec)
+
+        self.validateData(changes[0])
+        self.assertEqual(changes[0]['changeid'], 14)
+        self.assertEqual(len(changes), 1)
+
+    @defer.inlineCallbacks
+    def test_getChangesOtherOrder(self):
+        resultSpec = resultspec.ResultSpec(limit=1, order=['-when_time_stamp'])
+        changes = yield self.callGet(('changes',), resultSpec=resultSpec)
+
+        # limit not implemented for other order
+        self.assertEqual(len(changes), 2)
+
+    @defer.inlineCallbacks
+    def test_getChangesOtherOffset(self):
+        resultSpec = resultspec.ResultSpec(limit=1, offset=1, order=['-changeid'])
+        changes = yield self.callGet(('changes',), resultSpec=resultSpec)
+
+        # limit not implemented for other offset
+        self.assertEqual(len(changes), 2)
 
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):

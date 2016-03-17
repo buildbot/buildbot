@@ -848,7 +848,7 @@ class FakeChangesComponent(FakeDBComponent):
         return defer.succeed(chdicts)
 
     def getChangesCount(self):
-        return len(self.changes)
+        return defer.succeed(len(self.changes))
 
     def getChangesForBuild(self, buildid):
         # the algorithm is too complicated to be worth faked, better patch it ad-hoc
