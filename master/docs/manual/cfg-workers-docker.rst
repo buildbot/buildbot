@@ -220,6 +220,9 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     (optional)
     Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <http://docker-py.readthedocs.org/en/latest/hostconfig/>`_ for all the supported options.
 
+``networking_config``
+  Set the network configuration for the docker container. It can be one the following: 'bridge', 'host', container:<NAME or ID>, none. The default is bridge. This option is equivalent to using the ``--net=`` command line parameter in docker. 
+
 Setting up Volumes
 ..................
 
