@@ -416,3 +416,16 @@ This is equivalent to::
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=now)])
 
 Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a function decorated with :func:`renderer` can be used directly.
+
+
+.. _URLForBuild:
+
+URL for build
++++++++++++++
+
+Its common to need to use the URL for the build in a step.
+For this you can use a special custom renderer as following::
+
+    from buildbot.plugins import *
+
+    ShellCommand(command=['make', Interpolate('BUILDURL=%(kw:url)s', url=util.URLForBuild)])

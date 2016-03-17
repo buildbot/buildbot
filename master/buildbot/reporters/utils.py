@@ -15,6 +15,7 @@
 
 from UserList import UserList
 from buildbot.data import resultspec
+from buildbot.process.properties import renderer
 from buildbot.process.results import RETRY
 from buildbot.util import flatten
 from twisted.internet import defer
@@ -155,3 +156,11 @@ def getURLForBuild(master, builderid, build_number):
     return prefix + "#builders/%d/builds/%d" % (
         builderid,
         build_number)
+
+
+@renderer
+@defer.inlineCallbacks
+def URLForBuild(props):
+    build = props.getBuild()
+    builder_id = yield build.builder.getBuilderId()
+    raise defer.returnValue(getURLForBuild(build.master, builder_id, build.number))
