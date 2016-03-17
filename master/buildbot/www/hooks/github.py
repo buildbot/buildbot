@@ -99,7 +99,7 @@ class GitHubEventHandler(object):
         user = None
         # user = payload['pusher']['name']
         repo = payload['repository']['name']
-        repo_url = payload['repository']['url']
+        repo_url = payload['repository']['html_url']
         # NOTE: what would be a reasonable value for project?
         # project = request.args.get('project', [''])[0]
         project = payload['repository']['full_name']
@@ -128,7 +128,8 @@ class GitHubEventHandler(object):
             'when_timestamp': dateparse(payload['pull_request']['created_at']),
             'branch': refname,
             'revlink': payload['pull_request']['_links']['html']['href'],
-            'repository': payload['repository']['clone_url'],
+            'repository': payload['repository']['html_url'],
+            'project': payload['pull_request']['base']['repo']['full_name'],
             'category': 'pull',
             # TODO: Get author name based on login id using txgithub module
             'author': payload['sender']['login'],

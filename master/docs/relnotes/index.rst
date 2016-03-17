@@ -29,6 +29,7 @@ Fixes
 
 * Fix loading :class:`~buildbot.ldapuserinfo.LdapUserInfo` plugin and its documentation (:bug:`3371`).
 * Fix deprecation warnings seen with docker-py >= 1.4 when passing arguments to ``docker_client.start()``.
+* :class:`GitHubEventHandler` now uses the ``['repository']['html_url']`` key in the webhook payload to populate ``repository``, as the previously used ``['url']`` and ``['clone_url']`` keys had a different format between push and pull requests and GitHub and GitHub Enterprise instances.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
