@@ -193,8 +193,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         for rq in self.requests:
             props.updateFromProperties(rq.properties)
 
+        self.builder.setupProperties(props)
+
+    def setupOwnProperties(self):
         # now set some properties of our own, corresponding to the
         # build itself
+        props = self.getProperties()
         props.setProperty("buildnumber", self.number, "Build")
 
         if self.sources and len(self.sources) == 1:
@@ -205,8 +209,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             props.setProperty("repository", source.repository, "Build")
             props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
-
-        self.builder.setupProperties(props)
 
     def setupWorkerForBuilder(self, workerforbuilder):
         self.workerforbuilder = workerforbuilder
@@ -257,8 +259,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                                                                       "stop"))
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
-        # now that we have a build_status, we can set properties
-        self.setupProperties()
+        self.setupOwnProperties()
         self.setupWorkerForBuilder(workerforbuilder)
         worker.updateWorkerStatus(buildStarted=self)
 
