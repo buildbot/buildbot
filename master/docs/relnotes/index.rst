@@ -27,6 +27,8 @@ Features
 * :bb:step:`CMake` build step is added.
   It provides a convenience interface to `CMake <https://cmake.org/cmake/help/latest/>`_ build system.
 * MySQL InnoDB tables are now supported.
+* :class:`~buildbot.reporters.http.HttpStatusPush` has been ported to reporter API.
+* :class:`~buildbot.reporters.stash.StashStatusPush` has been ported to reporter API.
 
 Fixes
 ~~~~~

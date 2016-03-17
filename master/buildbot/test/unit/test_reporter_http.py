@@ -14,9 +14,8 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
-from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.stash import StashStatusPush
+from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
@@ -26,7 +25,20 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
+class BuildLookAlike(object):
+
+    """ a class that compare to any build dict that this reporter is supposed to send out"""
+
+    def __eq__(self, b):
+        return b.keys() == ['buildrequestid', 'complete', 'buildid', 'workerid', 'number', 'results',
+                            'masterid', 'buildrequest', 'buildset', 'started_at', 'properties',
+                            'complete_at', 'builderid', 'builder', 'state_string']
+
+    def __repr__(self):
+        return "{ any build }"
+
+
+class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -35,7 +47,7 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-        self.sp = sp = StashStatusPush("serv", "username", "passwd")
+        self.sp = sp = HttpStatusPush("serv", "username", "passwd")
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
         yield sp.startService()
@@ -58,17 +70,13 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.buildStarted(("build", 20, "started"), build)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
-        build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
         # we make sure proper calls to txrequests have been made
+        #
         self.assertEqual(
             self.sp.session.post.mock_calls,
-            [call(u'serv/rest/build-status/1.0/commits/abcd',
+            [call(u'serv',
                   {'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'INPROGRESS', 'key': u'Builder0'}, auth=('username', 'passwd')),
-             call(u'serv/rest/build-status/1.0/commits/abcd',
+                   'build': BuildLookAlike()}, auth=('username', 'passwd')),
+             call(u'serv',
                   {'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'SUCCESSFUL', 'key': u'Builder0'}, auth=('username', 'passwd')),
-             call(u'serv/rest/build-status/1.0/commits/abcd',
-                  {'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'FAILED', 'key': u'Builder0'}, auth=('username', 'passwd'))])
+                   'build': BuildLookAlike()}, auth=('username', 'passwd'))])
