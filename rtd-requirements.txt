@@ -1,10 +1,4 @@
 # Requirements list for building documentation on ReadTheDocs.
 
-# Install master.
--e master/
-
-# Install docs dependencies.
-# When issue 3435 will be resolved, instead of these lines
-# `[docs]` extras should be added to master installation.
-sphinxcontrib-blockdiag
-docutils>=0.8
+# Install master with the docs dependencies
+-e master[docs]
