@@ -34,6 +34,7 @@ class InfluxStorageService(StatsStorageBase):
                  name="InfluxStorageService"):
         if not InfluxDBClient:
             config.error("Python client for InfluxDB not installed.")
+            return
         self.url = url
         self.port = port
         self.user = user
