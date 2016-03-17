@@ -79,6 +79,7 @@ class DockerLatentWorker(AbstractLatentWorker):
             except ValueError:
                 config.error("Invalid volume definition for docker "
                              "%s. Skipping..." % volume_string)
+                continue
             self.volumes.append(volume)
 
             ro = False
