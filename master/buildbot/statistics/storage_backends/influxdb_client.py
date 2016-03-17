@@ -44,7 +44,7 @@ class InfluxStorageService(StatsStorageBase):
 
         self.captures = captures
         self.client = InfluxDBClient(self.url, self.port, self.user,
-                                         self.password, self.db)
+                                     self.password, self.db)
         self._inited = True
 
     def thd_postStatsValue(self, post_data, series_name, context=None):
