@@ -13,17 +13,17 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
-
-import buildbot.test.fake.openstack as novaclient
 import mock
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import interfaces
+import buildbot.test.fake.openstack as novaclient
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestOpenStackWorker(unittest.TestCase):

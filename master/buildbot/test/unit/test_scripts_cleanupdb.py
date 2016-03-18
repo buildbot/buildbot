@@ -13,13 +13,19 @@
 #
 # Copyright Buildbot Team Members
 import os
-import sqlalchemy as sa
 import textwrap
+
+try:
+    import lz4
+    [lz4]
+    hasLz4 = True
+except ImportError:
+    hasLz4 = False
+
+import sqlalchemy as sa
 
 from twisted.internet import defer
 from twisted.trial import unittest
-
-import test_db_logs
 
 from buildbot.db.connector import DBConnector
 from buildbot.scripts import cleanupdb
@@ -27,12 +33,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-try:
-    import lz4
-    [lz4]
-    hasLz4 = True
-except ImportError:
-    hasLz4 = False
+
+import test_db_logs
 
 
 def mkconfig(**kwargs):

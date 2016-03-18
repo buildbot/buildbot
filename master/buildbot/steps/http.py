@@ -12,13 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from future.utils import iteritems
 
-from buildbot import config
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import FAILURE
-from buildbot.process.buildstep import SUCCESS
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -28,6 +23,11 @@ try:
     import requests
 except ImportError:
     txrequests = None
+
+from buildbot import config
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
 
 # This step uses a global Session object, which encapsulates a thread pool as
 # well as state such as cookies and authentication.  This state may pose

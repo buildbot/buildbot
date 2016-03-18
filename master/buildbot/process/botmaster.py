@@ -15,15 +15,16 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from buildbot import locks
-from buildbot import util
-from buildbot.process import metrics
-from buildbot.process.builder import Builder
-from buildbot.process.buildrequestdistributor import BuildRequestDistributor
-from buildbot.util import service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
+
+from buildbot import locks
+from buildbot.process import metrics
+from buildbot.process.builder import Builder
+from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+from buildbot import util
+from buildbot.util import service
 
 
 class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):

@@ -12,12 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 """
 Miscellaneous utilities; these should be imported from C{buildbot.util}, not
 directly from this module.
 """
-
 from twisted.internet import reactor
 
 

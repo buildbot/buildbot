@@ -15,6 +15,10 @@
 
 import textwrap
 
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot import util
 from buildbot.db import builders
 from buildbot.db import buildrequests
@@ -37,9 +41,6 @@ from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
 from buildbot.worker_transition import WorkerAPICompatMixin
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.python import log
 
 
 upgrade_message = textwrap.dedent("""\

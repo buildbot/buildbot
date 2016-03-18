@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-
 from builtins import bytes
 from builtins import str
 
@@ -22,14 +21,15 @@ import os
 import pprint
 import re
 
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import FAILURE
-from buildbot.process.buildstep import SUCCESS
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
+
+from buildbot.process.buildstep import BuildStep
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
 
 
 class MasterShellCommand(BuildStep):

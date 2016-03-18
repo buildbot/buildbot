@@ -12,14 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import os
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.changes import hgpoller
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
-from twisted.internet import defer
-from twisted.trial import unittest
+
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 

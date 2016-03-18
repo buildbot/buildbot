@@ -14,15 +14,14 @@
 # Copyright 2011 Louis Opter <kalessin@kalessin.fr>
 #
 # Written from the github change hook unit test
-
 import StringIO
 
-import buildbot.www.change_hook as change_hook
+from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+import buildbot.www.change_hook as change_hook
 
-from twisted.trial import unittest
 
 # Sample Google Code commit payload extracted from a Google Code test project
 # {

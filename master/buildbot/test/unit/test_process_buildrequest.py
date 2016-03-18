@@ -16,11 +16,12 @@ from future.utils import itervalues
 
 import mock
 
+from twisted.internet import defer
+from twisted.trial import unittest
+
 from buildbot.process import buildrequest
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestBuildRequestCollapser(unittest.TestCase):

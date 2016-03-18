@@ -14,13 +14,15 @@
 # Copyright Buildbot Team Members
 
 import base64
+
 import sqlalchemy as sa
 
-from buildbot.db import base
-from buildbot.util import epoch2datetime
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
+
+from buildbot.db import base
+from buildbot.util import epoch2datetime
 
 
 class SsDict(dict):

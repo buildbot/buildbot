@@ -19,7 +19,11 @@ import os
 import re
 import sys
 import traceback
+from types import MethodType
 import warnings
+
+from twisted.python import failure
+from twisted.python import log
 
 from buildbot import interfaces
 from buildbot import locks
@@ -34,9 +38,6 @@ from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
-from twisted.python import failure
-from twisted.python import log
-from types import MethodType
 
 
 class ConfigErrors(Exception):

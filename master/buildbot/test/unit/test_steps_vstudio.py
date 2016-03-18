@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from mock import Mock
+
+from twisted.trial import unittest
 
 from buildbot.process.properties import Property
 from buildbot.process.results import FAILURE
@@ -20,9 +23,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import vstudio
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
-from twisted.trial import unittest
 
-from mock import Mock
 
 real_log = r"""
 1>------ Build started: Project: lib1, Configuration: debug Win32 ------

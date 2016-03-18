@@ -12,6 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from mock import Mock
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 from zope.interface import implements
 
@@ -27,11 +33,6 @@ from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
-from mock import Mock
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
 
 
 class FakeTriggerable(object):

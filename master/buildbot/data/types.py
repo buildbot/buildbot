@@ -16,7 +16,6 @@
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import iteritems
 
-
 import datetime
 import re
 

@@ -16,6 +16,10 @@ from future.utils import iteritems
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
+
 from buildbot.db import builds
 from buildbot.db import changes
 from buildbot.db import sourcestamps
@@ -25,9 +29,7 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
+
 
 SOMETIME = 20398573
 OTHERTIME = 937239287

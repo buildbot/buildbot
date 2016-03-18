@@ -15,16 +15,18 @@
 from future.utils import iteritems
 
 import cStringIO
-import mock
 import os
 import re
 import sys
 import textwrap
 
+import mock
+
+from twisted.trial import unittest
+
 from buildbot.scripts import base
 from buildbot.scripts import checkconfig
 from buildbot.test.util import dirs
-from twisted.trial import unittest
 
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):

@@ -14,15 +14,16 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from cStringIO import StringIO
 import os
 import shutil
 import stat
 import tarfile
 import tempfile
 
-from twisted.trial import unittest
-
 from mock import Mock
+
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import remotetransfer
@@ -40,8 +41,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import json
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from cStringIO import StringIO
 
 
 def uploadString(string, timestamp=None):

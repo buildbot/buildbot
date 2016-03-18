@@ -16,6 +16,11 @@ from future.utils import itervalues
 
 import mock
 
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
+
 from buildbot import locks
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
@@ -40,10 +45,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.trial import unittest
 
 
 class OldStyleStep(buildstep.BuildStep):

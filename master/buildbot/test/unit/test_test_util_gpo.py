@@ -12,15 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import sys
-import twisted
 
-from buildbot.test.util.gpo import Expect
-from buildbot.test.util.gpo import GetProcessOutputMixin
+import twisted
 from twisted.internet import utils
 from twisted.trial import reporter
 from twisted.trial import unittest
+
+from buildbot.test.util.gpo import Expect
+from buildbot.test.util.gpo import GetProcessOutputMixin
 
 
 class TestGPOMixin(unittest.TestCase):

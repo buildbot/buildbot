@@ -12,7 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import warnings
 
 from twisted.python import deprecate
@@ -30,9 +29,8 @@ from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
 
+
 # deprecated, use BuildFactory.addStep
-
-
 @deprecate.deprecated(versions.Version("buildbot", 0, 8, 6))
 def s(steptype, **kwargs):
     # convenience function for master.cfg files, to create step

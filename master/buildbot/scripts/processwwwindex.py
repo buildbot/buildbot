@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 from __future__ import print_function
 
-import jinja2
 import os
+
+import jinja2
+
+from twisted.internet import defer
 
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
@@ -23,7 +26,6 @@ from buildbot.util import json
 from buildbot.www.config import IndexResource
 from buildbot.www.service import WWWService
 from buildbot.www import auth
-from twisted.internet import defer
 
 
 @in_reactor

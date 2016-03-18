@@ -12,19 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import gc
 import random
 import string
 
-from buildbot.util import lru
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
 
-# construct weakref-able objects for particular keys
+from buildbot.util import lru
 
+
+# construct weakref-able objects for particular keys
 
 def short(k):
     return set([k.upper() * 3])

@@ -12,10 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from twisted.trial import unittest
 
 from buildbot.test.fake.fakemaster import make_master
 from buildbot.util import state
-from twisted.trial import unittest
 
 
 class FakeObject(state.StateMixin):

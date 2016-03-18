@@ -18,16 +18,17 @@ import collections
 import re
 import weakref
 
+from twisted.internet import defer
+from twisted.python.components import registerAdapter
+
+from zope.interface import implements
+
 from buildbot import config
 from buildbot import util
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
 from buildbot.util import flatten
 from buildbot.util import json
-from twisted.internet import defer
-from twisted.python.components import registerAdapter
-from zope.interface import implements
-
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 

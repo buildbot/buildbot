@@ -12,12 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+#
 # code inspired/copied from contrib/github_buildbot
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
-
 from buildbot.util import json
 
 

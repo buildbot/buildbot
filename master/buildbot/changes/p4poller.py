@@ -18,7 +18,7 @@
 # Many thanks to Dave Peticolas for contributing this module
 
 import datetime
-import dateutil.tz
+import dateutil
 import exceptions
 import os
 import re

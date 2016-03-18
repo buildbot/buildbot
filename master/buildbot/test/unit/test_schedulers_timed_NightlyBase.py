@@ -12,18 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import time
-
-from buildbot.schedulers import timed
-from buildbot.test.util import scheduler
 try:
     from multiprocessing import Process
     assert Process
 except ImportError:
     Process = None
+
 from twisted.internet import defer
 from twisted.trial import unittest
+
+from buildbot.schedulers import timed
+from buildbot.test.util import scheduler
 
 
 class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):

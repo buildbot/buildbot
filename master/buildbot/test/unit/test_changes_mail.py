@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 import os
 
+from twisted.trial import unittest
+
 from buildbot.changes import mail
 from buildbot.test.util import changesource
 from buildbot.test.util import dirs
-from twisted.trial import unittest
 
 
 class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,

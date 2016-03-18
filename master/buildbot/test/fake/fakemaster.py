@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-import mock
 import os
 import weakref
+
+import mock
+
+from twisted.internet import defer
+
+from zope.interface import implements
 
 from buildbot import config
 from buildbot import interfaces
@@ -27,8 +31,6 @@ from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.util import service
-from twisted.internet import defer
-from zope.interface import implements
 
 
 class FakeCache(object):

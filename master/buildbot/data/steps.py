@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.data import base
 from buildbot.data import types
-from twisted.internet import defer
 
 
 class Db2DataMixin(object):

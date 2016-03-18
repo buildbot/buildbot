@@ -12,28 +12,28 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-import mock
 import os
 import webbrowser
 
-from buildbot.util import json
-from twisted.internet import reactor
-from twisted.internet import threads
-from twisted.python import failure
-from twisted.web.resource import Resource
-from twisted.web.server import Site
+import mock
 
 try:
     import requests
-    assert requests
-    from buildbot.www import oauth2
 except ImportError:
     requests = None
 
-from buildbot.test.util import www
 from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import threads
+from twisted.python import failure
 from twisted.trial import unittest
+from twisted.web.resource import Resource
+from twisted.web.server import Site
+
+from buildbot.test.util import www
+from buildbot.util import json
+if requests:
+    from buildbot.www import oauth2
 
 
 class FakeResponse(object):

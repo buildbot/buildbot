@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from collections import defaultdict
 from collections import deque
 from itertools import ifilterfalse
+from weakref import WeakValueDictionary
+
 from twisted.internet import defer
 from twisted.python import log
-from weakref import WeakValueDictionary
 
 
 class LRUCache(object):

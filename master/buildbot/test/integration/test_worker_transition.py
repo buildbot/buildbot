@@ -12,12 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-import mock
 import os
 import re
 
-import buildbot.worker
+import mock
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.master import BuildMaster
@@ -26,11 +28,9 @@ from buildbot.test.util import www
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
+import buildbot.worker
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
 
 
 # Template for master configuration just before worker renaming.

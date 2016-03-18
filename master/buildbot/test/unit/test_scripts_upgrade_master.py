@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
-import mock
 import os
 import sys
+import StringIO
+
+import mock
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot import config as config_module
 from buildbot.db import connector
@@ -26,8 +30,6 @@ from buildbot.scripts import upgrade_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 def mkconfig(**kwargs):

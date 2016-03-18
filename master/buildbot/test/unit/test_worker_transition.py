@@ -12,12 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-import mock
 import new
 import re
 import sys
 
+import mock
+
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
@@ -29,8 +31,6 @@ from buildbot.worker_transition import _compat_name
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerClassProperty
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 
 
 class CompatNameGeneration(unittest.TestCase):

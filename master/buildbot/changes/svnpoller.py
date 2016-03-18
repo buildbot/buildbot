@@ -15,18 +15,17 @@
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
-
 from future.moves.urllib.parse import quote_plus as urlquote_plus
+
+import os
+import xml.dom.minidom
 
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
 
-from buildbot import util
 from buildbot.changes import base
-
-import os
-import xml.dom.minidom
+from buildbot import util
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.

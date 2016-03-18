@@ -17,14 +17,15 @@ import os
 import string
 import textwrap
 
+from twisted.python import runtime
+from twisted.python import usage
+from twisted.trial import unittest
+
 from buildbot import config as config_module
 from buildbot.scripts import base
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import skipUnlessPlatformIs
-from twisted.python import runtime
-from twisted.python import usage
-from twisted.trial import unittest
 
 
 class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):

@@ -13,26 +13,26 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
-
 from __future__ import absolute_import
 
 import os
-
-from buildbot import config
-from buildbot.util.eventual import eventually
-from buildbot.worker.base import AbstractLatentWorker
-from buildbot.worker.base import AbstractWorker
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.internet import utils
-from twisted.python import failure
-from twisted.python import log
 
 try:
     import libvirt
     libvirt = libvirt
 except ImportError:
     libvirt = None
+
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.internet import utils
+from twisted.python import failure
+from twisted.python import log
+
+from buildbot import config
+from buildbot.util.eventual import eventually
+from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker.base import AbstractWorker
 
 
 class WorkQueue(object):

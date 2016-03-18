@@ -12,12 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from buildbot.process import properties
-from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
-from buildbot.steps import http
-from buildbot.test.util import steps
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web.resource import Resource
@@ -31,9 +25,15 @@ try:
 except ImportError:
     txrequests = requests = None
 
+from buildbot.process import properties
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.steps import http
+from buildbot.test.util import steps
+
+
 # We use twisted's internal webserver instead of mocking requests
 # to be sure we use the correct requests interfaces
-
 
 class TestPage(Resource):
     isLeaf = True

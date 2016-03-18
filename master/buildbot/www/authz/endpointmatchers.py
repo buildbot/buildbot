@@ -12,11 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import inspect
 
-from buildbot.data.exceptions import InvalidPathError
 from twisted.internet import defer
+
+from buildbot.data.exceptions import InvalidPathError
 
 
 class EndpointMatcherBase(object):

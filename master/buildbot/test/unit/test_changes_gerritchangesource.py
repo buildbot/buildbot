@@ -16,11 +16,12 @@ from future.utils import iteritems
 
 import types
 
+from twisted.trial import unittest
+
 from buildbot.changes import gerritchangesource
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
 from buildbot.util import json
-from twisted.trial import unittest
 
 
 class TestGerritHelpers(unittest.TestCase):

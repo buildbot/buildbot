@@ -12,14 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import warnings
+
+from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.test.util.warnings import ignoreWarning
-from twisted.trial import unittest
 
 
 class SomeWarning(Warning):

@@ -12,9 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import StringIO
+
 import mock
+
+from twisted.trial import unittest
+
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.process.results import FAILURE
@@ -22,8 +26,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
-from twisted.trial import unittest
-from zope.interface import implements
 
 
 class StubLogObserver(mock.Mock):

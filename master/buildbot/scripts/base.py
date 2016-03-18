@@ -15,17 +15,17 @@
 from __future__ import print_function
 
 import copy
+from contextlib import contextmanager
 import os
 import stat
 import sys
 import traceback
 
+from twisted.internet import defer
 from twisted.python import runtime
+from twisted.python import usage
 
 from buildbot import config as config_module
-from contextlib import contextmanager
-from twisted.internet import defer
-from twisted.python import usage
 
 
 @contextmanager

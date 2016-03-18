@@ -12,19 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import calendar
-
-import buildbot.www.change_hook as change_hook
-
-from buildbot.test.fake.web import FakeRequest
-from buildbot.test.fake.web import fakeMasterForHooks
 
 from twisted.trial import unittest
 
+from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
+import buildbot.www.change_hook as change_hook
+
+
 # Sample Gitorious commit payload
 # source: http://gitorious.org/gitorious/pages/WebHooks
-
 gitJsonPayload = r"""
 {
   "after": "df5744f7bc8663b39717f87742dc94f52ccbf4dd",

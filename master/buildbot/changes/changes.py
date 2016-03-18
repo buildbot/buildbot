@@ -16,14 +16,15 @@ from future.utils import iteritems
 
 import time
 
-from buildbot.util import datetime2epoch
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import html
+
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
+from buildbot.util import datetime2epoch
 from buildbot.process.properties import Properties
 
 

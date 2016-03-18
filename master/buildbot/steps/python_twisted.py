@@ -12,7 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+"""
+BuildSteps that are specific to the Twisted source tree
+"""
+import re
 
 from twisted.python import log
 
@@ -22,10 +25,6 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
-
-import re
-
-# BuildSteps that are specific to the Twisted source tree
 
 
 class HLint(ShellCommand):

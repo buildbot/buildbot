@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 from __future__ import print_function
 
+from twisted.internet import defer
+
 from buildbot.clients import usersclient
 from buildbot.process.users import users
 from buildbot.util import in_reactor
-from twisted.internet import defer
 
 
 @in_reactor
