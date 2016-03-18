@@ -33,7 +33,7 @@ class BuildmasterTimeoutError(Exception):
     pass
 
 
-class BuildslaveTimeoutError(Exception):
+class WorkerTimeoutError(Exception):
     pass
 
 
@@ -41,7 +41,7 @@ class ReconfigError(Exception):
     pass
 
 
-class BuildSlaveDetectedError(Exception):
+class WorkerDetectedError(Exception):
     pass
 
 
@@ -100,7 +100,7 @@ class LogWatcher(LineOnlyReceiver):
         if self.processtype == "buildmaster":
             e = BuildmasterTimeoutError()
         else:
-            e = BuildslaveTimeoutError()
+            e = WorkerTimeoutError()
         self.finished(Failure(e))
 
     def finished(self, results):
@@ -122,8 +122,8 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
         if "loading configuration from" in line:
             self.in_reconfig = True
-        if "Creating BuildSlave" in line:
-            self.processtype = "buildslave"
+        if "Creating Worker" in line:
+            self.processtype = "worker"
 
         if self.in_reconfig:
             log.msg(line)

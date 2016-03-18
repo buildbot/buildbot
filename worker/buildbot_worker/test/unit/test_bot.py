@@ -116,14 +116,14 @@ class TestBot(unittest.TestCase):
         def check(builders):
             self.assertEqual(list(builders), ['mybld'])
             self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-            # note that we test the SlaveBuilder instance below
+            # note that we test the WorkerForBuilder instance below
         d.addCallback(check)
         return d
 
     def test_setBuilderList_updates(self):
         d = defer.succeed(None)
 
-        slavebuilders = {}
+        workerforbuilders = {}
 
         def add_my(_):
             d = self.bot.callRemote("setBuilderList", [
@@ -132,7 +132,7 @@ class TestBot(unittest.TestCase):
             def check(builders):
                 self.assertEqual(list(builders), ['mybld'])
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                slavebuilders['my'] = builders['mybld']
+                workerforbuilders['my'] = builders['mybld']
             d.addCallback(check)
             return d
         d.addCallback(add_my)
@@ -145,9 +145,9 @@ class TestBot(unittest.TestCase):
                 self.assertEqual(sorted(builders.keys()), sorted(['mybld', 'yourbld']))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                # 'my' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['my']), id(builders['mybld']))
-                slavebuilders['your'] = builders['yourbld']
+                # 'my' should still be the same WorkerForBuilder object
+                self.assertEqual(id(workerforbuilders['my']), id(builders['mybld']))
+                workerforbuilders['your'] = builders['yourbld']
             d.addCallback(check)
             return d
         d.addCallback(add_your)
@@ -162,8 +162,8 @@ class TestBot(unittest.TestCase):
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
-                # 'your' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['your']), id(builders['yourbld']))
+                # 'your' should still be the same WorkerForBuilder object
+                self.assertEqual(id(workerforbuilders['your']), id(builders['yourbld']))
             d.addCallback(check)
             return d
         d.addCallback(remove_my)
@@ -214,7 +214,7 @@ class FakeStep(object):
         self.finished_d.callback(None)
 
 
-class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
+class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -226,7 +226,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         self.bot = base.BotBase(self.basedir, False)
         self.bot.startService()
 
-        # get a SlaveBuilder object from the bot and wrap it as a fake remote
+        # get a WorkerForBuilder object from the bot and wrap it as a fake remote
         builders = yield self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = FakeRemote(builders['sb'])
 
@@ -243,10 +243,10 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_print(self):
-        return self.sb.callRemote("print", "Hello, SlaveBuilder.")
+        return self.sb.callRemote("print", "Hello, WorkerForBuilder.")
 
     def test_setMaster(self):
-        # not much to check here - what the SlaveBuilder does with the
+        # not much to check here - what the WorkerForBuilder does with the
         # master is not part of the interface (and, in fact, it does very little)
         return self.sb.callRemote("setMaster", mock.Mock())
 
@@ -426,4 +426,4 @@ class TestBotFactory(unittest.TestCase):
         clock.advance(35)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
-# note that the BuildSlave class is tested in test_bot_BuildSlave
+# note that the Worker class is tested in test_bot_Worker

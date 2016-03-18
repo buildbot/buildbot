@@ -48,14 +48,14 @@ class TransferCommand(Command):
         # when it sees self.interrupted set.
 
 
-class SlaveFileUploadCommand(TransferCommand):
+class WorkerFileUploadCommand(TransferCommand):
 
     """
-    Upload a file from slave to build master
+    Upload a file from worker to build master
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavesrc']:  name of the slave-side file to read from
+        - ['slavesrc']:  name of the worker-side file to read from
         - ['writer']:    RemoteReference to a buildbot_worker.protocols.base.FileWriterProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -76,7 +76,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveFileUploadCommand started')
+            log.msg('WorkerFileUploadCommand started')
 
         # Open file
         self.path = os.path.join(self.builder.basedir,
@@ -149,7 +149,7 @@ class SlaveFileUploadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileUploadCommand._writeBlock(): end')
+                log.msg('WorkerFileUploadCommand._writeBlock(): end')
             return True
 
         length = self.blocksize
@@ -166,7 +166,7 @@ class SlaveFileUploadCommand(TransferCommand):
             data = self.fp.read(length)
 
         if self.debug:
-            log.msg('SlaveFileUploadCommand._writeBlock(): ' +
+            log.msg('WorkerFileUploadCommand._writeBlock(): ' +
                     'allowed=%d readlen=%d' % (length, len(data)))
         if len(data) == 0:
             log.msg("EOF: callRemote(close)")
@@ -180,7 +180,7 @@ class SlaveFileUploadCommand(TransferCommand):
         return d
 
 
-class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
+class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
     debug = False
     requiredArgs = ['workdir', 'slavesrc', 'writer', 'blocksize']
 
@@ -196,7 +196,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveDirectoryUploadCommand started')
+            log.msg('WorkerDirectoryUploadCommand started')
 
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
@@ -245,14 +245,14 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         return TransferCommand.finished(self, res)
 
 
-class SlaveFileDownloadCommand(TransferCommand):
+class WorkerFileDownloadCommand(TransferCommand):
 
     """
-    Download a file from master to slave
+    Download a file from master to worker
     Arguments:
 
         - ['workdir']:   base directory to use
-        - ['slavedest']: name of the slave-side file to be created
+        - ['slavedest']: name of the worker-side file to be created
         - ['reader']:    RemoteReference to a buildbot_worker.protocols.base.FileReaderProxy object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
@@ -273,7 +273,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def start(self):
         if self.debug:
-            log.msg('SlaveFileDownloadCommand starting')
+            log.msg('WorkerFileDownloadCommand starting')
 
         # Open file
         self.path = os.path.join(self.builder.basedir,
@@ -290,9 +290,9 @@ class SlaveFileDownloadCommand(TransferCommand):
                 log.msg("Opened '%s' for download" % self.path)
             if self.mode is not None:
                 # note: there is a brief window during which the new file
-                # will have the buildslave's default (umask) mode before we
+                # will have the worker's default (umask) mode before we
                 # set the new one. Don't use this mode= feature to keep files
-                # private: use the buildslave's umask for that instead. (it
+                # private: use the worker's umask for that instead. (it
                 # is possible to call os.umask() before and after the open()
                 # call, but cleaning up from exceptions properly is more of a
                 # nuisance that way).
@@ -337,7 +337,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
         if self.interrupted or self.fp is None:
             if self.debug:
-                log.msg('SlaveFileDownloadCommand._readBlock(): end')
+                log.msg('WorkerFileDownloadCommand._readBlock(): end')
             return True
 
         length = self.blocksize
@@ -357,7 +357,7 @@ class SlaveFileDownloadCommand(TransferCommand):
 
     def _writeData(self, data):
         if self.debug:
-            log.msg('SlaveFileDownloadCommand._readBlock(): readlen=%d' %
+            log.msg('WorkerFileDownloadCommand._readBlock(): readlen=%d' %
                     len(data))
         if len(data) == 0:
             return True

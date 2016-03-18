@@ -19,7 +19,7 @@ from buildbot_worker import runprocess
 from buildbot_worker.commands import base
 
 
-class SlaveShellCommand(base.Command):
+class WorkerShellCommand(base.Command):
 
     requiredArgs = ['workdir', 'command']
 

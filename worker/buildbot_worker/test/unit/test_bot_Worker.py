@@ -71,11 +71,11 @@ class MasterRealm(object):
         return self.mind.broker.transport.loseConnection()
 
 
-class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
+class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
     def setUp(self):
         self.realm = None
-        self.buildslave = None
+        self.worker = None
         self.listeningport = None
 
         self.basedir = os.path.abspath("basedir")
@@ -87,8 +87,8 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         d = defer.succeed(None)
         if self.realm:
             d.addCallback(lambda _: self.realm.shutdown())
-        if self.buildslave and self.buildslave.running:
-            d.addCallback(lambda _: self.buildslave.stopService())
+        if self.worker and self.worker.running:
+            d.addCallback(lambda _: self.worker.stopService())
         if self.listeningport:
             d.addCallback(lambda _: self.listeningport.stopListening())
         if os.path.exists(self.basedir):
@@ -106,35 +106,35 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
     def test_constructor_minimal(self):
         # only required arguments
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False)
 
     def test_constructor_083_tac(self):
         # invocation as made from default 083 tac files
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                       umask=0o123, maxdelay=10)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                   umask=0o123, maxdelay=10)
 
     def test_constructor_full(self):
         # invocation with all args
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                       umask=0o123, maxdelay=10, keepaliveTimeout=10,
-                       unicode_encoding='utf8', allow_shutdown=True)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                   umask=0o123, maxdelay=10, keepaliveTimeout=10,
+                   unicode_encoding='utf8', allow_shutdown=True)
 
-    def test_buildslave_print(self):
+    def test_worker_print(self):
         d = defer.Deferred()
 
         # set up to call print when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_print(mind):
-            print_d = mind.callRemote("print", "Hi, slave.")
+            print_d = mind.callRemote("print", "Hi, worker.")
             print_d.addCallbacks(d.callback, d.errback)
 
-        # start up the master and slave
+        # start up the master and worker
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
-                                         "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
-        self.buildslave.startService()
+        self.worker = bot.Worker("127.0.0.1", port,
+                                 "testy", "westy", self.basedir,
+                                 keepalive=0, usePTY=False, umask=0o22)
+        self.worker.startService()
 
         # and wait for the result of the print
         return d
@@ -142,10 +142,10 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
     def test_recordHostname_uname(self):
         self.patch_os_uname(lambda: [0, 'test-hostname.domain.com'])
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
-                                         "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
-        self.buildslave.recordHostname(self.basedir)
+        self.worker = bot.Worker("127.0.0.1", 9999,
+                                 "testy", "westy", self.basedir,
+                                 keepalive=0, usePTY=False, umask=0o22)
+        self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
@@ -155,15 +155,15 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         self.patch_os_uname(missing)
         self.patch(socket, "getfqdn", lambda: 'test-hostname.domain.com')
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
-                                         "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
-        self.buildslave.recordHostname(self.basedir)
+        self.worker = bot.Worker("127.0.0.1", 9999,
+                                 "testy", "westy", self.basedir,
+                                 keepalive=0, usePTY=False, umask=0o22)
+        self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
-    def test_buildslave_graceful_shutdown(self):
-        """Test that running the build slave's gracefulShutdown method results
+    def test_worker_graceful_shutdown(self):
+        """Test that running the build worker's gracefulShutdown method results
         in a call to the master's shutdown method"""
         d = defer.Deferred()
 
@@ -179,18 +179,18 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         # set up to call shutdown when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_shutdown(mind):
-            self.buildslave.bf.perspective = fakepersp
-            shutdown_d = self.buildslave.gracefulShutdown()
+            self.worker.bf.perspective = fakepersp
+            shutdown_d = self.worker.gracefulShutdown()
             shutdown_d.addCallbacks(d.callback, d.errback)
 
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_shutdown)
 
-        self.buildslave = bot.BuildSlave("127.0.0.1", port,
-                                         "testy", "westy", self.basedir,
-                                         keepalive=0, usePTY=False, umask=0o22)
+        self.worker = bot.Worker("127.0.0.1", port,
+                                 "testy", "westy", self.basedir,
+                                 keepalive=0, usePTY=False, umask=0o22)
 
-        self.buildslave.startService()
+        self.worker.startService()
 
         def check(ign):
             self.assertEquals(called, [('shutdown',)])
@@ -198,17 +198,17 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
 
         return d
 
-    def test_buildslave_shutdown(self):
+    def test_worker_shutdown(self):
         """Test watching an existing shutdown_file results in gracefulShutdown
         being called."""
 
-        buildslave = bot.BuildSlave("127.0.0.1", 1234,
-                                    "testy", "westy", self.basedir,
-                                    keepalive=0, usePTY=False, umask=0o22,
-                                    allow_shutdown='file')
+        worker = bot.Worker("127.0.0.1", 1234,
+                            "testy", "westy", self.basedir,
+                            keepalive=0, usePTY=False, umask=0o22,
+                            allow_shutdown='file')
 
         # Mock out gracefulShutdown
-        buildslave.gracefulShutdown = Mock()
+        worker.gracefulShutdown = Mock()
 
         # Mock out os.path methods
         exists = Mock()
@@ -221,24 +221,24 @@ class TestBuildSlave(misc.PatcherMixin, unittest.TestCase):
         mtime.return_value = 0
         exists.return_value = False
 
-        buildslave._checkShutdownFile()
+        worker._checkShutdownFile()
 
         # We shouldn't have called gracefulShutdown
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 0)
+        self.assertEquals(worker.gracefulShutdown.call_count, 0)
 
         # Pretend that the file exists now, with an mtime of 2
         exists.return_value = True
         mtime.return_value = 2
-        buildslave._checkShutdownFile()
+        worker._checkShutdownFile()
 
         # Now we should have changed gracefulShutdown
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 1)
+        self.assertEquals(worker.gracefulShutdown.call_count, 1)
 
         # Bump the mtime again, and make sure we call shutdown again
         mtime.return_value = 3
-        buildslave._checkShutdownFile()
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+        worker._checkShutdownFile()
+        self.assertEquals(worker.gracefulShutdown.call_count, 2)
 
         # Try again, we shouldn't call shutdown another time
-        buildslave._checkShutdownFile()
-        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+        worker._checkShutdownFile()
+        self.assertEquals(worker.gracefulShutdown.call_count, 2)

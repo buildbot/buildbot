@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot_worker.null import LocalBuildSlave
-from buildbot_worker.pb import BuildSlave
+from buildbot_worker.null import LocalWorker
+from buildbot_worker.pb import Worker
 
-__all__ = ['BuildSlave', 'LocalBuildSlave']
+__all__ = ['Worker', 'LocalWorker']

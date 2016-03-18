@@ -17,10 +17,10 @@ from twisted.python import reflect
 
 commandRegistry = {
     # command name : fully qualified factory name (callable)
-    "shell": "buildbot_worker.commands.shell.SlaveShellCommand",
-    "uploadFile": "buildbot_worker.commands.transfer.SlaveFileUploadCommand",
-    "uploadDirectory": "buildbot_worker.commands.transfer.SlaveDirectoryUploadCommand",
-    "downloadFile": "buildbot_worker.commands.transfer.SlaveFileDownloadCommand",
+    "shell": "buildbot_worker.commands.shell.WorkerShellCommand",
+    "uploadFile": "buildbot_worker.commands.transfer.WorkerFileUploadCommand",
+    "uploadDirectory": "buildbot_worker.commands.transfer.WorkerDirectoryUploadCommand",
+    "downloadFile": "buildbot_worker.commands.transfer.WorkerFileDownloadCommand",
     "repo": "buildbot_worker.commands.repo.Repo",
     "mkdir": "buildbot_worker.commands.fs.MakeDirectory",
     "rmdir": "buildbot_worker.commands.fs.RemoveDirectory",

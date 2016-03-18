@@ -527,7 +527,7 @@ def DetermineRunner(bbdir):
         if os.path.exists(tacfile):
             with open(tacfile, 'r') as f:
                 contents = f.read()
-                if 'import BuildSlave' in contents:
+                if 'import Worker' in contents:
                     return buildbot_worker.scripts.runner.run
 
     except ImportError:

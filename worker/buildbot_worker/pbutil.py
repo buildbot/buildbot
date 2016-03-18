@@ -136,7 +136,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
             log.msg("we lost the brand-new connection")
             # fall through
         elif why.check(error.UnauthorizedLogin):
-            log.msg("unauthorized login; check slave name and password")
+            log.msg("unauthorized login; check worker name and password")
             # fall through
         else:
             log.err(why, 'While trying to connect:')

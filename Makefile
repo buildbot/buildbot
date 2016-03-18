@@ -16,12 +16,14 @@ apidocs:
 pylint:
 	$(MAKE) -C master pylint; master_res=$$?; \
 	$(MAKE) -C slave pylint; slave_res=$$?; \
-	if [ $$master_res != 0 ] || [ $$slave_res != 0 ]; then exit 1; fi
+	$(MAKE) -C worker pylint; worker_res=$$?; \
+	if [ $$master_res != 0 ] || [ $$slave_res != 0 ] || [ $$worker_res != 0 ]; then exit 1; fi
 
 # flake8 the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 flake8:
 	$(MAKE) -C master flake8
 	$(MAKE) -C slave flake8
+	$(MAKE) -C worker flake8
 	flake8 --config=common/flake8rc www/*/buildbot_*/
 	flake8 --config=common/flake8rc www/*/setup.py
 

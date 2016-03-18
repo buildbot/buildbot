@@ -20,7 +20,7 @@ import buildbot_worker.runprocess
 
 from buildbot_worker.commands import utils
 from buildbot_worker.test.fake import runprocess
-from buildbot_worker.test.fake import slavebuilder
+from buildbot_worker.test.fake import workerforbuilder
 
 
 class CommandTestMixin(object):
@@ -65,15 +65,15 @@ class CommandTestMixin(object):
         cmdclass argument is the Command class, and args is the args dict
         to pass to its constructor.
 
-        This always creates the SlaveBuilder with a basedir (self.basedir).  If
-        makedirs is true, it will create the basedir and a workdir directory
+        This always creates the WorkerForBuilder with a basedir (self.basedir).
+        If makedirs is true, it will create the basedir and a workdir directory
         inside (named 'workdir').
 
         The resulting command is returned, but as a side-effect, the following
         attributes are set:
 
             self.cmd -- the command
-            self.builder -- the (fake) SlaveBuilder
+            self.builder -- the (fake) WorkerForBuilder
         """
 
         # set up the workdir and basedir
@@ -84,7 +84,7 @@ class CommandTestMixin(object):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir=self.basedir)
+        b = self.builder = workerforbuilder.FakeWorkerForBuilder(basedir=self.basedir)
         self.cmd = cmdclass(b, 'fake-stepid', args)
 
         return self.cmd

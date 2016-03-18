@@ -35,7 +35,7 @@ class UnknownCommand(pb.Error):
     pass
 
 
-class SlaveBuilderBase(service.Service):
+class WorkerForBuilderBase(service.Service):
 
     """This is the local representation of a single Builder: it handles a
     single kind of build (like an all-warnings build). It has a name and a
@@ -49,7 +49,7 @@ class SlaveBuilderBase(service.Service):
     # is severed.
     remote = None
 
-    # .command points to a SlaveCommand instance, and is set while the step
+    # .command points to a WorkerCommand instance, and is set while the step
     # is running. We use it to implement the stopBuild method.
     command = None
 
@@ -64,7 +64,7 @@ class SlaveBuilderBase(service.Service):
         self.setName(name)
 
     def __repr__(self):
-        return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
+        return "<WorkerForBuilder '%s' at %d>" % (self.name, id(self))
 
     def setServiceParent(self, parent):
         service.Service.setServiceParent(self, parent)
@@ -89,9 +89,9 @@ class SlaveBuilderBase(service.Service):
     def activity(self):
         bot = self.parent
         if bot:
-            bslave = bot.parent
-            if bslave and self.bf:
-                bf = bslave.bf
+            bworker = bot.parent
+            if bworker and self.bf:
+                bf = bworker.bf
                 bf.activity()
 
     def remote_setMaster(self, remote):
@@ -99,7 +99,7 @@ class SlaveBuilderBase(service.Service):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
+        log.msg("WorkerForBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
 
     def lostRemote(self, remote):
@@ -137,7 +137,7 @@ class SlaveBuilderBase(service.Service):
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand("unrecognized SlaveCommand '%s'" % command)
+            raise UnknownCommand("unrecognized WorkerCommand '%s'" % command)
         self.command = factory(self, stepId, args)
 
         log.msg(" startCommand:%s [id %s]" % (command, stepId))
@@ -161,7 +161,7 @@ class SlaveBuilderBase(service.Service):
 
     def stopCommand(self):
         """Make any currently-running command die, with no further status
-        output. This is used when the buildslave is shutting down or the
+        output. This is used when the worker is shutting down or the
         connection to the master has been lost. Interrupt the command,
         silence it, and then forget about it."""
         if not self.command:
@@ -185,13 +185,13 @@ class SlaveBuilderBase(service.Service):
             return
         # the update[1]=0 comes from the leftover 'updateNum', which the
         # master still expects to receive. Provide it to avoid significant
-        # interoperability issues between new slaves and old masters.
+        # interoperability issues between new workers and old masters.
         if self.remoteStep:
             update = [data, 0]
             updates = [update]
             d = self.remoteStep.callRemote("update", updates)
             d.addCallback(self.ackUpdate)
-            d.addErrback(self._ackFailed, "SlaveBuilder.sendUpdate")
+            d.addErrback(self._ackFailed, "WorkerForBuilder.sendUpdate")
 
     def ackUpdate(self, acknum):
         self.activity()  # update the "last activity" timer
@@ -200,13 +200,13 @@ class SlaveBuilderBase(service.Service):
         self.activity()  # update the "last activity" timer
 
     def _ackFailed(self, why, where):
-        log.msg("SlaveBuilder._ackFailed:", where)
+        log.msg("WorkerForBuilder._ackFailed:", where)
         log.err(why)  # we don't really care
 
     # this is fired by the Deferred attached to each Command
     def commandComplete(self, failure):
         if failure:
-            log.msg("SlaveBuilder.commandFailed", self.command)
+            log.msg("WorkerForBuilder.commandFailed", self.command)
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
@@ -214,7 +214,7 @@ class SlaveBuilderBase(service.Service):
             failure.unsafeTracebacks = True
         else:
             # failure is None
-            log.msg("SlaveBuilder.commandComplete", self.command)
+            log.msg("WorkerForBuilder.commandComplete", self.command)
         self.command = None
         if not self.running:
             log.msg(" but we weren't running, quitting silently")
@@ -227,17 +227,17 @@ class SlaveBuilderBase(service.Service):
             self.remoteStep = None
 
     def remote_shutdown(self):
-        log.msg("slave shutting down on command from master")
-        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
+        log.msg("worker shutting down on command from master")
+        log.msg("NOTE: master is using deprecated WorkerForBuilder.shutdown method")
         reactor.stop()
 
 
 class BotBase(service.MultiService):
 
-    """I represent the slave-side bot."""
+    """I represent the worker-side bot."""
     usePTY = None
     name = "bot"
-    SlaveBuilder = SlaveBuilderBase
+    WorkerForBuilder = WorkerForBuilderBase
 
     def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
@@ -272,7 +272,7 @@ class BotBase(service.MultiService):
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = self.SlaveBuilder(name)
+                b = self.WorkerForBuilder(name)
                 b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
@@ -305,11 +305,11 @@ class BotBase(service.MultiService):
         log.msg("message from master:", message)
 
     def remote_getSlaveInfo(self):
-        """This command retrieves data from the files in SLAVEDIR/info/* and
+        """This command retrieves data from the files in WORKERDIR/info/* and
         sends the contents to the buildmaster. These are used to describe
-        the slave and its configuration, and should be created and
-        maintained by the slave administrator. They will be retrieved each
-        time the master-slave connection is established.
+        the worker and its configuration, and should be created and
+        maintained by the worker administrator. They will be retrieved each
+        time the master-worker connection is established.
         """
 
         files = {}
@@ -335,15 +335,15 @@ class BotBase(service.MultiService):
         return buildbot_worker.version
 
     def remote_shutdown(self):
-        log.msg("slave shutting down on command from master")
+        log.msg("worker shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
-        # resilinet to slaves dropping their connections, so there is no harm
+        # resilinet to workers dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 
 
-class BuildSlaveBase(service.MultiService):
+class WorkerBase(service.MultiService):
     Bot = BotBase
 
     def __init__(self, name, basedir,
@@ -362,7 +362,7 @@ class BuildSlaveBase(service.MultiService):
         # first, apply all monkeypatches
         monkeypatches.patch_all()
 
-        log.msg("Starting BuildSlave -- version: %s" % buildbot_worker.version)
+        log.msg("Starting Worker -- version: %s" % buildbot_worker.version)
 
         if self.umask is not None:
             os.umask(self.umask)

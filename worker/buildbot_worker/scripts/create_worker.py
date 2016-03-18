@@ -17,10 +17,10 @@ import os
 
 from twisted.python import log
 
-slaveTACTemplate = ["""
+workerTACTemplate = ["""
 import os
 
-from buildbot_worker.bot import BuildSlave
+from buildbot_worker.bot import Worker
 from twisted.application import service
 
 basedir = %(basedir)r
@@ -32,11 +32,11 @@ if basedir == '.':
     import os.path
     basedir = os.path.abspath(os.path.dirname(__file__))
 
-# note: this line is matched against to check that this is a buildslave
+# note: this line is matched against to check that this is a worker
 # directory; do not edit it.
 application = service.Application('buildslave')
 """,
-                    """
+                     """
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
@@ -47,10 +47,10 @@ except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
 """,
-                    """
+                     """
 buildmaster_host = %(host)r
 port = %(port)d
-slavename = %(name)r
+workername = %(name)r
 passwd = %(passwd)r
 if "SLAVEPASS" in os.environ:
     del os.environ['SLAVEPASS']
@@ -61,29 +61,29 @@ maxdelay = %(maxdelay)d
 numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
 
-s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               numcpus=numcpus, allow_shutdown=allow_shutdown)
+s = Worker(buildmaster_host, port, workername, passwd, basedir,
+           keepalive, usepty, umask=umask, maxdelay=maxdelay,
+           numcpus=numcpus, allow_shutdown=allow_shutdown)
 s.setServiceParent(application)
 
 """]
 
 
-class CreateSlaveError(Exception):
+class CreateWorkerError(Exception):
 
     """
-    Raised on errors while setting up buildslave directory.
+    Raised on errors while setting up worker directory.
     """
 
 
 def _makeBaseDir(basedir, quiet):
     """
-    Make buildslave base directory if needed.
+    Make worker base directory if needed.
 
-    @param basedir: buildslave base directory relative path
+    @param basedir: worker base directory relative path
     @param   quiet: if True, don't print info messages
 
-    @raise CreateSlaveError: on error making base directory
+    @raise CreateWorkerError: on error making base directory
     """
     if os.path.exists(basedir):
         if not quiet:
@@ -96,8 +96,8 @@ def _makeBaseDir(basedir, quiet):
     try:
         os.mkdir(basedir)
     except OSError as exception:
-        raise CreateSlaveError("error creating directory %s: %s" %
-                               (basedir, exception.strerror))
+        raise CreateWorkerError("error creating directory %s: %s" %
+                                (basedir, exception.strerror))
 
 
 def _makeBuildbotTac(basedir, tac_file_contents, quiet):
@@ -105,11 +105,11 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
     Create buildbot.tac file. If buildbot.tac file already exists with
     different contents, create buildbot.tac.new instead.
 
-    @param basedir: buildslave base directory relative path
+    @param basedir: worker base directory relative path
     @param tac_file_contents: contents of buildbot.tac file to write
     @param quiet: if True, don't print info messages
 
-    @raise CreateSlaveError: on error reading or writing tac file
+    @raise CreateWorkerError: on error reading or writing tac file
     """
     tacfile = os.path.join(basedir, "buildbot.tac")
 
@@ -117,8 +117,8 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         try:
             oldcontents = open(tacfile, "rt").read()
         except IOError as exception:
-            raise CreateSlaveError("error reading %s: %s" %
-                                   (tacfile, exception.strerror))
+            raise CreateWorkerError("error reading %s: %s" %
+                                    (tacfile, exception.strerror))
 
         if oldcontents == tac_file_contents:
             if not quiet:
@@ -137,18 +137,18 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
         f.close()
         os.chmod(tacfile, 0o600)
     except IOError as exception:
-        raise CreateSlaveError("could not write %s: %s" %
-                               (tacfile, exception.strerror))
+        raise CreateWorkerError("could not write %s: %s" %
+                                (tacfile, exception.strerror))
 
 
 def _makeInfoFiles(basedir, quiet):
     """
     Create info/* files inside basedir.
 
-    @param basedir: buildslave base directory relative path
+    @param basedir: worker base directory relative path
     @param   quiet: if True, don't print info messages
 
-    @raise CreateSlaveError: on error making info directory or
+    @raise CreateWorkerError: on error making info directory or
                              writing info files
     """
     def createFile(path, file, contents):
@@ -164,8 +164,8 @@ def _makeInfoFiles(basedir, quiet):
         try:
             open(filepath, "wt").write(contents)
         except IOError as exception:
-            raise CreateSlaveError("could not write %s: %s" %
-                                   (filepath, exception.strerror))
+            raise CreateWorkerError("could not write %s: %s" %
+                                    (filepath, exception.strerror))
         return True
 
     path = os.path.join(basedir, "info")
@@ -175,8 +175,8 @@ def _makeInfoFiles(basedir, quiet):
         try:
             os.mkdir(path)
         except OSError as exception:
-            raise CreateSlaveError("error creating directory %s: %s" %
-                                   (path, exception.strerror))
+            raise CreateWorkerError("error creating directory %s: %s" %
+                                    (path, exception.strerror))
 
     # create 'info/admin' file
     created = createFile(path, "admin",
@@ -197,7 +197,7 @@ def _makeInfoFiles(basedir, quiet):
         log.msg("Please edit the files in %s appropriately." % path)
 
 
-def createSlave(config):
+def createWorker(config):
     basedir = config['basedir']
     quiet = config['quiet']
 
@@ -209,21 +209,21 @@ def createSlave(config):
         config['allow-shutdown'] = repr(asd)
 
     if config['no-logrotate']:
-        slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
+        workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
     else:
-        slaveTAC = "".join(slaveTACTemplate)
-    contents = slaveTAC % config
+        workerTAC = "".join(workerTACTemplate)
+    contents = workerTAC % config
 
     try:
         _makeBaseDir(basedir, quiet)
         _makeBuildbotTac(basedir, contents, quiet)
         _makeInfoFiles(basedir, quiet)
-    except CreateSlaveError as exception:
-        log.msg("%s\nfailed to configure buildslave in %s" %
+    except CreateWorkerError as exception:
+        log.msg("%s\nfailed to configure worker in %s" %
                 (exception, config['basedir']))
         return 1
 
     if not quiet:
-        log.msg("buildslave configured in %s" % basedir)
+        log.msg("worker configured in %s" % basedir)
 
     return 0

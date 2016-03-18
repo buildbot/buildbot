@@ -43,25 +43,25 @@ class Follower(object):
     def _failure(self, why):
         from twisted.internet import reactor
         from buildbot_worker.scripts.logwatcher import BuildmasterTimeoutError, \
-            ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
+            ReconfigError, WorkerTimeoutError, WorkerDetectedError
         if why.check(BuildmasterTimeoutError):
             log.msg("""
-The buildslave took more than 10 seconds to start, so we were unable to
+The worker took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'configuration update complete' to verify correct startup.
 """)
-        elif why.check(BuildslaveTimeoutError):
+        elif why.check(WorkerTimeoutError):
             log.msg("""
-The buildslave took more than 10 seconds to start and/or connect to the
+The worker took more than 10 seconds to start and/or connect to the
 buildslave, so we were unable to confirm that it started and connected
 correctly. Please 'tail twistd.log' and look for a line that says 'message
 from master: attached' to verify correct startup. If you see a bunch of
-messages like 'will retry in 6 seconds', your buildslave might not have the
+messages like 'will retry in 6 seconds', your worker might not have the
 correct hostname or portnumber for the buildslave, or the buildslave might
 not be running. If you see messages like
    'Failure: twisted.cred.error.UnauthorizedLogin'
-then your buildslave might be using the wrong botname or password. Please
-correct these problems and then restart the buildslave.
+then your worker might be using the wrong botname or password. Please
+correct these problems and then restart the worker.
 """)
         elif why.check(ReconfigError):
             log.msg("""
@@ -69,13 +69,13 @@ The buildslave appears to have encountered an error in the master.cfg config
 file during startup. It is probably running with an empty configuration right
 now. Please inspect and fix master.cfg, then restart the buildslave.
 """)
-        elif why.check(BuildSlaveDetectedError):
+        elif why.check(WorkerDetectedError):
             log.msg("""
 Buildslave is starting up, not following logfile.
 """)
         else:
             log.msg("""
-Unable to confirm that the buildslave started correctly. You may need to
+Unable to confirm that the worker started correctly. You may need to
 stop it, fix the config file, and restart.
 """)
             log.msg(why)
@@ -85,15 +85,15 @@ stop it, fix the config file, and restart.
 
 def startCommand(config):
     basedir = config['basedir']
-    if not base.isBuildslaveDir(basedir):
+    if not base.isWorkerDir(basedir):
         return 1
 
-    return startSlave(basedir, config['quiet'], config['nodaemon'])
+    return startWorker(basedir, config['quiet'], config['nodaemon'])
 
 
-def startSlave(basedir, quiet, nodaemon):
+def startWorker(basedir, quiet, nodaemon):
     """
-    Start slave process.
+    Start worker process.
 
     Fork and start twisted application described in basedir buildbot.tac file.
     Print it's log messages to stdout for a while and try to figure out if
@@ -102,11 +102,11 @@ def startSlave(basedir, quiet, nodaemon):
     If quiet or nodaemon parameters are True, or we are running on a win32
     system, will not fork and log will not be printed to stdout.
 
-    @param  basedir: buildslave's basedir path
+    @param  basedir: worker's basedir path
     @param    quiet: don't display startup log messages
     @param nodaemon: don't daemonize (stay in foreground)
-    @return: 0 if slave was successfully started,
-             1 if we are not sure that slave started successfully
+    @return: 0 if worker was successfully started,
+             1 if we are not sure that worker started successfully
     """
 
     os.chdir(basedir)

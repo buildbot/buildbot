@@ -26,8 +26,8 @@ from twisted.python import log
 from twisted.spread import pb
 
 from buildbot_worker.base import BotBase
-from buildbot_worker.base import BuildSlaveBase
-from buildbot_worker.base import SlaveBuilderBase
+from buildbot_worker.base import WorkerBase
+from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.pbutil import ReconnectingPBClientFactory
 
 
@@ -35,12 +35,12 @@ class UnknownCommand(pb.Error):
     pass
 
 
-class SlaveBuilderPb(SlaveBuilderBase, pb.Referenceable):
+class WorkerForBuilderPb(WorkerForBuilderBase, pb.Referenceable):
     pass
 
 
 class BotPb(BotBase, pb.Referenceable):
-    SlaveBuilder = SlaveBuilderPb
+    WorkerForBuilder = WorkerForBuilderPb
 
 
 class BotFactory(ReconnectingPBClientFactory):
@@ -53,7 +53,7 @@ class BotFactory(ReconnectingPBClientFactory):
     # of such (although this could take several minutes).
     keepaliveInterval = None  # None = do not use keepalives
 
-    # 'maxDelay' determines the maximum amount of time the slave will wait
+    # 'maxDelay' determines the maximum amount of time the worker will wait
     # between connection retries
     maxDelay = 300
 
@@ -79,7 +79,7 @@ class BotFactory(ReconnectingPBClientFactory):
         self.connector = connector
 
     def gotPerspective(self, perspective):
-        log.msg("Connected to %s:%s; slave is ready" % (self.buildmaster_host, self.port))
+        log.msg("Connected to %s:%s; worker is ready" % (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:
@@ -134,7 +134,7 @@ class BotFactory(ReconnectingPBClientFactory):
 
     def activity(self, res=None):
         """Subclass or monkey-patch this method to be alerted whenever there is
-        active communication between the master and slave."""
+        active communication between the master and worker."""
         pass
 
     def stopFactory(self):
@@ -142,7 +142,7 @@ class BotFactory(ReconnectingPBClientFactory):
         self.stopTimers()
 
 
-class BuildSlave(BuildSlaveBase, service.MultiService):
+class Worker(WorkerBase, service.MultiService):
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
@@ -154,7 +154,7 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
         # backward-compatibility
 
         service.MultiService.__init__(self)
-        BuildSlaveBase.__init__(self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
+        WorkerBase.__init__(self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
         if keepalive == 0:
             keepalive = None
 
@@ -175,7 +175,7 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
         c.setServiceParent(self)
 
     def startService(self):
-        BuildSlaveBase.startService(self)
+        WorkerBase.startService(self)
 
         if self.allow_shutdown == 'signal':
             log.msg("Setting up SIGHUP handler to initiate shutdown")
@@ -223,7 +223,7 @@ class BuildSlave(BuildSlaveBase, service.MultiService):
 
         def _shutdownfailed(err):
             if err.check(AttributeError):
-                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+                log.msg("Master does not support worker initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
             else:
                 log.msg('callRemote("shutdown") failed')
                 log.err(err)

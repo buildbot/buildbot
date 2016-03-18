@@ -32,7 +32,7 @@ from buildbot_worker import runprocess
 from buildbot_worker import util
 from buildbot_worker.commands import utils
 from buildbot_worker.exceptions import AbandonChain
-from buildbot_worker.interfaces import ISlaveCommand
+from buildbot_worker.interfaces import IWorkerCommand
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -75,10 +75,10 @@ command_version = "2.16"
 
 
 class Command(object):
-    implements(ISlaveCommand)
+    implements(IWorkerCommand)
 
     """This class defines one command that can be invoked by the build master.
-    The command is executed on the slave side, and always sends back a
+    The command is executed on the worker side, and always sends back a
     completion message when it finishes. It may also send intermediate status
     as it runs (by calling builder.sendStatus). Some commands can be
     interrupted (either by the build master or a local timeout), in which
@@ -86,13 +86,13 @@ class Command(object):
     indicates an error occurred.
 
     These commands are used by BuildSteps on the master side. Each kind of
-    BuildStep uses a single Command. The slave must implement all the
+    BuildStep uses a single Command. The worker must implement all the
     Commands required by the set of BuildSteps used for any given build:
     this is checked at startup time.
 
     All Commands are constructed with the same signature:
      c = CommandClass(builder, stepid, args)
-    where 'builder' is the parent SlaveBuilder object, and 'args' is a
+    where 'builder' is the parent WorkerForBuilder object, and 'args' is a
     dict that is interpreted per-command.
 
     The setup(args) method is available for setup, and is run from __init__.
@@ -196,7 +196,7 @@ class Command(object):
         this matters."""
         pass
 
-    # utility methods, mostly used by SlaveShellCommand and the like
+    # utility methods, mostly used by WorkerShellCommand and the like
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):
@@ -253,7 +253,7 @@ class SourceBaseCommand(Command):
         - ['retry']:    If not None, this is a tuple of (delay, repeats)
                         which means that any failed VC updates should be
                         reattempted, up to REPEATS times, after a delay of
-                        DELAY seconds. This is intended to deal with slaves
+                        DELAY seconds. This is intended to deal with workers
                         that experience transient network failures.
     """
 
@@ -261,7 +261,7 @@ class SourceBaseCommand(Command):
 
     def setup(self, args):
         # if we need to parse the output, use this environment. Otherwise
-        # command output will be in whatever the buildslave's native language
+        # command output will be in whatever the worker's native language
         # has been set to.
         self.env = os.environ.copy()
         self.env['LC_MESSAGES'] = "C"

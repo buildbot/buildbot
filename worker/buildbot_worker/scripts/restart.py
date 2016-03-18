@@ -24,15 +24,15 @@ def restart(config):
     quiet = config['quiet']
     basedir = config['basedir']
 
-    if not base.isBuildslaveDir(basedir):
+    if not base.isWorkerDir(basedir):
         return 1
 
     try:
-        stop.stopSlave(basedir, quiet)
-    except stop.SlaveNotRunning:
+        stop.stopWorker(basedir, quiet)
+    except stop.WorkerNotRunning:
         if not quiet:
-            log.msg("no old buildslave process found to stop")
+            log.msg("no old worker process found to stop")
     if not quiet:
-        log.msg("now restarting buildslave process..")
+        log.msg("now restarting worker process..")
 
-    return start.startSlave(basedir, quiet, config['nodaemon'])
+    return start.startWorker(basedir, quiet, config['nodaemon'])

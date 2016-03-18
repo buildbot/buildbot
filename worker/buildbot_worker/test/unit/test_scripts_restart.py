@@ -22,7 +22,7 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestRestart(misc.IsBuildslaveDirMixin,
+class TestRestart(misc.IsWorkerDirMixin,
                   misc.LoggingMixin,
                   unittest.TestCase):
 
@@ -34,59 +34,59 @@ class TestRestart(misc.IsBuildslaveDirMixin,
     def setUp(self):
         self.setUpLogging()
 
-        # patch start.startSlave() to do nothing
-        self.startSlave = mock.Mock()
-        self.patch(start, "startSlave", self.startSlave)
+        # patch start.startWorker() to do nothing
+        self.startWorker = mock.Mock()
+        self.patch(start, "startWorker", self.startWorker)
 
     def test_bad_basedir(self):
         """
         test calling restart() with invalid basedir path
         """
 
-        # patch isBuildslaveDir() to fail
-        self.setupUpIsBuildslaveDir(False)
+        # patch isWorkerDir() to fail
+        self.setupUpIsWorkerDir(False)
 
         # call startCommand() and check that correct exit code is returned
         self.assertEqual(restart.restart(self.config), 1,
                          "unexpected exit code")
 
-        # check that isBuildslaveDir was called with correct argument
-        self.isBuildslaveDir.assert_called_once_with(self.config["basedir"])
+        # check that isWorkerDir was called with correct argument
+        self.isWorkerDir.assert_called_once_with(self.config["basedir"])
 
-    def test_no_slave_running(self):
+    def test_no_worker_running(self):
         """
-        test calling restart() when no slave is running
+        test calling restart() when no worker is running
         """
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
-        # patch stopSlave() to raise an exception
-        mock_stopSlave = mock.Mock(side_effect=stop.SlaveNotRunning())
-        self.patch(stop, "stopSlave", mock_stopSlave)
+        # patch stopWorker() to raise an exception
+        mock_stopWorker = mock.Mock(side_effect=stop.WorkerNotRunning())
+        self.patch(stop, "stopWorker", mock_stopWorker)
 
-        # check that restart() calls startSlave() and outputs correct messages
+        # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
-        self.startSlave.assert_called_once_with(self.config["basedir"],
-                                                self.config["quiet"],
-                                                self.config["nodaemon"])
+        self.startWorker.assert_called_once_with(self.config["basedir"],
+                                                 self.config["quiet"],
+                                                 self.config["nodaemon"])
 
-        self.assertLogged("no old buildslave process found to stop")
-        self.assertLogged("now restarting buildslave process..")
+        self.assertLogged("no old worker process found to stop")
+        self.assertLogged("now restarting worker process..")
 
     def test_restart(self):
         """
-        test calling restart() when slave is running
+        test calling restart() when worker is running
         """
         # patch basedir check to always succeed
-        self.setupUpIsBuildslaveDir(True)
+        self.setupUpIsWorkerDir(True)
 
-        # patch stopSlave() to do nothing
-        mock_stopSlave = mock.Mock()
-        self.patch(stop, "stopSlave", mock_stopSlave)
+        # patch stopWorker() to do nothing
+        mock_stopWorker = mock.Mock()
+        self.patch(stop, "stopWorker", mock_stopWorker)
 
-        # check that restart() calls startSlave() and outputs correct messages
+        # check that restart() calls startWorker() and outputs correct messages
         restart.restart(self.config)
-        self.startSlave.assert_called_once_with(self.config["basedir"],
-                                                self.config["quiet"],
-                                                self.config["nodaemon"])
-        self.assertLogged("now restarting buildslave process..")
+        self.startWorker.assert_called_once_with(self.config["basedir"],
+                                                 self.config["quiet"],
+                                                 self.config["nodaemon"])
+        self.assertLogged("now restarting worker process..")

@@ -21,25 +21,25 @@ from twisted.python import log
 from buildbot_worker.scripts import base
 
 
-class SlaveNotRunning(Exception):
+class WorkerNotRunning(Exception):
 
     """
-    raised when trying to stop slave process that is not running
+    raised when trying to stop worker process that is not running
     """
 
 
-def stopSlave(basedir, quiet, signame="TERM"):
+def stopWorker(basedir, quiet, signame="TERM"):
     """
-    Stop slave process by sending it a signal.
+    Stop worker process by sending it a signal.
 
-    Using the specified basedir path, read slave process's pid file and
+    Using the specified basedir path, read worker process's pid file and
     try to terminate that process with specified signal.
 
-    @param basedir: buildslave's basedir path
+    @param basedir: worker's basedir path
     @param   quite: if False, don't print any messages to stdout
-    @param signame: signal to send to the slave process
+    @param signame: signal to send to the worker process
 
-    @raise SlaveNotRunning: if slave pid file is not found
+    @raise WorkerNotRunning: if worker pid file is not found
     """
     import signal
 
@@ -47,7 +47,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
     try:
         f = open("twistd.pid", "rt")
     except IOError:
-        raise SlaveNotRunning()
+        raise WorkerNotRunning()
 
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG" + signame)
@@ -65,7 +65,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                log.msg("buildslave process %d is dead" % pid)
+                log.msg("worker process %d is dead" % pid)
             return
         timer += 1
         time.sleep(1)
@@ -77,13 +77,13 @@ def stop(config, signame="TERM"):
     quiet = config['quiet']
     basedir = config['basedir']
 
-    if not base.isBuildslaveDir(basedir):
+    if not base.isWorkerDir(basedir):
         return 1
 
     try:
-        stopSlave(basedir, quiet, signame)
-    except SlaveNotRunning:
+        stopWorker(basedir, quiet, signame)
+    except WorkerNotRunning:
         if not quiet:
-            log.msg("buildslave not running")
+            log.msg("worker not running")
 
     return 0
