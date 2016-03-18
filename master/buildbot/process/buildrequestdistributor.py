@@ -1142,6 +1142,12 @@ class KatanaBuildRequestDistributor(service.Service):
         while 1:
             yield self.activity_lock.acquire()
 
+            self.active = self.running and (self.check_new_builds or self.check_resume_builds)
+            # bail out if we shouldn't keep looping
+            if not self.active:
+                self.activity_lock.release()
+                break
+
             # continue checking new builds if we have pending builders
             if self.check_new_builds:
                 nextBuilder = yield self._selectNextBuildRequest(queue=Queue.unclaimed,
@@ -1154,13 +1160,7 @@ class KatanaBuildRequestDistributor(service.Service):
                                                                        asyncFunc=self._maybeResumeBuildsOnBuilder)
                 self.check_resume_builds = nextResumeBuilder is not None
 
-            self.active = self.running and (self.check_new_builds or self.check_resume_builds)
-
             self.activity_lock.release()
-
-            # bail out if we shouldn't keep looping
-            if not self.active:
-                break
 
         self.timerLogFinished(msg="KatanaBuildRequestDistributor._procesBuildRequestsActivityLoop finished", timer=timer)
         self.katanaBuildChooser.initializeBreqCache()
