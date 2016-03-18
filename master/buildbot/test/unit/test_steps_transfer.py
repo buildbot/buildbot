@@ -14,13 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from cStringIO import StringIO
 import os
 import shutil
 import stat
 import tarfile
 import tempfile
-
-from cStringIO import StringIO
 
 from mock import Mock
 

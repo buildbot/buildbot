@@ -12,19 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import hmac
-import logging
-import re
-
-from hashlib import sha1
-
 from dateutil.parser import parse as dateparse
-
+from hashlib import sha1
+import hmac
 try:
     import json
     assert json
 except ImportError:
     import simplejson as json
+import logging
+import re
 
 from twisted.python import log
 

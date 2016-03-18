@@ -33,11 +33,10 @@ Basic architecture:
 """
 from future.utils import iteritems
 
+from collections import deque
+from collections import defaultdict
 import gc
 import os
-
-from collections import defaultdict
-from collections import deque
 # Make use of the resource module if we can
 try:
     import resource

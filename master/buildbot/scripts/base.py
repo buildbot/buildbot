@@ -15,12 +15,11 @@
 from __future__ import print_function
 
 import copy
+from contextlib import contextmanager
 import os
 import stat
 import sys
 import traceback
-
-from contextlib import contextmanager
 
 from twisted.internet import defer
 from twisted.python import runtime

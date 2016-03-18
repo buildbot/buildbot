@@ -23,10 +23,9 @@ from twisted.trial import unittest
 
 from zope.interface import implements
 
-import buildbot.plugins.db
-
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
+import buildbot.plugins.db
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning

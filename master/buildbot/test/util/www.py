@@ -15,10 +15,9 @@
 from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import iteritems
 
+from cStringIO import StringIO
 import cgi
 import os
-
-from cStringIO import StringIO
 from uuid import uuid1
 
 import mock

@@ -30,7 +30,6 @@ from zope.interface import implements
 
 import buildbot
 import buildbot.pbmanager
-
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches

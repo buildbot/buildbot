@@ -15,7 +15,6 @@
 import sys
 
 import twisted
-
 from twisted.internet import utils
 from twisted.trial import reporter
 from twisted.trial import unittest

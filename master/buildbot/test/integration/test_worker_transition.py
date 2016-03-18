@@ -23,8 +23,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
-import buildbot.worker
-
 from buildbot import config
 from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
@@ -32,7 +30,7 @@ from buildbot.test.util import dirs
 from buildbot.test.util import www
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import assertProducesWarnings
+import buildbot.worker
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
