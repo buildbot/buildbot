@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from StringIO import StringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 
 from mock import Mock
 
@@ -53,7 +55,7 @@ class FakeRequest(Mock):
             args = {}
 
         self.args = args
-        self.content = StringIO(content)
+        self.content = BytesIO(content)
         self.site = Mock()
         self.site.buildbot_service = Mock()
         self.uri = '/'

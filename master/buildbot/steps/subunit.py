@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from StringIO import StringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 from unittest import TestResult
 
 from buildbot.process import logobserver
@@ -42,7 +44,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
         self.PROGRESS_POP = PROGRESS_POP
-        self.warningio = StringIO()
+        self.warningio = BytesIO()
         self.protocol = TestProtocolServer(self, self.warningio)
         self.skips = []
         self.seen_tags = set()  # don't yet know what tags does in subunit

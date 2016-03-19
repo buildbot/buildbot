@@ -15,8 +15,9 @@
 from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import iteritems
 
-from cStringIO import StringIO
 import cgi
+# Check when finally switching to Python 3
+from io import BytesIO
 import json
 import os
 from uuid import uuid1
@@ -169,7 +170,7 @@ class WwwTestMixin(RequiresWwwMixin):
         id = id or self.UUID
         request = self.make_request(path)
         request.method = "POST"
-        request.content = StringIO(requestJson or json.dumps(
+        request.content = BytesIO(requestJson or json.dumps(
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
         request.input_headers = {'content-type': content_type}
         rv = rsrc.render(request)

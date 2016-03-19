@@ -14,7 +14,8 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-from StringIO import StringIO
+# Check when finally switching to Python 3
+from io import BytesIO
 
 import mock
 
@@ -125,7 +126,7 @@ class OldBuildEPYDoc(shell.ShellCommand):
         return defer.succeed(None)
 
     def createSummary(self, log):
-        for line in StringIO(log.getText()):
+        for line in BytesIO(log.getText()):
             # what we do with the line isn't important to the test
             assert line in ('some\n', 'output\n')
 

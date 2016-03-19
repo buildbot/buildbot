@@ -14,7 +14,8 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-import cStringIO
+# Check when finally switching to Python 3
+from io import BytesIO
 import os
 import re
 import sys
@@ -56,8 +57,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 f.write(contents)
 
         old_stdout, old_stderr = sys.stdout, sys.stderr
-        stdout = sys.stdout = cStringIO.StringIO()
-        stderr = sys.stderr = cStringIO.StringIO()
+        stdout = sys.stdout = BytesIO()
+        stderr = sys.stderr = BytesIO()
         try:
             checkconfig._loadConfig(
                 basedir='configdir', configFile="master.cfg", quiet=False)

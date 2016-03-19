@@ -12,8 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
 import getpass
+# Check when finally switching to Python 3
+from io import BytesIO
 import os
 import sys
 
@@ -837,7 +838,7 @@ class TestRun(unittest.TestCase):
 
     def test_run_bad(self):
         self.patch(sys, 'argv', ['buildbot', 'my', '-l'])
-        stdout = cStringIO.StringIO()
+        stdout = BytesIO()
         self.patch(sys, 'stdout', stdout)
         try:
             runner.run()

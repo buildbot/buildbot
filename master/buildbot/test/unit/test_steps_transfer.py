@@ -14,7 +14,8 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-from cStringIO import StringIO
+# Check when finally switching to Python 3
+from io import BytesIO
 import json
 import os
 import shutil
@@ -68,10 +69,10 @@ def downloadString(memoizer, timestamp=None):
 
 def uploadTarFile(filename, **members):
     def behavior(command):
-        f = StringIO()
+        f = BytesIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
         for name, content in iteritems(members):
-            archive.addfile(tarfile.TarInfo(name), StringIO(content))
+            archive.addfile(tarfile.TarInfo(name), BytesIO(content))
         writer = command.args['writer']
         writer.remote_write(f.getvalue())
         writer.remote_unpack()

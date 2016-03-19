@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 import os
 import sys
 
@@ -42,7 +44,7 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        self.stdout = cStringIO.StringIO()
+        self.stdout = BytesIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

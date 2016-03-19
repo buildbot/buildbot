@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 
 from twisted.trial import unittest
 
@@ -35,7 +37,7 @@ class Tests(unittest.TestCase):
         self.assertIsInstance(obj[1], TestClass)
 
     def test_load(self):
-        f = cStringIO.StringIO(self.simplePickle)
+        f = BytesIO(self.simplePickle)
         obj = pickle.load(f)
         self.assertSimplePickleContents(obj)
 

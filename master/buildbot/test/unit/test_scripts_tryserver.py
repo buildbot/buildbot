@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from cStringIO import StringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 import os
 import sys
 
@@ -31,7 +33,7 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
 
     def test_trycmd(self):
         config = dict(jobdir='jobdir')
-        inputfile = StringIO('this is my try job')
+        inputfile = BytesIO('this is my try job')
         self.patch(sys, 'stdin', inputfile)
 
         rc = tryserver.tryserver(config)

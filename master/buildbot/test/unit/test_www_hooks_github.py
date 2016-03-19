@@ -15,7 +15,8 @@
 from calendar import timegm
 from hashlib import sha1
 import hmac
-from StringIO import StringIO
+# Check when finally switching to Python 3
+from io import BytesIO
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -286,7 +287,7 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     }
 
     if isinstance(payload, str):
-        request.content = StringIO(payload)
+        request.content = BytesIO(payload)
         request.received_headers[_HEADER_CT] = _CT_JSON
 
         if _secret is not None:
