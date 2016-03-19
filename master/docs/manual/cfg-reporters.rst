@@ -781,40 +781,26 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. bb:reporter:: GitHubStatus
 
-GitHubStatus (not migrated)
+GitHubStatus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-   Not yet migrated to the new Data API based reporter API.
 
 
 .. @cindex GitHubStatus
-.. py:class:: buildbot.status.github.GitHubStatus
+.. py:class:: buildbot.reporter.github.GitHubStatus
 
 ::
 
-    from buildbot.plugins import status, util
+    from buildbot.plugins import reporter, util
 
-    repoOwner = Interpolate("%(prop:github_repo_owner)s")
-    repoName = Interpolate("%(prop:github_repo_name)s")
-    sha = Interpolate("%(src::revision)s")
     context = Interpolate("buildbot/%(prop:buildername)s")
     gs = status.GitHubStatus(token='githubAPIToken',
-                             repoOwner=repoOwner,
-                             repoName=repoName,
-                             sha=sha,
                              context=context,
                              startDescription='Build started.',
                              endDescription='Build done.')
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
         workernames=['worker1'],
-        factory=BuilderFactory(),
-        properties={
-            "github_repo_owner": "buildbot",
-            "github_repo_name": "bbtools",
-            })
+        factory=BuilderFactory())
     c['builders'].append(buildbot_bbtools)
     c['services'].append(gs)
 
@@ -825,15 +811,6 @@ It requires `txgithub <https://pypi.python.org/pypi/txgithub>` package to allow 
 It is configured with at least a GitHub API token, repoOwner and repoName arguments.
 
 You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
-
-`repoOwner`, `repoName` are used to inform the plugin where to send status for build.
-This allow using a single :class:`GitHubStatus` for multiple projects.
-`repoOwner`, `repoName` can be passes as a static `string` (for single project) or :class:`Interpolate` for dynamic substitution in multiple project.
-
-`sha` argument is use to define the commit SHA for which to send the status.
-By default `sha` is defined as: `%(src::revision)s`.
-
-In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty string, the plugin will skip sending the status.
 
 The `context` argument is passed to GitHub to differentiate between statuses. A static string can be passed or :class:`Interpolate` for dynamic substitution.
 The default context is `buildbot/%(prop:buildername)s`.
