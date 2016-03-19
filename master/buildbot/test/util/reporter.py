@@ -45,7 +45,7 @@ class ReporterTestMixin(object):
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
-            fakedb.SourceStamp(id=234),
+            fakedb.SourceStamp(id=234, project=self.TEST_PROJECT, revision=self.TEST_REVISION),
             fakedb.Change(changeid=13, branch=u'master', revision=u'9283', author='me@foo',
                           repository=u'https://...', codebase=u'cbgerrit',
                           project=u'world-domination', sourcestampid=234),

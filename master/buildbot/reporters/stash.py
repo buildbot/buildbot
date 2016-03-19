@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from buildbot.reporters import http
-from buildbot.reporters import utils
 
 from buildbot.process.results import SUCCESS
 from twisted.internet import defer
@@ -26,14 +25,16 @@ STASH_SUCCESSFUL = 'SUCCESSFUL'
 STASH_FAILED = 'FAILED'
 
 
-class StashStatusPush(http.HttpStatusPush):
+class StashStatusPush(http.HttpStatusPushBase):
     name = "StashStatusPush"
 
-    def __init__(self, base_url, user, password):
-        http.HttpStatusPush.__init__(self, base_url, user, password)
+    @defer.inlineCallbacks
+    def reconfigService(self, base_url, user, password, **kwargs):
+        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
         if not base_url.endswith('/'):
             base_url += '/'
         self.base_url = '%srest/build-status/1.0/commits/' % (base_url, )
+        self.auth = (user, password)
 
     @defer.inlineCallbacks
     def send(self, build):
@@ -42,12 +43,10 @@ class StashStatusPush(http.HttpStatusPush):
             status = STASH_SUCCESSFUL if results == SUCCESS else STASH_FAILED
         else:
             status = STASH_INPROGRESS
-        yield utils.getDetailsForBuild(self.master, build)
-        build_url = utils.getURLForBuild(self.master, build['builderid'], build['number'])
         for sourcestamp in build['buildset']['sourcestamps']:
             sha = sourcestamp['revision']
-            body = {'state': status, 'key': build['builder']['name'], 'url': build_url}
+            body = {'state': status, 'key': build['builder']['name'], 'url': build['url']}
             stash_uri = self.base_url + sha
             response = yield self.session.post(stash_uri, body, auth=self.auth)
             if response.status != 200:
-                log.msg("%s: unable to upload stash status: %s", response.status, response.content)
+                log.msg("%s: unable to upload stash status: %s" % (response.status, response.content))

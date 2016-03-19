@@ -113,6 +113,8 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
         build['builder'] = buildersbyid[build['builderid']]
         build['buildset'] = buildset
+        build['url'] = getURLForBuild(master, build['builderid'], build['number'])
+
         if wantProperties:
             build['properties'] = properties
 

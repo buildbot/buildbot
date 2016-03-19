@@ -27,24 +27,21 @@ except ImportError:
     txrequests = None
 
 
-class HttpStatusPush(service.BuildbotService):
-    name = "HttpStatusPush"
+class HttpStatusPushBase(service.BuildbotService):
+    neededDetails = dict()
 
-    def __init__(self, serverUrl, user, password):
-        service.BuildbotService.__init__(self)
-        self.serverUrl = serverUrl
-        self.auth = (user, password)
+    def checkConfig(self, *args, **kwargs):
+        service.BuildbotService.checkConfig(self)
         if txrequests is None:
             config.error("Please install txrequests and requests to use %s (pip install txrequest)" %
                          (self.__class__,))
+        if not isinstance(kwargs.get('builders'), (type(None), list)):
+            config.error("builders must be a list or None")
 
     @defer.inlineCallbacks
-    def send(self, build):
-        yield utils.getDetailsForBuild(self.master, build)
-        build_url = utils.getURLForBuild(self.master, build['builderid'], build['number'])
-        response = yield self.session.post(self.serverUrl, {'build': build, 'url': build_url}, auth=self.auth)
-        if response.status != 200:
-            log.msg("%s: unable to upload stash status: %s", response.status, response.content)
+    def reconfigService(self, builders=None):
+        yield service.BuildbotService.reconfigService(self)
+        self.builders = builders
 
     def sessionFactory(self):
         """txrequests mocking endpoint"""
@@ -70,7 +67,39 @@ class HttpStatusPush(service.BuildbotService):
         self.session.close()
 
     def buildStarted(self, key, build):
-        return self.send(build)
+        return self.getMoreInfoAndSend(build)
 
     def buildFinished(self, key, build):
-        return self.send(build)
+        return self.getMoreInfoAndSend(build)
+
+    def filterBuilds(self, build):
+        if self.builders is not None:
+            return build['builder']['name'] in self.builders
+        return True
+
+    @defer.inlineCallbacks
+    def getMoreInfoAndSend(self, build):
+        yield utils.getDetailsForBuild(self.master, build, **self.neededDetails)
+        if self.filterBuilds(build):
+            yield self.send(build)
+
+
+class HttpStatusPush(HttpStatusPushBase):
+    name = "HttpStatusPush"
+
+    def checkConfig(self, serverUrl, user, password, **kwargs):
+        HttpStatusPushBase.checkConfig(self, **kwargs)
+        if txrequests is None:
+            config.error("Please install txrequests and requests to use %s (pip install txrequest)" %
+                         (self.__class__,))
+
+    def reconfigService(self, serverUrl, user, password, **kwargs):
+        HttpStatusPushBase.reconfigService(self, **kwargs)
+        self.serverUrl = serverUrl
+        self.auth = (user, password)
+
+    @defer.inlineCallbacks
+    def send(self, build):
+        response = yield self.session.post(self.serverUrl, build, auth=self.auth)
+        if response.status != 200:
+            log.msg("%s: unable to upload status: %s", response.status, response.content)

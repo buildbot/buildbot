@@ -44,6 +44,7 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
     def tearDown(self):
         yield self.sp.stopService()
         self.assertEqual(self.sp.session.close.call_count, 1)
+        config._errors = None
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults):
@@ -63,12 +64,12 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         # we make sure proper calls to txrequests have been made
         self.assertEqual(
             self.sp.session.post.mock_calls,
-            [call(u'serv/rest/build-status/1.0/commits/abcd',
+            [call(u'serv/rest/build-status/1.0/commits/d34db33fd43db33f',
                   {'url': 'http://localhost:8080/#builders/79/builds/0',
                    'state': 'INPROGRESS', 'key': u'Builder0'}, auth=('username', 'passwd')),
-             call(u'serv/rest/build-status/1.0/commits/abcd',
+             call(u'serv/rest/build-status/1.0/commits/d34db33fd43db33f',
                   {'url': 'http://localhost:8080/#builders/79/builds/0',
                    'state': 'SUCCESSFUL', 'key': u'Builder0'}, auth=('username', 'passwd')),
-             call(u'serv/rest/build-status/1.0/commits/abcd',
+             call(u'serv/rest/build-status/1.0/commits/d34db33fd43db33f',
                   {'url': 'http://localhost:8080/#builders/79/builds/0',
                    'state': 'FAILED', 'key': u'Builder0'}, auth=('username', 'passwd'))])

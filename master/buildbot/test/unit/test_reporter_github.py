@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 from buildbot import config
+from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.http import HttpStatusPush
+from buildbot.reporters.github import GithubStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
@@ -25,34 +26,22 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 
-class BuildLookAlike(object):
+class TestGithubStatusPush(unittest.TestCase, ReporterTestMixin):
+    # project must be in the form <owner>/<project>
+    TEST_PROJECT = u'buildbot/buildbot'
 
-    """ a class whose instances compares to any build dict that this reporter is supposed to send out"""
-
-    def __eq__(self, b):
-        return sorted(b.keys()) == [
-            'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
-            'buildset', 'complete', 'complete_at', 'masterid', 'number',
-            'properties', 'results', 'started_at', 'state_string', 'url', 'workerid']
-
-    def __repr__(self):
-        return "{ any build }"
-
-
-class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
-
+    @defer.inlineCallbacks
     def setUp(self):
         # ignore config error if txrequests is not installed
         config._errors = Mock()
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-    @defer.inlineCallbacks
-    def createReporter(self, **kwargs):
-        self.sp = sp = HttpStatusPush("serv", "username", "passwd", **kwargs)
+        self.sp = sp = GithubStatusPush('token')
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
         yield sp.startService()
+        sp.session.headers = {}
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -68,40 +57,29 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def test_basic(self):
-        yield self.createReporter()
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
         # we make sure proper calls to txrequests have been made
-        #
         self.assertEqual(
-            self.sp.session.post.mock_calls,
-            [call(u'serv',
-                  BuildLookAlike(), auth=('username', 'passwd')),
-             call(u'serv',
-                  BuildLookAlike(), auth=('username', 'passwd'))])
-
-    @defer.inlineCallbacks
-    def test_filtering(self):
-        yield self.createReporter(builders=['foo'])
-        build = yield self.setupBuildResults(SUCCESS)
-        self.sp.buildFinished(("build", 20, "finished"), build)
-        self.assertEqual(
-            self.sp.session.post.mock_calls, [])
-
-    @defer.inlineCallbacks
-    def test_filteringPass(self):
-        yield self.createReporter(builders=['Builder0'])
-        build = yield self.setupBuildResults(SUCCESS)
-        self.sp.buildFinished(("build", 20, "finished"), build)
-        self.assertEqual(
-            self.sp.session.post.mock_calls,
-            [call(u'serv',
-                  BuildLookAlike(), auth=('username', 'passwd'))])
-
-    @defer.inlineCallbacks
-    def test_builderTypeCheck(self):
-        yield self.createReporter(builders='Builder0')
-        config._errors.addError.assert_any_call("builders must be a list or None")
+            self.sp.session.post.mock_calls, [
+                call(
+                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f', {
+                        'state': 'pending',
+                        'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                        'description': 'Build started.', 'context': 'buildbot/'}),
+                call(
+                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f', {
+                        'state': 'success',
+                        'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                        'description': 'Build done.', 'context': 'buildbot/'}),
+                call(
+                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f', {
+                        'state': 'failure',
+                        'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                        'description': 'Build done.', 'context': 'buildbot/'}),
+            ])

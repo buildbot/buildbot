@@ -29,6 +29,7 @@ Features
 * MySQL InnoDB tables are now supported.
 * :class:`~buildbot.reporters.http.HttpStatusPush` has been ported to reporter API.
 * :class:`~buildbot.reporters.stash.StashStatusPush` has been ported to reporter API.
+* :class:`~buildbot.reporters.github.GithubStatusPush` has been ported to reporter API.
 
 Fixes
 ~~~~~
