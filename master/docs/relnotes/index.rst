@@ -44,6 +44,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * Deprecated ``workdir`` was removed, ``builddir`` property should be used instead.
 * To support MySQL InnoDB, the size of six VARCHAR(256) columns ``changes.(author, branch, category, name); object_state.name; user.identifier`` was reduced to VARCHAR(255).
 
+* :class:`~buildbot.status.status_push.StatusPush` has been removed from buildbot.
+    please use the much simpler :class:`~buildbot.reporters.http.HttpStatusPush` instead.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
