@@ -80,8 +80,8 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
         else:
             # this special case is useful and implemented by the dbapi
             # so give it a boost
-            if all((resultSpec.limit, resultSpec.offset is None,
-                    resultSpec.order == ['-changeid'])):
+            if (resultSpec.order == ['-changeid'] and resultSpec.limit and
+                    resultSpec.offset is None):
                 changes = yield self.master.db.changes.getRecentChanges(resultSpec.limit)
             else:
                 changes = yield self.master.db.changes.getChanges()
