@@ -17,6 +17,7 @@ from future.utils import iteritems
 
 from cStringIO import StringIO
 import cgi
+import json
 import os
 from uuid import uuid1
 
@@ -28,7 +29,6 @@ from twisted.internet import defer
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
-from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
 

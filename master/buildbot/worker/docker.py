@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 
 from io import BytesIO
+import json
 import socket
 
 try:
@@ -39,7 +40,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util import json
 from buildbot.worker import AbstractLatentWorker
 
 

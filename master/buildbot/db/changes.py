@@ -19,6 +19,8 @@ Support for changes in the database
 from future.utils import iteritems
 from future.utils import itervalues
 
+import json
+
 import sqlalchemy as sa
 
 from twisted.internet import defer
@@ -28,7 +30,6 @@ from twisted.python import log
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class ChDict(dict):

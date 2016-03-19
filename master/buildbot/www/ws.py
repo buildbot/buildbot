@@ -14,6 +14,8 @@
 # Copyright  Team Members
 from future.utils import itervalues
 
+import json
+
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
@@ -21,7 +23,6 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import json
 from buildbot.util import toJson
 
 

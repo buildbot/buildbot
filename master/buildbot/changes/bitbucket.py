@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import json
 import time
 from datetime import datetime
 
@@ -25,7 +26,6 @@ from buildbot.util import ascii2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):

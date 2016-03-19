@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import cStringIO as StringIO
+import json
 import os
 import shutil
 import sys
@@ -31,7 +32,6 @@ from twisted.trial import unittest
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
-from buildbot.util import json
 
 
 class TryBase(unittest.TestCase):

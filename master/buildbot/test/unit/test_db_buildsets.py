@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import datetime
+import json
 
 import mock
 
@@ -29,7 +30,6 @@ from buildbot.test.util import validation
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class Tests(interfaces.InterfaceTests):

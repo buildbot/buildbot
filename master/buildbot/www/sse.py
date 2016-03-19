@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
+import json
 import uuid
 
 from twisted.python import log
@@ -21,7 +22,6 @@ from twisted.web import resource
 from twisted.web import server
 
 from buildbot.data.exceptions import InvalidPathError
-from buildbot.util import json
 from buildbot.util import toJson
 
 

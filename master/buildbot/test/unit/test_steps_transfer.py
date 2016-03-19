@@ -15,6 +15,7 @@
 from future.utils import iteritems
 
 from cStringIO import StringIO
+import json
 import os
 import shutil
 import stat
@@ -38,7 +39,6 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.util import json
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
