@@ -5,13 +5,6 @@
 Reporters
 ---------
 
-.. warning::
-
-   Report targets are being migrated to Data API and not all status targets had been ported.
-   These have an explicit warning before their description and are marked as such in the section title (to make it easier to distinguish them in the table of contents).
-   As the old status targets are migrated to the new API, the warnings and markings will be removed.
-   Report targets that are not migrated will *not* work!
-   (Remember this is a beta version.)
 
 .. contents::
     :depth: 2
@@ -760,12 +753,21 @@ It requires `txrequests`_ package to allow interaction with http server.
    It is indeed generated using data api.
 
 .. py:class:: HttpStatusPush(
-    serverUrl, user, password, builders = None)
+    serverUrl, user, password, builders = None,
+    wantProperties=False, wantSteps=False,
+    wantPreviousBuild=False, wantLogs=False
+    )
 
     :param string serverUrl: the url where to do the http post
     :param string user: the BasicAuth user to post as
     :param string password: the BasicAuth user's password
     :param list builders: only send update for specified builders
+    :param boolean wantProperties: include 'properties' in the build dictionary
+    :param boolean wantSteps: include 'steps' in the build dictionary
+    :param boolean wantLogs: include 'logs' in the steps dictionaries.
+        This needs wantSteps=True.
+        This dumps the *full* content of logs.
+    :param boolean wantPreviousBuild: include 'prev_build' in the build dictionary
 
 Json object spec
 ----------------

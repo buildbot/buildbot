@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 
 from buildbot import config
 from buildbot.reporters import utils
@@ -97,6 +99,9 @@ class HttpStatusPush(HttpStatusPushBase):
         HttpStatusPushBase.reconfigService(self, **kwargs)
         self.serverUrl = serverUrl
         self.auth = (user, password)
+        for k, v in iteritems(kwargs):
+            if k.startswith("want"):
+                self.neededDetails[k] = v
 
     @defer.inlineCallbacks
     def send(self, build):
