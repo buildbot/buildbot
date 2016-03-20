@@ -23,6 +23,8 @@ Features
 * :class:`GitPoller` now has a ``buildPushesWithNoCommits`` option to allow the rebuild of already known commits on new branches.
 * Add GitLab authentication plugin for web UI. See :class:`buildbot.www.oauth2.GitLabAuth`.
 * :class:`DockerLatentWorker` now has a ``hostconfig`` parameter that can be used to setup host configuration when creating a new container.
+* :bb:step:`CMake` build step is added.
+  It provides a convenience interface to `CMake <https://cmake.org/cmake/help/latest/>`_ build system.
 
 Fixes
 ~~~~~
