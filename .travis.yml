@@ -76,6 +76,10 @@ matrix:
 #    - python: "3.4"
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
+    # Configuration to run `python setup.py test` to check this test runner.
+    - python: "2.7"
+      env: TESTS=setuppy_test
+
 # Dependencies installation commands
 install:
   # codecov is the interface to codecov.io; see after_success
@@ -154,6 +158,9 @@ script:
   - "[ $TESTS != lint ] || make pylint"
   - "[ $TESTS != lint ] || make flake8"
   - "[ $TESTS != docs ] || make docs"
+  - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
+  - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"
+  - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
   - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
 notifications:
