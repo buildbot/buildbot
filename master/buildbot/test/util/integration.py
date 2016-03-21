@@ -29,7 +29,10 @@ from buildbot.master import BuildMaster
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
 from buildbot.test.util import dirs
-from buildslave.bot import BuildSlave
+try:
+    from buildslave.bot import BuildSlave
+except ImportError:
+    BuildSlave = None
 
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
@@ -41,6 +44,9 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     # in all cases, tearDown that stops the master defined in self.master
     # will be called.
     testCasesHandleTheirSetup = False
+
+    if BuildSlave is None:
+        skip = "buildbot-slave package is not installed"
 
     @defer.inlineCallbacks
     def setupConfig(self, configFunc):
