@@ -96,7 +96,7 @@ install:
   # Install boto and moto for running EC2 tests
   # Install txgithub to run buildbot.status.github module tests
   - |
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint ] || \
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
                   -e master[tls] \
                   -e slave \
