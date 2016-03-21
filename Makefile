@@ -36,7 +36,7 @@ frontend:
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests:
 	$(PIP) install -e pkg
-	$(PIP) install mock wheel
+	$(PIP) install mock wheel twisted
 	trial pkg/test_buildbot_pkg.py
 
 prebuilt_frontend:
