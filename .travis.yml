@@ -123,10 +123,6 @@ install:
                   future
 
   # Run additional tests only in latest configuration
-  # txgithub requires Twisted >= 12.3.0, so we install it only when we test the
-  # latest Twisted to avoid unintended upgrades.
-  # deps of txgithub cryptography requires python 2.7, so we only install txgithub for 2.7
-  - "[ $TWISTED != latest ] || [ $TRAVIS_PYTHON_VERSION != 2.7 ] || pip install txgithub"
   # Astroid 1.3.0 dropped Python-2.6 spuport
   - "[ $TRAVIS_PYTHON_VERSION != 2.7 ] || pip install 'astroid<1.3.0'"
 
