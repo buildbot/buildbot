@@ -96,7 +96,7 @@ install:
   # Install boto and moto for running EC2 tests
   # Install txgithub to run buildbot.status.github module tests
   - |
-      [ $TESTS = py3 ] || \
+      [ $TESTS != trial ] || \
       pip install -e pkg \
                   -e master[tls] \
                   -e slave \
@@ -112,7 +112,7 @@ install:
                   moto \
                   txgithub
   # install buildbot_www from pip in order to run the www tests
-  - "[ $TESTS = py3 ] || pip install --pre buildbot_www"
+  - "[ $TESTS != trial ] || pip install --pre buildbot_www"
 
 
   # for python 3 we dont install everything yet..
