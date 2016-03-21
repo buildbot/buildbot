@@ -96,7 +96,7 @@ class TestStopOptions(BaseDirTestsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.StopOptions()
-        self.assertIn('buildslave stop', opts.getSynopsis())
+        self.assertIn('buildbot-worker stop', opts.getSynopsis())
 
 
 class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
@@ -108,7 +108,7 @@ class TestStartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.StartOptions()
-        self.assertIn('buildslave start', opts.getSynopsis())
+        self.assertIn('buildbot-worker start', opts.getSynopsis())
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
@@ -126,7 +126,7 @@ class TestRestartOptions(OptionsMixin, BaseDirTestsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.RestartOptions()
-        self.assertIn('buildslave restart', opts.getSynopsis())
+        self.assertIn('buildbot-worker restart', opts.getSynopsis())
 
     def test_all_args(self):
         opts = self.parse("--quiet", "--nodaemon", self.MY_BASEDIR)
@@ -144,7 +144,7 @@ class TestUpgradeWorkerOptions(BaseDirTestsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.UpgradeWorkerOptions()
-        self.assertIn('buildslave upgrade-slave', opts.getSynopsis())
+        self.assertIn('buildbot-worker upgrade-slave', opts.getSynopsis())
 
 
 class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
@@ -167,7 +167,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.CreateWorkerOptions()
-        self.assertIn('buildslave create-slave', opts.getSynopsis())
+        self.assertIn('buildbot-worker create-slave', opts.getSynopsis())
 
     def test_min_args(self):
 

@@ -73,14 +73,14 @@ class StartOptions(MakerBase):
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave start [<basedir>]"
+        return "Usage:    buildbot-worker start [<basedir>]"
 
 
 class StopOptions(MakerBase):
     subcommandFunction = "buildbot_worker.scripts.stop.stop"
 
     def getSynopsis(self):
-        return "Usage:    buildslave stop [<basedir>]"
+        return "Usage:    buildbot-worker stop [<basedir>]"
 
 
 class RestartOptions(MakerBase):
@@ -91,7 +91,7 @@ class RestartOptions(MakerBase):
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave restart [<basedir>]"
+        return "Usage:    buildbot-worker restart [<basedir>]"
 
 
 class UpgradeWorkerOptions(MakerBase):
@@ -102,7 +102,7 @@ class UpgradeWorkerOptions(MakerBase):
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave upgrade-slave [<basedir>]"
+        return "Usage:    buildbot-worker upgrade-slave [<basedir>]"
 
     longdesc = """
     This command takes an existing worker working directory and
@@ -184,7 +184,7 @@ class CreateWorkerOptions(MakerBase):
         return master, port
 
     def getSynopsis(self):
-        return "Usage:    buildslave create-slave " \
+        return "Usage:    buildbot-worker create-slave " \
             "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
@@ -228,7 +228,7 @@ class CreateWorkerOptions(MakerBase):
 
 
 class Options(usage.Options):
-    synopsis = "Usage:    buildslave <command> [command options]"
+    synopsis = "Usage:    buildbot-worker <command> [command options]"
 
     subCommands = [
         # the following are all admin commands
