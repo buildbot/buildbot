@@ -78,7 +78,7 @@ matrix:
 
     # Configuration to run `python setup.py test` to check this test runner.
     - python: "2.7"
-      env: TESTS=setuppy_test
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
 # Dependencies installation commands
 install:
@@ -96,7 +96,7 @@ install:
   # Install boto and moto for running EC2 tests
   # Install txgithub to run buildbot.status.github module tests
   - |
-      [ $TESTS != trial ] || \
+      [ $TESTS != trial -a $TESTS != coverage ] || \
       pip install -e pkg \
                   -e master[tls] \
                   -e slave \
@@ -112,7 +112,7 @@ install:
                   moto \
                   txgithub
   # install buildbot_www from pip in order to run the www tests
-  - "[ $TESTS != trial ] || pip install --pre buildbot_www"
+  - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
 
 
   # for python 3 we dont install everything yet..
