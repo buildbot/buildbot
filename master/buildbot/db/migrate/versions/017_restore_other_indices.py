@@ -60,9 +60,10 @@ def upgrade(migrate_engine):
     users = sa.Table('users', metadata, autoload=True)
 
     dialect = migrate_engine.dialect.name
-    if dialect in ('sqlite', 'postgresql'):
-        migrate_engine.execute("DROP INDEX users_identifier")
-    elif dialect == 'mysql':
-        migrate_engine.execute("DROP INDEX users_identifier ON users")
+    with migrate_engine.connect() as conn:
+        if dialect in ('sqlite', 'postgresql'):
+            conn.execute("DROP INDEX users_identifier")
+        elif dialect == 'mysql':
+            conn.execute("DROP INDEX users_identifier ON users")
 
     sa.Index('users_identifier', users.c.identifier, unique=True).create()

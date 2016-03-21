@@ -27,9 +27,9 @@ class RunMaster(dirs.DirsMixin, unittest.TestCase):
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
         self.configfile = os.path.join(self.basedir, 'master.cfg')
-        open(self.configfile, "w").write(
-            'from buildbot.test.integration.test_master \\\n'
-            'import BuildmasterConfig\n')
+        with open(self.configfile, "w") as f:
+            f.write('from buildbot.test.integration.test_master \\\n '
+                    'import BuildmasterConfig\n')
 
     def tearDown(self):
         return self.tearDownDirs()
