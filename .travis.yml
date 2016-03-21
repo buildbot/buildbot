@@ -134,6 +134,13 @@ install:
   # Install docs dependencies for running the tests
   - "[ $TESTS != docs ] || pip install -e ./master[docs]"
 
+  # Check that Twisted is not installed during previous steps on setuppy_test configuration.
+  # In setuppy_test all dependencies should be installed by setuptools during tests.
+  - "[ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)"
+  # Automatic installation of Twisted during `setup.py test` fails due to:
+  # https://bitbucket.org/pypa/setuptools/issues/500/when-directorysandbox-is-active-isinstance
+  - "[ $TESTS != setuppy_test ] || pip install Twisted"
+
 before_script:
   # create real MySQL database for tests
   - mysql -e 'create database bbtest;'
