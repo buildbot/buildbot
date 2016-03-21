@@ -25,6 +25,8 @@ def fakeMasterForHooks():
     master.addedChanges = []
 
     def addChange(**kwargs):
+        if 'isdir' in kwargs or 'is_dir' in kwargs:
+            return defer.fail(AttributeError('isdir/is_dir is not accepted'))
         master.addedChanges.append(kwargs)
         return defer.succeed(Mock())
     master.addChange = addChange

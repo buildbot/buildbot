@@ -63,7 +63,6 @@ def getChanges(request, options=None):
     if not author:
         author = firstOrNothing(args.get('who'))
     comments = firstOrNothing(args.get('comments')).decode('utf-8')
-    isdir = firstOrNothing(args.get('isdir', 0))
     branch = firstOrNothing(args.get('branch'))
     category = firstOrNothing(args.get('category'))
     revlink = firstOrNothing(args.get('revlink'))
@@ -71,7 +70,7 @@ def getChanges(request, options=None):
     project = firstOrNothing(args.get('project'))
 
     chdict = dict(author=author, files=files, comments=comments,
-                  isdir=isdir, revision=revision, when=when,
+                  revision=revision, when=when,
                   branch=branch, category=category, revlink=revlink,
                   properties=properties, repository=repository,
                   project=project)
