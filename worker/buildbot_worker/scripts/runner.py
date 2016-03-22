@@ -94,22 +94,6 @@ class RestartOptions(MakerBase):
         return "Usage:    buildbot-worker restart [<basedir>]"
 
 
-class UpgradeWorkerOptions(MakerBase):
-    subcommandFunction = "buildbot_worker.scripts.upgrade_worker.upgradeWorker"
-    optFlags = [
-    ]
-    optParameters = [
-    ]
-
-    def getSynopsis(self):
-        return "Usage:    buildbot-worker upgrade-slave [<basedir>]"
-
-    longdesc = """
-    This command takes an existing worker working directory and
-    upgrades it to the current version.
-    """
-
-
 class CreateWorkerOptions(MakerBase):
     subcommandFunction = "buildbot_worker.scripts.create_worker.createWorker"
     optFlags = [
@@ -234,8 +218,6 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-slave', None, CreateWorkerOptions,
          "Create and populate a directory for a new worker"],
-        ['upgrade-slave', None, UpgradeWorkerOptions,
-         "Upgrade an existing worker directory for the current version"],
         ['start', None, StartOptions, "Start a worker"],
         ['stop', None, StopOptions, "Stop a worker"],
         ['restart', None, RestartOptions,
