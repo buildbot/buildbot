@@ -25,7 +25,7 @@ from twisted.trial import unittest
 class TestLocalWorker(unittest.TestCase):
 
     try:
-        from buildslave.bot import LocalBuildSlave as _
+        from buildslave.bot import LocalBuildSlave as _  # noqa
     except ImportError:
         skip = "buildbot-slave package is not installed"
 
