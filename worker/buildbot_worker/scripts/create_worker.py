@@ -34,7 +34,7 @@ if basedir == '.':
 
 # note: this line is matched against to check that this is a worker
 # directory; do not edit it.
-application = service.Application('buildslave')
+application = service.Application('buildbot-worker')
 """,
                      """
 try:

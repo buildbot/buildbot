@@ -30,7 +30,7 @@ def isWorkerDir(dir):
                     (buildbot_tac, exception.strerror))
         return False
 
-    if "Application('buildslave')" not in contents:
+    if "Application('buildbot-worker')" not in contents:
         print_error("unexpected content in '%s'" % buildbot_tac)
         return False
 

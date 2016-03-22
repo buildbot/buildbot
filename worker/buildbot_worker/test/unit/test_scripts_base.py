@@ -95,7 +95,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
         """Test checking valid worker directory."""
 
         # patch open() to return file with valid worker tac contents
-        self.setUpOpen("Application('buildslave')")
+        self.setUpOpen("Application('buildbot-worker')")
 
         # check that isWorkerDir() flags directory as good
         self.assertTrue(base.isWorkerDir("testdir"))
