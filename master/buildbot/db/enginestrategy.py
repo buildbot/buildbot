@@ -116,8 +116,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         def connect_listener_enable_fk(connection, record):
             # fk must be enabled for all connections
             if not getattr(engine, "fk_disabled", False):
-                return  # http://trac.buildbot.net/ticket/3490#ticket
-                # connection.execute('pragma foreign_keys=ON')
+                connection.execute('pragma foreign_keys=ON')
 
         sa.event.listen(engine.pool, 'connect', connect_listener_enable_fk)
         # try to enable WAL logging
