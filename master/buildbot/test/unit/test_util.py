@@ -54,6 +54,9 @@ class formatInterval(unittest.TestCase):
     def test_mixed(self):
         self.assertEqual(util.formatInterval(7392), "2 hrs, 3 mins, 12 secs")
 
+    def test_hours_seconds(self):
+        self.assertEqual(util.formatInterval(3645.2678), "1 hrs, 45.27 secs")
+
 class safeTranslate(unittest.TestCase):
 
     def test_str_good(self):
