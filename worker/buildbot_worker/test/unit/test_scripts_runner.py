@@ -155,7 +155,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     def test_synopsis(self):
         opts = runner.CreateWorkerOptions()
-        self.assertIn('buildbot-worker create-slave', opts.getSynopsis())
+        self.assertIn('buildbot-worker create-worker', opts.getSynopsis())
 
     def test_min_args(self):
 

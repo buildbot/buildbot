@@ -168,7 +168,7 @@ class CreateWorkerOptions(MakerBase):
         return master, port
 
     def getSynopsis(self):
-        return "Usage:    buildbot-worker create-slave " \
+        return "Usage:    buildbot-worker create-worker " \
             "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
@@ -216,7 +216,7 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, CreateWorkerOptions,
+        ['create-worker', None, CreateWorkerOptions,
          "Create and populate a directory for a new worker"],
         ['start', None, StartOptions, "Start a worker"],
         ['stop', None, StopOptions, "Stop a worker"],
