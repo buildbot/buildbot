@@ -1,4 +1,4 @@
-include MANIFEST.in README NEWS COPYING UPGRADING
+include MANIFEST.in README COPYING UPGRADING
 include bin/buildbot-worker
 include docs/buildbot-worker.1
 
