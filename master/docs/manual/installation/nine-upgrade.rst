@@ -174,6 +174,8 @@ The default master.cfg file contains some new changes, which you should look ove
 
 * ``c['protocols'] = {'pb': {'port': 9989}}`` (the default port used by the workers)
 * Waterfall View: requires installation (``pip install buildbot-waterfall-view``) and configuration (``c['www'] = { ..., 'plugins': {'waterfall_view': {} }``).
+* the ``nextWorker`` callable now takes three arguments, instead of
+  two. For details, see :ref:`Builder-Configuration`.
 
 Build History
 -------------
