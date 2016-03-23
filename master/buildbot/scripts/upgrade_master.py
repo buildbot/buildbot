@@ -107,32 +107,32 @@ def upgradeDatabase(config, master_cfg):
 
 
 @in_reactor
-@defer.inlineCallbacks
 def upgradeMaster(config, _noMonkey=False):
     if not _noMonkey:  # pragma: no cover
         monkeypatches.patch_all()
 
     if not base.checkBasedir(config):
-        defer.returnValue(1)
-        return
+        return defer.succeed(1)
 
     os.chdir(config['basedir'])
 
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
     except (SyntaxError, ImportError) as e:
-        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'])
-        print(e)
-
-        defer.returnValue(1)
-        return
+        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'], sys.stderr)
+        print(e, sys.stderr)
+        return defer.succeed(1)
     master_cfg = base.loadConfig(config, configFile)
     if not master_cfg:
-        defer.returnValue(1)
-        return
+        return defer.succeed(1)
+    return _upgradeMaster(config, master_cfg)
 
-    upgradeFiles(config)
+
+@defer.inlineCallbacks
+def _upgradeMaster(config, master_cfg):
+
     try:
+        upgradeFiles(config)
         yield upgradeDatabase(config, master_cfg)
     except Exception as e:
         print("problem while upgrading!:", e, file=sys.stderr)
