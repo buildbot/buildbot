@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import os
+import sys
 
 from buildbot import monkeypatches
 from buildbot.db import connector
@@ -131,9 +132,13 @@ def upgradeMaster(config, _noMonkey=False):
         return
 
     upgradeFiles(config)
-    yield upgradeDatabase(config, master_cfg)
-
-    if not config['quiet']:
-        print("upgrade complete")
+    try:
+        yield upgradeDatabase(config, master_cfg)
+    except Exception as e:
+        print("problem while upgrading!:", e, file=sys.stderr)
+        defer.returnValue(1)
+    else:
+        if not config['quiet']:
+            print("upgrade complete")
 
     defer.returnValue(0)
