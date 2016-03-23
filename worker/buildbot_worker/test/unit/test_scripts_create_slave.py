@@ -608,7 +608,7 @@ class TestCreateWorker(misc.LoggingMixin, unittest.TestCase):
         exec(expected_tac_contents, glb, glb)
 
         # only one Application must be created in .tac
-        application_class_mock.assert_called_once_with("buildslave")
+        application_class_mock.assert_called_once_with("buildbot-worker")
 
         # check that Worker created with passed options
         worker_class_mock.assert_called_once_with(
