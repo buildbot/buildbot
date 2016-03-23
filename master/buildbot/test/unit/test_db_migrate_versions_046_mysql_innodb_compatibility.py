@@ -151,4 +151,3 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
     def test_invalid_identifier_in_users(self):
         return self.do_invalid_test('users', dict(uid=1,
                                                   identifier="a" * 256))
-
