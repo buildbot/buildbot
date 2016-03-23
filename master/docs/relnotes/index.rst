@@ -45,7 +45,7 @@ Deprecations, Removals, and Non-Compatible Changes
 * To support MySQL InnoDB, the size of six VARCHAR(256) columns ``changes.(author, branch, category, name); object_state.name; user.identifier`` was reduced to VARCHAR(255).
 
 * :class:`~buildbot.status.status_push.StatusPush` has been removed from buildbot.
-    please use the much simpler :class:`~buildbot.reporters.http.HttpStatusPush` instead.
+    Please use the much simpler :class:`~buildbot.reporters.http.HttpStatusPush` instead.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -33,7 +33,7 @@ class StashStatusPush(http.HttpStatusPushBase):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
         if not base_url.endswith('/'):
             base_url += '/'
-        self.base_url = '%srest/build-status/1.0/commits/' % (base_url, )
+        self.base_url = '%srest/build-status/1.0/commits/' % (base_url,)
         self.auth = (user, password)
 
     @defer.inlineCallbacks

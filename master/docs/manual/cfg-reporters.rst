@@ -48,7 +48,7 @@ The Buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
 It is also quite common to send a message to a mailing list (usually named `builds` or similar) about every build.
 
-The :class:`MailNotifier` status target is used to accomplish this.
+The :class:`MailNotifier` reporter is used to accomplish this.
 You configure it by specifying who mail should be sent to, under what circumstances mail should be sent, and how to deliver the mail.
 It can be configured to only send out mail for certain builders, and only send messages when the build fails, or when the builder transitions from success to failure.
 It can also be configured to include various build logs in each message.
@@ -430,7 +430,7 @@ IRC Bot
 ~~~~~~~
 
 
-The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
+The :bb:reporter:`IRC` reporter creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
 
 The IRC Bot in buildbot nine, is mostly a rewrite, and not all functionality has been ported yet.

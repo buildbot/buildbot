@@ -27,6 +27,7 @@ from buildbot.process.results import WARNINGS
 from twisted.internet import defer
 from twisted.python import log
 
+
 HOSTED_BASE_URL = 'https://api.github.com'
 
 
@@ -77,9 +78,8 @@ class GithubStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['context'] = context
 
-        return self.session.post("/".join(
-            [self.baseURL, 'repos', repo_user, repo_name, 'statuses', sha]),
-            payload)
+        return self.session.post('/'.join(
+            [self.baseURL, 'repos', repo_user, repo_name, 'statuses', sha]), payload)
 
     @defer.inlineCallbacks
     def send(self, build):
@@ -105,13 +105,12 @@ class GithubStatusPush(http.HttpStatusPushBase):
         sourcestamps = build['buildset']['sourcestamps']
         project = sourcestamps[0]['project']
 
-        if not project:
+        if project:
+            repoOwner, repoName = project.split('/')
+        else:
             repo = sourcestamps[0]['repository'].split('/')[-2:]
             repoOwner = repo[0]
             repoName = '.'.join(repo[1].split('.')[:-1])
-        else:
-            print project
-            repoOwner, repoName = project.split('/')
 
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
