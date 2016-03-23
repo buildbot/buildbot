@@ -638,6 +638,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     implements(ILatentWorker)
 
+    substantiating = False
     substantiated = False
     substantiation_deferred = None
     substantiation_build = None
@@ -692,11 +693,13 @@ class AbstractLatentWorker(AbstractWorker):
 
     def _substantiate(self, build):
         # register event trigger
+        self.substantiating = True
         d = self.start_instance(build)
         self._shutdown_callback_handle = reactor.addSystemEventTrigger(
             'before', 'shutdown', self._soft_disconnect, fast=True)
 
         def start_instance_result(result):
+	    self.substantiating = False
             # If we don't report success, then preparation failed.
             if not result:
                 log.msg("Worker '%s' does not want to substantiate at this time" % (self.name,))
@@ -706,6 +709,7 @@ class AbstractLatentWorker(AbstractWorker):
             return result
 
         def clean_up(failure):
+	    self.substantiating = False
             if self.missing_timer is not None:
                 self.missing_timer.cancel()
                 self._substantiation_failed(failure)
@@ -762,7 +766,7 @@ class AbstractLatentWorker(AbstractWorker):
         return self._mail_missing_message(subject, text)
 
     def canStartBuild(self):
-        if self.insubstantiating:
+        if self.insubstantiating or self.substantiating:
             return False
         return AbstractWorker.canStartBuild(self)
 
