@@ -84,6 +84,16 @@ def upgrade(migrate_engine):
             _has_incompatible_object_state(metadata, migrate_engine),
             _has_incompatible_users(metadata, migrate_engine)]):
         raise ValueError('cannot upgrade due to invalid data')
+    if migrate_engine.dialect.name == 'postgresql':
+        # Sql alchemy migrate does not apply changes on postgresql
+        def reduce_table_column_length(table, column):
+            return 'ALTER TABLE {} ALTER COLUMN {} TYPE character varying(255)'.format(table, column)
+        for table, columns in {'changes': ['author', 'branch', 'revision', 'category'],
+                               'object_state': ['name'],
+                               'users': ['identifier']}.items():
+            for column in columns:
+                migrate_engine.execute(reduce_table_column_length(table, column))
+        return
 
     changeset.alter_column(
         sa.Column('author', sa.String(255), nullable=False),
