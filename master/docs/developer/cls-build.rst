@@ -25,3 +25,11 @@ Build
         This translates to a call to Python's ``reduce``::
 
             return reduce(summary_fn, step_stats_list, initial_value)
+
+    .. py:method:: getUrl()
+
+        :returns: Url as string
+
+        Returns url of the build in the UI.
+        Build must be started.
+        This is useful for customs steps.

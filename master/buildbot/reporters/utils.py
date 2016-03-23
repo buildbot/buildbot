@@ -159,8 +159,6 @@ def getURLForBuild(master, builderid, build_number):
 
 
 @renderer
-@defer.inlineCallbacks
 def URLForBuild(props):
     build = props.getBuild()
-    builder_id = yield build.builder.getBuilderId()
-    raise defer.returnValue(getURLForBuild(build.master, builder_id, build.number))
+    return build.getUrl()

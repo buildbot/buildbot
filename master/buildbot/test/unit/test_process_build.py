@@ -743,6 +743,12 @@ class TestBuild(unittest.TestCase):
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
 
+    @defer.inlineCallbacks
+    def testGetUrl(self):
+        self.build.number = 3
+        url = yield self.build.getUrl()
+        self.assertEqual(url, 'http://localhost:8080/#builders/83/builds/3')
+
 
 class TestMultipleSourceStamps(unittest.TestCase):
 
