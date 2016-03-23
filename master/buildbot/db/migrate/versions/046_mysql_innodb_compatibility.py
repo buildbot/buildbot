@@ -92,19 +92,19 @@ def upgrade(migrate_engine):
         engine=migrate_engine)
 
     changeset.alter_column(
-        sa.Column('branch', sa.String(255), nullable=False),
+        sa.Column('branch', sa.String(255)),
         table='changes',
         metadata=metadata,
         engine=migrate_engine)
 
     changeset.alter_column(
-        sa.Column('revision', sa.String(255), nullable=False),
+        sa.Column('revision', sa.String(255)),
         table='changes',
         metadata=metadata,
         engine=migrate_engine)
 
     changeset.alter_column(
-        sa.Column('category', sa.String(255), nullable=False),
+        sa.Column('category', sa.String(255)),
         table='changes',
         metadata=metadata,
         engine=migrate_engine)
