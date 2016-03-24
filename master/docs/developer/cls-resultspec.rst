@@ -116,4 +116,3 @@ Endpoints processing a result specification should take care to replicate this b
     A property represents an item of a foreign table.
 
     In either case, the values must be passed as a list.
-

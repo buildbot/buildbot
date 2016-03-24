@@ -78,8 +78,13 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
             else:
                 changes = []
         else:
-            changes = yield self.master.db.changes.getChanges()
-
+            # this special case is useful and implemented by the dbapi
+            # so give it a boost
+            if (resultSpec.order == ['-changeid'] and resultSpec.limit and
+                    resultSpec.offset is None):
+                changes = yield self.master.db.changes.getRecentChanges(resultSpec.limit)
+            else:
+                changes = yield self.master.db.changes.getChanges()
         changes = [(yield self._fixChange(ch)) for ch in changes]
         defer.returnValue(changes)
 
