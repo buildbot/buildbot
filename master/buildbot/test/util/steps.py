@@ -125,8 +125,8 @@ class BuildStepMixin(object):
 
         return getWorkerCommandVersion
 
-    def setupStep(self, step, worker_version={'*': "99.99"}, worker_env={},
-                  buildFiles=[], wantDefaultWorkdir=True, wantData=True,
+    def setupStep(self, step, worker_version=None, worker_env=None,
+                  buildFiles=None, wantDefaultWorkdir=True, wantData=True,
                   wantDb=False, wantMq=False):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
@@ -152,6 +152,17 @@ class BuildStepMixin(object):
         @param wantMq(bool): Set to True to add mq connector to master.
             Default value: False.
         """
+        if worker_version is None:
+            worker_version = {
+                '*': '99.99'
+            }
+
+        if worker_env is None:
+            worker_env = dict()
+
+        if buildFiles is None:
+            buildFiles = list()
+
         factory = interfaces.IBuildStepFactory(step)
 
         step = self.step = factory.buildStep()
