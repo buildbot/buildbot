@@ -16,13 +16,12 @@
 import sqlalchemy as sa
 from sqlalchemy.sql import func
 from sqlalchemy.sql import or_
-from twisted.python import log
 
 from buildbot.util import sautils
 from migrate import changeset
 
 
-def _has_incompatible_changes(metadata, migrate_engine):
+def _incompatible_changes(metadata, migrate_engine):
     changes = sautils.Table('changes', metadata, autoload=True)
     c = changes.c
     q = sa.select([c.changeid]).where(or_(func.length(c.author) > 255,
@@ -30,60 +29,58 @@ def _has_incompatible_changes(metadata, migrate_engine):
                                           func.length(c.revision) > 255,
                                           func.length(c.category) > 255))
     invalid_changes = q.execute().fetchall()
+    errors = []
     if invalid_changes:
 
         def format(res):
-            return ("changes.change={id} "
-                    "have author, branch, revision or category "
-                    "longer than 255)".format(id=res[0]))
-        log.msg(
-            "'changes' table has invalid data:\n"
-            "{0}".format("\n".join(map(format, invalid_changes))))
-        return True
-    return False
+            return ("    changes.change={id} "
+                    "has author, branch, revision or category "
+                    "longer than 255".format(id=res[0]))
+        errors = ["- 'changes' table has invalid data:\n"
+                  "{0}".format("\n".join(map(format, invalid_changes)))]
+    return errors
 
 
-def _has_incompatible_object_state(metadata, migrate_engine):
+def _incompatible_object_state(metadata, migrate_engine):
     object_state = sautils.Table('object_state', metadata, autoload=True)
     c = object_state.c
     q = sa.select([c.objectid]).where(func.length(c.name) > 255)
     invalid_object_states = q.execute().fetchall()
+    errors = []
     if invalid_object_states:
 
         def format(res):
-            return ("object_state.objectid={id}"
+            return ("    object_state.objectid={id}"
                     " has name longer than 255".format(id=res[0]))
-        log.msg(
-            "'object_state' table has invalid data:\n"
-            "{0}".format("\n".join(map(format, invalid_object_states))))
-        return True
-    return False
+        errors = ["- 'object_state' table has invalid data:\n"
+                  "{0}".format("\n".join(map(format, invalid_object_states)))]
+    return errors
 
 
-def _has_incompatible_users(metadata, migrate_engine):
+def _incompatible_users(metadata, migrate_engine):
     users = sautils.Table('users', metadata, autoload=True)
     c = users.c
     q = sa.select([c.uid]).where(func.length(c.identifier) > 255)
     invalid_users = q.execute().fetchall()
+    errors = []
     if invalid_users:
 
         def format(res):
-            return ("users.uid={id} "
+            return ("    users.uid={id} "
                     "has identifier longer than 255".format(id=res[0]))
-        log.msg(
-            "'users_state' table has invalid data:\n"
-            "{0}".format("\n".join(map(format, invalid_users))))
-        return True
-    return False
+        errors = ["- 'users_state' table has invalid data:\n"
+                  "{0}".format("\n".join(map(format, invalid_users)))]
+    return errors
 
 
 def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
-    if any([_has_incompatible_changes(metadata, migrate_engine),
-            _has_incompatible_object_state(metadata, migrate_engine),
-            _has_incompatible_users(metadata, migrate_engine)]):
-        raise ValueError('cannot upgrade due to invalid data')
+    errors = sum([_incompatible_changes(metadata, migrate_engine),
+                  _incompatible_object_state(metadata, migrate_engine),
+                  _incompatible_users(metadata, migrate_engine)], [])
+    if errors:
+        raise ValueError("\n".join([""] + errors))
     if migrate_engine.dialect.name == 'postgresql':
         # Sql alchemy migrate does not apply changes on postgresql
         def reduce_table_column_length(table, column):
