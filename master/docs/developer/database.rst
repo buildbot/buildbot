@@ -1847,6 +1847,8 @@ length is 1000 bytes" with utf8 <http://bugs.mysql.com/bug.php?id=4541>`_.
 While this makes sense for indexes used for record lookup, it limits the
 ability to use unique indexes to prevent duplicate rows.
 
+InnoDB only supports indexes up to 255 unicode characters, which is why
+all indexed columns are limited to 255 characters in Buildbot.
 
 Transactions in MySQL
 ~~~~~~~~~~~~~~~~~~~~~
