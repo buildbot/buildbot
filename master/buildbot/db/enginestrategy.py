@@ -141,7 +141,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         kwargs['pool_recycle'] = int(u.query.pop('max_idle', 3600))
 
-        # default to the MyISAM storage engine; InnoDB is not supported
+        # default to the MyISAM storage engine
         storage_engine = u.query.pop('storage_engine', 'MyISAM')
         kwargs['connect_args'] = {
             'init_command': 'SET default_storage_engine=%s' % storage_engine,

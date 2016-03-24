@@ -1840,15 +1840,13 @@ Index Length in MySQL
 
 .. index:: single: MySQL; limitations
 
-MySQL only supports about 330-character indexes.  The actual index length is
+MySQL only supports about 330-character indexes. The actual index length is
 1000 bytes, but MySQL uses 3-byte encoding for UTF8 strings.  This is a
 longstanding bug in MySQL - see `"Specified key was too long; max key
 length is 1000 bytes" with utf8 <http://bugs.mysql.com/bug.php?id=4541>`_.
 While this makes sense for indexes used for record lookup, it limits the
 ability to use unique indexes to prevent duplicate rows.
 
-InnoDB has even more severe restrictions on key lengths, which is why the MySQL
-implementation requires a MyISAM storage engine.
 
 Transactions in MySQL
 ~~~~~~~~~~~~~~~~~~~~~

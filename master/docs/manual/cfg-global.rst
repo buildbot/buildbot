@@ -74,8 +74,6 @@ Buildbot requires ``use_unique=True`` and ``charset=utf8``, and will add them au
 
 MySQL defaults to the MyISAM storage engine, but this can be overridden with the ``storage_engine`` URL argument.
 
-Note that, because of InnoDB's extremely short key length limitations, it cannot be used to run Buildbot.
-See http://bugs.mysql.com/bug.php?id=4541 for more information.
 
 .. index:: Postgres
 
