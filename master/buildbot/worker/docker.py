@@ -80,7 +80,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                 config.error("Invalid volume definition for docker "
                              "%s. Skipping..." % volume_string)
                 continue
-            self.volumes.append(volume)
+            self.volumes.append(volume_string)
 
             ro = False
             if bind.endswith(':ro') or bind.endswith(':rw'):
