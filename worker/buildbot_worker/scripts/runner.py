@@ -73,14 +73,14 @@ class StartOptions(MakerBase):
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave start [<basedir>]"
+        return "Usage:    buildbot-worker start [<basedir>]"
 
 
 class StopOptions(MakerBase):
     subcommandFunction = "buildbot_worker.scripts.stop.stop"
 
     def getSynopsis(self):
-        return "Usage:    buildslave stop [<basedir>]"
+        return "Usage:    buildbot-worker stop [<basedir>]"
 
 
 class RestartOptions(MakerBase):
@@ -91,23 +91,7 @@ class RestartOptions(MakerBase):
     ]
 
     def getSynopsis(self):
-        return "Usage:    buildslave restart [<basedir>]"
-
-
-class UpgradeWorkerOptions(MakerBase):
-    subcommandFunction = "buildbot_worker.scripts.upgrade_worker.upgradeWorker"
-    optFlags = [
-    ]
-    optParameters = [
-    ]
-
-    def getSynopsis(self):
-        return "Usage:    buildslave upgrade-slave [<basedir>]"
-
-    longdesc = """
-    This command takes an existing worker working directory and
-    upgrades it to the current version.
-    """
+        return "Usage:    buildbot-worker restart [<basedir>]"
 
 
 class CreateWorkerOptions(MakerBase):
@@ -142,7 +126,7 @@ class CreateWorkerOptions(MakerBase):
     ]
 
     longdesc = """
-    This command creates a buildslave working directory and buildbot.tac
+    This command creates a buildbot worker directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
     build-specific subdirectory of <basedir>. <master> is a string of the
@@ -184,7 +168,7 @@ class CreateWorkerOptions(MakerBase):
         return master, port
 
     def getSynopsis(self):
-        return "Usage:    buildslave create-slave " \
+        return "Usage:    buildbot-worker create-worker " \
             "[options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
@@ -228,14 +212,12 @@ class CreateWorkerOptions(MakerBase):
 
 
 class Options(usage.Options):
-    synopsis = "Usage:    buildslave <command> [command options]"
+    synopsis = "Usage:    buildbot-worker <command> [command options]"
 
     subCommands = [
         # the following are all admin commands
-        ['create-slave', None, CreateWorkerOptions,
+        ['create-worker', None, CreateWorkerOptions,
          "Create and populate a directory for a new worker"],
-        ['upgrade-slave', None, UpgradeWorkerOptions,
-         "Upgrade an existing worker directory for the current version"],
         ['start', None, StartOptions, "Start a worker"],
         ['stop', None, StopOptions, "Stop a worker"],
         ['restart', None, RestartOptions,
