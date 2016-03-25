@@ -112,11 +112,6 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     # Scheduler methods
 
-    def getPendingBuildTimes(self):
-        # take the latest-calculated value of actuateAt as a reasonable
-        # estimate
-        return [self.actuateAt]
-
     def gotChange(self, change, important):
         # both important and unimportant changes on our branch are recorded, as
         # we will include all such changes in any buildsets we start.  Note

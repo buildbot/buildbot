@@ -116,9 +116,6 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     def listBuilderNames(self):
         return self.builderNames
 
-    def getPendingBuildTimes(self):
-        return []
-
     # change handling
 
     @defer.inlineCallbacks

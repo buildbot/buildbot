@@ -201,11 +201,6 @@ class BaseBasicScheduler(base.BaseScheduler):
         yield self.master.db.schedulers.flushChangeClassifications(
             self.objectid, less_than=max_changeid + 1)
 
-    def getPendingBuildTimes(self):
-        # This isn't locked, since the caller expects an immediate value,
-        # and in any case, this is only an estimate.
-        return [timer.getTime() for timer in itervalues(self._stable_timers) if timer and timer.active()]
-
 
 class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
 

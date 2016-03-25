@@ -102,10 +102,6 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(builderNames=['x', 'y'])
         self.assertEqual(sched.listBuilderNames(), ['x', 'y'])
 
-    def test_getPendingBuildTimes(self):
-        sched = self.makeScheduler()
-        self.assertEqual(sched.getPendingBuildTimes(), [])
-
     @defer.inlineCallbacks
     def test_startConsumingChanges_fileIsImportant_check(self):
         sched = self.makeScheduler()

@@ -49,18 +49,3 @@ class Timed(scheduler.SchedulerMixin, unittest.TestCase):
 
     # note that most of the heavy-lifting for testing this class is handled by
     # the subclasses' tests, as that's the more natural place for it
-
-    def test_getPendingBuildTimes(self):
-        sched = self.makeScheduler(name='test', builderNames=['foo'])
-
-        sched.activate()
-
-        self.assertEqual(sched.got_lastActuation, None)
-        self.assertEqual(sched.getPendingBuildTimes(), [1060])
-
-        self.clock.advance(1065)
-        self.assertTrue(sched.started_build)
-        self.assertEqual(sched.getPendingBuildTimes(), [1120])
-
-        d = sched.deactivate()
-        return d
