@@ -838,15 +838,19 @@ class TestMaybeStartBuilds(TestBRDBase):
             return defer.succeed(lst[1])
         return self.do_test_nextWorker(nextWorker, exp_choice=1)
 
+    @defer.inlineCallbacks
     def test_nextWorker_exception(self):
         def nextWorker(bldr, lst):
             raise RuntimeError("")
-        return self.do_test_nextWorker(nextWorker)
+        yield self.do_test_nextWorker(nextWorker)
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
+    @defer.inlineCallbacks
     def test_nextWorker_failure(self):
         def nextWorker(bldr, lst):
             return defer.fail(failure.Failure(RuntimeError()))
-        return self.do_test_nextWorker(nextWorker)
+        yield self.do_test_nextWorker(nextWorker)
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     # _nextBuild
 
