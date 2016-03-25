@@ -369,7 +369,7 @@ class GerritStatusPush(service.BuildbotService):
         if getProperty(build, "event.change.id") is not None:  # used only to verify Gerrit source
             project = getProperty(build, "event.change.project")
             codebase = getProperty(build, "codebase")
-            revision = getProperty(build, "got_revision") or build.getProperty("revision")
+            revision = getProperty(build, "got_revision") or getProperty(build, "revision")
 
             if isinstance(revision, dict):
                 # in case of the revision is a codebase revision, we just take the revisionfor current codebase
