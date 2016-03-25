@@ -16,8 +16,10 @@ from future.utils import iteritems
 
 import mock
 
+from buildbot import config
 from buildbot.db import buildrequests
 from buildbot.process import buildrequestdistributor
+from buildbot.process import factory
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import epoch2datetime
@@ -109,7 +111,7 @@ class TestBRDBase(unittest.TestCase):
                 bldr.workers.append(sb)
 
     @defer.inlineCallbacks
-    def createBuilder(self, name, builderid=None):
+    def createBuilder(self, name, builderid=None, builder_config=None):
         if builderid is None:
             b = fakedb.Builder(name=name)
             yield self.master.db.insertTestData([b])
@@ -132,8 +134,11 @@ class TestBRDBase(unittest.TestCase):
         bldr.workers = []
         bldr.getAvailableWorkers = lambda: [s for s in bldr.workers if s.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
-        bldr.config.nextWorker = None
-        bldr.config.nextBuild = None
+        if builder_config is None:
+            bldr.config.nextWorker = None
+            bldr.config.nextBuild = None
+        else:
+            bldr.config = builder_config
 
         def canStartBuild(*args):
             can = bldr.config.canStartBuild
@@ -695,7 +700,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_nextWorker_None(self):
-        self.bldr.config.nextWorker = lambda _1, _2: defer.succeed(None)
+        self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(None)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -705,19 +710,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_nextWorker_bogus(self):
-        self.bldr.config.nextWorker = lambda _1, _2: defer.succeed(mock.Mock())
-        self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[], exp_builds=[])
-
-    @defer.inlineCallbacks
-    def test_nextWorker_fails(self):
-        def nextWorkerRaises(*args):
-            raise RuntimeError("xx")
-        self.bldr.config.nextWorker = nextWorkerRaises
+        self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(mock.Mock())
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
@@ -790,19 +783,30 @@ class TestMaybeStartBuilds(TestBRDBase):
     # nextWorker
     @defer.inlineCallbacks
     def do_test_nextWorker(self, nextWorker, exp_choice=None):
-        rows = self.make_workers(4)
+        builder_config = config.BuilderConfig(name='bldrconf',
+                                              workernames=['wk1', 'wk2'],
+                                              builddir='bdir',
+                                              factory=factory.BuildFactory(),
+                                              nextWorker=nextWorker)
+        self.bldr = yield self.createBuilder('B', builderid=78,
+                                             builder_config=builder_config)
+        for i in range(4):
+            self.addWorkers({'test-worker%d' % i: 1})
 
-        self.bldr.config.nextWorker = nextWorker
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
+        rows = [
+            fakedb.SourceStamp(id=21),
+            fakedb.Builder(id=78, name='B'),
+            fakedb.Buildset(id=12, reason='because'),
+            fakedb.BuildsetSourceStamp(sourcestampid=21, buildsetid=12),
+            fakedb.BuildRequest(id=12, buildsetid=12, builderid=78),
         ]
 
         if exp_choice is None:
             exp_claims = []
             exp_builds = []
         else:
-            exp_claims = [11]
-            exp_builds = [('test-worker%d' % exp_choice, [11])]
+            exp_claims = [12]
+            exp_builds = [('test-worker%d' % exp_choice, [12])]
 
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=exp_claims, exp_builds=exp_builds)
@@ -815,7 +819,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_nextWorker_2args_in_signature(self):
         def nextWorker(builder, lst):
             return lst[0] if lst else None
-        return self.do_test_nextWorker(nextWorker)
+        return self.do_test_nextWorker(nextWorker, exp_choice=0)
 
     def test_nextWorker_default(self):
         import random
@@ -834,15 +838,19 @@ class TestMaybeStartBuilds(TestBRDBase):
             return defer.succeed(lst[1])
         return self.do_test_nextWorker(nextWorker, exp_choice=1)
 
+    @defer.inlineCallbacks
     def test_nextWorker_exception(self):
         def nextWorker(bldr, lst):
             raise RuntimeError("")
-        return self.do_test_nextWorker(nextWorker)
+        yield self.do_test_nextWorker(nextWorker)
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
+    @defer.inlineCallbacks
     def test_nextWorker_failure(self):
         def nextWorker(bldr, lst):
             return defer.fail(failure.Failure(RuntimeError()))
-        return self.do_test_nextWorker(nextWorker)
+        yield self.do_test_nextWorker(nextWorker)
+        self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     # _nextBuild
 

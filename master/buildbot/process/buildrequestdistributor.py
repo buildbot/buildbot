@@ -254,6 +254,8 @@ class BasicBuildChooser(BuildChooserBase):
             try:
                 worker = yield self.nextWorker(self.bldr, self.workerpool, buildrequest)
             except Exception:
+                log.err(Failure(),
+                        "from nextWorker for builder '%s'" % (self.bldr,))
                 worker = None
 
             if not worker or worker not in self.workerpool:

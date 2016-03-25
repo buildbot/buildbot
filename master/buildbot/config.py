@@ -848,7 +848,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if nextSlave is not None:
             reportDeprecatedWorkerNameUsage(
                 "'nextSlave' keyword argument is deprecated, "
-                "use 'workerbuilddir' instead")
+                "use 'nextWorker' instead")
             assert workerbuilddir is None
             nextWorker = nextSlave
 
@@ -934,6 +934,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if nextWorker and (nextWorker.func_code.co_argcount == 2 or
                            (isinstance(nextWorker, MethodType) and
                             nextWorker.func_code.co_argcount == 3)):
+            warnDeprecated(
+                "0.9", "nextWorker now takes a 3rd argument (build request)")
             self.nextWorker = lambda x, y, z: nextWorker(x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
