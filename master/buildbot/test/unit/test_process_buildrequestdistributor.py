@@ -719,18 +719,6 @@ class TestMaybeStartBuilds(TestBRDBase):
                                                      exp_claims=[], exp_builds=[])
 
     @defer.inlineCallbacks
-    def test_nextWorker_fails(self):
-        def nextWorkerRaises(*args):
-            raise RuntimeError("xx")
-        self.bldr.config.nextWorker = nextWorkerRaises
-        self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),
-        ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[], exp_builds=[])
-
-    @defer.inlineCallbacks
     def test_nextBuild_None(self):
         self.bldr.config.nextBuild = lambda _1, _2: defer.succeed(None)
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
