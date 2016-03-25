@@ -125,14 +125,27 @@ else:
         'twisted >= 8.0.0',
         'future',
     ]
+
+    # Unit test hard dependencies.
+    test_deps = [
+        'mock',
+    ]
+
+    setup_args['tests_require'] = test_deps
+
     setup_args['extras_require'] = {
         'test': [
-            'mock',
+            'setuptools_trial',
             'pep8',
             'pylint==1.1.0',
             'pyflakes',
-        ],
+        ] + test_deps,
     }
+
+    if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
+        setup_args['setup_requires'] = [
+            'setuptools_trial',
+        ]
 
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
