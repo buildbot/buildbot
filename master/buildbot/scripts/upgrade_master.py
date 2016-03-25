@@ -16,6 +16,7 @@ from __future__ import print_function
 
 import os
 import sys
+import traceback
 
 from buildbot import monkeypatches
 from buildbot.db import connector
@@ -118,9 +119,10 @@ def upgradeMaster(config, _noMonkey=False):
 
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError) as e:
-        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'], sys.stderr)
-        print(e, sys.stderr)
+    except (SyntaxError, ImportError):
+        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'], file=sys.stderr)
+        e = traceback.format_exc()
+        print(e, file=sys.stderr)
         return defer.succeed(1)
     master_cfg = base.loadConfig(config, configFile)
     if not master_cfg:
@@ -134,8 +136,9 @@ def _upgradeMaster(config, master_cfg):
     try:
         upgradeFiles(config)
         yield upgradeDatabase(config, master_cfg)
-    except Exception as e:
-        print("problem while upgrading!:", e, file=sys.stderr)
+    except Exception:
+        e = traceback.format_exc()
+        print("problem while upgrading!:\n", e, file=sys.stderr)
         defer.returnValue(1)
     else:
         if not config['quiet']:
