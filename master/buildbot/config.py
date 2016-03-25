@@ -848,7 +848,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if nextSlave is not None:
             reportDeprecatedWorkerNameUsage(
                 "'nextSlave' keyword argument is deprecated, "
-                "use 'workerbuilddir' instead")
+                "use 'nextWorker' instead")
             assert workerbuilddir is None
             nextWorker = nextSlave
 
