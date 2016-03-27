@@ -341,8 +341,17 @@ class _Lookup(util.ComparableMixin, object):
         self.index = index
         self.default = default
         self.defaultWhenFalse = defaultWhenFalse
-        self.hasKey = hasKey
+        if hasKey is not _notHasKey:
+            self._hasKey = hasKey
         self.elideNoneAs = elideNoneAs
+
+    @property
+    def hasKey(self):
+        # the default value will be the _notHasKey constant at the time
+        # of evaluation, instead of at time of __init__().
+        # There are various reasons that the constant may change,
+        # reloading this module after instantiation is one.
+        return getattr(self, '_hasKey', _notHasKey)
 
     def __repr__(self):
         return '_Lookup(%r, %r%s%s%s%s)' % (

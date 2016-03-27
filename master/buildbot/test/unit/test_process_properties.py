@@ -408,6 +408,29 @@ class TestInterpolateProperties(unittest.TestCase):
                       "echo buildby-blddef")
         return d
 
+    def test_notHasKey_changed(self):
+        # let's change the _notHasKey constant after Interpolate instantiation
+        # see http://trac.buildbot.net/ticket/3505
+        # this can happen after some reloads (reconfig?)
+        # can't demonstrate by simply reloading 'properties' from here, though
+        self.props.setProperty("buildername", "linux4", "test")
+        command = Interpolate("echo buildby-%(prop:buildername:-blddef)s")
+
+        from buildbot.process import properties
+        saved_notHasKey = properties._notHasKey
+
+        def restore(result):
+            """Avoid making other tests mad"""
+            properties._notHasKey = saved_notHasKey
+            return result
+        properties._notHasKey = object()
+
+        d = self.build.render(command)
+        d.addCallback(restore)
+        d.addCallback(self.failUnlessEqual,
+                      "echo buildby-linux4")
+        return d
+
     def test_property_colon_tilde_true(self):
         self.props.setProperty("buildername", "winbld", "test")
         command = Interpolate("echo buildby-%(prop:buildername:~blddef)s")
