@@ -415,18 +415,9 @@ class TestInterpolateProperties(unittest.TestCase):
         # can't demonstrate by simply reloading 'properties' from here, though
         self.props.setProperty("buildername", "linux4", "test")
         command = Interpolate("echo buildby-%(prop:buildername:-blddef)s")
-
         from buildbot.process import properties
-        saved_notHasKey = properties._notHasKey
-
-        def restore(result):
-            """Avoid making other tests mad"""
-            properties._notHasKey = saved_notHasKey
-            return result
-        properties._notHasKey = object()
-
+        self.patch(properties, '_notHasKey', object())
         d = self.build.render(command)
-        d.addCallback(restore)
         d.addCallback(self.failUnlessEqual,
                       "echo buildby-linux4")
         return d
