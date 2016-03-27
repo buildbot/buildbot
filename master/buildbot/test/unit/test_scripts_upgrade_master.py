@@ -223,6 +223,6 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
             mkconfig(basedir='test', quiet=True),
             config_module.MasterConfig())
         self.assertEqual(ret, 1)
-        self.assertIn("problem while upgrading!:\n Traceback (most recent call last):\n",
+        self.assertIn("problem while upgrading!:\nTraceback (most recent call last):\n",
                       sys.stderr.getvalue())
         self.assertIn("o noz", sys.stderr.getvalue())

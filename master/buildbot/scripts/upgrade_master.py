@@ -138,7 +138,7 @@ def _upgradeMaster(config, master_cfg):
         yield upgradeDatabase(config, master_cfg)
     except Exception:
         e = traceback.format_exc()
-        print("problem while upgrading!:\n", e, file=sys.stderr)
+        print("problem while upgrading!:\n" + e, file=sys.stderr)
         defer.returnValue(1)
     else:
         if not config['quiet']:
