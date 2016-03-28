@@ -37,6 +37,7 @@ from twisted.internet import defer
 from twisted.python import components
 from twisted.trial import unittest
 from zope.interface import implements
+from copy import deepcopy
 
 
 class FakeSource:
@@ -409,15 +410,13 @@ class TestInterpolateProperties(unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
-    def test_notHasKey_changed(self):
-        # let's change the _notHasKey constant after Interpolate instantiation
+    def test_deepcopy(self):
+        # After a deepcopy, Interpolate instances used to lose track
+        # that they didn't have a ``hasKey`` value
         # see http://trac.buildbot.net/ticket/3505
-        # this can happen after some reloads (reconfig?)
-        # can't demonstrate by simply reloading 'properties' from here, though
         self.props.setProperty("buildername", "linux4", "test")
-        command = Interpolate("echo buildby-%(prop:buildername:-blddef)s")
-        from buildbot.process import properties
-        self.patch(properties, '_notHasKey', object())
+        command = deepcopy(
+            Interpolate("echo buildby-%(prop:buildername:-blddef)s"))
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo buildby-linux4")
 
