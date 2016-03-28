@@ -36,8 +36,19 @@ if sys.version_info[:2] < (3, 2):
     # WARNINGs and ERRORs will be printed).
     import logging
     _handler = logging.StreamHandler()
-    logging.getLogger().addHandler(_handler)
 
+    # Ignore following Exception logs:
+    #       Traceback (most recent call last):
+    #       File "[..]site-packages/sqlalchemy/pool.py", line 290, in _close_connection
+    #       self._dialect.do_close(connection)
+    #       File "[..]/sqlalchemy/engine/default.py", line 426, in do_close
+    #       dbapi_connection.close()
+    #       ProgrammingError: SQLite objects created in a thread can only be used in that same thread.
+    #       The object was created in thread id 123145306509312 and this is thread id 140735272824832
+    # sqlalchemy is closing pool connections from the main thread, which sqlite does not like
+    # the warning has been there since forever, but would be catched by the next lastResort logger
+    logging.getLogger("sqlalchemy.pool.SingletonThreadPool").addHandler(None)
+    logging.getLogger().addHandler(_handler)
 # import mock so we bail out early if it's not installed
 try:
     import mock
