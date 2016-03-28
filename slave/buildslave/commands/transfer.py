@@ -82,6 +82,12 @@ class SlaveFileUploadCommand(TransferCommand):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
+        if not os.path.isfile(self.path):
+            self.stderr = "File '%s' doesn't exist" % self.path
+            self.rc = 1
+            if self.debug:
+                log.msg("File '%s' doesn't exist" % self.path)
+            return
         accessed_modified = None
         try:
             if self.keepstamp:
