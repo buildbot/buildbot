@@ -5,12 +5,6 @@
 Reporters
 ---------
 
-.. warning::
-
-   Report targets are being migrated to Data API and not all status targets had been ported.
-   These have an explicit warning before their description and are marked as such in the section title (to make it easier to distinguish them in the table of contents).
-   As the old status targets are migrated to the new API, the warnings and markings will be removed.
-   (Remember this is a beta version.)
 
 .. contents::
     :depth: 2
@@ -54,7 +48,7 @@ The Buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
 It is also quite common to send a message to a mailing list (usually named `builds` or similar) about every build.
 
-The :class:`MailNotifier` status target is used to accomplish this.
+The :class:`MailNotifier` reporter is used to accomplish this.
 You configure it by specifying who mail should be sent to, under what circumstances mail should be sent, and how to deliver the mail.
 It can be configured to only send out mail for certain builders, and only send messages when the build fails, or when the builder transitions from success to failure.
 It can also be configured to include various build logs in each message.
@@ -246,6 +240,8 @@ Another example of a function delivering a customized html email containing the 
                                 extraRecipients=['listaddr@example.org'],
                                 messageFormatter=html_message_formatter)
 
+.. _PyOpenSSL: http://pyopenssl.sourceforge.net/
+
 MailNotifier arguments
 ++++++++++++++++++++++
 
@@ -431,10 +427,10 @@ List of responsible users
 .. index:: IRC
 
 IRC Bot
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
 
 
-The :bb:reporter:`IRC` status target creates an IRC bot which will attach to certain channels and be available for status queries.
+The :bb:reporter:`IRC` reporter creates an IRC bot which will attach to certain channels and be available for status queries.
 It can also be asked to announce builds as they occur, or be told to shut up.
 
 The IRC Bot in buildbot nine, is mostly a rewrite, and not all functionality has been ported yet.
@@ -448,8 +444,8 @@ Please note that any user having access to your irc channel or can PM the bot wi
 
 ::
 
-    from buildbot.plugins import status
-    irc = status.IRC("irc.example.org", "botnickname",
+    from buildbot.plugins import reporters
+    irc = reporters.IRC("irc.example.org", "botnickname",
                      useColors=False,
                      channels=[{"channel": "#example1"},
                                {"channel": "#example2",
@@ -647,54 +643,6 @@ Two additional arguments can be set to control how fast the IRC bot tries to rec
 ``lostDelay`` defaults to a random number between 1 and 5, while ``failedDelay`` defaults to a random one between 45 and 60.
 Setting random defaults like this means multiple IRC bots are less likely to deny each other by flooding the server.
 
-.. bb:reporter:: StatusPush
-
-StatusPush (not migrated)
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-   Not yet migrated to the new Data API based reporter API.
-
-
-.. @cindex StatusPush
-.. py:class:: buildbot.status.status_push.StatusPush
-
-::
-
-    def Process(self):
-        print str(self.queue.popChunk())
-        self.queueNextServerPush()
-
-    from buildbot.plugins import status
-    sp = status.StatusPush(serverPushCb=Process, bufferDelay=0.5, retryDelay=5)
-    c['services'].append(sp)
-
-:class:`StatusPush` batches events normally processed and sends it to the :func:`serverPushCb` callback every ``bufferDelay`` seconds.
-The callback should pop items from the queue and then queue the next callback.
-If no items were popped from ``self.queue``, ``retryDelay`` seconds will be waited instead.
-
-.. bb:reporter:: HttpStatusPush
-
-HttpStatusPush (not migrated)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-   Not yet migrated to the new Data API based reporter API.
-
-
-.. @cindex HttpStatusPush
-.. @stindex buildbot.status.status_push.HttpStatusPush
-
-::
-
-    from buildbot.plugins import status
-    sp = status.HttpStatusPush(serverUrl="http://example.com/submit")
-    c['services'].append(sp)
-
-:class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
-It is useful to create a status front end outside of Buildbot for better scalability.
 
 .. bb:reporter:: GerritStatusPush
 
@@ -779,87 +727,120 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
    :file:`master/docs/examples/git_gerrit.cfg` and :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
 
-.. bb:reporter:: GitHubStatus
 
-GitHubStatus (not migrated)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. bb:reporter:: HttpStatusPush
 
-.. warning::
+HttpStatusPush
+~~~~~~~~~~~~~~
 
-   Not yet migrated to the new Data API based reporter API.
-
-
-.. @cindex GitHubStatus
-.. py:class:: buildbot.status.github.GitHubStatus
+.. @cindex HttpStatusPush
+.. @stindex buildbot.reporter.HttpStatusPush
 
 ::
 
-    from buildbot.plugins import status, util
+    from buildbot.plugins import reporter
+    sp = reporter.HttpStatusPush(serverUrl="http://example.com/submit")
+    c['services'].append(sp)
 
-    repoOwner = Interpolate("%(prop:github_repo_owner)s")
-    repoName = Interpolate("%(prop:github_repo_name)s")
-    sha = Interpolate("%(src::revision)s")
+:class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
+It is useful to create a status front end outside of Buildbot for better scalability.
+
+It requires `txrequests`_ package to allow interaction with http server.
+
+.. note::
+
+   The json data object sent is completly different from the one that was generated by 0.8.x buildbot.
+   It is indeed generated using data api.
+
+.. py:class:: HttpStatusPush(serverUrl, user, password, builders = None, wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False)
+
+    :param string serverUrl: the url where to do the http post
+    :param string user: the BasicAuth user to post as
+    :param string password: the BasicAuth user's password
+    :param list builders: only send update for specified builders
+    :param boolean wantProperties: include 'properties' in the build dictionary
+    :param boolean wantSteps: include 'steps' in the build dictionary
+    :param boolean wantLogs: include 'logs' in the steps dictionaries.
+        This needs wantSteps=True.
+        This dumps the *full* content of logs.
+    :param boolean wantPreviousBuild: include 'prev_build' in the build dictionary
+
+Json object spec
+++++++++++++++++
+
+The default json object sent is a build object agremented wih some more data as follow.
+
+.. code-block:: json
+
+    {
+        "url": "http://yourbot/path/to/build",
+        "<build data api values>": "[...]",
+        "buildset": "<buildset data api values>",
+        "builder": "<builder data api values>",
+        "buildrequest": "<buildrequest data api values>"
+    }
+
+
+If you want another format, don't hesitate to subclass, and modify the :py:meth:`send` method.
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+
+.. bb:reporter:: GitHubStatus
+
+GitHubStatus
+~~~~~~~~~~~~
+
+
+.. @cindex GitHubStatus
+.. py:class:: buildbot.reporter.github.GitHubStatus
+
+::
+
+    from buildbot.plugins import reporter, util
+
     context = Interpolate("buildbot/%(prop:buildername)s")
     gs = status.GitHubStatus(token='githubAPIToken',
-                             repoOwner=repoOwner,
-                             repoName=repoName,
-                             sha=sha,
                              context=context,
                              startDescription='Build started.',
                              endDescription='Build done.')
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
         workernames=['worker1'],
-        factory=BuilderFactory(),
-        properties={
-            "github_repo_owner": "buildbot",
-            "github_repo_name": "bbtools",
-            })
+        factory=BuilderFactory())
     c['builders'].append(buildbot_bbtools)
     c['services'].append(gs)
 
 :class:`GitHubStatus` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
-It requires `txgithub <https://pypi.python.org/pypi/txgithub>` package to allow interaction with GitHub API.
+It requires `txrequests`_ package to allow interaction with GitHub REST API.
 
-It is configured with at least a GitHub API token, repoOwner and repoName arguments.
+It is configured with at least a GitHub API token.
 
 You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
 
-`repoOwner`, `repoName` are used to inform the plugin where to send status for build.
-This allow using a single :class:`GitHubStatus` for multiple projects.
-`repoOwner`, `repoName` can be passes as a static `string` (for single project) or :class:`Interpolate` for dynamic substitution in multiple project.
+.. py:class:: GithubStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False, builders=None)
 
-`sha` argument is use to define the commit SHA for which to send the status.
-By default `sha` is defined as: `%(src::revision)s`.
+    :param string token: token used for authentication.
+    :param rendereable string startDescription: Custom start message (default: 'Build started.')
+    :param rendereable string endDescription: Custom end message (default: 'Build done.')
+    :param rendereable string context: Passed to GitHub to differentiate between statuses.
+        A static string can be passed or :class:`Interpolate` for dynamic substitution.
+        The default context is `buildbot/%(prop:buildername)s`.
+    :param string baseURL: specify the github api endpoint if you work with GitHub Enterprise
+    :param boolean verbose: if True, logs a message for each successful status push
+    :param list builders: only send update for specified builders
 
-In case any of `repoOwner`, `repoName` or `sha` returns `None`, `False` or empty string, the plugin will skip sending the status.
-
-The `context` argument is passed to GitHub to differentiate between statuses. A static string can be passed or :class:`Interpolate` for dynamic substitution.
-The default context is `buildbot/%(prop:buildername)s`.
-
-You can define custom start and end build messages using the `startDescription` and `endDescription` optional interpolation arguments.
-
-Starting with Buildbot version 0.8.11, :class:`GitHubStatus` supports additional parameter -- ``baseURL`` -- that allows to specify a different API base endpoint.
-This is required if you work with GitHub Enterprise installation.
-This feature requires ``txgithub`` of version 0.2.0 or better.
-
-StashStatusPush (not migrated)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-   Not yet migrated to the new Data API based reporter API.
-
+StashStatusPush
+~~~~~~~~~~~~~~~
 
 .. @cindex StashStatusPush
-.. py:class:: buildbot.status.status_stash.StashStatusPush
+.. py:class:: buildbot.reporters.stash.StashStatusPush
 
 ::
 
-    from buildbot.plugins import status
+    from buildbot.plugins import reporters
 
-    ss = status.StashStatusPush('https://stash.example.com:8080/',
+    ss = reporters.StashStatusPush('https://stash.example.com:8080/',
                                 'stash_username',
                                 'secret_password')
     c['services'].append(ss)
@@ -870,18 +851,16 @@ It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It uses the standard Python Twisted Agent to make REST requests to the stash server.
+It requires `txgithub <https://pypi.python.org/pypi/txrequests>` package to allow interaction with GitHub API.
+
+It requires `txrequests`_ package to allow interaction with Stash REST API.
+
 It uses HTTP Basic AUTH.
 As a result, we recommend you use https in your base_url rather than http.
-If you use https, it requires `pyOpenSSL`.
 
-Configuration requires exactly 3 parameters:
+.. py:class:: StashStatusPush(base_url, user, password, builders = None)
 
-``base_url``
-    the base url of the stash host, up to and optionally including the first `/` of the path.
-``user``
-    the stash user to post as
-``password``
-    the stash user's password
-
-.. _PyOpenSSL: http://pyopenssl.sourceforge.net/
+    :param string base_url: the base url of the stash host, up to and optionally including the first `/` of the path.
+    :param string user: the stash user to post as
+    :param string password: the stash user's password
+    :param list builders: only send update for specified builders

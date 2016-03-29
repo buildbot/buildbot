@@ -105,8 +105,6 @@ The available reporters as of 0.9.0 are
 
 * :bb:reporter:`IRC`
 
-* :bb:reporter:`StatusPush`
-
 * :bb:reporter:`HttpStatusPush`
 
 * :bb:reporter:`GerritStatusPush`
