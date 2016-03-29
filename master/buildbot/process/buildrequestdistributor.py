@@ -679,8 +679,14 @@ class KatanaBuildChooser(BasicBuildChooser):
                                                                             b.build_status.number,
                                                                             queue=queue)
                     if b.finished:
-                        yield self.master.db.buildrequests.completeBuildRequests(brids=brids,
-                                                                                 results=b.build_status.getResults())
+                        if b.build_status.getResults() == RESUME:
+                            yield self.master.db.buildrequests\
+                                .updateBuildRequests(brids,
+                                                     results=RESUME,
+                                                     slavepool=b.build_status.resumeSlavepool)
+                        else:
+                            yield self.master.db.buildrequests.completeBuildRequests(brids=brids,
+                                                                                     results=b.build_status.getResults())
                 except:
                     raise
 
