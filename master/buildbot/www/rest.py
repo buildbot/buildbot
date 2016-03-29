@@ -15,11 +15,12 @@
 from future.moves.urllib.parse import urlparse
 from future.utils import iteritems
 
-from contextlib import contextmanager
 import datetime
 import fnmatch
 import mimetools
 import re
+
+from contextlib import contextmanager
 
 from twisted.internet import defer
 from twisted.python import log

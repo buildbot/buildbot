@@ -15,10 +15,10 @@
 from twisted.internet import defer
 
 from buildbot.process import buildstep
+from buildbot.process.results import SUCCESS
 from buildbot.statistics import capture
 from buildbot.statistics import stats_service
 from buildbot.statistics.storage_backends.base import StatsStorageBase
-from buildbot.process.results import SUCCESS
 
 
 class FakeStatsStorageService(StatsStorageBase):

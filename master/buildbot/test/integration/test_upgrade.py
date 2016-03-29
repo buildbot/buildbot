@@ -19,9 +19,11 @@ import textwrap
 
 import migrate
 import migrate.versioning.api
+
 from migrate.versioning import schemadiff
 
 import sqlalchemy as sa
+
 from sqlalchemy.engine import reflection
 
 from twisted.internet import defer

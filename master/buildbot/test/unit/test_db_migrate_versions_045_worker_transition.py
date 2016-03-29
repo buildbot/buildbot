@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+
 from sqlalchemy.engine.reflection import Inspector
 
 from twisted.internet import defer

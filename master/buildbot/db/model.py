@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from migrate import exceptions
 import migrate
 import migrate.versioning.repository
+
+from migrate import exceptions
 try:
     from migrate.versioning.schema import ControlledSchema
     assert ControlledSchema  # hush pyflakes

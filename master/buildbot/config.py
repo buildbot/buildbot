@@ -19,8 +19,9 @@ import os
 import re
 import sys
 import traceback
-from types import MethodType
 import warnings
+
+from types import MethodType
 
 from twisted.python import failure
 from twisted.python import log

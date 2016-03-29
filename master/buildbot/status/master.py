@@ -25,11 +25,11 @@ from twisted.python import log
 from zope.interface import implements
 
 from buildbot import interfaces
+from buildbot import util
 from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
-from buildbot import util
 from buildbot.util import bbcollections
 from buildbot.util import pickle
 from buildbot.util import service

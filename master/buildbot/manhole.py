@@ -22,9 +22,9 @@ import types
 from builtins import str
 
 from twisted.application import strports
-from twisted.conch.insults import insults
 from twisted.conch import manhole
 from twisted.conch import telnet
+from twisted.conch.insults import insults
 try:
     from twisted.conch import checkers as conchc, manhole_ssh
     _hush_pyflakes = [manhole_ssh, conchc]
@@ -34,8 +34,8 @@ except ImportError:
     conchc = None
 from twisted.cred import checkers
 from twisted.cred import portal
-from twisted.python import log
 from twisted.internet import protocol
+from twisted.python import log
 
 from zope.interface import implements  # requires Twisted-2.0 or later
 

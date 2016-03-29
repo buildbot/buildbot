@@ -16,11 +16,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
-from buildbot.schedulers import base
-from buildbot.schedulers import dependent
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.schedulers import base
+from buildbot.schedulers import dependent
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
 

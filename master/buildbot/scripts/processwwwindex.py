@@ -23,9 +23,9 @@ from twisted.internet import defer
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
 from buildbot.util import json
+from buildbot.www import auth
 from buildbot.www.config import IndexResource
 from buildbot.www.service import WWWService
-from buildbot.www import auth
 
 
 @in_reactor

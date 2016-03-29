@@ -24,8 +24,8 @@ from twisted.internet import defer
 from twisted.python import util
 
 from buildbot import config as config_module
-from buildbot.master import BuildMaster
 from buildbot import monkeypatches
+from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
 
 

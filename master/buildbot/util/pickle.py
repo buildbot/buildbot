@@ -16,16 +16,17 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
 
-from bz2 import BZ2File
-from cStringIO import StringIO
 import cPickle
 import cStringIO
-from collections import defaultdict
-from functools import reduce
-from gzip import GzipFile
 import new
 import os
 import sys
+
+from bz2 import BZ2File
+from cStringIO import StringIO
+from collections import defaultdict
+from functools import reduce
+from gzip import GzipFile
 
 from twisted.internet import defer
 from twisted.internet import reactor

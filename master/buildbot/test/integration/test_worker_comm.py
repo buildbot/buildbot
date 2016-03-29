@@ -22,6 +22,7 @@ from twisted.spread import pb
 from twisted.trial import unittest
 
 import buildbot
+
 from buildbot import config
 from buildbot import pbmanager
 from buildbot import worker

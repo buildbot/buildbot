@@ -16,8 +16,9 @@
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
 
-from io import BytesIO
 import socket
+
+from io import BytesIO
 
 try:
     import docker

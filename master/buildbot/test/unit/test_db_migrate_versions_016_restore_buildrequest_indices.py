@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+
 from sqlalchemy.engine import reflection
 
 from twisted.trial import unittest

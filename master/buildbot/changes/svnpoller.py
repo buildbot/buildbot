@@ -24,8 +24,8 @@ from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
 
-from buildbot.changes import base
 from buildbot import util
+from buildbot.changes import base
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
