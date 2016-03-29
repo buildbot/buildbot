@@ -133,6 +133,11 @@ class ResultSpec(object):
         if eqVals and len(eqVals) == 1:
             return eqVals[0]
 
+    def popIntegerFilter(self, field):
+        eqVals = self.popFilter(field, 'eq')
+        if eqVals and len(eqVals) == 1:
+            return int(eqVals[0])
+
     def removePagination(self):
         self.limit = self.offset = None
 

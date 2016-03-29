@@ -164,6 +164,13 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
+    def test_get_buildrequest_via_filter_with_string(self):
+        resultSpec = MockedResultSpec(filters=[resultspec.Filter('buildrequestid', 'eq', ['82'])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
+        [self.validateData(build) for build in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
     def test_get_worker(self):
         builds = yield self.callGet(('workers', 13, 'builds'))
         [self.validateData(build) for build in builds]
