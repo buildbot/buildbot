@@ -19,10 +19,12 @@ import time
 
 from email.message import Message
 from email.utils import formatdate
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.reflect import namedModule
+
 from zope.interface import implements
 
 from buildbot import config

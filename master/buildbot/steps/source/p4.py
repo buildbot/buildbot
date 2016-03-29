@@ -13,8 +13,12 @@
 #
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
-
 import re
+
+from types import StringType
+
+from twisted.internet import defer
+from twisted.python import log
 
 from buildbot import config
 from buildbot import interfaces
@@ -22,9 +26,6 @@ from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
-from twisted.internet import defer
-from twisted.python import log
-from types import StringType
 
 
 # Notes:

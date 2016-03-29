@@ -14,8 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
-import mock
 import os
+
+import mock
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import connector
 from buildbot.db import model
@@ -23,8 +27,6 @@ from buildbot.scripts import create_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 def mkconfig(**kwargs):

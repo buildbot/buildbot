@@ -15,6 +15,9 @@
 from __future__ import print_function
 from future.utils import iteritems
 
+from twisted.internet import defer
+from twisted.trial import unittest
+
 from buildbot import config
 from buildbot.schedulers.forcesched import AnyPropertyParameter
 from buildbot.schedulers.forcesched import BaseParameter
@@ -34,8 +37,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import json
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):

@@ -12,20 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-import buildbot.www.change_hook as change_hook
 import calendar
-import mock
 
-from buildbot.test.fake.web import FakeRequest
-from buildbot.test.fake.web import fakeMasterForHooks
+import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
+import buildbot.www.change_hook as change_hook
+
+from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
+
+
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modfied" and "removed", and change email
-
 gitJsonPayload = """
 {
   "before": "95790bf891e76fee5e1747ab589903a6a1f80f22",

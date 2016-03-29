@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
+
+from zope.interface import implements
 
 from buildbot import config
 from buildbot import interfaces
@@ -21,10 +26,6 @@ from buildbot.changes import changes
 from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
-from twisted.internet import defer
-from twisted.python import failure
-from twisted.python import log
-from zope.interface import implements
 
 
 class BaseScheduler(ClusteredBuildbotService, StateMixin):

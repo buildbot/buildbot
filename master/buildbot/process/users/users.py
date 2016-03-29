@@ -12,15 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import os
+
+from hashlib import sha1
 
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.util import flatten
-
-from hashlib import sha1
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8

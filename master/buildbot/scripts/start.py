@@ -17,13 +17,14 @@ from __future__ import print_function
 import os
 import sys
 
+from twisted.internet import protocol
+from twisted.internet import reactor
+from twisted.python.runtime import platformType
+
 from buildbot.scripts import base
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
-from twisted.internet import protocol
-from twisted.internet import reactor
-from twisted.python.runtime import platformType
 
 
 class Follower:

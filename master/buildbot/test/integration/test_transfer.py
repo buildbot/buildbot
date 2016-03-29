@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import os
 import shutil
 
+from twisted.internet import defer
+
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
-from twisted.internet import defer
 
 # This integration test creates a master and worker environment
 # and make sure the transfer steps are working

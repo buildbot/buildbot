@@ -12,23 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import iteritems
 
 import cgi
-import mock
 import os
+
+from cStringIO import StringIO
+from uuid import uuid1
+
+import mock
+
 import pkg_resources
+
+from twisted.internet import defer
+from twisted.web import server
 
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
-from cStringIO import StringIO
-from twisted.internet import defer
-from twisted.web import server
-from uuid import uuid1
 
 
 class FakeSession(object):

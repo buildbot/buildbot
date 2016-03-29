@@ -12,10 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+#
 # The original author is Terry Jones, relicensed under GPLv2:
 #   https://github.com/terrycojones/txrdq/tree/b6e45003
-
 from twisted.internet import defer
 
 

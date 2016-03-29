@@ -17,39 +17,39 @@ from future.utils import iteritems
 import re
 
 from StringIO import StringIO
+
+# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
+# although it has no effect before python-2.7.
+from email import charset
+charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log as twlog
-from zope.interface import implements
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
     ESMTPSenderFactory = ESMTPSenderFactory  # for pyflakes
 except ImportError:
     ESMTPSenderFactory = None
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log as twlog
 
-# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
-# although it has no effect before python-2.7.
-from email import charset
-charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
+from zope.interface import implements
 
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
-from buildbot.reporters import utils
-from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import utils
+from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.util import service
 
 # Email parsing can be complex. We try to take a very liberal

@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-# Source step code for mercurial
-
+"""
+Source step code for mercurial
+"""
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log

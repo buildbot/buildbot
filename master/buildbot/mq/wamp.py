@@ -13,18 +13,19 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import unicode_literals
+
+import json
+
 from autobahn.wamp.exception import TransportLost
 from autobahn.wamp.types import PublishOptions
 from autobahn.wamp.types import SubscribeOptions
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.mq import base
 from buildbot.util import service
 from buildbot.util import toJson
-from twisted.python import log
-
-import json
 
 
 class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):

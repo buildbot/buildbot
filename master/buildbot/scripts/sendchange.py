@@ -17,9 +17,10 @@ from __future__ import print_function
 import sys
 import traceback
 
+from twisted.internet import defer
+
 from buildbot.clients import sendchange as sendchange_client
 from buildbot.util import in_reactor
-from twisted.internet import defer
 
 
 @in_reactor

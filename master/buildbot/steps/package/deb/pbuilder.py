@@ -16,7 +16,6 @@
 """
 Steps and objects related to pbuilder
 """
-
 import re
 import stat
 import time

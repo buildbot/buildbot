@@ -12,15 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import datetime
+
 import sqlalchemy as sa
+
+from twisted.trial import unittest
 
 from buildbot.test.util import migration
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import sautils
-from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):

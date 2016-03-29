@@ -16,10 +16,11 @@ from __future__ import print_function
 from future.utils import itervalues
 
 import StringIO
-import mock
 import os
 import sys
 import textwrap
+
+import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor

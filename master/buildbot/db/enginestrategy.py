@@ -26,13 +26,16 @@ special cases that Buildbot needs.  Those include:
 import migrate
 import os
 import re
+
 import sqlalchemy as sa
 
-from buildbot.util import sautils
 from sqlalchemy.engine import strategies
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
+
 from twisted.python import log
+
+from buildbot.util import sautils
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 

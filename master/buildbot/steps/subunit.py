@@ -12,14 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-
 from StringIO import StringIO
+from unittest import TestResult
+
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps.shell import ShellCommand
-from unittest import TestResult
 
 
 class SubunitLogObserver(logobserver.LogLineObserver, TestResult):

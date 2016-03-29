@@ -15,11 +15,12 @@
 
 import pprint
 
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot.mq import base
 from buildbot.util import service
 from buildbot.util import tuplematch
-from twisted.internet import defer
-from twisted.python import log
 
 
 class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):

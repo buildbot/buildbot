@@ -20,12 +20,14 @@
 # pages and texinfo documentation.
 from __future__ import print_function
 
-import sqlalchemy as sa
 import sys
 
-from buildbot.scripts import base
+import sqlalchemy as sa
+
 from twisted.python import reflect
 from twisted.python import usage
+
+from buildbot.scripts import base
 
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in

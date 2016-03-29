@@ -12,20 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-from hashlib import sha1
 import hmac
 import logging
 import re
 
+from hashlib import sha1
+
 from dateutil.parser import parse as dateparse
-from twisted.python import log
 
 try:
     import json
     assert json
 except ImportError:
     import simplejson as json
+
+from twisted.python import log
+
 
 _HEADER_CT = 'Content-Type'
 _HEADER_EVENT = 'X-GitHub-Event'

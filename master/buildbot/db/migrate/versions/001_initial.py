@@ -15,13 +15,16 @@
 from future.utils import iteritems
 
 import os
+
 import sqlalchemy as sa
+
+from twisted.persisted import styles
 
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.util import json
 from buildbot.util import pickle
 from buildbot.util import sautils
-from twisted.persisted import styles
+
 
 metadata = sa.MetaData()
 

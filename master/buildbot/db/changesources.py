@@ -15,9 +15,10 @@
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
+
 from buildbot.db import NULL
 from buildbot.db import base
-from twisted.internet import defer
 
 
 class ChangeSourceAlreadyClaimedError(Exception):

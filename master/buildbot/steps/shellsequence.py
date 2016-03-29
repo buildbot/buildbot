@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
-from twisted.internet import defer
-from twisted.python import log
 
 
 class ShellArg(results.ResultComputingConfigMixin):

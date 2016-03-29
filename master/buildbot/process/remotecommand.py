@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import log
+from twisted.python.failure import Failure
+from twisted.spread import pb
 
 from buildbot import util
 from buildbot.process import metrics
@@ -22,11 +27,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
 from buildbot.worker_transition import WorkerAPICompatMixin
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.python import log
-from twisted.python.failure import Failure
-from twisted.spread import pb
 
 
 class RemoteException(Exception):

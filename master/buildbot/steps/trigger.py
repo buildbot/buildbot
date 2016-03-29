@@ -15,6 +15,9 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot import config
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.buildstep import BuildStep
@@ -25,8 +28,6 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
-from twisted.internet import defer
-from twisted.python import log
 
 
 class Trigger(BuildStep):

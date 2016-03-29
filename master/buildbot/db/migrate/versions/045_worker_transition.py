@@ -15,10 +15,10 @@
 
 import sqlalchemy as sa
 
+from twisted.python import log
+
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
-
-from twisted.python import log
 
 
 def _create_configured_workers_table(migrate_engine):

@@ -12,13 +12,24 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import migrate
-import migrate.versioning.api
 import os
 import shutil
-import sqlalchemy as sa
 import tarfile
 import textwrap
+
+import migrate
+import migrate.versioning.api
+
+from migrate.versioning import schemadiff
+
+import sqlalchemy as sa
+
+from sqlalchemy.engine import reflection
+
+from twisted.internet import defer
+from twisted.persisted import styles
+from twisted.python import util
+from twisted.trial import unittest
 
 from buildbot.db import connector
 from buildbot.test.fake import fakemaster
@@ -26,12 +37,6 @@ from buildbot.test.util import change_import
 from buildbot.test.util import db
 from buildbot.test.util import querylog
 from buildbot.util import pickle
-from migrate.versioning import schemadiff
-from sqlalchemy.engine import reflection
-from twisted.internet import defer
-from twisted.persisted import styles
-from twisted.python import util
-from twisted.trial import unittest
 
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
 # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124

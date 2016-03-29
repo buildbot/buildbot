@@ -12,32 +12,30 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-
-"""Push events to gerrit
-
-."""
+"""
+Push events to Gerrit
+"""
 from future.utils import iteritems
 
 import time
-
 import warnings
 
-from buildbot.reporters import utils
+from distutils.version import LooseVersion
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.protocol import ProcessProtocol
+from twisted.python import log
+
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import utils
 from buildbot.util import service
 
-
-from distutils.version import LooseVersion
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet.protocol import ProcessProtocol
-from twisted.python import log
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600

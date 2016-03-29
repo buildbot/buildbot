@@ -12,11 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import mock
 
-from buildbot.test.util import www
-from buildbot.www import auth
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -24,6 +21,9 @@ from twisted.web.error import Error
 from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
+
+from buildbot.test.util import www
+from buildbot.www import auth
 
 
 class AuthResourceMixin:

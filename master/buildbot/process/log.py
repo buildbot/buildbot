@@ -16,10 +16,11 @@ from future.utils import itervalues
 
 import re
 
-from buildbot import util
-from buildbot.util import lineboundaries
 from twisted.internet import defer
 from twisted.python import log
+
+from buildbot import util
+from buildbot.util import lineboundaries
 
 
 class Log(object):

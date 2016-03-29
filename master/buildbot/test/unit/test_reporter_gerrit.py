@@ -13,6 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+import warnings
+
+from mock import Mock
+from mock import call
+
+from twisted.internet import defer
+from twisted.trial import unittest
+
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
@@ -25,13 +33,8 @@ from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
-from mock import Mock
-from mock import call
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
-import warnings
 warnings.filterwarnings('error', message='.*Gerrit status')
 
 

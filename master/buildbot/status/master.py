@@ -12,12 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import iteritems
 from future.utils import itervalues
 
 import os
+
+from twisted.internet import defer
+from twisted.persisted import styles
+from twisted.python import log
+
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
@@ -29,10 +34,6 @@ from buildbot.util import bbcollections
 from buildbot.util import pickle
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from twisted.internet import defer
-from twisted.persisted import styles
-from twisted.python import log
-from zope.interface import implements
 
 
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):

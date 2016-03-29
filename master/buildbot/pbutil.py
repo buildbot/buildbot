@@ -17,10 +17,9 @@
 """Base classes handy for use with PB clients.
 """
 
-from twisted.spread import pb
-
 from twisted.internet import protocol
 from twisted.python import log
+from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 
 

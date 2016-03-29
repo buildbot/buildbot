@@ -18,12 +18,9 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 
 Tested with Python boto 1.5c
 """
-
 import os
 import re
 import time
-
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 try:
     import boto
@@ -37,6 +34,8 @@ from twisted.python import log
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
+
 
 PENDING = 'pending'
 RUNNING = 'running'

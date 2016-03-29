@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright 2011, Louis Opter <kalessin@kalessin.fr>
-
+#
 # Quite inspired from the github hook.
-
 import hmac
 
-from buildbot.util import json
 from twisted.python import log
+
+from buildbot.util import json
 
 
 class GoogleCodeAuthFailed(Exception):

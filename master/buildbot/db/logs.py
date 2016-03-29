@@ -16,9 +16,10 @@ from future.utils import itervalues
 
 import sqlalchemy as sa
 
-from buildbot.db import base
 from twisted.internet import defer
 from twisted.python import log
+
+from buildbot.db import base
 
 
 def dumps_gzip(data):

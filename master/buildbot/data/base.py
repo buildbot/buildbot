@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import UserList
 import copy
 import re
 
-from buildbot.data import exceptions
+import UserList
+
 from twisted.internet import defer
+
+from buildbot.data import exceptions
 
 
 class ResourceType(object):

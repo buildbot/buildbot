@@ -12,20 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 """
 Support for buildsets in the database
 """
-
 import sqlalchemy as sa
+
+from twisted.internet import defer
+from twisted.internet import reactor
 
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from buildbot.util import json
-from twisted.internet import defer
-from twisted.internet import reactor
 
 
 class BsDict(dict):

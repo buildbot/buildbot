@@ -15,8 +15,9 @@
 
 import sqlalchemy as sa
 
-from buildbot.db import base
 from twisted.internet import defer
+
+from buildbot.db import base
 
 
 class BuildersConnectorComponent(base.DBConnectorComponent):

@@ -12,13 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 """
 Unit tests for the plugin framework
 """
+import re
 
 import mock
-import re
+
+from twisted.trial import unittest
+
+from zope.interface import implements
 
 import buildbot.plugins.db
 
@@ -28,8 +31,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.trial import unittest
-from zope.interface import implements
 
 
 # buildbot.plugins.db needs to be imported for patching, however just 'db' is
