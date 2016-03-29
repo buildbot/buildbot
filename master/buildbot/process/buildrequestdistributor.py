@@ -512,7 +512,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
             if not builderSlavepool[buildername]:
                 unavailableBuilderNames.append(buildername)
-                log.msg("Not available slaves in '%s' list to process buildrequest.id %d for builder %s"
+                log.msg("Not idle slaves found in '%s' list to process buildrequest.id %d for builder %s"
                         % (slavepool, br['brid'], buildername))
 
                 continue
