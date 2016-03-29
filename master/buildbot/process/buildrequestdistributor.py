@@ -30,6 +30,18 @@ from buildbot.util import lru
 
 import random
 
+def timerLogFinished(msg, timer):
+    log.msg(msg + " started at %s finished at %s elapsed %s" %
+            (util.epoch2datetime(timer.started),
+             util.epoch2datetime(util.now(timer._reactor)),
+             util.formatInterval(util.now(timer._reactor) - timer.started)))
+    timer.stop()
+
+def timerLogStart(msg, function_name):
+    timer = metrics.Timer(function_name)
+    timer.start()
+    log.msg(msg + " started at %s" % util.epoch2datetime(timer.started))
+    return timer
 
 class BuildChooserBase(object):
     #
@@ -402,6 +414,8 @@ class KatanaBuildChooser(BasicBuildChooser):
             yield self.master.db.buildrequests.claimBuildRequests(brids)
 
     def _removeBreq(self, breq):
+        # reset the checkMerges in case the breq still in the master cache
+        breq.checkMerges = True
         if hasattr(breq, 'brdict') and breq.brdict:
             if self.unclaimedBrdicts and breq.brdict in self.unclaimedBrdicts:
                 self.unclaimedBrdicts.remove(breq.brdict)
@@ -420,9 +434,13 @@ class KatanaBuildChooser(BasicBuildChooser):
     def _getBuildRequestForBrdict(self, brdict):
         # Turn a brdict into a BuildRequest into a brdict. This is useful
         # for API like 'nextBuild', which operate on BuildRequest objects.
-
+        timer = timerLogStart("_getBuildRequestForBrdict starting",
+                              function_name="KatanaBuildChooser._getBuildRequestForBrdict")
         breq = yield self.breqCache.get(brdict['brid'], master=self.master, brdict=brdict)
         breq.brdict = brdict
+        if not hasattr(breq, 'checkMerges'):
+            breq.checkMerges = True
+        timerLogFinished(msg="_getBuildRequestForBrdict finished", timer=timer)
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
@@ -477,7 +495,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             breq = yield self._getBuildRequestForBrdict(br)
 
             self.setupNextBuildRequest(bldr, breq)
-            if (yield self.mergeCompatibleBuildRequests(breq, queue)):
+            if breq.checkMerges and (yield self.mergeCompatibleBuildRequests(breq, queue)):
                 continue
 
             def getSlavepool():
@@ -703,6 +721,12 @@ class KatanaBuildChooser(BasicBuildChooser):
 
     @defer.inlineCallbacks
     def mergeCompatibleBuildRequests(self, breq, queue):
+        timer = timerLogStart("mergeCompatibleBuildRequests starting",
+                              function_name="KatanaBuildChooser.mergeCompatibleBuildRequests")
+
+        def mergeCheckFinished():
+            breq.checkMerges = False
+            timerLogFinished(msg="mergeCompatibleBuildRequests finished", timer=timer)
 
         # 2. try merge this build with a compatible running build
         if breq and self.bldr.building:
@@ -716,6 +740,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     yield self.bldr.maybeUpdateMergedBuilds(brid=build.requests[0].id,
                                                             buildnumber=build.build_status.number,
                                                             brids=brids)
+                    mergeCheckFinished()
                     defer.returnValue(True)
                     return
 
@@ -748,6 +773,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     yield self.bldr.maybeUpdateMergedBuilds(brid=finished_br['brid'],
                                                             buildnumber=buildnumber,
                                                             brids=totalBrids)
+                    mergeCheckFinished()
                     defer.returnValue(True)
                     return
 
@@ -756,6 +782,7 @@ class KatanaBuildChooser(BasicBuildChooser):
                     log.msg("mergeFinishedBuildRequest skipped: merge finished buildresquest %s with %s failed"
                             % (finished_br, totalBrids))
 
+        mergeCheckFinished()
         defer.returnValue(False)
 
     @defer.inlineCallbacks
@@ -1097,26 +1124,15 @@ class KatanaBuildRequestDistributor(service.Service):
         self.check_resume_builds = True
         self.katanaBuildChooser.initializeBuildRequestQueue()
 
-    def timerLogFinished(self, msg, timer):
-        log.msg(msg + " started at %s finished at %s elapsed %s" %
-                (util.epoch2datetime(timer.started),
-                 util.epoch2datetime(util.now(timer._reactor)),
-                 util.formatInterval(util.now(timer._reactor) - timer.started)))
-        timer.stop()
 
-    def timerLogStart(self, msg, function_name):
-        timer = metrics.Timer(function_name)
-        timer.start()
-        log.msg(msg + " started at %s" % util.epoch2datetime(timer.started))
-        return timer
 
     @defer.inlineCallbacks
     def _selectNextBuildRequest(self, queue, asyncFunc):
         # get the actual builder object that should start running new builds
-        timer = self.timerLogStart(msg="_selectNextBuildRequest starting _getNextPriorityBuilder queue %s" % queue,
-                                   function_name="KatanaBuildRequestDistributor._selectNextBuildRequest()")
+        timer = timerLogStart(msg="_selectNextBuildRequest starting _getNextPriorityBuilder queue %s" % queue,
+                              function_name="KatanaBuildRequestDistributor._selectNextBuildRequest()")
         breq = yield self.katanaBuildChooser.getNextPriorityBuilder(queue=queue)
-        self.timerLogFinished(msg="_selectNextBuildRequest _getNextPriorityBuilder finished", timer=timer)
+        timerLogFinished(msg="_selectNextBuildRequest _getNextPriorityBuilder finished", timer=timer)
 
         if breq is None:
             defer.returnValue(breq)
@@ -1124,11 +1140,15 @@ class KatanaBuildRequestDistributor(service.Service):
 
         try:
             log.msg("_nextBuilder:  %s, queue: %s" % (breq.buildername, queue))
+            timer = timerLogStart(msg="starting asyncFunc queue %s" % queue,
+                                   function_name="KatanaBuildRequestDistributor._selectNextBuildRequest()")
             yield asyncFunc()
 
         except Exception:
             self.katanaBuildChooser.initializeBuildRequestQueue()
             log.err(Failure(), "from _selectNextBuildRequest for builder '%s' queue '%s'" % (breq.buildername, queue))
+
+        timerLogFinished(msg="asyncFunc finished", timer=timer)
 
         defer.returnValue(breq)
 
@@ -1136,7 +1156,7 @@ class KatanaBuildRequestDistributor(service.Service):
     def _procesBuildRequestsActivityLoop(self):
         self.active = True
 
-        timer = self.timerLogStart(msg="_procesBuildRequestsActivityLoop ",
+        timer = timerLogStart(msg="_procesBuildRequestsActivityLoop ",
                                    function_name="KatanaBuildRequestDistributor._procesBuildRequestsActivityLoop()")
 
         while 1:
@@ -1162,7 +1182,7 @@ class KatanaBuildRequestDistributor(service.Service):
 
             self.activity_lock.release()
 
-        self.timerLogFinished(msg="KatanaBuildRequestDistributor._procesBuildRequestsActivityLoop finished", timer=timer)
+        timerLogFinished(msg="KatanaBuildRequestDistributor._procesBuildRequestsActivityLoop finished", timer=timer)
         self.katanaBuildChooser.initializeBreqCache()
         self._quiet()
 

@@ -84,7 +84,7 @@ class TestKatanaBuildRequestDistributorGetNextPriorityBuilder(unittest.TestCase,
         self.log = []
         self.expectedLog =["getNextPriorityBuilder found 2 buildrequests in the 'unclaimed' Queue",
                            "BuildRequest 2 uses unknown builder bldr2"]
-        def addLog(value):
+        def addLog(value=None, metric=None):
             self.log.append(value)
 
         self.patch(log, 'msg', addLog)
@@ -93,7 +93,7 @@ class TestKatanaBuildRequestDistributorGetNextPriorityBuilder(unittest.TestCase,
         # builder could be removed from master after reconfiguration
         # in this case brd should pick next high priority builder and a message should be added to log
         self.assertEquals((breq.buildername, breq.id), ('bldr1', 1))
-        self.assertEquals(self.log, self.expectedLog)
+        self.assertEquals(self.log[:2], self.expectedLog)
 
     @defer.inlineCallbacks
     def test_getNextPriorityBuilderEmptyQueue(self):
