@@ -331,6 +331,7 @@ setup_args = {
             ('buildbot.process.properties', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
+            ('buildbot.reporters.utils', ['URLForBuild']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
                 'ChoiceStringParameter',
