@@ -18,6 +18,7 @@ from buildbot.data import base
 
 
 class FieldBase(object):
+
     """
     This class implements a basic behavior
     to wrap value into a `Field` instance
@@ -59,6 +60,7 @@ class FieldBase(object):
 
 
 class Property(FieldBase):
+
     """
     Wraps ``property`` type value(s)
 
@@ -66,6 +68,7 @@ class Property(FieldBase):
 
 
 class Filter(FieldBase):
+
     """
     Wraps ``filter`` type value(s)
 
@@ -136,7 +139,11 @@ class ResultSpec(object):
     def popIntegerFilter(self, field):
         eqVals = self.popFilter(field, 'eq')
         if eqVals and len(eqVals) == 1:
-            return int(eqVals[0])
+            try:
+                return int(eqVals[0])
+            except ValueError:
+                raise ValueError("Filter value for {} should be integer, but got: {}".format(
+                    field, eqVals[0]))
 
     def removePagination(self):
         self.limit = self.offset = None
