@@ -15,6 +15,8 @@
 from __future__ import print_function
 
 import os
+import sys
+import traceback
 
 from buildbot import monkeypatches
 from buildbot.db import connector
@@ -106,34 +108,40 @@ def upgradeDatabase(config, master_cfg):
 
 
 @in_reactor
-@defer.inlineCallbacks
 def upgradeMaster(config, _noMonkey=False):
     if not _noMonkey:  # pragma: no cover
         monkeypatches.patch_all()
 
     if not base.checkBasedir(config):
-        defer.returnValue(1)
-        return
+        return defer.succeed(1)
 
     os.chdir(config['basedir'])
 
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
-    except (SyntaxError, ImportError) as e:
-        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'])
-        print(e)
-
-        defer.returnValue(1)
-        return
+    except (SyntaxError, ImportError):
+        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'], file=sys.stderr)
+        e = traceback.format_exc()
+        print(e, file=sys.stderr)
+        return defer.succeed(1)
     master_cfg = base.loadConfig(config, configFile)
     if not master_cfg:
+        return defer.succeed(1)
+    return _upgradeMaster(config, master_cfg)
+
+
+@defer.inlineCallbacks
+def _upgradeMaster(config, master_cfg):
+
+    try:
+        upgradeFiles(config)
+        yield upgradeDatabase(config, master_cfg)
+    except Exception:
+        e = traceback.format_exc()
+        print("problem while upgrading!:\n" + e, file=sys.stderr)
         defer.returnValue(1)
-        return
-
-    upgradeFiles(config)
-    yield upgradeDatabase(config, master_cfg)
-
-    if not config['quiet']:
-        print("upgrade complete")
+    else:
+        if not config['quiet']:
+            print("upgrade complete")
 
     defer.returnValue(0)

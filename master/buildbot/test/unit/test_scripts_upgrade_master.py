@@ -12,8 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import StringIO
 import mock
 import os
+import sys
 
 from buildbot import config as config_module
 from buildbot.db import connector
@@ -209,3 +211,18 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         setup.asset_called_with(check_version=False, verbose=False)
         upgrade.assert_called_with()
         self.assertWasQuiet()
+
+    @defer.inlineCallbacks
+    def test_upgradeDatabaseFail(self):
+        setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
+        self.patch(connector.DBConnector, 'setup', setup)
+        self.patch(sys, 'stderr', StringIO.StringIO())
+        upgrade = mock.Mock(side_effect=lambda **kwargs: defer.fail(Exception("o noz")))
+        self.patch(model.Model, 'upgrade', upgrade)
+        ret = yield upgrade_master._upgradeMaster(
+            mkconfig(basedir='test', quiet=True),
+            config_module.MasterConfig())
+        self.assertEqual(ret, 1)
+        self.assertIn("problem while upgrading!:\nTraceback (most recent call last):\n",
+                      sys.stderr.getvalue())
+        self.assertIn("o noz", sys.stderr.getvalue())
