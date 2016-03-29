@@ -17,13 +17,16 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
+from types import StringTypes
+
+from pkg_resources import iter_entry_points
+
+from zope.interface import Invalid
+from zope.interface.verify import verifyClass
+
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
-from pkg_resources import iter_entry_points
-from types import StringTypes
-from zope.interface import Invalid
-from zope.interface.verify import verifyClass
 
 # Base namespace for Buildbot specific plugins
 _NAMESPACE_BASE = 'buildbot'
@@ -64,7 +67,8 @@ class _PluginEntry(object):
 
 
 class _PluginEntryProxy(_PluginEntry):
-    """Proxy for specific entry with custom group name.
+    """
+    Proxy for specific entry with custom group name.
 
     Used to provided access to the same entry from different namespaces.
     """
@@ -95,7 +99,9 @@ class _PluginEntryProxy(_PluginEntry):
 
 
 class _DeprecatedPluginEntry(_PluginEntry):
-    """Plugin entry that emits warnings when it's value is requested."""
+    """
+    Plugin entry that emits warnings when it's value is requested.
+    """
 
     def __init__(self, compat_name, new_name, plugin_entry):
         assert isinstance(plugin_entry, _PluginEntry)
@@ -121,8 +127,8 @@ class _DeprecatedPluginEntry(_PluginEntry):
     @property
     def value(self):
         reportDeprecatedWorkerNameUsage(
-            "'{group}.{compat_name}' is deprecated, "
-            "use '{group}.{new_name}' instead".format(
+            '\'{group}.{compat_name}\' is deprecated, '
+            'use \'{group}.{new_name}\' instead'.format(
                 group=self.group,
                 compat_name=self._compat_name,
                 new_name=self._new_name))
@@ -308,7 +314,9 @@ class _Plugins(object):
 
 
 class _DeprecatedWorkerPlugins(_Plugins):
-    """Plugins for deprecated 'buildbot.buildslave' entry point."""
+    """
+    Plugins for deprecated 'buildbot.buildslave' entry point.
+    """
 
     def __init__(self, namespace, interface=None, check_extras=True):
         assert namespace == 'buildslave'
@@ -411,11 +419,9 @@ class _PluginDB(object):
                     ('OpenStackLatentBuildSlave', 'OpenStackLatentWorker'),
                 ]
                 for compat_name, new_name in old_new_names:
-                    buildslave_ns._tree.add(
-                        compat_name, worker_ns._tree._children[new_name])
+                    buildslave_ns._tree.add(compat_name, worker_ns._tree._children[new_name])
 
                 tempo = self._namespaces[namespace]
-
             elif namespace == 'util':
                 tempo = _Plugins(namespace, interface, check_extras)
 
@@ -428,10 +434,8 @@ class _PluginDB(object):
                 for compat_name, new_name in old_new_names:
                     entry = tempo._tree._get(new_name)
                     assert isinstance(entry, _PluginEntry)
-                    proxy_entry = _DeprecatedPluginEntry(
-                        compat_name, new_name, entry)
+                    proxy_entry = _DeprecatedPluginEntry(compat_name, new_name, entry)
                     tempo._tree.add(compat_name, proxy_entry)
-
             else:
                 tempo = _Plugins(namespace, interface, check_extras)
 
