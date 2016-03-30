@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from copy import deepcopy
+
 import mock
 
 from twisted.internet import defer
@@ -408,6 +410,17 @@ class TestInterpolateProperties(unittest.TestCase):
         d.addCallback(self.failUnlessEqual,
                       "echo buildby-blddef")
         return d
+
+    @defer.inlineCallbacks
+    def test_deepcopy(self):
+        # After a deepcopy, Interpolate instances used to lose track
+        # that they didn't have a ``hasKey`` value
+        # see http://trac.buildbot.net/ticket/3505
+        self.props.setProperty("buildername", "linux4", "test")
+        command = deepcopy(
+            Interpolate("echo buildby-%(prop:buildername:-blddef)s"))
+        rendered = yield self.build.render(command)
+        self.assertEqual(rendered, "echo buildby-linux4")
 
     def test_property_colon_tilde_true(self):
         self.props.setProperty("buildername", "winbld", "test")
