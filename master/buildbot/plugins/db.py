@@ -390,8 +390,9 @@ class _PluginDB(object):
                 # Load plugins in deprecated 'buildbot.buildslave' namespace
                 # using wrapper that generates warnings, when namespace
                 # attributes are queried.
-                buildslave_ns = _DeprecatedWorkerPlugins(
-                    'buildslave', interface, check_extras)
+                buildslave_ns = _DeprecatedWorkerPlugins('buildslave',
+                                                         interface,
+                                                         check_extras)
                 self._namespaces['buildslave'] = buildslave_ns
 
                 # Load plugins in 'buildbot.worker' namespace.
