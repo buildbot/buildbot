@@ -26,6 +26,7 @@ from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
+
 # Base namespace for Buildbot specific plugins
 _NAMESPACE_BASE = 'buildbot'
 
