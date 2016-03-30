@@ -17,8 +17,6 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from types import StringTypes
-
 from pkg_resources import iter_entry_points
 
 from zope.interface import Invalid
@@ -144,8 +142,7 @@ class _NSNode(object):
             child.load()
 
     def add(self, name, entry):
-        assert isinstance(name, StringTypes) and isinstance(entry,
-                                                            _PluginEntry)
+        assert isinstance(name, basestring) and isinstance(entry, _PluginEntry)
         self._add(name, entry)
 
     def _add(self, name, entry):
@@ -183,12 +180,12 @@ class _NSNode(object):
             return child
 
     def info(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, basestring)
 
         return self._get(name).info
 
     def get(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, basestring)
 
         return self._get(name).value
 
