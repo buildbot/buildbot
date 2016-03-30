@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import datetime
 import random
 
+from twisted.trial import unittest
+
 from buildbot.data import base
 from buildbot.data import resultspec
-from twisted.trial import unittest
 
 
 def mklist(fld, *values):

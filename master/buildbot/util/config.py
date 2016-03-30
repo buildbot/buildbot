@@ -16,9 +16,11 @@ from future.utils import iteritems
 
 import re
 
-from buildbot.interfaces import IConfigured
 from twisted.python.components import registerAdapter
+
 from zope.interface import implements
+
+from buildbot.interfaces import IConfigured
 
 
 class _DefaultConfigured(object):

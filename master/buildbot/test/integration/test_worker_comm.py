@@ -12,9 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import mock
+
+from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread import pb
+from twisted.trial import unittest
 
 import buildbot
-import mock
 
 from buildbot import config
 from buildbot import pbmanager
@@ -27,12 +34,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.decorators import flaky
 from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
-from twisted.cred import credentials
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.spread import pb
-from twisted.trial import unittest
 
 
 class FakeWorkerForBuilder(pb.Referenceable):

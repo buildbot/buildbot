@@ -12,12 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from UserList import UserList
+
+from twisted.internet import defer
+
 from buildbot.data import resultspec
+from buildbot.process.properties import renderer
 from buildbot.process.results import RETRY
 from buildbot.util import flatten
-from twisted.internet import defer
 
 
 @defer.inlineCallbacks
@@ -61,8 +63,21 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
 
 
 @defer.inlineCallbacks
+def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
+                       wantPreviousBuild=False, wantLogs=False):
+    buildrequest = yield master.data.get(("buildrequests", build['buildrequestid']))
+    buildset = yield master.data.get(("buildsets", buildrequest['buildsetid']))
+    build['buildrequest'], build['buildset'] = buildrequest, buildset
+    ret = yield getDetailsForBuilds(master, buildset, [build],
+                                    wantProperties=wantProperties, wantSteps=wantSteps,
+                                    wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
+    raise defer.returnValue(ret)
+
+
+@defer.inlineCallbacks
 def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantSteps=False,
                         wantPreviousBuild=False, wantLogs=False):
+
     builderids = set([build['builderid'] for build in builds])
 
     builders = yield defer.gatherResults([master.data.get(("builders", _id))
@@ -100,6 +115,8 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
         build['builder'] = buildersbyid[build['builderid']]
         build['buildset'] = buildset
+        build['url'] = getURLForBuild(master, build['builderid'], build['number'])
+
         if wantProperties:
             build['properties'] = properties
 
@@ -155,3 +172,9 @@ def getURLForBuild(master, builderid, build_number):
     return prefix + "#builders/%d/builds/%d" % (
         builderid,
         build_number)
+
+
+@renderer
+def URLForBuild(props):
+    build = props.getBuild()
+    return build.getUrl()

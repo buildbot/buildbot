@@ -15,13 +15,14 @@
 
 import inspect
 
+from twisted.internet import defer
+from twisted.python import reflect
+
 from buildbot.data import base
 from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.util import pathmatch
 from buildbot.util import service
-from twisted.internet import defer
-from twisted.python import reflect
 
 
 class Updates(object):

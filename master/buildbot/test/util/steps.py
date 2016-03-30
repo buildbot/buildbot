@@ -16,9 +16,10 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
 
-
 import mock
 
+from twisted.internet import defer
+from twisted.internet import task
 from twisted.python import log
 
 from buildbot import interfaces
@@ -29,8 +30,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
 from buildbot.test.fake import worker
-from twisted.internet import defer
-from twisted.internet import task
 
 
 def _dict_diff(d1, d2):

@@ -25,6 +25,7 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 
+
 RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40
 

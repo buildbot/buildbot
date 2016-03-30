@@ -15,15 +15,15 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import json
 from buildbot.util import service
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
 
 
 class FakeUpdates(service.AsyncService):

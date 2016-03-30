@@ -33,25 +33,26 @@ Basic architecture:
 """
 from future.utils import iteritems
 
-from collections import deque
-
-from buildbot import util
-from buildbot.util import service as util_service
-from collections import defaultdict
-from twisted.application import service
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
-from twisted.python import log
-
 import gc
 import os
-import sys
+
+from collections import defaultdict
+from collections import deque
 # Make use of the resource module if we can
 try:
     import resource
     assert resource
 except ImportError:
     resource = None
+import sys
+
+from twisted.application import service
+from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
+from twisted.python import log
+
+from buildbot import util
+from buildbot.util import service as util_service
 
 
 class MetricEvent(object):

@@ -17,10 +17,11 @@ from future.utils import itervalues
 
 import calendar
 
+from twisted.internet import defer
+
 from buildbot.data import resultspec
 from buildbot.process import properties
 from buildbot.process.results import SKIPPED
-from twisted.internet import defer
 
 
 class BuildRequestCollapser(object):

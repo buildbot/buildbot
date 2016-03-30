@@ -59,8 +59,6 @@ from buildbot.worker import manager as workermanager
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
 
-#
-
 
 class LogRotation(object):
 

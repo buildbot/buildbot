@@ -12,7 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
-
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import TransportLost

@@ -12,7 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -21,7 +21,6 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.test.fake import docker
 from buildbot.worker import docker as dockerworker
-from twisted.internet import defer
 
 
 class TestDockerLatentWorker(unittest.TestCase):
@@ -80,14 +79,14 @@ class TestDockerLatentWorker(unittest.TestCase):
 
     def test_volume_no_suffix(self):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
-        self.assertEqual(bs.volumes, ['/src/webapp'])
+        self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
 
     def test_ro_rw_volume(self):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
                                  volumes=['/src/webapp:/opt/webapp:ro',
                                           '~:/backup:rw'])
-        self.assertEqual(bs.volumes, ['/src/webapp', '~'])
+        self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
                                     '~': {'bind': '/backup', 'ro': False}})
 

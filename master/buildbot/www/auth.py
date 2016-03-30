@@ -12,13 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import re
-
-from zope.interface import implements
-
-from buildbot.util import config
-from buildbot.www import resource
 
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
@@ -30,6 +24,11 @@ from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import DigestCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
+
+from zope.interface import implements
+
+from buildbot.util import config
+from buildbot.www import resource
 
 
 class AuthRootResource(resource.Resource):

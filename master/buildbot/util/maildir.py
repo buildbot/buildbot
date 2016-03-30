@@ -12,26 +12,29 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-
-# This is a class which watches a maildir for new messages. It uses the
-# linux dirwatcher API (if available) to look for new files. The
-# .messageReceived method is invoked with the filename of the new message,
-# relative to the top of the maildir (so it will look like "new/blahblah").
-
+"""
+This is a class which watches a maildir for new messages. It uses the
+linux dirwatcher API (if available) to look for new files. The
+.messageReceived method is invoked with the filename of the new message,
+relative to the top of the maildir (so it will look like "new/blahblah").
+"""
 import os
 
-from buildbot.util import service
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.internet import reactor
+# We have to put it here, since we use it to provide feedback
 from twisted.python import log
-from twisted.python import runtime
+
 dnotify = None
 try:
     import dnotify
 except ImportError:
     log.msg("unable to import dnotify, so Maildir will use polling instead")
+
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import runtime
+
+from buildbot.util import service
 
 
 class NoSuchMaildir(Exception):

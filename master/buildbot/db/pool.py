@@ -15,15 +15,17 @@
 from __future__ import print_function
 
 import inspect
-import sqlalchemy as sa
 import time
 import traceback
 
-from buildbot.process import metrics
+import sqlalchemy as sa
+
 from twisted.internet import reactor
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
+
+from buildbot.process import metrics
 
 # set this to True for *very* verbose query debugging output; this can
 # be monkey-patched from master.cfg, too:

@@ -14,17 +14,19 @@
 # Copyright Buildbot Team Members
 import cStringIO
 import getpass
-import mock
 import os
 import sys
 
-from buildbot.scripts import base
-from buildbot.scripts import runner
-from buildbot.test.util import misc
+import mock
+
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python import usage
 from twisted.trial import unittest
+
+from buildbot.scripts import base
+from buildbot.scripts import runner
+from buildbot.test.util import misc
 
 
 class OptionsMixin(object):

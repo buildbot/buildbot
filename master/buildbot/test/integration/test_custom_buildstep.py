@@ -14,9 +14,15 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+from StringIO import StringIO
+
 import mock
 
-from StringIO import StringIO
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import builder
@@ -30,11 +36,6 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.worker.base import Worker
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
 
 
 class TestLogObserver(buildstep.LogObserver):

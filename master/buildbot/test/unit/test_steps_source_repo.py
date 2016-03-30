@@ -12,8 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from twisted.trial import unittest
 
-from .test_changes_gerritchangesource import TestGerritChangeSource
 from buildbot.changes.changes import Change
 from buildbot.process.properties import Properties
 from buildbot.process.results import FAILURE
@@ -22,7 +22,8 @@ from buildbot.steps.source import repo
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
-from twisted.trial import unittest
+
+from .test_changes_gerritchangesource import TestGerritChangeSource
 
 
 class RepoURL(unittest.TestCase):

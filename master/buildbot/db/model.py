@@ -15,23 +15,24 @@
 
 import migrate
 import migrate.versioning.repository
-import sqlalchemy as sa
 
 from migrate import exceptions
+try:
+    from migrate.versioning.schema import ControlledSchema
+    assert ControlledSchema  # hush pyflakes
+except ImportError:
+    ControlledSchema = None
+
+import sqlalchemy as sa
+
+from twisted.python import log
+from twisted.python import util
 
 from buildbot.db import base
 from buildbot.db.migrate_utils import should_import_changes
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
-from twisted.python import log
-from twisted.python import util
-
-try:
-    from migrate.versioning.schema import ControlledSchema
-    assert ControlledSchema  # hush pyflakes
-except ImportError:
-    ControlledSchema = None
 
 
 class Model(base.DBConnectorComponent):
@@ -323,17 +324,17 @@ class Model(base.DBConnectorComponent):
         sa.Column('changeid', sa.Integer, primary_key=True),
 
         # author's name (usually an email address)
-        sa.Column('author', sa.String(256), nullable=False),
+        sa.Column('author', sa.String(255), nullable=False),
 
         # commit comment
         sa.Column('comments', sa.Text, nullable=False),
 
         # The branch where this change occurred.  When branch is NULL, that
         # means the main branch (trunk, master, etc.)
-        sa.Column('branch', sa.String(256)),
+        sa.Column('branch', sa.String(255)),
 
         # revision identifier for this change
-        sa.Column('revision', sa.String(256)),  # CVS uses NULL
+        sa.Column('revision', sa.String(255)),  # CVS uses NULL
 
         sa.Column('revlink', sa.String(256)),
 
@@ -343,7 +344,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('when_timestamp', sa.Integer, nullable=False),
 
         # an arbitrary string used for filtering changes
-        sa.Column('category', sa.String(256)),
+        sa.Column('category', sa.String(255)),
 
         # repository specifies, along with revision and branch, the
         # source tree in which this change was detected.
@@ -552,7 +553,7 @@ class Model(base.DBConnectorComponent):
         sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
                   nullable=False),
         # name for this value (local to the object)
-        sa.Column("name", sa.String(length=256), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         # value, as a JSON string
         sa.Column("value_json", sa.Text, nullable=False),
     )
@@ -567,7 +568,7 @@ class Model(base.DBConnectorComponent):
         sa.Column("uid", sa.Integer, primary_key=True),
 
         # identifier (nickname) for this user; used for display
-        sa.Column("identifier", sa.String(256), nullable=False),
+        sa.Column("identifier", sa.String(255), nullable=False),
 
         # username portion of user credentials for authentication
         sa.Column("bb_username", sa.String(128)),

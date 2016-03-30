@@ -16,15 +16,17 @@ import os
 import re
 import shutil
 
-from buildbot import interfaces
-from buildbot import util
-from buildbot.util import pickle
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.persisted import styles
 from twisted.python import log
 from twisted.python import runtime
+
 from zope.interface import implements
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.util import pickle
 
 
 class BuildStatus(styles.Versioned):

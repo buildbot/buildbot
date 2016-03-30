@@ -12,17 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import mock
+
+from twisted.internet import defer
+from twisted.trial import unittest
+
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.process import botmaster
 from buildbot.test.fake import fakemaster
 from buildbot.util import service
 from buildbot.worker import manager as workermanager
-from twisted.internet import defer
-from twisted.trial import unittest
-from zope.interface import implements
 
 
 class FakeWorker(service.BuildbotService):

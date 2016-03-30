@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 from __future__ import absolute_import
 
 import contextlib
 import logging
 
 from twisted.python import log
+
 
 # These routines provides a way to dump SQLAlchemy SQL commands and their
 # results into Twisted's log.

@@ -16,10 +16,11 @@ from future.utils import itervalues
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
+
 from buildbot.db import base
 from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-from twisted.internet import defer
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):

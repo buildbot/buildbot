@@ -26,13 +26,16 @@ special cases that Buildbot needs.  Those include:
 import migrate
 import os
 import re
+
 import sqlalchemy as sa
 
-from buildbot.util import sautils
 from sqlalchemy.engine import strategies
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
+
 from twisted.python import log
+
+from buildbot.util import sautils
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
@@ -141,7 +144,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         kwargs['pool_recycle'] = int(u.query.pop('max_idle', 3600))
 
-        # default to the MyISAM storage engine; InnoDB is not supported
+        # default to the MyISAM storage engine
         storage_engine = u.query.pop('storage_engine', 'MyISAM')
         kwargs['connect_args'] = {
             'init_command': 'SET default_storage_engine=%s' % storage_engine,

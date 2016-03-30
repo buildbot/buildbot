@@ -15,9 +15,10 @@
 """
 Tests for buildbot.status.builder module.
 """
+from twisted.trial import unittest
+
 from buildbot.status import builder
 from buildbot.test.fake import fakemaster
-from twisted.trial import unittest
 
 
 class TestBuilderStatus(unittest.TestCase):

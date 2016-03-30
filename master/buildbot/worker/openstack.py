@@ -13,16 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
-
 import time
-
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.python import log
-
-from buildbot import config
-from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.worker.base import AbstractLatentWorker
 
 try:
     import novaclient.exceptions as nce
@@ -31,6 +22,14 @@ try:
 except ImportError:
     nce = None
     client = None
+
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.python import log
+
+from buildbot import config
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.worker.base import AbstractLatentWorker
 
 
 ACTIVE = 'ACTIVE'

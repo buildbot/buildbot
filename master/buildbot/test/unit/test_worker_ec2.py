@@ -13,7 +13,6 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
-
 try:
     from moto import mock_ec2
     assert mock_ec2
@@ -23,14 +22,15 @@ except ImportError:
     boto = None
     ec2 = None
 
-if boto is not None:
-    from buildbot.worker import ec2
+from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.trial import unittest
+
+if boto is not None:
+    from buildbot.worker import ec2
 
 
 # redefine the mock_ec2 decorator to skip the test if boto or moto

@@ -295,6 +295,9 @@ setup_args = {
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
+            ('buildbot.reporters.http', ['HttpStatusPush']),
+            ('buildbot.reporters.github', ['GithubStatusPush']),
+            ('buildbot.reporters.stash', ['StashStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
 
         ]),
@@ -328,6 +331,7 @@ setup_args = {
             ('buildbot.process.properties', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
+            ('buildbot.reporters.utils', ['URLForBuild']),
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
                 'ChoiceStringParameter',

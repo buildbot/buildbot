@@ -13,18 +13,20 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+
 from future.utils import iteritems
 
+import os
 
 import jinja2
-import os
+
+from twisted.internet import defer
+from twisted.python import util
 
 from buildbot import config as config_module
 from buildbot import monkeypatches
 from buildbot.master import BuildMaster
 from buildbot.util import in_reactor
-from twisted.internet import defer
-from twisted.python import util
 
 
 def makeBasedir(config):

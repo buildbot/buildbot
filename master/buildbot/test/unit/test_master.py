@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-import mock
 import os
 import signal
+
+import mock
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import master
@@ -27,10 +32,6 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.trial import unittest
 
 
 class OldTriggeringMethods(unittest.TestCase):

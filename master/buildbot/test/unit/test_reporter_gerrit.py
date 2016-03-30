@@ -12,7 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
+
+import warnings
+
+from mock import Mock
+from mock import call
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -24,15 +31,10 @@ from buildbot.reporters.gerrit import GerritStatusPush
 from buildbot.reporters.gerrit import defaultReviewCB
 from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
-from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from mock import Mock
-from mock import call
-from twisted.internet import defer
-from twisted.trial import unittest
+from buildbot.test.util.reporter import ReporterTestMixin
 
 
-import warnings
 warnings.filterwarnings('error', message='.*Gerrit status')
 
 
@@ -93,21 +95,7 @@ def legacyTestSummaryCB(buildInfoList, results, status, arg):
     return (str(buildInfoList), verified, 0)
 
 
-class TestGerritStatusPush(unittest.TestCase):
-
-    TEST_PROJECT = u'testProject'
-    TEST_REVISION = u'd34db33fd43db33f'
-    TEST_CHANGE_ID = u'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
-    TEST_BUILDER_NAME = u'Builder0'
-    TEST_PROPS = {
-        'gerrit_branch': 'refs/changes/34/1234/1',
-        'project': TEST_PROJECT,
-        'got_revision': TEST_REVISION,
-        'revision': TEST_REVISION,
-        'event.change.id': TEST_CHANGE_ID,
-        'event.change.project': TEST_PROJECT,
-    }
-    THING_URL = 'http://thing.example.com'
+class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -130,41 +118,7 @@ class TestGerritStatusPush(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, finalResult):
-        # this testsuite always goes through setupBuildResults so that
-        # the data is sure to be the real data schema known coming from data api
-
-        self.db = self.master.db
-        self.db.insertTestData([
-            fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='sl'),
-            fakedb.Builder(id=79, name='Builder0'),
-            fakedb.Builder(id=80, name='Builder1'),
-            fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
-            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
-            fakedb.SourceStamp(id=234),
-            fakedb.Change(changeid=13, branch=u'master', revision=u'9283', author='me@foo',
-                          repository=u'https://...', codebase=u'cbgerrit',
-                          project=u'world-domination', sourcestampid=234),
-        ])
-        i = 0
-        for results in buildResults:
-            self.db.insertTestData([
-                fakedb.BuildRequest(id=11 + i, buildsetid=98, builderid=79 + i),
-                fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i, workerid=13,
-                             masterid=92, results=results, state_string=u"buildText"),
-                fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
-                fakedb.Log(id=60 + i, stepid=50 + i, name='stdio', slug='stdio', type='s',
-                           num_lines=7),
-                fakedb.LogChunk(logid=60 + i, first_line=0, last_line=1, compressed=0,
-                                content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
-                fakedb.BuildProperty(buildid=20 + i, name="workername", value="sl"),
-                fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),
-            ])
-            for k, v in iteritems(self.TEST_PROPS):
-                self.db.insertTestData([
-                    fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
-                    ])
-            i += 1
+        self.insertTestData(buildResults, finalResult)
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True)
         builds = res['builds']
         buildset = res['buildset']

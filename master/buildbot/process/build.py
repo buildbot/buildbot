@@ -34,6 +34,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import worst_status
+from buildbot.reporters.utils import getURLForBuild
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
@@ -577,6 +578,11 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             return reduce(summary_fn, step_stats_list)
         else:
             return reduce(summary_fn, step_stats_list, initial_value)
+
+    @defer.inlineCallbacks
+    def getUrl(self):
+        builder_id = yield self.builder.getBuilderId()
+        defer.returnValue(getURLForBuild(self.master, builder_id, self.number))
 
     # IBuildControl
 

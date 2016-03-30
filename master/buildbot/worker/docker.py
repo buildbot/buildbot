@@ -20,6 +20,13 @@ import socket
 
 from io import BytesIO
 
+try:
+    import docker
+    from docker import client
+    _hush_pyflakes = [docker, client]
+except ImportError:
+    client = None
+
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
@@ -28,13 +35,6 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import json
 from buildbot.worker import AbstractLatentWorker
-
-try:
-    import docker
-    from docker import client
-    _hush_pyflakes = [docker, client]
-except ImportError:
-    client = None
 
 
 def _handle_stream_line(line):

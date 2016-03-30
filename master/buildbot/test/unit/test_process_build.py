@@ -12,8 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 import operator
+
+from mock import Mock
+from mock import call
+
+from twisted.internet import defer
+from twisted.trial import unittest
+
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.locks import WorkerLock
@@ -35,12 +42,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.internet import defer
-from twisted.trial import unittest
-from zope.interface import implements
-
-from mock import Mock
-from mock import call
 
 
 class FakeChange:
@@ -742,6 +743,12 @@ class TestBuild(unittest.TestCase):
         expected_names = ["a", "b", "c_1", "c_2", "c"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
+
+    @defer.inlineCallbacks
+    def testGetUrl(self):
+        self.build.number = 3
+        url = yield self.build.getUrl()
+        self.assertEqual(url, 'http://localhost:8080/#builders/83/builds/3')
 
 
 class TestMultipleSourceStamps(unittest.TestCase):

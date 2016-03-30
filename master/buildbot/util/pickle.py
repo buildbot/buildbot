@@ -16,23 +16,18 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
 
-
 import cPickle
 import cStringIO
 import new
 import os
 import sys
 
-from functools import reduce
-
 from bz2 import BZ2File
 from cStringIO import StringIO
+from collections import defaultdict
+from functools import reduce
 from gzip import GzipFile
 
-from buildbot import interfaces
-from buildbot import util
-from buildbot.util import netstrings
-from collections import defaultdict
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.persisted import styles
@@ -40,7 +35,13 @@ from twisted.python import log
 from twisted.python import reflect
 from twisted.python import runtime
 from twisted.spread import pb
+
 from zope.interface import implements
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.util import netstrings
+
 
 # This module contains classes that are referenced in pickles, and thus needed
 # during upgrade operations, but are no longer used in a running Buildbot

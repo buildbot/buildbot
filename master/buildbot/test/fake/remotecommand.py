@@ -14,11 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
+from twisted.internet import defer
+from twisted.python import failure
+
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake import logfile
-from twisted.internet import defer
-from twisted.python import failure
 
 
 class FakeRemoteCommand(object):

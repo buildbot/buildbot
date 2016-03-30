@@ -14,8 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-import mock
 import random
+
+import mock
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import builder
@@ -27,8 +31,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class BuilderMixin(object):

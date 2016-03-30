@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 # Copyright Manba Team
-
 import calendar
 
 from twisted.internet.defer import inlineCallbacks

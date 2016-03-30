@@ -12,18 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import time
 
 import mock
-import time
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
 
 from buildbot.changes import filter
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.trial import unittest
 
 
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):

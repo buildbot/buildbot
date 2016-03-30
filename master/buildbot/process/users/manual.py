@@ -12,15 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-# this class is known to contain cruft and will be looked at later, so
-# no current implementation utilizes it aside from scripts.runner.
-
-from buildbot import pbutil
-from buildbot.util import service
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot import pbutil
+from buildbot.util import service
+
+
+# this class is known to contain cruft and will be looked at later, so
+# no current implementation utilizes it aside from scripts.runner.
 
 class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
 

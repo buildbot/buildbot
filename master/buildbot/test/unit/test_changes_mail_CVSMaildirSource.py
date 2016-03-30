@@ -12,13 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from email import message_from_string
+from email.utils import mktime_tz
+from email.utils import parsedate_tz
 
 from twisted.trial import unittest
 
 from buildbot.changes.mail import CVSMaildirSource
-from email import message_from_string
-from email.utils import mktime_tz
-from email.utils import parsedate_tz
+
 
 #
 # Sample message from CVS version 1.11

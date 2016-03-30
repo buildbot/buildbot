@@ -17,6 +17,11 @@ from future.utils import iteritems
 import inspect
 import re
 
+from twisted.python import failure
+from twisted.python import log
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
+
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -29,10 +34,6 @@ from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list
-from twisted.python import failure
-from twisted.python import log
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.

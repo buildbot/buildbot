@@ -26,6 +26,10 @@ Features
 * :class:`DockerLatentWorker` now has a ``hostconfig`` parameter that can be used to setup host configuration when creating a new container.
 * :bb:step:`CMake` build step is added.
   It provides a convenience interface to `CMake <https://cmake.org/cmake/help/latest/>`_ build system.
+* MySQL InnoDB tables are now supported.
+* :class:`~buildbot.reporters.http.HttpStatusPush` has been ported to reporter API.
+* :class:`~buildbot.reporters.stash.StashStatusPush` has been ported to reporter API.
+* :class:`~buildbot.reporters.github.GithubStatusPush` has been ported to reporter API.
 
 Fixes
 ~~~~~
@@ -38,6 +42,10 @@ Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Deprecated ``workdir`` was removed, ``builddir`` property should be used instead.
+* To support MySQL InnoDB, the size of six VARCHAR(256) columns ``changes.(author, branch, category, name); object_state.name; user.identifier`` was reduced to VARCHAR(255).
+
+* :class:`~buildbot.status.status_push.StatusPush` has been removed from buildbot.
+    Please use the much simpler :class:`~buildbot.reporters.http.HttpStatusPush` instead.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -15,6 +15,7 @@
 
 from twisted.internet import defer
 from twisted.python import log
+
 from zope.interface import implements
 
 from buildbot.interfaces import IChangeSource

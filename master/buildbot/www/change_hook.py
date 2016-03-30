@@ -12,19 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
+#
 # code inspired/copied from contrib/github_buildbot
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
-
 import re
 
-from buildbot.www import resource
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from twisted.web import server
+
+from buildbot.www import resource
 
 
 class ChangeHookResource(resource.Resource):

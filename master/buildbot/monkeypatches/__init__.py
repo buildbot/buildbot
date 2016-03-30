@@ -14,11 +14,13 @@
 # Copyright Buildbot Team Members
 
 import sys
+
 import twisted
 
-from buildbot.util import sautils
 from twisted.python import util
 from twisted.python import versions
+
+from buildbot.util import sautils
 
 
 def onlyOnce(fn):

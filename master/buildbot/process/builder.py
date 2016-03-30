@@ -12,9 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
-
 import weakref
+
+from twisted.application import internet
+from twisted.application import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import log
+
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.data import resultspec
@@ -29,13 +36,6 @@ from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-from twisted.application import internet
-from twisted.application import service
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.python import log
-from zope.interface import implements
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
