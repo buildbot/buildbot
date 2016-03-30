@@ -56,13 +56,13 @@ class _PluginEntry(object):
         dist = self._entry.dist
         return (dist.project_name, dist.version)
 
-    def __ne__(self, other):
-        return self.info != other.info
-
     @property
     def value(self):
         self.load()
         return self._value
+
+    def __ne__(self, other):
+        return self.info != other.info
 
 
 class _PluginEntryProxy(_PluginEntry):
