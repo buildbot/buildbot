@@ -313,9 +313,24 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getPrioritizedBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None,
-                                           mergebrids=None, startbrid=None,
-                                           order=True, _master_objectid=None):
+    def getBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None,
+                                mergebrids=None, startbrid=None,
+                                order=True, _master_objectid=None):
+        """
+        Finds the buildrequests that are in queue waiting to be process
+        it will return empty list if there are no pending request.
+
+        @param queue: if queue is 'unclaimed' will select only the pending builds
+        and if queue='resume' it will select only builds pending to be resume
+        @param buildername: filter the result by builder
+        @param sourcestamps: filter the results by sourcestamps
+        @param mergebrids: fetch buildrequest that has been merged with brids
+        @param startbrid: filter pending builds that belong to same build chain
+        @param order: order the resutls by higher priority and oldest submitted time
+        this can be skipped when applying filters to check request that can be merged.
+
+        @returns: a build request dictionary or empty list
+        """
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims

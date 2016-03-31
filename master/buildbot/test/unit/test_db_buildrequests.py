@@ -1334,7 +1334,7 @@ class TestBuildsetsConnectorComponent(
                                                     selected_slave=None, slavepool=None)]
 
         d = self.insertPrioritizedBreqs()
-        d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.unclaimed))
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestsInQueue(queue=Queue.unclaimed))
         d.addCallback(lambda queue: self.assertEqual(queue, expectedBreqs))
         return d
 
@@ -1358,7 +1358,7 @@ class TestBuildsetsConnectorComponent(
                                      selected_slave=None, slavepool=None)]
 
         d = self.insertPrioritizedBreqs()
-        d.addCallback(lambda _: self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.resume))
+        d.addCallback(lambda _: self.db.buildrequests.getBuildRequestsInQueue(queue=Queue.resume))
         d.addCallback(lambda queue: self.assertEqual(queue, expectedBreqs))
         return d
 
@@ -1393,10 +1393,10 @@ class TestBuildsetsConnectorComponent(
                                  'b_sourcestampsetid': 1})
 
         self.insertTestData(testdata)
-        result = yield self.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=Queue.unclaimed,
-                                                                                buildername='bldr1',
-                                                                                mergebrids=[1],
-                                                                                sourcestamps=sourcestamps)
+        result = yield self.db.buildrequests.getBuildRequestsInQueue(queue=Queue.unclaimed,
+                                                                     buildername='bldr1',
+                                                                     mergebrids=[1],
+                                                                     sourcestamps=sourcestamps)
         self.assertTrue(len(result) == 1)
         self.assertTrue(result[0]['brid'] ==  2)
 

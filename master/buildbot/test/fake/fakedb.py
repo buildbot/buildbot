@@ -974,7 +974,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
         return defer.succeed(rv)
 
-    def getPrioritizedBuildRequestsInQueue(self, queue=None):
+    def getBuildRequestsInQueue(self, queue=None):
         return self.getBuildRequests(complete=False, claimed=False)
 
     def getBuildRequestInQueue(self, buildername=None, sourcestamps=None, sorted=True, limit=None):

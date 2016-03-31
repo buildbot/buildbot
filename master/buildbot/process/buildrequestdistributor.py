@@ -444,18 +444,18 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
-    def _getBuildRequestQueue(self, queue):
+    def _getBuildRequestsQueue(self, queue):
         if queue == Queue.unclaimed:
             if not self.unclaimedBrdicts:
                 self.unclaimedBrdicts = yield self.master.db.buildrequests\
-                    .getPrioritizedBuildRequestsInQueue(queue=queue)
+                    .getBuildRequestsInQueue(queue=queue)
             defer.returnValue(self.unclaimedBrdicts)
             return
 
         if queue == Queue.resume:
             if not self.resumeBrdicts:
                 self.resumeBrdicts = yield self.master.db.buildrequests\
-                    .getPrioritizedBuildRequestsInQueue(queue=queue)
+                    .getBuildRequestsInQueue(queue=queue)
             defer.returnValue(self.resumeBrdicts)
 
     # Katana's gets the next priority builder from the DB instead of keeping a local list
@@ -476,7 +476,7 @@ class KatanaBuildChooser(BasicBuildChooser):
         builderSlavepool = {}
 
         # TODO: For performance reasons we may need to limit the searches but  we need to load test it first
-        buildrequestQueue = yield self._getBuildRequestQueue(queue)
+        buildrequestQueue = yield self._getBuildRequestsQueue(queue)
 
         log.msg("getNextPriorityBuilder found %d buildrequests in the '%s' Queue" % (len(buildrequestQueue), queue))
 
@@ -585,10 +585,10 @@ class KatanaBuildChooser(BasicBuildChooser):
     @defer.inlineCallbacks
     def fetchPreviouslyMergedBuildRequests(self, breqs, queue):
         brids = [breq.id for breq in breqs]
-        brdicts = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=queue,
-                                                                                        buildername=self.bldr.name,
-                                                                                        mergebrids=brids,
-                                                                                        order=False)
+        brdicts = yield self.master.db.buildrequests.getBuildRequestsInQueue(queue=queue,
+                                                                             buildername=self.bldr.name,
+                                                                             mergebrids=brids,
+                                                                             order=False)
         merged_breqs = yield defer.gatherResults([self._getBuildRequestForBrdict(brdict)
                                                   for brdict in brdicts])
         defer.returnValue(breqs + merged_breqs)
@@ -602,11 +602,11 @@ class KatanaBuildChooser(BasicBuildChooser):
             sourcestamps.append({'b_codebase': ss.codebase, 'b_revision': ss.revision,
                                  'b_branch': ss.branch, 'b_sourcestampsetid': ss.sourcestampsetid})
 
-        brdicts = yield self.master.db.buildrequests.getPrioritizedBuildRequestsInQueue(queue=queue,
-                                                                                        buildername=self.bldr.name,
-                                                                                        sourcestamps=sourcestamps,
-                                                                                        startbrid=startbrid,
-                                                                                        order=False)
+        brdicts = yield self.master.db.buildrequests.getBuildRequestsInQueue(queue=queue,
+                                                                             buildername=self.bldr.name,
+                                                                             sourcestamps=sourcestamps,
+                                                                             startbrid=startbrid,
+                                                                             order=False)
 
         for brdict in brdicts:
             req = yield self._getBuildRequestForBrdict(brdict)
