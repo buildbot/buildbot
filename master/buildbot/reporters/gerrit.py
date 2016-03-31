@@ -326,6 +326,7 @@ class GerritStatusPush(service.BuildbotService):
                 }.get(result, "completed with unknown result %d" % result)
 
                 return {'name': build['builder']['name'],
+                        'properties': build['properties'],
                         'result': result,
                         'resultText': resultText,
                         'text': build['state_string'],
