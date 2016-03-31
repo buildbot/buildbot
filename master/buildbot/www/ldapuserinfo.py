@@ -79,6 +79,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             if len(res) != 1:
                 raise KeyError("ldap search \"%s\" returned %d results" % (pattern, len(res)))
             dn, ldap_infos = res[0]['dn'], res[0]['raw_attributes']
+            if isinstance(dn, bytes):
+                dn = dn.decode('utf-8')
 
             def getLdapInfo(x):
                 if isinstance(x, list):
