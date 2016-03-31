@@ -130,8 +130,6 @@ class _DeprecatedPluginEntry(_PluginEntry):
 
 
 class _NSNode(object):
-    # pylint: disable=W0212
-
     def __init__(self):
         self._children = dict()
 
