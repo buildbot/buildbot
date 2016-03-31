@@ -327,7 +327,17 @@ class WithProperties(util.ComparableMixin):
         return s
 
 
-_notHasKey = object()  # Marker object for _Lookup(..., hasKey=...) default
+class _NotHasKey(util.ComparableMixin):
+    """A marker for missing ``hasKey`` parameter.
+
+    To withstand ``deepcopy``, ``reload`` and pickle serialization round trips,
+    check it with ``==`` or ``!=``.
+    """
+    compare_attrs = ()
+
+# any instance of _NotHasKey would do, yet we don't want to create and delete
+# them all the time
+_notHasKey = _NotHasKey()
 
 
 class _Lookup(util.ComparableMixin, object):
@@ -354,7 +364,7 @@ class _Lookup(util.ComparableMixin, object):
             ', defaultWhenFalse=False'
             if not self.defaultWhenFalse else '',
             ', hasKey=%r' % (self.hasKey,)
-            if self.hasKey is not _notHasKey else '',
+            if self.hasKey != _notHasKey else '',
             ', elideNoneAs=%r' % (self.elideNoneAs,)
             if self.elideNoneAs is not None else '')
 
@@ -370,9 +380,9 @@ class _Lookup(util.ComparableMixin, object):
                 rv = yield build.render(value[index])
                 if not rv:
                     rv = yield build.render(self.default)
-                elif self.hasKey is not _notHasKey:
+                elif self.hasKey != _notHasKey:
                     rv = yield build.render(self.hasKey)
-            elif self.hasKey is not _notHasKey:
+            elif self.hasKey != _notHasKey:
                 rv = yield build.render(self.hasKey)
             else:
                 rv = yield build.render(value[index])
