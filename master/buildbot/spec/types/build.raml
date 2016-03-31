@@ -1,0 +1,110 @@
+#%RAML 1.0 DataType
+displayName: Build
+description: |
+    This resource type describes completed and in-progress builds.
+    Much of the contextual data for a build is associated with the build request, and through it the buildset.
+
+    .. note:: *properties*
+
+        This properties dict is only filled out if the `properties filterspec` is set.
+
+        Meaning that, `property filter` allows one to request the Builds DATA API like so:
+
+            * api/v2/builds?property=propKey1&property=propKey2 (returns Build's properties which match given keys)
+            * api/v2/builds?property=* (returns all Build's properties)
+            * api/v2/builds?propKey1&property=propKey2&limit=30 (filters combination)
+
+        .. important::
+
+            When combined with ``field`` filter, to get properties, one should ensure **properties** ``field`` is set.
+
+            * api/v2/builds?field=buildid&field=properties&property=slavename&property=user
+
+    .. note::
+
+        Build requests are not available in pickled builds, so ``brid`` is always None for build requests imported from older versions of Buildbot.
+        The field will always be set for new builds.
+
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.builds.Build
+
+        .. py:method:: newBuild(builderid, buildrequestid, workerid)
+
+            :param integer builderid: builder performing this build
+            :param integer buildrequstid: build request being built
+            :param integer workerid: worker on which this build is performed
+            :returns: (buildid, number) via Deferred
+
+            Create a new build resource and return its ID.
+            The state strings for the new build will be set to 'starting'.
+
+        .. py:method:: setBuildStateString(buildid, state_string)
+
+            :param integer buildid: the build to modify
+            :param unicode state_string: new state string for this build
+
+            Replace the existing state strings for a build with a new list.
+
+        .. py:method:: finishBuild(buildid, results)
+
+            :param integer buildid: the build to modify
+            :param integer results: the build's results
+
+            Mark the build as finished at the current time, with the given results.
+
+properties:
+    buildid:
+        description: the unique ID of this build
+        type: integer
+    number:
+        description: the number of this build (sequential for a given builder)
+        type: integer
+    builderid:
+        description: id of the builder for this build
+        type: integer
+    buildrequestid:
+        description: build request for which this build was performed, or None if no such request exists
+        type: integer
+    workerid:
+        description: the slave this build ran on
+        type: integer
+    masterid:
+        description: the master this build ran on
+        type: integer
+    started_at:
+        description: time at which this build started
+        type: date
+    complete:
+        description: true if this build is complete
+        type: boolean
+    complete_at?:
+        description: time at which this build was complete, or None if it's still running
+        type: date
+    properties?:
+        description: a dictionary of properties attached to build.
+        type: sourcedproperties
+    results?:
+        description: the results of the build (see :ref:`Build-Result-Codes`), or None if not complete
+        type: integer
+    state_string:
+        description: a string giving detail on the state of the build.
+        type: string
+type: object
+example:
+    'builderid': 10
+    buildid: 100
+    buildrequestid: 13
+    workerid: 20
+    complete: false
+    complete_at: null
+    masterid: 824
+    number: 1
+    results: null
+    started_at: 1451001600
+    state_string: created
+    properties: {}

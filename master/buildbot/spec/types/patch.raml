@@ -1,0 +1,34 @@
+#%RAML 1.0 DataType
+description: |
+    This resource type describes a patch.
+    Patches have unique IDs, but only appear embedded in sourcestamps, so those IDs are not especially useful.
+
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.patches.PatchResourceType
+
+        (no update methods)
+
+properties:
+    patchid:
+        description: the unique ID of this patch
+        type: integer
+    body:
+        description: patch body as a binary string
+        type: string
+    level:
+        description: patch level - the number of directory names to strip from filenames in the patch
+        type: integer
+    subdir:
+        description: subdirectory in which patch should be applied
+        type: string
+    author?:
+        description: patch author, or None
+        type: string
+    comment?:
+        description: patch comment, or None
+        type: string

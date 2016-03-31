@@ -1,0 +1,90 @@
+#%RAML 1.0 DataType
+description: |
+    A change resource represents a change to the source code monitored by Buildbot.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.changes.ChangeResourceType
+
+        .. py:method:: addChange(files=None, comments=None, author=None, revision=None, when_timestamp=None, branch=None, category=None, revlink='', properties={}, repository='', codebase=None, project='', src=None)
+
+            :param files: a list of filenames that were changed
+            :type files: list of unicode strings
+            :param unicode comments: user comments on the change
+            :param unicode author: the author of this change
+            :param unicode revision: the revision identifier for this change
+            :param integer when_timestamp: when this change occurred (seconds since the epoch), or the current time if None
+            :param unicode branch: the branch on which this change took place
+            :param unicode category: category for this change
+            :param string revlink: link to a web view of this revision
+            :param properties: properties to set on this change.  Note that the property source is *not* included in this dictionary.
+            :type properties: dictionary with unicode keys and simple values (JSON-able).
+            :param unicode repository: the repository in which this change took place
+            :param unicode project: the project this change is a part of
+            :param unicode src: source of the change (vcs or other)
+            :returns: the ID of the new change, via Deferred
+
+            Add a new change to Buildbot.
+            This method is the interface between change sources and the rest of Buildbot.
+
+            All parameters should be passed as keyword arguments.
+
+            All parameters labeled 'unicode' must be unicode strings and not bytestrings.
+            Filenames in ``files``, and property names, must also be unicode strings.
+            This is tested by the fake implementation.
+
+properties:
+    changeid:
+        description: the ID of this change
+        type: integer
+    author:
+        description: |
+            the author of the change in "name", "name <email>" or just "email" (with @) format
+        type: string
+    branch?:
+        description: |
+            branch on which the change took place, or none for the "default branch", whatever that might mean
+        type: string
+    category?:
+        description: user-defined category of this change, or none
+        type: string
+    codebase:
+        description: codebase in this repository
+        type: string
+    comments:
+        description: |
+            user comments for this change (aka commit)
+        type: string
+    files[]:
+        description: list of source-code filenames changed
+        type: string
+    parent_changeids[]:
+        description: |
+            The ID of the parents.
+            The data api allow for several parents, but the core buildbot does not yet support
+        type: integer
+    project:
+        description: user-defined project to which this change corresponds
+        type: string
+    properties:
+        description: user-specified properties for this change, represented as an object mapping keys to tuple (value, source)
+        type: sourcedproperties
+    repository:
+        description: repository where this change occurred
+        type: string
+    revision?:
+        description: revision for this change, or none if unknown
+        type: string
+    revlink?:
+        description: link to a web view of this change
+        type: string
+    sourcestamp:
+        description: the sourcestamp resouce for this change
+        type: sourcestamp
+    when_timestamp:
+        description: time of the change
+        type: integer
+type: object

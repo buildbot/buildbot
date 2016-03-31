@@ -1,0 +1,39 @@
+#%RAML 1.0 DataType
+description: |
+
+    A worker resource represents a worker to the source code monitored by Buildbot.
+
+    The contents of the ``connected_to`` and ``configured_on`` attributes are sensitive to the context of the request.
+    If a builder or master is specified in the path, then only the corresponding connections and configurations are included in the result.
+
+
+properties:
+    workerid:
+        description: the ID of this worker
+        type: integer
+    configured_on[]:
+        description: list of builders on masters this worker is configured on
+        properties:
+            builderid: integer
+            masterid: integer
+    connected_to[]:
+        description: list of masters this worker is attached to
+        properties:
+            masterid: integer
+    name:
+        description: the name of the worker
+        type: string
+    workerinfo:
+        description: |
+            information about the worker.
+
+            The worker information can be any JSON-able object.
+            In practice, it contains the following keys, based on information provided by the worker:
+
+            * ``admin`` (the admin information)
+            * ``host`` (the name of the host)
+            * ``access_uri`` (the access URI)
+            * ``version`` (the version on the worker)
+
+        type: object
+type: object

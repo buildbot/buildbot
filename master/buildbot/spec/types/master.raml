@@ -1,0 +1,53 @@
+#%RAML 1.0 DataType
+description: |
+
+    This resource type describes buildmasters in the buildmaster cluster.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.masters.MasterResourceType
+
+        .. py:method:: masterActive(name, masterid)
+
+            :param unicode name: the name of this master (generally ``hostname:basedir``)
+            :param integer masterid: this master's master ID
+            :returns: Deferred
+
+            Mark this master as still active.
+            This method should be called at startup and at least once per minute.
+            The master ID is acquired directly from the database early in the master startup process.
+
+        .. py:method:: expireMasters()
+
+            :returns: Deferred
+
+            Scan the database for masters that have not checked in for ten minutes.
+            This method should be called about once per minute.
+
+        .. py:method:: masterStopped(name, masterid)
+
+            :param unicode name: the name of this master
+            :param integer masterid: this master's master ID
+            :returns: Deferred
+
+            Mark this master as inactive.
+            Masters should call this method before completing an expected shutdown, and on startup.
+            This method will take care of deactivating or removing configuration resources like builders and schedulers as well as marking lost builds and build requests for retry.
+
+properties:
+    active:
+        description: true if the master is active
+        type: boolean
+    last_active:
+        description: time this master was last marked active
+        type: date
+    masterid:
+        description: the ID of this master
+        type: integer
+    name:
+        description: master name (in the form "hostname:basedir")
+        type: string
+type: object

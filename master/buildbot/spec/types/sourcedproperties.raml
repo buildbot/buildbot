@@ -1,0 +1,47 @@
+#%RAML 1.0 DataType
+description: |
+    user-specified properties for this change, represented as an object mapping keys to tuple (value, source)
+
+    Properties are present in several data resources, but have a separate endpoints, because they can represent a large dataset.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.properties.Properties
+
+        .. py:method:: setBuildProperty(buildid, name, value, source)
+
+            :param integer buildid: build ID
+            :param unicode name: Name of the property to set
+            :param value: Value of the property
+            :type value: Any JSON-able type is accepted (lists, dicts, strings and numbers)
+            :param unicode source: Source of the property to set
+
+            Set a build property.
+            If no property with that name exists in that build, a new property will be created.
+
+        .. py:method:: setBuildProperties(buildid, props)
+
+            :param integer buildid: build ID
+            :param IProperties props: Name of the property to set
+
+            Synchronise build properties with the db.
+            This sends only one event in the end of the sync, and only if properties changed.
+            The event contains only the updated properties, for network efficiency reasons.
+
+properties:
+    '[]':
+        description: |
+            Each key of this map is the name of a defined property
+            The value consist on a couple (source, value)
+        properties:
+            1:
+                type: string
+                description: source of the property
+            2:
+                type: integer | string | object | array | boolean
+                description: value of the property
+        type: object
+type: object

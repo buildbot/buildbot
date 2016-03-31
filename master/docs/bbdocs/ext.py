@@ -262,10 +262,6 @@ class BBDomain(Domain):
                                                TypedField('pathkey', label='Path Keys',
                                                           names=('pathkey',), typenames=('type',),
                                                           can_collapse=True),
-                                               Field('event', label='Event',
-                                                     names=('event',)),
-                                               Field('opt', label='Option',
-                                                     names=('opt',)),
                                            ]),
     }
 

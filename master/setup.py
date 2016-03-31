@@ -468,6 +468,8 @@ else:
             'sphinx==1.3.3',
             'sphinxcontrib-blockdiag',
             'docutils>=0.8',
+            'ramlfications',
+            'sphinx-jinja',
         ],
     }
 

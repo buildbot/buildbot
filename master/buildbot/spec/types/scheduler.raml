@@ -1,0 +1,43 @@
+#%RAML 1.0 DataType
+description: |
+    A scheduler initiates builds, often in response to changes from change sources.
+    A particular scheduler (by name) runs on at most one master at a time.
+
+    .. note::
+
+        This data type and associated enpoints is planned to be merged with forcescheduler data type when :bug:`4496` will be resolved.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.schedulers.SchedulerResourceType
+
+    .. py:method:: findSchedulerId(name)
+
+        :param string name: scheduler name
+        :returns: scheduler ID via Deferred
+
+        Get the ID for the given scheduler name, inventing one if necessary.
+
+    .. py:method:: trySetSchedulerMaster(schedulerid, masterid)
+
+        :param integer schedulerid: scheduler ID to try to claim
+        :param integer masterid: this master's master ID
+        :returns: ``True`` or ``False``, via Deferred
+
+        Try to claim the given scheduler for the given master and return ``True`` if
+        the scheduler is to be activated on that master.
+
+properties:
+    master?:
+        description: the master on which this scheduler is running, or None if it is inactive
+        type: master
+    name:
+        description: name of this scheduler
+        type: string
+    schedulerid:
+        description: the ID of this scheduler
+        type: integer
+type: object

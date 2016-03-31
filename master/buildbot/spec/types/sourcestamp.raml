@@ -1,0 +1,44 @@
+#%RAML 1.0 DataType
+description: |
+
+    A source stamp represents a particular version of the source code.
+    Absolute sourcestamps specify this completely, while relative sourcestamps (with revision = None) specify the latest source at the current time.
+    Source stamps can also have patches; such stamps describe the underlying revision with the given patch applied.
+
+    Note that, depending on the underlying version-control system, the same revision may describe different code in different branches (e.g., SVN) or may be independent of the branch (e.g., Git).
+
+    The ``created_at`` timestamp can be used to indicate the first time a sourcestamp was seen by Buildbot.
+    This provides a reasonable default ordering for sourcestamps when more reliable information is not available.
+    
+properties:
+    ssid:
+        description: |
+            the ID of this sourcestamp
+            .. note::
+
+                For legacy reasons, the abreviated name ``ssid`` is used instead of canonical
+                ``sourcestampid``.
+                This might change in the future (:bug:`3509`).
+        type: integer
+    branch?:
+        description: code branch, or none for the "default branch", whatever that might mean
+        type: string
+    codebase:
+        description: revision for this sourcestamp, or none if unknown
+        type: string
+    created_at:
+        description: the timestamp when this sourcestamp was created
+        type: date
+    patch?:
+        description: the patch for this sourcestamp, or none
+        type: patch
+    project:
+        description: user-defined project to which this sourcestamp corresponds
+        type: string
+    repository:
+        description: repository where this sourcestamp occurred
+        type: string
+    revision?:
+        description: revision for this sourcestamp, or none if unknown
+        type: string
+type: object
