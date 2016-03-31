@@ -1,3 +1,4 @@
+# coding: utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -99,6 +100,36 @@ class LdapUserInfo(unittest.TestCase):
     def test_updateUserInfoGroups(self):
         self.makeSearchSideEffect([[("cn", {"accountFullName": "me too",
                                             "accountEmail": "mee@too"})],
+                                   [("cn", {"groupName": ["group"]}),
+                                    ("cn", {"groupName": ["group2"]})
+                                    ], []])
+        res = yield self.userInfoProvider.getUserInfo("me")
+        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
+                               'groups': ["group", "group2"], 'username': 'me'})
+
+    @defer.inlineCallbacks
+    def test_updateUserInfoGroupsUnicodeDn(self):
+        # In case of non Ascii DN, ldap3 lib returns an UTF-8 str
+        dn = "cn=Sébastien,dc=example,dc=org"
+        # If groupMemberPattern is an str, the resulting filter will be an str,
+        # leading to UnicodeDecodeError
+        # in ldap3.protocol.convert.validate_assertion_value()
+        # So we use an unicode pattern:
+        self.userInfoProvider.groupMemberPattern = u'(member=%(dn)s)'
+        self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",
+                                          "accountEmail": "mee@too"})],
+                                   [("cn", {"groupName": ["group"]}),
+                                    ("cn", {"groupName": ["group2"]})
+                                    ], []])
+        res = yield self.userInfoProvider.getUserInfo("me")
+        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
+                               'groups': ["group", "group2"], 'username': 'me'})
+
+        # actually, it also works with an str pattern after fix in this commit
+        # because groupMemberPattern is promoted by the % operator
+        self.userInfoProvider.groupMemberPattern = '(member=%(dn)s)'
+        self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",
+                                          "accountEmail": "mee@too"})],
                                    [("cn", {"groupName": ["group"]}),
                                     ("cn", {"groupName": ["group2"]})
                                     ], []])
