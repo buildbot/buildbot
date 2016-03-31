@@ -12,11 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import copy
+import json
 import os
 import ramlfications
-import json
-import copy
+
 from collections import OrderedDict
+
 
 class RamlSpec(object):
 

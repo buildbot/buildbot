@@ -51,6 +51,7 @@ class Type(object):
             r["doc"] = self.doc
         return r
 
+
 class NoneOk(Type):
 
     def __init__(self, nestedType):
@@ -81,6 +82,7 @@ class NoneOk(Type):
 
     def toRaml(self):
         return self.nestedType.toRaml()
+
 
 class Instance(Type):
 
@@ -172,6 +174,7 @@ class Identifier(Type):
         elif len(object) > self.len:
             yield "%s - %r - is longer than %d characters" % (name, object,
                                                               self.len)
+
     def toRaml(self):
         return {'type': self.ramlType,
                 'pattern': self.identRe.pattern}
@@ -211,12 +214,14 @@ class List(Type):
     def toRaml(self):
         return {'type': 'array', 'items': self.of.name}
 
+
 def maybeNoneOrList(k, v):
     if isinstance(v, NoneOk):
         return k + "?"
     if isinstance(v, List):
         return k + "[]"
     return k
+
 
 class SourcedProperties(Type):
 
@@ -243,16 +248,17 @@ class SourcedProperties(Type):
     def toRaml(self):
         return {'type': "object",
                 'properties':
-                     { '[]': { 'type': 'object',
-                                'properties': {
-                                     1: 'string',
-                                     2: 'integer | string | object | array | boolean'
-                                }
-                            }}}
+                {'[]': {'type': 'object',
+                        'properties': {
+                            1: 'string',
+                            2: 'integer | string | object | array | boolean'
+                            }
+                        }}}
 
 
 class Dict(Type):
     name = "dict"
+
     @property
     def ramlname(self):
         return self.toRaml()
@@ -291,14 +297,16 @@ class Dict(Type):
                                  type_spec=v.getSpec())
                             for k, v in iteritems(self.contents)
                             ])
+
     def toRaml(self):
         return {'type': "object",
-                 'properties': dict([(maybeNoneOrList(k, v), v.ramlname) for k, v in self.contents.items()])}
+                'properties': dict([(maybeNoneOrList(k, v), v.ramlname) for k, v in self.contents.items()])}
 
 
 class JsonObject(Type):
     name = "jsonobject"
     ramlname = 'object'
+
     def validate(self, name, object):
         if not isinstance(object, dict):
             yield "%s (%r) is not a dictionary (got type %s)" \
@@ -314,6 +322,7 @@ class JsonObject(Type):
 
     def toRaml(self):
         return "object"
+
 
 class Entity(Type):
 
@@ -369,4 +378,4 @@ class Entity(Type):
 
     def toRaml(self):
         return {'type': "object",
-                 'properties': dict([(maybeNoneOrList(k, v), {'type': v.ramlname, 'description': ''}) for k, v in iteritems(self.fields)])}
+                'properties': dict([(maybeNoneOrList(k, v), {'type': v.ramlname, 'description': ''}) for k, v in iteritems(self.fields)])}

@@ -436,6 +436,7 @@ else:
         'boto',
         'moto',
         'txgithub',
+        'ramlfications',
         'mock',
     ]
     if sys.platform != 'win32':

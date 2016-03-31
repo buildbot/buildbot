@@ -15,8 +15,8 @@
 import textwrap
 
 from buildbot.util import raml
-from twisted.trial import unittest
 from collections import OrderedDict
+from twisted.trial import unittest
 
 
 class TestRaml(unittest.TestCase):

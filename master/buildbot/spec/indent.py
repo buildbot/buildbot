@@ -1,6 +1,6 @@
 #!/usr/bin/python
-import sys
 import re
+import sys
 
 spaces = re.compile("^ +")
 for fn in sys.argv[1:]:
