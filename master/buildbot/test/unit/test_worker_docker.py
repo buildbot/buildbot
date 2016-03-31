@@ -19,6 +19,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
+from buildbot.process.properties import Interpolate
 from buildbot.test.fake import docker
 from buildbot.worker import docker as dockerworker
 
@@ -29,7 +30,7 @@ class TestDockerLatentWorker(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.build = Properties(image="busybox:latest")
+        self.build = Properties(image="busybox:latest", builder="docker_worker")
         self.patch(dockerworker, 'client', docker)
 
     def test_constructor_nodocker(self):
@@ -77,15 +78,26 @@ class TestDockerLatentWorker(unittest.TestCase):
         self.assertEqual(bs.client_args, {'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
         self.assertEqual(bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
 
+    @defer.inlineCallbacks
+    def test_start_instance_volume_renderable(self):
+        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+                                 volumes=[Interpolate('/data:/buildslave/%(kw:builder)s/build', builder=Property('builder'))])
+        id, name = yield bs.start_instance(self.build)
+        self.assertEqual(bs.volumes, ['/data:/buildslave/docker_worker/build'])
+
+    @defer.inlineCallbacks
     def test_volume_no_suffix(self):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
+        yield bs.start_instance(self.build)
         self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
 
-    def test_ro_rw_volume(self):
+    @defer.inlineCallbacks
+    def test_volume_ro_rw(self):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
                                  volumes=['/src/webapp:/opt/webapp:ro',
                                           '~:/backup:rw'])
+        yield bs.start_instance(self.build)
         self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
                                     '~': {'bind': '/backup', 'ro': False}})
@@ -93,6 +105,12 @@ class TestDockerLatentWorker(unittest.TestCase):
     def test_volume_bad_format(self):
         self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'http://localhost:2375', image="worker",
                           volumes=['abcd=efgh'])
+
+    @defer.inlineCallbacks
+    def test_volume_bad_format_renderable(self):
+        bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', image="worker",
+                                 volumes=[Interpolate('/data==/buildslave/%(kw:builder)s/build', builder=Property('builder'))])
+        yield self.assertRaises(AttributeError, bs.start_instance(self.build))
 
     @defer.inlineCallbacks
     def test_start_instance_image_no_version(self):
