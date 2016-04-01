@@ -188,6 +188,9 @@ define(function (require) {
             });
 
         },
+        getInstantJSON: function () {
+            return window.instantJSON;
+        },
         selectBuildsAction: function ($table, dontUpdate, updateUrl, parameters, updateFunc) { // check all in tables and perform remove action
 
             if ($table === undefined) {
@@ -207,6 +210,11 @@ define(function (require) {
                 var $dataTable = $table.dataTable();
                 $("#preloader").preloader("showPreloader");
                 str = str + '&ajax=true';
+
+                var json = helpers.getInstantJSON();
+                if (json !== undefined && json.pending_builds && json.pending_builds.url) {
+                    str = str + '&pending_builds_url=' + json.pending_builds.url;
+                }
 
                 $.ajax({
                     type: "POST",
@@ -649,6 +657,22 @@ define(function (require) {
               $.cookie('exthistorylist', cookie, {expires: 10000000000, path: "/"});
             }
           }              
+        },
+
+        getPendingIcons: function (hb, data) {
+            return hb.partials.cells["cells:pendingIcons"]({initial_queue: data.results !== 9});
+        },
+
+        getPriorityData: function (data, full){
+            var priority = data.priority;
+            if (full.properties !== undefined) {
+                $.each(full.properties, function (i, prop) {
+                    if (prop[0] === "selected_slave") {
+                        priority += "<br/>" + prop[1];
+                    }
+                });
+            }
+            return priority;
         }
       };
 

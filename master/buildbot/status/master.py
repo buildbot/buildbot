@@ -189,7 +189,12 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         def getMasterURL(bmdict, builder_name, build_number):
             url = {}
 
-            url['path'] = bmdict['buildbotURL'] + self.getBuildersPath(builder_name, build_number) \
+            buildbotURL = bmdict['buildbotURL'] if bmdict and 'buildbotURL' in bmdict else ''
+            if not buildbotURL:
+                log.msg("Did not find buildbotURL for buildrequest self.master.db.mastersconfig.getMasterURL(%d)"
+                        % brid)
+
+            url['path'] = buildbotURL + self.getBuildersPath(builder_name, build_number) \
                           + getCodebasesArg(sourcestamps=sourcestamps)
             url['text'] = self.getURLText(name, build_number)
             return url
@@ -367,11 +372,11 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         all_builds = []
         for bn in builder_names:
             b = self.getBuilder(bn)
-            finished_builds = yield b.getFinishedBuildsByNumbers(buildnumbers=sorted(lastBuilds[bn], reverse=True),
-                                                                  results=results)
+            finished_builds = yield b.getFinishedBuildsByNumbers(buildnumbers=lastBuilds[bn],
+                                                                 results=results)
             all_builds.extend(finished_builds)
 
-        sorted_builds = sorted(all_builds, key=lambda build: build.started, reverse=True)
+        sorted_builds = sorted(all_builds, key=lambda build: build.finished, reverse=True)
         defer.returnValue(sorted_builds)
 
     def generateFinishedBuilds(self, builders=[], branches=[],

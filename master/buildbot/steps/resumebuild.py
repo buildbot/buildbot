@@ -2,7 +2,8 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.steps.shell import ShellCommand
 from buildbot.status.results import SUCCESS, RESUME, SKIPPED
 from twisted.internet import defer
-
+from buildbot.process.builder import Slavepool
+from buildbot import config
 
 def shouldResumeBuild(resume, results, steps):
     return resume and (results == SUCCESS or results == SKIPPED) and len(steps) > 0
@@ -12,10 +13,19 @@ class ResumeBuild(LoggingBuildStep):
     description="Resume Build..."
     descriptionDone="Resume Build"
 
-    def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
+    def checkResumeSlavepoolParameter(self, resumeSlavepool):
+        if resumeSlavepool is not None and resumeSlavepool != Slavepool.startSlavenames \
+                and resumeSlavepool != Slavepool.slavenames:
+            config.error(
+                "resumeSlavepool='%s', this parameter must be equals to '%s' or '%s'"
+                % (resumeSlavepool, Slavepool.startSlavenames, Slavepool.slavenames))
+
+        return "slavenames" if resumeSlavepool is None else resumeSlavepool
+
+    def __init__(self, resumeBuild=True, resumeSlavepool=None, haltOnFailure=True, **kwargs):
         self.resumeBuild = resumeBuild if resumeBuild is not None else True
-        self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
-        LoggingBuildStep.__init__(self, **kwargs)
+        self.resumeSlavepool = self.checkResumeSlavepoolParameter(resumeSlavepool)
+        LoggingBuildStep.__init__(self, haltOnFailure=haltOnFailure, **kwargs)
 
     def releaseBuildLocks(self):
         self.build.releaseLocks()
@@ -63,10 +73,10 @@ class ShellCommandResumeBuild(ShellCommand):
     description="Resume Build..."
     descriptionDone="Resume Build"
 
-    def __init__(self, resumeBuild=True, resumeSlavepool=None, **kwargs):
+    def __init__(self, resumeBuild=True, resumeSlavepool=None, haltOnFailure=True, **kwargs):
         self.resumeBuild = resumeBuild if resumeBuild is not None else True
         self.resumeSlavepool = "slavenames" if resumeSlavepool is None else resumeSlavepool
-        ShellCommand.__init__(self, **kwargs)
+        ShellCommand.__init__(self, haltOnFailure=haltOnFailure, **kwargs)
 
     def finished(self, results):
         if shouldResumeBuild(self.resumeBuild, results, self.build.steps):

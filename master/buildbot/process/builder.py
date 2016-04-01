@@ -31,6 +31,10 @@ from buildbot.process.build import Build
 from buildbot.process.slavebuilder import BUILDING
 
 
+class Slavepool(object):
+    slavenames = 'slavenames'
+    startSlavenames = 'startSlavenames'
+
 def enforceChosenSlave(bldr, slavebuilder, breq):
     if 'slavename' in breq.properties:
         slavename = breq.properties['slavename']
@@ -132,7 +136,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         @returns: datetime instance or None, via Deferred
         """
-        unclaimed = yield self.master.db.buildrequests.getOldestBuildRequestInQueue(buildername=self.name)
+        unclaimed = yield self.master.db.buildrequests.getBuildRequests(buildername=self.name, claimed=False)
 
         if unclaimed:
             unclaimed = [ brd['submitted_at'] for brd in unclaimed ]
@@ -140,6 +144,15 @@ class Builder(config.ReconfigurableServiceMixin,
             defer.returnValue(unclaimed[0])
         else:
             defer.returnValue(None)
+
+    def getSlaveBuilder(self, slavename):
+        for sb in self.getAllSlaves():
+            if sb.slave.slave_status.getName() == slavename:
+                return sb
+
+    def slaveIsAvailable(self, slavename):
+        slave_builder = self.getSlaveBuilder(slavename=slavename)
+        return slave_builder.isAvailable() if slave_builder else False
 
     def reclaimAllBuilds(self):
         brids = set()
@@ -297,10 +310,6 @@ class Builder(config.ReconfigurableServiceMixin,
         except Exception:
             log.err(None, "while trying to update status of builder '%s'" % (self.name,))
 
-    def getAvailableSlavesToResume(self):
-        return [sb for sb in self.slaves
-                if sb.isAvailable()]
-
     def getAvailableSlaves(self):
         if self.config.startSlavenames:
             return [sb for sb in self.startSlaves
@@ -308,6 +317,12 @@ class Builder(config.ReconfigurableServiceMixin,
 
         return [sb for sb in self.slaves
                 if sb.isAvailable()]
+
+    def getAvailableSlavesToProcessBuildRequests(self, slavepool):
+        slavelist = self.startSlaves if (self.config.startSlavenames and slavepool == Slavepool.startSlavenames) \
+            else self.slaves
+
+        return [sb for sb in slavelist if sb.isAvailable()]
 
     def canStartWithSlavebuilder(self, slavebuilder):
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
@@ -574,13 +589,10 @@ class Builder(config.ReconfigurableServiceMixin,
         self.updateBigStatus()
 
     @defer.inlineCallbacks
-    def _maybeBuildsetsComplete(self, requests, requestRemoved=False, results=None):
+    def _maybeBuildsetsComplete(self, requests, results=None):
         # inform the master that we may have completed a number of buildsets
         for br in requests:
             yield self.master.maybeBuildsetComplete(br.bsid)
-            # notify the master that the buildrequest was remove from queue
-            if requestRemoved:
-                self.master.buildRequestRemoved(br.bsid, br.id, self.name)
 
             if results and results == RESUME:
                 self.master.buildRequestAdded(br.bsid, br.id, self.name)

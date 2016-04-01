@@ -121,32 +121,40 @@ define(function (require) {
             };
 
             options.aoColumns = [
-                {"mData": null, "sWidth": "4%", "sTitle": ""},
-                {"mData": null, "sWidth": "27%", "sTitle": "Requested at"},
-                {"mData": null, "sWidth": "27%", "sTitle": "Waiting"},
-                {"mData": null, "sWidth": "27%", "sTitle": "Branch"},
-                {"mData": null, "sWidth": "15%", "sTitle": "Select all"}
+                {"mData": null, "sWidth": "4%", "sTitle": "", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Priority", bSortable: false},
+                {"mData": null, "sWidth": "17%", "sTitle": "When", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Waiting", bSortable: false},
+                {"mData": null, "sWidth": "21%", "sTitle": "Branch", bSortable: false},
+                {"mData": "brid", "sWidth": "17%"}
             ];
 
             options.aoColumnDefs = [
                 {
                     "aTargets": [0],
-                    "sClass": "txt-align-left",
+                    "sClass": "txt-align-center",
                     "mRender": function (data, type, full) {
                         // If the build result is not resume then we are in the normal queue and not the
                         // resume queue
-                        return hb.partials.cells["cells:pendingIcons"]({initial_queue: data.results !== 9});
+                        return helpers.getPendingIcons(hb, data);
                     }
                 },
                 {
                     "aTargets": [1],
+                    "sClass": "txt-align-center",
+                    "mRender": function (data, type, full) {
+                        return helpers.getPriorityData(data, full);
+                    }
+                },
+                {
+                    "aTargets": [2],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         return extendMoment.getDateFormatted(full.submittedAt);
                     }
                 },
                 {
-                    "aTargets": [2],
+                    "aTargets": [3],
                     "sClass": "txt-align-left",
                     "mRender": function () {
                         return hbBuilderDetail({pendingBuildWait: true});
@@ -155,12 +163,19 @@ define(function (require) {
                         timeElements.addElapsedElem($(nTd).find('.waiting-time-js'), oData.submittedAt);
                     }
                 },
-                rtTable.cell.revision(3, "sources", helpers.urlHasCodebases()),
+                rtTable.cell.revision(4, "sources", helpers.urlHasCodebases()),
                 {
-                    "aTargets": [4],
+                    "aTargets": [5],
                     "sClass": "txt-align-right",
                     "mRender": function (data, type, full) {
                         return hbBuilderDetail({removeBuildSelector: true, data: full});
+                    }
+                },
+                {
+                    "aTargets": [ 6 ],
+                    "sClass": "select-input",
+                    "mRender": function (data, type, full) {
+                        return hbBuilderDetail({input: 'true', brid: full.brid});
                     }
                 }
             ];

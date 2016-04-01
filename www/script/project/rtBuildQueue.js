@@ -33,25 +33,39 @@ define(function (require) {
         dataTableInit: function () {
             var options = {};
 
-            options.aaSorting = [
-                [ 2, "asc" ]
-            ];
-
             options.aoColumns = [
-                { "mData": "builderFriendlyName" },
-                { "mData": "sources" },
-                { "mData": "reason"},
-                { "mData": "slaves" },
-                { "mData": "brid" }
+                { "mData": null, "sWidth": "4%", bSortable: false },
+                { "mData": null, "sWidth": "10%", bSortable: false },
+                { "mData": "builderFriendlyName", "sWidth": "28%", bSortable: false},
+                { "mData": "sources", "sWidth": "10%", bSortable: false },
+                { "mData": "reason", "sWidth": "30%", bSortable: false },
+                { "mData": "slaves", "sWidth": "10%", bSortable: false },
+                { "mData": "brid", "sWidth": "6%", bSortable: false }
             ];
 
             options.aoColumnDefs = [
                 {
-                    "sClass": "txt-align-left",
-                    "aTargets": [ 0 ]
+                    "aTargets": [0],
+                    "sClass": "txt-align-center",
+                    "mRender": function (data, type, full) {
+                        // If the build result is not resume then we are in the normal queue and not the
+                        // resume queue
+                        return helpers.getPendingIcons(hb, data);
+                    }
                 },
                 {
-                    "aTargets": [ 1 ],
+                    "aTargets": [1],
+                    "sClass": "txt-align-center",
+                    "mRender": function (data, type, full) {
+                        return helpers.getPriorityData(data, full);
+                    }
+                },
+                {
+                    "sClass": "txt-align-left",
+                    "aTargets": [ 2 ]
+                },
+                {
+                    "aTargets": [ 3 ],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         var sourcesLength = full.sources !== undefined ? full.sources.length : 0;
@@ -63,7 +77,7 @@ define(function (require) {
                     }
                 },
                 {
-                    "aTargets": [ 2 ],
+                    "aTargets": [ 4 ],
                     "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         var requested = moment.unix(full.submittedAt).format('MMMM Do YYYY, H:mm:ss');
@@ -74,8 +88,8 @@ define(function (require) {
                     }
                 },
                 {
-                    "aTargets": [ 3 ],
-                    "sClass": "txt-align-right",
+                    "aTargets": [ 5 ],
+                    "sClass": "txt-align-left",
                     "mRender": function (data, type, full) {
                         var slavelength = full.slaves !== undefined ? full.slaves.length : 0;
                         return hbBuildQueue({showslaves: true, slaves: data, slavelength: slavelength});
@@ -86,7 +100,7 @@ define(function (require) {
                     }
                 },
                 {
-                    "aTargets": [ 4 ],
+                    "aTargets": [ 6 ],
                     "sClass": "select-input",
                     "mRender": function (data, type, full) {
                         return hbBuildQueue({input: 'true', brid: full.brid});

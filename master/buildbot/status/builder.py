@@ -369,10 +369,12 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestStatuses(self):
-        db = self.status.master.db
+    def getPendingBuildRequestStatuses(self, codebases={}):
+        sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
 
-        brdicts = yield db.buildrequests.getBuildRequestInQueue(buildername=self.name, sorted=True)
+        brdicts = yield self.master.db.buildrequests.getBuildRequestInQueue(buildername=self.name,
+                                                                            sourcestamps=sourcestamps,
+                                                                            sorted=True)
 
         result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
 
@@ -681,6 +683,13 @@ class BuilderStatus(styles.Versioned):
 
         defer.returnValue(build)
 
+    @defer.inlineCallbacks
+    def cancelBuildRequestsOnResume(self, number):
+        build = yield self.cancelBuildOnResume(number)
+        # the builder cancel related requests in the db
+        if build:
+            yield self.master.db.buildrequests.cancelBuildRequestsByBuildNumber(number=number, buildername=self.name)
+
     def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
@@ -895,18 +904,11 @@ class BuilderStatus(styles.Versioned):
             return self.latestBuildCache and k in self.latestBuildCache and 'build' in self.latestBuildCache[k] and \
                 self.latestBuildCache[k]["build"] and cache["build"] is None
 
-        def buildCacheAlreadyHasLastBuild():
-            return self.latestBuildCache and k in self.latestBuildCache and self.latestBuildCache[k] and\
-                self.latestBuildCache[k]["build"] and self.latestBuildCache[k]["build"] > cache["build"]
-
         def keyHasMultipleCodebasesAndEmptyBuild():
             codebases = [key for key in k.split(';') if key]
             return not cache["build"] and len(codebases) > 1
 
         if nonEmptyCacheUpdateToEmptyBuild():
-            return
-
-        if buildCacheAlreadyHasLastBuild():
             return
 
         if keyHasMultipleCodebasesAndEmptyBuild():

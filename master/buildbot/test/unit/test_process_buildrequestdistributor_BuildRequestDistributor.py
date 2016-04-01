@@ -45,7 +45,7 @@ class Test(unittest.TestCase):
         self.botmaster.builders = {}
         def prioritizeBuilders(master, builders):
             # simple sort-by-name by default
-            return sorted(builders, lambda b1,b2 : cmp(b1.name, b2.name))
+            return sorted(builders, lambda b1, b2: cmp(b1.name, b2.name))
         self.master = self.botmaster.master = mock.Mock(name='master')
         self.master.config.prioritizeBuilders = prioritizeBuilders
         self.master.db = fakedb.FakeDBConnector(self)
@@ -130,7 +130,7 @@ class Test(unittest.TestCase):
         # test 15 "parallel" invocations of maybeStartBuildsOn, with a
         # _sortBuilders that takes a while.  This is a regression test for bug
         # #1979.
-        builders = ['bldr%02d' % i for i in xrange(15) ]
+        builders = ['bldr%02d' % i for i in xrange(15)]
 
         def slow_sorter(master, bldrs):
             bldrs.sort(lambda b1, b2 : cmp(b1.name, b2.name))
@@ -210,13 +210,11 @@ class Test(unittest.TestCase):
 
         def mklambda(t): # work around variable-binding issues
             if returnDeferred:
-                return lambda : defer.succeed(t)
+                return lambda: defer.succeed(t)
             else:
-                return lambda : t
+                return lambda: t
 
         for n, t in oldestRequestTimes.iteritems():
-            if t is not None:
-                t = epoch2datetime(t)
             self.builders[n].getOldestRequestTime = mklambda(t)
 
         d = self.brd._sortBuilders(oldestRequestTimes.keys())
@@ -228,19 +226,19 @@ class Test(unittest.TestCase):
 
     def test_sortBuilders_default_sync(self):
         return self.do_test_sortBuilders(None, # use the default sort
-                dict(bldr1=777, bldr2=999, bldr3=888),
-                ['bldr1', 'bldr3', 'bldr2'])
+                                         dict(dict(bldr1=777, bldr2=999, bldr3=888)),
+                                         ['bldr1', 'bldr3', 'bldr2'])
 
     def test_sortBuilders_default_asyn(self):
-        return self.do_test_sortBuilders(None, # use the default sort
-                dict(bldr1=777, bldr2=999, bldr3=888),
-                ['bldr1', 'bldr3', 'bldr2'],
-                returnDeferred=True)
+        return self.do_test_sortBuilders(None,
+                                         dict(bldr1=777, bldr2=999, bldr3=888),
+                                         ['bldr1', 'bldr3', 'bldr2'],
+                                         returnDeferred=True)
 
     def test_sortBuilders_default_None(self):
         return self.do_test_sortBuilders(None, # use the default sort
-                dict(bldr1=777, bldr2=None, bldr3=888),
-                ['bldr1', 'bldr3', 'bldr2'])
+                                         dict(bldr1=777, bldr2=None, bldr3=888),
+                                         ['bldr1', 'bldr3', 'bldr2'])
 
     def test_sortBuilders_custom(self):
         def prioritizeBuilders(master, builders):
@@ -264,6 +262,7 @@ class Test(unittest.TestCase):
     def test_sortBuilders_custom_exception(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['x', 'y'])
+
         def fail(m, b):
             raise RuntimeError("oh noes")
         self.master.config.prioritizeBuilders = fail
@@ -286,6 +285,7 @@ class Test(unittest.TestCase):
         self.addBuilders(['A', 'B'])
 
         oldMSBOB = self.brd._maybeStartBuildsOnBuilder
+
         def maybeStartBuildsOnBuilder(bldr):
             d = oldMSBOB(bldr)
 
@@ -584,7 +584,8 @@ class TestMaybeStartBuilds(unittest.TestCase):
             ('test-slave2', 10),
             ('test-slave1', 10),
             ('test-slave2', 11),
-            ('test-slave2', 12)])
+            ('test-slave2', 12)
+        ])
 
     @mock.patch('random.choice', nth_slave(-1))
     @defer.inlineCallbacks
@@ -643,7 +644,7 @@ class TestMaybeStartBuilds(unittest.TestCase):
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                 exp_claims=[],  # reclaimed so none taken!
-                exp_builds=[('test-slave2', [10]), ('test-slave2', [11])])
+                exp_builds=[('test-slave2', [10]), ('test-slave1', [11])])
 
     @mock.patch('random.choice', nth_slave(-1))
     @defer.inlineCallbacks
@@ -671,12 +672,12 @@ class TestMaybeStartBuilds(unittest.TestCase):
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.master.db.buildrequests.assertMyClaims([11])  # reclaimed so none taken!
-        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave2', [11])])
+        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave1', [11])])
 
         # second time around the #10 will pass, adding another request and it is claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.master.db.buildrequests.assertMyClaims([10, 11])
-        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave2', [11]), ('test-slave2', [10])])
+        self.assertBuildsStarted([('test-slave2', [10]), ('test-slave1', [11]), ('test-slave2', [10])])
 
 
     @mock.patch('random.choice', nth_slave(1))

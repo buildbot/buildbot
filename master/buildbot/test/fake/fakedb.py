@@ -24,6 +24,7 @@ from buildbot.util import json, epoch2datetime, datetime2epoch
 from twisted.python import failure
 from twisted.internet import defer, reactor
 from buildbot.db import buildrequests
+from buildbot.db.buildrequests import Queue
 
 # Fake DB Rows
 
@@ -92,7 +93,9 @@ class BuildRequest(Row):
         artifactbrid = None,
         triggeredbybrid = None,
         mergebrid = None,
-        startbrid = None
+        startbrid = None,
+        slavepool = None
+
     )
 
     id_column = 'id'
@@ -931,7 +934,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             return defer.succeed(None)
 
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
-                         bsid=None, results=None, mergebrids=None):
+                         bsid=None, results=None, mergebrids=None, sourcestamps=None, sorted=False):
         rv = []
         for br in self.reqs.itervalues():
             if buildername and br.buildername != buildername:
@@ -965,12 +968,16 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 elif mergebrids and br.mergebrid not in mergebrids:
                         continue
             rv.append(self._brdictFromRow(br))
+
+        if sorted:
+            rv.sort(key=lambda br: (-br["priority"], br["submitted_at"]))
+
         return defer.succeed(rv)
 
-    def getOldestBuildRequestInQueue(self, buildername):
-        return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
+    def getBuildRequestsInQueue(self, queue=None):
+        return self.getBuildRequests(complete=False, claimed=False)
 
-    def getBuildRequestInQueue(self, buildername, sorted=True):
+    def getBuildRequestInQueue(self, buildername=None, sourcestamps=None, sorted=True, limit=None):
         return self.getBuildRequests(buildername=buildername, complete=False, claimed=False)
 
     def claimBuildRequests(self, brids, claimed_at=None):
@@ -1074,8 +1081,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         return defer.succeed(None)
 
 
-    def mergeBuildingRequest(self, requests, brids, number, claim=True):
-        if claim:
+    def mergeBuildingRequest(self, requests, brids, number, queue):
+        if queue == Queue.unclaimed:
             return self.claimBuildRequests(brids)
 
     def maybeUpdateMergedBrids(self, brids):

@@ -95,7 +95,8 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
             log.msg("setting database journal mode to 'wal'")
             try:
-                engine.execute("pragma journal_mode = wal")
+                with engine.connect() as connection:
+                    connection.execute("pragma journal_mode = wal")
             except:
                 log.msg("failed to set journal mode - database may fail")
 

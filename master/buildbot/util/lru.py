@@ -169,11 +169,12 @@ class AsyncLRUCache(LRUCache):
     multiple concurrent requests for the same key, only one fetch is performed.
     """
 
-    __slots__ = ['concurrent']
+    __slots__ = ['concurrent', 'fn_uses_key']
 
     def __init__(self, miss_fn, max_size=50):
         LRUCache.__init__(self, miss_fn, max_size=max_size)
         self.concurrent = {}
+        self.fn_uses_key = True
 
     def get(self, key, **miss_fn_kwargs):
         try:
@@ -198,7 +199,10 @@ class AsyncLRUCache(LRUCache):
         assert key not in concurrent
         concurrent[key] = [ d ]
 
-        miss_d = self.miss_fn(key, **miss_fn_kwargs)
+        if self.fn_uses_key:
+            miss_d = self.miss_fn(key, **miss_fn_kwargs)
+        else:
+            miss_d = self.miss_fn(**miss_fn_kwargs)
 
         def handle_result(result):
             if result is not None:
@@ -227,6 +231,9 @@ class AsyncLRUCache(LRUCache):
 
         return d
 
+    def remove(self, key):
+        if key in self.cache:
+            del self.cache[key]
 
 # for tests
 inv_failed = False

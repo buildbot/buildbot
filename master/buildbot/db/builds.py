@@ -17,6 +17,7 @@ from twisted.internet import reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 import sqlalchemy as sa
+from buildbot.db.buildrequests import maybeFilterBuildRequestsBySourceStamps
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -142,29 +143,30 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             maxSearch = num_builds if num_builds < 200 else 200
             resumeBuilds = [9, -1]
 
-            q = sa.select(columns=[buildrequests_tbl.c.buildername, builds_tbl.c.number],
+            q = sa.select(columns=[buildrequests_tbl.c.id, buildrequests_tbl.c.buildername, builds_tbl.c.number],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
-                                                          & (builds_tbl.c.finish_time != None)))
+                                                          & (builds_tbl.c.finish_time != None)))\
+                .group_by(buildrequests_tbl.c.id, buildrequests_tbl.c.buildername, builds_tbl.c.number)
 
             #TODO: support filter by RETRY result
             if results:
-                q = sa.select(columns=[buildrequests_tbl.c.buildername,
-                                       buildrequests_tbl.c.id,
+                q = sa.select(columns=[buildrequests_tbl.c.id,
+                                       buildrequests_tbl.c.buildername,
                                        buildrequests_tbl.c.results,
                                        sa.func.max(builds_tbl.c.number).label("number")],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
                                                           & (builds_tbl.c.finish_time != None)))\
                     .where(buildrequests_tbl.c.results.in_(results))\
-                    .group_by(buildrequests_tbl.c.buildername, buildrequests_tbl.c.id,
+                    .group_by(buildrequests_tbl.c.id, buildrequests_tbl.c.buildername,
                               buildrequests_tbl.c.results)
 
             q = q.where(buildrequests_tbl.c.mergebrid == None)\
-                .where(builds_tbl.c.slavename == slavename)\
+                .where(buildrequests_tbl.c.complete == 1)\
                 .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
-                .distinct(buildrequests_tbl.c.buildername, builds_tbl.c.number)\
-                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+                .where(builds_tbl.c.slavename == slavename)\
+                .order_by(sa.desc(buildrequests_tbl.c.complete_at)).limit(maxSearch)
 
             res = conn.execute(q)
 
@@ -182,7 +184,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, results=None, num_builds=1):
+    def getLastBuildsNumbers(self, buildername=None, sourcestamps=None, results=None, num_builds=15):
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
             buildsets_tbl = self.db .model.buildsets
@@ -194,13 +196,15 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             maxSearch = num_builds if num_builds < 200 else 200
             resumeBuilds = [9, -1]
 
-            q = sa.select(columns=[builds_tbl.c.number],
+            q = sa.select(columns=[buildrequests_tbl.c.id, sa.func.max(builds_tbl.c.number).label("number")],
                           from_obj=buildrequests_tbl.join(builds_tbl,
                                                           (buildrequests_tbl.c.id == builds_tbl.c.brid)
                                                           & (builds_tbl.c.finish_time != None))).\
                 where(buildrequests_tbl.c.mergebrid == None)\
                 .where(~buildrequests_tbl.c.results.in_(resumeBuilds))\
-                .where(buildrequests_tbl.c.buildername == buildername)
+                .where(buildrequests_tbl.c.buildername == buildername)\
+                .where(buildrequests_tbl.c.complete == 1)\
+                .group_by(buildrequests_tbl.c.id)
 
             #TODO: support filter by RETRY result
             if results:
@@ -212,50 +216,17 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     where(buildrequests_tbl.c.mergebrid == None)\
                     .where(buildrequests_tbl.c.buildername == buildername)\
                     .where(buildrequests_tbl.c.results.in_(results))\
+                    .where(buildrequests_tbl.c.complete == 1)\
                     .group_by(buildrequests_tbl.c.id, buildrequests_tbl.c.results)
 
-            if sourcestamps and len(sourcestamps) > 0:
-                # check that sourcestampset match all branches x codebases
-                clauses = []
-                exclude_clauses = []
-                codebases_filter = sourcestamps is not None and len(sourcestamps) > 1 \
-                                   and 'b_codebase' in sourcestamps[0]
+            q = maybeFilterBuildRequestsBySourceStamps(query=q,
+                                                       sourcestamps=sourcestamps,
+                                                       buildrequests_tbl=buildrequests_tbl,
+                                                       buildsets_tbl=buildsets_tbl,
+                                                       sourcestamps_tbl=sourcestamps_tbl,
+                                                       sourcestampsets_tbl=sourcestampsets_tbl)
 
-                for ss in sourcestamps:
-                    stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
-                        .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
-                        .where(sourcestamps_tbl.c.branch == ss['b_branch'])
-                    if 'b_codebase' in ss:
-                        stmt_include = stmt_include.where(sourcestamps_tbl.c.codebase == ss['b_codebase'])
-
-                    clauses.append(sourcestampsets_tbl.c.id == stmt_include)
-
-                    if codebases_filter:
-                        stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
-                            .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
-                            .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
-                            .where(sourcestamps_tbl.c.branch != ss['b_branch'])
-                        exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
-
-                stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
-                    .where(sa.or_(*clauses))
-
-                stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
-                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
-
-                q = q.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
-
-                if codebases_filter:
-                    stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
-                        .where(sa.or_(*exclude_clauses))
-
-                    stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
-                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
-
-                    q = q.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
-
-            q = q.distinct(builds_tbl.c.number)\
-                .order_by(sa.desc(buildrequests_tbl.c.id)).limit(maxSearch)
+            q = q.order_by(sa.desc(buildrequests_tbl.c.complete_at)).limit(maxSearch)
 
             res = conn.execute(q)
 
@@ -267,7 +238,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
             res.close()
 
-            return sorted(lastBuilds, reverse=True)
+            return lastBuilds
 
         return self.db.pool.do(thd)
 

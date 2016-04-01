@@ -19,6 +19,7 @@ import tempfile, os
 import shutil
 import tarfile
 from twisted.trial import unittest
+import ast
 
 from mock import Mock
 
@@ -261,7 +262,9 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEquals(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEquals(data, json.dumps(dict(sourcestamp=ss.asDict(), properties={'key1': 'value1'})))
+                self.assertEquals(ast.literal_eval(data),
+                                  ast.literal_eval(json.dumps(dict(sourcestamp=ss.asDict(),
+                                                                   properties={'key1': 'value1'}))))
                 break
         else:
             self.assert_(False, "No downloadFile command found")

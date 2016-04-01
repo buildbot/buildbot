@@ -93,7 +93,10 @@ class CancelBuildQueueActionResource(ActionResource):
             yield brc.cancel()
 
         # go back to the buildqueue page
-        if req.args.has_key("ajax"):
+        pending_builds_url = req.args.get("pending_builds_url", None)
+        if pending_builds_url:
+            defer.returnValue(pending_builds_url[0])
+        elif req.args.has_key("ajax"):
             defer.returnValue(path_to_buildqueue_json(req))
         else:
             defer.returnValue(path_to_buildqueue(req))

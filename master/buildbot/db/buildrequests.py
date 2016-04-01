@@ -21,36 +21,101 @@ from datetime import datetime, timedelta
 from twisted.internet import reactor
 from twisted.python import log
 from buildbot.db import base
+from buildbot.util import json
 from buildbot.util import epoch2datetime, datetime2epoch
 from buildbot.status.results import RESUME, CANCELED
+from twisted.python.failure import Failure
+
+
+class Queue(object):
+    unclaimed = 'unclaimed'
+    resume = 'resume'
+
 
 class AlreadyClaimedError(Exception):
     pass
 
+
 class NotClaimedError(Exception):
     pass
+
 
 class UpdateBuildRequestError(Exception):
     pass
 
+
+class UnsupportedQueueError(Exception):
+    pass
+
+
 class BrDict(dict):
     pass
+
 
 def mkdt(epoch):
     if epoch:
         return epoch2datetime(epoch)
+
+
+# Utility function that returns the query
+# Adding the filters that excludes requests that doesnt match all the selected codebases
+def maybeFilterBuildRequestsBySourceStamps(query, sourcestamps, buildrequests_tbl,
+                                           buildsets_tbl, sourcestamps_tbl, sourcestampsets_tbl):
+    if sourcestamps:
+        clauses = []
+        exclude_clauses = []
+        codebases_filter = sourcestamps is not None and len(sourcestamps) > 1 \
+                           and ("b_codebase" in sourcestamps[0])
+
+        for ss in sourcestamps:
+            stmt_include = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                .where(sourcestamps_tbl.c.branch == ss['b_branch'])
+            if 'b_codebase' in ss:
+                stmt_include = stmt_include.where(sourcestamps_tbl.c.codebase == ss['b_codebase'])
+
+            clauses.append(sourcestampsets_tbl.c.id == stmt_include)
+
+            if codebases_filter:
+                stmt_exclude = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
+                    .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id) \
+                    .where(sourcestamps_tbl.c.codebase == ss['b_codebase'])\
+                    .where(sourcestamps_tbl.c.branch != ss['b_branch'])
+                exclude_clauses.append(sourcestampsets_tbl.c.id == stmt_exclude)
+
+        stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
+            .where(sa.or_(*clauses))
+
+        stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
+                .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+
+        query = query.where(buildrequests_tbl.c.buildsetid.in_(stmt3))
+
+        if codebases_filter:
+            stmt4 = sa.select(columns=[sourcestampsets_tbl.c.id])\
+                .where(sa.or_(*exclude_clauses))
+
+            stmt5 = sa.select(columns=[buildsets_tbl.c.id])\
+                .where(buildsets_tbl.c.sourcestampsetid.in_(stmt4))
+
+            query = query.where(~buildrequests_tbl.c.buildsetid.in_(stmt5))
+
+    return query
+
 
 # private decorator to add a _master_objectid keyword argument, querying from
 # the master
 def with_master_objectid(fn):
     def wrap(self, *args, **kwargs):
         d = self.db.master.getObjectId()
-        d.addCallback(lambda master_objectid :
-                fn(self, _master_objectid=master_objectid, *args, **kwargs))
+        d.addCallback(lambda master_objectid:
+                      fn(self, _master_objectid=master_objectid, *args, **kwargs))
         return d
+
     wrap.__name__ = fn.__name__
     wrap.__doc__ = fn.__doc__
     return wrap
+
 
 class BuildRequestsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
@@ -62,7 +127,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             claims_tbl = self.db.model.buildrequest_claims
             res = conn.execute(sa.select([
                 reqs_tbl.outerjoin(claims_tbl,
-                                   (reqs_tbl.c.id == claims_tbl.c.brid)) ],
+                                   (reqs_tbl.c.id == claims_tbl.c.brid))],
                 whereclause=(reqs_tbl.c.id == brid)), use_labels=True)
             row = res.fetchone()
 
@@ -71,30 +136,33 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rv = self._brdictFromRow(row, _master_objectid)
             res.close()
             return rv
+
         return self.db.pool.do(thd)
 
     @with_master_objectid
     def getBuildRequests(self, buildername=None, complete=None, claimed=None,
                          bsid=None, _master_objectid=None, brids=None,
-                         branch=None, repository=None, results=None, mergebrids=None):
+                         branch=None, repository=None, results=None,
+                         mergebrids=None, sourcestamps=None, sorted=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
             bsets_tbl = self.db.model.buildsets
             sstamps_tbls = self.db.model.sourcestamps
+            sourcestampsets_tbl = self.db.model.sourcestampsets
 
             from_clause = reqs_tbl.outerjoin(claims_tbl,
                                              reqs_tbl.c.id == claims_tbl.c.brid)
 
             if branch or repository:
-              from_clause = from_clause.join(bsets_tbl,
-                                             reqs_tbl.c.buildsetid ==
-                                             bsets_tbl.c.id)
-              from_clause = from_clause.join(sstamps_tbls,
-                                             bsets_tbl.c.sourcestampsetid ==
-                                             sstamps_tbls.c.sourcestampsetid)
+                from_clause = from_clause.join(bsets_tbl,
+                                               reqs_tbl.c.buildsetid ==
+                                               bsets_tbl.c.id)
+                from_clause = from_clause.join(sstamps_tbls,
+                                               bsets_tbl.c.sourcestampsetid ==
+                                               sstamps_tbls.c.sourcestampsetid)
 
-            q = sa.select([ reqs_tbl, claims_tbl ]).select_from(from_clause)
+            q = sa.select([reqs_tbl, claims_tbl]).select_from(from_clause)
 
             if claimed is not None:
                 if not claimed:
@@ -133,26 +201,42 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(reqs_tbl.c.mergebrid.in_(mergebrids))
 
             if branch is not None:
-              q = q.where(sstamps_tbls.c.branch == branch)
+                q = q.where(sstamps_tbls.c.branch == branch)
 
             if repository is not None:
-              q = q.where(sstamps_tbls.c.repository == repository)
+                q = q.where(sstamps_tbls.c.repository == repository)
+
+            if sourcestamps is not None and sourcestamps:
+                stmt = self.selectBuildSetsExactlyMatchesSourcestamps(sourcestamps=sourcestamps,
+                                                                      sourcestamps_tbl=sstamps_tbls,
+                                                                      sourcestampsets_tbl=sourcestampsets_tbl,
+                                                                      buildsets_tbl=bsets_tbl)
+                q = q.where(reqs_tbl.c.buildsetid.in_(stmt))
+
+            if sorted:
+                q = q.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
 
             res = conn.execute(q)
 
-            return [ self._brdictFromRow(row, _master_objectid)
-                     for row in res.fetchall() ]
+            rv = [self._brdictFromRow(row, _master_objectid) for row in res.fetchall()]
+
+            return rv
+
         return self.db.pool.do(thd)
 
     def getTotalBuildsInTheLastDay(self):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             yesterday = datetime.now().date() - timedelta(1)
-            lastday = datetime2epoch(datetime(yesterday.year, yesterday.month, yesterday.day))
-            query = sa.select([func.count(reqs_tbl.c.id).label("totalbuilds")])\
-                .where(reqs_tbl.c.submitted_at >= lastday)\
-                .where(reqs_tbl.c.complete == 1)\
-                .where(reqs_tbl.c.mergebrid == None)\
+            beforeyesterday = datetime.now().date() - timedelta(2)
+            yesterday_epoch = datetime2epoch(datetime(yesterday.year, yesterday.month, yesterday.day))
+            beforeyesterday_epoch = datetime2epoch(
+                datetime(beforeyesterday.year, beforeyesterday.month, beforeyesterday.day))
+            query = sa.select([func.count(reqs_tbl.c.id).label("totalbuilds")]) \
+                .where(reqs_tbl.c.complete_at >= beforeyesterday_epoch) \
+                .where(reqs_tbl.c.complete_at <= yesterday_epoch) \
+                .where(reqs_tbl.c.complete == 1) \
+                .where(reqs_tbl.c.mergebrid == None) \
                 .where(reqs_tbl.c.artifactbrid == None)
 
             res = conn.execute(query)
@@ -161,13 +245,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-
     @with_master_objectid
-    def getBuildRequestInQueue(self, brids=None, buildername=None,
+    def getBuildRequestInQueue(self, brids=None, buildername=None, sourcestamps=None,
                                _master_objectid=None, sorted=False, limit=False):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
+            sourcestamps_tbl = self.db.model.sourcestamps
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            buildsets_tbl = self.db.model.buildsets
 
             def checkConditions(query):
                 if buildername:
@@ -180,7 +266,14 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     query = query.limit(200)
 
                 if sorted:
-                    query = query.order_by(reqs_tbl.c.submitted_at)
+                    query = query.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
+
+                query = maybeFilterBuildRequestsBySourceStamps(query=query,
+                                                               sourcestamps=sourcestamps,
+                                                               buildrequests_tbl=reqs_tbl,
+                                                               buildsets_tbl=buildsets_tbl,
+                                                               sourcestamps_tbl=sourcestamps_tbl,
+                                                               sourcestampsets_tbl=sourcestampsets_tbl)
 
                 return query
 
@@ -197,21 +290,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 return rv
 
             pending = sa.select([reqs_tbl],
-                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)),
-                          whereclause=((claims_tbl.c.claimed_at == None) &
-                                       (reqs_tbl.c.complete == 0)))
+                                from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)),
+                                whereclause=((claims_tbl.c.claimed_at == None) &
+                                             (reqs_tbl.c.complete == 0)))
 
             pending = checkConditions(pending)
 
             resume = sa.select([reqs_tbl],
                                from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
-                                                      & (claims_tbl.c.objectid == _master_objectid)))\
-                .where(reqs_tbl.c.results == RESUME)\
+                                                      & (claims_tbl.c.objectid == _master_objectid))) \
+                .where(reqs_tbl.c.complete == 0) \
+                .where(reqs_tbl.c.results == RESUME) \
                 .where(reqs_tbl.c.mergebrid == None)
 
             resume = checkConditions(resume)
             buildqueue = pending.alias('pending').select().union_all(resume.alias('resume').select())
-
 
             result = getResults(buildqueue)
 
@@ -220,45 +313,122 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def getOldestBuildRequestInQueue(self, buildername, _master_objectid=None):
+    def getBuildRequestsInQueue(self, queue, buildername=None, sourcestamps=None,
+                                mergebrids=None, startbrid=None,
+                                order=True, _master_objectid=None):
+        """
+        Finds the buildrequests that are in queue waiting to be process
+        it will return empty list if there are no pending request.
+
+        @param queue: if queue is 'unclaimed' will select only the pending builds
+        and if queue='resume' it will select only builds pending to be resume
+        @param buildername: filter the result by builder
+        @param sourcestamps: filter the results by sourcestamps
+        @param mergebrids: fetch buildrequest that has been merged with brids
+        @param startbrid: filter pending builds that belong to same build chain
+        @param order: order the resutls by higher priority and oldest submitted time
+        this can be skipped when applying filters to check request that can be merged.
+
+        @returns: a build request dictionary or empty list
+        """
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
+            buildset_properties_tbl = self.db.model.buildset_properties
+            sourcestamps_tbl = self.db.model.sourcestamps
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            buildsets_tbl = self.db.model.buildsets
 
-            pending = sa.select([reqs_tbl.c.buildername, reqs_tbl.c.submitted_at],
-                          from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)),
-                          whereclause=((claims_tbl.c.claimed_at == None) &
-                                       (reqs_tbl.c.complete == 0)))\
-                .where(reqs_tbl.c.buildername == buildername)\
-                .order_by(reqs_tbl.c.submitted_at).limit(1)
+            pending = sa.select([reqs_tbl.c.id, reqs_tbl.c.buildername, reqs_tbl.c.priority,
+                                 reqs_tbl.c.submitted_at, reqs_tbl.c.results,
+                                 reqs_tbl.c.buildsetid,
+                                 buildset_properties_tbl.c.property_value,
+                                 reqs_tbl.c.slavepool, reqs_tbl.c.startbrid],
+                                from_obj=reqs_tbl.outerjoin(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid))
+                                .outerjoin(buildset_properties_tbl,
+                                           (buildset_properties_tbl.c.buildsetid == reqs_tbl.c.buildsetid)
+                                           & (buildset_properties_tbl.c.property_name == 'selected_slave')),
+                                whereclause=((claims_tbl.c.claimed_at == None) &
+                                             (reqs_tbl.c.complete == 0)))
 
-            resumebuilds = sa.select([reqs_tbl.c.id, reqs_tbl.c.submitted_at],
-                               from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
-                                                      & (claims_tbl.c.objectid == _master_objectid)))\
-                .where(reqs_tbl.c.results == RESUME)\
-                .where(reqs_tbl.c.mergebrid == None)\
-                .where(reqs_tbl.c.buildername == buildername)\
-                .order_by(reqs_tbl.c.submitted_at).limit(1)
+            resumebuilds = sa.select([reqs_tbl.c.id,
+                                      reqs_tbl.c.buildername, reqs_tbl.c.priority,
+                                      reqs_tbl.c.submitted_at, reqs_tbl.c.results,
+                                      reqs_tbl.c.buildsetid,
+                                      buildset_properties_tbl.c.property_value,
+                                      reqs_tbl.c.slavepool, reqs_tbl.c.startbrid],
+                                     from_obj=reqs_tbl.join(claims_tbl,
+                                                            (reqs_tbl.c.id == claims_tbl.c.brid)
+                                                            & (claims_tbl.c.objectid == _master_objectid))
+                                     .outerjoin(buildset_properties_tbl,
+                                                (buildset_properties_tbl.c.buildsetid == reqs_tbl.c.buildsetid)
+                                                & (buildset_properties_tbl.c.property_name == 'selected_slave'))) \
+                .where(reqs_tbl.c.complete == 0) \
+                .where(reqs_tbl.c.results == RESUME)
 
-            buildersqueue = pending.alias('pending').select().union_all(resumebuilds.alias('resume').select())
+            if queue == Queue.unclaimed:
+                buildersqueue = pending
 
+            elif queue == Queue.resume:
+                buildersqueue = resumebuilds
+
+            else:
+                raise UnsupportedQueueError
+
+            if buildername:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.buildername == buildername)
+
+            if sourcestamps is not None and sourcestamps:
+                stmt = self.selectBuildSetsExactlyMatchesSourcestamps(sourcestamps=sourcestamps,
+                                                                      sourcestamps_tbl=sourcestamps_tbl,
+                                                                      sourcestampsets_tbl=sourcestampsets_tbl,
+                                                                      buildsets_tbl=buildsets_tbl)
+
+                buildersqueue = buildersqueue.where(reqs_tbl.c.buildsetid.in_(stmt))
+
+            if mergebrids is not None and mergebrids:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.mergebrid.in_(mergebrids))
+            else:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.mergebrid == None)
+
+            if startbrid:
+                buildersqueue = buildersqueue.where(reqs_tbl.c.startbrid == startbrid)
+
+            if order:
+                buildersqueue = buildersqueue.order_by(sa.desc(reqs_tbl.c.priority), sa.asc(reqs_tbl.c.submitted_at))
+
+            # TODO: for performance we may need to limit the result
             res = conn.execute(buildersqueue)
+
             rows = res.fetchall()
             rv = []
+
+            def getSelectedSlave(row):
+                return json.loads(row.property_value)[0] if row.property_value and len(row.property_value) > 0 else None
+
             for row in rows:
                 if row:
-                    rv.append(dict(buildername=row.buildername, submitted_at=mkdt(row.submitted_at)))
+                    rv.append(dict(brid=row.id,
+                                   buildername=row.buildername,
+                                   priority=row.priority,
+                                   submitted_at=mkdt(row.submitted_at),
+                                   results=row.results,
+                                   buildsetid=row.buildsetid,
+                                   selected_slave=getSelectedSlave(row),
+                                   slavepool=row.slavepool,
+                                   startbrid=row.startbrid))
 
+            res.close()
             return rv
 
         return self.db.pool.do(thd)
 
-    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
-        def thd(conn):
-            sourcestampsets_tbl = self.db.model.sourcestampsets
-            sourcestamps_tbl = self.db.model.sourcestamps
-            buildrequests_tbl = self.db.model.buildrequests
-            buildsets_tbl = self.db .model.buildsets
+    def selectBuildSetsExactlyMatchesSourcestamps(self,
+                                                  sourcestamps,
+                                                  sourcestamps_tbl,
+                                                  sourcestampsets_tbl,
+                                                  buildsets_tbl):
+
             clauses = []
 
             # check sourcestampset has same number of row in the sourcestamps table
@@ -273,26 +443,40 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             # check that sourcestampset match all revisions x codebases
             for ss in sourcestamps:
                 stmt_temp = sa.select([sourcestamps_tbl.c.sourcestampsetid]) \
-                    .where(sourcestamps_tbl.c.sourcestampsetid ==  sourcestampsets_tbl.c.id ) \
+                    .where(sourcestamps_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id) \
                     .where(sourcestamps_tbl.c.codebase == ss['b_codebase']) \
-                    .where(sourcestamps_tbl.c.revision == ss['b_revision'])\
+                    .where(sourcestamps_tbl.c.revision == ss['b_revision']) \
                     .where(sourcestamps_tbl.c.branch == ss['b_branch'])
                 clauses.append(sourcestampsets_tbl.c.id == stmt_temp)
 
             stmt2 = sa.select(columns=[sourcestampsets_tbl.c.id]) \
                 .where(sa.and_(*clauses))
 
-            stmt3 = sa.select(columns=[buildsets_tbl.c.id])\
-                        .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
+            stmt3 = sa.select(columns=[buildsets_tbl.c.id]) \
+                .where(buildsets_tbl.c.sourcestampsetid.in_(stmt2))
 
-            last_br = sa.select(columns=[sa.func.max(buildrequests_tbl.c.id).label("id")])\
-                    .where(buildrequests_tbl.c.buildsetid.in_(stmt3))\
-                    .where(buildrequests_tbl.c.complete == 1)\
-                    .where(buildrequests_tbl.c.results == 0)\
-                    .where(buildrequests_tbl.c.buildername == buildername)\
-                    .where(buildrequests_tbl.c.artifactbrid == None)
+            return stmt3
 
-            q = sa.select(columns=[buildrequests_tbl])\
+    def getBuildRequestBySourcestamps(self, buildername=None, sourcestamps=None):
+        def thd(conn):
+            sourcestampsets_tbl = self.db.model.sourcestampsets
+            sourcestamps_tbl = self.db.model.sourcestamps
+            buildrequests_tbl = self.db.model.buildrequests
+            buildsets_tbl = self.db.model.buildsets
+
+            stmt = self.selectBuildSetsExactlyMatchesSourcestamps(sourcestamps=sourcestamps,
+                                                                  sourcestamps_tbl=sourcestamps_tbl,
+                                                                  sourcestampsets_tbl=sourcestampsets_tbl,
+                                                                  buildsets_tbl=buildsets_tbl)
+
+            last_br = sa.select(columns=[sa.func.max(buildrequests_tbl.c.id).label("id")]) \
+                .where(buildrequests_tbl.c.buildsetid.in_(stmt)) \
+                .where(buildrequests_tbl.c.complete == 1) \
+                .where(buildrequests_tbl.c.results == 0) \
+                .where(buildrequests_tbl.c.buildername == buildername) \
+                .where(buildrequests_tbl.c.artifactbrid == None)
+
+            q = sa.select(columns=[buildrequests_tbl]) \
                 .where(buildrequests_tbl.c.id == last_br)
 
             res = conn.execute(q)
@@ -302,12 +486,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 submitted_at = mkdt(row.submitted_at)
                 complete_at = mkdt(row.complete_at)
                 buildrequest = dict(brid=row.id, buildsetid=row.buildsetid,
-                      buildername=row.buildername, priority=row.priority,
-                      complete=bool(row.complete), results=row.results,
-                      submitted_at=submitted_at, complete_at=complete_at, artifactbrid=row.artifactbrid)
+                                    buildername=row.buildername, priority=row.priority,
+                                    complete=bool(row.complete), results=row.results,
+                                    submitted_at=submitted_at, complete_at=complete_at, artifactbrid=row.artifactbrid)
 
             res.close()
             return buildrequest
+
         return self.db.pool.do(thd)
 
     def reusePreviousBuild(self, requests, artifactbrid):
@@ -315,8 +500,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             buildrequests_tbl = self.db.model.buildrequests
 
             brids = [br.id for br in requests]
-            stmt = buildrequests_tbl.update()\
-                .where(buildrequests_tbl.c.id.in_(brids))\
+            stmt = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(brids)) \
                 .values(artifactbrid=artifactbrid)
 
             res = conn.execute(stmt)
@@ -332,7 +517,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             if len(mergedrequests) > 0:
                 stmt2 = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.id.in_(mergedrequests))\
+                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
                     .values(artifactbrid=requests[0].id)
 
                 res = conn.execute(stmt2)
@@ -341,11 +526,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def mergeBuildingRequest(self, requests, brids, number, claim=True, _reactor=reactor, _master_objectid=None):
+    def mergeBuildingRequest(self, requests, brids, number, queue, _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                if claim:
+                if queue == Queue.unclaimed:
                     claimed_at = self.getClaimedAtValue(_reactor)
                     self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 self.addBuilds(conn, brids, number)
@@ -365,15 +550,15 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if len(brids) > 1:
                     buildrequests_tbl = self.db.model.buildrequests
 
-                    q = sa.select([buildrequests_tbl.c.artifactbrid])\
-                    .where(buildrequests_tbl.c.id == brids[0])
+                    q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                        .where(buildrequests_tbl.c.id == brids[0])
                     res = conn.execute(q)
                     row = res.fetchone()
 
                     artifactbrid = row.artifactbrid if row and (row.artifactbrid is not None) else brids[0]
 
-                    stmt_brids = sa.select([buildrequests_tbl.c.id])\
-                        .where(buildrequests_tbl.c.mergebrid == brids[0])\
+                    stmt_brids = sa.select([buildrequests_tbl.c.id]) \
+                        .where(buildrequests_tbl.c.mergebrid == brids[0]) \
                         .where(or_((buildrequests_tbl.c.artifactbrid != artifactbrid),
                                    (buildrequests_tbl.c.artifactbrid == None)))
 
@@ -383,8 +568,8 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     res.close()
 
                     if len(mergedrequests) > 0:
-                        stmt2 = buildrequests_tbl.update()\
-                            .where(buildrequests_tbl.c.id.in_(mergedrequests))\
+                        stmt2 = buildrequests_tbl.update() \
+                            .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
                             .values(artifactbrid=artifactbrid)
                         conn.execute(stmt2)
 
@@ -397,31 +582,31 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def executeMergeBuildingRequests(self, conn, requests):
-            buildrequests_tbl = self.db.model.buildrequests
-            mergedrequests = [br.id for br in requests[1:]]
+        buildrequests_tbl = self.db.model.buildrequests
+        mergedrequests = [br.id for br in requests[1:]]
 
-            # we'll need to batch the brids into groups of 100, so that the
-            # parameter lists supported by the DBAPI aren't
-            iterator = iter(mergedrequests)
-            batch = list(itertools.islice(iterator, 100))
-            while len(batch) > 0:
-                q = sa.select([buildrequests_tbl.c.artifactbrid]) \
-                    .where(id == requests[0].id)
-                res = conn.execute(q)
-                row = res.fetchone()
-                # by default it will mark using artifact generated from merged brid
+        # we'll need to batch the brids into groups of 100, so that the
+        # parameter lists supported by the DBAPI aren't
+        iterator = iter(mergedrequests)
+        batch = list(itertools.islice(iterator, 100))
+        while len(batch) > 0:
+            q = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                .where(id == requests[0].id)
+            res = conn.execute(q)
+            row = res.fetchone()
+            # by default it will mark using artifact generated from merged brid
+            stmt2 = buildrequests_tbl.update() \
+                .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
+                .values(artifactbrid=requests[0].id) \
+                .values(mergebrid=requests[0].id)
+
+            if row and (row.artifactbrid is not None):
                 stmt2 = buildrequests_tbl.update() \
                     .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                    .values(artifactbrid=requests[0].id)\
+                    .values(artifactbrid=row.artifactbrid) \
                     .values(mergebrid=requests[0].id)
-
-                if row and (row.artifactbrid is not None):
-                    stmt2 = buildrequests_tbl.update() \
-                    .where(buildrequests_tbl.c.id.in_(mergedrequests)) \
-                    .values(artifactbrid=row.artifactbrid)\
-                    .values(mergebrid=requests[0].id)
-                conn.execute(stmt2)
-                batch = list(itertools.islice(iterator, 100))
+            conn.execute(stmt2)
+            batch = list(itertools.islice(iterator, 100))
 
     def findCompatibleFinishedBuildRequest(self, buildername, startbrid):
         def thd(conn):
@@ -439,23 +624,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rv = self._brdictFromRow(row, None)
             res.close()
             return rv
-        return self.db.pool.do(thd)
 
-    def getRequestsCompatibleToMerge(self, buildername, startbrid, compatible_brids):
-        def thd(conn):
-            buildrequests_tbl = self.db.model.buildrequests
-
-            stmt = sa.select([buildrequests_tbl.c.id]) \
-                .where(buildrequests_tbl.c.id.in_(compatible_brids)) \
-                .where(buildrequests_tbl.c.buildername == buildername)\
-                .where(buildrequests_tbl.c.startbrid == startbrid)
-
-            res = conn.execute(stmt)
-            rows = res.fetchall()
-            merged_brids = [row.id for row in rows]
-
-            res.close()
-            return merged_brids
         return self.db.pool.do(thd)
 
     def executeMergeFinishedBuildRequest(self, conn, brdict, merged_brids):
@@ -469,10 +638,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         while len(batch) > 0:
             stmt2 = buildrequests_tbl.update() \
                 .where(buildrequests_tbl.c.id.in_(batch)) \
-                .values(complete = 1) \
+                .values(complete=1) \
                 .values(results=brdict['results']) \
                 .values(mergebrid=brdict['brid']) \
-                .values(complete_at = completed_at)
+                .values(complete_at=completed_at)
 
             if brdict['artifactbrid'] is None:
                 stmt2 = stmt2.values(artifactbrid=brdict['brid'])
@@ -483,26 +652,26 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def addFinishedBuilds(self, conn, brdict, merged_brids):
         builds_tbl = self.db.model.builds
-        stmt3 = sa.select([builds_tbl.c.number,  builds_tbl.c.start_time, builds_tbl.c.finish_time],
-                          order_by = [sa.desc(builds_tbl.c.number)]) \
+        stmt3 = sa.select([builds_tbl.c.number, builds_tbl.c.start_time, builds_tbl.c.finish_time],
+                          order_by=[sa.desc(builds_tbl.c.number)]) \
             .where(builds_tbl.c.brid == brdict['brid'])
 
         res = conn.execute(stmt3)
         row = res.fetchone()
         if row:
             stmt4 = builds_tbl.insert()
-            conn.execute(stmt4, [ dict(number=row.number, brid=br,
-                                       start_time=row.start_time,finish_time=row.finish_time)
-                                  for br in merged_brids ])
+            conn.execute(stmt4, [dict(number=row.number, brid=br,
+                                      start_time=row.start_time, finish_time=row.finish_time)
+                                 for br in merged_brids])
         res.close()
 
     @with_master_objectid
-    def mergeFinishedBuildRequest(self, brdict, merged_brids, claim=True,
-                                      _reactor=reactor, _master_objectid=None):
+    def mergeFinishedBuildRequest(self, brdict, merged_brids, queue,
+                                  _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
-                if claim:
+                if queue == Queue.unclaimed:
                     claimed_at = self.getClaimedAtValue(_reactor)
                     self.insertBuildRequestClaimsTable(conn, _master_objectid, merged_brids, claimed_at)
                 # build request will have same properties so we skip checking it
@@ -514,16 +683,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 raise
 
             transaction.commit()
+
         return self.db.pool.do(thd)
 
     @with_master_objectid
-    def mergePendingBuildRequests(self, brids, artifactbrid=None, claim=True, _reactor=reactor, _master_objectid=None):
+    def mergePendingBuildRequests(self, brids, artifactbrid=None, queue=Queue.unclaimed,
+                                  _reactor=reactor, _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             try:
                 buildrequests_tbl = self.db.model.buildrequests
                 claimed_at = self.getClaimedAtValue(_reactor)
-                if claim:
+                if queue == Queue.unclaimed:
                     self.insertBuildRequestClaimsTable(conn, _master_objectid, brids, claimed_at)
                 # we'll need to batch the brids into groups of 100, so that the
                 # parameter lists supported by the DBAPI aren't
@@ -531,13 +702,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 batch = list(itertools.islice(iterator, 100))
                 while len(batch) > 0:
 
-                    stmt = buildrequests_tbl.update()\
-                        .where(sa.or_(buildrequests_tbl.c.id.in_(batch), buildrequests_tbl.c.mergebrid.in_(batch)))\
+                    stmt = buildrequests_tbl.update() \
+                        .where(sa.or_(buildrequests_tbl.c.id.in_(batch), buildrequests_tbl.c.mergebrid.in_(batch))) \
                         .values(mergebrid=brids[0])
 
                     if artifactbrid is not None:
-                        stmt_br = sa.select([buildrequests_tbl.c.artifactbrid])\
-                            .where(buildrequests_tbl.c.id==brids[0])
+                        stmt_br = sa.select([buildrequests_tbl.c.artifactbrid]) \
+                            .where(buildrequests_tbl.c.id == brids[0])
                         res = conn.execute(stmt_br)
                         row = res.fetchone()
                         stmt = stmt.values(artifactbrid=row.artifactbrid if row and row.artifactbrid else artifactbrid)
@@ -591,22 +762,23 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             clauses = []
             property_filter = [{'property_name': 'scheduler',
-                                'property_value': '["'+schedulername+'", "Scheduler"]'},
+                                'property_value': '["' + schedulername + '", "Scheduler"]'},
                                {'property_name': 'stepname',
-                                'property_value': '["'+stepname+'", "Trigger"]'}]
+                                'property_value': '["' + stepname + '", "Trigger"]'}]
 
             for prop in property_filter:
                 stmt = sa.select([buildrequests_tbl.c.id],
                                  from_obj=buildrequests_tbl
                                  .join(buildset_properties_tbl,
-                                       (buildset_properties_tbl.c.buildsetid == buildrequests_tbl.c.buildsetid)))\
-                    .where(buildrequests_tbl.c.triggeredbybrid == triggeredbybrid)\
-                    .where(buildset_properties_tbl.c.property_name == prop['property_name'])\
+                                       (buildset_properties_tbl.c.buildsetid == buildrequests_tbl.c.buildsetid))) \
+                    .where(buildrequests_tbl.c.triggeredbybrid == triggeredbybrid) \
+                    .where(buildset_properties_tbl.c.property_name == prop['property_name']) \
                     .where(buildset_properties_tbl.c.property_value == prop['property_value'])
                 clauses.append(buildrequests_tbl.c.id.in_(stmt))
 
-            stmt_br = sa.select([buildrequests_tbl.c.id, buildrequests_tbl.c.buildsetid, buildrequests_tbl.c.buildername])\
-                .where(sa.and_(*clauses))\
+            stmt_br = sa.select(
+                [buildrequests_tbl.c.id, buildrequests_tbl.c.buildsetid, buildrequests_tbl.c.buildername]) \
+                .where(sa.and_(*clauses)) \
                 .where(buildrequests_tbl.c.triggeredbybrid == triggeredbybrid)
 
             res = conn.execute(stmt_br)
@@ -634,19 +806,19 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             if startbrid:
                 pending = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.results, reqs_tbl.c.buildername],
-                      from_obj=reqs_tbl.outerjoin(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)),
-                      whereclause=(reqs_tbl.c.startbrid == startbrid) &
-                                   (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None))\
+                                    from_obj=reqs_tbl.outerjoin(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)),
+                                    whereclause=(reqs_tbl.c.startbrid == startbrid) &
+                                                (reqs_tbl.c.complete == 0) & (reqs_tbl.c.mergebrid == None)) \
                     .order_by(reqs_tbl.c.submitted_at)
 
                 resume = sa.select([reqs_tbl.c.id, builds_tbl.c.number, reqs_tbl.c.results, reqs_tbl.c.buildername],
                                    from_obj=reqs_tbl.join(claims_tbl, (reqs_tbl.c.id == claims_tbl.c.brid)
-                                                      & (claims_tbl.c.objectid == _master_objectid))
-                                   .join(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid)))\
-                    .where(reqs_tbl.c.startbrid == startbrid)\
-                    .where(reqs_tbl.c.results == RESUME)\
-                    .where(reqs_tbl.c.complete == 1)\
-                    .where(reqs_tbl.c.mergebrid == None)\
+                                                          & (claims_tbl.c.objectid == _master_objectid))
+                                   .join(builds_tbl, (reqs_tbl.c.id == builds_tbl.c.brid))) \
+                    .where(reqs_tbl.c.startbrid == startbrid) \
+                    .where(reqs_tbl.c.results == RESUME) \
+                    .where(reqs_tbl.c.complete == 1) \
+                    .where(reqs_tbl.c.mergebrid == None) \
                     .order_by(reqs_tbl.c.submitted_at)
 
                 buildrequests = pending.alias('pending').select().union_all(resume.alias('resume').select())
@@ -656,7 +828,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if rows:
                     for row in rows:
                         rv.append(dict(brid=row.id, results=row.results, number=row.number,
-                                   buildername=row.buildername))
+                                       buildername=row.buildername))
                 res.close()
 
             return rv
@@ -679,7 +851,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     @with_master_objectid
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor,
-                            _master_objectid=None):
+                           _master_objectid=None):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
         else:
@@ -691,9 +863,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             try:
                 q = tbl.insert()
-                conn.execute(q, [ dict(brid=id, objectid=_master_objectid,
-                                    claimed_at=claimed_at)
-                                  for id in brids ])
+                conn.execute(q, [dict(brid=id, objectid=_master_objectid,
+                                      claimed_at=claimed_at)
+                                 for id in brids])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 transaction.rollback()
                 raise AlreadyClaimedError
@@ -706,13 +878,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         builds_tbl = self.db.model.builds
         start_time = _reactor.seconds()
         q = builds_tbl.insert()
-        conn.execute(q, [ dict(number=number, brid=id,
-                               start_time=start_time,finish_time=None)
-                          for id in brids ])
+        conn.execute(q, [dict(number=number, brid=id,
+                              start_time=start_time, finish_time=None)
+                         for id in brids])
 
     @with_master_objectid
     def reclaimBuildRequests(self, brids, _reactor=reactor,
-                            _master_objectid=None):
+                             _master_objectid=None):
         def thd(conn):
             transaction = conn.begin()
             tbl = self.db.model.buildrequest_claims
@@ -725,10 +897,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             while 1:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
                 q = tbl.update(tbl.c.brid.in_(batch)
-                                & (tbl.c.objectid==_master_objectid))
+                               & (tbl.c.objectid == _master_objectid))
                 res = conn.execute(q, claimed_at=claimed_at)
 
                 # if fewer rows were updated than expected, then something
@@ -738,6 +910,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     raise AlreadyClaimedError
 
             transaction.commit()
+
         return self.db.pool.do(thd)
 
     @with_master_objectid
@@ -754,15 +927,18 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             while 1:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
                 try:
                     q = claims_tbl.delete(
-                            (claims_tbl.c.brid.in_(batch))
-                            & (claims_tbl.c.objectid == _master_objectid))
+                        (claims_tbl.c.brid.in_(batch))
+                        & (claims_tbl.c.objectid == _master_objectid))
                     conn.execute(q)
 
-                    q = req_tbl.update(req_tbl.c.id.in_(batch)).values(mergebrid=None)
+                    q = req_tbl.update(req_tbl.c.id.in_(batch)) \
+                        .values(mergebrid=None) \
+                        .values(artifactbrid=None) \
+                        .values(slavepool=None)
 
                     if results is not None:
                         q = q.values(results=results)
@@ -773,16 +949,22 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     raise
 
             transaction.commit()
+
         return self.db.pool.do(thd)
 
-    def cancelResumeBuildRequests(self, brid):
+    def cancelResumeBuildRequest(self, brid, complete_at=None, _reactor=reactor):
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
+            complete_at = _reactor.seconds()
+
         def thd(conn):
             buildrequests_tbl = self.db.model.buildrequests
 
             transaction = conn.begin()
             try:
-                stmt = sa.select([buildrequests_tbl.c.id])\
-                    .where(or_(buildrequests_tbl.c.id == brid, buildrequests_tbl.c.mergebrid == brid))\
+                stmt = sa.select([buildrequests_tbl.c.id]) \
+                    .where(or_(buildrequests_tbl.c.id == brid, buildrequests_tbl.c.mergebrid == brid)) \
                     .where(buildrequests_tbl.c.results == RESUME).order_by(buildrequests_tbl.c.id)
 
                 res = conn.execute(stmt)
@@ -791,8 +973,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 res.close()
 
                 if brids:
-                    q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(brids))\
-                        .values(complete=1).values(results=CANCELED)
+                    q = buildrequests_tbl.update().where(buildrequests_tbl.c.id.in_(brids)) \
+                        .values(complete=1) \
+                        .values(complete_at=complete_at) \
+                        .values(results=CANCELED)
 
                     conn.execute(q)
             except:
@@ -801,10 +985,55 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 return
 
             transaction.commit()
+
         return self.db.pool.do(thd)
 
+    def cancelBuildRequestsByBuildNumber(self, number, buildername, complete_at=None, _reactor=reactor):
+        if complete_at is not None:
+            complete_at = datetime2epoch(complete_at)
+        else:
+            complete_at = _reactor.seconds()
 
-    def updateBuildRequests(self, brids, results=None, complete=None, slavepool=None):
+        def thd(conn):
+            buildrequests_tbl = self.db.model.buildrequests
+            builds_tbl = self.db.model.builds
+
+            transaction = conn.begin()
+            try:
+
+                stmt = sa.select(columns=[buildrequests_tbl.c.id],
+                          from_obj=buildrequests_tbl.join(builds_tbl,
+                                                          (buildrequests_tbl.c.id == builds_tbl.c.brid)
+                                                          & (builds_tbl.c.number == number))) \
+                    .where(buildrequests_tbl.c.buildername == buildername)
+
+                res = conn.execute(stmt)
+                rows = res.fetchall()
+                brids = []
+                for row in rows:
+                    if row.id not in brids:
+                        brids.append(row.id)
+                res.close()
+
+                if brids:
+                    q = buildrequests_tbl.update()\
+                        .where(or_(buildrequests_tbl.c.id.in_(brids), buildrequests_tbl.c.mergebrid.in_(brids))) \
+                        .values(complete=1) \
+                        .values(complete_at=complete_at) \
+                        .values(results=CANCELED)
+
+                    conn.execute(q)
+            except Exception:
+                transaction.rollback()
+                log.msg(Failure(), "Could not cancel build requests %s" % brids)
+
+                return
+
+            transaction.commit()
+
+        return self.db.pool.do(thd)
+
+    def updateBuildRequests(self, brids, results=None, slavepool=None):
         def thd(conn):
 
             transaction = conn.begin()
@@ -817,9 +1046,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             while 1:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
-                q = buildrequests_tbl.update()\
+                q = buildrequests_tbl.update() \
                     .where(buildrequests_tbl.c.id.in_(batch))
 
                 if results:
@@ -828,27 +1057,21 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 if slavepool:
                     q = q.values(slavepool=slavepool)
 
-                if complete:
-                    q = q.values(complete=complete)
-
-                if complete == 0:
-                    q = q.values(complete_at=None)
-
                 res = conn.execute(q)
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
                     log.msg("tried to update %d buildreqests, "
-                        "but only updated %d" % (len(batch), res.rowcount))
+                            "but only updated %d" % (len(batch), res.rowcount))
                     transaction.rollback()
                     raise UpdateBuildRequestError
             transaction.commit()
-        return self.db.pool.do(thd)
 
+        return self.db.pool.do(thd)
 
     @with_master_objectid
     def completeBuildRequests(self, brids, results, complete_at=None,
-                            _reactor=reactor, _master_objectid=None):
+                              _reactor=reactor, _master_objectid=None):
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
@@ -871,23 +1094,24 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             while 1:
                 batch = list(itertools.islice(iterator, 100))
                 if not batch:
-                    break # success!
+                    break  # success!
 
                 q = reqs_tbl.update()
                 q = q.where(reqs_tbl.c.id.in_(batch))
                 q = q.where(reqs_tbl.c.complete != 1)
                 res = conn.execute(q,
-                    complete=1,
-                    results=results,
-                    complete_at=complete_at)
+                                   complete=1,
+                                   results=results,
+                                   complete_at=complete_at)
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
                     log.msg("tried to complete %d buildreqests, "
-                        "but only completed %d" % (len(batch), res.rowcount))
+                            "but only completed %d" % (len(batch), res.rowcount))
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()
+
         return self.db.pool.do(thd)
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
@@ -897,17 +1121,20 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             old_epoch = _reactor.seconds() - old
 
             # select any expired requests, and delete each one individually
-            expired_brids = sa.select([ reqs_tbl.c.id ],
-                        whereclause=(reqs_tbl.c.complete != 1))
+            expired_brids = sa.select([reqs_tbl.c.id],
+                                      whereclause=(reqs_tbl.c.complete != 1))
             res = conn.execute(claims_tbl.delete(
-                        (claims_tbl.c.claimed_at < old_epoch) &
-                        claims_tbl.c.brid.in_(expired_brids)))
+                (claims_tbl.c.claimed_at < old_epoch) &
+                claims_tbl.c.brid.in_(expired_brids)))
             return res.rowcount
+
         d = self.db.pool.do(thd)
+
         def log_nonzero_count(count):
             if count != 0:
                 log.msg("unclaimed %d expired buildrequests (over %d seconds "
                         "old)" % (count, old))
+
         d.addCallback(log_nonzero_count)
         return d
 
@@ -925,9 +1152,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         claimed_at = mkdt(claimed_at)
 
         return BrDict(brid=row.id, buildsetid=row.buildsetid,
-                buildername=row.buildername, priority=row.priority,
-                claimed=claimed, claimed_at=claimed_at, mine=mine,
-                complete=bool(row.complete), results=row.results,
-                submitted_at=submitted_at, complete_at=complete_at,
-                artifactbrid=row.artifactbrid, triggeredbybrid = row.triggeredbybrid,
-                mergebrid=row.mergebrid, startbrid=row.startbrid, slavepool=row.slavepool)
+                      buildername=row.buildername, priority=row.priority,
+                      claimed=claimed, claimed_at=claimed_at, mine=mine,
+                      complete=bool(row.complete), results=row.results,
+                      submitted_at=submitted_at, complete_at=complete_at,
+                      artifactbrid=row.artifactbrid, triggeredbybrid=row.triggeredbybrid,
+                      mergebrid=row.mergebrid, startbrid=row.startbrid, slavepool=row.slavepool)

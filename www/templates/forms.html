@@ -213,8 +213,10 @@
              class="tooltip question-icon"></span>
         <select id="priority" name="priority" class="select">
             {% if is_admin != 0 %}
-            <option value="75">High</option>
+            <option value="100">Emergency</option>
+            <option value="80">Very high</option>
             {% endif %}
+            <option value="75">High</option>
             <option selected="selected" value="50">Medium (Default)</option>
             <option value="25">Low</option>
         </select>

@@ -18,7 +18,7 @@ from buildbot.status.web import status_json
 from twisted.trial import unittest
 from buildbot.config import ProjectConfig
 from buildbot.status import master
-from buildbot.test.fake import fakemaster
+from buildbot.test.fake import fakemaster, fakedb
 from buildbot.status.builder import BuilderStatus, PendingBuildsCache
 from buildbot.status.build import BuildStatus
 from buildbot.status.slave import SlaveStatus
@@ -490,6 +490,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus.getSubmitTime = lambda: 1418823086
             brstatus.getResults = lambda : -1
             brstatus.getReason = lambda: 'because'
+            brstatus.getPriority = lambda : 50
 
             ss = SourceStamp(branch='b', sourcestampsetid=1, repository='z')
             brstatus.getSourceStamps = lambda: {}
@@ -497,7 +498,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus.getBuildProperties = lambda: Properties()
             return brstatus
 
-        def getPendingBuildRequestStatuses():
+        def getPendingBuildRequestStatuses(codebases={}):
             requests = [1, 2, 3]
             return [getBuildRequestStatus(id) for id in requests]
 
@@ -526,11 +527,50 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
                                'url': ''},
                     'sources': [],
                     'submittedAt': 1418823086,
-                    'results': -1}
+                    'results': -1,
+                    'priority': 50}
 
         self.assertEqual(pending_dict, [pendingBuildRequestDict(1),
                                         pendingBuildRequestDict(2),
                                         pendingBuildRequestDict(3)])
+
+
+class TestQueueJsonResource(unittest.TestCase):
+    def setUp(self):
+        self.project = setUpProject()
+
+        self.master = setUpFakeMasterWithProjects(self.project, self)
+
+        self.master_status = setUpFakeMasterStatus(self.master)
+        self.master.status = self.master_status
+
+        builder = mockBuilder(self.master, self.master_status, "bldr1", "Katana")
+
+        def getBuilder(name):
+            if name == "bldr1":
+                return builder
+            return None
+
+        self.master_status.getBuilder = getBuilder
+
+        self.request = mock.Mock()
+        self.request.getHeader = mock.Mock(return_value=None)
+        self.request.prepath = ['json', 'buildqueue']
+        self.request.path = '/json/buildqueue'
+
+    @defer.inlineCallbacks
+    def test_getQueueJsonResource(self):
+        testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2",priority=50, submitted_at=1450171039)]
+
+        testdata += [fakedb.Buildset(id=idx, sourcestampsetid=idx) for idx in xrange(1, 3)]
+        testdata += [fakedb.SourceStamp(sourcestampsetid=idx, branch='branch_%d' % idx) for idx in xrange(1, 3)]
+
+        yield self.master.db.insertTestData(testdata)
+
+        queue = status_json.QueueJsonResource(self.master_status)
+        queue_json = yield queue.asDict(self.request)
+        self.assertEquals((len(queue_json), queue_json[0]['brid']), (1, 1))
 
 
 class TestAliveJsonResource(unittest.TestCase):

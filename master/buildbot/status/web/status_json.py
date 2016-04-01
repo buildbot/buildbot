@@ -943,16 +943,11 @@ class QueueJsonResource(JsonResource):
 
         #Convert to dictionary
         output = []
-        defers = []
         for br_dict in unclaimed_brq:
             br = BuildRequestStatus(br_dict['buildername'], br_dict['brid'], self.status)
-            d = br.asDict_async()
-            defers.append(d)
-
-        #Call the yield after to run async calls
-        for d in defers:
-            r = yield d
-            output.append(r)
+            brstatus_dict = yield br.asDict_async()
+            if brstatus_dict:
+                output.append(brstatus_dict)
 
         defer.returnValue(output)
 
@@ -981,33 +976,16 @@ class SinglePendingBuildsJsonResource(JsonResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        builds = yield self.builder.getPendingBuildRequestStatuses()
-
         #Get codebases
         codebases = {}
         getCodebasesArg(request=request, codebases=codebases)
 
-        #Filter + add sort info
-        pending = []
-        for br in builds:
-            result = True
-            if len(codebases) > 0:
-                from buildbot.status.web.builder import foundCodebasesInPendingBuild
-                result = yield foundCodebasesInPendingBuild(br, codebases)
-
-
-            if result:
-                br.sort_value = yield br.getSubmitTime()
-                pending.append(br)
-
-        def sort_queue(br, otherBR):
-            return br.sort_value - otherBR.sort_value
-
-        pending = sorted(pending, cmp=sort_queue)
+        # Get pending request filtered + sorted
+        builds = yield self.builder.getPendingBuildRequestStatuses(codebases=codebases)
 
         #Convert to dictionary
         output = []
-        for b in pending:
+        for b in builds:
             d = yield b.asDict_async(request)
             output.append(d)
 
@@ -1193,6 +1171,7 @@ class GlobalJsonResource(JsonResource):
         for b in self.builders.values():
             current_builds += len(b.builder_status.getCurrentBuilds())
 
+        # TODO: change to get the total instead of all the buildrequests in queue
         queue = yield self.status.master.db.buildrequests.getBuildRequestInQueue(sorted=False)
         total_builds_lastday = yield self.status.getNumberOfBuildsInLastDay()
         result = {"slaves_count": connected_slaves,

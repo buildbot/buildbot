@@ -98,6 +98,11 @@ class BuildRequestStatus:
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []
 
+        if not builder:
+            log.msg("Buildrequest %d has unknown builder %s" % (self.brid, self.buildername))
+            defer.returnValue(builds)
+            return
+
         bdicts = yield self.master.db.builds.getBuildsForRequest(self.brid)
 
         buildnums = sorted([ bdict['number'] for bdict in bdicts ])
@@ -139,6 +144,11 @@ class BuildRequestStatus:
         else:
             defer.returnValue(-1)
 
+    @defer.inlineCallbacks
+    def getPriority(self):
+        br = yield self._getBuildRequest()
+        defer.returnValue(br.priority)
+
     def getSlaves(self):
         builder = self.status.getBuilder(self.getBuilderName())
         if builder is not None:
@@ -164,7 +174,10 @@ class BuildRequestStatus:
     @defer.inlineCallbacks
     def asDict_async(self, request=None):
         result = {}
-
+        builder = self.status.getBuilder(self.getBuilderName())
+        if not builder:
+            defer.returnValue(result)
+            return
 
         ss = yield self.getSourceStamp()
         sources = yield self.getSourceStamps()
@@ -173,16 +186,15 @@ class BuildRequestStatus:
         result['sources'] = [s.asDict() for s in sources.values()]
         props = yield self.getBuildProperties()
         result['properties'] = props.asList()
+        result['priority'] = yield self.getPriority()
         result['builderName'] = self.getBuilderName()
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
         result['results'] = yield self.getResults()
 
-        builder = self.status.getBuilder(self.getBuilderName())
-        if builder is not None:
-            result['builderFriendlyName'] = builder.getFriendlyName()
-            result['builderURL'] = self.status.getURLForThing(builder)
+        result['builderFriendlyName'] = builder.getFriendlyName()
+        result['builderURL'] = self.status.getURLForThing(builder)
 
         if request is not None:
             from buildbot.status.web.base import getCodebasesArg

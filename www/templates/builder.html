@@ -38,24 +38,23 @@
 
       <table id="rtCurrentBuildsTable" class="table table-katana tablesorter-js tablesorter first-child">
       </table>
-  
+
       <button id="submitBtn" class="removeBuildBtn">Remove selected</button>
 
       <h2 class="head-2">
         Pending Build Requests
       </h2>
 
-      <table id="rtPendingBuildsTable" class="table table-katana tablesorter-js tablesorter first-child buildqueue-table">
+      <table id="rtPendingBuildsTable" class="table table-katana first-child buildqueue-table">
         <thead>
           <tr>
-            <th class="txt-align-left"></th>
-            <th class="txt-align-left">Requested at</th>
+            <th class="txt-align-center"></th>
+            <th class="txt-align-center">Priority</th>
+            <th class="txt-align-left">When</th>
             <th class="txt-align-left">Waiting</th>
             <th class="txt-align-left">Branch</th>
-            <th class="select-input no-tablesorter-js">    
-		        <label for="selectall"> 
-        	          Select all 
-                </label>				            
+            <th class="select-input no-tablesorter-js">
+                <label for="selectall">Select all</label>
                 <input id="selectall" type="checkbox" name="checkuncheck" class="tooltip" title="Select or deselect all pending builds">
             </th>
           </tr>

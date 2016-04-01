@@ -16,7 +16,8 @@
 from twisted.trial import unittest
 from buildbot.test.fake import fakedb, fakemaster
 from buildbot.process import buildrequest
-from buildbot.status.results import CANCELED
+from buildbot.status.results import CANCELED, BEGINNING
+import mock
 
 class FakeSource:
     def __init__(self, mergeable = True):
@@ -361,6 +362,49 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda brdict:
                     buildrequest.BuildRequest.fromBrdict(master, brdict))
         d.addCallback(lambda br: br.cancelBuildRequest())
+        d.addCallback(lambda _: master.db.buildrequests.getBuildRequest(1))
+        d.addCallback(checkCanceled)
+
+        return d
+
+    def test_buildRequestControlCancelBuildRequestUnknownBuilder(self):
+        master = fakemaster.make_master()
+        master.db = fakedb.FakeDBConnector(self)
+        master.db.insertTestData([fakedb.BuildRequest(id=1, buildsetid=1, buildername='bldr1'),
+                                  fakedb.Buildset(id=1, reason='force', sourcestampsetid=1),
+                                  fakedb.SourceStampSet(id=1),
+                                  fakedb.SourceStamp(id=1, sourcestampsetid=1)])
+
+        d = master.db.buildrequests.getBuildRequest(1)
+
+        def checkCanceled(br):
+            self.assertEquals((br['complete'], br['results']), (False, BEGINNING))
+
+        d.addCallback(lambda brdict: buildrequest.BuildRequest.fromBrdict(master, brdict))
+        d.addCallback(lambda breq: buildrequest.BuildRequestControl(None, breq))
+        d.addCallback(lambda breqControl: breqControl.cancel())
+        d.addCallback(lambda _: master.db.buildrequests.getBuildRequest(1))
+        d.addCallback(checkCanceled)
+
+        return d
+
+    def test_BuildRequestControlCancelBuildRequest(self):
+        master = fakemaster.make_master()
+        master.db = fakedb.FakeDBConnector(self)
+        bldr = mock.Mock(name="bldr")
+        master.db.insertTestData([fakedb.BuildRequest(id=1, buildsetid=1, buildername='bldr'),
+                                  fakedb.Buildset(id=1, reason='force', sourcestampsetid=1),
+                                  fakedb.SourceStampSet(id=1),
+                                  fakedb.SourceStamp(id=1, sourcestampsetid=1)])
+
+        d = master.db.buildrequests.getBuildRequest(1)
+
+        def checkCanceled(br):
+            self.assertEquals((br['complete'], br['results']), (True, CANCELED))
+
+        d.addCallback(lambda brdict: buildrequest.BuildRequest.fromBrdict(master, brdict))
+        d.addCallback(lambda breq: buildrequest.BuildRequestControl(bldr, breq))
+        d.addCallback(lambda breqControl: breqControl.cancel())
         d.addCallback(lambda _: master.db.buildrequests.getBuildRequest(1))
         d.addCallback(checkCanceled)
 

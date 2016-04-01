@@ -23,36 +23,45 @@
 
             </div>
 
-            {% if not b.isFinished() %}
-            <div class="divider"></div>
-            {% if authz.advertiseAction('stopBuild', request) %}
-            <h2 class="head-2">
-                Stop Build
-            </h2>
-            {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build')
-            }}
-            <div class="divider"></div>
-            {% endif %}
+            {% if b.isResuming() %}
+                <div class="divider"></div>
+                <h2 class="head-2">
+                        Stop Build
+                </h2>
+                    {{ forms.stop_build(build_url+"/cancel"+codebases_arg, authz, on_all=False, short=False, label='This Build')
+                    }}
+                <div class="divider"></div>
 
-            {% if authz.advertiseAction('stopAllBuilds', request) %}
-            <h2 class="head-2">Stop Entire Build Chain</h2>
-            {{ forms.stop_build(build_url+"/stopchain"+codebases_arg, authz, on_all=True, label='Entire Build Chain', short=False) }}
-            <div class="divider"></div>
-            {% endif %}
-            {% else %}
-            <div class="divider"></div>
-            {% if b.getTestResults() %}
-            <h3><a href="{{ tests_link }}"/></h3>
-            {% endif %}
-            {% endif %}
+            {% elif not b.isFinished() %}
+                <div class="divider"></div>
+                {% if authz.advertiseAction('stopBuild', request) %}
+                    <h2 class="head-2">
+                        Stop Build
+                    </h2>
+                    {{ forms.stop_build(build_url+"/stop"+codebases_arg, authz, on_all=False, short=False, label='This Build')
+                    }}
+                    <div class="divider"></div>
+                {% endif %}
 
-            {% if authz.advertiseAction('forceBuild', request) and b.isFinished() %}
-            <h2 class="head-2">
-                Resubmit Build
-            </h2>
-            {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, exactly, sourcestamps[0], builder.name,
-            path_to_builder) }}
-            <div class="divider"></div>
+                {% if authz.advertiseAction('stopAllBuilds', request) %}
+                    <h2 class="head-2">Stop Entire Build Chain</h2>
+                    {{ forms.stop_build(build_url+"/stopchain"+codebases_arg, authz, on_all=True, label='Entire Build Chain', short=False) }}
+                    <div class="divider"></div>
+                {% else %}
+                    <div class="divider"></div>
+                    {% if b.getTestResults() %}
+                    <h3><a href="{{ tests_link }}"/></h3>
+                    {% endif %}
+                {% endif %}
+
+            {% elif authz.advertiseAction('forceBuild', request) and b.isFinished() %}
+                <div class="divider"></div>
+                <h2 class="head-2">
+                    Resubmit Build
+                </h2>
+                {{ forms.rebuild_build(build_url+"/rebuild"+codebases_arg, authz, exactly, sourcestamps[0], builder.name,
+                path_to_builder) }}
+                <div class="divider"></div>
             {% endif %}
 
             <h2 class="head-2">

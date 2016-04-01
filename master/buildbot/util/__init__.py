@@ -62,7 +62,10 @@ def formatInterval(eta):
     if eta > 60:
         eta_parts.append("%d mins" % (eta / 60))
         eta %= 60
-    eta_parts.append("%d secs" % eta)
+    if float(eta).is_integer():
+        eta_parts.append("%d secs" % eta)
+    else:
+        eta_parts.append("{0:.2f} secs".format(eta))
     return ", ".join(eta_parts)
 
 def calculateDayPart(eta, amount, partname):
