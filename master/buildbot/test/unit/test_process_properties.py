@@ -922,7 +922,7 @@ class TestProperties(unittest.TestCase):
         self.props.setProperty("do-tests", 1, "scheduler")
         self.props.setProperty("do-install", 2, "scheduler")
 
-        self.assert_('do-tests' in self.props)
+        self.assertTrue('do-tests' in self.props)
         self.failUnlessEqual(self.props['do-tests'], 1)
         self.failUnlessEqual(self.props['do-install'], 2)
         self.assertRaises(KeyError, lambda: self.props['do-nothing'])

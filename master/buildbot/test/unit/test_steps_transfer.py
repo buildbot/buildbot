@@ -866,8 +866,8 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEquals(
                     data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
                 break
-        else:
-            self.assert_(False, "No downloadFile command found")
+            else:
+                self.assertRaise(ValueError, "No downloadFile command found")
 
     def test_workerdest_old_api(self):
         step = transfer.JSONPropertiesDownload(workerdest='dstfile')

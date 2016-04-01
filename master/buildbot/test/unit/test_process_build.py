@@ -157,7 +157,7 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
+        self.assertTrue(('startStep', (self.workerforbuilder.worker.conn,), {})
                      in step.method_calls)
 
     def testStopBuild(self):
@@ -177,7 +177,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(b.results, CANCELLED)
 
-        self.assert_(('interrupt', ('stop it',), {}) in step.method_calls)
+        self.assertTrue(('interrupt', ('stop it',), {}) in step.method_calls)
 
     def testAlwaysRunStepStopBuild(self):
         """Test that steps marked with alwaysRun=True still get run even if
@@ -217,8 +217,8 @@ class TestBuild(unittest.TestCase):
 
         def check(ign):
             self.assertEqual(b.results, CANCELLED)
-            self.assert_(('interrupt', ('stop it',), {}) in step1.method_calls)
-            self.assert_(step2Started[0])
+            self.assertTrue(('interrupt', ('stop it',), {}) in step1.method_calls)
+            self.assertTrue(step2Started[0])
         d.addCallback(check)
         return d
 
@@ -385,11 +385,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
+        self.assertTrue(('startStep', (self.workerforbuilder.worker.conn,), {})
                      not in step.method_calls)
         self.assertEquals(claimCount[0], 1)
-        self.assert_(b.currentStep is None)
-        self.assert_(b._acquiringLock is not None)
+        self.assertEquals(b.currentStep, None)
+        self.assertNotEquals(b._acquiringLock, None)
 
     def testStopBuildWaitingForLocks(self):
         b = self.build
@@ -417,11 +417,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
+        self.assertTrue(('startStep', (self.workerforbuilder.worker.conn,), {})
                      not in step.method_calls)
-        self.assert_(b.currentStep is None)
+        self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
-        self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.assertTrue(('interrupt', ('stop it',), {}) not in step.method_calls)
 
     def testStopBuildWaitingForLocks_lostRemote(self):
         b = self.build
@@ -449,11 +449,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
+        self.assertTrue(('startStep', (self.workerforbuilder.worker.conn,), {})
                      not in step.method_calls)
-        self.assert_(b.currentStep is None)
+        self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, RETRY)
-        self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.assertTrue(('interrupt', ('stop it',), {}) not in step.method_calls)
         self.build.build_status.setText.assert_called_with(["retry", "lost", "connection"])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
@@ -476,7 +476,7 @@ class TestBuild(unittest.TestCase):
         def acquireLocks(res=None):
             gotLocks[0] = True
             retval = LoggingBuildStep.acquireLocks(step, res)
-            self.assert_(b.currentStep is step)
+            self.assertTrue(b.currentStep is step)
             b.stopBuild('stop it')
             return retval
         step.acquireLocks = acquireLocks

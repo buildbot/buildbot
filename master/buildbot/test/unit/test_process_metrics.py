@@ -164,7 +164,7 @@ class TestPeriodicChecks(TestMetricBase):
         self.assertEquals(report['alarms']['gc.garbage'][0], 'WARN')
 
     def testGetRSS(self):
-        self.assert_(metrics._get_rss() > 0)
+        self.assertTrue(metrics._get_rss() > 0)
     if sys.platform != 'linux2':
         testGetRSS.skip = "only available on linux2 platforms"
 
@@ -182,13 +182,13 @@ class TestReconfig(TestMetricBase):
         # enable log_interval
         new_config.metrics = dict(log_interval=10, periodic_interval=0)
         observer.reconfigServiceWithBuildbotConfig(new_config)
-        self.assert_(observer.log_task)
+        self.assertTrue(observer.log_task)
         self.assertEquals(observer.periodic_task, None)
 
         # disable that and enable periodic_interval
         new_config.metrics = dict(periodic_interval=10, log_interval=0)
         observer.reconfigServiceWithBuildbotConfig(new_config)
-        self.assert_(observer.periodic_task)
+        self.assertTrue(observer.periodic_task)
         self.assertEquals(observer.log_task, None)
 
         # Make the periodic check run
@@ -210,8 +210,8 @@ class TestReconfig(TestMetricBase):
         # enable both
         new_config.metrics = dict(periodic_interval=10, log_interval=10)
         observer.reconfigServiceWithBuildbotConfig(new_config)
-        self.assert_(observer.log_task)
-        self.assert_(observer.periodic_task)
+        self.assertTrue(observer.log_task)
+        self.assertTrue(observer.periodic_task)
 
         # (service will be stopped by tearDown)
 
