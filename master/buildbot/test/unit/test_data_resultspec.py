@@ -256,6 +256,36 @@ class ResultSpec(unittest.TestCase):
         self.assertEqual(rs.popBooleanFilter('bar'), True)
         self.assertEqual(len(rs.filters), 0)
 
+    def test_popStringFilter(self):
+        rs = resultspec.ResultSpec(filters=[
+            resultspec.Filter('foo', 'eq', ['foo']),
+        ])
+        self.assertEqual(rs.popStringFilter('foo'), 'foo')
+
+    def test_popStringFilterSeveral(self):
+        rs = resultspec.ResultSpec(filters=[
+            resultspec.Filter('foo', 'eq', ['foo', 'bar']),
+        ])
+        self.assertEqual(rs.popStringFilter('foo'), None)
+
+    def test_popIntegerFilter(self):
+        rs = resultspec.ResultSpec(filters=[
+            resultspec.Filter('foo', 'eq', ['12']),
+        ])
+        self.assertEqual(rs.popIntegerFilter('foo'), 12)
+
+    def test_popIntegerFilterSeveral(self):
+        rs = resultspec.ResultSpec(filters=[
+            resultspec.Filter('foo', 'eq', ['12', '13']),
+        ])
+        self.assertEqual(rs.popIntegerFilter('foo'), None)
+
+    def test_popIntegerFilterNotInt(self):
+        rs = resultspec.ResultSpec(filters=[
+            resultspec.Filter('foo', 'eq', ['bar']),
+        ])
+        self.assertRaises(ValueError, lambda: rs.popIntegerFilter('foo'))
+
     def test_removeOrder(self):
         rs = resultspec.ResultSpec(order=['foo', '-bar'])
         rs.removeOrder()

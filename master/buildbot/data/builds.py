@@ -134,9 +134,10 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         # following returns None if no filter
         # true or false, if there is a complete filter
         complete = resultSpec.popBooleanFilter("complete")
+        buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
-            buildrequestid=kwargs.get('buildrequestid'),
+            buildrequestid=kwargs.get('buildrequestid', buildrequestid),
             workerid=kwargs.get('workerid'),
             complete=complete)
         # returns properties' list

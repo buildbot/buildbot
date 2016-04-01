@@ -74,6 +74,15 @@ Endpoints processing a result specification should take care to replicate this b
         If a filter exists for the field, remove it and return the expected value (True or False); otherwise return None.
         This method correctly handles odd cases like ``field__ne=false``.
 
+    .. py:method:: popStringFilter(field)
+
+        If one string filter exists for the field, remove it and return the expected value (as string); otherwise return None.
+
+    .. py:method:: popIntegerFilter(field)
+
+        If one integer filter exists for the field, remove it and return the expected value (as integer); otherwise return None.
+        raises ValueError if the field is not convertible to integer.
+
     .. py:method:: removePagination()
 
         Remove the pagination attributes (:py:attr:`limit` and :py:attr:`offset`) from the result spec.
