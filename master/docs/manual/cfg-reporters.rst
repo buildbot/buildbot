@@ -42,7 +42,7 @@ A full list of reporters is available in the :bb:index:`reporter`.
 MailNotifier
 ~~~~~~~~~~~~
 
-.. py:class:: buildbot.reporter.mail.MailNotifier
+.. py:class:: buildbot.reporters.mail.MailNotifier
 
 The Buildbot can send email when builds finish.
 The most common use of this is to tell developers when their change has caused the build to fail.
@@ -734,12 +734,12 @@ HttpStatusPush
 ~~~~~~~~~~~~~~
 
 .. @cindex HttpStatusPush
-.. @stindex buildbot.reporter.HttpStatusPush
+.. @stindex buildbot.reporters.HttpStatusPush
 
 ::
 
-    from buildbot.plugins import reporter
-    sp = reporter.HttpStatusPush(serverUrl="http://example.com/submit")
+    from buildbot.plugins import reporters
+    sp = reporters.HttpStatusPush(serverUrl="http://example.com/submit")
     c['services'].append(sp)
 
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
@@ -792,11 +792,11 @@ GitHubStatus
 
 
 .. @cindex GitHubStatus
-.. py:class:: buildbot.reporter.github.GitHubStatus
+.. py:class:: buildbot.reporters.github.GitHubStatus
 
 ::
 
-    from buildbot.plugins import reporter, util
+    from buildbot.plugins import reporters, util
 
     context = Interpolate("buildbot/%(prop:buildername)s")
     gs = status.GitHubStatus(token='githubAPIToken',
