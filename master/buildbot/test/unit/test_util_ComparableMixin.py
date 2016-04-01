@@ -28,7 +28,6 @@ class ComparableMixin(unittest.TestCase):
     class Bar(Foo, util.ComparableMixin):
         compare_attrs = ("b", "c")
 
-
     def setUp(self):
         self.f123 = self.Foo(1, 2, 3)
         self.f124 = self.Foo(1, 2, 4)
