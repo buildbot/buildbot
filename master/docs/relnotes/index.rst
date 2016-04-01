@@ -30,6 +30,7 @@ Features
 * :class:`~buildbot.reporters.http.HttpStatusPush` has been ported to reporter API.
 * :class:`~buildbot.reporters.stash.StashStatusPush` has been ported to reporter API.
 * :class:`~buildbot.reporters.github.GithubStatusPush` has been ported to reporter API.
+* `summaryCB` of :bb:reporter:`GerritStatusPush` now gets not only pre-processed information but the actual build as well.
 
 Fixes
 ~~~~~
