@@ -101,13 +101,13 @@ def formatInterval(eta):
 
 class ComparableMixin(object):
     implements(IConfigured)
-    compare_attrs = []
+    compare_attrs = ()
 
     class _None:
         pass
 
     def __hash__(self):
-        compare_attrs = []
+        compare_attrs = ()
         reflect.accumulateClassList(
             self.__class__, 'compare_attrs', compare_attrs)
 

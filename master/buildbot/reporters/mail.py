@@ -72,7 +72,7 @@ ENCODING = 'utf8'
 
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
-    compare_attrs = ["domain"]
+    compare_attrs = ("domain")
 
     def __init__(self, domain):
         assert "@" not in domain

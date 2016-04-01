@@ -26,7 +26,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     Use it like this::
 
         class Widget(FactoryProduct, ComparableMixin):
-            compare_attrs = [ 'radius', 'thickness' ]
+            compare_attrs = ( 'radius', 'thickness' )
             # ...
 
     Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
