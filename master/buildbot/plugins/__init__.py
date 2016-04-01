@@ -23,6 +23,8 @@ from buildbot.interfaces import IChangeSource
 from buildbot.interfaces import IScheduler
 from buildbot.interfaces import IWorker
 from buildbot.plugins.db import get_plugins
+from buildbot.plugins.db import handle_transition_plugins
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 __all__ = [
     'changes', 'schedulers', 'steps', 'util', 'reporters', 'statistics',
@@ -32,15 +34,28 @@ __all__ = [
 
 
 # Names here match the names of the corresponding Buildbot module, hence
-# 'changes', 'schedulers', but 'buildslave'
+# 'changes', 'schedulers', but 'worker'
 changes = get_plugins('changes', IChangeSource)
 schedulers = get_plugins('schedulers', IScheduler)
 steps = get_plugins('steps', IBuildStep)
-util = get_plugins('util', None)
+util = get_plugins('util', None, deprecations=[
+    ('SlaveLock', 'WorkerLock'),
+    ('enforceChosenSlave', 'enforceChosenWorker'),
+    ('BuildslaveChoiceParameter', 'WorkerChoiceParameter')
+], warning=DeprecatedWorkerNameWarning)
 reporters = get_plugins('reporters', None)
+
+# Worker entry point for new/updated plugins.
+worker = get_plugins('worker', IWorker)
 
 # For plugins that are not updated to the new worker names, plus fallback of
 # current Buildbot plugins for old configuration files.
-buildslave = get_plugins('buildslave', IWorker)
-# Worker entry point for new/updated plugins.
-worker = get_plugins('worker', IWorker)
+# NOTE: the order is important:
+# * first declare target namespace (see worker above)
+# * then declare namespace to transition from
+buildslave = handle_transition_plugins('buildslave', 'worker', [
+    ('BuildSlave', 'Worker'),
+    ('EC2LatentBuildSlave', 'EC2LatentWorker'),
+    ('LibVirtSlave', 'LibVirtWorker'),
+    ('OpenStackLatentBuildSlave', 'OpenStackLatentWorker'),
+])
