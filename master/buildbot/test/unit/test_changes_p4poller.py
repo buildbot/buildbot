@@ -147,7 +147,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.add_p4_describe_result(3, encoded_p4change[3])
 
         # The first time, it just learns the change to start at.
-        self.assertTrue(self.changesource.last_change is None)
+        self.assertIsNone(self.changesource.last_change)
         d = self.changesource.poll()
 
         def check_first_check(_):
