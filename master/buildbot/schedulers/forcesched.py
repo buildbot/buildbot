@@ -660,7 +660,7 @@ class ForceScheduler(base.BaseScheduler):
             properties.setProperty("priority", kwargs['priority'][0], "Force Build Form")
 
         ssdict = sourcestamps.values()
-        buildLatestRev = all((ss['revision'].strip()=='' or ss['revision'] is None) for ss in ssdict)
+        buildLatestRev = all((ss['revision'] is None or ss['revision'].strip()=='') for ss in ssdict)
         properties.setProperty("buildLatestRev", buildLatestRev, "Force Build Form")
         if isinstance(owner, unicode):
             owner = owner.encode('utf-8')
