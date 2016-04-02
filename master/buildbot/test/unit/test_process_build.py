@@ -388,7 +388,7 @@ class TestBuild(unittest.TestCase):
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                      step.method_calls)
         self.assertEquals(claimCount[0], 1)
-        self.assertIsNone(b.currentStep)
+        self.assertTrue(b.currentStep is None)
         self.assertIsNotNone(b._acquiringLock)
 
     def testStopBuildWaitingForLocks(self):
@@ -419,7 +419,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                      step.method_calls)
-        self.assertIsNone(b.currentStep)
+        self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
         self.assertNotIn(('interrupt', ('stop it',), {}), step.method_calls)
 
@@ -451,7 +451,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                      step.method_calls)
-        self.assertIsNone(b.currentStep)
+        self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, RETRY)
         self.assertNotIn(('interrupt', ('stop it',), {}), step.method_calls)
         self.build.build_status.setText.assert_called_with(["retry", "lost", "connection"])
@@ -476,7 +476,7 @@ class TestBuild(unittest.TestCase):
         def acquireLocks(res=None):
             gotLocks[0] = True
             retval = LoggingBuildStep.acquireLocks(step, res)
-            self.assertIs(b.currentStep, step)
+            self.assertTrue(b.currentStep is step)
             b.stopBuild('stop it')
             return retval
         step.acquireLocks = acquireLocks
@@ -790,7 +790,7 @@ class TestMultipleSourceStamps(unittest.TestCase):
         """
         codebase = ''
         source3 = self.build.getSourceStamp(codebase)
-        self.assertIsNotNone(source3)
+        self.assertTrue(source3 is not None)
         self.assertEqual([source3.repository, source3.revision], ["repoC", "111213"])
 
 
