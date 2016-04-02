@@ -1313,9 +1313,9 @@ In addition to the parameters :bb:step:`ShellCommand` supports, this step accept
     ...
 
     factory.addStep(
-        step.CMake(
+        steps.CMake(
             generator='Ninja',
-            defitions={
+            definitions={
                 'CMAKE_BUILD_TYPE': Property('BUILD_TYPE')
             },
             options=[
