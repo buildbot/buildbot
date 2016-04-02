@@ -115,7 +115,7 @@ See the reporter index for the full, current list.
 
 A few notes on changes to the configuration of these reporters:
 
-* :bb:reporter:`MailNotifier` argument ``messageFormatter`` should now be a :py:class:`buildbot.reporter.message.MessageFormatter`, due to the removal of the status classes (see above), such formatters must be re-implemented using the Data API.
+* :bb:reporter:`MailNotifier` argument ``messageFormatter`` should now be a :py:class:`buildbot.reporters.message.MessageFormatter`, due to the removal of the status classes (see above), such formatters must be re-implemented using the Data API.
 
 * :bb:reporter:`MailNotifier` argument ``previousBuildGetter`` is not supported anymore
 
