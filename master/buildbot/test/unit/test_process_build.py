@@ -389,7 +389,7 @@ class TestBuild(unittest.TestCase):
                      step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assertTrue(b.currentStep is None)
-        self.assertIsNotNone(b._acquiringLock)
+        self.assertTrue(b._acquiringLock is not None)
 
     def testStopBuildWaitingForLocks(self):
         b = self.build
