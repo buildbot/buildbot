@@ -52,6 +52,27 @@ Unit test modules are be named after the package or class they test, replacing
 trivial classes, can be tested in a single test module. For more complex
 situations, prefer to use multiple test modules.
 
+Unit tests using renderables require special handling. The following example
+shows how the same test would be written with the 'param' parameter and with the
+same parameter as a renderable.::
+
+    def test_param(self):
+        f = self.ConcreteClass(param='val')
+        self.assertEqual(f.param, 'val')
+
+When the parameter is renderable, you need to instantiate the Class before you
+can you renderables::
+
+    def setUp(self):
+        self.build = Properties(paramVal='val')
+
+    @defer.inlineCallbacks
+    def test_param_renderable(self):
+        f = self.ConcreteClass(param=Interpolate('%(kw:rendered_val)s',
+                               rendered_val=Property('paramVal'))
+        yield f.start_instance(self.build)
+        self.assertEqual(f.param, 'val')
+
 Interface Tests
 ~~~~~~~~~~~~~~~
 

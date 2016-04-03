@@ -69,24 +69,24 @@ class DockerLatentWorker(AbstractLatentWorker):
             config.error("DockerLatentWorker: You need to specify at least"
                          " an image name, or a dockerfile")
 
-        self.volumes = []
+        self.volumes = volumes or []
         self.binds = {}
         self.networking_config = networking_config
         self.followStartupLogs = followStartupLogs
-        for volume_string in (volumes or []):
-            try:
-                volume, bind = volume_string.split(":", 1)
-            except ValueError:
-                config.error("Invalid volume definition for docker "
-                             "%s. Skipping..." % volume_string)
-                continue
-            self.volumes.append(volume_string)
 
-            ro = False
-            if bind.endswith(':ro') or bind.endswith(':rw'):
-                ro = bind[-2:] == 'ro'
-                bind = bind[:-3]
-            self.binds[volume] = {'bind': bind, 'ro': ro}
+        # Following block is only for checking config errors,
+        # actual parsing happens in self.parse_volumes()
+        # Renderables can be direct volumes definition or list member
+        if isinstance(volumes, list):
+            for volume_string in (volumes or []):
+                if not isinstance(volume_string, str):
+                    continue
+                try:
+                    volume, bind = volume_string.split(":", 1)
+                except ValueError:
+                    config.error("Invalid volume definition for docker "
+                                 "%s. Skipping..." % volume_string)
+                    continue
 
         # Set build_wait_timeout to 0 if not explicitely set: Starting a
         # container is almost immediate, we can affort doing so for each build.
@@ -108,6 +108,23 @@ class DockerLatentWorker(AbstractLatentWorker):
         if tls is not None:
             self.client_args['tls'] = tls
 
+    def parse_volumes(self, volumes):
+        self.volumes = []
+        for volume_string in (volumes or []):
+            try:
+                volume, bind = volume_string.split(":", 1)
+            except ValueError:
+                config.error("Invalid volume definition for docker "
+                             "%s. Skipping..." % volume_string)
+                continue
+            self.volumes.append(volume_string)
+
+            ro = False
+            if bind.endswith(':ro') or bind.endswith(':rw'):
+                ro = bind[-2:] == 'ro'
+                bind = bind[:-3]
+            self.binds[volume] = {'bind': bind, 'ro': ro}
+
     def createEnvironment(self):
         result = {
             "BUILDMASTER": self.masterFQDN,
@@ -123,7 +140,8 @@ class DockerLatentWorker(AbstractLatentWorker):
         if self.instance is not None:
             raise ValueError('instance active')
         image = yield build.render(self.image)
-        res = yield threads.deferToThread(self._thd_start_instance, image)
+        volumes = yield build.render(self.volumes)
+        res = yield threads.deferToThread(self._thd_start_instance, image, volumes)
         defer.returnValue(res)
 
     def _image_exists(self, client, name):
@@ -136,7 +154,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                     return True
         return False
 
-    def _thd_start_instance(self, image):
+    def _thd_start_instance(self, image, volumes):
         docker_client = client.Client(**self.client_args)
 
         found = False
@@ -158,6 +176,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                 'Image "%s" not found on docker host.' % image
             )
 
+        self.parse_volumes(volumes)
         self.hostconfig['binds'] = self.binds
         host_conf = docker_client.create_host_config(**self.hostconfig)
 

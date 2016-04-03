@@ -277,6 +277,8 @@ For example::
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
+Note: Config errors with Renderables may not always be caught via checkconfig
+
 .. index:: single: Properties; Transform
 
 .. _Transform:

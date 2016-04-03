@@ -24,6 +24,8 @@ Features
 * Add GitLab authentication plugin for web UI.
   See :class:`buildbot.www.oauth2.GitLabAuth`.
 * :class:`DockerLatentWorker` now has a ``hostconfig`` parameter that can be used to setup host configuration when creating a new container.
+* :class:`DockerLatentWorker` now has a ``networking_config`` parameter that can be used to setup container networks.
+* The :class:`DockerLatentWorker` ``volumes`` attribute is now renderable.
 * :bb:step:`CMake` build step is added.
   It provides a convenience interface to `CMake <https://cmake.org/cmake/help/latest/>`_ build system.
 * MySQL InnoDB tables are now supported.

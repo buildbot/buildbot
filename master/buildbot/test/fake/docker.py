@@ -17,7 +17,7 @@
 class Client(object):
 
     def __init__(self, base_url):
-        self._images = [{'RepoTags': ['busybox:latest']}]
+        self._images = [{'RepoTags': ['busybox:latest', 'worker:latest']}]
 
     def images(self):
         return self._images
