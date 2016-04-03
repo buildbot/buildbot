@@ -24,6 +24,8 @@ import time
 
 try:
     import boto
+    import boto.ec2
+    import boto.exception
 except ImportError:
     boto = None
 
@@ -60,7 +62,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                  spot_instance=False, max_spot_price=1.6, volumes=None,
                  placement=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX',
-                 **kwargs):
+                 instance_profile_arn=None, **kwargs):
 
         if not boto:
             config.error("The python module 'boto' is needed to use a "
@@ -122,6 +124,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.retry = retry
         self.attempt = 1
         self.product_description = product_description
+        self.instance_profile_arn = instance_profile_arn
         if None not in [placement, region]:
             self.placement = '%s%s' % (region, placement)
         else:
@@ -294,13 +297,12 @@ class EC2LatentWorker(AbstractLatentWorker):
         reservation = image.run(
             key_name=self.keypair_name, security_groups=[self.security_name],
             instance_type=self.instance_type, user_data=self.user_data,
-            placement=self.placement)
+            placement=self.placement,
+            instance_profile_arn=self.instance_profile_arn)
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(
             reservation)
         if None not in [instance_id, image_id, start_time]:
-            if len(self.tags) > 0:
-                self.conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state)
@@ -422,6 +424,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 (self.__class__.__name__, self.workername, self.instance.id))
         duration = 0
         interval = self._poll_resolution
+        tagged = False
         while self.instance.state == PENDING:
             time.sleep(interval)
             duration += interval
@@ -429,7 +432,15 @@ class EC2LatentWorker(AbstractLatentWorker):
                 log.msg('%s %s has waited %d minutes for instance %s' %
                         (self.__class__.__name__, self.workername, duration // 60,
                          self.instance.id))
-            self.instance.update()
+            try:
+                self.instance.update()
+                if not tagged:
+                    self._tag_resource(self.instance.id)
+                    tagged = True
+            except boto.exception.EC2ResponseError as e:
+                # AWS is eventaully consistent
+                if 'InvalidInstanceID.NotFound' not in e.body:
+                    raise
 
         if self.instance.state == RUNNING:
             self.output = self.instance.get_console_output()
@@ -453,8 +464,22 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _wait_for_request(self, reservation):
         duration = 0
         interval = self._poll_resolution
-        requests = self.conn.get_all_spot_instance_requests(
-            request_ids=[reservation.id])
+        requests = None
+        while not requests:
+            time.sleep(interval)
+            duration += interval
+            if duration % 60 == 0:
+                log.msg('%s %s has waited %d minutes for spot request %s' %
+                        (self.__class__.__name__, self.slavename,
+                         duration // 60, reservation.id))
+            try:
+                requests = self.conn.get_all_spot_instance_requests(
+                    request_ids=[reservation.id])
+                self._tag_resource(reservation.id)
+            except boto.exception.EC2ResponseError as e:
+                # AWS is eventaully consistent
+                if 'InvalidSpotInstanceRequestID.NotFound' not in e.body:
+                    raise
         request = requests[0]
         request_status = request.status.code
         while request_status in SPOT_REQUEST_PENDING_STATES:
@@ -488,3 +513,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                      request.id, request_status))
             raise LatentWorkerFailedToSubstantiate(
                 request.id, request.status)
+
+    def _tag_resource(self, resource_id):
+        if len(self.tags) > 0:
+            self.conn.create_tags(resource_id, self.tags)
