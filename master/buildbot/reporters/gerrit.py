@@ -329,7 +329,8 @@ class GerritStatusPush(service.BuildbotService):
                         'result': result,
                         'resultText': resultText,
                         'text': build['state_string'],
-                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'], build['number'])
+                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'], build['number']),
+                        'build': build
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 

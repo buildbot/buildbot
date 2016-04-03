@@ -132,12 +132,13 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         self.master.db.changes.getChangesForBuild = getChangesForBuild
         defer.returnValue((buildset, builds))
 
-    def makeBuildInfo(self, buildResults, resultText):
+    def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
         for i in xrange(len(buildResults)):
             info.append({'name': u"Builder%d" % i, 'result': buildResults[i],
                          'resultText': resultText[i], 'text': u'buildText',
-                         'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i)})
+                         'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i),
+                         'build': builds[i]})
         return info
 
     @defer.inlineCallbacks
@@ -147,7 +148,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         yield gsp.buildsetComplete('buildset.98.complete'.split("."),
                                    buildset)
 
-        info = self.makeBuildInfo(buildResults, resultText)
+        info = self.makeBuildInfo(buildResults, resultText, builds)
         if expWarning:
             self.assertEqual([w['message'] for w in self.flushWarnings()],
                              ['The Gerrit status callback uses the old '
@@ -348,10 +349,10 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         self.assertEqual(res['labels'], {})
 
     def test_defaultSummaryCB(self):
-        info = self.makeBuildInfo([SUCCESS, FAILURE], ["yes", "no"])
+        info = self.makeBuildInfo([SUCCESS, FAILURE], ["yes", "no"], [None, None])
         res = defaultSummaryCB(info, SUCCESS, None, None)
         self.assertEqual(res['labels'], {'Verified': -1})
-        info = self.makeBuildInfo([SUCCESS, SUCCESS], ["yes", "yes"])
+        info = self.makeBuildInfo([SUCCESS, SUCCESS], ["yes", "yes"], [None, None])
         res = defaultSummaryCB(info, SUCCESS, None, None)
         self.assertEqual(res['labels'], {'Verified': 1})
 
