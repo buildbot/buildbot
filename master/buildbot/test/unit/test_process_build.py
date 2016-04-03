@@ -157,8 +157,8 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
-                     in step.method_calls)
+        self.assertIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
+                     step.method_calls)
 
     def testStopBuild(self):
         b = self.build
@@ -177,7 +177,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(b.results, CANCELLED)
 
-        self.assert_(('interrupt', ('stop it',), {}) in step.method_calls)
+        self.assertIn(('interrupt', ('stop it',), {}), step.method_calls)
 
     def testAlwaysRunStepStopBuild(self):
         """Test that steps marked with alwaysRun=True still get run even if
@@ -217,8 +217,8 @@ class TestBuild(unittest.TestCase):
 
         def check(ign):
             self.assertEqual(b.results, CANCELLED)
-            self.assert_(('interrupt', ('stop it',), {}) in step1.method_calls)
-            self.assert_(step2Started[0])
+            self.assertIn(('interrupt', ('stop it',), {}), step1.method_calls)
+            self.assertTrue(step2Started[0])
         d.addCallback(check)
         return d
 
@@ -385,11 +385,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
-                     not in step.method_calls)
+        self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
+                     step.method_calls)
         self.assertEquals(claimCount[0], 1)
-        self.assert_(b.currentStep is None)
-        self.assert_(b._acquiringLock is not None)
+        self.assertTrue(b.currentStep is None)
+        self.assertTrue(b._acquiringLock is not None)
 
     def testStopBuildWaitingForLocks(self):
         b = self.build
@@ -417,11 +417,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
-                     not in step.method_calls)
-        self.assert_(b.currentStep is None)
+        self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
+                     step.method_calls)
+        self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
-        self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.assertNotIn(('interrupt', ('stop it',), {}), step.method_calls)
 
     def testStopBuildWaitingForLocks_lostRemote(self):
         b = self.build
@@ -449,11 +449,11 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
 
-        self.assert_(('startStep', (self.workerforbuilder.worker.conn,), {})
-                     not in step.method_calls)
-        self.assert_(b.currentStep is None)
+        self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
+                     step.method_calls)
+        self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, RETRY)
-        self.assert_(('interrupt', ('stop it',), {}) not in step.method_calls)
+        self.assertNotIn(('interrupt', ('stop it',), {}), step.method_calls)
         self.build.build_status.setText.assert_called_with(["retry", "lost", "connection"])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
@@ -476,7 +476,7 @@ class TestBuild(unittest.TestCase):
         def acquireLocks(res=None):
             gotLocks[0] = True
             retval = LoggingBuildStep.acquireLocks(step, res)
-            self.assert_(b.currentStep is step)
+            self.assertTrue(b.currentStep is step)
             b.stopBuild('stop it')
             return retval
         step.acquireLocks = acquireLocks
@@ -492,7 +492,7 @@ class TestBuild(unittest.TestCase):
         b.results = SUCCESS
         step = FakeBuildStep()
         terminate = b.stepDone(SUCCESS, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, SUCCESS)
 
     def testStepDoneHaltOnFailure(self):
@@ -502,7 +502,7 @@ class TestBuild(unittest.TestCase):
         step = FakeBuildStep()
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
-        self.assertEqual(terminate, True)
+        self.assertTrue(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneHaltOnFailureNoFlunkOnFailure(self):
@@ -513,7 +513,7 @@ class TestBuild(unittest.TestCase):
         step.flunkOnFailure = False
         step.haltOnFailure = True
         terminate = b.stepDone(FAILURE, step)
-        self.assertEqual(terminate, True)
+        self.assertTrue(terminate)
         self.assertEqual(b.results, SUCCESS)
 
     def testStepDoneFlunkOnWarningsFlunkOnFailure(self):
@@ -525,7 +525,7 @@ class TestBuild(unittest.TestCase):
         step.flunkOnWarnings = True
         b.stepDone(WARNINGS, step)
         terminate = b.stepDone(FAILURE, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneNoWarnOnWarnings(self):
@@ -535,7 +535,7 @@ class TestBuild(unittest.TestCase):
         step = FakeBuildStep()
         step.warnOnWarnings = False
         terminate = b.stepDone(WARNINGS, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, SUCCESS)
 
     def testStepDoneWarnings(self):
@@ -544,7 +544,7 @@ class TestBuild(unittest.TestCase):
         b.results = SUCCESS
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, WARNINGS)
 
     def testStepDoneFail(self):
@@ -553,7 +553,7 @@ class TestBuild(unittest.TestCase):
         b.results = SUCCESS
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneFailOverridesWarnings(self):
@@ -562,7 +562,7 @@ class TestBuild(unittest.TestCase):
         b.results = WARNINGS
         step = FakeBuildStep()
         terminate = b.stepDone(FAILURE, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneWarnOnFailure(self):
@@ -573,7 +573,7 @@ class TestBuild(unittest.TestCase):
         step.warnOnFailure = True
         step.flunkOnFailure = False
         terminate = b.stepDone(FAILURE, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, WARNINGS)
 
     def testStepDoneFlunkOnWarnings(self):
@@ -583,7 +583,7 @@ class TestBuild(unittest.TestCase):
         step = FakeBuildStep()
         step.flunkOnWarnings = True
         terminate = b.stepDone(WARNINGS, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneHaltOnFailureFlunkOnWarnings(self):
@@ -594,7 +594,7 @@ class TestBuild(unittest.TestCase):
         step.flunkOnWarnings = True
         self.haltOnFailure = True
         terminate = b.stepDone(WARNINGS, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneWarningsDontOverrideFailure(self):
@@ -603,7 +603,7 @@ class TestBuild(unittest.TestCase):
         b.results = FAILURE
         step = FakeBuildStep()
         terminate = b.stepDone(WARNINGS, step)
-        self.assertEqual(terminate, False)
+        self.assertFalse(terminate)
         self.assertEqual(b.results, FAILURE)
 
     def testStepDoneRetryOverridesAnythingElse(self):
@@ -616,7 +616,7 @@ class TestBuild(unittest.TestCase):
         b.stepDone(FAILURE, step)
         b.stepDone(SUCCESS, step)
         terminate = b.stepDone(EXCEPTION, step)
-        self.assertEqual(terminate, True)
+        self.assertTrue(terminate)
         self.assertEqual(b.results, RETRY)
 
     def test_getSummaryStatistic(self):
@@ -874,11 +874,11 @@ class TestSetupProperties_MultipleSources(unittest.TestCase):
 
     def test_sourcestamp_properties_not_set(self):
         self.build.setupOwnProperties()
-        self.assertTrue("codebase" not in self.props["Build"])
-        self.assertTrue("revision" not in self.props["Build"])
-        self.assertTrue("branch" not in self.props["Build"])
-        self.assertTrue("project" not in self.props["Build"])
-        self.assertTrue("repository" not in self.props["Build"])
+        self.assertNotIn("codebase", self.props["Build"])
+        self.assertNotIn("revision", self.props["Build"])
+        self.assertNotIn("branch", self.props["Build"])
+        self.assertNotIn("project", self.props["Build"])
+        self.assertNotIn("repository", self.props["Build"])
 
 
 class TestSetupProperties_SingleSource(unittest.TestCase):
