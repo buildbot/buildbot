@@ -25,7 +25,7 @@ class UrlForBuildMaster(RunMasterBase):
     proto = "null"
 
     @defer.inlineCallbacks
-    def test_transfer(self):
+    def test_url(self):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
