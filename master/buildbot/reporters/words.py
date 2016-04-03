@@ -1013,7 +1013,7 @@ class StatusBot(service.AsyncMultiService):
 
     def __init__(self, tags, notify_events,
                  useRevisions=False, showBlameList=False, useColors=True,
-                 categories=None  # deprecated
+                 categories=None, authz=None  # deprecated
                  ):
         service.AsyncMultiService.__init__(self)
         self.tags = tags or categories
@@ -1021,6 +1021,7 @@ class StatusBot(service.AsyncMultiService):
         self.useColors = useColors
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
+        self.authz = authz
         self.contacts = {}
 
     def groupChat(self, channel, message):
