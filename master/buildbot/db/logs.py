@@ -177,25 +177,27 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                      num_lines=last_line + 1)
         return first_line, last_line
 
-    def appendLog(self, logid, content):
+    def thdAppendLog(self, conn, logid, content):
         # check for trailing newline and strip it for storage -- chunks omit
         # the trailing newline
         assert content[-1] == u'\n'
         content = content[:-1]
+        q = sa.select([self.db.model.logs.c.num_lines])
+        q = q.where(self.db.model.logs.c.id == logid)
+        res = conn.execute(q)
+        row = res.fetchone()
+        res.close()
+        if not row:
+            return  # ignore a missing log
 
+        return self.thdSplitAndAppendChunk(conn=conn,
+                                           logid=logid,
+                                           content=content.encode('utf-8'),
+                                           first_line=row[0])
+
+    def appendLog(self, logid, content):
         def thd(conn):
-            q = sa.select([self.db.model.logs.c.num_lines])
-            q = q.where(self.db.model.logs.c.id == logid)
-            res = conn.execute(q)
-            row = res.fetchone()
-            res.close()
-            if not row:
-                return  # ignore a missing log
-
-            return self.thdSplitAndAppendChunk(conn=conn,
-                                               logid=logid,
-                                               content=content.encode('utf-8'),
-                                               first_line=row[0])
+            return self.thdAppendLog(conn, logid, content)
 
         return self.db.pool.do(thd)
 
@@ -268,28 +270,24 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for row in rows:
                 wholelog += self.COMPRESSION_BYID[row.compressed]["read"](row.content).decode('utf-8') + "\n"
 
+            if len(wholelog) == 0:
+                return 0
+
+            transaction = conn.begin()
             d = tbl.delete()
             d = d.where(tbl.c.logid == logid)
-            conn.execute(d).close()
+            conn.execute(d)
             conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
                          num_lines=0)
-
-            return wholelog
-
-        wholelog = yield self.db.pool.do(thd)
-        if wholelog is None or len(wholelog) == 0:
-            defer.returnValue(0)
-
-        yield self.appendLog(logid, wholelog)
-
-        def getLogSize(conn):
-            # get the set of chunks
-            tbl = self.db.model.logchunks
+            self.thdAppendLog(conn, logid, wholelog)
+            transaction.commit()
             q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
             q = q.where(tbl.c.logid == logid)
-            return conn.execute(q).fetchone()[0]
-        newsize = yield self.db.pool.do(getLogSize)
-        defer.returnValue(len(wholelog) - newsize)
+            newsize = conn.execute(q).fetchone()[0]
+            return len(wholelog) - newsize
+
+        saved = yield self.db.pool.do(thd)
+        defer.returnValue(saved)
 
     def _logdictFromRow(self, row):
         rv = dict(row)
