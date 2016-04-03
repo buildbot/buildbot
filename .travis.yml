@@ -99,19 +99,12 @@ install:
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
-                  -e master[tls] \
+                  -e master[tls][tests] \
                   -e slave \
                   -e worker \
-                  txrequests \
-                  future \
-                  pyjade \
-                  lz4 \
                   MySQL-python \
                   psycopg2 \
                   pg8000 \
-                  boto \
-                  moto \
-                  txgithub
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
 
