@@ -23,7 +23,7 @@ Features
      will result in the spot request being placed in us-west-2b.
    * Float parameter ``price_multiplier`` specifies the percentage bid above the 24-hour average spot price.
    * Dict parameter ``tags`` specifies AWS tags as key/value pairs to be applied to new instances.
-  
+
   With ``spot_instance=True``, an ``EC2LatentBuildSlave`` will attempt to create a spot instance with the provided spot
   price, placement, and so on.
 
@@ -365,16 +365,3 @@ git log itself:
 .. code-block:: bash
 
    git log v0.8.8..v0.8.9
-
-Older Versions
---------------
-
-Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
-Newer versions are also available here:
-
-.. toctree::
-    :maxdepth: 1
-
-    0.8.8
-    0.8.7
-    0.8.6
