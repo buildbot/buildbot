@@ -99,7 +99,7 @@ install:
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
-                  -e master[tls][tests] \
+                  -e master[tls,test] \
                   -e slave \
                   -e worker \
                   MySQL-python \
