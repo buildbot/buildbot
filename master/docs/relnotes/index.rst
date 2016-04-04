@@ -33,6 +33,7 @@ Features
 * :class:`~buildbot.reporters.stash.StashStatusPush` has been ported to reporter API.
 * :class:`~buildbot.reporters.github.GithubStatusPush` has been ported to reporter API.
 * `summaryCB` of :bb:reporter:`GerritStatusPush` now gets not only pre-processed information but the actual build as well.
+* EC2LatentWorker supports VPCs, instance profiles, and advanced volume mounts.
 
 Fixes
 ~~~~~

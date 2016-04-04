@@ -220,11 +220,78 @@ To get Buildbot to tag the latent worker specify the tag keys and values in your
                                tags={'SomeTag': 'foo'})
     ]
 
+If the worker needs access to additional AWS resources, you can also enable your workers to access them via an EC2 instance profile.
+To use this capability, you must first create an instance profile separately in AWS.
+Then specify its name on EC2LatentWorker via instance_profile_name.
+
+::
+
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               ami='ami-12345',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
+                               instance_profile_name='my_profile'
+                               )
+    ]
+
 The :class:`~buildbot.worker.ec2.EC2LatentWorker` supports all other configuration from the standard :class:`Worker`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an EC2 instance to attach before considering the attempt to have failed, and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.
 
+
+Volumes
+--------------
+
+If you want to attach existing volumes to an ec2 latent worker, use the volumes attribute.
+This mechanism can be valuable if you want to maintain state on a conceptual worker across multiple start/terminate sequences.
 ``volumes`` expects a list of (volume_id, mount_point) tuples to attempt attaching when your instance has been created.
+
+If you want to attach new ephemeral volumes, use the the block_device_map attribute.
+This follows the BlockDeviceMap configuration of boto almost exactly, essentially acting as a passthrough.
+The only distinction is that the volumes default to deleting on termination to avoid leaking volume resources when workers are terminated.
+See boto documentation for further details.
+
+::
+
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               ami='ami-12345',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
+                               block_device_map= {
+                                "/dev/xvdb" : {
+                                  "volume_type": "io1",
+                                  "iops": 1000,
+                                  "size": 100
+                                }
+                               }
+                               )
+    ]
+
+
+VPC Support
+--------------
+
+If you are managing workers within a VPC, your worker configuration must be modified from above.
+You must specify the id of the subnet where you want your worker placed.
+You must also specify security groups created within your VPC as opposed to classic EC2 security groups.
+This can be done by passing the ids of the vpc security groups.
+Note, when using a VPC, you can not specify classic EC2 security groups (as specified by security_name).
+
+::
+
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               ami='ami-12345',
+                               keypair_name='latent_buildbot_worker',
+                               subnet_id='subnet-12345',
+                               security_group_ids=['sg-12345','sg-67890']
+                               )
+    ]
 
 Spot instances
 --------------

@@ -13,6 +13,8 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
+
+from twisted.trial import unittest
 try:
     from moto import mock_ec2
     assert mock_ec2
@@ -21,8 +23,6 @@ try:
 except ImportError:
     boto = None
     ec2 = None
-
-from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
@@ -107,6 +107,52 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.tags, tags)
 
     @mock_ec2
+    def test_fail_mixing_classic_and_vpc_ec2_settings(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+
+        def create_worker():
+            ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                keypair_name="test_key",
+                                identifier='publickey',
+                                secret_identifier='privatekey',
+                                ami=amis[0].id,
+                                security_name="classic",
+                                subnet_id="sn-1234"
+                                )
+
+        self.assertRaises(ValueError, create_worker)
+
+    @mock_ec2
+    def test_start_vpc_instance(self):
+        c = self.botoSetup()
+
+        vpc_conn = boto.connect_vpc()
+        vpc = vpc_conn.create_vpc("192.168.0.0/24")
+        subnet = vpc_conn.create_subnet(vpc.id, "192.168.0.0/24")
+        amis = c.get_all_images()
+
+        sg = c.create_security_group("test_sg", "test_sg", vpc.id)
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="test_key",
+                                 security_group_ids=[sg.id],
+                                 subnet_id=subnet.id,
+                                 ami=amis[0].id
+                                 )
+
+        instance_id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].subnet_id, subnet.id)
+        self.assertEqual(len(instances[0].groups), 1)
+        self.assertEqual(instances[0].groups[0].id, sg.id)
+
+    @mock_ec2
     def test_start_instance(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -134,6 +180,56 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].tags, {})
 
     @mock_ec2
+    def test_start_instance_volumes(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"Use of default value of 'keypair_name' of "
+                    r"EC2LatentWorker constructor is deprecated",
+                    r"Use of default value of 'security_name' of "
+                    r"EC2LatentWorker constructor is deprecated"
+                ]):
+            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                     identifier='publickey',
+                                     secret_identifier='privatekey',
+                                     ami=amis[0].id,
+                                     block_device_map={
+                                         "/dev/xvdb": {
+                                             "volume_type": "io1",
+                                             "iops": 10,
+                                             "size": 20,
+                                         },
+                                         "/dev/xvdc": {
+                                             "volume_type": "gp2",
+                                             "size": 30,
+                                             "delete_on_termination": False
+                                         }
+                                         }
+                                     )
+
+        # moto does not currently map volumes properly.  below ensures
+        # that my conversion code properly composes it, including
+        # delete_on_termination default.
+        from boto.ec2.blockdevicemapping import BlockDeviceType
+        self.assertEqual(set(['/dev/xvdb', '/dev/xvdc']), set(bs.block_device_map.keys()))
+
+        def assertBlockDeviceEqual(a, b):
+            self.assertEqual(a.volume_type, b.volume_type)
+            self.assertEqual(a.iops, b.iops)
+            self.assertEqual(a.size, b.size)
+            self.assertEqual(a.delete_on_termination, b.delete_on_termination)
+
+        assertBlockDeviceEqual(
+            BlockDeviceType(volume_type='io1', iops=10, size=20, delete_on_termination=True),
+            bs.block_device_map['/dev/xvdb'])
+
+        assertBlockDeviceEqual(
+            BlockDeviceType(volume_type='gp2', size=30, delete_on_termination=False),
+            bs.block_device_map['/dev/xvdc'])
+
+    @mock_ec2
     def test_start_instance_tags(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -158,6 +254,38 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
         self.assertEqual(instances[0].tags, tags)
+
+    @mock_ec2
+    def test_start_vpc_spot_instance(self):
+        c = self.botoSetup()
+
+        vpc_conn = boto.connect_vpc()
+        vpc = vpc_conn.create_vpc("192.168.0.0/24")
+        subnet = vpc_conn.create_subnet(vpc.id, "192.168.0.0/24")
+        amis = c.get_all_images()
+
+        sg = c.create_security_group("test_sg", "test_sg", vpc.id)
+
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="test_key",
+                                 ami=amis[0].id, spot_instance=True,
+                                 max_spot_price=1.5,
+                                 security_group_ids=[sg.id],
+                                 subnet_id=subnet.id,
+                                 )
+
+        instance_id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+
+        self.assertTrue(bs.spot_instance)
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].subnet_id, subnet.id)
+        self.assertEqual(len(instances[0].groups), 1)
+        self.assertEqual(instances[0].groups[0].id, sg.id)
 
     @mock_ec2
     def test_start_spot_instance(self):
@@ -311,6 +439,20 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
                                      )
         self.assertEqual(bs.keypair_name, 'test_keypair')
         self.assertEqual(bs.security_name, 'latent_buildbot_slave')
+
+    @mock_ec2
+    def test_no_default_security_warning_when_security_group_ids(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 ami=amis[0].id,
+                                 keypair_name='test_keypair',
+                                 subnet_id=["sn-1"]
+                                 )
+        self.assertEqual(bs.security_name, None)
 
     @mock_ec2
     def test_use_non_default_keypair_security(self):
