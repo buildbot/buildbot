@@ -1,7 +1,6 @@
 Release Notes for Buildbot 0.9.0b8
 ==================================
 
-
 The following are the release notes for Buildbot 0.9.0b8
 This version was released on April 04, 2016.
 
@@ -46,7 +45,7 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Deprecated ``workdir`` was removed, ``builddir`` property should be used instead.
+* Deprecated ``workdir`` property has been removed, ``builddir`` property should be used instead.
 * To support MySQL InnoDB, the size of six VARCHAR(256) columns ``changes.(author, branch, category, name); object_state.name; user.identifier`` was reduced to VARCHAR(255).
 
 * :class:`~buildbot.status.status_push.StatusPush` has been removed from buildbot.
@@ -54,6 +53,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
+
+Worker changes described in below worker section will probably impact a buildbot developer who uses undocumented '*slave*' API.
+Undocumented APIs have been replaced without failover, so any custom code that uses it shall be updated with new undocumented API.
 
 Worker
 ------

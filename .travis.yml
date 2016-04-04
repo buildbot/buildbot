@@ -132,8 +132,8 @@ install:
   # In setuppy_test all dependencies should be installed by setuptools during tests.
   - "[ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)"
   # Automatic installation of autobahn during `setup.py test` fails due to:
-  # https://bitbucket.org/pypa/setuptools/issues/500/when-directorysandbox-is-active-isinstance
-  - "[ $TESTS != setuppy_test ] || pip install autobahn"
+  # https://github.com/pypa/setuptools/issues/500
+  - "[ $TESTS != setuppy_test ] || pip install autobahn Twisted"
 
 before_script:
   # create real MySQL database for tests
