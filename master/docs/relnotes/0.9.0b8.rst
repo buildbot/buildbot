@@ -66,9 +66,6 @@ As the work is not completly finished, neither `buildbot-slave==0.9.0b8` or `bui
 You can safely use any version of buildbot-slave with `buildbot==0.9.0b8`, either `buildbot-slave==0.8.12` or `buildbot-slave==0.9.0b7`.
 
 
-Deprecations, Removals, and Non-Compatible Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Transition to "worker" terminology
 ----------------------------------
 
@@ -531,7 +528,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0b7..master
+   git log v0.9.0b7..v0.9.0b8
 
 Older Versions
 --------------
