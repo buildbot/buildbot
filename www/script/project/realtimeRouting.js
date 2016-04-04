@@ -2,12 +2,20 @@
 define(function (require) {
     "use strict";
 
-    var helpers = require('helpers');
+    var helpers = require('helpers'),
+        _callbacks = {};
 
     return {
+        addPageInitHandler : function(key, callback) {
+            if (!key || !callback) {
+                return;
+            }
+           _callbacks[key] =  callback;
+        },
         init: function () {
             /*jslint white: true */
-            switch (helpers.getCurrentPage()) {
+            var page = helpers.getCurrentPage();
+            switch (page) {
                 case 'builddetail_page':
                     // For the builddetailpage
                     require(['rtBuildDetail'],
@@ -62,6 +70,11 @@ define(function (require) {
                         });
                     break;
                 default:
+                    if(Object.keys(_callbacks).indexOf(page) > -1)
+                    {
+                        _callbacks[page]();
+                        break;
+                    }
                     // For pages without overriden realtime
                     require(['rtGlobal'],
                         function (rtGlobal) {

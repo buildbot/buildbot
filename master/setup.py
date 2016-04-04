@@ -199,7 +199,7 @@ else:
         'sqlalchemy-migrate ==0.7.2',
         'python-dateutil==1.5',
         'autobahn',
-        'python-ldap',
+        'python-ldap >= 2.4.25',
         'mysql-python',
         # alternative MySQL driver, that works under pypy
         'pymysql==0.7.1'

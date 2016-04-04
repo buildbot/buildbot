@@ -22,13 +22,16 @@ define(function (require) {
             EXCEPTION: [4, "exception"],
             RETRY: [5, "retry"],
             CANCELED: [6, "exception"],
-            NOT_REBUILT: [7, "not_rebuilt"],
-            DEPENDENCY_FAILURE: [8, "dependency_failure"],
+            NOT_REBUILT: [7, "not-rebuilt"],
+            DEPENDENCY_FAILURE: [8, "dependency-failure"],
             RUNNING: [9, "running"],
-            NOT_STARTED: [10, "not_started"],
+            NOT_STARTED: [10, "not-started"],
             None: ""
         },
-        settings = {};
+        settings = {},
+        key_codes = {
+           ENTER : 13
+        };
 
     $.each(css_classes, function (key, val) {
         css_class_enum[key] = val[0];
@@ -625,7 +628,9 @@ define(function (require) {
                 var el = ext_history_list[i];
                 var codebasesHtml = $("<div class='row branch-list'/>");
                 $.each(el.codebases, function(i, val) {
-                    $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>"+i.slice(0, -"_branch".length) +": </strong>"+val+"</span></div>").appendTo(codebasesHtml);
+                    if(val) {
+                        $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>" + i.slice(0, -"_branch".length) + ": </strong>" + val + "</span></div>").appendTo(codebasesHtml);
+                    }
                 });
                 
                 var html = "<div class='row'><div class='col-md-8'><a class='builder-link' href='" + el.url + "'>" + unescape(el.proj) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";
@@ -673,7 +678,8 @@ define(function (require) {
                 });
             }
             return priority;
-        }
+        },
+        keyCodes : key_codes
       };
 
     return helpers;

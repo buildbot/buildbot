@@ -473,7 +473,7 @@ table.codebase-branch-table {
     &.branch-overview {
         .border-table-holder {
             border-left: 0;
-            padding-left: 0;
+            box-shadow: none;
         }
     }
 }
@@ -676,3 +676,8 @@ table.codebase-branch-table {
 tr.italic {
     font-style: italic;
 }
+
+#btn-or-tag-select{
+    display: none;
+}
+

@@ -59,7 +59,8 @@
             'userSettings': 'project/userSettings',
             'URIjs': 'libs/uri',
             'toastr': 'plugins/toastr',
-            "precompiled.handlebars": "../generated/precompiled.handlebars"
+            'precompiled.handlebars': '../generated/precompiled.handlebars',
+            'rtTestReport' : 'project/rtTestReport'
         },
 
         shim: {

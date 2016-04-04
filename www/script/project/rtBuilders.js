@@ -2,7 +2,7 @@
 define(function (require) {
     "use strict";
 
-    var $ = require('jquery'),
+   var $ = require('jquery'),
         realtimePages = require('realtimePages'),
         helpers = require('helpers'),
         dt = require('project/datatables-extend'),
@@ -22,6 +22,7 @@ define(function (require) {
         NO_TAG = "No Tag",
         UNSTABLE_TAG = "Unstable",
         WIP_TAG = "WIP",
+        tagSeparator = " && ",
         extra_tags = [NO_TAG],
         MAIN_REPO = "unity_branch",
         hideUnstable = false,
@@ -43,6 +44,8 @@ define(function (require) {
             window.addEventListener('popstate', function (event) {
                 rtBuilders.loadStateFromURL();
             });
+
+            helpers.tooltip($("[data-title]"));
         },
         realtimeFunctionsProcessBuilders: function (data) {
             if (initializedCodebaseOverview === false) {
@@ -65,11 +68,6 @@ define(function (require) {
             }
             latestRevDict = data.latestRevisions;
             rtTable.table.rtfGenericTableProcess($tbSorter, data.builders);
-
-            //Setup tooltips
-            helpers.tooltip($("[data-title]"));
-        },
-        setupTagsSelector: function setupTagsSelector() {
 
         },
         updateTagsForSelect2: function updateTagsForSelect2(allowInit) {
@@ -122,7 +120,8 @@ define(function (require) {
 
             tags.clear();
             $.each(data, function eachBuilder(i, builder) {
-                tags = tags.add(rtBuilders.formatTags(builder.tags, branch_type));
+                var builderTags = rtBuilders.formatTags(builder.tags, branch_type);
+                tags.add(builderTags);
 
                 $.each(builder.tags, function eachBuilderTag(i, tag) {
                     // If we found a branch tag then add it
@@ -130,6 +129,10 @@ define(function (require) {
                         branch_tags.add(tag.toLowerCase());
                     }
                 });
+
+                if (builderTags.length > 1){
+                    tags.add(builderTags.join(tagSeparator));
+                }
             });
 
             tags.add(extra_tags)
@@ -163,6 +166,7 @@ define(function (require) {
                 }
 
                 var filteredTags = rtBuilders.filterTags(builderTags, branch_type);
+
                 if (selectedTags.length == 0 && (builderTags.length > 0 && filteredTags.length === 0 || builderTags.length !== filteredTags.length)) {
                     return builderTags.some(hasBranch);
                 }
@@ -175,18 +179,18 @@ define(function (require) {
                     return $.inArray(NO_TAG, selectedTags) > -1;
                 }
 
-                var result = true;
+                var result = false;
                 if ($.inArray(NO_TAG, selectedTags) > -1) {
                     selectedTags.push(branch_type);
                 }
+
+                if(filteredTags.length > 1) {
+                    filteredTags.push(filteredTags.join(tagSeparator));
+                }
+
                 $.each(selectedTags, function eachSelectedTag(i, tag) {
-                    if (tag === NO_TAG) {
-                        if (filteredTags.length == 0 && builderTags.some(hasBranch)) {
-                            // Exit early we have found a builder with the branch as a tag
-                            return false;
-                        }
-                    } else if ($.inArray(tag, filteredTags) === -1) {
-                        result = false;
+                    if ((tag === NO_TAG && filteredTags.length === 0 && builderTags.some(hasBranch)) || ($.inArray(tag, filteredTags) > -1)) {
+                        result = true;
                         return false;
                     }
                 });
@@ -230,8 +234,8 @@ define(function (require) {
                 return rtBuilders.tagVisibleForBranch(tag, branch_type)
             });
 
-            return rtBuilders.formatTags(filtered_tags, branch_type);
 
+            return  rtBuilders.formatTags(filtered_tags, branch_type).sort();
         },
         formatTags: function formatTags(tags, branch_type) {
             var formatTag = function (tag) {

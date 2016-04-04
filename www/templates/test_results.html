@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% import 'submenu.html' as submenu %}
+
+{% block submenu %}
+    {{ submenu.buildsubmenu(active_page="Test Results", pathNum=6, buildersPath=path_to_builders, codebasesPath=path_to_codebases, builderName=builder_name, builderPath=path_to_builder, buildNumber=build_number, buildPath=path_to_build, stepName="Test Results", selectedProject=selectedproject) }}
+{% endblock %}
+
+{% set bodyId = 'id="testresults_page"' %}
+
+{% block extra_script %}
+    <script type="text/javascript">
+        require.deps.push('rtTestReport');
+    </script>
+{% endblock %}
+{% block content %}
+    <div class="top left"></div>
+    <div class="log-main" data-failed-tests="{{ data.summary.failedCount }}">
+        <div id="dataTablesFilter" class="fl-right top-filter-list">
+            <div id="CheckBoxesList" class="check-boxes-list">
+                {% for key, checked in data.filters.iteritems() %}
+                    <label for="{{ key }}input">{{ key }}</label>
+                    <input {{ 'checked=checked' if checked else '' }} type="checkbox" value="{{ key }}" id="{{ key }}input"/>
+                {% endfor %}
+            </div>
+            <div class="dataTables_filter">
+                <label class="input-label"></label>
+                <input type="text" placeholder="Free text filter" id="filterinput"/>
+            </div>
+            <button class="grey-btn" id="submitFilter">Filter</button>
+            <button class="grey-btn" id="clearFilter">Clear</button>
+        </div>
+    </div>
+
+    <h1 class="main-head" id=":i18n:Summary">Summary</h1>
+    <table class="table table-katana" id="summaryTable">
+        <thead>
+        <tr>
+            <th class="txt-align-left first-child">All tests</th>
+            {% for key in data.filters %}
+                <th class="txt-align-left">{{ key }}</th>
+            {% endfor %}
+            <th class="txt-align-left">Success Rate</th>
+            <th class="txt-align-left">Time(s)</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if data.summary.failedCount > 0 %}
+            <tr class="Failure">
+                {% else %}
+            <tr class="Pass">
+        {% endif %}
+        <td class="txt-align-left first-child">{{ data.summary.testsCount }}</td>
+        {% for key in data.filters %}
+            {% set key = key.lower() + 'Count' %}
+            <td class="txt-align-left">{{ data.summary[key] if key in data.summary else 0 }}</td>
+        {% endfor %}
+
+        <td class="txt-align-left">{{ '%0.2f' % data.summary.success_rate + '%' if data.summary.success_rate else '' }}</td>
+        <td class="txt-align-left" data-time="{{ data.summary.time }}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    {%- block suites -%}
+    {%- endblock -%}
+
+{% endblock %}

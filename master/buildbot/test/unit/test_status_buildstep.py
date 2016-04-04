@@ -66,3 +66,48 @@ class TestBuildStepStatus(unittest.TestCase):
             [['log_1', ('http://localhost:8080/projects/Project/builders/builder_1/'
                         'builds/0/steps/step_1/logs/log_1')]]
             )
+
+    def testaddHtmlLog_with_no_content_type(self):
+        b = self.setupBuilder('builder_1')
+        self.setupStatus(b)
+        bs = b.newBuild()
+        bss1 = bs.addStepWithName('step_1', None)
+        bss1.stepStarted()
+        bss1.addHTMLLog('htmllog_1', "html")
+
+        self.assertEquals(
+            bss1.asDict()['logs'],
+            [['htmllog_1', ('http://localhost:8080/projects/Project/builders/builder_1/'
+                        'builds/0/steps/step_1/logs/htmllog_1')]]
+            )
+        self.assertEqual(len(bss1.logs), 1)
+        self.assertEqual(bss1.logs[0].content_type, None)
+
+    def testaddHtmlLog_with_content_type(self):
+        b = self.setupBuilder('builder_1')
+        self.setupStatus(b)
+        bs = b.newBuild()
+        bss1 = bs.addStepWithName('step_1', None)
+        bss1.stepStarted()
+        content_type = "test_content_type"
+        bss1.addHTMLLog('htmllog_1', "html", content_type)
+
+        self.assertEqual(len(bss1.logs), 1)
+        self.assertEqual(bss1.logs[0].content_type, content_type)
+
+    def testaddHtmlLog_with_content_type_multiple_logs(self):
+        b = self.setupBuilder('builder_1')
+        self.setupStatus(b)
+        bs = b.newBuild()
+        bss1 = bs.addStepWithName('step_1', None)
+        bss1.stepStarted()
+        content_type1 = "test_content_type"
+        content_type2 = "json"
+        bss1.addHTMLLog('htmllog_1', "html", content_type1)
+        bss1.addHTMLLog('htmllog_2', "html 2")
+        bss1.addHTMLLog('htmllog_3', "html 2", content_type2)
+
+        self.assertEqual(len(bss1.logs), 3)
+        self.assertEqual(bss1.logs[0].content_type, content_type1)
+        self.assertEqual(bss1.logs[1].content_type, None)
+        self.assertEqual(bss1.logs[2].content_type, content_type2)
