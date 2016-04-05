@@ -79,7 +79,7 @@ class GithubStatusPush(http.HttpStatusPushBase):
             payload['context'] = context
 
         return self.session.post('/'.join(
-            [self.baseURL, 'repos', repo_user, repo_name, 'statuses', sha]), payload)
+            [self.baseURL, 'repos', repo_user, repo_name, 'statuses', sha]), json=payload)
 
     @defer.inlineCallbacks
     def send(self, build):

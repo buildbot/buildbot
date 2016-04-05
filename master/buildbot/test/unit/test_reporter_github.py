@@ -68,18 +68,18 @@ class TestGithubStatusPush(unittest.TestCase, ReporterTestMixin):
         self.assertEqual(
             self.sp.session.post.mock_calls, [
                 call(
-                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f', {
-                        'state': 'pending',
-                        'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                        'description': 'Build started.', 'context': 'buildbot/'}),
+                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+                    json={'state': 'pending',
+                          'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                          'description': 'Build started.', 'context': 'buildbot/'}),
                 call(
-                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f', {
-                        'state': 'success',
-                        'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                        'description': 'Build done.', 'context': 'buildbot/'}),
+                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+                    json={'state': 'success',
+                          'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                          'description': 'Build done.', 'context': 'buildbot/'}),
                 call(
-                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f', {
-                        'state': 'failure',
-                        'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                        'description': 'Build done.', 'context': 'buildbot/'}),
+                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+                    json={'state': 'failure',
+                          'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                          'description': 'Build done.', 'context': 'buildbot/'}),
             ])
