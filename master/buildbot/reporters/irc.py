@@ -197,10 +197,10 @@ class IRC(service.BuildbotService):
     name = "IRC"
     in_test_harness = False
     f = None
-    compare_attrs = ["host", "port", "nick", "password",
+    compare_attrs = ("host", "port", "nick", "password",
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
                      "useRevisions", "tags", "useColors",
-                     "lostDelay", "failedDelay", "allowShutdown"]
+                     "lostDelay", "failedDelay", "allowShutdown")
 
     def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
                     allowForce=False, tags=None, password=None, notify_events=None,

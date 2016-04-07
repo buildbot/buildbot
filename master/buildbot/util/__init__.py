@@ -101,7 +101,7 @@ def formatInterval(eta):
 
 class ComparableMixin(object):
     implements(IConfigured)
-    compare_attrs = []
+    compare_attrs = ()
 
     class _None:
         pass

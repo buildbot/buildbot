@@ -196,7 +196,7 @@ if DEFINE_POLLER:
     class BzrPoller(buildbot.changes.base.PollingChangeSource,
                     buildbot.util.ComparableMixin):
 
-        compare_attrs = ['url']
+        compare_attrs = ('url')
 
         def __init__(self, url, poll_interval=10 * 60, blame_merge_author=False,
                      branch_name=None, category=None):

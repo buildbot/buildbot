@@ -229,7 +229,7 @@ class LockAccess(util.ComparableMixin):
     @type  mode: A string, either 'counting' or 'exclusive'.
     """
 
-    compare_attrs = ['lockid', 'mode']
+    compare_attrs = ('lockid', 'mode')
 
     def __init__(self, lockid, mode, _skipChecks=False):
         self.lockid = lockid
@@ -284,7 +284,7 @@ class MasterLock(BaseLockId):
     workers, for example to limit the load on a common SVN repository.
     """
 
-    compare_attrs = ['name', 'maxCount']
+    compare_attrs = ('name', 'maxCount')
     lockClass = RealMasterLock
 
     def __init__(self, name, maxCount=1):
@@ -313,7 +313,7 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
 
     """
 
-    compare_attrs = ['name', 'maxCount', '_maxCountForWorkerList']
+    compare_attrs = ('name', 'maxCount', '_maxCountForWorkerList')
     lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForWorker=None,

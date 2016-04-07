@@ -47,7 +47,7 @@ class BuildFactory(util.ComparableMixin):
     buildClass = Build
     useProgress = 1
     workdir = "build"
-    compare_attrs = ['buildClass', 'steps', 'useProgress', 'workdir']
+    compare_attrs = ('buildClass', 'steps', 'useProgress', 'workdir')
 
     def __init__(self, steps=None):
         self.steps = []
