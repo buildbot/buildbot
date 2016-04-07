@@ -22,20 +22,20 @@ import os
 import re
 import time
 
-try:
-    import boto
-except ImportError:
-    boto = None
-
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
+
+try:
+    import boto
+    from boto.ec2.blockdevicemapping import BlockDeviceType, BlockDeviceMapping
+except ImportError:
+    boto = None
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
-
 
 PENDING = 'pending'
 RUNNING = 'running'
@@ -60,6 +60,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                  spot_instance=False, max_spot_price=1.6, volumes=None,
                  placement=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX',
+                 subnet_id=None, security_group_ids=None, instance_profile_name=None,
+                 block_device_map=None,
                  **kwargs):
 
         if not boto:
@@ -71,7 +73,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 "Use of default value of 'keypair_name' of EC2LatentWorker "
                 "constructor is deprecated. Please explicitly specify value")
             keypair_name = 'latent_buildbot_slave'
-        if security_name is None:
+        if security_name is None and not subnet_id:
             reportDeprecatedWorkerNameUsage(
                 "Use of default value of 'security_name' of EC2LatentWorker "
                 "constructor is deprecated. Please explicitly specify value")
@@ -85,6 +87,10 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         AbstractLatentWorker.__init__(self, name, password, **kwargs)
 
+        if security_name and subnet_id:
+            raise ValueError(
+                'security_name (EC2 classic security groups) is not supported '
+                'in a VPC.  Use security_group_ids instead.')
         if not ((ami is not None) ^
                 (valid_ami_owners is not None or
                  valid_ami_location_regex is not None)):
@@ -122,6 +128,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.retry = retry
         self.attempt = 1
         self.product_description = product_description
+
         if None not in [placement, region]:
             self.placement = '%s%s' % (region, placement)
         else:
@@ -158,15 +165,15 @@ class EC2LatentWorker(AbstractLatentWorker):
                     region_found = r
 
             if region_found is not None:
-                self.conn = boto.ec2.connect_to_region(region,
-                                                       aws_access_key_id=identifier,
-                                                       aws_secret_access_key=secret_identifier)
+                self.ec2_conn = boto.ec2.connect_to_region(region,
+                                                           aws_access_key_id=identifier,
+                                                           aws_secret_access_key=secret_identifier)
             else:
                 raise ValueError(
                     'The specified region does not exist: ' + region)
 
         else:
-            self.conn = boto.connect_ec2(identifier, secret_identifier)
+            self.ec2_conn = boto.connect_ec2(identifier, secret_identifier)
 
         # Make a keypair
         #
@@ -177,7 +184,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         # generate it and store it on the filesystem, which is an unnecessary
         # usage requirement.
         try:
-            key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
+            key_pair = self.ec2_conn.get_all_key_pairs(keypair_name)[0]
             assert key_pair
             # key_pair.delete() # would be used to recreate
         except boto.exception.EC2ResponseError as e:
@@ -193,30 +200,31 @@ class EC2LatentWorker(AbstractLatentWorker):
             # make one; we would always do this, and stash the result, if we
             # needed the key (for instance, to SSH to the box).  We'd then
             # use paramiko to use the key to connect.
-            self.conn.create_key_pair(keypair_name)
+            self.ec2_conn.create_key_pair(keypair_name)
 
         # create security group
-        try:
-            group = self.conn.get_all_security_groups(security_name)[0]
-            assert group
-        except boto.exception.EC2ResponseError as e:
-            if 'InvalidGroup.NotFound' in e.body:
-                self.security_group = self.conn.create_security_group(
-                    security_name,
-                    'Authorization to access the buildbot instance.')
-                # Authorize the master as necessary
-                # TODO this is where we'd open the hole to do the reverse pb
-                # connect to the buildbot
-                # ip = urllib.urlopen(
-                #     'http://checkip.amazonaws.com').read().strip()
-                # self.security_group.authorize('tcp', 22, 22, '%s/32' % ip)
-                # self.security_group.authorize('tcp', 80, 80, '%s/32' % ip)
-            else:
-                raise
+        if security_name:
+            try:
+                group = self.ec2_conn.get_all_security_groups(security_name)[0]
+                assert group
+            except boto.exception.EC2ResponseError as e:
+                if 'InvalidGroup.NotFound' in e.body:
+                    self.security_group = self.ec2_conn.create_security_group(
+                        security_name,
+                        'Authorization to access the buildbot instance.')
+                    # Authorize the master as necessary
+                    # TODO this is where we'd open the hole to do the reverse pb
+                    # connect to the buildbot
+                    # ip = urllib.urlopen(
+                    #     'http://checkip.amazonaws.com').read().strip()
+                    # self.security_group.authorize('tcp', 22, 22, '%s/32' % ip)
+                    # self.security_group.authorize('tcp', 80, 80, '%s/32' % ip)
+                else:
+                    raise
 
         # get the image
         if self.ami is not None:
-            self.image = self.conn.get_image(self.ami)
+            self.image = self.ec2_conn.get_image(self.ami)
         else:
             # verify we have access to at least one acceptable image
             discard = self.get_image()
@@ -224,9 +232,28 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         # get the specified elastic IP, if any
         if elastic_ip is not None:
-            elastic_ip = self.conn.get_all_addresses([elastic_ip])[0]
+            elastic_ip = self.ec2_conn.get_all_addresses([elastic_ip])[0]
         self.elastic_ip = elastic_ip
+        self.subnet_id = subnet_id
+        self.security_group_ids = security_group_ids
+        self.classic_security_groups = [self.security_name] if self.security_name else None
+        self.instance_profile_name = instance_profile_name
         self.tags = tags
+        self.block_device_map = self.create_block_device_mapping(block_device_map)
+
+    def create_block_device_mapping(self, mapping_definitions):
+        if not mapping_definitions:
+            return None
+
+        result = BlockDeviceMapping()
+        for device_name, device_properties in mapping_definitions.iteritems():
+            modified_device_properties = dict(device_properties)
+            # Since latent slaves are ephemeral, not leaking volumes on termination
+            # is a much safer default.
+            if 'delete_on_termination' not in modified_device_properties:
+                modified_device_properties['delete_on_termination'] = True
+            result[device_name] = BlockDeviceType(**modified_device_properties)
+        return result
 
     def get_image(self):
         if self.image is not None:
@@ -235,7 +262,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             level = 0
             options = []
             get_match = re.compile(self.valid_ami_location_regex).match
-            for image in self.conn.get_all_images(
+            for image in self.ec2_conn.get_all_images(
                     owners=self.valid_ami_owners):
                 # Image must be available
                 if image.state != 'available':
@@ -264,7 +291,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 options = [candidate[level:] for candidate in options]
         else:
             options = [(image.location, image.id, image) for image
-                       in self.conn.get_all_images(
+                       in self.ec2_conn.get_all_images(
                            owners=self.valid_ami_owners)]
         options.sort()
         log.msg('sorted images (last is chosen): %s' %
@@ -292,20 +319,26 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _start_instance(self):
         image = self.get_image()
         reservation = image.run(
-            key_name=self.keypair_name, security_groups=[self.security_name],
+            key_name=self.keypair_name, security_groups=self.classic_security_groups,
             instance_type=self.instance_type, user_data=self.user_data,
-            placement=self.placement)
+            placement=self.placement, subnet_id=self.subnet_id,
+            security_group_ids=self.security_group_ids,
+            instance_profile_name=self.instance_profile_name,
+            block_device_map=self.block_device_map
+        )
+
         self.instance = reservation.instances[0]
         instance_id, image_id, start_time = self._wait_for_instance(
             reservation)
         if None not in [instance_id, image_id, start_time]:
             if len(self.tags) > 0:
-                self.conn.create_tags(instance_id, self.tags)
+                self.ec2_conn.create_tags(instance_id, self.tags)
             return [instance_id, image_id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state)
 
     def stop_instance(self, fast=False):
+
         if self.instance is None:
             # be gentle.  Something may just be trying to alert us that an
             # instance never attached, and it's because, somehow, we never
@@ -318,13 +351,13 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _attach_volumes(self):
         for volume_id, device_node in self.volumes:
-            self.conn.attach_volume(volume_id, self.instance.id, device_node)
+            self.ec2_conn.attach_volume(volume_id, self.instance.id, device_node)
             log.msg('Attaching EBS volume %s to %s.' %
                     (volume_id, device_node))
 
     def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
-            self.conn.disassociate_address(self.elastic_ip.public_ip)
+            self.ec2_conn.disassociate_address(self.elastic_ip.public_ip)
         instance.update()
         if instance.state not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
@@ -355,7 +388,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime(
             '%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
-        spot_prices = self.conn.get_spot_price_history(
+        spot_prices = self.ec2_conn.get_spot_price_history(
             start_time=spot_history_starttime,
             product_description=self.product_description,
             availability_zone=self.placement)
@@ -383,18 +416,23 @@ class EC2LatentWorker(AbstractLatentWorker):
             else:
                 log.msg('%s %s requesting spot instance with price %0.4f' %
                         (self.__class__.__name__, self.workername, self.current_spot_price))
-        reservations = self.conn.request_spot_instances(self.current_spot_price, self.ami,
-                                                        key_name=self.keypair_name,
-                                                        security_groups=[self.security_name],
-                                                        instance_type=self.instance_type,
-                                                        user_data=self.user_data,
-                                                        placement=self.placement)
+        reservations = self.ec2_conn.request_spot_instances(self.current_spot_price, self.ami,
+                                                            key_name=self.keypair_name,
+                                                            security_groups=[self.classic_security_groups],
+                                                            instance_type=self.instance_type,
+                                                            user_data=self.user_data,
+                                                            placement=self.placement,
+                                                            subnet_id=self.subnet_id,
+                                                            security_group_ids=self.security_group_ids,
+                                                            instance_profile_name=self.instance_profile_name,
+                                                            block_device_map=self.block_device_map
+                                                            )
         request, success = self._wait_for_request(reservations[0])
         if not success:
             return request, None, None, False
         else:
             instance_id = request.instance_id
-            reservations = self.conn.get_all_instances(instance_ids=[instance_id])
+            reservations = self.ec2_conn.get_all_instances(instance_ids=[instance_id])
             self.instance = reservations[0].instances[0]
             instance_id, image_id, start_time = self._wait_for_instance(self.get_image())
             return instance_id, image_id, start_time, True
@@ -453,7 +491,7 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _wait_for_request(self, reservation):
         duration = 0
         interval = self._poll_resolution
-        requests = self.conn.get_all_spot_instance_requests(
+        requests = self.ec2_conn.get_all_spot_instance_requests(
             request_ids=[reservation.id])
         request = requests[0]
         request_status = request.status.code
@@ -464,7 +502,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 log.msg('%s %s has waited %d minutes for spot request %s' %
                         (self.__class__.__name__, self.workername, duration // 60,
                          request.id))
-            requests = self.conn.get_all_spot_instance_requests(
+            requests = self.ec2_conn.get_all_spot_instance_requests(
                 request_ids=[request.id])
             request = requests[0]
             request_status = request.status.code
