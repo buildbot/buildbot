@@ -59,9 +59,14 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         # define the server and the connection
         s = ldap3.Server(netloc[0], port=int(netloc[1]), use_ssl=server.scheme == 'ldaps',
                          get_info=ldap3.GET_ALL_INFO)
+
+        auth = ldap3.AUTH_SIMPLE
+        if self.bindUser is None and self.bindPw is None:
+            auth = ldap3.AUTH_ANONYMOUS
+
         c = ldap3.Connection(s, auto_bind=True, client_strategy=ldap3.STRATEGY_SYNC,
                              user=self.bindUser, password=self.bindPw,
-                             authentication=ldap3.AUTH_SIMPLE)
+                             authentication=auth)
         return c
 
     def search(self, c, base, filterstr='f', attributes=None):
