@@ -408,7 +408,8 @@ bundle_version = version.split("-")[0]
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools  # @UnusedImport
+    import setuptools
+    [setuptools]
 except ImportError:
     pass
 else:
@@ -424,8 +425,15 @@ else:
         'autobahn ' + autobahn_ver,
     ]
 
-    # Unit test hard dependencies.
+    # Unit test dependencies.
     test_deps = [
+        'txrequests',
+        'future',
+        'pyjade',
+        'lz4',
+        'boto',
+        'moto',
+        'txgithub',
         'mock',
     ]
 

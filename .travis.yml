@@ -78,8 +78,8 @@ matrix:
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
     # Configuration to run `python setup.py test` to check this test runner.
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
+#    - python: "2.7"
+#      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
 # Dependencies installation commands
 install:
@@ -99,19 +99,12 @@ install:
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
-                  -e master[tls] \
+                  -e master[tls,test] \
                   -e slave \
                   -e worker \
-                  txrequests \
-                  future \
-                  pyjade \
-                  lz4 \
                   MySQL-python \
                   psycopg2 \
                   pg8000 \
-                  boto \
-                  moto \
-                  txgithub
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
 
@@ -139,8 +132,8 @@ install:
   # In setuppy_test all dependencies should be installed by setuptools during tests.
   - "[ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)"
   # Automatic installation of autobahn during `setup.py test` fails due to:
-  # https://bitbucket.org/pypa/setuptools/issues/500/when-directorysandbox-is-active-isinstance
-  - "[ $TESTS != setuppy_test ] || pip install autobahn"
+  # https://github.com/pypa/setuptools/issues/500
+  - "[ $TESTS != setuppy_test ] || pip install autobahn Twisted"
 
 before_script:
   # create real MySQL database for tests
