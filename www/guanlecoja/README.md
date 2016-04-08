@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/buildbot/guanlecoja.svg?branch=master)](https://travis-ci.org/buildbot/guanlecoja)
+[![Travis](https://img.shields.io/travis/buildbotg/guanlecoja.svg)]()
+[![npm](https://img.shields.io/npm/v/guanlecoja.svg)]()
+[![node](https://img.shields.io/badge/nodejs-0.11%2C0.12%2C4.1%2C4.2%2C5.1%2C5.2%2C5.3-green.svg]()
 
 # guanlecoja: opinionated RAD build environment for single page web apps
 
