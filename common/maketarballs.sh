@@ -2,7 +2,7 @@
 find . -name VERSION -exec rm {} \;
 rm -rf dist
 mkdir dist
-for pkg in pkg master slave pkg www/base www/console_view www/waterfall_view
+for pkg in master www/base www/console_view www/waterfall_view
 do
   pip install -e ${pkg}
   (
