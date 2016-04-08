@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/buildbot/guanlecoja.svg?branch=master)](https://travis-ci.org/buildbot/guanlecoja)
+
 # guanlecoja: opinionated RAD build environment for single page web apps
 
 It integrates several web technologies and methodologies together to accelerate web development.
