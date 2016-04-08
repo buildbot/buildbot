@@ -217,6 +217,18 @@ Code Coverage is a technique that tells you how much of your code is run during 
 ``gulp --coverage`` enables code coverage report using coffeescript coverage annotation engine.
 This will create a ``coverage`` directory with the report inside it.
 
+### PhantomJS
+
+Guanlecoja uses karma phantomjs by default to run the unit tests.
+This eventually downloads a version of the headless browser called phantomJS.
+In order to speed up the CI builds in a enterprise intranet environment, you might want to use a local phantomJS URL.
+In this case, you can use the environment variable:
+
+    PHANTOMJS_CDNURL=https://bitbucket.org/ariya/phantomjs/downloads
+
+You can also install phantomjs in your CI machine in /usr/bin/phantomjs.
+Basically, this is just about copying bin/phantomjs from the binary distribution into your system.
+
 ### Examples
 
 Guanlecoja methodology has been built for the buildbot project, but is very generic, and can be used for any projects\.
@@ -225,7 +237,8 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
-* 0.6.1: Support sass include PATH to be implicitly set as includePath. fix problem with impossibility to create a task after karma 
+* 0.6.2: fix and upgrade phantomjs to 2.1.1. This will help on the stability of the builds.
+* 0.6.1: Support sass include PATH to be implicitly set as includePath. fix problem with impossibility to create a task after karma
 * 0.5.5: update dependencies for npm 3
 * 0.5.4: add more documentation on the testing methodology
 * 0.5.3: fix problem with generated packages does not work with symlink
