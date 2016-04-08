@@ -78,8 +78,8 @@ matrix:
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
     # Configuration to run `python setup.py test` to check this test runner.
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
+#    - python: "2.7"
+#      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
 # Dependencies installation commands
 install:
