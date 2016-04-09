@@ -112,5 +112,5 @@ class HttpStatusPush(HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build):
         response = yield self.session.post(self.serverUrl, build, auth=self.auth)
-        if response.status != 200:
-            log.msg("%s: unable to upload status: %s", response.status, response.content)
+        if response.status_code != 200:
+            log.msg("%s: unable to upload status: %s" % (response.status_code, response.content))
