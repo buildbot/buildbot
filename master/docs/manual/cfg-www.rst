@@ -74,7 +74,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
 
 ``versions``
     Custom component versions that you'd like to display on the About page.
-    Buildbot will automatically prepend the versions of python, twisted and buildbot itself to the list.
+    Buildbot will automatically prepend the versions of Python, twisted and buildbot itself to the list.
 
     ``versions`` should be a list of tuples. for example::
 
@@ -92,7 +92,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
     This directory will be parsed for custom angularJS templates to replace the one of the original website templates.
     if the directory string is relative, it will be joined to the master's basedir.
     Either ``*.jade`` files or ``*.html`` files can be used, and will be used to override ``views/<filename>.html`` templates in the angularjs templateCache.
-    Unlike with the regular nodejs based angularjs build system, python only jade interpreter is used to parse the jade templates.
+    Unlike with the regular nodejs based angularjs build system, Python only jade interpreter is used to parse the jade templates.
     ``pip install pyjade`` is be required to use jade templates.
     You can also override plugin's directives, but they have to be in another directory.
 
@@ -184,7 +184,7 @@ The available classes are described here:
             'auth': util.GoogleAuth("clientid", "clientsecret"),
         }
 
-    in order to use this module, you need to install the python ``requests`` module
+    in order to use this module, you need to install the Python ``requests`` module
 
     .. code-block:: bash
 

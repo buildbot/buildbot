@@ -59,8 +59,8 @@ sqlite3: http://www.sqlite.org
   Version 3.7.0 or higher is recommended, although Buildbot will run down to 3.6.16 -- at the risk of "Database is locked" errors.
   The minimum version is 3.4.0, below which parallel database queries and schema introspection fail.
 
-  Please note that Python ships with sqlite3 by default since python 2.6.
-  Python2.6 for Windows ships with sqlite 3.6.2, thus you will not be able to run buildbot with sqlite on Windows and python 2.6.
+  Please note that Python ships with sqlite3 by default since Python 2.6.
+  Python2.6 for Windows ships with sqlite 3.6.2, thus you will not be able to run buildbot with sqlite on Windows and Python 2.6.
 
   If you configure a different database engine, then SQLite is not required.
   however note that Buildbot's own unit tests require SQLite.
@@ -84,7 +84,7 @@ SQLAlchemy-Migrate: https://sqlalchemy-migrate.readthedocs.org/en/latest/
 Python-Dateutil: http://labix.org/python-dateutil
 
   Buildbot requires Python-Dateutil in version 1.5 or higher (the last version to support Python-2.x).
-  This is a small, pure-python library.
+  This is a small, pure-Python library.
 
 Autobahn:
 
