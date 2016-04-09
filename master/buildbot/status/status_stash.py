@@ -22,9 +22,11 @@ try:
     from twisted.web.client import readBody
 except ImportError:
     def readBody(*args, **kwargs):
-        return defer.succeed('StatusStashPush requires twisted.web.client.readBody() '
+        return defer.succeed('StatusStashPush requires '
+                             'twisted.web.client.readBody() '
                              'to report the body of Stash API errors. '
-                             'Please upgrade to Twisted 13.1.0 or newer if you need more verbose error messages.')
+                             'Please upgrade to Twisted 13.1.0 or newer '
+                             'if you need more verbose error messages.')
 
 # Magic words understood by Stash REST API
 INPROGRESS = 'INPROGRESS'
@@ -72,20 +74,19 @@ class StashStatusPush(StatusReceiverMultiService,
     implements(IStatusReceiver)
 
     def __init__(self, base_url, user, password,
-                 key_format='%(builderName)s',
+                 key_format='%(prop:builderName)s',
                  name_format=None):
         """
         :param base_url: The base url of the stash host, up to the path.
         For example, https://stash.example.com/
         :param user: The stash user to log in as using http basic auth.
         :param password: The password to use with the stash user.
-        :param key_format: A python format string used to create
+        :param key_format: A rendered string used as
             the build status key sent to Stash.
-            Currently supports builderName, branch and buildNumber.
-            Defaults to '%(builderName)s' for backwards compatability.
-        :param name_format: An optional python format string used to create
-            the build status name sent to stash. Supports same keywords as
-            key_format. Defaults to None, which disables sending it.
+            Defaults to '%(prop:builderName)s' for backwards compatability.
+        :param name_format: A rendered string used as
+            the build status name sent to stash.
+            Defaults to None, which disables sending it.
         :return:
         """
         StatusReceiverMultiService.__init__(self)
@@ -93,39 +94,31 @@ class StashStatusPush(StatusReceiverMultiService,
             base_url += '/'
         self.base_url = '%srest/build-status/1.0/commits/' % (base_url, )
         self.auth = b64encode('%s:%s' % (user, password))
-        self.key_format = key_format
+        self.key_interpolation = Interpolate(key_format)
+        self.name_interpolation = Interpolate(name_format or '')
         self.name_format = name_format
         self._sha = Interpolate('%(src::revision)s')
-        self._branch = Interpolate('%(src::branch)s')
-        self._buildnumber = Interpolate('%(prop:buildnumber)s')
         self.master_status = None
 
-    @defer.inlineCallbacks
     def _send(self, request_kwargs, body, error_message):
         request_kwargs['bodyProducer'] = StringProducer(body)
         agent = Agent(reactor)
         d = agent.request(**request_kwargs)
         d.addCallback(logIfNot2XX)
         d.addErrback(log.err, error_message)
-        yield d
+        return d
 
     @defer.inlineCallbacks
     def send(self, builderName, build, status):
-        sha, branch, buildNumber = yield defer.gatherResults([
+        sha, key, name_string = yield defer.gatherResults([
             build.render(self._sha),
-            build.render(self._branch),
-            build.render(self._buildnumber),
+            build.render(self.key_interpolation),
+            build.render(self.name_interpolation),
         ])
         build_url = build.builder.status.getURLForThing(build)
-        format_dict = {
-            'builderName': builderName,
-            'branch': branch,
-            'buildNumber': buildNumber,
-        }
-        key = self.key_format % format_dict
         body_dict = {'state': status, 'key': key, 'url': build_url}
         if self.name_format is not None:
-            body_dict['name'] = self.name_format % format_dict
+            body_dict['name'] = name_string
         body = dumps(body_dict)
         stash_uri = self.base_url + sha
         request_kwargs = dict(
