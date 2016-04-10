@@ -43,9 +43,12 @@ class HttpStatusPushBase(service.BuildbotService):
             config.error("builders must be a list or None")
 
     @defer.inlineCallbacks
-    def reconfigService(self, builders=None):
+    def reconfigService(self, builders=None, **kwargs):
         yield service.BuildbotService.reconfigService(self)
         self.builders = builders
+        for k, v in iteritems(kwargs):
+            if k.startswith("want"):
+                self.neededDetails[k] = v
 
     def sessionFactory(self):
         """txrequests mocking endpoint"""
@@ -105,9 +108,6 @@ class HttpStatusPush(HttpStatusPushBase):
         HttpStatusPushBase.reconfigService(self, **kwargs)
         self.serverUrl = serverUrl
         self.auth = (user, password)
-        for k, v in iteritems(kwargs):
-            if k.startswith("want"):
-                self.neededDetails[k] = v
 
     @defer.inlineCallbacks
     def send(self, build):
