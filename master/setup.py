@@ -395,13 +395,15 @@ if 'a' in version or 'b' in version:
             raise RuntimeError(VERSION_MSG)
 
 if sys.version_info[:2] == (2, 6):
-    # Twisted-15.4.0 and autobahn 0.13.0 don't support Python 2.6 anymore
+    # Twisted-15.4.0, txaio >=2.3.0 and autobahn >=0.13.0 don't support Python 2.6 anymore
     twisted_ver = ">= 12.1.0, < 15.4.0"
     autobahn_ver = ">= 0.10.2, < 0.13.0"
+    txaio_ver = "== 2.2.2"
 
 else:
     twisted_ver = ">= 12.1.0"
     autobahn_ver = ">= 0.10.2"
+    txaio_ver = ">= 2.2.2"
 
 bundle_version = version.split("-")[0]
 
@@ -422,6 +424,7 @@ else:
         'sqlalchemy>=0.8.0',
         'sqlalchemy-migrate>=0.9',
         'python-dateutil>=1.5',
+        'txaio ' + txaio_ver,
         'autobahn ' + autobahn_ver,
     ]
 
