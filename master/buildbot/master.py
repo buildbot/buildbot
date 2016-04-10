@@ -222,7 +222,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             # load the configuration file, treating errors as fatal
             try:
                 # run the master.cfg in thread, so that it can use blocking code
-                self.config = yield threads.deferToThread(
+                self.config = yield threads.deferToThreadPool(
+                    _reactor, _reactor.getThreadPool(),
                     config.MasterConfig.loadConfig, self.basedir, self.configFileName)
 
             except config.ConfigErrors as e:
