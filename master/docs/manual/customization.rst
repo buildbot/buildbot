@@ -933,7 +933,7 @@ This is easy, and it keeps the point of definition very close to the point of us
 The downside is that every time you reload the config file, the Framboozle class will get redefined, which means that the buildmaster will think that you've reconfigured all the Builders that use it, even though nothing changed.
 Bleh.
 
-python file somewhere on the system
+Python file somewhere on the system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Instead, we can put this code in a separate file, and import it into the master.cfg file just like we would the normal buildsteps like :bb:step:`ShellCommand` and :bb:step:`SVN`.
@@ -1002,7 +1002,7 @@ Find out what your Python's standard include path is by asking it:
      '/var/lib/python-support/python2.4',
      '/usr/lib/site-python']
 
-In this case, putting the code into /usr/local/lib/python2.4/site-packages/framboozle.py would work just fine.
+In this case, putting the code into :file:`/usr/local/lib/python2.4/site-packages/framboozle.py` would work just fine.
 We can use the same :file:`master.cfg` ``import framboozle`` statement as in Option 2.
 By putting it in a standard include directory (instead of the decidedly non-standard :file:`~/lib/python`), we don't even have to set :envvar:`PYTHONPATH` to anything special.
 The downside is that you probably have to be root to write to one of those standard include directories.
@@ -1033,7 +1033,7 @@ This file needs to be updated to include a pointer to your new step:
 Where:
 
 * ``buildbot.steps`` is the kind of plugin you offer (more information about possible kinds you can find in :doc:`../developer/plugins-publish`)
-* ``framboozle:Framboozle`` consists of two parts: ``framboozle`` is the name of the python module where to look for ``Framboozle`` class, which implements the plugin
+* ``framboozle:Framboozle`` consists of two parts: ``framboozle`` is the name of the Python module where to look for ``Framboozle`` class, which implements the plugin
 * ``Framboozle`` is the name of the plugin.
 
   This will allow users of your plugin to use it just like any other Buildbot plugins::

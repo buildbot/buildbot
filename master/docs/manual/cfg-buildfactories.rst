@@ -357,7 +357,7 @@ Trial
 .. py:class:: buildbot.process.factory.Trial
 
 Twisted provides a unit test tool named :command:`trial` which provides a few improvements over Python's built-in :mod:`unittest` module.
-Many python projects which use Twisted for their networking or application services also use trial for their unit tests.
+Many Python projects which use Twisted for their networking or application services also use trial for their unit tests.
 These modules are usually built and tested with something like the following:
 
 .. code-block:: bash
@@ -388,7 +388,7 @@ Arguments:
 ``testpath``
     Provides a directory to add to :envvar:`PYTHONPATH` when running the unit tests, if tests are being run.
     Defaults to ``.`` to include the project files in-place.
-    The generated build library is frequently architecture-dependent, but may simply be :file:`build/lib` for pure-python modules.
+    The generated build library is frequently architecture-dependent, but may simply be :file:`build/lib` for pure-Python modules.
 
 ``python``
     which Python executable to use.

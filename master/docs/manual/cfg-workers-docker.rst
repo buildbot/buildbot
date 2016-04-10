@@ -124,7 +124,7 @@ You can find in buildbot source code in ``master/contrib/docker`` two example co
     the base worker configuration, including a custom buildbot.tac, which takes environment variables into account for setting the correct worker name, and connect to the correct master.
 
 ``pythonnode_worker``
-    a worker with python and node installed, which demonstrate how to reuse the base worker to create variations of build environments.
+    a worker with Python and node installed, which demonstrate how to reuse the base worker to create variations of build environments.
 
 The master setups several environment variables before starting the workers:
 
@@ -147,7 +147,7 @@ We will rely on docker-py to connect our master with docker.
 Now is the time to install it in your master environment.
 
 Before adding the worker to your master configuration, it is possible to validate the previous steps by starting the newly created image interactively.
-To do this, enter the following lines in a python prompt where docker-py is installed::
+To do this, enter the following lines in a Python prompt where docker-py is installed::
 
     >>> import docker
     >>> docker_socket = 'tcp://localhost:2375'
