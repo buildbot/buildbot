@@ -83,7 +83,7 @@ def timed_do_fn(f):
     return wrap
 
 
-class DBThreadPool(threadpool.ThreadPool):
+class DBThreadPool(object):
 
     running = False
 
@@ -105,10 +105,10 @@ class DBThreadPool(threadpool.ThreadPool):
         if hasattr(engine, 'optimal_thread_pool_size'):
             pool_size = engine.optimal_thread_pool_size
 
-        threadpool.ThreadPool.__init__(self,
-                                       minthreads=1,
-                                       maxthreads=pool_size,
-                                       name='DBThreadPool')
+        self._pool = threadpool.ThreadPool(minthreads=1,
+                                           maxthreads=pool_size,
+                                           name='DBThreadPool')
+
         self.engine = engine
         if engine.dialect.name == 'sqlite':
             vers = self.get_sqlite_version()
@@ -131,14 +131,14 @@ class DBThreadPool(threadpool.ThreadPool):
     def _start(self):
         self._start_evt = None
         if not self.running:
-            self.start()
+            self._pool.start()
             self._stop_evt = reactor.addSystemEventTrigger(
                 'during', 'shutdown', self._stop)
             self.running = True
 
     def _stop(self):
         self._stop_evt = None
-        self.stop()
+        self._pool.stop()
         self.engine.dispose()
         self.running = False
 
@@ -208,11 +208,11 @@ class DBThreadPool(threadpool.ThreadPool):
         return rv
 
     def do(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(reactor, self,
+        return threads.deferToThreadPool(reactor, self._pool,
                                          self.__thd, False, callable, args, kwargs)
 
     def do_with_engine(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(reactor, self,
+        return threads.deferToThreadPool(reactor, self._pool,
                                          self.__thd, True, callable, args, kwargs)
 
     def get_sqlite_version(self):
