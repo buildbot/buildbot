@@ -797,7 +797,7 @@ div.last{margin-right:0}
 @keyframes shake{0%,100%{transform:translateX(0)}
 10%,30%,50%,70%,90%{transform:translateX(-10px)}
 20%,40%,60%,80%{transform:translateX(10px)}}
-@font-face{font-family:katana_icons;src:url(../../fonts/katana_icons/katana_icons.eot?cachebusting=6) format("eot"),url(../../fonts/katana_icons/katana_icons.ttf?cachebusting=6) format("truetype")}
+@font-face{font-family:katana_icons;src:url(../../fonts/katana_icons/katana_icons.eot?cachebusting=7) format("eot"),url(../../fonts/katana_icons/katana_icons.ttf?cachebusting=7) format("truetype")}
 @font-face{font-family:pacifico;src:url(../../fonts/pacifico/pacifico-webfont.eot?cachebusting=2) format("eot"),url(../../fonts/pacifico/pacifico-webfont.ttf?cachebusting=2) format("truetype")}
 @font-face{font-family:leckerlione;src:url(../../fonts/leckerlione/leckerlione-regular-webfont.eot?cachebusting=6) format("eot"),url(../../fonts/leckerlione/leckerlione-regular-webfont.ttf?cachebusting=6) format("truetype")}
 .user-settings{display:none}
