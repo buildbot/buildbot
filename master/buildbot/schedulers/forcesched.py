@@ -25,6 +25,7 @@ from twisted.python.reflect import accumulateClassList
 from buildbot import config
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
+from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
@@ -614,6 +615,10 @@ class ForceScheduler(base.BaseScheduler):
 
         if not name:
             config.error("ForceScheduler name must not be empty: %r " %
+                         name)
+
+        if not identifiers.ident_re.match(name):
+            config.error("ForceScheduler name must be an identifier: %r " %
                          name)
 
         if not self.checkIfListOfType(builderNames, str):

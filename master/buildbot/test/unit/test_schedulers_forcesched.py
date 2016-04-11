@@ -564,6 +564,12 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                      lambda: ForceScheduler(name=1234, builderNames=[],
                                                             codebases=['bar'], username="foo"))
 
+    def test_notidentifier_name(self):
+        # FIXME: this test should be removed eventually when bug 3460 gets a real fix
+        self.assertRaisesConfigError("ForceScheduler name must be an identifier: 'my scheduler'",
+                                     lambda: ForceScheduler(name='my scheduler', builderNames=[],
+                                                            codebases=['bar'], username="foo"))
+
     def test_emptystring_name(self):
         self.assertRaisesConfigError("ForceScheduler name must not be empty:",
                                      lambda: ForceScheduler(name='', builderNames=[],
