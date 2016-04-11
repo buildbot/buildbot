@@ -6,6 +6,11 @@ Release Notes for Buildbot |version|
     Most simply need an additional bulleted list item, but more significant
     changes can be given a subsection of their own.
 
+    If you can:
+
+       please point to the bug using syntax: (:bug:`NNN`)
+       please point to classes using syntax: :py:class:`~buildbot.reporters.http.HttpStatusBase`
+
 ..
     NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b*
     into one single set of notes.  Also, link prominently to the migration guide.
@@ -36,8 +41,15 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* GitLabStatus was present in buildbot 0.8.12 release, but is no more in 0.9.0.
+* GitLabStatus was present in buildbot 0.8.12 release, but is no more in 0.9.0 (:bug:`3286`).
   Gitlab community should be able to easily port it using :py:class:`~buildbot.reporters.http.HttpStatusBase`
+
+
+* Web server does not provide /png and /redirect anymore (:bug:`3357`).
+  This functionality is used to implement build status images.
+  This should be easy to implement if you need it.
+  One could port the old image generation code, or implement a redirection to http://shields.io/.
+
 
 Details
 -------
