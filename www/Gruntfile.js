@@ -67,14 +67,14 @@ module.exports = function (grunt) {
             }
         },
         sass: {
-  			  options: {
-  				  importer: compass
+            options: {
+                importer: compass
   		  	},
-  			  dist: {
-  				  files: {
-  					  "<%= files.css.dest_css_file %>": "<%= files.css.src_css_file %>"
-  				  }
-  			  }
+  			dist: {
+  			    files: {
+  			        "<%= files.css.dest_css_file %>": "<%= files.css.src_css_file %>"
+  				}
+            }
         },
         cssmin: {
             options: {
