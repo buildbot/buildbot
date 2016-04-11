@@ -21,9 +21,14 @@ import re
 import sys
 import textwrap
 
+from twisted.logger import ILogObserver
+from twisted.logger import formatEvent
+from twisted.logger import globalLogBeginner
 from twisted.python import log
 from twisted.python import reflect
 from twisted.python import usage
+
+from zope.interface import implementer
 
 
 # the create/start/stop commands should all be run as the same user,
@@ -238,7 +243,18 @@ class Options(usage.Options):
             raise usage.UsageError("must specify a command")
 
 
+@implementer(ILogObserver)
+class StdoutLogger(object):
+
+    def __call__(self, event):
+        print(formatEvent(event))
+
+
 def run():
+    globalLogBeginner.beginLoggingTo(
+        [StdoutLogger()],
+        redirectStandardIO=False)
+
     config = Options()
     try:
         config.parseOptions()
