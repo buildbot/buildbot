@@ -120,8 +120,9 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
 
     longdesc = """
     This command creates a buildmaster working directory and buildbot.tac file.
-    The master will live in <dir> and create various files there.  If
-    --relocatable is given, then the resulting buildbot.tac file will be
+    The master will live in <basedir> (defaults to the current directory)
+    and create various files there.
+    If --relocatable is given, then the resulting buildbot.tac file will be
     written such that its containing directory is assumed to be the basedir.
     This is generally a good idea.
 
