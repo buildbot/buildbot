@@ -19,6 +19,7 @@
 import os
 import re
 import sys
+import textwrap
 
 from twisted.python import log
 from twisted.python import reflect
@@ -38,10 +39,10 @@ class MakerBase(usage.Options):
         ["quiet", "q", "Do not emit the commands being run"],
     ]
 
-    longdesc = """
+    longdesc = textwrap.dedent("""
     Operates upon the specified <basedir> (or the current directory, if not
     specified).
-    """
+    """)
 
     # on tab completion, suggest directories as first argument
     if hasattr(usage, 'Completions'):
@@ -125,18 +126,18 @@ class CreateWorkerOptions(MakerBase):
          "'signal' or 'file'"]
     ]
 
-    longdesc = """
+    longdesc = textwrap.dedent("""
     This command creates a buildbot worker directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
     build-specific subdirectory of <basedir>. <master> is a string of the
     form 'hostname[:port]', and specifies where the buildmaster can be reached.
-    port defaults to 9989
+    port defaults to 9989.
 
     The appropriate values for <name>, <passwd>, and <master> should be
     provided to you by the buildmaster administrator. You must choose <basedir>
     yourself.
-    """
+    """)
 
     def validateMasterArgument(self, master_arg):
         """
