@@ -517,7 +517,6 @@ class TestWorkerTransition(unittest.TestCase):
         self.assertIdentical(deprecated, AbstractWorker)
 
     def test_AbstractLatentBuildSlave_deprecated_worker(self):
-        from buildbot.worker import AbstractLatentWorker
 
         import buildbot.buildslave as bs
 
@@ -526,7 +525,7 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="AbstractLatentBuildSlave was deprecated"):
             deprecated = bs.AbstractLatentBuildSlave
 
-        self.assertIdentical(deprecated, AbstractLatentWorker)
+        self.assertIdentical(deprecated, base.AbstractLatentWorker)
 
     def test_BuildSlave_deprecated_worker(self):
         from buildbot.worker import Worker
