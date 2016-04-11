@@ -159,7 +159,7 @@ fi
 if ! $quick; then
     status "running Python tests"
     run_tests || not_ok "Python tests failed"
-elif [ -z `which cctrial` ]; then
+elif [ -z `command -v cctrial` ]; then
     warning "Skipping Python Tests ('pip install cctrial' for quick tests)"
 else
     cctrial -H buildbot buildslave || not_ok "Python tests failed"
@@ -187,7 +187,7 @@ done
 $RES || warning "some import fixes failed -- not enforcing for now"
 
 status "running autopep8"
-if [[ -z `which autopep8` ]]; then
+if [[ -z `command -v autopep8` ]]; then
     warning "autopep8 is not installed"
 elif [[ ! -f common/flake8rc ]]; then
     warning "common/flake8rc not found"
@@ -212,7 +212,7 @@ else
 fi
 
 status "running flake8"
-if [[ -z `which flake8` ]]; then
+if [[ -z `command -v flake8` ]]; then
     warning "flake8 is not installed"
 else
     flake8_ok=true
@@ -226,7 +226,7 @@ fi
 
 
 status "running pylint"
-if [[ -z `which pylint` ]]; then
+if [[ -z `command -v pylint` ]]; then
     warning "pylint is not installed"
 elif [[ ! -f common/pylintrc ]]; then
     warning "common/pylintrc not found"
