@@ -416,6 +416,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             instance_id, image_id, start_time, success = self._submit_request()
             if not success:
                 raise LatentWorkerFailedToSubstantiate()
+
+        if len(self.tags) > 0:
+            self.conn.create_tags(instance_id, self.tags)
+
         return instance_id, image_id, start_time
 
     def _wait_for_instance(self, image):
