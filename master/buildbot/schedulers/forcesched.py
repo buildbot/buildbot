@@ -614,11 +614,11 @@ class ForceScheduler(base.BaseScheduler):
                          name)
 
         if not name:
-            config.error("ForceScheduler name must not be empty: %r " %
+            config.error("ForceScheduler name must not be empty: %r" %
                          name)
 
         if not identifiers.ident_re.match(name):
-            config.error("ForceScheduler name must be an identifier: %r " %
+            config.error("ForceScheduler name must be an identifier: %r" %
                          name)
 
         if not self.checkIfListOfType(builderNames, str):
