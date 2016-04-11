@@ -36,6 +36,9 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* GitLabStatus was present in buildbot 0.8.12 release, but is no more in 0.9.0.
+  Gitlab community should be able to easily port it using :py:class:`~buildbot.reporters.http.HttpStatusBase`
+
 Details
 -------
 

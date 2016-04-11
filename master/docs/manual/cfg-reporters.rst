@@ -865,3 +865,16 @@ As a result, we recommend you use https in your base_url rather than http.
     :param string user: the stash user to post as
     :param string password: the stash user's password
     :param list builders: only send update for specified builders
+
+
+
+GitLabStatusPush
+~~~~~~~~~~~~~~~~
+
+.. @cindex GitLabStatusPush
+.. py:class:: buildbot.reporters.gitlab.GitLabStatusPush
+
+.. note::
+
+    GitLabStatus was present in buildbot 0.8.12 release, but is no more in 0.9.0.
+    Gitlab community should be able to easily port it using :py:class:`~buildbot.reporters.http.HttpStatusBase`
