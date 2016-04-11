@@ -803,10 +803,11 @@ GitHubStatus
                              context=context,
                              startDescription='Build started.',
                              endDescription='Build done.')
+    factory = util.BuildFactory()
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
         workernames=['worker1'],
-        factory=BuilderFactory())
+        factory=factory)
     c['builders'].append(buildbot_bbtools)
     c['services'].append(gs)
 
