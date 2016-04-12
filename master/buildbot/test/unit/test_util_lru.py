@@ -20,6 +20,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import failure
 from buildbot.util import lru
+from buildbot.test.util import compat
 
 # construct weakref-able objects for particular keys
 def short(k):
@@ -169,6 +170,7 @@ class LRUCacheTest(unittest.TestCase):
             res = self.lru.get('a')
             self.check_result(res, short('a'), i+1, 1)
 
+    @compat.skipIfRunningPypy
     def test_weakrefs(self):
         res_a = self.lru.get('a')
         self.check_result(res_a, short('a'))
@@ -429,6 +431,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
             res = yield self.lru.get('a')
             self.check_result(res, short('a'), i+1, 1)
 
+    @compat.skipIfRunningPypy
     @defer.inlineCallbacks
     def test_weakrefs(self):
         res_a = yield self.lru.get('a')
