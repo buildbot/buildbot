@@ -15,10 +15,7 @@
 
 import sys
 
-import twisted
-
 from twisted.python import util
-from twisted.python import versions
 
 from buildbot.util import sautils
 
@@ -40,25 +37,6 @@ def onlyOnce(fn):
 
 
 @onlyOnce
-def patch_bug4520():
-    # this bug was patched in twisted-11.1.0, and only affects py26 and up
-    py_26 = (sys.version_info[0] > 2 or
-             (sys.version_info[0] == 2 and sys.version_info[1] >= 6))
-    if twisted.version < versions.Version('twisted', 11, 1, 0) and py_26:
-        from buildbot.monkeypatches import bug4520
-        bug4520.patch()
-
-
-@onlyOnce
-def patch_bug5079():
-    # this bug is patched in Twisted-12.0.0; it was probably
-    # present in Twisted-8.x.0, but the patch doesn't work
-    if twisted.version < versions.Version('twisted', 12, 0, 0):
-        from buildbot.monkeypatches import bug5079
-        bug5079.patch()
-
-
-@onlyOnce
 def patch_sqlalchemy2364():
     # fix for SQLAlchemy bug 2364
     if sautils.sa_version() < (0, 7, 5):
@@ -75,13 +53,6 @@ def patch_sqlalchemy2189():
 
 
 @onlyOnce
-def patch_gatherResults():
-    if twisted.version < versions.Version('twisted', 11, 1, 0):
-        from buildbot.monkeypatches import gatherResults
-        gatherResults.patch()
-
-
-@onlyOnce
 def patch_python14653():
     # this bug was fixed in Python 2.7.4: http://bugs.python.org/issue14653
     if sys.version_info[:3] < (2, 7, 4):
@@ -93,23 +64,6 @@ def patch_python14653():
 def patch_servicechecks():
     from buildbot.monkeypatches import servicechecks
     servicechecks.patch()
-
-
-@onlyOnce
-def patch_testcase_patch():
-    # Twisted-9.0.0 and earlier did not have a UnitTest.patch that worked on
-    # Python-2.7
-    if twisted.version.major <= 9 and sys.version_info[:2] == (2, 7):
-        from buildbot.monkeypatches import testcase_patch
-        testcase_patch.patch()
-
-
-@onlyOnce
-def patch_testcase_synctest():
-    if twisted.version.major < 13 or (
-            twisted.version.major == 13 and twisted.version.minor == 0):
-        from buildbot.monkeypatches import testcase_synctest
-        testcase_synctest.patch()
 
 
 @onlyOnce
@@ -133,26 +87,13 @@ def patch_mock_asserts():
     mock_asserts.patch()
 
 
-@onlyOnce
-def patch_LoopingCall_reset():
-    if twisted.version.major == 11 and twisted.version.minor == 0:
-        from buildbot.monkeypatches import loopingcall_reset
-        loopingcall_reset.patch()
-
-
 def patch_all(for_tests=False):
     if for_tests:
         patch_servicechecks()
-        patch_testcase_patch()
-        patch_testcase_synctest()
         patch_testcase_assert_raises_regexp()
         patch_decorators()
         patch_mock_asserts()
 
-    patch_bug4520()
-    patch_bug5079()
     patch_sqlalchemy2364()
     patch_sqlalchemy2189()
-    patch_gatherResults()
     patch_python14653()
-    patch_LoopingCall_reset()
