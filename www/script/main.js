@@ -33,7 +33,7 @@ require.config({
         "rtGenericTable": "project/rtGenericTable",
         "userSettings": "project/userSettings",
         "toastr": "plugins/toastr",
-        "testResults": "project/testresults-common",
+        "rtTestReport": "project/rtTestReport",
         "buildLog": "project/buildLog",
         "buildLogiFrame": "project/buildLog-iFrame",
         "login": "project/login",

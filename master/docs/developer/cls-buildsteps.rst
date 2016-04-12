@@ -309,10 +309,11 @@ BuildStep
         This is often useful to add a short logfile describing activities performed on the master.
         The logfile is immediately closed, and no further data can be added.
 
-    .. py:method:: addHTMLLog(name, html)
+    .. py:method:: addHTMLLog(name, html, content_type=None)
 
         :param name: log name
         :param html: content of the logfile
+        :param content_type: type of content, e.g. xml, json
 
         Similar to :meth:`addCompleteLog`, this adds a logfile containing pre-formatted HTML, allowing more expressiveness than the text format supported by :meth:`addCompleteLog`.
 

@@ -1,0 +1,143 @@
+{% extends "test_results.html" %}
+
+{% block suites %}
+   <div class="content container">
+    {% for suite in data.suites %}
+        {% if suite.summary.result %}
+            <div class="row">
+                <h4>Suite type: {{ suite.name }}</h4>
+                {% if data.utrPrefix %}
+                    <a class="label label-default collapse" data-target="#suiteCommand{{ loop.index }}">Command to run locally</a>
+
+                    <div id="suiteCommand{{ loop.index }}" class="report-command">
+                        <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }}" onclick="this.select();" readonly/>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if suite.error %}
+                <div class="failure"> suite.error</div>
+            {% endif %}
+        {% endif %}
+
+        {% if suite.artifacts %}
+            <div class="row" id="suite_artifacts">
+                <h4>Suite Artifacts:</h4>
+
+                <div class="clearfix"></div>
+                {% for artifact in suite.artifacts %}
+                    <div class="artifact">
+                        <a target="_blank" href="{{ join(path_to_artifacts, artifact).replace("\\","/") }}">{{ basename(artifact.replace("\\","/")) }}</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="table-holder">
+            <div class="row">
+                <ul class="summary-list">
+                    <li><b id="Tests">Tests </b>{{ suite.summary.testsCount }}</li>
+                    <li><b id="Passed">Passed </b>{{ suite.summary.successCount }}</li>
+                    <li><b id="Failures">Failures </b><span>{{ suite.summary.failedCount }}</span></li>
+                    <li><b id="Error">Ignored </b><span>{{ suite.summary.errorCount }}</span></li>
+                    <li><b id="Skipped">Skipped </b><span>{{ suite.summary.skippedCount }}</span></li>
+                    <li><b id="Inconclusive">Inconclusive </b><span>{{ suite.summary.inconclusiveCount }}</span>
+                    </li>
+                    <li data-time="{{ suite.summary.time }}" data-time-unit="ms"><b id="Time">Time(s) </b>
+                    </li>
+                </ul>
+            </div>
+            <table class="table table-katana tablesorter tablesorter-log-js">
+                <colgroup>
+                    <col span="1" style="width: 50%;">
+                    <col span="1" style="width: 20%;">
+                    <col span="1" style="width: 10%;">
+                    <col span="1" style="width: 20%;">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th class="txt-align-left first-child" id=":i18n:Name">Name</th>
+                    <th id=":i18n:Status">Status</th>
+                    <th id=":i18n:Time">Time(s)</th>
+                    <th id=":i18n:Time">Artifacts</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% set outer_loop = loop %}
+                {% for test in suite.tests %}
+                    <tr>
+                        <td class="txt-align-left">
+                            <h5><strong>{{ test.name }}</strong></h5>
+                            {% if data.utrPrefix %}
+                                <a class="label label-default collapse" data-target="#testCommand{{ outer_loop.index }}{{ loop.index }}">Command to run locally</a>
+
+                                <div id="testCommand{{ outer_loop.index }}{{ loop.index }}" class="report-command">
+                                    <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
+                                </div>
+                            {% endif %}
+
+                            {% if test.artifacts %}
+                                <div class="test-image-list">
+                                    {% for artifact in test.artifacts %}
+                                        {% if artifact.lower().endswith(('.png', '.jpg', '.jpeg')) %}
+                                            <div class="test-image">
+                                                <div class="test-image-title">{{ basename(artifact.replace("\\","/")) }}</div>
+                                                <img src="{{ join(path_to_artifacts, artifact).replace("\\","/") }}" alt="Description"/>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            {% if test.message %}
+                                <div><b>Message:</b></div>
+                                <div class="formatted-text"><pre>{{ test.message }}</pre></div>
+                            {% endif %}
+                            {% if test.stackTrace %}
+                                <div><b>Stack trace:</b></div>
+                                <div class="formatted-text"><pre>{{ test.stackTrace }}</pre></div>
+                            {% endif %}
+                            {% if test.reason %}
+                                <div><b>Reason:</b></div>
+                                <div class="formatted-text"><pre>{{ test.reason }}</pre></div>
+                            {% endif %}
+                        </td>
+                        {% set test_state = results[test.state] if test.state in results else 'unknown'%}
+                        <td class="{{ test_state }}">{{ test_state }}</td>
+                        {% if test.time %}
+                            <td data-time="{{ test.time }}" data-time-unit="ms"></td>
+                        {% else %}
+                            <td>N/A</td>
+                        {% endif %}
+                        <td class="txt-align-left first-child ">
+                            {% for artifact in test.artifacts %}
+                                <div class="artifact">
+                                    <a target="_blank" href="{{ join(path_to_artifacts, artifact).replace("\\","/") }}">{{ basename(artifact.replace("\\","/")) }}</a>
+                                </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% if test.state and test.state|lower == "false" %}
+                        <tr>
+                            <td class="txt-align-left failure-detail-cont colspan-js">
+                                <div class="pos-relative">
+                                    <div class="failure-detail-txt">
+                                        {% for line in test.message %}
+                                            <div class="test-message"><pre>{{ line.text|e|trim }}</pre></div></div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="hidden-result">{{ test.result }}</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+            <a class="back-top-top" href="#top">Back to top</a>
+        </div>
+    {% endfor %}
+
+</div>
+{% endblock %}
