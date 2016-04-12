@@ -560,14 +560,32 @@ class Builder(config.ReconfigurableServiceMixin,
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
         brids = [br.id for br in build.requests]
-        d = self.master.db.builds.finishBuilds(bids)
-        # todo: get build number
-        d.addCallback(lambda _ : self.master.db.builds.finishedMergedBuilds(brids, build.build_status.number))
+        d = self.finishBuildRequests(brids, build.requests, build, bids)
+
+        self.building.remove(build)
+
+        if sb.slave:
+            sb.slave.releaseLocks()
+
+        self.updateBigStatus()
+
+        return d
+
+    def finishBuildRequests(self, brids, requests, build, bids=None, mergedbrids=None):
+        d = defer.Deferred()
+
+        if bids:
+            d = self.master.db.builds.finishBuilds(bids)
+
+        mergedbrids = brids if mergedbrids is None else mergedbrids
+
+        # TODO: we should probably do better error handle
+
+        d.addCallback(lambda _: self.master.db.builds.finishedMergedBuilds(mergedbrids, build.build_status.number))
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
-        d.addCallback(lambda _: self.master.db.buildrequests.maybeUpdateMergedBrids(brids))
+        d.addCallback(lambda _: self.master.db.buildrequests.maybeUpdateMergedBrids(mergedbrids))
 
         results = build.build_status.getResults()
-        self.building.remove(build)
         if results == RETRY:
             self._resubmit_buildreqs(build=build).addErrback(log.err)
         else:
@@ -577,16 +595,12 @@ class Builder(config.ReconfigurableServiceMixin,
                                                          slavepool=build.build_status.resumeSlavepool)
             else:
                 d = db.buildrequests.completeBuildRequests(brids, results)
-            d.addCallback(
-                lambda _ : self._maybeBuildsetsComplete(build.requests, results=results))
+            d.addCallback(lambda _: self._maybeBuildsetsComplete(requests, results=results))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')
+        return d
 
-        if sb.slave:
-            sb.slave.releaseLocks()
-
-        self.updateBigStatus()
 
     @defer.inlineCallbacks
     def _maybeBuildsetsComplete(self, requests, results=None):

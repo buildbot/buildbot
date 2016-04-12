@@ -672,26 +672,24 @@ class KatanaBuildChooser(BasicBuildChooser):
     def mergeBuildingRequests(self, brids, breqs, queue):
         # check only the first br others will be compatible to merge
         for b in self.bldr.building:
-            if self.mergeRequestsFn(self.bldr, b.requests[0], breqs[0]):
+            if not b.finished and self.mergeRequestsFn(self.bldr, b.requests[0], breqs[0]):
                 try:
                     yield self.master.db.buildrequests.mergeBuildingRequest([b.requests[0]] + breqs,
                                                                             brids,
                                                                             b.build_status.number,
                                                                             queue=queue)
+
                     if b.finished:
-                        if b.build_status.getResults() == RESUME:
-                            yield self.master.db.buildrequests\
-                                .updateBuildRequests(brids,
-                                                     results=RESUME,
-                                                     slavepool=b.build_status.resumeSlavepool)
-                        else:
-                            yield self.master.db.buildrequests.completeBuildRequests(brids=brids,
-                                                                                     results=b.build_status.getResults())
+                        log.msg("buildrequest %s finished while merging %s " % (b.requests[0].id, brids))
+                        yield self.bldr.finishBuildRequests(brids,
+                                                            requests=breqs,
+                                                            build=b,
+                                                            mergedbrids=[b.requests[0].id]+brids)
                 except:
                     raise
 
-                log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
                 b.requests += breqs
+                log.msg("merge brids %s with building request %s " % (brids, b.requests[0].id))
                 self.notifyRequestsRemoved(breqs)
                 defer.returnValue(b)
                 return
