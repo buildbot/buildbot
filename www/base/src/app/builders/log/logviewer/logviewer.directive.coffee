@@ -1,6 +1,6 @@
 # logviewer. This directive uses jquery for simplicity
 class Logviewer extends Directive
-    constructor: ($log, $window, $timeout, $sce, $q, dataService, restService) ->
+    constructor: ($log, $window, $timeout, $sce, $q, dataService, restService, ansicodesService) ->
         $window = angular.element($window)
 
         directive = ->
@@ -51,7 +51,7 @@ class Logviewer extends Directive
                                         logclass = line[0]
                                         line = line[1..]
                                     ret.push
-                                        content: line
+                                        content: ansicodesService.ansi2html(line)
                                         class: "log_" + logclass
                                     offset += 1
                                 resolve(ret)
