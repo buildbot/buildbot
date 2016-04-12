@@ -433,12 +433,17 @@ else:
         'txrequests',
         'future',
         'pyjade',
-        'lz4',
         'boto',
         'moto',
         'txgithub',
         'mock',
     ]
+    if sys.platform != 'win32':
+        test_deps += [
+            # LZ4 fails to build on Windows:
+            # https://github.com/steeve/python-lz4/issues/27
+            'lz4',
+        ]
 
     setup_args['tests_require'] = test_deps
 
