@@ -9,7 +9,7 @@ describe 'ansicode service', ->
     beforeEach(inject(injected))
 
     runTest = (string, expected...) ->
-        ret = ansicodesService.parse_ansi_sgr(string)
+        ret = ansicodesService.parseAnsiSgr(string)
         expect(ret).toEqual(expected)
 
     it "test_ansi0m", ->
@@ -35,17 +35,29 @@ describe 'ansicode service', ->
 
 
     it 'should provide correct split_ansi_line', ->
-        ret = ansicodesService.split_ansi_line("\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.")
+        ret = ansicodesService.splitAnsiLine("\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.")
         expect(ret).toEqual [
             {class: 'ansi36', text: 'DEBUG [plugin]: '},
-            {class: 'ansi39', text: 'Loading plugin karma-jasmine.'}]
+            {class: '', text: 'Loading plugin karma-jasmine.'}]
 
-    it 'should provide correct split_ansi_line for unknown modes', ->
+    it 'should provide correct split_ansi_line for nested codes', ->
+        ret = ansicodesService.splitAnsiLine("\x1b[1m\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.")
+        expect(ret).toEqual [
+            {class: 'ansi1 ansi36', text: 'DEBUG [plugin]: '},
+            {class: '', text: 'Loading plugin karma-jasmine.'}]
+
+    it 'should provide correct split_ansi_line for joint codes', ->
+        ret = ansicodesService.splitAnsiLine("\x1b[1;36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.")
+        expect(ret).toEqual [
+            {class: 'ansi1 ansi36', text: 'DEBUG [plugin]: '},
+            {class: '', text: 'Loading plugin karma-jasmine.'}]
+
+    it 'should provide correct split_ansi_line for unsupported modes', ->
         val = "\x1b[1A\x1b[2KPhantomJS 1.9.8 (Linux 0.0.0)"
-        ret = ansicodesService.split_ansi_line(val)
+        ret = ansicodesService.splitAnsiLine(val)
         expect(ret).toEqual [
             { class: '', text: 'PhantomJS 1.9.8 (Linux 0.0.0)'}]
 
     it 'should provide correct ansi2html', ->
         ret = ansicodesService.ansi2html("\x1b[36mDEBUG [plugin]: \x1b[39mLoading plugin karma-jasmine.")
-        expect(ret).toEqual "<span class='ansi36'>DEBUG [plugin]: </span><span class='ansi39'>Loading plugin karma-jasmine.</span>"
+        expect(ret).toEqual "<span class='ansi36'>DEBUG [plugin]: </span><span class=''>Loading plugin karma-jasmine.</span>"
