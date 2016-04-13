@@ -38,4 +38,4 @@ class Builder extends Controller
                     glTopbarContextualActionsService.setContextualActions(actions)
 
             $scope.builds = builder.getBuilds(limit:20, order:'-number')
-            $scope.buildrequests = builder.getBuildrequests(claimed:0)
+            $scope.buildrequests = builder.getBuildrequests(claimed:false)
