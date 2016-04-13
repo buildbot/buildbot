@@ -15,7 +15,6 @@
 import textwrap
 
 from buildbot.util import raml
-from collections import OrderedDict
 from twisted.trial import unittest
 
 
@@ -37,12 +36,12 @@ class TestRaml(unittest.TestCase):
         # this is why we compare str repr, to make sure the endpoints are in the right order
         self.assertEqual(str(self.api.endpoints[
             "/masters/{masterid}/builders/{builderid}/workers/{workerid}"]['uriParameters']),
-            str(OrderedDict([
-                ('masterid', OrderedDict([
+            str(raml.OrderedDict([
+                ('masterid', raml.OrderedDict([
                     ('type', 'number'), ('description', 'the id of the master')])),
-                ('builderid', OrderedDict([
+                ('builderid', raml.OrderedDict([
                     ('type', 'number'), ('description', 'the id of the builder')])),
-                ('workerid', OrderedDict([
+                ('workerid', raml.OrderedDict([
                     ('type', 'number'), ('description', 'the id of the worker')]))]))
         )
 
