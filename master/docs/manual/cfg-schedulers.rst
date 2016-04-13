@@ -764,7 +764,7 @@ If you click on that button, a dialog will let you choose various parameters for
 
 The Buildbot framework allows you to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
 
-How you do so is by configuring a  :bb:sched:`ForceScheduler`, and add it into the list `c['schedulers']`
+How you do so is by configuring a  :bb:sched:`ForceScheduler`, and add it into the list :bb:cfg:`schedulers`
 
 The scheduler takes the following parameters:
 
