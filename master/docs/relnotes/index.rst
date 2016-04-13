@@ -41,6 +41,8 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* The buildmaster now requires at least Twisted-14.0.1.
+
 * GitLabStatus was present in buildbot 0.8.12 release, but is no more in 0.9.0 (:bug:`3286`).
   Gitlab community should be able to easily port it using :py:class:`~buildbot.reporters.http.HttpStatusBase`
 

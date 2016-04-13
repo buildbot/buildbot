@@ -17,8 +17,7 @@ python:
   - "2.7"
 
 env:
-  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=13.0.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
   # Configuration when SQLite database is persistent between running tests
