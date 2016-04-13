@@ -52,6 +52,8 @@ Deprecations, Removals, and Non-Compatible Changes
   This should be easy to implement if you need it.
   One could port the old image generation code, or implement a redirection to http://shields.io/.
 
+* html is not permitted anymore in 'label' attributes of forcescheduler parameters.
+
 
 Details
 -------

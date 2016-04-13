@@ -432,7 +432,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"regex": null, "need_email": true, "multiple": false, '
                               '"name": "username", "default": "", "required": false, '
                               '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
-                              '"fullName": "username", "type": "text", "size": 30}')
+                              '"fullName": "username", "type": "username", "size": 30}')
 
     def test_UserNameParameterErrorTestIsInvalidMail(self):
         self.do_ParameterTest(value="test",

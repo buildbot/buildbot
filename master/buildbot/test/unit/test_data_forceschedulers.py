@@ -34,7 +34,7 @@ expected_default = {
                                 'required': False,
                                 'size': 30,
                                 'tablabel': 'Your name:',
-                                'type': 'text'},
+                                'type': 'username'},
                                {'default': 'force build',
                                 'fullName': 'reason',
                                 'hide': False,
