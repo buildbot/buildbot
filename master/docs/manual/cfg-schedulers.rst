@@ -5,7 +5,7 @@ Schedulers
 ----------
 
 .. contents::
-    :depth: 1
+    :depth: 2
     :local:
 
 Schedulers are responsible for initiating builds on builders.
@@ -78,7 +78,7 @@ There are several common arguments for schedulers, although not all are availabl
                      'codebase2': {'repository':'....'} }
 
     .. important::
-    
+
        The ``codebases`` parameter is only used to fill in missing details about a codebases when scheduling a build.
        For example, when a change to codebase ``A`` occurs, a scheduler must invent a sourcestamp for codebase ``B``.
        The parameter does not act as a filter on incoming changes -- use a change filter for that purpose.
@@ -253,7 +253,7 @@ The arguments to this scheduler are:
     Setting ``branch`` equal to the special value of ``None`` means it should only pay attention to the default branch.
 
     .. note::
-    
+
        ``None`` is a keyword, not a string, so write ``None`` and not ``"None"``.
 
 Example::
@@ -759,22 +759,28 @@ ForceScheduler Scheduler
 
 The :bb:sched:`ForceScheduler` scheduler is the way you can configure a force build form in the web UI.
 
-In the ``builder/<builder-name>`` web page, you will see one form for each :bb:sched:`ForceScheduler` scheduler that was configured for this builder.
+In the ``/#/builders/:builderid`` web page, you will see, on the top right of the page, one button for each :bb:sched:`ForceScheduler` scheduler that was configured for this builder.
+If you click on that button, a dialog will let you choose various parameters for requesting a new build.
 
-This allows you to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
+The Buildbot framework allows you to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
+
+How you do so is by configuring a  :bb:sched:`ForceScheduler`, and add it into the list `c['schedulers']`
 
 The scheduler takes the following parameters:
 
 ``name``
 
+    Name of the scheduler (should be an :ref:`Identifier <type-identifier>`)
+
 ``builderNames``
 
+    List of builders where the force button should appear.
     See :ref:`Configuring-Schedulers`.
 
 ``reason``
 
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the reason for the build.
-    The default value is a string parameter with value "force build".
+    A :ref:`parameter <ForceScheduler-Parameters>` allowing the user to specify the reason for the build.
+    The default value is a string parameter with a default value "force build".
 
 ``reasonString``
 
@@ -783,8 +789,8 @@ The scheduler takes the following parameters:
 
 ``username``
 
-    A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for the build.
-    The default value is a username parameter,
+    A :ref:`parameter <ForceScheduler-Parameters>` specifying the username associated with the build (aka owner).
+    The default value is a username parameter.
 
 ``codebases``
 
@@ -800,7 +806,7 @@ The scheduler takes the following parameters:
 ``buttonName``
 
     The name of the "submit" button on the resulting force-build form.
-    This defaults to "Force Build".
+    This defaults to the name of scheduler.
 
 An example may be better than long explanation.
 What you need in your config file is something like::
@@ -809,6 +815,8 @@ What you need in your config file is something like::
 
     sch = schedulers.ForceScheduler(
         name="force",
+        buttonName="pushMe!",
+        label="My nice Force form",
         builderNames=["my-builder"],
 
         codebases=[
@@ -818,7 +826,7 @@ What you need in your config file is something like::
                 # will generate a combo box
                 branch=util.ChoiceStringParameter(
                     name="branch",
-                    choices=["master", "hest", primaryBranch],
+                    choices=["master", "hest"],
                     default="master"),
 
                 # will generate nothing in the form, but revision, repository,
@@ -832,24 +840,31 @@ What you need in your config file is something like::
 
         # will generate a text input
         reason=util.StringParameter(name="reason",
-                                    label="reason:<br>",
+                                    label="reason:",
                                     required=True, size=80),
 
         # in case you dont require authentication this will display
         # input for user to type his name
-        username=util.UserNameParameter(label="your name:<br>",
+        username=util.UserNameParameter(label="your name:",
                                         size=80),
         # A completely customized property list.  The name of the
         # property is the name of the parameter
         properties=[
-           util.BooleanParameter(name="force_build_clean",
-                                 label="force a make clean",
-                                 default=False),
-           util.StringParameter(name="pull_url",
-                                label="optionally give a public Git pull url:<br>",
-                                default="", size=80)
+            util.NestedParameter(name="options", label="Build Options", layout="vertical", fields=[
+                util.StringParameter(name="pull_url",
+                                     label="optionally give a public Git pull url:",
+                                     default="", size=80),
+                util.BooleanParameter(name="force_build_clean",
+                                      label="force a make clean",
+                                      default=False)
+            ])
         ])
-    c['schedulers'].append(sch)
+
+This will result in the following UI:
+
+.. image:: _images/forcedialog1.png
+   :alt: Force Form Result
+
 
 Authorization
 .............
@@ -896,7 +911,11 @@ All parameter types have a few common arguments:
 
     The label of the parameter.
     This is what is displayed to the user.
-    HTML is permitted here.
+
+``tablabel`` (optional; default is same as label)
+
+    The label of the tab if this parameter is included into a tab layout NestedParameter}.
+    This is what is displayed to the user.
 
 ``default`` (optional; default: "")
 
@@ -907,6 +926,39 @@ All parameter types have a few common arguments:
     If this is true, then an error will be shown to user if there is no input in this field
 
 The parameter types are:
+
+NestedParameter
+###############
+
+::
+
+    NestedParameter(name="options", label="Build options" layout="vertical", fields=[...]),
+
+This parameter type is a special parameter which contains other parameters.
+This can be used to group a set of parameters together, and define the layout of your form.
+You can recursively include NestedParameter into NestedParameter, to build very complex UI.
+
+It adds the following arguments:
+
+``layout`` (optional, default: "vertical")
+
+    The layout defines how the fields are placed in the form.
+
+    The layouts implemented in the standard web application are:
+
+    * ``simple``: fields are displayed one by one without alignement.
+        They take the horizontal space that they need.
+
+    * ``vertical``: all fields are displayed vertically, aligned in columns (as per the ``column`` attribute of the NestedParameter)
+
+    * ``tabs``: Each field gets its own `tab <http://getbootstrap.com/components/#nav-tabs>`_.
+        This can be used to declare complex build forms which won't fit into one screen.
+        The childs fields are usually other NestedParameters with vertical layout.
+
+``columns`` (optional, accepted values are 1,2,3,4)
+
+    The number of columns to use for a `vertical` layout.
+    If ommited, it is set to 1 unless there are more than 3 visible child fields in which case it is set to 2.
 
 FixedParameter
 ##############
@@ -923,7 +975,7 @@ StringParameter
 ::
 
     StringParameter(name="pull_url",
-        label="optionally give a public Git pull url:<br>",
+        label="optionally give a public Git pull url:",
         default="", size=80)
 
 This parameter type will show a single-line text-entry box, and allow the user to enter an arbitrary string.
@@ -963,7 +1015,7 @@ This class could be subclassed in order to have more customization e.g.
 * developer could send a list of gerrit changes to cherry-pick,
 * developer could send a shell script to amend the build.
 
-beware of security issues anyway.
+Beware of security issues anyway.
 
 IntParameter
 ############
@@ -991,7 +1043,7 @@ UserNameParameter
 
 ::
 
-    UserNameParameter(label="your name:<br>", size=80)
+    UserNameParameter(label="your name:", size=80)
 
 This parameter type accepts a username.
 If authentication is active, it will use the authenticated user instead of displaying a text-entry box.
@@ -1052,7 +1104,7 @@ Example::
                                         schedulerNames=Property("forced_tests")))
 
 CodebaseParameter
-#####################
+#################
 
 ::
 
@@ -1088,6 +1140,10 @@ This is a parameter group to specify a sourcestamp for a given codebase.
 
 InheritBuildParameter
 #####################
+
+.. note::
+
+    InheritBuildParameter is not yet ported to data API, and cannot be used with buildbot nine yet(:bug:`3521`).
 
 This is a special parameter for inheriting force build properties from another build.
 The user is presented with a list of compatible builds from which to choose, and all forced-build parameters from the selected build are copied into the new build.
@@ -1132,6 +1188,10 @@ Example::
 WorkerChoiceParameter
 #####################
 
+.. note::
+
+    WorkerChoiceParameter is not yet ported to data API, and cannot be used with buildbot nine yet(:bug:`3521`).
+
 This parameter allows a scheduler to require that a build is assigned to the chosen worker.
 The choice is assigned to the `workername` property for the build.
 The :py:class:`~buildbot.builder.enforceChosenWorker` functor must be assigned to the ``canStartBuild`` parameter for the ``Builder``.
@@ -1157,7 +1217,7 @@ Example::
 AnyPropertyParameter
 ####################
 
-This parameter type can only be used in ``properties``, and allows the user to specify both the property name and value in the HTML form.
+This parameter type can only be used in ``properties``, and allows the user to specify both the property name and value in the web form.
 
 This Parameter is here to reimplement old Buildbot behavior, and should be avoided.
 Stricter parameter name and type should be preferred.

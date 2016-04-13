@@ -8,6 +8,7 @@ class State extends Config
                 modal.modal = $modal.open
                     templateUrl: "views/forcedialog.html"
                     controller: 'forceDialogController'
+                    windowClass: 'modal-xlg'
                     resolve:
                         builderid: -> $stateParams.builder
                         schedulerid: -> $stateParams.scheduler

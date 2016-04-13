@@ -249,7 +249,7 @@ class UserNameParameter(StringParameter):
 
     """A username parameter to supply the 'owner' of a build"""
     spec_attributes = ["need_email"]
-    type = "text"
+    type = "username"
     default = ""
     size = 30
     need_email = True
@@ -388,7 +388,8 @@ class NestedParameter(BaseParameter):
         BaseParameter.__init__(self, fields=fields, name=name, **kwargs)
         # reasonable defaults for the number of columns
         if self.columns is None:
-            if len(fields) >= 4:
+            num_visible_fields = len([field for field in fields if not field.hide])
+            if num_visible_fields >= 4:
                 self.columns = 2
             else:
                 self.columns = 1
