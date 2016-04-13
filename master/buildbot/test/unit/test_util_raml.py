@@ -24,7 +24,7 @@ class TestRaml(unittest.TestCase):
         self.api = raml.RamlSpec()
 
     def test_api(self):
-        self.assertIsNotNone(self.api.api)
+        self.assertTrue(self.api.api is not None)
 
     def test_endpoints(self):
         self.assertIn(
