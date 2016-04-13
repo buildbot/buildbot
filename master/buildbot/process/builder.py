@@ -572,10 +572,8 @@ class Builder(config.ReconfigurableServiceMixin,
         return d
 
     def finishBuildRequests(self, brids, requests, build, bids=None, mergedbrids=None):
-        d = defer.Deferred()
 
-        if bids:
-            d = self.master.db.builds.finishBuilds(bids)
+        d = self.master.db.builds.finishBuilds(bids) if bids else defer.succeed(None)
 
         mergedbrids = brids if mergedbrids is None else mergedbrids
 
@@ -591,10 +589,10 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             db = self.master.db
             if results == RESUME:
-                d = db.buildrequests.updateBuildRequests(brids, results=results,
-                                                         slavepool=build.build_status.resumeSlavepool)
+                d.addCallback(lambda _: db.buildrequests.updateBuildRequests(brids, results=results, slavepool=build.build_status.resumeSlavepool))
             else:
-                d = db.buildrequests.completeBuildRequests(brids, results)
+                d.addCallback(lambda _: db.buildrequests.completeBuildRequests(brids, results))
+
             d.addCallback(lambda _: self._maybeBuildsetsComplete(requests, results=results))
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
