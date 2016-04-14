@@ -33,7 +33,6 @@ from twisted.internet import reactor
 from twisted.persisted import styles
 from twisted.python import log
 from twisted.python import reflect
-from twisted.python import runtime
 from twisted.spread import pb
 
 from zope.interface import implements
@@ -134,19 +133,7 @@ class ChangeMaster:  # pragma: no cover
         self.nextNumber = 1
 
     def saveYourself(self):
-        filename = os.path.join(self.basedir, "changes.pck")
-        tmpfilename = filename + ".tmp"
-        try:
-            with open(tmpfilename, "wb") as f:
-                dump(self, f)
-            if runtime.platformType == 'win32':
-                # windows cannot rename a file on top of an existing one
-                if os.path.exists(filename):
-                    os.unlink(filename)
-            os.rename(tmpfilename, filename)
-        except Exception:
-            log.msg("unable to save changes")
-            log.err()
+        return
 
     # This method is used by contrib/fix_changes_pickle_encoding.py to recode all
     # bytestrings in an old changes.pck into unicode strings

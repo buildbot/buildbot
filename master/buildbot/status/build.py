@@ -12,21 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import os
 import re
-import shutil
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.persisted import styles
-from twisted.python import log
-from twisted.python import runtime
 
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
-from buildbot.util import pickle
 
 
 class BuildStatus(styles.Versioned):
@@ -369,26 +364,7 @@ class BuildStatus(styles.Versioned):
             s.checkLogfiles()
 
     def saveYourself(self):
-        filename = os.path.join(self.builder.basedir, "%d" % self.number)
-        if os.path.isdir(filename):
-            # leftover from 0.5.0, which stored builds in directories
-            shutil.rmtree(filename, ignore_errors=True)
-        tmpfilename = filename + ".tmp"
-        try:
-            with open(tmpfilename, "wb") as f:
-                pickle.dump(self, f, -1)
-            if runtime.platformType == 'win32':
-                # windows cannot rename a file on top of an existing one, so
-                # fall back to delete-first. There are ways this can fail and
-                # lose the builder's history, so we avoid using it in the
-                # general (non-windows) case
-                if os.path.exists(filename):
-                    os.unlink(filename)
-            os.rename(tmpfilename, filename)
-        except Exception:
-            log.msg("unable to save build %s-#%d" % (self.builder.name,
-                                                     self.number))
-            log.err()
+        return
 
     def asDict(self):
         result = {}

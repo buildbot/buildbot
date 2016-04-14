@@ -378,10 +378,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builder_status.name = name  # it might have been updated
         builder_status.status = self
 
-        if not os.path.isdir(builder_status.basedir):
-            os.makedirs(builder_status.basedir)
-        builder_status.determineNextBuildNumber()
-
         builder_status.setBigState("offline")
 
         for t in self.watchers:
