@@ -455,6 +455,7 @@ else:
         'test': [
             'setuptools_trial',
             'pep8',
+            'isort',
             'pylint==1.1.0',
             'pyflakes',
         ] + test_deps,

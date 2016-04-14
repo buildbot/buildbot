@@ -177,14 +177,13 @@ status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"
 
 status "checking import module convention in modified files"
-RES=true
-for filename in ${py_files[@]}; do
-  if ! python common/fiximports.py "$filename"; then
-    echo "cannot fix imports of $filename"
-    RES=false
-  fi
-done
-$RES || warning "some import fixes failed -- not enforcing for now"
+if [[ -z `command -v isort` ]]; then
+    warning "isort is not installed"
+else
+    if ! isort ${py_files[@]}; then
+        warning "unable to run isort on modified files"
+    fi
+fi
 
 status "running autopep8"
 if [[ -z `command -v autopep8` ]]; then
