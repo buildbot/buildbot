@@ -280,12 +280,14 @@ class GerritStatusPush(service.BuildbotService):
             builder = yield self.master.data.get(("builders", build['builderid']))
             build['builder'] = builder
             if self.isBuildReported(build):
-                message = self.startCB(builder['name'], build, self.startArg)
+                message = yield self.startCB(builder['name'], build, self.startArg)
                 self.sendCodeReviews(build, message)
 
+    @defer.inlineCallbacks
     def buildFinished(self, builderName, build, result):
         """Do the SSH gerrit verify command to the server."""
-        result = _handleLegacyResult(self.reviewCB(builderName, build, result, self.master, self.reviewArg))
+        result = yield self.reviewCB(builderName, build, result, self.master, self.reviewArg)
+        result = _handleLegacyResult(result)
         self.sendCodeReviews(build, result)
 
     @defer.inlineCallbacks
@@ -313,6 +315,7 @@ class GerritStatusPush(service.BuildbotService):
         buildset = res['buildset']
         self.sendBuildSetSummary(buildset, builds)
 
+    @defer.inlineCallbacks
     def sendBuildSetSummary(self, buildset, builds):
         builds = filter(self.isBuildReported, builds)
         if builds and self.summaryCB:
@@ -334,8 +337,12 @@ class GerritStatusPush(service.BuildbotService):
                         }
             buildInfoList = sorted([getBuildInfo(build) for build in builds], key=lambda bi: bi['name'])
 
-            result = _handleLegacyResult(self.summaryCB(buildInfoList, Results[buildset['results']],
-                                                        self.master, self.summaryArg))
+            result = yield self.summaryCB(buildInfoList,
+                                          Results[buildset['results']],
+                                          self.master,
+                                          self.summaryArg)
+
+            result = _handleLegacyResult(result)
             self.sendCodeReviews(builds[0], result)
 
     def sendCodeReviews(self, build, result):

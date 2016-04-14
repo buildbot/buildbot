@@ -38,18 +38,33 @@ from buildbot.test.util.reporter import ReporterTestMixin
 warnings.filterwarnings('error', message='.*Gerrit status')
 
 
-def testReviewCB(builderName, build, result, status, arg):
+def sampleReviewCB(builderName, build, result, status, arg):
     verified = 1 if result == SUCCESS else -1
     return makeReviewResult(str({'name': builderName, 'result': result}),
                             (GERRIT_LABEL_VERIFIED, verified))
 
 
-def testStartCB(builderName, build, arg):
+@defer.inlineCallbacks
+def sampleReviewCBDeferred(builderName, build, result, status, arg):
+    verified = 1 if result == SUCCESS else -1
+    result = yield makeReviewResult(str({'name': builderName, 'result': result}),
+                                    (GERRIT_LABEL_VERIFIED, verified))
+    defer.returnValue(result)
+
+
+def sampleStartCB(builderName, build, arg):
     return makeReviewResult(str({'name': builderName}),
                             (GERRIT_LABEL_REVIEWED, 0))
 
 
-def testSummaryCB(buildInfoList, results, status, arg):
+@defer.inlineCallbacks
+def sampleStartCBDeferred(builderName, build, arg):
+    result = yield makeReviewResult(str({'name': builderName}),
+                                    (GERRIT_LABEL_REVIEWED, 0))
+    defer.returnValue(result)
+
+
+def sampleSummaryCB(buildInfoList, results, status, arg):
     success = False
     failure = False
 
@@ -68,6 +83,29 @@ def testSummaryCB(buildInfoList, results, status, arg):
 
     return makeReviewResult(str(buildInfoList),
                             (GERRIT_LABEL_VERIFIED, verified))
+
+
+@defer.inlineCallbacks
+def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
+    success = False
+    failure = False
+
+    for buildInfo in buildInfoList:
+        if buildInfo['result'] == SUCCESS:
+            success = True
+        else:
+            failure = True
+
+    if failure:
+        verified = -1
+    elif success:
+        verified = 1
+    else:
+        verified = 0
+
+    result = yield makeReviewResult(str(buildInfoList),
+                                    (GERRIT_LABEL_VERIFIED, verified))
+    defer.returnValue(result)
 
 
 def legacyTestReviewCB(builderName, build, result, status, arg):
@@ -161,9 +199,23 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     #   * the expected result
 
     @defer.inlineCallbacks
+    def check_summary_build_deferred(self, buildResults, finalResult, resultText,
+                                     verifiedScore):
+        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCBDeferred)
+
+        msg = yield self.run_fake_summary_build(gsp, buildResults, finalResult,
+                                                resultText)
+
+        result = makeReviewResult(msg,
+                                  (GERRIT_LABEL_VERIFIED, verifiedScore))
+        gsp.sendCodeReview.assert_called_once_with(self.TEST_PROJECT,
+                                                   self.TEST_REVISION,
+                                                   result)
+
+    @defer.inlineCallbacks
     def check_summary_build(self, buildResults, finalResult, resultText,
                             verifiedScore):
-        gsp = yield self.setupGerritStatusPush(summaryCB=testSummaryCB)
+        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCB)
 
         msg = yield self.run_fake_summary_build(gsp, buildResults, finalResult,
                                                 resultText)
@@ -207,6 +259,13 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
             'gerrit', 'foo',
         ]
         self.assertEqual(expected2, with_identity._gerritCmd('foo'))
+
+    def test_buildsetComplete_success_sends_summary_review_deferred(self):
+        d = self.check_summary_build_deferred(buildResults=[SUCCESS, SUCCESS],
+                                              finalResult=SUCCESS,
+                                              resultText=["succeeded", "succeeded"],
+                                              verifiedScore=1)
+        return d
 
     def test_buildsetComplete_success_sends_summary_review(self):
         d = self.check_summary_build(buildResults=[SUCCESS, SUCCESS],
@@ -252,7 +311,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def test_buildsetComplete_filtered_builder(self):
-        gsp = yield self.setupGerritStatusPush(summaryCB=testSummaryCB)
+        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCB)
         gsp.builders = ["foo"]
         yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
                                           ["failed", "failed"])
@@ -261,7 +320,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def test_buildsetComplete_filtered_matching_builder(self):
-        gsp = yield self.setupGerritStatusPush(summaryCB=testSummaryCB)
+        gsp = yield self.setupGerritStatusPush(summaryCB=sampleSummaryCB)
         gsp.builders = ["Builder1"]
         yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
                                           ["failed", "failed"])
@@ -287,8 +346,24 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def check_single_build(self, buildResult, verifiedScore):
 
-        gsp = yield self.setupGerritStatusPush(reviewCB=testReviewCB,
-                                               startCB=testStartCB)
+        gsp = yield self.setupGerritStatusPush(reviewCB=sampleReviewCB,
+                                               startCB=sampleStartCB)
+
+        msg = yield self.run_fake_single_build(gsp, buildResult)
+        start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
+                                 (GERRIT_LABEL_REVIEWED, 0))
+        result = makeReviewResult(msg,
+                                  (GERRIT_LABEL_VERIFIED, verifiedScore))
+        calls = [call(self.TEST_PROJECT, self.TEST_REVISION, start),
+                 call(self.TEST_PROJECT, self.TEST_REVISION, result)]
+        gsp.sendCodeReview.assert_has_calls(calls)
+
+    # same goes for check_single_build and check_single_build_legacy
+    @defer.inlineCallbacks
+    def check_single_build_deferred(self, buildResult, verifiedScore):
+
+        gsp = yield self.setupGerritStatusPush(reviewCB=sampleReviewCBDeferred,
+                                               startCB=sampleStartCBDeferred)
 
         msg = yield self.run_fake_single_build(gsp, buildResult)
         start = makeReviewResult(str({'name': self.TEST_BUILDER_NAME}),
@@ -302,7 +377,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def check_single_build_legacy(self, buildResult, verifiedScore):
         gsp = yield self.setupGerritStatusPush(reviewCB=legacyTestReviewCB,
-                                               startCB=testStartCB)
+                                               startCB=sampleStartCB)
 
         msg = yield self.run_fake_single_build(gsp, buildResult, expWarning=True)
 
@@ -331,8 +406,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_single_build_filtered(self):
 
-        gsp = yield self.setupGerritStatusPush(reviewCB=testReviewCB,
-                                               startCB=testStartCB)
+        gsp = yield self.setupGerritStatusPush(reviewCB=sampleReviewCB,
+                                               startCB=sampleStartCB)
 
         gsp.builders = ["Builder0"]
         yield self.run_fake_single_build(gsp, SUCCESS)
