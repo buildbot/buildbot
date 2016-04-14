@@ -262,7 +262,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.setupOwnProperties()
         self.setupWorkerForBuilder(workerforbuilder)
-        worker.updateWorkerStatus(buildStarted=self)
 
         # then narrow WorkerLocks down to the right worker
         self.locks = [(l.getLock(self.workerforbuilder.worker), a)
@@ -309,7 +308,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # mark the build as finished
         self.workerforbuilder.buildFinished()
-        worker.updateWorkerStatus(buildFinished=self)
 
     @staticmethod
     def canStartWithWorkerForBuilder(lockList, workerforbuilder):
