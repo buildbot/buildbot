@@ -471,6 +471,37 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(worker.worker_status.getGraceful(), True)
 
 
+class TestAbstractLatentWorker(unittest.SynchronousTestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master(wantDb=True, wantData=True,
+                                             testcase=self)
+        self.botmaster = self.master.botmaster
+        self.master.workers.disownServiceParent()
+        self.workers = self.master.workers = bworkermanager.FakeWorkerManager()
+        self.workers.setServiceParent(self.master)
+        self.clock = task.Clock()
+        self.patch(reactor, 'callLater', self.clock.callLater)
+        self.patch(reactor, 'seconds', self.clock.seconds)
+
+    def do_test_reconfigService(self, old, new, existingRegistration=True):
+        old.parent = self.master
+        if existingRegistration:
+            old.registration = bworkermanager.FakeWorkerRegistration(old)
+        old.missing_timer = mock.Mock(name='missing_timer')
+        self.successResultOf(old.startService())
+
+        self.successResultOf(old.reconfigServiceWithSibling(new))
+
+    def test_reconfigService(self):
+        old = base.AbstractLatentWorker("name", "password", build_wait_timeout=10)
+        new = base.AbstractLatentWorker("name", "password", build_wait_timeout=30)
+
+        self.do_test_reconfigService(old, new)
+
+        self.assertEqual(old.build_wait_timeout, 30)
+
+
 class TestWorkerTransition(unittest.TestCase):
 
     def test_AbstractBuildSlave_deprecated_worker(self):
@@ -486,7 +517,6 @@ class TestWorkerTransition(unittest.TestCase):
         self.assertIdentical(deprecated, AbstractWorker)
 
     def test_AbstractLatentBuildSlave_deprecated_worker(self):
-        from buildbot.worker import AbstractLatentWorker
 
         import buildbot.buildslave as bs
 
@@ -495,7 +525,7 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="AbstractLatentBuildSlave was deprecated"):
             deprecated = bs.AbstractLatentBuildSlave
 
-        self.assertIdentical(deprecated, AbstractLatentWorker)
+        self.assertIdentical(deprecated, base.AbstractLatentWorker)
 
     def test_BuildSlave_deprecated_worker(self):
         from buildbot.worker import Worker

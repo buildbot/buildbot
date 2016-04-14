@@ -647,13 +647,18 @@ class AbstractLatentWorker(AbstractWorker):
     build_wait_timer = None
     _shutdown_callback_handle = None
 
-    def __init__(self, name, password,
-                 build_wait_timeout=60 * 10,
-                 **kwargs):
-        AbstractWorker.__init__(self, name, password, **kwargs)
-
+    def checkConfig(self, name, password,
+                    build_wait_timeout=60 * 10,
+                    **kwargs):
+        AbstractWorker.checkConfig(self, name, password, **kwargs)
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
+
+    def reconfigService(self, name, password,
+                        build_wait_timeout=60 * 10,
+                        **kwargs):
+        self.build_wait_timeout = build_wait_timeout
+        return AbstractWorker.reconfigService(self, name, password, **kwargs)
 
     def failed_to_start(self, instance_id, instance_state):
         log.msg('%s %s failed to start instance %s (%s)' %
