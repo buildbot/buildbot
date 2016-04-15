@@ -64,6 +64,10 @@ class _buildsummary extends Controller('common')
         @isBuildURL = (url) ->
             return buildURLMatcher.exec(url) != null
 
+        @getBuildProperty = (property) ->
+            hasProperty = self.properties && self.properties.hasOwnProperty(property)
+            return  if hasProperty then self.properties[property][0] else null
+
         @toggleFullDisplay = ->
             @fulldisplay = !@fulldisplay
             if @fullDisplay
@@ -83,6 +87,10 @@ class _buildsummary extends Controller('common')
 
             data.getBuilders(build.builderid).onNew = (builder) ->
                 self.builder = builder
+
+            build.getProperties().onNew = (properties) ->
+                self.properties = properties
+                self.reason = self.getBuildProperty('reason')
 
             self.steps = build.getSteps()
 
