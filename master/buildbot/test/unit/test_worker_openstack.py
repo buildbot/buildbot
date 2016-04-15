@@ -91,7 +91,7 @@ class TestOpenStackWorker(unittest.TestCase):
 
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
                                              image=image_callable, **self.os_auth)
-        os_client = novaclient.Client('user', 'pass', 'tenant', 'auth')
+        os_client = novaclient.Client('1.1', 'user', 'pass', 'tenant', 'auth')
         os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
         self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
 
