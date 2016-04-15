@@ -121,7 +121,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         if self.building:
             for b in self.building:
-                d.addCallback(self._resubmit_buildreqs, b)
+                d.addCallback(self._resubmit_buildreqs, b.requests)
                 d.addErrback(log.err)
         return d
 
@@ -585,7 +585,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
         results = build.build_status.getResults()
         if results == RETRY:
-            self._resubmit_buildreqs(build=build).addErrback(log.err)
+            d.addCallback(lambda _: self._resubmit_buildreqs(requests=requests))
+            d.addErrback(log.err, 'while resubmitting build requests')
         else:
             db = self.master.db
             if results == RESUME:
@@ -610,8 +611,8 @@ class Builder(config.ReconfigurableServiceMixin,
                 self.master.buildRequestAdded(br.bsid, br.id, self.name)
 
     @defer.inlineCallbacks
-    def _resubmit_buildreqs(self, out=None, build=None):
-        brids = [br.id for br in build.requests]
+    def _resubmit_buildreqs(self, out=None, requests=None):
+        brids = [br.id for br in requests]
         yield self.master.db.buildrequests.unclaimBuildRequests(brids, results=BEGINNING)
         defer.returnValue(out)
 
