@@ -590,7 +590,10 @@ class Builder(config.ReconfigurableServiceMixin,
         else:
             db = self.master.db
             if results == RESUME:
-                d.addCallback(lambda _: db.buildrequests.updateBuildRequests(brids, results=results, slavepool=build.build_status.resumeSlavepool))
+                d.addCallback(lambda _:
+                              db.buildrequests.updateBuildRequests(brids,
+                                                                   results=results,
+                                                                   slavepool=build.build_status.resumeSlavepool))
             else:
                 d.addCallback(lambda _: db.buildrequests.completeBuildRequests(brids, results))
 

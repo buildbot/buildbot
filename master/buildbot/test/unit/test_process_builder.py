@@ -23,6 +23,8 @@ from buildbot.test.fake import fakedb, fakemaster
 from buildbot.test.fake import fakebuild
 from buildbot.process import builder, factory
 from buildbot.util import epoch2datetime
+from buildbot.test.util.katanabuildrequestdistributor import KatanaBuildRequestDistributorTestSetup
+from buildbot.status.results import SUCCESS, BEGINNING, RETRY
 
 class BuilderMixin(object):
     def makeBuilder(self, name="bldr", patch_random=False, **config_kwargs):
@@ -415,3 +417,110 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
                     category=self.bldr.builder_status.getCategory()),
                 dict(description="New",
                     category="NewCat"))
+
+
+class TestFinishBuildRequests(unittest.TestCase, KatanaBuildRequestDistributorTestSetup):
+
+    @defer.inlineCallbacks
+    def setupBuildRequets(self):
+        self.bldr = self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False,
+                                                                        'slave-02': True})
+        self.bldr.master = self.master
+        build = mock.Mock()
+        build.finished = False
+        build.build_status = mock.Mock()
+        build.build_status.number = 1
+        build.build_status.getResults.return_value = SUCCESS
+
+        def createRequest(id):
+            req = mock.Mock()
+            req.id = id
+            return req
+
+        build.requests = [createRequest(1), createRequest(2)]
+        self.bldr.building = [build]
+        self.build = build
+
+        testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1",
+                                       submitted_at=1300305712),
+                    fakedb.BuildRequest(id=2,
+                                        buildsetid=2,
+                                        buildername="bldr1",
+                                        submitted_at=1300305712,
+                                        mergebrid=1,
+                                        artifactbrid=1),
+                    fakedb.Build(id=1, number=1, brid=1, start_time=1300305712),
+                    fakedb.Build(id=2, number=1, brid=2, start_time=1300305712),
+                    fakedb.BuildRequestClaim(brid=1, objectid=1, claimed_at=1300305712),
+                    fakedb.BuildRequestClaim(brid=2, objectid=1, claimed_at=1300305712)]
+
+        yield  self.insertTestData(testdata)
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        yield self.setUpComponents()
+        yield self.setupBuildRequets()
+
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.tearDownComponents()
+
+    @defer.inlineCallbacks
+    def checkBuilds(self, brids, finish):
+        for brid in brids:
+            build = yield self.master.db.builds.getBuildsForRequest(brid)
+            self.assertEqual(len(build), 1)
+            self.assertTrue(build[0]['finish_time'] is None if not finish else build[0]['finish_time'])
+
+    @defer.inlineCallbacks
+    def checkBuildRequests(self, brids, complete, results, claimed=True):
+        brdicts = yield self.master.db.buildrequests.getBuildRequests(buildername='bldr1',
+                                                                      brids=[1, 2],
+                                                                      claimed=claimed)
+        self.assertTrue(len(brdicts) == 2)
+        self.assertTrue(all([br['complete'] == complete and br['results'] == results
+                             and (br['complete_at'] is not None if complete else br['complete_at'] is None)
+                             and (br['claimed_at'] is not None if claimed else br['claimed_at'] is None)
+                             for br in brdicts]))
+
+    @defer.inlineCallbacks
+    def test_finishBuildRequests(self):
+        brids = [1, 2]
+        yield self.checkBuilds(brids=brids, finish=False)
+        yield self.checkBuildRequests(brids=brids, complete=0, results=BEGINNING)
+
+        yield self.bldr.finishBuildRequests(brids=[1, 2],
+                                            requests=self.build.requests,
+                                            build=self.build,
+                                            bids=[1, 2])
+
+        yield self.checkBuilds(brids=brids, finish=True)
+        yield self.checkBuildRequests(brids=brids, complete=1, results=SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_finishBuildRequestsRetryBuild(self):
+        brids = [1, 2]
+        yield self.checkBuilds(brids=brids, finish=False)
+        yield self.checkBuildRequests(brids=brids, complete=0, results=BEGINNING)
+
+        self.build.build_status.getResults.return_value = RETRY
+
+        yield self.bldr.finishBuildRequests([1, 2], self.build.requests, self.build, [1, 2])
+
+        yield self.checkBuilds(brids=brids, finish=True)
+        yield self.checkBuildRequests(brids=brids, complete=0, results=BEGINNING, claimed=False)
+
+    @defer.inlineCallbacks
+    def test_finishBuildRequestsWhileMergingBuild(self):
+        brids = [1, 2]
+        yield self.checkBuilds(brids=brids, finish=False)
+        yield self.checkBuildRequests(brids=brids, complete=0, results=BEGINNING)
+
+        yield self.bldr.finishBuildRequests(brids=[1], requests=self.build.requests[:1], build=self.build, bids=[1])
+
+        yield self.bldr.finishBuildRequests(brids=[2], requests=self.build.requests[1:], build=self.build,
+                                            mergedbrids=[1, 2])
+
+        yield self.checkBuilds(brids=brids, finish=True)
+        yield self.checkBuildRequests(brids=brids, complete=1, results=SUCCESS)
