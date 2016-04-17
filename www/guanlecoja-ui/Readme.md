@@ -142,7 +142,6 @@ The stored list of notifications.
 
 ## ChangeLog
 
-
 * 1.6.0: Massive upgrade of dependencies:
     - jquery 2.1 -> 2.2.
     - Angular 1.4 -> 1.5.
