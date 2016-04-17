@@ -1,8 +1,8 @@
 describe 'page with sidebar', ->
     beforeEach (module("app"))
     elmBody = scope = rootScope = queries = timeout = null
-    padding = (pix) -> type:"padding", height:pix
-    elements = (start, end) -> type:"elements", start:start, end:end
+    padding = (pix) -> type: "padding", height: pix
+    elements = (start, end) -> type: "elements", start: start, end: end
 
     assertDOM = (l) ->
         childs = []
@@ -55,7 +55,7 @@ describe 'page with sidebar', ->
                 d = $q.defer()
                 $timeout ->
                     ret = []
-                    ret.push(v:(index + i)) for i in [0..num - 1]
+                    ret.push(v: (index + i)) for i in [0..num - 1]
                     d.resolve(ret)
                 return d.promise
         $compile(elmBody)(scope)[0]

@@ -92,7 +92,7 @@ class Scroll extends Directive
                         # Replace angularjs linker by _.template, which is much faster
                         rowTemplate = "<#{repeaterType} style='height:#{rowHeight}px;'>" +
                             "#{template[0].innerHTML}</#{repeaterType}>"
-                        rowTemplate = _.template(rowTemplate,null, interpolate: /\{\{::(.+?)\}\}/g )
+                        rowTemplate = _.template(rowTemplate, interpolate: /\{\{::(.+?)\}\}/g )
                         linker = (scope, cb) ->
                             cb(angular.element(rowTemplate(scope)))
 
