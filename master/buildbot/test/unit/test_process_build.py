@@ -154,7 +154,7 @@ class TestBuild(unittest.TestCase):
         step.startStep.return_value = SUCCESS
         b.setStepFactories([FakeStepFactory(step)])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
         self.assertIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
@@ -173,7 +173,7 @@ class TestBuild(unittest.TestCase):
             return defer.Deferred()
         step.startStep = startStep
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertEqual(b.results, CANCELLED)
 
@@ -213,7 +213,7 @@ class TestBuild(unittest.TestCase):
         step2.startStep = startStep2
         step1.stepDone.return_value = False
 
-        d = b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        d = b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         def check(ign):
             self.assertEqual(b.results, CANCELLED)
@@ -300,7 +300,7 @@ class TestBuild(unittest.TestCase):
         step.startStep.return_value = SUCCESS
         b.setStepFactories([FakeStepFactory(step)])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertEqual(b.results, SUCCESS)
         self.assertIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
@@ -345,8 +345,8 @@ class TestBuild(unittest.TestCase):
         eBuild.setStepFactories([FakeStepFactory(step)])
         cBuild.setStepFactories([FakeStepFactory(step)])
 
-        e = eBuild.startBuild(FakeBuildStatus(), None, eWorker)
-        c = cBuild.startBuild(FakeBuildStatus(), None, cWorker)
+        e = eBuild.startBuild(FakeBuildStatus(), eWorker)
+        c = cBuild.startBuild(FakeBuildStatus(), cWorker)
         d = defer.DeferredList([e, c])
 
         realLock.release(fakeBuild, fakeBuildAccess)
@@ -383,7 +383,7 @@ class TestBuild(unittest.TestCase):
 
         real_lock.claim(Mock(), l.access('counting'))
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                      step.method_calls)
@@ -415,7 +415,7 @@ class TestBuild(unittest.TestCase):
             return retval
         b.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                      step.method_calls)
@@ -447,7 +447,7 @@ class TestBuild(unittest.TestCase):
             return retval
         b.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                      step.method_calls)
@@ -481,7 +481,7 @@ class TestBuild(unittest.TestCase):
             return retval
         step.acquireLocks = acquireLocks
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertEqual(gotLocks, [True])
         self.assertEqual(b.results, CANCELLED)
@@ -675,7 +675,7 @@ class TestBuild(unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "d", "e", "c"]
         executed_names = [s.name for s in b.executedSteps]
@@ -694,7 +694,7 @@ class TestBuild(unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "d", "e"]
         executed_names = [s.name for s in b.executedSteps]
@@ -707,7 +707,7 @@ class TestBuild(unittest.TestCase):
         steps = self.create_mock_steps(["clone", "command", "clean"])
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["clone", "command", "clean"]
         executed_names = [s.name for s in b.executedSteps]
@@ -719,7 +719,7 @@ class TestBuild(unittest.TestCase):
         steps = self.create_mock_steps(["stage", "stage", "stage"])
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["stage", "stage_1", "stage_2"]
         executed_names = [s.name for s in b.executedSteps]
@@ -738,7 +738,7 @@ class TestBuild(unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), None, self.workerforbuilder)
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c_1", "c_2", "c"]
         executed_names = [s.name for s in b.executedSteps]
@@ -971,7 +971,7 @@ class TestBuildProperties(unittest.TestCase):
         self.properties = self.build.properties = FakeProperties()
         self.build_status = FakeBuildStatus()
         self.build._flushProperties = Mock()
-        self.build.startBuild(self.build_status, None, self.workerforbuilder)
+        self.build.startBuild(self.build_status, self.workerforbuilder)
 
     def test_getProperty(self):
         self.build.getProperty('x')
