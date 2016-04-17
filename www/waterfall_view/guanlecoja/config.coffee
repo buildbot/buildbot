@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.4.6"
+ANGULAR_TAG = "~1.5.3"
 module.exports =
 
     ### ###########################################################################################
@@ -15,7 +15,7 @@ module.exports =
         testdeps:
             # vendors.js includes jquery, angularjs, etc in the right order
             "guanlecoja-ui":
-                version: '~1.5.0'
+                version: '~1.6.0'
                 files: ['vendors.js', 'scripts.js']
             "angular-mocks":
                 version: ANGULAR_TAG
@@ -24,7 +24,7 @@ module.exports =
                 version: "3.4.11"
                 files: "d3.js"
             'buildbot-data':
-                version: '~1.0.14'
+                version: '~2.0.0'
                 files: 'dist/buildbot-data.js'
     karma:
         # we put tests first, so that we have angular, and fake app defined

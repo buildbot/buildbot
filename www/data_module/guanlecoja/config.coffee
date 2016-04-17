@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = '~1.4.1'
+ANGULAR_TAG = "~1.5.3"
 
 gulp = require('gulp')
 require("shelljs/global")

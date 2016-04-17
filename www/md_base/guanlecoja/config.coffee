@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = '~1.4.1'
+ANGULAR_TAG = "~1.5.3"
 ANGULAR_MATERIAL_TAG = '~0.10.0'
 
 path = require('path')
