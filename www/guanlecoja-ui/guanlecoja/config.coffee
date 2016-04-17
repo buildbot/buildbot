@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.4.0"
+ANGULAR_TAG = "~1.5.3"
 
 gulp = require("gulp")
 require("shelljs/global")
@@ -16,7 +16,7 @@ gulp.task "publish", ['default'], ->
         return
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.5.0"
+        version: "1.6.0"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
@@ -61,7 +61,7 @@ config =
     bower:
         deps:
             jquery:
-                version: '~2.1.1'
+                version: '~2.2.3'
                 files: 'dist/jquery.js'
             angular:
                 version: ANGULAR_TAG
@@ -70,20 +70,17 @@ config =
                 version: ANGULAR_TAG
                 files: 'angular-animate.js'
             "angular-bootstrap":
-                version: '~0.11.0'
+                version: '~1.1.0'
                 files: 'ui-bootstrap-tpls.js'
             "angular-ui-router":
-                version: '~0.2.13'
+                version: '~0.2.18'
                 files: 'release/angular-ui-router.js'
             "angular-recursion":
-                version: '~1.0.1'
+                version: '~1.0.5'
                 files: 'angular-recursion.js'
             lodash:
-                version: "~2.4.1"
+                version: "~4.11.1"
                 files: 'dist/lodash.js'
-            'underscore.string':
-                version: "~2.3.3"
-                files: 'lib/underscore.string.js'
         testdeps:
             "angular-mocks":
                 version: ANGULAR_TAG

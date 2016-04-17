@@ -7,10 +7,10 @@ block content
         gl-topbar.noselect
             gl-topbar-contextual-actions
             gl-notification
-            li.dropdown
-                a.dropdown-toggle(href='#')
+            li(uib-dropdown)
+                a(uib-dropdown-toggle,href='#')
                   img.avatar(src='img/avatar.jpg')
-                ul.dropdown-menu.dropdown-menu-right
+                ul.dropdown-menu.dropdown-menu-right(uib-dropdown-menu)
                     li.dropdown-header
                         | Joe Bloggs
                     li.divider

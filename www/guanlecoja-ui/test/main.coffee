@@ -20,7 +20,7 @@ m.config ($stateProvider, glMenuServiceProvider, $urlRouterProvider) ->
             groups.push group
             glMenuServiceProvider.addGroup
                 name: group.name
-                caption: _.string.humanize(group.name)
+                caption: _.capitalize(group.name)
                 icon: group.name
                 order: group.name.length
 
@@ -45,7 +45,7 @@ m.config ($stateProvider, glMenuServiceProvider, $urlRouterProvider) ->
                     url: '/' + item.name
                     data:
                         group: group.name
-                        caption: _.string.humanize(item.name)
+                        caption: _.capitalize(item.name)
                 $stateProvider.state(state)
 
 m.controller "dummyController", ($scope, $state, glBreadcrumbService, glNotificationService,
@@ -70,9 +70,9 @@ m.controller "dummyController", ($scope, $state, glBreadcrumbService, glNotifica
                                 title:"State transitions", group:"state")
 
     glBreadcrumbService.setBreadcrumb [
-        caption: _.string.humanize($state.current.data.group)
+        caption: _.capitalize($state.current.data.group)
     ,
-        caption: _.string.humanize($state.current.name)
+        caption: _.capitalize($state.current.name)
         sref: $state.current.name
     ]
 #

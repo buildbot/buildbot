@@ -27,7 +27,7 @@ class GlMenu extends Provider
                 throw Error("group #{group} has not been defined with glMenuProvider.group(). has: #{_.keys(@groups)}")
 
             @groups[group].items.push
-                caption: state.data.caption || _.string.humanize(state.name)
+                caption: state.data.caption || _.capitalize(state.name)
                 sref: state.name
 
         for name, group of @groups

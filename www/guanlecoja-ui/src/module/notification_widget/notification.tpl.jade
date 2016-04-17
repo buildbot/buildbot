@@ -1,7 +1,7 @@
-li.dropdown.notifications
-    a.dropdown-toggle
+li.dropdown.notifications(uib-dropdown)
+    a(uib-dropdown-toggle)
         i.fa.fa-bell-o.fa-lg(ng-class="{'fa-ringing': n.notifications.length > 0 }")
-    ul.dropdown-menu.dropdown-menu-right
+    ul.uib-dropdown-menu.dropdown-menu.dropdown-menu-right(dropdown-toggle)
         li.dropdown-header
             | Notifications
         li.divider

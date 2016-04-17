@@ -12,7 +12,7 @@ class GlNotification extends Directive
 
 class _glNotification extends Controller
 
-    constructor: (@$scope, @glNotificationService, @dropdownService) ->
+    constructor: (@$scope, @glNotificationService) ->
         @notifications = @glNotificationService.notifications
         null
 

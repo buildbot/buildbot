@@ -140,8 +140,17 @@ Remove a notification from the list.
 
 The stored list of notifications.
 
-ChangeLog:
+## ChangeLog
 
+
+* 1.6.0: Massive upgrade of dependencies:
+    - jquery 2.1 -> 2.2.
+    - Angular 1.4 -> 1.5.
+    - Lodash -> 4.11.
+    - Drop underscore.string as lodash got most important string utils.
+    - angular-ui-bootstrap 0.11 -> 1.3.2:
+        Most important change is that ui-bootstrap directives are now prefixed with "uib-" e.g: in jade: ".dropdown-toggle" -> ".dropdown-toggle(uib-dropdown-toggle)"
+        This makes the markup more complicated, but the old 0.11 documentation is not even available anymore, so its best to upgrade.
 * 1.5.0: Switch to angularJS 1.4.3
 * 1.4.2: fix the sidebar when screen is > 800px
 * 1.4.1: bump ui-router version to 0.2.13
@@ -150,7 +159,8 @@ ChangeLog:
 * 1.3.0: Switch to angularJS 1.3.1
 * 1.2.3: Initial Release
 
-Credits
-=======
+## Credits
+
+
 Original Design by Elliot Hesp:
 https://github.com/Ehesp/Responsive-Dashboard

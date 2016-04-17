@@ -22,7 +22,7 @@ class _glTopbar extends Controller
                 $scope.breadcrumb.push
                     caption: groups[state.data.group].caption
             $scope.breadcrumb.push
-                caption: state.data?.caption or _.humanize(state.name)
+                caption: state.data?.caption or _.capitalize(state.name)
                 href: '#' + $location.hash()
 
         $scope.$on "glBreadcrumb", (e, data) ->

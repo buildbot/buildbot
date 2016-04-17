@@ -20,7 +20,7 @@ describe 'menuService', ->
             else
                 glMenuServiceProvider.addGroup
                     name: group.name
-                    caption: _.string.humanize(group.name)
+                    caption: _.capitalize(group.name)
                     icon: group.name
                     order: if i == "edit" then undefined else group.name.length
 
@@ -36,7 +36,7 @@ describe 'menuService', ->
                     url: '/' + item.name
                     data:
                         group: if item.name == "banedit" then undefined else group.name
-                        caption: if item.name == "editedit" then undefined else _.string.humanize(item.name)
+                        caption: if item.name == "editedit" then undefined else _.capitalize(item.name)
                 $stateProvider.state(state)
         null
 
