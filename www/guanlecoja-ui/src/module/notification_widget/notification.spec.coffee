@@ -9,7 +9,7 @@ describe 'notification', ->
 
         scope = $rootScope
         $compile(elmBody)(scope)
-        scope.$digest();
+        scope.$digest()
 
     beforeEach (inject(injected))
 
