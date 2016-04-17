@@ -9,9 +9,9 @@ gulp = require("gulp")
 require("shelljs/global")
 
 gulp.task "publish", ['default'], ->
-    r = exec "git diff --no-ext-diff --quiet --exit-code"
+    r = git "diff", "--no-ext-diff", "--quiet", "--exit-code"
     if r.code > 0
-        exec("git status")
+        git "status"
         echo "Please commit your changes before publish!"
         return
     bower_json =
@@ -22,15 +22,15 @@ gulp.task "publish", ['default'], ->
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
         dependencies: {}
 
-    exec("git checkout gh-pages")
+    git "checkout", "gh-pages"
     cp "-rf", "static/*", "."
     JSON.stringify(bower_json).to("bower.json")
-    exec("git add .")
-    exec("git commit -m " + bower_json.version)
-    exec("git tag " + bower_json.version)
-    exec("git push buildbot gh-pages")
-    exec("git push buildbot " + bower_json.version)
-    exec("git checkout master")
+    git "add", "."
+    git "commit", "-m", bower_json.version
+    git "tag", bower_json.version
+    git "push", "buildbot", "gh-pages"
+    git "push", "buildbot", bower_json.version
+    git "checkout", "master"
 
 gulp.task "readme", ->
     gulp.src("Readme.md").pipe gulp.dest(config.dir.build)
