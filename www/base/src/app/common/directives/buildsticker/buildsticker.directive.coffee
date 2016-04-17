@@ -3,7 +3,7 @@ class Buildsticker extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {build: '=', builder:'='}
+            scope: {build: '=?', builder: '=?'}
             templateUrl: 'views/buildsticker.html'
             controller: '_buildstickerController'
         }
@@ -17,6 +17,6 @@ class _buildsticker extends Controller('common')
 
         data = dataService.open().closeOnDestroy($scope)
         $scope.$watch 'build', (build) ->
-            if not $scope.builder?
-                data.getBuilders(build.builderid).then (builders) ->
-                    $scope.builder = builders[0]
+            if not $scope.builder
+                data.getBuilders(build.builderid).onNew = (builder) ->
+                    $scope.builder = builder
