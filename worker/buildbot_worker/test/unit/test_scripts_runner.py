@@ -325,7 +325,8 @@ class TestOptions(misc.LoggingMixin, unittest.TestCase):
 functionPlaceholder = None
 
 
-class TestRun(misc.LoggingMixin, unittest.TestCase):
+class TestRun(misc.LoggingMixin, misc.StdoutAssertionsMixin,
+              unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.run()
@@ -333,6 +334,7 @@ class TestRun(misc.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpLogging()
+        self.setUpStdoutAssertions()
 
     class TestSubCommand(usage.Options):
         subcommandFunction = __name__ + ".functionPlaceholder"
@@ -391,6 +393,7 @@ class TestRun(misc.LoggingMixin, unittest.TestCase):
         self.assertLogged("command:  usage-error-message",
                           "GeneralUsage",
                           "unexpected error message on stdout")
+        self.assertInStdout("command:  usage-error-message")
 
     def test_run_bad_suboption(self):
         """
@@ -409,3 +412,4 @@ class TestRun(misc.LoggingMixin, unittest.TestCase):
         self.assertLogged("command:  usage-error-message",
                           "SubOptionUsage",
                           "unexpected error message on stdout")
+        self.assertInStdout("command:  usage-error-message")
