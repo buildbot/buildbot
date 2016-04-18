@@ -15,7 +15,7 @@ This document will guide you through setup of an OpenStack latent worker:
 Install dependencies
 --------------------
 
-OpenStackLatentWorker requires python-novaclient v3.0 or newer to work, you can install it with pip install python-novaclient.
+OpenStackLatentWorker requires python-novaclient to work, you can install it with pip install python-novaclient.
 
 Get an Account in an OpenStack cloud
 ------------------------------------
