@@ -52,8 +52,6 @@ buildmaster_host = %(host)r
 port = %(port)d
 workername = %(name)r
 passwd = %(passwd)r
-if "SLAVEPASS" in os.environ:
-    del os.environ['SLAVEPASS']
 keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
