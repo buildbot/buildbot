@@ -116,7 +116,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
 
         return d
 
-    def prepare(self, builder_status, build):
+    def prepare(self, build):
         if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
         return defer.succeed(True)
@@ -220,7 +220,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         log.msg("Latent worker %s attached to %s" % (worker.workername,
                                                      self.builder_name))
 
-    def prepare(self, builder_status, build):
+    def prepare(self, build):
         # If we can't lock, then don't bother trying to substantiate
         if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
@@ -234,12 +234,6 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
             if not res:
                 self.state = States.LATENT
             return res
-
-        @d.addErrback
-        def substantiation_failed(f):
-            builder_status.addPointEvent(['removing', 'latent',
-                                          self.worker.workername])
-            return f
         return d
 
     def substantiate(self, build):

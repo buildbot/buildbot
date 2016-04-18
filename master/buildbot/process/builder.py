@@ -18,7 +18,6 @@ import weakref
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
-from twisted.python import failure
 from twisted.python import log
 from zope.interface import implements
 
@@ -320,25 +319,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             return defer.maybeDeferred(self.config.canStartBuild, self, workerforbuilder, breq)
         return defer.succeed(True)
 
-    @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
-        # Build a stack of cleanup functions so that, at any point, we can
-        # abort this operation and unwind the commitments made so far.
-        cleanups = []
-
-        def run_cleanups():
-            try:
-                while cleanups:
-                    fn = cleanups.pop()
-                    fn()
-            except Exception:
-                log.err(failure.Failure(), "while running %r" %
-                        (run_cleanups,))
-
-        # the last cleanup we want to perform is to update the big
-        # status based on any other cleanup
-        cleanups.append(lambda: self.updateBigStatus())
-
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
         build.setupProperties()
@@ -347,85 +328,26 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # set up locks
         build.setLocks(self.config.locks)
-        cleanups.append(workerforbuilder.worker.releaseLocks)
 
         if len(self.config.env) > 0:
             build.setWorkerEnvironment(self.config.env)
 
         # append the build to self.building
         self.building.append(build)
-        cleanups.append(lambda: self.building.remove(build))
 
         # update the big status accordingly
         self.updateBigStatus()
 
-        try:
-            ready = yield workerforbuilder.prepare(self.builder_status, build)
-        except Exception:
-            log.err(failure.Failure(), 'while preparing workerforbuilder:')
-            ready = False
-
-        # If prepare returns True then it is ready and we start a build
-        # If it returns false then we don't start a new build.
-        if not ready:
-            log.msg("worker %s can't build %s after all; re-queueing the "
-                    "request" % (build, workerforbuilder))
-            run_cleanups()
-            defer.returnValue(False)
-            return
-
-        # ping the worker to make sure they're still there. If they've
-        # fallen off the map (due to a NAT timeout or something), this
-        # will fail in a couple of minutes, depending upon the TCP
-        # timeout.
-        #
-        # TODO: This can unnecessarily suspend the starting of a build, in
-        # situations where the worker is live but is pushing lots of data to
-        # us in a build.
-        log.msg("starting build %s.. pinging the worker %s"
-                % (build, workerforbuilder))
-        try:
-            ping_success = yield workerforbuilder.ping()
-        except Exception:
-            log.err(failure.Failure(), 'while pinging worker before build:')
-            ping_success = False
-
-        if not ping_success:
-            log.msg("worker ping failed; re-queueing the request")
-            run_cleanups()
-            defer.returnValue(False)
-            return
-
         # The worker is ready to go. workerforbuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
         # This gets set back to IDLE by the Build itself when it finishes.
+        # Note: This can't be done in `Build.startBuild`, since it needs to be done
+        # synchronously, before the BuildRequestDistributor looks at
+        # another build request.
         workerforbuilder.buildStarted()
-        cleanups.append(lambda: workerforbuilder.buildFinished())
-
-        # tell the remote that it's starting a build, too
-        try:
-            yield workerforbuilder.worker.conn.remoteStartBuild(build.builder.name)
-        except Exception:
-            log.err(failure.Failure(), 'while calling remote startBuild:')
-            run_cleanups()
-            defer.returnValue(False)
-            return
 
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
-
-        # IMPORTANT: no yielding is allowed from here to the startBuild call!
-
-        # it's possible that we lost the worker remote between the ping above
-        # and now.  If so, bail out.  The build.startBuild call below transfers
-        # responsibility for monitoring this connection to the Build instance,
-        # so this check ensures we hand off a working connection.
-        # TODO: replace with isConnected()
-        if not workerforbuilder.worker.conn:
-            log.msg("worker disappeared before build could start")
-            run_cleanups()
-            defer.returnValue(False)
-            return
 
         # let status know
         self.master.status.build_started(buildrequests[0].id, self.name, bs)
@@ -444,10 +366,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
 
-        # make sure the builder's status is represented correctly
-        self.updateBigStatus()
-
-        defer.returnValue(True)
+        return defer.succeed(True)
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")

@@ -214,8 +214,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             props.setProperty("project", source.project, "Build")
 
     def setupWorkerForBuilder(self, workerforbuilder):
-        self.workerforbuilder = workerforbuilder
-
         self.path_module = workerforbuilder.worker.path_module
 
         # navigate our way back to the L{buildbot.worker.Worker}
@@ -237,12 +235,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
-        worker = workerforbuilder.worker
+        self.workerforbuilder = workerforbuilder
+        self.conn = None
 
-        # we are taking responsibility for watching the connection to the
-        # remote. This responsibility was held by the Builder until our
-        # startBuild was called, and will not return to them until we fire
-        # the Deferred returned by this method.
+        worker = workerforbuilder.worker
 
         log.msg("%s.startBuild" % self)
 
@@ -261,14 +257,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                                                                       str(self.buildid),
                                                                       "stop"))
         self.setupOwnProperties()
-        self.setupWorkerForBuilder(workerforbuilder)
 
         # then narrow WorkerLocks down to the right worker
-        self.locks = [(l.getLock(self.workerforbuilder.worker), a)
+        self.locks = [(l.getLock(workerforbuilder.worker), a)
                       for l, a in self.locks]
-        self.conn = workerforbuilder.worker.conn
-        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
-
         metrics.MetricCountEvent.log('active_builds', 1)
 
         # make sure properties are available to people listening on 'new'
@@ -291,8 +283,59 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             log.err(Failure())
             self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
+
         # flush properties in the beginning of the build
         yield self._flushProperties(None)
+
+        try:
+            ready = yield workerforbuilder.prepare(self)
+        except Exception:
+            log.err(Failure(), 'while preparing workerforbuilder:')
+            self.buildFinished(["worker", "not", "available"], RETRY)
+            return
+
+        # If prepare returns True then it is ready and we start a build
+        # If it returns false then we don't start a new build.
+        if not ready:
+            log.msg("worker %s can't build %s after all; retrying the "
+                    "build" % (self, workerforbuilder))
+            self.stopped = True
+            self.buildFinished(["worker", "not", "available"], RETRY)
+            return
+
+        # ping the worker to make sure they're still there. If they've
+        # fallen off the map (due to a NAT timeout or something), this
+        # will fail in a couple of minutes, depending upon the TCP
+        # timeout.
+        #
+        # TODO: This can unnecessarily suspend the starting of a build, in
+        # situations where the worker is live but is pushing lots of data to
+        # us in a build.
+        log.msg("starting build %s.. pinging the worker %s"
+                % (self, workerforbuilder))
+        try:
+            ping_success = yield workerforbuilder.ping()
+        except Exception:
+            log.err(Failure(), 'while pinging worker before build:')
+            ping_success = False
+
+        if not ping_success:
+            log.msg("worker ping failed; retrying the build")
+            self.buildFinished(["worker", "not", "pinged"], RETRY)
+            return
+
+        self.conn = workerforbuilder.worker.conn
+        self.setupWorkerForBuilder(workerforbuilder)
+        self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
+
+        # tell the remote that it's starting a build, too
+        try:
+            yield self.conn.remoteStartBuild(self.builder.name)
+        except Exception:
+            log.err(Failure(), 'while calling remote startBuild:')
+            self.buildFinished(["worker", "not", "building"], RETRY)
+            return
+
         yield self.acquireLocks()
 
         # start the sequence of steps

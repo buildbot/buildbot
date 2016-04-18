@@ -766,7 +766,6 @@ class AbstractLatentWorker(AbstractWorker):
         return AbstractWorker.canStartBuild(self)
 
     def buildStarted(self, sb):
-        assert self.substantiated
         self._clearBuildWaitTimer()
         self.building.add(sb.builder_name)
 
