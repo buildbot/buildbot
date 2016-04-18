@@ -29,11 +29,17 @@ class BuildLookAlike(object):
 
     """ a class whose instances compares to any build dict that this reporter is supposed to send out"""
 
-    def __eq__(self, b):
-        return sorted(b.keys()) == [
+    def __init__(self, keys=None):
+        self.keys = [
             'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
             'buildset', 'complete', 'complete_at', 'masterid', 'number',
             'properties', 'results', 'started_at', 'state_string', 'url', 'workerid']
+        if keys:
+            self.keys.extend(keys)
+            self.keys.sort()
+
+    def __eq__(self, b):
+        return sorted(b.keys()) == self.keys
 
     def __repr__(self):
         return "{ any build }"
@@ -105,3 +111,15 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_builderTypeCheck(self):
         yield self.createReporter(builders='Builder0')
         config._errors.addError.assert_any_call("builders must be a list or None")
+
+    @defer.inlineCallbacks
+    def test_wantKwargsCheck(self):
+        yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
+                                  wantPreviousBuild=True, wantLogs=True)
+        build = yield self.setupBuildResults(SUCCESS)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.assertEqual(
+            self.sp.session.post.mock_calls,
+            [call(u'serv',
+                  BuildLookAlike(['prev_build', 'steps']), auth=('username', 'passwd'))])
