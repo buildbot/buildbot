@@ -21,12 +21,11 @@ import re
 import sys
 import textwrap
 
-from twisted.logger import ILogObserver
-from twisted.logger import formatEvent
-from twisted.logger import globalLogBeginner
 from twisted.python import log
 from twisted.python import reflect
 from twisted.python import usage
+from twisted.python.log import ILogObserver
+from twisted.python.log import textFromEventDict
 
 from zope.interface import implementer
 
@@ -247,13 +246,13 @@ class Options(usage.Options):
 class StdoutLogger(object):
 
     def __call__(self, event):
-        print(formatEvent(event))
+        text = textFromEventDict(event)
+        if text is not None:
+            print(text)
 
 
 def run():
-    globalLogBeginner.beginLoggingTo(
-        [StdoutLogger()],
-        redirectStandardIO=False)
+    log.addObserver(StdoutLogger())
 
     config = Options()
     try:
