@@ -18,6 +18,7 @@ import weakref
 import mock
 
 from twisted.internet import defer
+from twisted.internet import reactor
 
 from zope.interface import implements
 
@@ -169,6 +170,7 @@ class FakeMaster(service.MasterService):
     def __init__(self, master_id=fakedb.FakeBuildRequestsComponent.MASTER_ID):
         service.MasterService.__init__(self)
         self._master_id = master_id
+        self.reactor = reactor
         self.objectids = []
         self.config = config.MasterConfig()
         self.caches = FakeCaches()

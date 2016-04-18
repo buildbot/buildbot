@@ -33,7 +33,7 @@ class Basic(unittest.TestCase):
     def setUp(self):
         self.engine = sa.create_engine('sqlite://')
         self.engine.optimal_thread_pool_size = 1
-        self.pool = pool.DBThreadPool(self.engine)
+        self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
 
     def tearDown(self):
         self.pool.shutdown()
@@ -108,7 +108,7 @@ class Stress(unittest.TestCase):
 
         self.engine = sa.create_engine('sqlite:///test.sqlite')
         self.engine.optimal_thread_pool_size = 2
-        self.pool = pool.DBThreadPool(self.engine)
+        self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
 
     def tearDown(self):
         self.pool.shutdown()
@@ -159,7 +159,7 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
         d = self.setUpRealDatabase(want_pool=False)
 
         def make_pool(_):
-            self.pool = pool.DBThreadPool(self.db_engine)
+            self.pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
         d.addCallback(make_pool)
         return d
 

@@ -20,7 +20,6 @@ import traceback
 
 import sqlalchemy as sa
 
-from twisted.internet import reactor
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
@@ -87,7 +86,7 @@ class DBThreadPool(object):
 
     running = False
 
-    def __init__(self, engine, verbose=False):
+    def __init__(self, engine, reactor, verbose=False):
         # verbose is used by upgrade scripts, and if it is set we should print
         # messages about versions and other warnings
         log_msg = log.msg
@@ -95,6 +94,8 @@ class DBThreadPool(object):
             def _log_msg(m):
                 print(m)
             log_msg = _log_msg
+
+        self.reactor = reactor
 
         pool_size = 5
 
@@ -121,7 +122,7 @@ class DBThreadPool(object):
                     log_msg("NOTE: this old version of SQLite is not "
                             "supported.")
                     raise RuntimeError("unsupported SQLite version")
-        self._start_evt = reactor.callWhenRunning(self._start)
+        self._start_evt = self.reactor.callWhenRunning(self._start)
 
         # patch the do methods to do verbose logging if necessary
         if debug:
@@ -132,7 +133,7 @@ class DBThreadPool(object):
         self._start_evt = None
         if not self.running:
             self._pool.start()
-            self._stop_evt = reactor.addSystemEventTrigger(
+            self._stop_evt = self.reactor.addSystemEventTrigger(
                 'during', 'shutdown', self._stop)
             self.running = True
 
@@ -148,7 +149,7 @@ class DBThreadPool(object):
         circumstances."""
         if not self._stop_evt:
             return  # pool is already stopped
-        reactor.removeSystemEventTrigger(self._stop_evt)
+        self.reactor.removeSystemEventTrigger(self._stop_evt)
         self._stop()
 
     # Try about 170 times over the space of a day, with the last few tries
@@ -208,11 +209,11 @@ class DBThreadPool(object):
         return rv
 
     def do(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(reactor, self._pool,
+        return threads.deferToThreadPool(self.reactor, self._pool,
                                          self.__thd, False, callable, args, kwargs)
 
     def do_with_engine(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(reactor, self._pool,
+        return threads.deferToThreadPool(self.reactor, self._pool,
                                          self.__thd, True, callable, args, kwargs)
 
     def get_sqlite_version(self):

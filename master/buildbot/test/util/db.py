@@ -17,6 +17,7 @@ import os
 from sqlalchemy.schema import MetaData
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -194,7 +195,7 @@ class RealDatabaseMixin(object):
         if not want_pool:
             return defer.succeed(None)
 
-        self.db_pool = pool.DBThreadPool(self.db_engine)
+        self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 
         log.msg("cleaning database %s" % self.db_url)
         d = self.db_pool.do(self.__thd_clean_database)
