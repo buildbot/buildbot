@@ -660,7 +660,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param string username: Gerrit SSH server's username.
    :param identity_file: (optional) Gerrit SSH identity file.
    :param int port: (optional) Gerrit SSH server's port (default: 29418)
-   :param reviewCB: (optional) callback that is called each time a build is finished, and that is used to define the message and review approvals depending on the build result.
+   :param reviewCB: (optional) callback that is called each time a build is finished, and that is used to define the message and review approvals depending on the build result. can be a deferred.
    :param reviewArg: (optional) argument passed to the review callback.
 
                     If :py:func:`reviewCB` callback is specified, it determines the message and score to give when sending a review for each separate build.
@@ -686,7 +686,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                        from buildbot.plugins import util
 
    :param startCB: (optional) callback that is called each time a build is started.
-                   Used to define the message sent to Gerrit.
+                   Used to define the message sent to Gerrit. can be a deferred.
    :param startArg: (optional) argument passed to the start callback.
 
                     If :py:func:`startCB` is specified, it should return a message.
@@ -695,7 +695,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                     .. literalinclude:: /examples/git_gerrit.cfg
                        :pyobject: gerritStartCB
 
-   :param summaryCB: (optional) callback that is called each time a buildset finishes, and that is used to define a message and review approvals depending on the build result.
+   :param summaryCB: (optional) callback that is called each time a buildset finishes, and that is used to define a message and review approvals depending on the build result. can be a deferred.
    :param summaryArg: (optional) argument passed to the summary callback.
 
                       If :py:func:`summaryCB` callback is specified, determines the message and score to give when sending a single review summarizing all of the builds.
