@@ -169,8 +169,15 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         BuildmasterConfig['status'] = []
 
+        # mock reactor.stop (which trial *really* doesn't
+        # like test code to call!)
+        mock_reactor = mock.Mock(spec=reactor)
+        mock_reactor.callWhenRunning = reactor.callWhenRunning
+        mock_reactor.getThreadPool = reactor.getThreadPool
+        mock_reactor.callFromThread = reactor.callFromThread
+
         # create the master and set its config
-        m = self.master = master.BuildMaster(self.basedir, self.configfile)
+        m = self.master = master.BuildMaster(self.basedir, self.configfile, reactor=mock_reactor)
         m.config = config.MasterConfig.loadConfig(
             self.basedir, self.configfile)
 
@@ -181,15 +188,8 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         # stub out m.db.setup since it was already called above
         m.db.setup = lambda: None
 
-        # mock reactor.stop (which trial *really* doesn't
-        # like test code to call!)
-        mock_reactor = mock.Mock(spec=reactor)
-        mock_reactor.callWhenRunning = reactor.callWhenRunning
-        mock_reactor.getThreadPool = reactor.getThreadPool
-        mock_reactor.callFromThread = reactor.callFromThread
-
         # start the service
-        yield m.startService(_reactor=mock_reactor)
+        yield m.startService()
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 

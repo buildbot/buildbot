@@ -138,7 +138,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.patch(config.MasterConfig, 'loadConfig',
                        classmethod(lambda cls, b, f: cls()))
 
-            self.master = master.BuildMaster(self.basedir)
+            self.reactor = self.make_reactor()
+            self.master = master.BuildMaster(self.basedir, reactor=self.reactor)
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.db.setServiceParent(self.master)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self)
@@ -166,52 +167,45 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
     # tests
     def test_startup_bad_config(self):
-        reactor = self.make_reactor()
         self.patch_loadConfig_fail()
 
-        d = self.master.startService(_reactor=reactor)
+        d = self.master.startService()
 
         @d.addCallback
         def check(_):
-            reactor.stop.assert_called_with()
+            self.reactor.stop.assert_called_with()
             self.assertLogged("oh noes")
         return d
 
     def test_startup_db_not_ready(self):
-        reactor = self.make_reactor()
-
         def db_setup():
             log.msg("GOT HERE")
             raise exceptions.DatabaseNotReadyError()
         self.db.setup = db_setup
 
-        d = self.master.startService(_reactor=reactor)
+        d = self.master.startService()
 
         @d.addCallback
         def check(_):
-            reactor.stop.assert_called_with()
+            self.reactor.stop.assert_called_with()
             self.assertLogged("GOT HERE")
         return d
 
     def test_startup_error(self):
-        reactor = self.make_reactor()
-
         def db_setup():
             raise RuntimeError("oh noes")
         self.db.setup = db_setup
 
-        d = self.master.startService(_reactor=reactor)
+        d = self.master.startService()
 
         @d.addCallback
         def check(_):
-            reactor.stop.assert_called_with()
+            self.reactor.stop.assert_called_with()
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         return d
 
     def test_startup_ok(self):
-        reactor = self.make_reactor()
-
-        d = self.master.startService(_reactor=reactor)
+        d = self.master.startService()
 
         @d.addCallback
         def check_started(_):
@@ -220,7 +214,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         @d.addCallback
         def check(_):
-            self.failIf(reactor.stop.called)
+            self.failIf(self.reactor.stop.called)
             self.assertLogged("BuildMaster is running")
 
             # check started/stopped messages
@@ -229,23 +223,21 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
     @defer.inlineCallbacks
     def test_reconfig(self):
-        reactor = self.make_reactor()
         self.master.reconfigServiceWithBuildbotConfig = mock.Mock(
             side_effect=lambda n: defer.succeed(None))
         self.master.masterHeartbeatService = mock.Mock()
-        yield self.master.startService(_reactor=reactor)
+        yield self.master.startService()
         yield self.master.reconfig()
         yield self.master.stopService()
         self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
 
     @defer.inlineCallbacks
     def test_reconfig_bad_config(self):
-        reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
             side_effect=lambda n: defer.succeed(None))
 
         self.master.masterHeartbeatService = mock.Mock()
-        yield self.master.startService(_reactor=reactor)
+        yield self.master.startService()
 
         # reset, since startService called reconfigService
         self.master.reconfigService.reset_mock()
