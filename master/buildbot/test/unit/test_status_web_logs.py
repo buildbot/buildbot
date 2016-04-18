@@ -17,7 +17,7 @@ from buildbot.status.web.jsontestresults import JSONTestResource
 from buildbot.status.buildstep import BuildStepStatus
 from buildbot.status.build import BuildStatus
 from buildbot.status.logfile import HTMLLogFile, LogFile
-from buildbot.status.web.logs import LogsResource
+from buildbot.status.web.logs import LogsResource, HTMLLog, TextLog
 
 import mock
 from buildbot.status.web.xmltestresults import XMLTestResource
@@ -34,9 +34,11 @@ class TestLogsResource(unittest.TestCase):
         if name is None:
             return st
 
-        log = mock.Mock(HTMLLogFile) if html_log else mock.Mock(LogFile)
+        step = self.setupBuildStepStatus()
+        log = HTMLLogFile(step, "example", "test file", "test html") if html_log \
+            else LogFile(step, "example", "test file")
         log.getName = lambda: name
-        log.hasContent = lambda: has_content
+        log.hasContents = lambda: has_content
         log.content_type = content_type
         log.getText = lambda: text
         self.logs.append(log)
@@ -87,7 +89,7 @@ class TestLogsResource(unittest.TestCase):
         logs_resource = LogsResource(self.setupStatus("test", "", True))
         res = logs_resource.getChild("test", "")
 
-        self.assertIsInstance(res, HTMLLogFile)
+        self.assertIsInstance(res, HTMLLog)
 
     def test_log_resource_no_log(self):
         logs_resource = LogsResource(self.setupStatus("test", "", True))
@@ -99,7 +101,7 @@ class TestLogsResource(unittest.TestCase):
         logs_resource = LogsResource(self.setupStatus("test", "test content", True, html_log=False))
         res = logs_resource.getChild("test", "")
 
-        self.assertIsInstance(res, LogFile)
+        self.assertIsInstance(res, TextLog)
 
     def test_log_resource_no_logs(self):
         logs_resource = LogsResource(self.setupStatus())
