@@ -185,6 +185,8 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         # like test code to call!)
         mock_reactor = mock.Mock(spec=reactor)
         mock_reactor.callWhenRunning = reactor.callWhenRunning
+        mock_reactor.getThreadPool = reactor.getThreadPool
+        mock_reactor.callFromThread = reactor.callFromThread
 
         # start the service
         yield m.startService(_reactor=mock_reactor)

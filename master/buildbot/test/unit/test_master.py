@@ -154,6 +154,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
     def make_reactor(self):
         r = mock.Mock()
         r.callWhenRunning = reactor.callWhenRunning
+        r.getThreadPool = reactor.getThreadPool
+        r.callFromThread = reactor.callFromThread
         return r
 
     def patch_loadConfig_fail(self):
