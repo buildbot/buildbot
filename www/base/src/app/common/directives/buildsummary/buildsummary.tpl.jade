@@ -1,7 +1,7 @@
 .panel.panel-default(ng-class="results2class(buildsummary.build)")
   .panel-heading.no-select
     .row
-      .col-sm-5
+      .col-sm-6
         .btn.btn-xs.btn-default(ng-click="buildsummary.toggleFullDisplay()", title="Expand all step logs")
             i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':buildsummary.fulldisplay}")
         .btn.btn-xs.btn-default(ng-click="buildsummary.toggleDetails()", title="Show steps according to their importance")
@@ -10,11 +10,9 @@
         | &nbsp;
         span(ng-if="buildsummary.prefix") {{buildsummary.prefix}}&nbsp;
         a(ui-sref="build({builder:buildsummary.builder.builderid, build:buildsummary.build.number})")
-          | {{buildsummary.builder.name}}/{{buildsummary.build.number}}
-      .col-sm-4
-        span
-          | {{buildsummary.reason}}
-      .col-sm-3.text-right
+          | {{buildsummary.builder.name}}/{{buildsummary.build.number}}&nbsp;
+        span(ng-if="buildsummary.reason") |&nbsp;{{buildsummary.reason}}
+      .col-sm-6.text-right
           span(ng-show="buildsummary.build.complete")
               | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
           span(ng-show="!buildsummary.build.complete")
