@@ -437,6 +437,7 @@ else:
         'boto',
         'moto',
         'txgithub',
+        'ramlfications',
         'mock',
     ]
     if sys.platform != 'win32':
@@ -469,6 +470,8 @@ else:
             'sphinx==1.3.3',
             'sphinxcontrib-blockdiag',
             'docutils>=0.8',
+            'ramlfications',
+            'sphinx-jinja',
         ],
     }
 

@@ -7,6 +7,7 @@ These are the interfaces against which externally-maintained code should be writ
 .. toctree::
     :maxdepth: 2
 
+    rest
     data
     database
     mq

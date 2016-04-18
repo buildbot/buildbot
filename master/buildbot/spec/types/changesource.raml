@@ -1,0 +1,39 @@
+#%RAML 1.0 DataType
+description: |
+    A changesource generates change objects, for example in response to an update in some
+    repository. A particular changesource (by name) runs on at most one master at a time.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.changes.ChangeSourceResourceType
+
+        .. py:method:: findChangeSourceId(name)
+
+            :param string name: changesource name
+            :returns: changesource ID via Deferred
+
+            Get the ID for the given changesource name, inventing one if necessary.
+
+        .. py:method:: trySetChangeSourceMaster(changesourceid, masterid)
+
+            :param integer changesourceid: changesource ID to try to claim
+            :param integer masterid: this master's master ID
+            :returns: ``True`` or ``False``, via Deferred
+
+            Try to claim the given scheduler for the given master and return ``True`` if
+            the scheduler is to be activated on that master.
+
+properties:
+    changesourceid:
+        description: the ID of this changesource
+        type: integer
+    master?:
+        description: the master on which this worker is running, or None if it is inactive
+        type: master
+    name:
+        description: name of this changesource
+        type: string
+type: object

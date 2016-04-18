@@ -1,0 +1,95 @@
+#%RAML 1.0 DataType
+description: |
+
+    This resource type describes a step in a build.
+    Steps have unique IDs, but are most commonly accessed by name in the context of their containing builds.
+
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.steps.StepResourceType
+
+        .. py:method:: newStep(buildid, name)
+
+            :param integer buildid: buildid containing this step
+            :param name: name for the step
+            :type name: 50-character :ref:`identifier <type-identifier>`
+            :returns: (stepid, number, name) via Deferred
+
+            Create a new step and return its ID, number, and name.
+            Note that the name may be different from the requested name, if that name was already in use.
+            The state strings for the new step will be set to 'pending'.
+
+        .. py:method:: startStep(stepid)
+
+            :param integer stepid: the step to modify
+
+            Start the step.
+
+        .. py:method:: setStepStateString(stepid, state_string)
+
+            :param integer stepid: the step to modify
+            :param unicode state_string: new state strings for this step
+
+            Replace the existing state string for a step with a new list.
+
+        .. py:method:: addStepURL(stepid, name, url):
+
+            :param integer stepid: the step to modify
+            :param string name: the url name
+            :param string url: the actual url
+            :returns: None via deferred
+
+            Add a new url to a step.
+            The new url is added to the list of urls.
+
+        .. py:method:: finishStep(stepid, results, hidden)
+
+            :param integer stepid: the step to modify
+            :param integer results: the step's results
+            :param boolean hidden: true if the step should not be displayed
+
+            Mark the step as finished at the current time, with the given results.
+
+properties:
+    stepid:
+        description: the unique ID of this step
+        type: integer
+    buildid:
+        description: id of the build containing this step
+        type: integer
+    complete:
+        description: true if this step is complete
+        type: boolean
+    complete_at?:
+        description: time at which this step was complete, or None if it's still running
+        type: date
+    hidden:
+        description: true if the step should not be displayed
+        type: boolean
+    name:
+        description: the step name, unique within the build
+        type: identifier
+    number:
+        description: the number of this step (sequential within the build)
+        type: integer
+    results?:
+        description: the results of the step (see :ref:`Build-Result-Codes`), or None if not complete
+        type: integer
+    started_at?:
+        description: time at which this step started, or None if it hasn't started yet
+        type: date
+    state_string:
+        description: |
+            a string giving detail on the state of the build.
+            The first is usually one word or phrase; the remainder are sized for one-line display.
+        type: string
+    urls[]:
+        description: a list of URLs associated with this step.
+        properties:
+            name: string
+            url: string
+type: object

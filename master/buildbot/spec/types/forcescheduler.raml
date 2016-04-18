@@ -1,0 +1,27 @@
+#%RAML 1.0 DataType
+description: |
+
+    A forcescheduler initiates builds, via a formular in the web UI.
+    At the moment, forceschedulers must be defined on all the masters where a web ui is configured. A particular forcescheduler runs on the master where the web request was sent.
+
+    .. note::
+
+        This datatype and associated enpoints will be deprecated when :bug:`4496` will be resolved.
+    
+properties:
+    all_fields[]:
+        description: ''
+        type: object
+    builder_names[]:
+        description: names of the builders that this scheduler can trigger
+        type: identifier
+    button_name:
+        description: label of the button to use in the UI
+        type: string
+    label:
+        description: label of this scheduler to be displayed in the ui
+        type: string
+    name:
+        description: name of this scheduler
+        type: identifier
+type: object

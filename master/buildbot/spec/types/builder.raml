@@ -1,0 +1,38 @@
+#%RAML 1.0 DataType
+description: |
+    This resource type describes a builder.
+
+    Update Methods
+    --------------
+
+    All update methods are available as attributes of ``master.data.updates``.
+
+    .. py:class:: buildbot.data.changes.BuilderResourceType
+
+        .. py:method:: updateBuilderList(masterid, builderNames)
+
+            :param integer masterid: this master's master ID
+            :param list builderNames: list of names of currently-configured builders (unicode strings)
+            :returns: Deferred
+
+            Record the given builders as the currently-configured set of builders on this master.
+            Masters should call this every time the list of configured builders changes.
+
+
+properties:
+    builderid:
+        description: the ID of this builder
+        type: integer
+    description?:
+        description: The description for that builder
+        type: string
+    masterids[]:
+        description: the ID of the masters this builder is running on
+        type: integer
+    name:
+        description: builder name
+        type: identifier
+    tags[]:
+        description: list of tags for this builder
+        type: string
+type: object

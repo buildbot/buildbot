@@ -127,7 +127,8 @@ Within the buildmaster process, the root of the data API is available at `self.m
 
         :returns: list of endpoint specifications
 
-        This method returns the API spec as described in :ref:`API-Discovery`.
+        This method returns the deprecated API spec.
+        Please use :ref:`Raml-Spec` instead.
 
     .. py:attribute:: rtypes
 
@@ -557,24 +558,5 @@ The translation to tuples and other formats should be obvious.
 
 All strings in the data model are unicode strings.
 
-.. toctree::
-    :maxdepth: 1
-
-    rtype-buildset
-    rtype-change
-    rtype-changesource
-    rtype-master
-    rtype-builder
-    rtype-worker
-    rtype-sourcestamp
-    rtype-patch
-    rtype-properties
-    rtype-scheduler
-    rtype-forcescheduler
-    rtype-build
-    rtype-buildrequest
-    rtype-step
-    rtype-log
-    rtype-logchunk
 
 .. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.
