@@ -136,17 +136,23 @@ Requests are only candidated for a merge if both requests have exactly the same 
 This behavior can be controlled globally, using the :bb:cfg:`collapseRequests` parameter, and on a per-:class:`Builder` basis, using the ``collapseRequests`` argument to the :class:`Builder` configuration.
 If ``collapseRequests`` is given, it completely overrides the global configuration.
 
-For either configuration parameter, a value of ``True`` (the default) causes buildbot to merge BuildRequests that have "compatible" source stamps.
-Source stamps are compatible if:
+Possible values for both ``collapseRequests`` configurations are:
 
-* their codebase, branch, project, and repository attributes match exactly;
-* neither source stamp has a patch (e.g., from a try scheduler); and
-* either both source stamps are associated with changes, or neither ar associated with changes but they have matching revisions.
+``True``
+    Requests will be collapsed if their sourcestamp are compatible (see below for definition of compatible).
 
-A configuration value of ``False`` indicates that requests should never be merged.
+``False``
+    Requests will never be collapsed.
 
-The configuration value can also be a callable, specifying a custom merging function.
-See :ref:`Collapse-Request-Functions` for details.
+``callable(builder, req1, req2)``
+    Requests will be collapsed if the callable returns true.
+    See :ref:`Collapse-Request-Functions` for detailed example.
+
+Sourcestamps are compatible if all of the below conditions are met:
+
+* Their codebase, branch, project, and repository attributes match exactly
+* Neither source stamp has a patch (e.g., from a try scheduler)
+* Either both source stamps are associated with changes, or neither are associated with changes but they have matching revisions.
 
 .. index:: Builds; priority
 

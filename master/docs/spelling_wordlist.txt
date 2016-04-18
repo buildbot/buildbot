@@ -388,6 +388,7 @@ inrepo
 inrepos
 interCaps
 internet
+ini
 intialization
 intialized
 ip
@@ -900,5 +901,6 @@ xda
 Xen
 xf
 xvfb
+yaml
 Zope
 zsh
