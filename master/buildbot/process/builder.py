@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import weakref
+import warnings
 
 from twisted.application import internet
 from twisted.application import service
@@ -55,15 +56,17 @@ class Builder(util_service.ReconfigurableServiceMixin,
     # reconfigure builders before workers
     reconfig_priority = 196
 
+    @property
+    def expectations(self):
+        warnings.warn("'Builder.expectations' is deprecated.")
+        return None
+
     def __init__(self, name, _addServices=True):
         service.MultiService.__init__(self)
         self.name = name
 
         # this is filled on demand by getBuilderId; don't access it directly
         self._builderid = None
-
-        # this is created the first time we get a good build
-        self.expectations = None
 
         # build/wannabuild slots: Build objects move along this sequence
         self.building = []
@@ -432,7 +435,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # raised by startBuild are treated as deferred errbacks (see
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
-                                bs, self.expectations, workerforbuilder)
+                                bs, workerforbuilder)
         d.addCallback(lambda _: self.buildFinished(build, workerforbuilder))
         # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '

@@ -851,7 +851,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             reportDeprecatedWorkerNameUsage(
                 "'nextSlave' keyword argument is deprecated, "
                 "use 'nextWorker' instead")
-            assert workerbuilddir is None
+            assert nextWorker is None
             nextWorker = nextSlave
 
         # name is required, and can't start with '_'

@@ -515,6 +515,22 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
                       self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
         return d
 
+    def test_error_both_set(self):
+        """
+        If both ``extract_fn`` and ``property`` are defined,
+        ``SetPropertyFromCommand`` reports a config error.
+        """
+        self.assertRaises(config.ConfigErrors,
+                          shell.SetPropertyFromCommand, command=["echo", "value"], property="propname", extract_fn=lambda x: {"propname": "hello"})
+
+    def test_error_none_set(self):
+        """
+        If neither ``extract_fn`` and ``property`` are defined,
+        ``SetPropertyFromCommand`` reports a config error.
+        """
+        self.assertRaises(config.ConfigErrors,
+                          shell.SetPropertyFromCommand, command=["echo", "value"])
+
 
 class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
 

@@ -334,10 +334,6 @@ class AbstractWorker(service.BuildbotService, object):
         else:
             return defer.succeed(None)
 
-    def updateWorkerStatus(self, buildStarted=None, buildFinished=None):
-        # TODO
-        pass
-
     @defer.inlineCallbacks
     def attached(self, conn):
         """This is called when the worker connects."""

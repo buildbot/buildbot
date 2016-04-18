@@ -405,6 +405,16 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 self.assertEqual(dummy, 'dummy')
                 self.assertTrue(method.called)
 
+    def test_expectations_deprecated(self):
+        self.successResultOf(self.makeBuilder())
+
+        with assertProducesWarning(
+                Warning,
+                message_pattern="'Builder.expectations' is deprecated."):
+            deprecated = self.bldr.expectations
+
+        self.assertIdentical(deprecated, None)
+
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):
 

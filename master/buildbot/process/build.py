@@ -231,7 +231,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks
-    def startBuild(self, build_status, expectations, workerforbuilder):
+    def startBuild(self, build_status, workerforbuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
         finishes. This Deferred is guaranteed to never errback."""
@@ -262,7 +262,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.setupOwnProperties()
         self.setupWorkerForBuilder(workerforbuilder)
-        worker.updateWorkerStatus(buildStarted=self)
 
         # then narrow WorkerLocks down to the right worker
         self.locks = [(l.getLock(self.workerforbuilder.worker), a)
@@ -275,7 +274,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.deferred = defer.Deferred()
 
         try:
-            self.setupBuild(expectations)  # create .steps
+            self.setupBuild()  # create .steps
         except Exception:
             # the build hasn't started yet, so log the exception as a point
             # event instead of flunking the build.
@@ -309,7 +308,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # mark the build as finished
         self.workerforbuilder.buildFinished()
-        worker.updateWorkerStatus(buildFinished=self)
 
     @staticmethod
     def canStartWithWorkerForBuilder(lockList, workerforbuilder):
@@ -364,7 +362,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 step.setupProgress()
         return steps
 
-    def setupBuild(self, expectations):
+    def setupBuild(self):
         # create the actual BuildSteps.
         self.executedSteps = []
         self.stepnames = {}
