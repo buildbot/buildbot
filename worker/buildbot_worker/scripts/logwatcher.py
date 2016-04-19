@@ -30,19 +30,7 @@ class FakeTransport(object):
     disconnecting = False
 
 
-class BuildmasterTimeoutError(Exception):
-    pass
-
-
 class WorkerTimeoutError(Exception):
-    pass
-
-
-class ReconfigError(Exception):
-    pass
-
-
-class WorkerDetectedError(Exception):
     pass
 
 
@@ -66,7 +54,6 @@ class LogWatcher(LineOnlyReceiver):
         self.transport = FakeTransport()
         self.pp = TailProcess()
         self.pp.lw = self
-        self.processtype = "buildmaster"
         self.timer = None
 
     def start(self):
@@ -74,7 +61,7 @@ class LogWatcher(LineOnlyReceiver):
         if not os.path.exists(self.logfile):
             open(self.logfile, 'a').close()
 
-        # return a Deferred that fires when the reconfig process has
+        # return a Deferred that fires when the start process has
         # finished. It errbacks with TimeoutError if the finish line has not
         # been seen within 10 seconds, and with ReconfigError if the error
         # line was seen. If the logfile could not be opened, it errbacks with
@@ -98,10 +85,7 @@ class LogWatcher(LineOnlyReceiver):
 
     def timeout(self):
         self.timer = None
-        if self.processtype == "buildmaster":
-            e = BuildmasterTimeoutError()
-        else:
-            e = WorkerTimeoutError()
+        e = WorkerTimeoutError()
         self.finished(Failure(e))
 
     def finished(self, results):
@@ -123,15 +107,9 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
         if "loading configuration from" in line:
             self.in_reconfig = True
-        if "Creating Worker" in line:
-            self.processtype = "worker"
 
         if self.in_reconfig:
             print(line)
 
         if "message from master: attached" in line:
-            return self.finished("buildslave")
-        if "I will keep using the previous config file" in line:
-            return self.finished(Failure(ReconfigError()))
-        if "configuration update complete" in line:
-            return self.finished("buildmaster")
+            return self.finished("buildbot-worker")
