@@ -57,7 +57,7 @@ You can also type ``buildbot create-master --help`` for an up-to-the-moment summ
 
 .. option:: --relocatable
 
-    This creates a "relocatable" buildbot.tac, which uses relative paths instead of absolute paths, so that the buildmaster directory can be moved about.
+    This creates a "relocatable" ``buildbot.tac``, which uses relative paths instead of absolute paths, so that the buildmaster directory can be moved about.
 
 .. option:: --config
 

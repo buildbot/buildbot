@@ -560,8 +560,8 @@ A note on option `--op=update`: when updating the option `--bb_username` and opt
 
 .. _buildbot-config-directory:
 
-.buildbot config directory
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+:file:`.buildbot` config directory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Many of the :command:`buildbot` tools must be told how to contact the buildmaster that they interact with.
 This specification can be provided as a command-line argument, but most of the time it will be easier to set them in an ``options`` file.

@@ -68,7 +68,7 @@ Typical plugin source code layout is:
     gulpfile.js                  # entrypoint for gulp, should be a one line call to guanlecoja. Typically, no change needed
     MANIFEST.in                  # needed by setup.py for sdist generation. You need to adapt this file to match the name of your plugin
 
-Plugins are packaged as python entry-points for the buildbot.www namespace.
+Plugins are packaged as python entry-points for the ``buildbot.www`` namespace.
 The python part is defined in the `buildbot.www.plugin` module.
 The entrypoint must contain a twisted.web Resource, that is populated in the web server in `/<pluginname>/`.
 
@@ -244,7 +244,7 @@ Provided you run it in a buildbot master virtualenv, the following command will 
 
     gulp dev proxy --host nine.buildbot.net
 
-You can then just point your browser to localhost:8010, and you will access nine.buildbot.net, with your own version of the UI.
+You can then just point your browser to localhost:8010, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
 
 
 Guanlecoja

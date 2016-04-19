@@ -37,16 +37,16 @@ Other goals:
 Requirements
 ~~~~~~~~~~~~
 
-The buildbot-master package requires Python 2.6 or higher -- Python 2.5 is no longer supported.
-The buildbot-slave package requires Python 2.5 or higher -- Python 2.4 is no longer supported.
+The ``buildbot`` package requires Python 2.6 or higher -- Python 2.5 is no longer supported.
+The ``buildbot-slave`` package requires Python 2.5 or higher -- Python 2.4 is no longer supported.
 
 No additional software or systems, aside from some minor Python packages, are required.
 
 But the devil is in the details:
 
- * If you want to do web *development*, or *build* the buildbot-www package, you'll need Node.
+ * If you want to do web *development*, or *build* the ``buildbot-www`` package, you'll need Node.
    It's an Angular app, and that's how such apps are developed.
-   We've taken pains to not make either a requirement for users - you can simply 'pip install' buildbot-www and be on your way.
+   We've taken pains to not make either a requirement for users - you can simply 'pip install' ``buildbot-www`` and be on your way.
    This is the case even if you're hacking on the Python side of Buildbot.
  * For a single master, nothing else is required.
 
@@ -60,9 +60,9 @@ Minor Python Packages
 Known Limitations of 0.9.0b1
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following feature will be implemented for buildbot 0.9.1 Milestone.
+The following feature will be implemented for Buildbot 0.9.1 Milestone.
 
-* Multimaster is not supported as of buildbot 0.9.0. http://trac.buildbot.net/ticket/2644
+* Multimaster is not supported as of Buildbot 0.9.0. http://trac.buildbot.net/ticket/2644
 
 * Not all status plugin are converted to the new reporter API.
   Only email and gerrit reporters are fully supported.

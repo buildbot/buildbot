@@ -58,7 +58,7 @@ Changes for Developers
 Slave
 -----
 
-* buildbot-slave now requires Python 2.6
+* ``buildbot-slave`` now requires Python 2.6
 
 Features
 ~~~~~~~~

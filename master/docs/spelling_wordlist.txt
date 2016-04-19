@@ -81,7 +81,6 @@ bsid
 bugfix
 Buidbot
 Builbot
-buildbot
 Buildbot
 buildCacheSize
 builddir

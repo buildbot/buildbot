@@ -7,7 +7,7 @@ BuildFactory Implementation Note
 The default :class:`BuildFactory`, provided in the :mod:`buildbot.process.factory` module, contains an internal list of `BuildStep specifications`: a list of ``(step_class, kwargs)`` tuples for each.
 These specification tuples are constructed when the config file is read, by asking the instances passed to :meth:`addStep` for their subclass and arguments.
 
-To support config files from buildbot-0.7.5 and earlier, :meth:`addStep` also accepts the ``f.addStep(shell.Compile, command=["make","build"])`` form, although its use is discouraged because then the ``Compile`` step doesn't get to validate or complain about its arguments until build time.
+To support config files from Buildbot version 0.7.5 and earlier, :meth:`addStep` also accepts the ``f.addStep(shell.Compile, command=["make","build"])`` form, although its use is discouraged because then the ``Compile`` step doesn't get to validate or complain about its arguments until build time.
 The modern pass-by-instance approach allows this validation to occur while the config file is being loaded, where the admin has a better chance of noticing problems.
 
 When asked to create a :class:`Build`, the :class:`BuildFactory` puts a copy of the list of step specifications into the new :class:`Build` object.

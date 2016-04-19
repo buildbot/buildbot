@@ -244,7 +244,7 @@ Fixes
 
 * The `haltOnFailure` and `flunkOnFailure` attricutes of :bb:step:`ShellCommand` are now renderable. (:bug:`2486`).
 
-* The `rotateLength` and `maxRotatedFile` arguments are no longer treated as strings in buildbot.tac. This fixes log rotation. The upgrade_master command will notify users if they have this problem.
+* The `rotateLength` and `maxRotatedFile` arguments are no longer treated as strings in :file:`buildbot.tac`. This fixes log rotation. The upgrade_master command will notify users if they have this problem.
 
 * Builbot no longer specifies a revision when pulling from a mercurial (:bug:`438`).
 
@@ -298,7 +298,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * ``slavePortnum`` option deprecated, please use ``c['protocols']['pb']['port']`` to set up PB port
 
-* The buildbot.process.mtrlogobserver module have been renamed to buildbot.steps.mtrlogobserver.
+* The ``buildbot.process.mtrlogobserver`` module have been renamed to :py:mod:`buildbot.steps.mtrlogobserver`.
 
 * The buildmaster now requires at least Twisted-11.0.0.
 

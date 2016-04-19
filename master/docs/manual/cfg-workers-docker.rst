@@ -121,7 +121,7 @@ Previous simple example hardcodes the worker name into the dockerfile, which wil
 You can find in buildbot source code in ``master/contrib/docker`` two example configurations:
 
 ``worker``
-    the base worker configuration, including a custom buildbot.tac, which takes environment variables into account for setting the correct worker name, and connect to the correct master.
+    the base worker configuration, including a custom ``buildbot.tac``, which takes environment variables into account for setting the correct worker name, and connect to the correct master.
 
 ``pythonnode_worker``
     a worker with Python and node installed, which demonstrate how to reuse the base worker to create variations of build environments.

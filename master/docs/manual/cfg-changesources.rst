@@ -261,10 +261,10 @@ For example::
     from buildbot.plugins import changes
     c['change_source'] = changes.CVSMaildirSource("/home/buildbot/Mail")
 
-Configuration of CVS and buildbot_cvs_mail.py
-#############################################
+Configuration of CVS and :file:`buildbot_cvs_mail.py`
+#####################################################
 
-CVS must be configured to invoke the buildbot_cvs_mail.py script when files are checked in.
+CVS must be configured to invoke the :file:`buildbot_cvs_mail.py` script when files are checked in.
 This is done via the CVS loginfo configuration file.
 
 To update this, first do:
@@ -284,7 +284,7 @@ cd to the CVSROOT directory and edit the file loginfo, adding a line like:
    For cvs version 1.12.x, the ``--path %p`` option is required.
    Version 1.11.x and 1.12.x report the directory path differently.
 
-The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT.
+The above example you put the :file:`buildbot_cvs_mail.py` script under /cvsroot/CVSROOT.
 It can be anywhere.
 Run the script with --help to see all the options.
 At the very least, the options ``-e`` (email) and ``-P`` (project) should be specified.
