@@ -1,5 +1,5 @@
-Release Notes for Buildbot |version|
-====================================
+Release Notes for Buildbot ``|version|``
+========================================
 
 ..
     Any change that adds a feature or fixes a bug should have an entry here.
@@ -15,7 +15,7 @@ Release Notes for Buildbot |version|
     NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b*
     into one single set of notes.  Also, link prominently to the migration guide.
 
-The following are the release notes for Buildbot |version|
+The following are the release notes for Buildbot ``|version|``.
 
 See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
