@@ -203,6 +203,8 @@ setup_args = {
             "buildbot/scripts/sample.cfg",
             "buildbot/scripts/buildbot_tac.tmpl",
         ]),
+        include("buildbot/spec", "*.raml"),
+        include("buildbot/spec/types", "*.raml"),
     ] + include_statics("buildbot/www/static"),
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
