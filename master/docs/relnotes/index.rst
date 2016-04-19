@@ -25,7 +25,7 @@ Master
 Features
 ~~~~~~~~
 
-* new :bb:reporter:GitLabStatusPush to report builds results to gitlab.
+* new :bb:reporter:GitLabStatusPush to report builds results to GitLab.
 
 Fixes
 ~~~~~

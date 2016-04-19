@@ -33,8 +33,8 @@ from buildbot.process.results import WARNINGS
 HOSTED_BASE_URL = 'https://gitlab.com'
 
 
-class GitlabStatusPush(http.HttpStatusPushBase):
-    name = "GitlabStatusPush"
+class GitLabStatusPush(http.HttpStatusPushBase):
+    name = "GitLabStatusPush"
     neededDetails = dict(wantProperties=True)
 
     @defer.inlineCallbacks
@@ -58,14 +58,14 @@ class GitlabStatusPush(http.HttpStatusPushBase):
                      project_id, sha, state, target_url=None,
                      description=None, context=None):
         """
-        :param project_id: Project ID from Gitlab
+        :param project_id: Project ID from GitLab
         :param sha: Full sha to create the status for.
         :param state: one of the following 'pending', 'success', 'error'
                       or 'failure'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
         :param context: Context of the result
-        :return: A defered with the result from Gitlab.
+        :return: A defered with the result from GitLab.
 
         This code comes from txgithub by @tomprince.
         txgithub is based on twisted's webclient agent, which is much less

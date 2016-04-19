@@ -876,18 +876,18 @@ GitLabStatusPush
 
     from buildbot.plugins import reporters
 
-    gl = reporters.GitlabStatusPush('private-token', context='continuous-integration/buildbot', baseUrl='https://git.yourcompany.com')
+    gl = reporters.GitLabStatusPush('private-token', context='continuous-integration/buildbot', baseUrl='https://git.yourcompany.com')
     c['services'].append(ss)
 
-:class:`GitlabStatusPush` publishes build status using `Gitlab Commit Status API <http://doc.gitlab.com/ce/api/commits.html#commit-status>`_.
-The build status is published to a specific commit SHA in Gitlab.
+:class:`GitLabStatusPush` publishes build status using `GitLab Commit Status API <http://doc.gitlab.com/ce/api/commits.html#commit-status>`_.
+The build status is published to a specific commit SHA in GitLab.
 
-It requires `txrequests`_ package to allow interaction with Gitlab Commit Status API.
+It requires `txrequests`_ package to allow interaction with GitLab Commit Status API.
 
 It uses private token auth, and the token owner is required to have at least reporter access to each repository. As a result, we recommend you use https in your base_url rather than http.
 
 
-.. py:class:: GitlabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
+.. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
 
     :param string token: Private token of user permitted to update status for commits 
     :param string startDescription: Description used when build starts 
