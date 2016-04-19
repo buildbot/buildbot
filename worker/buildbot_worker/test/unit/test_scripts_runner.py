@@ -325,15 +325,13 @@ class TestOptions(misc.LoggingMixin, unittest.TestCase):
 functionPlaceholder = None
 
 
-class TestRun(misc.LoggingMixin, misc.StdoutAssertionsMixin,
-              unittest.TestCase):
+class TestRun(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.run()
     """
 
     def setUp(self):
-        self.setUpLogging()
         self.setUpStdoutAssertions()
 
     class TestSubCommand(usage.Options):
@@ -390,10 +388,9 @@ class TestRun(misc.LoggingMixin, misc.StdoutAssertionsMixin,
 
         exception = self.assertRaises(SystemExit, runner.run)
         self.assertEqual(exception.code, 1, "unexpected exit code")
-        self.assertLogged("command:  usage-error-message",
-                          "GeneralUsage",
-                          "unexpected error message on stdout")
-        self.assertInStdout("command:  usage-error-message")
+        self.assertStdoutEqual("command:  usage-error-message\n\n"
+                               "GeneralUsage\n",
+                               "unexpected error message on stdout")
 
     def test_run_bad_suboption(self):
         """
@@ -409,7 +406,6 @@ class TestRun(misc.LoggingMixin, misc.StdoutAssertionsMixin,
         self.assertEqual(exception.code, 1, "unexpected exit code")
 
         # check that we get error message for a sub-option
-        self.assertLogged("command:  usage-error-message",
-                          "SubOptionUsage",
-                          "unexpected error message on stdout")
-        self.assertInStdout("command:  usage-error-message")
+        self.assertStdoutEqual("command:  usage-error-message\n\n"
+                               "SubOptionUsage\n",
+                               "unexpected error message on stdout")
