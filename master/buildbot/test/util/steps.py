@@ -220,7 +220,9 @@ class BuildStepMixin(object):
                         status_text=self.step_status.status_text)
             if self.exp_urls:
                 self.assertEqual(self.step_status.urls, self.exp_urls)
-            self.assertEqual(got_outcome, self.exp_outcome, "expected step outcome")
+            self.assertEqual(got_outcome['result'], self.exp_outcome['result'], "expected step result")
+            self.assertTrue(all(text in got_outcome['status_text'] for text in self.exp_outcome['status_text']),
+                             "expected step status_text")
             for pn, (pv, ps) in self.exp_properties.iteritems():
                 self.assertTrue(self.properties.hasProperty(pn),
                         "missing property '%s'" % pn)

@@ -121,6 +121,11 @@ class TestPath_to_json_past_builds(unittest.TestCase):
         self.request.args = dict(numbuilds=[10],
                                  results=[0, 7],
                                  foo=["bar"])
-        self.assertEquals(
-            "json/builders/bldr/builds/<10?foo=bar&results=0&results=7",
-            base.path_to_json_past_builds(self.request, "bldr", 10))
+
+        url = base.path_to_json_past_builds(self.request, "bldr", 10).split('?')
+        exp_args = ["foo=bar", "results=0", "results=7"]
+
+        self.assertEqual(len(url), 2)
+        self.assertTrue("json/builders/bldr/builds/<10" in url[0])
+        self.assertTrue(all(arg in url[1] for arg in exp_args))
+
