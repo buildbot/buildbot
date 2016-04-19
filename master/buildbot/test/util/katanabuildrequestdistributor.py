@@ -9,6 +9,7 @@ from buildbot.process import cache
 from buildbot.test.fake import fakedb
 from buildbot.status.results import RESUME, BEGINNING
 import cProfile, pstats
+from buildbot.test.util import compat
 
 
 class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorComponentMixin, object):
@@ -66,6 +67,10 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
 
     @defer.inlineCallbacks
     def profileAsyncFunc(self, expected_total_tt, func, **kwargs):
+        if compat.runningPypy():
+            res = yield func(**kwargs)
+            defer.returnValue(res)
+            return
         pr = cProfile.Profile()
         pr.enable()
         res = yield func(**kwargs)
