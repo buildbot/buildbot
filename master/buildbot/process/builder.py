@@ -496,7 +496,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     # Build Creation
 
-    @defer.inlineCallbacks
     def maybeStartBuild(self, workerforbuilder, breqs, _reactor=reactor):
         # This method is called by the botmaster whenever this builder should
         # start a set of buildrequests on a worker. Do not call this method
@@ -507,14 +506,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # uses this to ensure that any ongoing maybeStartBuild invocations
         # are complete before it stops.
         if not self.running:
-            defer.returnValue(False)
-            return
+            return defer.succeed(False)
 
         # If the build fails from here on out (e.g., because a worker has failed),
         # it will be handled outside of this function. TODO: test that!
 
-        build_started = yield self._startBuildFor(workerforbuilder, breqs)
-        defer.returnValue(build_started)
+        return self._startBuildFor(workerforbuilder, breqs)
 
     # a few utility functions to make the maybeStartBuild a bit shorter and
     # easier to read
