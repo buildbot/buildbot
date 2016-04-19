@@ -874,7 +874,25 @@ GitLabStatusPush
 .. @cindex GitLabStatusPush
 .. py:class:: buildbot.reporters.gitlab.GitLabStatusPush
 
-.. note::
+    from buildbot.plugins import reporters
 
-    GitLabStatus was present in buildbot 0.8.12 release, but is no more in 0.9.0.
-    Gitlab community should be able to easily port it using :py:class:`~buildbot.reporters.http.HttpStatusBase`
+    gl = reporters.GitlabStatusPush('private-token', context='continuous-integration/buildbot', baseUrl='https://git.yourcompany.com')
+    c['services'].append(ss)
+
+:class:`GitlabStatusPush` publishes build status using `Gitlab Commit Status API <http://doc.gitlab.com/ce/api/commits.html#commit-status>`_.
+The build status is published to a specific commit SHA in Gitlab.
+
+It requires `txrequests`_ package to allow interaction with Gitlab Commit Status API.
+
+It uses private token auth, and the token owner is required to have at least reporter access to each repository. As a result, we recommend you use https in your base_url rather than http.
+
+
+.. py:class:: GitlabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
+
+    :param string token: Private token of user permitted to update status for commits 
+    :param string startDescription: Description used when build starts 
+    :param string endDescription: Description used when build ends 
+    :param string context: Name of your build system, eg. continuous-integration/buildbot 
+    :param string baseURL: the base url of the gitlab host, up to and optionally including the first `/` of the path. Do not include /api/
+    :param string verbose: Be more verbose
+
