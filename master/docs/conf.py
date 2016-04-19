@@ -11,6 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from __future__ import print_function
+
 import os
 import sys
 import textwrap
@@ -49,7 +51,6 @@ extensions = [
     'bbdocs.highlighterrors',
     'sphinxcontrib.blockdiag',
     'sphinxcontrib.jinja',
-    'sphinxcontrib.spelling',
 ]
 todo_include_todos = True
 
@@ -277,5 +278,15 @@ jinja_contexts = {
     "data_api": {'raml': RamlSpec()}
 }
 
-# Spelling options
-spelling_show_suggestions = True
+# Spell checker.
+try:
+    import enchant as _  # noqa
+except ImportError as ex:
+    print("enchant module import failed:\n"
+          "{0}\n"
+          "Spell checking disabled.".format(ex),
+          file=sys.stderr)
+
+else:
+    extensions.append('sphinxcontrib.spelling')
+    spelling_show_suggestions = True
