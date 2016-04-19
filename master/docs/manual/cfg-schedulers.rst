@@ -764,13 +764,13 @@ If you click on that button, a dialog will let you choose various parameters for
 
 The Buildbot framework allows you to customize exactly how the build form looks, which builders have a force build form (it might not make sense to force build every builder), and who is allowed to force builds on which builders.
 
-How you do so is by configuring a  :bb:sched:`ForceScheduler`, and add it into the list :bb:cfg:`schedulers`
+How you do so is by configuring a :bb:sched:`ForceScheduler`, and add it into the list :bb:cfg:`schedulers`.
 
 The scheduler takes the following parameters:
 
 ``name``
 
-    Name of the scheduler (should be an :ref:`Identifier <type-identifier>`)
+    Name of the scheduler (should be an :ref:`Identifier <type-identifier>`).
 
 ``builderNames``
 
@@ -785,7 +785,7 @@ The scheduler takes the following parameters:
 ``reasonString``
 
     A string that will be used to create the build reason for the forced build.
-    This string can contain the placeholders '%(owner)s' and '%(reason)s', which represents the value typed into the reason field.
+    This string can contain the placeholders ``%(owner)s`` and ``%(reason)s``, which represents the value typed into the reason field.
 
 ``username``
 
@@ -914,7 +914,7 @@ All parameter types have a few common arguments:
 
 ``tablabel`` (optional; default is same as label)
 
-    The label of the tab if this parameter is included into a tab layout NestedParameter}.
+    The label of the tab if this parameter is included into a tab layout NestedParameter.
     This is what is displayed to the user.
 
 ``default`` (optional; default: "")
@@ -946,19 +946,19 @@ It adds the following arguments:
 
     The layouts implemented in the standard web application are:
 
-    * ``simple``: fields are displayed one by one without alignement.
+    * ``simple``: fields are displayed one by one without alignment.
         They take the horizontal space that they need.
 
     * ``vertical``: all fields are displayed vertically, aligned in columns (as per the ``column`` attribute of the NestedParameter)
 
     * ``tabs``: Each field gets its own `tab <http://getbootstrap.com/components/#nav-tabs>`_.
         This can be used to declare complex build forms which won't fit into one screen.
-        The childs fields are usually other NestedParameters with vertical layout.
+        The children fields are usually other NestedParameters with vertical layout.
 
 ``columns`` (optional, accepted values are 1,2,3,4)
 
     The number of columns to use for a `vertical` layout.
-    If ommited, it is set to 1 unless there are more than 3 visible child fields in which case it is set to 2.
+    If omitted, it is set to 1 unless there are more than 3 visible child fields in which case it is set to 2.
 
 FixedParameter
 ##############
@@ -983,11 +983,11 @@ It adds the following arguments:
 
 ``regex`` (optional)
 
-    a string that will be compiled as a regex, and used to validate the input of this parameter
+    A string that will be compiled as a regex, and used to validate the input of this parameter.
 
 ``size`` (optional; default: 10)
 
-    The width of the input field (in characters)
+    The width of the input field (in characters).
 
 TextParameter
 #############
@@ -998,16 +998,16 @@ TextParameter
         label="comments to be displayed to the user of the built binary",
         default="This is a development build", cols=60, rows=5)
 
-This parameter type is similar to StringParameter, except that it is represented in the HTML form as a textarea, allowing multi-line input.
+This parameter type is similar to StringParameter, except that it is represented in the HTML form as a ``textarea``, allowing multi-line input.
 It adds the StringParameter arguments, this type allows:
 
 ``cols`` (optional; default: 80)
 
-    The number of columns the textarea will have
+    The number of columns the ``textarea`` will have.
 
 ``rows`` (optional; default: 20)
 
-    The number of rows the textarea will have
+    The number of rows the ``textarea`` will have
 
 This class could be subclassed in order to have more customization e.g.
 
@@ -1049,7 +1049,7 @@ This parameter type accepts a username.
 If authentication is active, it will use the authenticated user instead of displaying a text-entry box.
 
 ``size`` (optional; default: 10)
-    The width of the input field (in characters)
+    The width of the input field (in characters).
 
 ``need_email`` (optional; default True)
     If true, require a full email address rather than arbitrary text.
@@ -1069,7 +1069,7 @@ If ``multiple`` is false, then its result is a string - one of the choices.
 If ``multiple`` is true, then the result is a list of strings from the choices.
 
 Note that for some use cases, the choices need to be generated dynamically.
-This can be done via subclassing and overiding the 'getChoices' member function.
+This can be done via subclassing and overriding the 'getChoices' member function.
 An example of this is provided by the source for the :py:class:`InheritBuildParameter` class.
 
 Its arguments, in addition to the common options, are:
