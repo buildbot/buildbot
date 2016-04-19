@@ -291,14 +291,14 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
                          "incorrect master host and/or port")
 
 
-class TestOptions(misc.LoggingMixin, unittest.TestCase):
+class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.Options class.
     """
 
     def setUp(self):
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
     def parse(self, *args):
         opts = runner.Options()
@@ -313,7 +313,7 @@ class TestOptions(misc.LoggingMixin, unittest.TestCase):
     def test_version(self):
         exception = self.assertRaises(SystemExit, self.parse, '--version')
         self.assertEqual(exception.code, 0, "unexpected exit code")
-        self.assertLogged('worker version:')
+        self.assertInStdout('worker version:')
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())

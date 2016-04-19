@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import print_function
+
 import os
 import re
 import textwrap
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot_worker import runprocess
 from buildbot_worker.commands.base import AbandonChain
@@ -67,8 +68,8 @@ class Repo(SourceBaseCommand):
         return os.path.join(self.builder.basedir, self.srcdir)
 
     def sourcedirIsUpdateable(self):
-        log.msg(os.path.join(self._fullSrcdir(), ".repo"))
-        log.msg(os.path.isdir(os.path.join(self._fullSrcdir(), ".repo")))
+        print(os.path.join(self._fullSrcdir(), ".repo"))
+        print(os.path.isdir(os.path.join(self._fullSrcdir(), ".repo")))
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
 
     def _repoCmd(self, command, cb=None, abandonOnFailure=True, **kwargs):
