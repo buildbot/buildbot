@@ -22,7 +22,7 @@ install:
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
   
   - "%PYTHON%\\python.exe -m pip install -e pkg"
-  - "%PYTHON%\\python.exe -m pip install -e master[test]"
+  - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
   - "%PYTHON%\\python.exe -m pip install -e slave"
   - "%PYTHON%\\python.exe -m pip install -e worker"
   - "%PYTHON%\\python.exe -m pip list"
