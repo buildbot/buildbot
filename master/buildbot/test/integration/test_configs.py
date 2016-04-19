@@ -39,13 +39,13 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
     def test_sample_config(self):
         filename = util.sibpath(runner.__file__, 'sample.cfg')
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            config.MasterConfig.loadConfig(self.basedir, filename)
+            config.FileLoader(self.basedir, filename).loadConfig()
 
     def test_0_9_0b5_api_renamed_config(self):
         with open(self.filename, "w") as f:
             f.write(sample_0_9_0b5_api_renamed)
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            config.MasterConfig.loadConfig(self.basedir, self.filename)
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_0_9_0b5_config(self):
         with open(self.filename, "w") as f:
@@ -56,7 +56,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
                     r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
                     r"'slavenames' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
-            config.MasterConfig.loadConfig(self.basedir, self.filename)
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_0_7_12_config(self):
         with open(self.filename, "w") as f:
@@ -68,7 +68,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
                     r"c\['slavePortnum'\] key is deprecated",
                     r"'slavename' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
-            config.MasterConfig.loadConfig(self.basedir, self.filename)
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_0_7_6_config(self):
         with open(self.filename, "w") as f:
@@ -80,7 +80,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
                     r"c\['slavePortnum'\] key is deprecated",
                     r"'slavename' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
-            config.MasterConfig.loadConfig(self.basedir, self.filename)
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
 
 # sample.cfg from various versions, with comments stripped.  Adjustments made

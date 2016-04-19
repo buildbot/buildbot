@@ -14,19 +14,24 @@
 # Copyright Buildbot Team Members
 from __future__ import print_function
 from future.utils import itervalues
+from importlib import import_module
 
 import StringIO
 import os
 import sys
-import textwrap
 
 import mock
+
+from zope.interface import implementer
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 
+from buildbot.config import MasterConfig
+from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
+from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
 from buildbot.test.util import dirs
@@ -34,6 +39,15 @@ try:
     from buildslave.bot import BuildSlave
 except ImportError:
     BuildSlave = None
+
+
+@implementer(IConfigLoader)
+class DictLoader(object):
+    def __init__(self, config_dict):
+        self.config_dict = config_dict
+
+    def loadConfig(self):
+        return MasterConfig.loadFromDict(self.config_dict, '<dict>')
 
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
@@ -61,26 +75,6 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         """
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
-        self.configfile = os.path.join(self.basedir, 'master.cfg')
-        workerclass = "Worker"
-        if self.proto == 'pb':
-            proto = '{"pb": {"port": "tcp:0:interface=127.0.0.1"}}'
-        elif self.proto == 'null':
-            proto = '{"null": {}}'
-            workerclass = "LocalWorker"
-        # We create a master.cfg, which loads the configuration from the
-        # test module. Only the worker config is kept there, as it should not
-        # be changed
-        open(self.configfile, "w").write(textwrap.dedent("""
-            from buildbot.plugins import worker
-            from {module} import {configFunc}
-            c = BuildmasterConfig = {configFunc}()
-            c['workers'] = [worker.{workerclass}("local1", "localpw")]
-            c['protocols'] = {proto}
-            """).format(module=self.__class__.__module__,
-                        configFunc=configFunc,
-                        proto=proto,
-                        workerclass=workerclass))
 
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
@@ -89,8 +83,18 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         mock_reactor.getThreadPool = reactor.getThreadPool
         mock_reactor.callFromThread = reactor.callFromThread
 
+        workerclass = worker.Worker
+        if self.proto == 'pb':
+            proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+        elif self.proto == 'null':
+            proto = {"null": {}}
+            workerclass = worker.LocalWorker
+
+        config_dict = getattr(import_module(self.__class__.__module__), configFunc)()
+        config_dict['workers'] = [workerclass("local1", "localpw")]
+        config_dict['protocols'] = proto
         # create the master and set its config
-        m = BuildMaster(self.basedir, self.configfile)
+        m = BuildMaster(self.basedir, reactor=mock_reactor, config_loader=DictLoader(config_dict))
         self.master = m
 
         # update the DB
@@ -111,11 +115,11 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
-            w = BuildSlave("127.0.0.1", workerPort, "local1", "localpw", self.basedir, False, False)
+            self.w = BuildSlave("127.0.0.1", workerPort, "local1", "localpw", self.basedir, False, False)
         elif self.proto == 'null':
-            w = None
-        if w is not None:
-            w.setServiceParent(m)
+            self.w = None
+        if self.w is not None:
+            self.w.setServiceParent(m)
 
     def setUp(self):
         if self.testCasesHandleTheirSetup:
@@ -132,6 +136,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
                 yield self.printBuild(build, dump, withLogs=True)
         m = self.master
         # stop the service
+        if self.w is not None:
+            yield self.w.disownServiceParent()
         yield m.stopService()
 
         # and shutdown the db threadpool, as is normally done at reactor stop

@@ -335,27 +335,27 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def test_loadConfig(self):
         @classmethod
-        def loadConfig(cls, basedir, filename):
+        def loadConfig(cls):
             return config_module.MasterConfig()
-        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
+        self.patch(config_module.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIsInstance(cfg, config_module.MasterConfig)
         self.assertInStdout('checking')
 
     def test_loadConfig_ConfigErrors(self):
         @classmethod
-        def loadConfig(cls, basedir, filename):
+        def loadConfig(cls):
             raise config_module.ConfigErrors(['oh noes'])
-        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
+        self.patch(config_module.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
         self.assertInStdout('oh noes')
 
     def test_loadConfig_exception(self):
         @classmethod
-        def loadConfig(cls, basedir, filename):
+        def loadConfig(cls):
             raise RuntimeError()
-        self.patch(config_module.MasterConfig, 'loadConfig', loadConfig)
+        self.patch(config_module.FileLoader, 'loadConfig', loadConfig)
         cfg = base.loadConfig(mkconfig())
         self.assertIdentical(cfg, None)
         self.assertInStdout('RuntimeError')

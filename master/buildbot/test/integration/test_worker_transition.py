@@ -17,6 +17,8 @@ import re
 
 import mock
 
+from zope.interface import implementer
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -24,6 +26,7 @@ from twisted.trial import unittest
 import buildbot.worker
 
 from buildbot import config
+from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import www
@@ -131,6 +134,15 @@ c['db'] = {
 """
 
 
+@implementer(IConfigLoader)
+class DummyLoader(object):
+    def __init__(self, loaded_config):
+        self.loaded_config = loaded_config
+
+    def loadConfig(self):
+        return self.loaded_config
+
+
 class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     """Test that master can actually run with configuration after renaming."""
@@ -153,7 +165,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         mock_reactor.callFromThread = reactor.callFromThread
 
         # create the master
-        m = BuildMaster(self.basedir, self.configfile, reactor=mock_reactor)
+        m = BuildMaster(self.basedir, reactor=mock_reactor, config_loader=DummyLoader(loaded_config))
 
         # update the DB
         yield m.db.setup(check_version=False)
@@ -162,14 +174,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         # stub out m.db.setup since it was already called above
         m.db.setup = lambda: None
 
-        # mock configuration loading
-        @classmethod
-        def loadConfig(cls, basedir, filename):
-            return loaded_config
-
-        with mock.patch('buildbot.config.MasterConfig.loadConfig', loadConfig):
-            # start the service
-            yield m.startService()
+        yield m.startService()
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 
@@ -201,8 +206,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                     r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
                     r"'slavenames' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
-            loaded_config = config.MasterConfig.loadConfig(
-                self.basedir, self.configfile)
+            loaded_config = config.FileLoader(self.basedir, self.configfile).loadConfig()
 
         return self._run_master(loaded_config)
 
@@ -213,8 +217,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         self._write_config(sample_0_9_0b5_api_renamed)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            loaded_config = config.MasterConfig.loadConfig(
-                self.basedir, self.configfile)
+            loaded_config = config.FileLoader(self.basedir, self.configfile).loadConfig()
 
         return self._run_master(loaded_config)
 

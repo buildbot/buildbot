@@ -178,8 +178,7 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         # create the master and set its config
         m = self.master = master.BuildMaster(self.basedir, self.configfile, reactor=mock_reactor)
-        m.config = config.MasterConfig.loadConfig(
-            self.basedir, self.configfile)
+        m.config = config.FileLoader(self.basedir, self.configfile).loadConfig()
 
         # set up the db
         yield m.db.setup(check_version=False)

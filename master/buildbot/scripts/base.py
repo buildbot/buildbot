@@ -75,8 +75,7 @@ def loadConfig(config, configFileName='master.cfg'):
         print("checking %s" % configFileName)
 
     try:
-        master_cfg = config_module.MasterConfig.loadConfig(
-            config['basedir'], configFileName)
+        master_cfg = config_module.FileLoader(config['basedir'], configFileName).loadConfig()
     except config_module.ConfigErrors as e:
         print("Errors loading configuration:")
 

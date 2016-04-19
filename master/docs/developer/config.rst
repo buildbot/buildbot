@@ -27,7 +27,7 @@ described in :ref:`developer-Reconfiguration`.
     - removing those concerns from other parts of Buildbot.
 
     This class may be instantiated directly, creating an entirely default
-    configuration, or via :py:meth:`loadConfig`, which will load the
+    configuration, or via :py:meth:`FileLoader.loadConfig`, which will load the
     configuration from a config file.
 
     The following attributes are available from this class, representing the

@@ -77,7 +77,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
     # unclaimed; this should be at least 2 to avoid false positives
     UNCLAIMED_BUILD_FACTOR = 6
 
-    def __init__(self, basedir, configFileName="master.cfg", umask=None, reactor=None):
+    def __init__(self, basedir, configFileName=None, umask=None, reactor=None, config_loader=None):
         service.AsyncMultiService.__init__(self)
 
         if reactor is None:
@@ -91,6 +91,16 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         self.basedir = basedir
         if basedir is not None:  # None is used in tests
             assert os.path.isdir(self.basedir)
+
+        if config_loader is not None and configFileName is not None:
+            raise config.ConfigErrors([
+                "Can't specify both `config_loader` and `configFilename`.",
+            ])
+        elif config_loader is None:
+            if configFileName is None:
+                configFileName = 'master.cfg'
+            config_loader = config.FileLoader(self.basedir, configFileName)
+        self.config_loader = config_loader
         self.configFileName = configFileName
 
         # flag so we don't try to do fancy things before the master is ready
@@ -228,7 +238,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 # run the master.cfg in thread, so that it can use blocking code
                 self.config = yield threads.deferToThreadPool(
                     self.reactor, self.reactor.getThreadPool(),
-                    config.MasterConfig.loadConfig, self.basedir, self.configFileName)
+                    self.config_loader.loadConfig)
 
             except config.ConfigErrors as e:
                 log.msg("Configuration Errors:")
@@ -354,9 +364,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         failed = False
         try:
             # Run the master.cfg in thread, so that it cas use blocking code
-            new_config = yield threads.deferToThread(config.MasterConfig.loadConfig,
-                                                     self.basedir,
-                                                     self.configFileName)
+            new_config = yield threads.deferToThreadPool(
+                self.reactor, self.reactor.getThreadPool(),
+                self.config_loader.loadConfig)
             changes_made = True
             self.config = new_config
 

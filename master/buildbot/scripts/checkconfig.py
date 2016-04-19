@@ -24,8 +24,7 @@ from buildbot.util import in_reactor
 
 def _loadConfig(basedir, configFile, quiet):
     try:
-        config.MasterConfig.loadConfig(
-            basedir, configFile)
+        config.FileLoader(basedir, configFile).loadConfig()
     except config.ConfigErrors as e:
         if not quiet:
             print("Configuration Errors:", file=sys.stderr)

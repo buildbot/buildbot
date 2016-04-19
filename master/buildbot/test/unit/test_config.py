@@ -149,7 +149,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
     # utils
 
     def patch_load_helpers(self):
-        # patch out all of the "helpers" for laodConfig with null functions
+        # patch out all of the "helpers" for loadConfig with null functions
         for n in dir(config.MasterConfig):
             if n.startswith('load_'):
                 typ = 'loader'
@@ -213,14 +213,12 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
     def test_loadConfig_missing_file(self):
         self.assertRaisesConfigError(
             re.compile("configuration file .* does not exist"),
-            lambda: config.MasterConfig.loadConfig(
-                self.basedir, self.filename))
+            lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_missing_basedir(self):
         self.assertRaisesConfigError(
             re.compile("basedir .* does not exist"),
-            lambda: config.MasterConfig.loadConfig(
-                os.path.join(self.basedir, 'NO'), 'test.cfg'))
+            lambda: config.FileLoader(os.path.join(self.basedir, 'NO'), 'test.cfg').loadConfig())
 
     def test_loadConfig_open_error(self):
         """
@@ -239,15 +237,13 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         # check that we got the expected ConfigError exception
         self.assertRaisesConfigError(
             re.compile("unable to open configuration file .*: error_msg"),
-            lambda: config.MasterConfig.loadConfig(
-                self.basedir, self.filename))
+            lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_parse_error(self):
         self.install_config_file('def x:\nbar')
         self.assertRaisesConfigError(
             re.compile("encountered a SyntaxError while parsing config file:"),
-            lambda: config.MasterConfig.loadConfig(
-                self.basedir, self.filename))
+            lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
@@ -255,8 +251,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = { 'multiMaster': True }
                 config.error('oh noes!')""")
         self.assertRaisesConfigError("oh noes",
-                                     lambda: config.MasterConfig.loadConfig(
-                                         self.basedir, self.filename))
+                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_eval_ConfigErrors(self):
         # We test a config that has embedded errors, as well
@@ -268,8 +263,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 config.error('oh noes!')
                 config.error('noes too!')""")
         e = self.assertRaises(config.ConfigErrors,
-                              lambda: config.MasterConfig.loadConfig(
-                                  self.basedir, self.filename))
+                              lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
         self.assertEqual(e.errors, ['oh noes!', 'noes too!',
                                     'no workers are configured',
                                     'no builders are configured'])
@@ -277,8 +271,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
         self.assertRaisesConfigError("does not define 'BuildmasterConfig'",
-                                     lambda: config.MasterConfig.loadConfig(
-                                         self.basedir, self.filename))
+                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_unknown_key(self):
         self.patch_load_helpers()
@@ -286,8 +279,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict(foo=10)
                 """)
         self.assertRaisesConfigError("Unknown BuildmasterConfig key foo",
-                                     lambda: config.MasterConfig.loadConfig(
-                                         self.basedir, self.filename))
+                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_unknown_keys(self):
         self.patch_load_helpers()
@@ -295,16 +287,14 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict(foo=10, bar=20)
                 """)
         self.assertRaisesConfigError("Unknown BuildmasterConfig keys bar, foo",
-                                     lambda: config.MasterConfig.loadConfig(
-                                         self.basedir, self.filename))
+                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_success(self):
         self.patch_load_helpers()
         self.install_config_file("""\
                 BuildmasterConfig = dict()
                 """)
-        rv = config.MasterConfig.loadConfig(
-            self.basedir, self.filename)
+        rv = config.FileLoader(self.basedir, self.filename).loadConfig()
         self.assertIsInstance(rv, config.MasterConfig)
 
         # make sure all of the loaders and checkers are called
@@ -335,8 +325,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict()
                 """,
                                  {'basedir/subsidiary_module.py': "x = 10"})
-        rv = config.MasterConfig.loadConfig(
-            self.basedir, self.filename)
+        rv = config.FileLoader(self.basedir, self.filename).loadConfig()
         self.assertIsInstance(rv, config.MasterConfig)
 
     def test_preChangeGenerator(self):

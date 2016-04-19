@@ -23,6 +23,8 @@ import warnings
 
 from types import MethodType
 
+from zope.interface import implementer
+
 from twisted.python import failure
 from twisted.python import log
 
@@ -52,6 +54,9 @@ class ConfigErrors(Exception):
     def addError(self, msg):
         self.errors.append(msg)
 
+    def merge(self, errors):
+        self.errors.extend(errors.errors)
+
     def __nonzero__(self):
         return len(self.errors)
 
@@ -70,6 +75,85 @@ def error(error):
 def warnDeprecated(version, msg):
     # for now just log the deprecation
     log.msg("NOTE: [%s and later] %s" % (version, msg))
+
+
+@implementer(interfaces.IConfigLoader)
+class FileLoader(object):
+    def __init__(self, basedir, configFileName):
+        self.basedir = basedir
+        self.configFileName = configFileName
+
+    def loadConfig(self):
+        if not os.path.isdir(self.basedir):
+            raise ConfigErrors([
+                "basedir '%s' does not exist" % (self.basedir,),
+            ])
+        filename = os.path.join(self.basedir, self.configFileName)
+        if not os.path.exists(filename):
+            raise ConfigErrors([
+                "configuration file '%s' does not exist" % (filename,),
+            ])
+
+        try:
+            f = open(filename, "r")
+        except IOError as e:
+            raise ConfigErrors([
+                "unable to open configuration file %r: %s" % (filename, e),
+            ])
+
+        log.msg("Loading configuration from %r" % (filename,))
+
+        # execute the config file
+        localDict = {
+            'basedir': os.path.expanduser(self.basedir),
+            '__file__': os.path.abspath(filename),
+        }
+
+        # from here on out we can batch errors together for the user's
+        # convenience
+        global _errors
+        _errors = errors = ConfigErrors()
+
+        old_sys_path = sys.path[:]
+        sys.path.append(self.basedir)
+        try:
+            try:
+                exec(f, localDict)
+            except ConfigErrors as e:
+                for err in e.errors:
+                    error(err)
+                raise errors
+            except SyntaxError:
+                error("encountered a SyntaxError while parsing config file:\n%s " %
+                      (traceback.format_exc(),),
+                      )
+                raise errors
+            except Exception:
+                log.err(failure.Failure(), 'error while parsing config file:')
+                error("error while parsing config file: %s (traceback in logfile)" %
+                      (sys.exc_info()[1],),
+                      )
+                raise errors
+        finally:
+            f.close()
+            sys.path[:] = old_sys_path
+            _errors = None
+
+        if 'BuildmasterConfig' not in localDict:
+            error("Configuration file %r does not define 'BuildmasterConfig'"
+                  % (filename,),
+                  )
+
+        config_dict = localDict['BuildmasterConfig']
+        try:
+            config = MasterConfig.loadFromDict(config_dict, filename)
+        except ConfigErrors as e:
+            errors.merge(e)
+
+        if errors:
+            raise errors
+
+        return config
 
 
 class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
@@ -168,68 +252,9 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         }
 
     @classmethod
-    def loadConfig(cls, basedir, filename):
-        if not os.path.isdir(basedir):
-            raise ConfigErrors([
-                "basedir '%s' does not exist" % (basedir,),
-            ])
-        filename = os.path.join(basedir, filename)
-        if not os.path.exists(filename):
-            raise ConfigErrors([
-                "configuration file '%s' does not exist" % (filename,),
-            ])
-
-        try:
-            f = open(filename, "r")
-        except IOError as e:
-            raise ConfigErrors([
-                "unable to open configuration file %r: %s" % (filename, e),
-            ])
-
-        log.msg("Loading configuration from %r" % (filename,))
-
-        # execute the config file
-        localDict = {
-            'basedir': os.path.expanduser(basedir),
-            '__file__': os.path.abspath(filename),
-        }
-
-        # from here on out we can batch errors together for the user's
-        # convenience
+    def loadFromDict(cls, config_dict, filename):
         global _errors
         _errors = errors = ConfigErrors()
-
-        old_sys_path = sys.path[:]
-        sys.path.append(basedir)
-        try:
-            try:
-                exec(f, localDict)
-            except ConfigErrors as e:
-                for err in e.errors:
-                    error(err)
-                raise errors
-            except SyntaxError:
-                error("encountered a SyntaxError while parsing config file:\n%s " %
-                      (traceback.format_exc(),),
-                      )
-                raise errors
-            except Exception:
-                log.err(failure.Failure(), 'error while parsing config file:')
-                error("error while parsing config file: %s (traceback in logfile)" %
-                      (sys.exc_info()[1],),
-                      )
-                raise errors
-        finally:
-            f.close()
-            sys.path[:] = old_sys_path
-            _errors = None
-
-        if 'BuildmasterConfig' not in localDict:
-            error("Configuration file %r does not define 'BuildmasterConfig'"
-                  % (filename,),
-                  )
-
-        config_dict = localDict['BuildmasterConfig']
 
         # check for unknown keys
         unknown_keys = set(config_dict.keys()) - cls._known_config_keys
@@ -245,7 +270,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         # automatically
         config = cls()
 
-        _errors = errors
         # and defer the rest to sub-functions, for code clarity
         try:
             config.load_global(filename, config_dict)
