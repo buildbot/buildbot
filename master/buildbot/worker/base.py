@@ -776,7 +776,7 @@ class AbstractLatentWorker(AbstractWorker):
         self.building.remove(sb.builder_name)
         if not self.building:
             if self.build_wait_timeout == 0:
-                d = self.insubstantiate()
+                d = self.insubstantiate(disconnect=True)
                 # try starting builds for this worker after insubstantiating;
                 # this will cause the worker to re-substantiate immediately if
                 # there are pending build requests.
@@ -799,7 +799,7 @@ class AbstractLatentWorker(AbstractWorker):
             self.build_wait_timeout, self._soft_disconnect)
 
     @defer.inlineCallbacks
-    def insubstantiate(self, fast=False):
+    def insubstantiate(self, fast=False, disconnect=False):
         self.insubstantiating = True
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
@@ -810,6 +810,8 @@ class AbstractLatentWorker(AbstractWorker):
         self.substantiated = False
         self.building.clear()  # just to be sure
         yield d
+        if disconnect:
+            yield AbstractWorker.disconnect(self)
         self.insubstantiating = False
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
