@@ -754,6 +754,8 @@ Here is a fully-worked example::
 
 .. index:: Forced Builds
 
+.. _ForceScheduler:
+
 ForceScheduler Scheduler
 ::::::::::::::::::::::::
 
