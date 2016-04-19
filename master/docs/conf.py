@@ -48,7 +48,8 @@ extensions = [
     'bbdocs.ext',
     'bbdocs.highlighterrors',
     'sphinxcontrib.blockdiag',
-    'sphinxcontrib.jinja'
+    'sphinxcontrib.jinja',
+    'sphinxcontrib.spelling',
 ]
 todo_include_todos = True
 
@@ -275,3 +276,6 @@ man_pages = [
 jinja_contexts = {
     "data_api": {'raml': RamlSpec()}
 }
+
+# Spelling options
+spelling_show_suggestions = True

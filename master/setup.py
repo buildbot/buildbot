@@ -476,6 +476,8 @@ else:
         'docs': [
             'sphinx',
             'sphinxcontrib-blockdiag',
+            'sphinxcontrib-spelling',
+            'pyenchant',
             'docutils>=0.8',
             'ramlfications',
             'sphinx-jinja',

@@ -136,6 +136,12 @@ linkcheck: conf.py
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
+spelling: conf.py
+	$(SPHINXBUILD) -b spelling $(ALLSPHINXOPTS) $(BUILDDIR)/spelling
+	@echo
+	@echo "Spelling check complete; look for any errors in the above output " \
+	      "or in $(BUILDDIR)/spelling/output.txt."
+
 doctest: conf.py
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
