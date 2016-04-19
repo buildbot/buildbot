@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import re
+
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.reporters import http
@@ -24,9 +29,6 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from twisted.internet import defer
-from twisted.python import log
-import re
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
