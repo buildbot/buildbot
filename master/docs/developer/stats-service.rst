@@ -82,7 +82,7 @@ Data is captured according to the master config file and then, is sent to each o
 
 Each storage backend has a Python client defined as part of :mod:`buildbot.statistics.storage_backends` to aid in posting data by :class:`StatsService`.
 
-Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage backend.
+Currently, only `InfluxDB`_ is supported as a storage backend.
 
 .. py:class:: buildbot.statistis.storage_backends.base.StatsStorageBase
 
@@ -105,7 +105,7 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
 
 .. py:class:: buildbot.statistics.storage_backends.influxdb_client.InfluxStorageService
 
-   `InfluxDB <http://influxdb.com>`_ is a distributed, time series database that employs a key-value pair storage system.
+   `InfluxDB`_ is a distributed, time series database that employs a key-value pair storage system.
 
    This class is a Buildbot client to the InfluxDB storage backend.
    It is available in the configuration as ``statistics.InfluxStorageService``.
@@ -139,6 +139,8 @@ Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage back
         It is a dict of key-value pairs.
 
       This method constructs a dictionary of data to be sent to InfluxDB in the proper format and sends the data to the influxDB instance.
+
+.. _InfluxDB: https://influxdata.com/time-series-platform/influxdb/
 
 Capture Classes
 ---------------

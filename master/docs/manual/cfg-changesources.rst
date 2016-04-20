@@ -836,7 +836,7 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 
 ``owner``
     The owner of the Bitbucket repository.
-    All Bitbucket Urls are of the form https://bitbucket.org/owner/slug/.
+    All Bitbucket Urls are of the form ``https://bitbucket.org/owner/slug/``.
 
 ``slug``
     The name of the Bitbucket repository.

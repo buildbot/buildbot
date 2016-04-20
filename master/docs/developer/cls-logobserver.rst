@@ -98,7 +98,7 @@ LogObservers
 
     .. warning::
 
-        This use of generator functions is a simple Python idiom first described in [PEP 342](http://www.python.org/dev/peps/pep-0342/).
+        This use of generator functions is a simple Python idiom first described in `PEP 342 <https://www.python.org/dev/peps/pep-0342/>`__.
         It is unrelated to the generators used in ``inlineCallbacks``.
         In fact, consumers of this type are incompatible with asynchronous programming, as each line must be processed immediately.
 

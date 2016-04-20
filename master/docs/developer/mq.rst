@@ -146,7 +146,7 @@ Wamp
     The :py:class:`WampConnector` class implements a buildbot service for wamp.
     It is managed outside of the mq module as this protocol can also be reused for worker protocol.
     The connector support queuing of requests until the wamp connection is created, but do not support disconnection and reconnection.
-    Reconnection will be supported as part of a next release of AutobahnPython (https://github.com/tavendo/AutobahnPython/issues/295).
+    Reconnection will be supported as part of a next release of AutobahnPython (https://github.com/crossbario/autobahn-python/issues/295).
     There is a chicken and egg problem at the buildbot initialization phasis, so the produce messages are actually not sent with deferred.
 
 .. _queue-schema:

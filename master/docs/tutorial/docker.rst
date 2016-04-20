@@ -39,7 +39,7 @@ Current Docker dependencies
 Installation
 ------------
 
-* Use the `Docker installation instructions <https://docs.docker.com/installation/>`_ for your operating system.
+* Use the `Docker installation instructions <https://docs.docker.com/engine/installation/>`_ for your operating system.
 * Test docker is happy in your environment:
 
   .. code-block:: bash

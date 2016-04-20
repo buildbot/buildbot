@@ -37,7 +37,7 @@ On top of Angular we use nodeJS tools to ease development
 modules we may or may not want to include:
 
 * `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
-* `ngGrid <http://angular-ui.github.com/ng-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
+* `ngGrid <https://angular-ui.github.io/ui-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
 * `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
 * `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation.
   Having it inside allows for all kind of hacks we may want to avoid.

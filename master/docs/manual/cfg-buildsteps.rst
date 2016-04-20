@@ -1564,8 +1564,8 @@ Robocopy
 
 This step runs ``robocopy`` on Windows.
 
-`Robocopy <http://technet.microsoft.com/en-us/library/cc733145.aspx>`_ is available in versions of Windows starting with Windows Vista and Windows Server 2008.
-For previous versions of Windows, it's available as part of the `Windows Server 2003 Resource Kit Tools <http://www.microsoft.com/en-us/download/details.aspx?id=17657>`_.
+`Robocopy <https://technet.microsoft.com/en-us/library/cc733145.aspx>`_ is available in versions of Windows starting with Windows Vista and Windows Server 2008.
+For previous versions of Windows, it's available as part of the `Windows Server 2003 Resource Kit Tools <https://www.microsoft.com/en-us/download/details.aspx?id=17657>`_.
 
 ::
 
@@ -1882,7 +1882,7 @@ PyFlakes
 
 .. py:class:: buildbot.steps.python.PyFlakes
 
-`PyFlakes <http://divmod.org/trac/wiki/DivmodPyflakes>`_ is a tool to perform basic static analysis of Python code to look for simple errors, like missing imports and references of undefined names.
+`PyFlakes <https://launchpad.net/pyflakes>`_ is a tool to perform basic static analysis of Python code to look for simple errors, like missing imports and references of undefined names.
 It is like a fast and simple form of the C :command:`lint` program.
 Other tools (like `pychecker <http://pychecker.sourceforge.net/>`_\) provide more detailed results but take longer to run.
 

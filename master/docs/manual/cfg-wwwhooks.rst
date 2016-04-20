@@ -251,7 +251,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
         change_hook_auth=["file:changehook.passwd"]
     )
 
-Then, create a GitLab service hook (see https://your.gitlab.server/help/web_hooks) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitlab``.
+Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -282,7 +282,7 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
         change_hook_auth=["file:changehook.passwd"]
     )
 
-Then, create a Gitorious web hook (see http://gitorious.org/gitorious/pages/WebHooks) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitorious``.
+Then, create a Gitorious web hook with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitorious``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 

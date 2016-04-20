@@ -311,7 +311,7 @@ It is that ``amanda`` subdirectory whose name becomes the ``project`` field of t
 Another common way to organize a Subversion repository is to put the branch name at the top, and the projects underneath.
 This is especially frequent when there are a number of related sub-projects that all get released in a group.
 
-For example, `Divmod.org <http://Divmod.org>`_ hosts a project named `Nevow` as well as one named `Quotient`.
+For example, ``Divmod.org`` hosts a project named `Nevow` as well as one named `Quotient`.
 In a checked-out Nevow tree there is a directory named `formless` that contains a Python source file named :file:`webform.py`.
 This repository is accessible via webdav (and thus uses an `http:` scheme) through the divmod.org hostname.
 There are many branches in this repository, and they use a ``({BRANCHNAME})/({PROJECT})`` naming policy.

@@ -108,4 +108,4 @@ Contrib Scripts
 ~~~~~~~~~~~~~~~
 
 While some features of Buildbot are included in the distribution, others are only available in :file:`contrib/` in the source directory.
-The latest versions of such scripts are available at http://github.com/buildbot/buildbot/tree/master/master/contrib.
+The latest versions of such scripts are available at :src:`master/contrib`.

@@ -593,7 +593,7 @@ Statistics Service
 ~~~~~~~~~~~~~~~~~~
 
 The Statistics Service (stats service for short) supports for collecting arbitrary data from within a running Buildbot instance and export it do a number of storage backends.
-Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage backend.
+Currently, only `InfluxDB`_ is supported as a storage backend.
 Also, InfluxDB (or any other storage backend) is not a mandatory dependency.
 Buildbot can run without it although :class:`StatsService` will be of no use in such a case.
 At present, :class:`StatsService` can keep track of build properties, build times (start, end, duration) and arbitrary data produced inside Buildbot (more on this later).
@@ -803,12 +803,12 @@ Storage backends are responsible for storing any statistics data sent to them.
 A storage backend will generally be some sort of a database-server running on a machine.
 (*Note*: This machine may be different from the one running :class:`BuildMaster`)
 
-Currently, only `InfluxDB <http://influxdb.com>`_ is supported as a storage backend.
+Currently, only `InfluxDB`_ is supported as a storage backend.
 
 .. py:class:: buildbot.statistics.storage_backends.influxdb_client.InfluxStorageService
    :noindex:
 
-   This class is a Buildbot client to the InfluxDB storage backend. `InfluxDB <http://influxdb.com>`_ is a distributed, time series database that employs a key-value pair storage system.
+   This class is a Buildbot client to the InfluxDB storage backend. `InfluxDB`_ is a distributed, time series database that employs a key-value pair storage system.
 
    It requires the following arguments:
 
@@ -946,3 +946,4 @@ This codebase will then be a logical name for the combination of repository and 
 The `codebaseGenerator` accepts a change dictionary as produced by the :py:class:`buildbot.db.changes.ChangesConnectorComponent <changes connector component>`, with a changeid equal to `None`.
 
 .. _TwistedConch: http://twistedmatrix.com/trac/wiki/TwistedConch
+.. _InfluxDB: https://influxdata.com/time-series-platform/influxdb/
