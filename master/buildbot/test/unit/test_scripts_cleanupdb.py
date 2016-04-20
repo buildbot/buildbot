@@ -43,6 +43,19 @@ def mkconfig(**kwargs):
     return config
 
 
+def patch_environ(case, key, value):
+    """
+    Add an environment variable for the duration of a test.
+    """
+    old_environ = os.environ.copy()
+
+    def cleanup():
+        os.environ.clear()
+        os.environ.update(old_environ)
+    os.environ[key] = value
+    case.addCleanup(cleanup)
+
+
 class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                     db.RealDatabaseMixin, unittest.TestCase):
 
@@ -86,6 +99,12 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     @defer.inlineCallbacks
     def test_cleanup_bad_config2(self):
+        # test may use mysql or pg if configured in env
+        if "BUILDBOT_TEST_DB_URL" not in os.environ:
+
+            patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
+                                                                             "basedir", "state.sqlite"))
+
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
         res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
@@ -98,8 +117,9 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
         # test may use mysql or pg if configured in env
         if "BUILDBOT_TEST_DB_URL" not in os.environ:
-            os.environ["BUILDBOT_TEST_DB_URL"] = "sqlite:///" + os.path.join(self.origcwd,
-                                                                             "basedir", "state.sqlite")
+
+            patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
+                                                                             "basedir", "state.sqlite"))
         # we reuse RealDatabaseMixin to setup the db
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
