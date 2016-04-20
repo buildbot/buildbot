@@ -280,7 +280,7 @@ jinja_contexts = {
 
 # Spell checker.
 try:
-    import enchant as _  # noqa
+    import enchant  # noqa # pylint: disable=unused-import
 except ImportError as ex:
     print("enchant module import failed:\n"
           "{0}\n"
