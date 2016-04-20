@@ -466,6 +466,12 @@ else:
         ],
         'tls': [
             'Twisted[tls] ' + twisted_ver,
+            # There are bugs with extras inside extras:
+            # <https://github.com/pypa/pip/issues/3516>
+            # so we explicitly include Twisted[tls] dependencies.
+            'pyopenssl >= 0.13',
+            'service_identity',
+            'idna >= 0.6',
         ],
         'docs': [
             # TODO: Pin Sphinx version to workaround http://trac.buildbot.net/ticket/3408
