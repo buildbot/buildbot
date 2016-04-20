@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+from __future__ import print_function
 
-from twisted.python import log
+import os
 
 
 def isWorkerDir(dir):
     def print_error(error_message):
-        log.msg("%s\ninvalid worker directory '%s'" % (error_message, dir))
+        print("%s\ninvalid worker directory '%s'" % (error_message, dir))
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:

@@ -23,7 +23,7 @@ from twisted.trial import unittest
 
 
 class TestRestart(misc.IsWorkerDirMixin,
-                  misc.LoggingMixin,
+                  misc.StdoutAssertionsMixin,
                   unittest.TestCase):
 
     """
@@ -32,7 +32,7 @@ class TestRestart(misc.IsWorkerDirMixin,
     config = {"basedir": "dummy", "nodaemon": False, "quiet": False}
 
     def setUp(self):
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
         # patch start.startWorker() to do nothing
         self.startWorker = mock.Mock()
@@ -70,8 +70,8 @@ class TestRestart(misc.IsWorkerDirMixin,
                                                  self.config["quiet"],
                                                  self.config["nodaemon"])
 
-        self.assertLogged("no old worker process found to stop")
-        self.assertLogged("now restarting worker process..")
+        self.assertStdoutEqual("no old worker process found to stop\n"
+                               "now restarting worker process..\n")
 
     def test_restart(self):
         """
@@ -89,4 +89,4 @@ class TestRestart(misc.IsWorkerDirMixin,
         self.startWorker.assert_called_once_with(self.config["basedir"],
                                                  self.config["quiet"],
                                                  self.config["nodaemon"])
-        self.assertLogged("now restarting worker process..")
+        self.assertStdoutEqual("now restarting worker process..\n")

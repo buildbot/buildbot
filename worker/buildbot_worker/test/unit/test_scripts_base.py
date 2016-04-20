@@ -15,7 +15,6 @@
 
 import io
 import os
-import re
 import sys
 
 from buildbot_worker.scripts import base
@@ -23,7 +22,8 @@ from buildbot_worker.test.util import misc
 from twisted.trial import unittest
 
 
-class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
+class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,
+                      unittest.TestCase):
 
     """Test buildbot_worker.scripts.base.isWorkerDir()"""
 
@@ -32,17 +32,16 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
         self.mocked_stdout = io.BytesIO()
         self.patch(sys, "stdout", self.mocked_stdout)
 
-        self.setUpLogging()
-
         # generate OS specific relative path to buildbot.tac inside basedir
         self.tac_file_path = os.path.join("testdir", "buildbot.tac")
 
     def assertReadErrorMessage(self, strerror):
-
-        self.assertLogged(
-            re.escape("error reading '%s': %s" % (
-                self.tac_file_path, strerror)),
-            "invalid worker directory 'testdir'")
+        expected_message = "error reading '%s': %s\n" \
+                           "invalid worker directory 'testdir'\n" \
+            % (self.tac_file_path, strerror)
+        self.assertEqual(self.mocked_stdout.getvalue(),
+                         expected_message,
+                         "unexpected error message on stdout")
 
     def test_open_error(self):
         """Test that open() errors are handled."""
@@ -83,11 +82,11 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):
         # check that isWorkerDir() flags directory as invalid
         self.assertFalse(base.isWorkerDir("testdir"))
 
-        # check that correct error message was printed to the log
-        self.assertLogged(
-            re.escape("unexpected content in '%s'" % self.tac_file_path),
-            "invalid worker directory 'testdir'",
-            "unexpected error message on stdout")
+        # check that correct error message was printed to stdout
+        self.assertEqual(self.mocked_stdout.getvalue(),
+                         "unexpected content in '%s'\n" % self.tac_file_path +
+                         "invalid worker directory 'testdir'\n",
+                         "unexpected error message on stdout")
         # check that open() was called with correct path
         self.open.assert_called_once_with(self.tac_file_path)
 

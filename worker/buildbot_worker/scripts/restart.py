@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log
+from __future__ import print_function
 
 from buildbot_worker.scripts import base
 from buildbot_worker.scripts import start
@@ -31,8 +31,8 @@ def restart(config):
         stop.stopWorker(basedir, quiet)
     except stop.WorkerNotRunning:
         if not quiet:
-            log.msg("no old worker process found to stop")
+            print("no old worker process found to stop")
     if not quiet:
-        log.msg("now restarting worker process..")
+        print("now restarting worker process..")
 
     return start.startWorker(basedir, quiet, config['nodaemon'])

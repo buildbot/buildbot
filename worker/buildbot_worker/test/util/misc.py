@@ -14,11 +14,13 @@
 # Copyright Buildbot Team Members
 
 import __builtin__
+import cStringIO
 import errno
 import mock
 import os
-import shutil
 import re
+import shutil
+import sys
 
 from twisted.python import log
 
@@ -165,3 +167,26 @@ class LoggingMixin(object):
 
     def assertWasQuiet(self):
         self.assertEqual(self._logEvents, [])
+
+
+class StdoutAssertionsMixin(object):
+
+    """
+    Mix this in to be able to assert on stdout during the test
+    """
+
+    def setUpStdoutAssertions(self):
+        self.stdout = cStringIO.StringIO()
+        self.patch(sys, 'stdout', self.stdout)
+
+    def assertWasQuiet(self):
+        self.assertEqual(self.stdout.getvalue(), '')
+
+    def assertInStdout(self, exp):
+        self.assertIn(exp, self.stdout.getvalue())
+
+    def assertStdoutEqual(self, exp, msg=None):
+        self.assertEqual(exp, self.stdout.getvalue(), msg)
+
+    def getStdout(self):
+        return self.stdout.getvalue().strip()

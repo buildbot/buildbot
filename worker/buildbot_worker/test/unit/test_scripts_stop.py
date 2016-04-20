@@ -26,7 +26,7 @@ from twisted.trial import unittest
 
 
 class TestStopWorker(misc.FileIOMixin,
-                     misc.LoggingMixin,
+                     misc.StdoutAssertionsMixin,
                      unittest.TestCase):
 
     """
@@ -35,7 +35,7 @@ class TestStopWorker(misc.FileIOMixin,
     PID = 9876
 
     def setUp(self):
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
         # patch os.chdir() to do nothing
         self.patch(os, "chdir", mock.Mock())
@@ -75,16 +75,16 @@ class TestStopWorker(misc.FileIOMixin,
         self.patch(time, "sleep", mock.Mock())
 
         # check that stopWorker() sends expected signal to right PID
-        # and print correct message to the log
+        # and print correct message to stdout
         stop.stopWorker(None, False)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
 
-        self.assertLogged("worker process %s is dead" % self.PID)
+        self.assertStdoutEqual("worker process %s is dead\n" % self.PID)
 
 
 class TestStop(misc.IsWorkerDirMixin,
-               misc.LoggingMixin,
+               misc.StdoutAssertionsMixin,
                unittest.TestCase):
 
     """
@@ -110,7 +110,7 @@ class TestStop(misc.IsWorkerDirMixin,
         """
         test calling stop() when no worker is running
         """
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
         # patch basedir check to always succeed
         self.setupUpIsWorkerDir(True)
@@ -121,7 +121,7 @@ class TestStop(misc.IsWorkerDirMixin,
 
         stop.stop(self.config)
 
-        self.assertLogged("worker not running")
+        self.assertStdoutEqual("worker not running\n")
 
     def test_successful_stop(self):
         """
@@ -137,5 +137,5 @@ class TestStop(misc.IsWorkerDirMixin,
 
         stop.stop(self.config)
         mock_stopWorker.assert_called_once_with(self.config["basedir"],
-                                               self.config["quiet"],
-                                               "TERM")
+                                                self.config["quiet"],
+                                                "TERM")

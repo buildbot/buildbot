@@ -16,6 +16,8 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 
+from __future__ import print_function
+
 import os
 import re
 import sys
@@ -227,7 +229,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot_worker
-        log.msg("worker version: %s" % buildbot_worker.version)
+        print("worker version: %s" % buildbot_worker.version)
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
@@ -243,10 +245,10 @@ def run():
     try:
         config.parseOptions()
     except usage.error as e:
-        log.msg("%s:  %s" % (sys.argv[0], e))
-        log.msg()
+        print("%s:  %s" % (sys.argv[0], e))
+        print()
         c = getattr(config, 'subOptions', config)
-        log.msg(str(c))
+        print(str(c))
         sys.exit(1)
 
     subconfig = config.subOptions
