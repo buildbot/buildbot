@@ -23,10 +23,10 @@ ERROR = 'ERROR'
 UNKNOWN = 'UNKNOWN'
 
 
-# Parts used from novaclient.v1_1.
+# Parts used from novaclient
 class Client():
 
-    def __init__(self, username, password, tenant_name, auth_url):
+    def __init__(self, version, username, password, tenant_name, auth_url):
         self.images = Images()
         self.servers = Servers()
 

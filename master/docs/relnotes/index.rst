@@ -30,6 +30,7 @@ Features
 Fixes
 ~~~~~
 
+* OpenStackLatentWorker uses the novaclient API correctly now.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

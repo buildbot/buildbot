@@ -17,7 +17,7 @@ import time
 
 try:
     import novaclient.exceptions as nce
-    from novaclient.v1_1 import client
+    from novaclient import client
     _hush_pyflakes = [nce, client]
 except ImportError:
     nce = None
@@ -30,7 +30,6 @@ from twisted.python import log
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
-
 
 ACTIVE = 'ACTIVE'
 BUILD = 'BUILD'
@@ -55,6 +54,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  # Have a nova_args parameter to allow passing things directly
                  # to novaclient v1.1.
                  nova_args=None,
+                 client_version='1.1',
                  **kwargs):
 
         if not client or not nce:
@@ -71,6 +71,8 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.os_password = os_password
         self.os_tenant_name = os_tenant_name
         self.os_auth_url = os_auth_url
+        self.client_version = client_version
+
         if block_devices is not None:
             self.block_devices = [self._parseBlockDevice(bd) for bd in block_devices]
         else:
@@ -119,7 +121,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
 
     def _start_instance(self):
         # Authenticate to OpenStack.
-        os_client = client.Client(self.os_username, self.os_password,
+        os_client = client.Client(self.client_version, self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
         image_uuid = self._getImage(os_client, self.image)
         boot_args = [self.workername, image_uuid, self.flavor]
@@ -175,7 +177,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
     def _stop_instance(self, instance, fast):
         # Authenticate to OpenStack. This is needed since it seems the update
         # method doesn't do a whole lot of updating right now.
-        os_client = client.Client(self.os_username, self.os_password,
+        os_client = client.Client(self.client_version, self.os_username, self.os_password,
                                   self.os_tenant_name, self.os_auth_url)
         # When the update method does work, replace the lines like below with
         # instance.update().

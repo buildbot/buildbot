@@ -12,6 +12,11 @@ This document will guide you through setup of an OpenStack latent worker:
    :depth: 1
    :local:
 
+Install dependencies
+--------------------
+
+OpenStackLatentWorker requires python-novaclient to work, you can install it with pip install python-novaclient.
+
 Get an Account in an OpenStack cloud
 ------------------------------------
 
@@ -94,7 +99,12 @@ These are the same details set in either environment variables or passed as opti
 ``nova_args``
     (optional)
     A dict that will be appended to the arguments when creating a VM.
-    Buildbot uses the OpenStack Nova version 1.1 API.
+    Buildbot uses the OpenStack Nova version 1.1 API by default (see client_version).
+
+``client_version``
+    (optional)
+    Nova client version to use. Defaults to 1.1 (deprecated). Use 2 or 2.minor for
+    version 2 API.
 
 Here is the simplest example of configuring an OpenStack latent worker.
 
