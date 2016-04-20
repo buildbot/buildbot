@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from __future__ import print_function
 from future.utils import itervalues
-from importlib import import_module
 
 import StringIO
 import os
@@ -52,26 +51,17 @@ class DictLoader(object):
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     proto = "null"
-    # If True the test cases must handle the configuration
-    # of the master in the self.master attribute themselves.
-    # The setupConfig could help the module in that task.
-    # Note that whether testCaseHandleTheirSetup is False or True
-    # in all cases, tearDown that stops the master defined in self.master
-    # will be called.
-    testCasesHandleTheirSetup = False
 
     if BuildSlave is None:
         skip = "buildbot-slave package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, configFunc):
+    def setupConfig(self, config_dict):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
-        @type configFunc: string
-        @param configFunc: name of a function
-        without argument defined in the test module
-        that returns a BuildmasterConfig object.
+        @type config_dict: dict
+        @param configFunc: The BuildmasterConfig dictionary.
         """
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
@@ -90,7 +80,6 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             proto = {"null": {}}
             workerclass = worker.LocalWorker
 
-        config_dict = getattr(import_module(self.__class__.__module__), configFunc)()
         config_dict['workers'] = [workerclass("local1", "localpw")]
         config_dict['protocols'] = proto
         # create the master and set its config
@@ -120,11 +109,6 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             self.w = None
         if self.w is not None:
             self.w.setServiceParent(m)
-
-    def setUp(self):
-        if self.testCasesHandleTheirSetup:
-            return defer.succeed(None)
-        return self.setupConfig("masterConfig")
 
     @defer.inlineCallbacks
     def tearDown(self):

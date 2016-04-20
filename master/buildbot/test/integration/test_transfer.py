@@ -40,6 +40,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_transfer(self):
+        yield self.setupConfig(masterConfig())
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)

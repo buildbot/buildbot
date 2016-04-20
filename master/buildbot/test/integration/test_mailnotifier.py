@@ -31,7 +31,6 @@ class MailMaster(RunMasterBase):
         def sendmail(_, mail, recipients):
             self.mailDeferred.callback((mail, recipients))
         self.patch(MailNotifier, "sendmail", sendmail)
-        return RunMasterBase.setUp(self)
 
     @defer.inlineCallbacks
     def doTest(self):
@@ -57,11 +56,14 @@ class MailMaster(RunMasterBase):
         else:  # b64encode and remove '=' padding (hence [:-1])
             self.assertIn(base64.b64encode(text).rstrip("="), mail)
 
+    @defer.inlineCallbacks
     def test_notifiy_for_build(self):
-        return self.doTest()
+        yield self.setupConfig(masterConfig())
+        yield self.doTest()
 
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
+        yield self.setupConfig(masterConfig())
         self.master.config.services = [MailNotifier("bot@foo.com", mode="all", buildSetSummary=True)]
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         yield self.doTest()

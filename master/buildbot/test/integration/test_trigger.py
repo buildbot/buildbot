@@ -42,6 +42,7 @@ class TriggeringMaster(RunMasterBase):
     @flaky(bugNumber=3339)
     @defer.inlineCallbacks
     def test_trigger(self):
+        yield self.setupConfig(masterConfig())
 
         change = dict(branch="master",
                       files=["foo.c"],

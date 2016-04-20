@@ -28,6 +28,7 @@ class CustomServiceMaster(RunMasterBase):
     @flaky(bugNumber=3340)
     @defer.inlineCallbacks
     def test_customService(self):
+        yield self.setupConfig(masterConfig())
 
         build = yield self.doForceBuild(wantSteps=True)
 
