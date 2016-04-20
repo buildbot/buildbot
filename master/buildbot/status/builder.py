@@ -20,7 +20,6 @@ import re
 
 from twisted.persisted import styles
 from twisted.python import log
-from twisted.python import runtime
 
 from zope.interface import implements
 
@@ -140,42 +139,10 @@ class BuilderStatus(styles.Versioned):
             del self.category
         self.wasUpgraded = True
 
-    def determineNextBuildNumber(self):
-        """Scan our directory of saved BuildStatus instances to determine
-        what our self.nextBuildNumber should be. Set it one larger than the
-        highest-numbered build we discover. This is called by the top-level
-        Status object shortly after we are created or loaded from disk.
-        """
-        existing_builds = [int(f)
-                           for f in os.listdir(self.basedir)
-                           if re.match(r"^\d+$", f)]
-        if existing_builds:
-            self.nextBuildNumber = max(existing_builds) + 1
-        else:
-            self.nextBuildNumber = 0
-
     def saveYourself(self):
-        for b in self.currentBuilds:
-            if not b.isFinished:
-                # interrupted build, need to save it anyway.
-                # BuildStatus.saveYourself will mark it as interrupted.
-                b.saveYourself()
-        filename = os.path.join(self.basedir, "builder")
-        tmpfilename = filename + ".tmp"
-        try:
-            with open(tmpfilename, "wb") as f:
-                pickle.dump(self, f, -1)
-            if runtime.platformType == 'win32':
-                # windows cannot rename a file on top of an existing one
-                if os.path.exists(filename):
-                    os.unlink(filename)
-            os.rename(tmpfilename, filename)
-        except Exception:
-            log.msg("unable to save builder %s" % self.name)
-            log.err()
+        return
 
     # build cache management
-
     def setCacheSize(self, size):
         self.buildCache.set_max_size(size)
 
@@ -550,17 +517,7 @@ class BuilderStatus(styles.Versioned):
                 log.err()
 
     def newBuild(self):
-        """The Builder has decided to start a build, but the Build object is
-        not yet ready to report status (it has not finished creating the
-        Steps). Create a BuildStatus object that it can use."""
-        number = self.nextBuildNumber
-        self.nextBuildNumber += 1
-        # TODO: self.saveYourself(), to make sure we don't forget about the
-        # build number we've just allocated. This is not quite as important
-        # as it was before we switch to determineNextBuildNumber, but I think
-        # it may still be useful to have the new build save itself.
-        s = BuildStatus(self, self.master, number)
-        s.waitUntilFinished().addCallback(self._buildFinished)
+        s = BuildStatus(self, self.master, 0)
         return s
 
     # buildStarted is called by our child BuildStatus instances
