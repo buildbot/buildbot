@@ -526,3 +526,25 @@ List of database-related changes in API (fallback for old API is provided):
 
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
      - :py:attr:`buildbot.db.connector.DBConnector.workers`
+
+``buildbot-worker``
+-------------------
+
+``buildbot-slave`` package has been deprecated in favor of ``buildbot-worker`` package.
+
+``buildbot-worker`` has backward incompatible changes and requires buildmaster >= 0.9.0b8.
+``buildbot-slave`` will work with both 0.8.x and 0.9.x versions of buildmaster, so there is no need to upgrade currently deployed buildbot-slaves during switch from 0.8.x to 0.9.x.
+
+.. list-table:: Master/worker compatibility table
+   :header-rows: 1
+   :stub-columns: 1
+
+   * -
+     - master 0.8.x
+     - master 0.9.x
+   * - buildbot-slave
+     - yes
+     - yes
+   * - buildbot-worker
+     - no
+     - yes
