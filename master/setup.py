@@ -474,8 +474,7 @@ else:
             'idna >= 0.6',
         ],
         'docs': [
-            # TODO: Pin Sphinx version to workaround http://trac.buildbot.net/ticket/3408
-            'sphinx==1.3.3',
+            'sphinx',
             'sphinxcontrib-blockdiag',
             'docutils>=0.8',
             'ramlfications',
