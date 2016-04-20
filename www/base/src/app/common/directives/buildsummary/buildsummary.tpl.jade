@@ -1,32 +1,34 @@
 .panel.panel-default(ng-class="results2class(buildsummary.build)")
   .panel-heading.no-select
-    .btn.btn-xs.btn-default(ng-click="buildsummary.toggleFullDisplay()", title="Expand all step logs")
-        i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':buildsummary.fulldisplay}")
-    .btn.btn-xs.btn-default(ng-click="buildsummary.toggleDetails()", title="Show steps according to their importance")
-        i.fa.fa-expand
-        {{buildsummary.levelOfDetails()}}
-    | &nbsp;
-    span(ng-if="buildsummary.prefix") {{buildsummary.prefix}}&nbsp;
-    a(ui-sref="build({builder:buildsummary.builder.builderid, build:buildsummary.build.number})")
-      | {{buildsummary.builder.name}}/{{buildsummary.build.number}}
-    .pull-right
-      span(ng-show="buildsummary.build.complete")
-          | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
-      span(ng-show="!buildsummary.build.complete")
-          | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
-      span
-        | &nbsp;{{buildsummary.build.state_string}}&nbsp;
-      .label(ng-class="results2class(buildsummary.build)")
-        | {{results2text(buildsummary.build)}}
-      span(ng-if="buildsummary.parentbuild")
-          | &nbsp;
-          a.label(ng-class="results2class(buildsummary.parentbuild)",
-          ui-sref="build({builder:buildsummary.parentbuilder.builderid, build:buildsummary.parentbuild.number})")
-                | {{buildsummary.parentrelationship}}:
-                | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
+    .row
+      .col-sm-6
+        .btn.btn-xs.btn-default(ng-click="buildsummary.toggleFullDisplay()", title="Expand all step logs")
+            i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':buildsummary.fulldisplay}")
+        .btn.btn-xs.btn-default(ng-click="buildsummary.toggleDetails()", title="Show steps according to their importance")
+            i.fa.fa-expand
+            {{buildsummary.levelOfDetails()}}
+        | &nbsp;
+        span(ng-if="buildsummary.prefix") {{buildsummary.prefix}}&nbsp;
+        a(ui-sref="build({builder:buildsummary.builder.builderid, build:buildsummary.build.number})")
+          | {{buildsummary.builder.name}}/{{buildsummary.build.number}}&nbsp;
+        span(ng-if="buildsummary.reason") |&nbsp;{{buildsummary.reason}}
+      .col-sm-6.text-right
+          span(ng-show="buildsummary.build.complete")
+              | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
+          span(ng-show="!buildsummary.build.complete")
+              | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
+          span
+            | &nbsp;{{buildsummary.build.state_string}}&nbsp;
+          .label(ng-class="results2class(buildsummary.build)")
+            | {{results2text(buildsummary.build)}}
+          span(ng-if="buildsummary.parentbuild")
+              | &nbsp;
+              a.label(ng-class="results2class(buildsummary.parentbuild)",
+              ui-sref="build({builder:buildsummary.parentbuilder.builderid, build:buildsummary.parentbuild.number})")
+                    | {{buildsummary.parentrelationship}}:
+                    | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
   ul.list-group.no-select
     li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)", ng-repeat="step in buildsummary.steps")
-
       div(ng-click="step.fulldisplay=!step.fulldisplay")
           span.pull-right(ng-if="step.started_at")
             span(ng-show="step.complete")
