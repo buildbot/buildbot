@@ -1295,7 +1295,7 @@ In addition to the parameters :bb:step:`ShellCommand` supports, this step accept
     See `cmake-generators(7) <https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html>`_ for available options.
 
 ``definitions``
-    A dictionary that contains parameters that will be converted to :option:`-D{name}={value}` when passed to CMake.
+    A dictionary that contains parameters that will be converted to ``-D{name}={value}`` when passed to CMake.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``options``
