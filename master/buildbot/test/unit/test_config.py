@@ -136,6 +136,93 @@ class ConfigErrors(unittest.TestCase):
         self.assertEqual(str(ex), "a\nc")
 
 
+class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousTestCase):
+
+    def setUp(self):
+        self.basedir = os.path.abspath('basedir')
+        self.filename = os.path.join(self.basedir, 'test.cfg')
+        return self.setUpDirs('basedir')
+
+    def tearDown(self):
+        return self.tearDownDirs()
+
+    def install_config_file(self, config_file, other_files={}):
+        config_file = textwrap.dedent(config_file)
+        with open(os.path.join(self.basedir, self.filename), "w") as f:
+            f.write(config_file)
+        for file, contents in iteritems(other_files):
+            with open(file, "w") as f:
+                f.write(contents)
+
+    def test_loadConfig_missing_file(self):
+        self.assertRaisesConfigError(
+            re.compile("configuration file .* does not exist"),
+            lambda: config.loadConfigDict(self.basedir, self.filename))
+
+    def test_loadConfig_missing_basedir(self):
+        self.assertRaisesConfigError(
+            re.compile("basedir .* does not exist"),
+            lambda: config.loadConfigDict(os.path.join(self.basedir, 'NO'), 'test.cfg'))
+
+    def test_loadConfig_open_error(self):
+        """
+        Check that loadConfig() raises correct ConfigError exception in cases
+        when configure file is found, but we fail to open it.
+        """
+
+        def raise_IOError(*args):
+            raise IOError("error_msg")
+
+        self.install_config_file('#dummy')
+
+        # override build-in open() function to always rise IOError
+        self.patch(__builtin__, "open", raise_IOError)
+
+        # check that we got the expected ConfigError exception
+        self.assertRaisesConfigError(
+            re.compile("unable to open configuration file .*: error_msg"),
+            lambda: config.loadConfigDict(self.basedir, self.filename))
+
+    def test_loadConfig_parse_error(self):
+        self.install_config_file('def x:\nbar')
+        self.assertRaisesConfigError(
+            re.compile("encountered a SyntaxError while parsing config file:"),
+            lambda: config.loadConfigDict(self.basedir, self.filename))
+
+    def test_loadConfig_eval_ConfigError(self):
+        self.install_config_file("""\
+                from buildbot import config
+                BuildmasterConfig = { 'multiMaster': True }
+                config.error('oh noes!')""")
+        self.assertRaisesConfigError("oh noes",
+                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+
+    def test_loadConfig_eval_otherError(self):
+        self.install_config_file("""\
+                from buildbot import config
+                BuildmasterConfig = { 'multiMaster': True }
+                raise ValueError('oh noes')""")
+        self.assertRaisesConfigError("error while parsing config file: oh noes (traceback in logfile)",
+                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+
+        [error] = self.flushLoggedErrors(ValueError)
+        self.assertEqual(error.value.args, ("oh noes",))
+
+    def test_loadConfig_no_BuildmasterConfig(self):
+        self.install_config_file('x=10')
+        self.assertRaisesConfigError("does not define 'BuildmasterConfig'",
+                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+
+    def test_loadConfig_with_local_import(self):
+        self.install_config_file("""\
+                from subsidiary_module import x
+                BuildmasterConfig = dict(x=x)
+                """,
+                                 {'basedir/subsidiary_module.py': "x = 10"})
+        _, rv = config.loadConfigDict(self.basedir, self.filename)
+        self.assertEqual(rv, {'x': 10})
+
+
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
@@ -210,49 +297,6 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                              'branch', 'revision', 'property_name', 'property_value',
                          ]))
 
-    def test_loadConfig_missing_file(self):
-        self.assertRaisesConfigError(
-            re.compile("configuration file .* does not exist"),
-            lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
-
-    def test_loadConfig_missing_basedir(self):
-        self.assertRaisesConfigError(
-            re.compile("basedir .* does not exist"),
-            lambda: config.FileLoader(os.path.join(self.basedir, 'NO'), 'test.cfg').loadConfig())
-
-    def test_loadConfig_open_error(self):
-        """
-        Check that loadConfig() raises correct ConfigError exception in cases
-        when configure file is found, but we fail to open it.
-        """
-
-        def raise_IOError(*args):
-            raise IOError("error_msg")
-
-        self.install_config_file('#dummy')
-
-        # override build-in open() function to always rise IOError
-        self.patch(__builtin__, "open", raise_IOError)
-
-        # check that we got the expected ConfigError exception
-        self.assertRaisesConfigError(
-            re.compile("unable to open configuration file .*: error_msg"),
-            lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
-
-    def test_loadConfig_parse_error(self):
-        self.install_config_file('def x:\nbar')
-        self.assertRaisesConfigError(
-            re.compile("encountered a SyntaxError while parsing config file:"),
-            lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
-
-    def test_loadConfig_eval_ConfigError(self):
-        self.install_config_file("""\
-                from buildbot import config
-                BuildmasterConfig = { 'multiMaster': True }
-                config.error('oh noes!')""")
-        self.assertRaisesConfigError("oh noes",
-                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
-
     def test_loadConfig_eval_ConfigErrors(self):
         # We test a config that has embedded errors, as well
         # as semantic errors that get added later. If an exception is raised
@@ -263,15 +307,10 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 config.error('oh noes!')
                 config.error('noes too!')""")
         e = self.assertRaises(config.ConfigErrors,
-                              lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
+                              config.FileLoader(self.basedir, self.filename).loadConfig)
         self.assertEqual(e.errors, ['oh noes!', 'noes too!',
                                     'no workers are configured',
                                     'no builders are configured'])
-
-    def test_loadConfig_no_BuildmasterConfig(self):
-        self.install_config_file('x=10')
-        self.assertRaisesConfigError("does not define 'BuildmasterConfig'",
-                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
 
     def test_loadConfig_unknown_key(self):
         self.patch_load_helpers()
@@ -279,7 +318,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict(foo=10)
                 """)
         self.assertRaisesConfigError("Unknown BuildmasterConfig key foo",
-                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
+                                     config.FileLoader(self.basedir, self.filename).loadConfig)
 
     def test_loadConfig_unknown_keys(self):
         self.patch_load_helpers()
@@ -287,7 +326,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                 BuildmasterConfig = dict(foo=10, bar=20)
                 """)
         self.assertRaisesConfigError("Unknown BuildmasterConfig keys bar, foo",
-                                     lambda: config.FileLoader(self.basedir, self.filename).loadConfig())
+                                     config.FileLoader(self.basedir, self.filename).loadConfig)
 
     def test_loadConfig_success(self):
         self.patch_load_helpers()
@@ -317,16 +356,6 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.failUnless(rv.check_status.called)
         self.failUnless(rv.check_horizons.called)
         self.failUnless(rv.check_ports.called)
-
-    def test_loadConfig_with_local_import(self):
-        self.patch_load_helpers()
-        self.install_config_file("""\
-                from subsidiary_module import x
-                BuildmasterConfig = dict()
-                """,
-                                 {'basedir/subsidiary_module.py': "x = 10"})
-        rv = config.FileLoader(self.basedir, self.filename).loadConfig()
-        self.assertIsInstance(rv, config.MasterConfig)
 
     def test_preChangeGenerator(self):
         cfg = config.MasterConfig()
