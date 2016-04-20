@@ -81,6 +81,14 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
                         configFunc=configFunc,
                         proto=proto,
                         workerclass=workerclass))
+
+        # mock reactor.stop (which trial *really* doesn't
+        # like test code to call!)
+        mock_reactor = mock.Mock(spec=reactor)
+        mock_reactor.callWhenRunning = reactor.callWhenRunning
+        mock_reactor.getThreadPool = reactor.getThreadPool
+        mock_reactor.callFromThread = reactor.callFromThread
+
         # create the master and set its config
         m = BuildMaster(self.basedir, self.configfile)
         self.master = m
@@ -92,15 +100,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         # stub out m.db.setup since it was already called above
         m.db.setup = lambda: None
 
-        # mock reactor.stop (which trial *really* doesn't
-        # like test code to call!)
-        mock_reactor = mock.Mock(spec=reactor)
-        mock_reactor.callWhenRunning = reactor.callWhenRunning
-        mock_reactor.getThreadPool = reactor.getThreadPool
-        mock_reactor.callFromThread = reactor.callFromThread
-
         # start the service
-        yield m.startService(_reactor=mock_reactor)
+        yield m.startService()
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 

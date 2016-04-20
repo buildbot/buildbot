@@ -145,8 +145,15 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def _run_master(self, loaded_config):
+        # mock reactor.stop (which trial *really* doesn't
+        # like test code to call!)
+        mock_reactor = mock.Mock(spec=reactor)
+        mock_reactor.callWhenRunning = reactor.callWhenRunning
+        mock_reactor.getThreadPool = reactor.getThreadPool
+        mock_reactor.callFromThread = reactor.callFromThread
+
         # create the master
-        m = BuildMaster(self.basedir, self.configfile)
+        m = BuildMaster(self.basedir, self.configfile, reactor=mock_reactor)
 
         # update the DB
         yield m.db.setup(check_version=False)
@@ -155,13 +162,6 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         # stub out m.db.setup since it was already called above
         m.db.setup = lambda: None
 
-        # mock reactor.stop (which trial *really* doesn't
-        # like test code to call!)
-        mock_reactor = mock.Mock(spec=reactor)
-        mock_reactor.callWhenRunning = reactor.callWhenRunning
-        mock_reactor.getThreadPool = reactor.getThreadPool
-        mock_reactor.callFromThread = reactor.callFromThread
-
         # mock configuration loading
         @classmethod
         def loadConfig(cls, basedir, filename):
@@ -169,7 +169,7 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 
         with mock.patch('buildbot.config.MasterConfig.loadConfig', loadConfig):
             # start the service
-            yield m.startService(_reactor=mock_reactor)
+            yield m.startService()
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
 

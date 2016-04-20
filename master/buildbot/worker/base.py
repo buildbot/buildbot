@@ -21,7 +21,6 @@ from email.message import Message
 from email.utils import formatdate
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.reflect import namedModule
 
@@ -287,7 +286,7 @@ class AbstractWorker(service.BuildbotService, object):
     def startMissingTimer(self):
         if self.notify_on_missing and self.missing_timeout and self.parent:
             self.stopMissingTimer()  # in case it's already running
-            self.missing_timer = reactor.callLater(self.missing_timeout,
+            self.missing_timer = self.master.reactor.callLater(self.missing_timeout,
                                                    self._missing_timer_fired)
 
     def stopMissingTimer(self):
@@ -681,7 +680,7 @@ class AbstractLatentWorker(AbstractWorker):
         if self.substantiation_deferred is None:
             if self.parent and not self.missing_timer:
                 # start timer.  if timer times out, fail deferred
-                self.missing_timer = reactor.callLater(
+                self.missing_timer = self.master.reactor.callLater(
                     self.missing_timeout,
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_deferred = defer.Deferred()
@@ -696,7 +695,7 @@ class AbstractLatentWorker(AbstractWorker):
     def _substantiate(self, build):
         # register event trigger
         d = self.start_instance(build)
-        self._shutdown_callback_handle = reactor.addSystemEventTrigger(
+        self._shutdown_callback_handle = self.master.reactor.addSystemEventTrigger(
             'before', 'shutdown', self._soft_disconnect, fast=True)
 
         def start_instance_result(result):
@@ -715,7 +714,7 @@ class AbstractLatentWorker(AbstractWorker):
             if self._shutdown_callback_handle is not None:
                 handle = self._shutdown_callback_handle
                 del self._shutdown_callback_handle
-                reactor.removeSystemEventTrigger(handle)
+                self.master.reactor.removeSystemEventTrigger(handle)
             return failure
         d.addCallbacks(start_instance_result, clean_up)
         return d
@@ -799,7 +798,7 @@ class AbstractLatentWorker(AbstractWorker):
         self._clearBuildWaitTimer()
         if self.build_wait_timeout <= 0:
             return
-        self.build_wait_timer = reactor.callLater(
+        self.build_wait_timer = self.master.reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)
 
     @defer.inlineCallbacks
@@ -810,7 +809,7 @@ class AbstractLatentWorker(AbstractWorker):
         if self._shutdown_callback_handle is not None:
             handle = self._shutdown_callback_handle
             del self._shutdown_callback_handle
-            reactor.removeSystemEventTrigger(handle)
+            self.master.reactor.removeSystemEventTrigger(handle)
         self.substantiated = False
         self.building.clear()  # just to be sure
         yield d
