@@ -179,22 +179,47 @@ described in :ref:`developer-Reconfiguration`.
 
         The list of additional plugin services
 
-    Loading of the configuration file is generally triggered by the master,
-    using the following methods:
+    .. py:classmethod:: loadFromDict(config_dict, filename)
 
-    .. py:classmethod:: loadConfig(basedir, filename)
+        :param dict config_dict: The dictionary containg the configuration to load.
+        :param string filename: The filename to use when reporting errors.
+        :returns: new :py:class:`MasterConfig` instance
+
+        Load the configuration from the given dictionary.
+
+
+Loading of the configuration file is generally triggered by the master,
+using the following class:
+
+.. py:class:: FileLoader
+
+    .. py:method:: __init__(basedir, filename)
 
         :param string basedir: directory to which config is relative
         :param string filename: the configuration file to load
-        :raises: :py:exc:`ConfigErrors` if any errors occur
+
+        The filename is treated as relative to the basedir, if it is not
+        absolute.
+
+    .. py:method:: loadConfig(basedir, filename)
+
         :returns: new :py:class:`MasterConfig` instance
 
         Load the configuration in the given file.  Aside from syntax errors,
         this will also detect a number of semantic errors such as multiple
         schedulers with the same name.
 
-        The filename is treated as relative to the basedir, if it is not
-        absolute.
+.. py:function:: loadConfigDict(basedir, filename)
+
+    :param string basedir: directory to which config is relative
+    :param string filename: the configuration file to load
+    :raises: :py:exc:`ConfigErrors` if any errors occur
+    :returns dict: The ``BuildmasterConfig`` dictionary.
+
+    Load the configuration dictionary in the given file.
+
+    The filename is treated as relative to the basedir, if it is not
+    absolute.
 
 Builder Configuration
 ---------------------
