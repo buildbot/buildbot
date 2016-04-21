@@ -18,16 +18,16 @@ import shutil
 import subprocess
 
 from twisted.internet import defer
+from twisted.python import log
 from twisted.trial import unittest
 
 from buildbot.test.util import dirs
-from buildbot.test.util import misc
 
 
 class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
     try:
-        import buildbot_worker as _  # noqa
+        import buildbot_worker as _  # noqa pylint: disable=unused-import
     except ImportError:
         skip = "buildbot-worker package is not installed"
 
@@ -42,6 +42,12 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         os.chdir(self.origcwd)
         yield self.tearDownDirs()
 
+    def _run_command(self, args):
+        log.msg("Running command: '{0}'".format(" ".join(args)))
+        stdout = subprocess.check_output(args)
+        log.msg("Output:\n{0}".format(stdout))
+        return stdout
+
     def test_master_worker_setup(self):
         os.chdir(self.projectdir)
 
@@ -49,7 +55,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         worker_dir = "worker-dir"
 
         # Create master.
-        stdout = subprocess.check_output(
+        stdout = self._run_command(
             ["buildbot", "create-master", master_dir])
         self.assertIn("buildmaster configured in", stdout)
 
@@ -59,13 +65,13 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             os.path.join(master_dir, "master.cfg"))
 
         # Create worker.
-        stdout = subprocess.check_output([
+        stdout = self._run_command([
             "buildbot-worker", "create-worker", worker_dir, "localhost",
             "example-worker", "pass"])
         self.assertIn("worker configured in", stdout)
 
         # Start master.
-        stdout = subprocess.check_output([
+        stdout = self._run_command([
             "buildbot", "start", master_dir])
         try:
             self.assertIn(
@@ -73,7 +79,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
                 stdout)
 
             # Start worker.
-            stdout = subprocess.check_output([
+            stdout = self._run_command([
                 "buildbot-worker", "start", worker_dir])
             try:
                 self.assertIn(
@@ -83,12 +89,12 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
             finally:
                 # Stop worker.
-                stdout = subprocess.check_output([
+                stdout = self._run_command([
                     "buildbot-worker", "stop", worker_dir])
                 self.assertRegexpMatches(stdout, r"worker process \d+ is dead")
 
         finally:
             # Stop master.
-            stdout = subprocess.check_output([
+            stdout = self._run_command([
                 "buildbot", "stop", master_dir])
             self.assertIn("sent SIGTERM to process", stdout)
