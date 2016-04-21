@@ -162,6 +162,29 @@ When the instance is destroyed, the volume will be terminated as well.
     ]
 
 
+The ``nova_args`` can be used to specify additional arguments for the novaclient.
+For example network mappings, which is required if your OpenStack tenancy has more than one network, and default cannot be determined.
+Please refer to your OpenStack manual whether it wants net-id or net-name.
+
+Other useful parameters are ``availability_zone``, ``security_groups`` and ``config_drive``.
+Refer to `Python bindings to the OpenStack Nova API <http://docs.openstack.org/developer/python-novaclient/>`_ for more information.
+It is found on section Servers, method create.
+
+::
+
+    from buildbot.plugins import worker
+    c['workers'] = [
+        worker.OpenStackLatentWorker('bot2', 'sekrit',
+                    flavor=1, image='8ac9d4a4-5e03-48b0-acde-77a0345a9ab1',
+                    os_username='user', os_password='password',
+                    os_tenant_name='tenant',
+                    os_auth_url='http://127.0.0.1:35357/v2.0',
+                    nova_args={
+                      'nics': [
+                                {'net-id':'uid-of-network'}
+                              ]})
+    ]
+
 :class:`OpenStackLatentWorker` supports all other configuration from the standard :class:`Worker`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an OpenStack instance to attach before considering the attempt to have failed and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.
