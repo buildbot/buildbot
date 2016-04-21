@@ -16,7 +16,7 @@
 from __future__ import print_function
 
 import os
-import shutil
+import re
 import subprocess
 
 from twisted.internet import defer
@@ -84,10 +84,13 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             ["buildbot", "create-master", master_dir])[0]
         self.assertIn("buildmaster configured in", stdout)
 
-        # Create master.cfg.
-        shutil.copy(
-            os.path.join(master_dir, "master.cfg.sample"),
-            os.path.join(master_dir, "master.cfg"))
+        # Copy master.cfg with disabling www plugins (they are not installed
+        # on Travis).
+        with open(os.path.join(master_dir, "master.cfg.sample"), "rt") as f:
+            master_cfg = f.read()
+        master_cfg = re.sub(r"plugins=dict\([^)]+\)", "plugins={}", master_cfg)
+        with open(os.path.join(master_dir, "master.cfg"), "wt") as f:
+            f.write(master_cfg)
 
         # Create worker.
         stdout = self._run_command([
