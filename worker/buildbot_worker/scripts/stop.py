@@ -66,11 +66,12 @@ def stopWorker(basedir, quiet, signame="TERM"):
         except OSError:
             if not quiet:
                 print("worker process %d is dead" % pid)
-            return
+            return 0
         timer += 1
         time.sleep(1)
     if not quiet:
         print("never saw process go away")
+    return 1
 
 
 def stop(config, signame="TERM"):
@@ -81,9 +82,8 @@ def stop(config, signame="TERM"):
         return 1
 
     try:
-        stopWorker(basedir, quiet, signame)
+        return stopWorker(basedir, quiet, signame)
     except WorkerNotRunning:
         if not quiet:
             print("worker not running")
-
-    return 0
+        return 0
