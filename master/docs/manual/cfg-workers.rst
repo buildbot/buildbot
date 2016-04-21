@@ -137,6 +137,7 @@ A configuration for two workers would look like::
         worker.LocalWorker('bot2'),
     ]
 
+In order to use local workers you need to have ``buildbot-worker`` package installed.
 
 .. index:: Workers; latent
 
