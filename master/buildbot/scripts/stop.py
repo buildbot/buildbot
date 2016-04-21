@@ -25,6 +25,7 @@ from buildbot.scripts import base
 def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
+    wait = wait or config['wait']
 
     if config['clean']:
         signame = 'USR1'

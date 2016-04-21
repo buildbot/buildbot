@@ -116,7 +116,8 @@ stop
     buildbot stop {BASEDIR}
 
 This terminates the daemon (either buildmaster or worker) running in the given directory.
-The option `--clean` option shuts down the buildmaster cleanly.
+The ``--clean`` option shuts down the buildmaster cleanly.
+With ``--wait`` option ``buildbot stop`` command will return either when buildmaster is completely stopped, or if stopping failed.
 
 .. bb:cmdline:: sighup
 

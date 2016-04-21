@@ -27,6 +27,8 @@ Features
 
 * new :bb:reporter:GitLabStatusPush to report builds results to GitLab.
 
+* New ``--wait`` argument for ``buildbot stop`` which allows to deterministically wait for complete master shutdown.
+
 Fixes
 ~~~~~
 

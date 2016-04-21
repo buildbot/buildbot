@@ -25,7 +25,9 @@ from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, clean=False, basedir=os.path.abspath('basedir'))
+    config = dict(
+        quiet=False, clean=False, basedir=os.path.abspath('basedir'),
+        wait=False)
     config.update(kwargs)
     return config
 
@@ -122,6 +124,17 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             [(0, None),
              ('sleep', 1), ] * 10,
             wait=True)
+        self.assertInStdout('never saw process')
+        self.assertEqual(rv, 1)
+
+    @skipUnlessPlatformIs('posix')
+    def test_stop_slow_death_config_wait_timeout(self):
+        rv = self.do_test_stop(mkconfig(wait=True), [
+            (signal.SIGTERM, None),
+            ('sleep', 0.1), ] +
+            [(0, None),
+             ('sleep', 1), ] * 10,
+            )
         self.assertInStdout('never saw process')
         self.assertEqual(rv, 1)
 
