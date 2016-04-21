@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import print_function
+
 import os
 import shutil
 import subprocess
@@ -37,21 +39,38 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.projectdir = os.path.abspath('project')
         yield self.setUpDirs(self.projectdir)
 
+        self.logs = []
+        self.success = False
+
     @defer.inlineCallbacks
     def tearDown(self):
+        if not self.success:
+            # Output ran command logs to stdout to help debugging in CI systems
+            # where logs are not available (e.g. Travis).
+            # Logs can be stored on AppVeyor and CircleCI, we can move
+            # e2e tests there if we don't want such output.
+            print("Test failed, output:")
+            print("-" * 80)
+            print("\n".join(self.logs))
+            print("-" * 80)
+
         os.chdir(self.origcwd)
         yield self.tearDownDirs()
 
+    def _log(self, msg):
+        self.logs.append(msg)
+        log.msg(msg)
+
     def _run_command(self, args):
-        log.msg("Running command: '{0}'".format(" ".join(args)))
+        self._log("Running command: '{0}'".format(" ".join(args)))
         process = subprocess.Popen(
             args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if stderr:
-            log.msg("stderr:\n{0}".format(stderr))
+            self._log("stderr:\n{0}".format(stderr))
         if stdout:
-            log.msg("stdout:\n{0}".format(stdout))
-        log.msg("Process finished with code {0}".format(process.returncode))
+            self._log("stdout:\n{0}".format(stdout))
+        self._log("Process finished with code {0}".format(process.returncode))
         return stdout, stderr
 
     def test_master_worker_setup(self):
@@ -104,3 +123,5 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             stdout = self._run_command([
                 "buildbot", "stop", master_dir])[0]
             self.assertIn("sent SIGTERM to process", stdout)
+
+        self.success = True
