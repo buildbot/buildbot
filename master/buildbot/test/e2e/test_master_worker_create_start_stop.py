@@ -122,6 +122,6 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             # Stop master.
             stdout = self._run_command([
                 "buildbot", "stop", master_dir])[0]
-            self.assertIn("sent SIGTERM to process", stdout)
+            self.assertRegexpMatches(stdout, r"buildbot process \d+ is dead")
 
         self.success = True
