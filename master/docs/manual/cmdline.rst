@@ -117,7 +117,7 @@ stop
 
 This terminates the daemon (either buildmaster or worker) running in the given directory.
 The ``--clean`` option shuts down the buildmaster cleanly.
-With ``--wait`` option ``buildbot stop`` command will return either when buildmaster is completely stopped, or if stopping failed.
+With ``--no-wait`` option ``buildbot stop`` command will send buildmaster shutdown signal and will immediately exit, not waiting for complete buildmaster shutdown.
 
 .. bb:cmdline:: sighup
 
