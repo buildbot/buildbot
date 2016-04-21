@@ -95,18 +95,18 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             "example-worker", "pass"])[0]
         self.assertIn("worker configured in", stdout)
 
-        # Start master.
-        stdout = self._run_command([
-            "buildbot", "start", master_dir])[0]
         try:
+            # Start master.
+            stdout = self._run_command([
+                "buildbot", "start", master_dir])[0]
             self.assertIn(
                 "The buildmaster appears to have (re)started correctly",
                 stdout)
 
-            # Start worker.
-            stdout = self._run_command([
-                "buildbot-worker", "start", worker_dir])[0]
             try:
+                # Start worker.
+                stdout = self._run_command([
+                    "buildbot-worker", "start", worker_dir])[0]
                 self.assertIn(
                     "The buildbot-worker appears to have (re)started "
                     "correctly",
