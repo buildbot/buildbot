@@ -34,9 +34,9 @@ from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 try:
-    from buildslave.bot import BuildSlave
+    from buildbot_worker.bot import Worker
 except ImportError:
-    BuildSlave = None
+    Worker = None
 
 
 @implementer(IConfigLoader)
@@ -71,8 +71,8 @@ def getMaster(case, reactor, config_dict):
 class RunMasterBase(unittest.TestCase):
     proto = "null"
 
-    if BuildSlave is None:
-        skip = "buildbot-slave package is not installed"
+    if Worker is None:
+        skip = "buildbot-worker package is not installed"
 
     @defer.inlineCallbacks
     def setupConfig(self, config_dict, startWorker=True):
@@ -117,7 +117,9 @@ class RunMasterBase(unittest.TestCase):
             # along with the master
             worker_dir = FilePath(self.mktemp())
             worker_dir.createDirectory()
-            self.w = BuildSlave("127.0.0.1", workerPort, "local1", "localpw", worker_dir.path, False, False)
+            self.w = Worker(
+                "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
+                False, False)
         elif self.proto == 'null':
             self.w = None
         if self.w is not None:

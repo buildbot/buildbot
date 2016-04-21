@@ -27,11 +27,11 @@ class LocalWorker(Worker):
         self.LocalWorkerFactory = None
         try:
             # importing here to avoid dependency on buildbot worker package
-            from buildslave.bot import LocalBuildSlave as RemoteLocalWorker
+            from buildbot_worker.bot import LocalWorker as RemoteLocalWorker
             self.LocalWorkerFactory = RemoteLocalWorker
         except ImportError:
-            error(
-                "LocalWorker needs the buildbot-slave package installed (pip install buildbot-slave)")
+            error("LocalWorker needs the buildbot-worker package installed "
+                  "(pip install buildbot-worker)")
         self.remote_worker = None
 
     @defer.inlineCallbacks
