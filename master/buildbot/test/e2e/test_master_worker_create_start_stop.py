@@ -44,9 +44,15 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
     def _run_command(self, args):
         log.msg("Running command: '{0}'".format(" ".join(args)))
-        stdout = subprocess.check_output(args)
-        log.msg("Output:\n{0}".format(stdout))
-        return stdout
+        process = subprocess.Popen(
+            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if stderr:
+            log.msg("stderr:\n{0}".format(stderr))
+        if stdout:
+            log.msg("stdout:\n{0}".format(stdout))
+        log.msg("Process finished with code {0}".format(process.returncode))
+        return stdout, stderr
 
     def test_master_worker_setup(self):
         os.chdir(self.projectdir)
@@ -56,7 +62,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         # Create master.
         stdout = self._run_command(
-            ["buildbot", "create-master", master_dir])
+            ["buildbot", "create-master", master_dir])[0]
         self.assertIn("buildmaster configured in", stdout)
 
         # Create master.cfg.
@@ -67,12 +73,12 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         # Create worker.
         stdout = self._run_command([
             "buildbot-worker", "create-worker", worker_dir, "localhost",
-            "example-worker", "pass"])
+            "example-worker", "pass"])[0]
         self.assertIn("worker configured in", stdout)
 
         # Start master.
         stdout = self._run_command([
-            "buildbot", "start", master_dir])
+            "buildbot", "start", master_dir])[0]
         try:
             self.assertIn(
                 "The buildmaster appears to have (re)started correctly",
@@ -80,7 +86,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
             # Start worker.
             stdout = self._run_command([
-                "buildbot-worker", "start", worker_dir])
+                "buildbot-worker", "start", worker_dir])[0]
             try:
                 self.assertIn(
                     "The buildbot-worker appears to have (re)started "
@@ -90,11 +96,11 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             finally:
                 # Stop worker.
                 stdout = self._run_command([
-                    "buildbot-worker", "stop", worker_dir])
+                    "buildbot-worker", "stop", worker_dir])[0]
                 self.assertRegexpMatches(stdout, r"worker process \d+ is dead")
 
         finally:
             # Stop master.
             stdout = self._run_command([
-                "buildbot", "stop", master_dir])
+                "buildbot", "stop", master_dir])[0]
             self.assertIn("sent SIGTERM to process", stdout)
