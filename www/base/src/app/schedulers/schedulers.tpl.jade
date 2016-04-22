@@ -1,13 +1,18 @@
 .container
-  .row
-    table.table.table-hover.table-striped.table-condensed
-      tr
-          td Scheduler Name
-          td Master
-        tr(ng-repeat='scheduler in schedulers')
-          td
-            a(ui-sref='scheduler({scheduler: scheduler.schedulerid})')
-              | {{ scheduler.name }}
-          td
-            a(ui-sref='master({master: scheduler.master.masterid})')
-              | {{ scheduler.master.name }}
+  tabset
+      tab(heading="All schedulers")
+        table.table.table-hover.table-striped.table-condensed
+          tr
+              td Scheduler Name
+              td Master
+            tr(ng-repeat='scheduler in schedulers | orderBy: ["name"]')
+              td {{ scheduler.name }}
+              td {{ scheduler.master.name }}
+      tab(heading="All schedulers by master")
+        table.table.table-hover.table-striped.table-condensed
+          tr
+              td Scheduler Name
+              td Master
+            tr(ng-repeat='scheduler in schedulers | orderBy: ["master.name", "name"]')
+              td {{ scheduler.name }}
+              td {{ scheduler.master.name }}

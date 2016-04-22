@@ -1,3 +1,4 @@
 class schedulers extends Controller
     constructor: ($log, $scope, $location, dataService) ->
-        $scope.schedulers = dataService.getSchedulers()
+        data = dataService.open().closeOnDestroy($scope)
+        $scope.schedulers = data.getSchedulers()
