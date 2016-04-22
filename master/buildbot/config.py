@@ -32,6 +32,7 @@ from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
+from buildbot.util import ComparableMixin
 from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
@@ -135,7 +136,9 @@ def loadConfigDict(basedir, configFileName):
 
 
 @implementer(interfaces.IConfigLoader)
-class FileLoader(object):
+class FileLoader(ComparableMixin, object):
+    compare_attrs = ['basedir', 'configFileName']
+
     def __init__(self, basedir, configFileName):
         self.basedir = basedir
         self.configFileName = configFileName

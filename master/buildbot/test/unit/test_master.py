@@ -133,6 +133,25 @@ class OldTriggeringMethods(unittest.TestCase):
             exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
 
 
+class InitTests(unittest.SynchronousTestCase):
+    def test_configfile_configloader_conflict(self):
+        """
+        If both configfile and config_loader are specified, a configuration
+        error is raised.
+        """
+        self.assertRaises(
+            config.ConfigErrors,
+            master.BuildMaster,
+            ".", "master.cfg", reactor=reactor, config_loader=DefaultLoader())
+
+    def test_configfile_default(self):
+        """
+        If neither configfile nor config_loader are specified, The default config_loader is a `FileLoader` pointing at `"master.cfg"`.
+        """
+        m = master.BuildMaster(".", reactor=reactor)
+        self.assertEqual(m.config_loader, config.FileLoader(".", "master.cfg"))
+
+
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
