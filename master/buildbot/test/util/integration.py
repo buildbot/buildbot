@@ -66,6 +66,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         """
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
+        self.addCleanup(self.tearDownDirs)
 
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
@@ -99,6 +100,9 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         yield m.startService()
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
+        # and shutdown the db threadpool, as is normally done at reactor stop
+        self.addCleanup(m.db.pool.shutdown)
+        self.addCleanup(m.stopService)
 
         if self.proto == 'pb':
             # We find out the worker port automatically
@@ -113,28 +117,19 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             self.w = None
         if self.w is not None:
             self.w.setServiceParent(m)
+            self.addCleanup(self.w.disownServiceParent)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if not self._passed:
-            dump = StringIO.StringIO()
-            print("FAILED! dumping build db for debug", file=dump)
-            builds = yield self.master.data.get(("builds",))
-            for build in builds:
-                yield self.printBuild(build, dump, withLogs=True)
-        m = self.master
-        # stop the service
-        if self.w is not None:
-            yield self.w.disownServiceParent()
-        yield m.stopService()
+        @defer.inlineCallbacks
+        def dump():
+            if not self._passed:
+                dump = StringIO.StringIO()
+                print("FAILED! dumping build db for debug", file=dump)
+                builds = yield self.master.data.get(("builds",))
+                for build in builds:
+                    yield self.printBuild(build, dump, withLogs=True)
 
-        # and shutdown the db threadpool, as is normally done at reactor stop
-        m.db.pool.shutdown()
-
-        # (trial will verify all reactor-based timers have been cleared, etc.)
-        self.tearDownDirs()
-        if not self._passed:
-            raise self.failureException(dump.getvalue())
+                raise self.failureException(dump.getvalue())
+        self.addCleanup(dump)
 
     @defer.inlineCallbacks
     def doForceBuild(self, wantSteps=False, wantProperties=False,
