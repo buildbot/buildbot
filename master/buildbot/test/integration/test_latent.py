@@ -94,6 +94,49 @@ class Tests(SynchronousTestCase):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
 
+    def test_latent_workers_start_in_parallel(self):
+        """
+        If there are two latent workers configured, and two build
+        requests for them, both workers will start substantiating
+        conccurently.
+        """
+        controllers = [
+            LatentController('local1'),
+            LatentController('local2'),
+        ]
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local1", "local2"],
+                              factory=BuildFactory()),
+            ],
+            'workers': [controller.worker for controller in controllers],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
+
+        # Request two builds.
+        for i in range(2):
+            bsid, brids = self.successResultOf(
+                master.data.updates.addBuildset(
+                    waited_for=False,
+                    builderids=[builder_id],
+                    sourcestamps=[
+                        {'codebase': '',
+                         'repository': '',
+                         'branch': None,
+                         'revision': None,
+                         'project': ''},
+                    ],
+                )
+            )
+
+        # Check that both workers were requested to start.
+        self.assertEqual(controllers[0].started, True)
+        self.assertEqual(controllers[1].started, True)
+
     def test_refused_substantiations_get_requeued(self):
         """
         If a latent worker refuses to substantiate, the build request becomes unclaimed.
