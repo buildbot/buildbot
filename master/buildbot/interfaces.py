@@ -1040,3 +1040,13 @@ class IBuildControl(Interface):
     def stopBuild(reason="<no reason given>"):
         """Halt the build. This has no effect if the build has already
         finished."""
+
+
+class IConfigLoader(Interface):
+
+    def loadConfig():
+        """
+        Load the specified configuration.
+
+        :return MasterConfig:
+        """

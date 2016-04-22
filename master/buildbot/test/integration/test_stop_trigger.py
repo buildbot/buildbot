@@ -100,8 +100,6 @@ def triggeredBuildIsNotCreated():
 
 
 class TriggeringMaster(RunMasterBase):
-    testCasesHandleTheirSetup = True
-
     change = dict(branch="master",
                   files=["foo.c"],
                   author="me@foo.com",
@@ -129,7 +127,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def testTriggerRunsForever(self):
-        yield self.setupConfig("triggerRunsForever")
+        yield self.setupConfig(triggerRunsForever())
         self.higherBuild = None
 
         def newCallback(_, data):
@@ -142,7 +140,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def testTriggerRunsForeverAfterCmdStarted(self):
-        yield self.setupConfig("triggerRunsForever")
+        yield self.setupConfig(triggerRunsForever())
         self.higherBuild = None
 
         def newCallback(_, data):
@@ -159,7 +157,7 @@ class TriggeringMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def testTriggeredBuildIsNotCreated(self):
-        yield self.setupConfig("triggeredBuildIsNotCreated")
+        yield self.setupConfig(triggeredBuildIsNotCreated())
 
         def newCallback(_, data):
             self.master.data.control("stop", {}, ("builds", data['buildid']))

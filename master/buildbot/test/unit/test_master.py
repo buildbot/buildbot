@@ -17,6 +17,8 @@ import signal
 
 import mock
 
+from zope.interface import implementer
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -27,11 +29,24 @@ from buildbot import master
 from buildbot import monkeypatches
 from buildbot.changes.changes import Change
 from buildbot.db import exceptions
+from buildbot.interfaces import IConfigLoader
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
+
+
+@implementer(IConfigLoader)
+class FailingLoader(object):
+    def loadConfig(self):
+        config.error('oh noes')
+
+
+@implementer(IConfigLoader)
+class DefaultLoader(object):
+    def loadConfig(self):
+        return config.MasterConfig()
 
 
 class OldTriggeringMethods(unittest.TestCase):
@@ -118,6 +133,25 @@ class OldTriggeringMethods(unittest.TestCase):
             exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
 
 
+class InitTests(unittest.SynchronousTestCase):
+    def test_configfile_configloader_conflict(self):
+        """
+        If both configfile and config_loader are specified, a configuration
+        error is raised.
+        """
+        self.assertRaises(
+            config.ConfigErrors,
+            master.BuildMaster,
+            ".", "master.cfg", reactor=reactor, config_loader=DefaultLoader())
+
+    def test_configfile_default(self):
+        """
+        If neither configfile nor config_loader are specified, The default config_loader is a `FileLoader` pointing at `"master.cfg"`.
+        """
+        m = master.BuildMaster(".", reactor=reactor)
+        self.assertEqual(m.config_loader, config.FileLoader(".", "master.cfg"))
+
+
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
@@ -135,11 +169,9 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.patch(monkeypatches, 'patch_all', lambda: None)
             self.patch(signal, 'signal', lambda sig, hdlr: None)
             self.patch(master, 'Status', lambda master: mock.Mock())  # XXX temporary
-            self.patch(config.MasterConfig, 'loadConfig',
-                       classmethod(lambda cls, b, f: cls()))
 
             self.reactor = self.make_reactor()
-            self.master = master.BuildMaster(self.basedir, reactor=self.reactor)
+            self.master = master.BuildMaster(self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.db.setServiceParent(self.master)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self)
@@ -159,15 +191,9 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         r.callFromThread = reactor.callFromThread
         return r
 
-    def patch_loadConfig_fail(self):
-        @classmethod
-        def loadConfig(cls, b, f):
-            config.error('oh noes')
-        self.patch(config.MasterConfig, 'loadConfig', loadConfig)
-
     # tests
     def test_startup_bad_config(self):
-        self.patch_loadConfig_fail()
+        self.master.config_loader = FailingLoader()
 
         d = self.master.startService()
 
@@ -243,7 +269,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.master.reconfigService.reset_mock()
 
         # reconfig, with a failure
-        self.patch_loadConfig_fail()
+        self.master.config_loader = FailingLoader()
         yield self.master.reconfig()
 
         self.master.stopService()
