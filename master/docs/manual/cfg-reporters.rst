@@ -867,12 +867,15 @@ As a result, we recommend you use https in your base_url rather than http.
     :param list builders: only send update for specified builders
 
 
+.. bb:reporter:: GitLabStatusPush
 
 GitLabStatusPush
 ~~~~~~~~~~~~~~~~
 
 .. @cindex GitLabStatusPush
 .. py:class:: buildbot.reporters.gitlab.GitLabStatusPush
+
+::
 
     from buildbot.plugins import reporters
 
@@ -893,6 +896,6 @@ It uses private token auth, and the token owner is required to have at least rep
     :param string startDescription: Description used when build starts 
     :param string endDescription: Description used when build ends 
     :param string context: Name of your build system, eg. continuous-integration/buildbot 
-    :param string baseURL: the base url of the gitlab host, up to and optionally including the first `/` of the path. Do not include /api/
+    :param string baseURL: the base url of the GitLab host, up to and optionally including the first `/` of the path. Do not include /api/
     :param string verbose: Be more verbose
 

@@ -487,7 +487,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
     :param groupPrefix: prefix to remove from each group
 
     RolesFromGroups grants roles from the groups of the user.
-    If a user has group 'buildbot-admin', and groupPrefix is 'buildbot-', then user will be granted the role 'admin'
+    If a user has group ``buildbot-admin``, and groupPrefix is ``buildbot-``, then user will be granted the role 'admin'
 
     ex::
 

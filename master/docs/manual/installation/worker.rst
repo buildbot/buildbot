@@ -58,7 +58,7 @@ Here's a good checklist for setting up a worker:
 
   * your worker's name
   * the password assigned to your worker
-  * the hostname and port number of the buildmaster, i.e. buildbot.example.org:8007
+  * the hostname and port number of the buildmaster, i.e. `<http://buildbot.example.org:8007>`__
 
 7. Create the worker
 

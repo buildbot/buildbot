@@ -30,7 +30,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
             # ...
 
     Any attributes not in ``compare_attrs`` will not be considered when comparing objects.
-    This is used to implement buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
+    This is used to implement Buildbot's reconfig logic, where a comparison between the new and existing objects is used to determine whether the new object should replace the existing object.
     If the comparison shows the objects to be equivalent, then the old object is left in place.
     If they differ, the old object is removed from the buildmaster and the new object added.
 
@@ -208,8 +208,8 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`ascii2unicode`.
     This is useful for configuration parameters that may be strings or lists of strings.
 
-buildbot.util.lru
-~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.lru`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.lru
 
@@ -288,8 +288,8 @@ buildbot.util.lru
 
     This class has the same functional interface as LRUCache, but asynchronous locking is used to ensure that in the common case of multiple concurrent requests for the same key, only one fetch is performed.
 
-buildbot.util.bbcollections
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.bbcollections`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.bbcollections
 
@@ -302,7 +302,7 @@ This package provides a few useful collection objects.
 .. py:class:: defaultdict
 
     This is a clone of the Python :class:`collections.defaultdict` for use in Python-2.4.
-    In later versions, this is simply a reference to the built-in :class:`defaultdict`, so buildbot code can simply use :class:`buildbot.util.collections.defaultdict` everywhere.
+    In later versions, this is simply a reference to the built-in :class:`defaultdict`, so Buildbot code can simply use :class:`buildbot.util.collections.defaultdict` everywhere.
 
 .. py:class:: KeyedSets
 
@@ -330,8 +330,8 @@ This package provides a few useful collection objects.
 
     This class is careful to conserve memory space - empty sets do not occupy any space.
 
-buildbot.util.eventual
-~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.eventual`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.eventual
 
@@ -377,8 +377,8 @@ The package defines "later" as "next time the reactor has control", so this is a
     This returns a Deferred which fires when the eventual-send queue is finally empty.
     This is useful for tests and other circumstances where it is useful to know that "later" has arrived.
 
-buildbot.util.debounce
-~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.debounce`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.debounce
 
@@ -422,8 +422,8 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
         This reverses the effects of ``stop``.
         This method can be called on a started debouncer without issues.
 
-buildbot.util.poll
-~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.poll`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.poll
 
@@ -480,8 +480,8 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
         Force a call to the decorated method now.
         If the decorated method is currently running, another call will begin as soon as it completes.
 
-buildbot.util.json
-~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.json`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.json
 
@@ -490,8 +490,8 @@ Use it instead of a more complex conditional import of :mod:`simplejson` or :mod
 
     from buildbot.util import json
 
-buildbot.util.maildir
-~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.maildir`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.maildir
 
@@ -530,8 +530,8 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
 
         Call this from :py:meth:`messageReceived` to start processing the message; this moves the message file to the 'cur' directory and returns an open file handle for it.
 
-buildbot.util.misc
-~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.misc`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.misc
 
@@ -568,8 +568,8 @@ buildbot.util.misc
     Cancel the given deferred after the given time has elapsed, if it has not already been fired.
     Whent his occurs, the deferred's errback will be fired with a :py:class:`twisted.internet.defer.CancelledError` failure.
 
-buildbot.util.netstrings
-~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.netstrings`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.netstrings
 
@@ -601,8 +601,8 @@ While Twisted supports a basic netstring receiver protocol, it does not have a s
 
         The strings decoded so far, if :py:meth:`stringReceived` is not overridden.
 
-buildbot.util.sautils
-~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.sautils`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.sautils
 
@@ -620,8 +620,8 @@ This module contains a few utilities that are not included with SQLAlchemy.
     Return a 3-tuple representing the SQLAlchemy version.
     Note that older versions that did not have a ``__version__`` attribute are represented by ``(0,0,0)``.
 
-buildbot.util.pathmatch
-~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.pathmatch`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.pathmatch
 
@@ -653,8 +653,8 @@ buildbot.util.pathmatch
 
         Returns an iterator which yields all patterns in the matcher as tuples of (pattern, endpoint).
 
-buildbot.util.topicmatch
-~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.topicmatch`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.topicmatch
 
@@ -670,19 +670,19 @@ buildbot.util.topicmatch
         :param string routingKey: routing key to examine
         :returns: True if the routing key matches a topic
 
-buildbot.util.subscription
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.subscription`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The classes in the :py:mod:`buildbot.util.subscription` module are used for master-local subscriptions.
 In the near future, all uses of this module will be replaced with message-queueing implementations that allow subscriptions and subscribers to span multiple masters.
 
-buildbot.util.croniter
-~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.croniter`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This module is a copy of https://github.com/taichino/croniter, and provides support for converting cron-like time specifications into actual times.
 
-buildbot.util.state
-~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.state`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.state
 
@@ -720,8 +720,8 @@ The classes in the :py:mod:`buildbot.util.subscription` module are used for deal
         Set a named state value in the object's persistent state.
         Note that value must be json-able.
 
-buildbot.util.pickle
-~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.pickle`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.pickle
 
@@ -729,8 +729,8 @@ This module is a drop-in replacement for the stdlib ``pickle`` or ``cPickle`` mo
 It adds the ability to load pickles that reference classes that have since been removed from Buildbot.
 It should be used whenever pickles from Buildbot-0.8.x and earlier are loaded.
 
-buildbot.util.identifiers
-~~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.identifiers`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.identifiers
 
@@ -764,8 +764,8 @@ This module makes it easy to manipulate identifiers.
     This is useful when selecting a unique identifier for an object.
     Maximum-length identifiers like ``_999999`` cannot be incremented and will raise :py:exc:`ValueError`.
 
-buildbot.util.lineboundaries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.lineboundaries`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.lineboundaries
 
@@ -792,8 +792,8 @@ buildbot.util.lineboundaries
 
         Flush any remaining partial line by adding a newline and invoking the callback.
 
-buildbot.util.service
-~~~~~~~~~~~~~~~~~~~~~
+:py:mod:`buildbot.util.service`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. py:module:: buildbot.util.service
 

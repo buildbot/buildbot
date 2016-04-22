@@ -163,7 +163,7 @@ Enabling the IRC Bot
 Buildbot includes an IRC bot that you can tell to join a channel and control to report on the status of buildbot.
 
 First, start an IRC client of your choice, connect to irc.freenode.org and join an empty channel.
-In this example we will use #buildbot-test, so go join that channel.
+In this example we will use ``#buildbot-test``, so go join that channel.
 (*Note: please do not join the main buildbot channel!*)
 
 Edit :file:'master.cfg' and look for the *STATUS TARGETS* section.

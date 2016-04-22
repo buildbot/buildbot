@@ -62,7 +62,7 @@ The worker-side Bot object has the following remote methods:
     ``basedir``
         base directory where worker is running
     ``numcpus``
-        number of CPUs on the worker, either as configured or as detected (since buildbot-slave version 0.9.0)
+        number of CPUs on the worker, either as configured or as detected (since ``buildbot-slave`` version 0.9.0)
 
 :meth:`~buildslave.bot.Bot.remote_getVersion`
     Returns the worker's version
@@ -277,7 +277,7 @@ The ``shell`` command sends the following updates:
 
 ``header``
     Similar to ``stdout``, but containing data for a stream of
-    buildbot-specific metadata.
+    Buildbot-specific metadata.
 
 ``rc``
     The exit status of the command, where -- in keeping with UNIX tradition --
