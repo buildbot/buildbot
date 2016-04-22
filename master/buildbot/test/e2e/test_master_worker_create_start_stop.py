@@ -18,6 +18,7 @@ from __future__ import print_function
 import os
 import re
 import subprocess
+import sys
 
 from twisted.internet import defer
 from twisted.python import log
@@ -63,8 +64,17 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
     def _run_command(self, args):
         self._log("Running command: '{0}'".format(" ".join(args)))
+
+        shell = False
+        if sys.platform == 'win32':
+            # There are issues finding Buildbot binaries on windows not in
+            # shell mode: "exceptions.WindowsError: [Error 2]
+            # The system cannot find the file specified"
+            shell = True
+
         process = subprocess.Popen(
-            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            shell=shell)
         stdout, stderr = process.communicate()
         if stderr:
             self._log("stderr:\n{0}".format(stderr))
