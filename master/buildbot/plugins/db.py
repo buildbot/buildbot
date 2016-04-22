@@ -17,21 +17,24 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from buildbot.errors import PluginDBError
-from buildbot.interfaces import IPlugin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from pkg_resources import iter_entry_points
-from types import StringTypes
+from warnings import warn
+
 from zope.interface import Invalid
 from zope.interface.verify import verifyClass
+
+from buildbot.errors import PluginDBError
+from buildbot.interfaces import IPlugin
+
 
 # Base namespace for Buildbot specific plugins
 _NAMESPACE_BASE = 'buildbot'
 
 
 class _PluginEntry(object):
-
     def __init__(self, group, entry, loader):
+        super(_PluginEntry, self).__init__()
+
         self._group = group
         self._entry = entry
         self._value = None
@@ -54,85 +57,19 @@ class _PluginEntry(object):
         dist = self._entry.dist
         return (dist.project_name, dist.version)
 
-    def __ne__(self, other):
-        return self.info != other.info
-
     @property
     def value(self):
         self.load()
         return self._value
 
-
-class _PluginEntryProxy(_PluginEntry):
-    """Proxy for specific entry with custom group name.
-
-    Used to provided access to the same entry from different namespaces.
-    """
-
-    def __init__(self, group, plugin_entry):
-        assert isinstance(plugin_entry, _PluginEntry)
-        self._plugin_entry = plugin_entry
-        self._group = group
-
-    def load(self):
-        self._plugin_entry.load()
-
-    @property
-    def group(self):
-        return self._group
-
-    @property
-    def name(self):
-        return self._plugin_entry.name
-
-    @property
-    def info(self):
-        return self._plugin_entry.info
-
-    @property
-    def value(self):
-        return self._plugin_entry.value
-
-
-class _DeprecatedPluginEntry(_PluginEntry):
-    """Plugin entry that emits warnings when it's value is requested."""
-
-    def __init__(self, compat_name, new_name, plugin_entry):
-        assert isinstance(plugin_entry, _PluginEntry)
-        self._plugin_entry = plugin_entry
-        self._compat_name = compat_name
-        self._new_name = new_name
-
-    def load(self):
-        self._plugin_entry.load()
-
-    @property
-    def group(self):
-        return self._plugin_entry.group
-
-    @property
-    def name(self):
-        return self._plugin_entry.name
-
-    @property
-    def info(self):
-        return self._plugin_entry.info
-
-    @property
-    def value(self):
-        reportDeprecatedWorkerNameUsage(
-            "'{group}.{compat_name}' is deprecated, "
-            "use '{group}.{new_name}' instead".format(
-                group=self.group,
-                compat_name=self._compat_name,
-                new_name=self._new_name))
-        return self._plugin_entry.value
+    def __ne__(self, other):
+        return self.info != other.info
 
 
 class _NSNode(object):
-    # pylint: disable=W0212
-
     def __init__(self):
+        super(_NSNode, self).__init__()
+
         self._children = dict()
 
     def load(self):
@@ -140,8 +77,7 @@ class _NSNode(object):
             child.load()
 
     def add(self, name, entry):
-        assert isinstance(name, StringTypes) and isinstance(entry,
-                                                            _PluginEntry)
+        assert isinstance(name, basestring) and isinstance(entry, _PluginEntry)
         self._add(name, entry)
 
     def _add(self, name, entry):
@@ -179,12 +115,12 @@ class _NSNode(object):
             return child
 
     def info(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, basestring)
 
         return self._get(name).info
 
     def get(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, basestring)
 
         return self._get(name).value
 
@@ -225,16 +161,26 @@ class _Plugins(object):
     represent plugins within a namespace
     """
 
-    def __init__(self, namespace, interface=None, check_extras=True):
+    def __init__(self, namespace, interface=None, check_extras=True,
+                 deprecations=None, warning=DeprecationWarning):
+        super(_Plugins, self).__init__()
+
         if interface is not None:
             assert interface.isOrExtends(IPlugin)
 
+        self._namespace = namespace
         self._group = '%s.%s' % (_NAMESPACE_BASE, namespace)
 
         self._interface = interface
         self._check_extras = check_extras
 
         self._real_tree = None
+
+        if deprecations is None:
+            deprecations = dict()
+
+        self._deprecations = dict(deprecations)
+        self._warning = warning
 
     def _load_entry(self, entry):
         # pylint: disable=W0703
@@ -277,6 +223,10 @@ class _Plugins(object):
         return self._tree.info_all()
 
     @property
+    def namespace(self):
+        return self._namespace
+
+    @property
     def names(self):
         # Expensive operation
         return list(self.info_all())
@@ -300,6 +250,18 @@ class _Plugins(object):
         """
         get an instance of the plugin with the given name
         """
+        if name in self._deprecations:
+            new_name = self._deprecations[name]
+
+            warn('use of {group}.{name} plugin is deprecated; '
+                 'use {group}.{new_name} instead'.format(
+                     group=self._group,
+                     name=name,
+                     new_name=new_name),
+                 self._warning)
+
+            name = new_name
+
         return self._tree.get(name)
 
     def __getattr__(self, name):
@@ -309,37 +271,47 @@ class _Plugins(object):
             raise AttributeError(str(err))
 
 
-class _DeprecatedWorkerPlugins(_Plugins):
-    """Plugins for deprecated 'buildbot.buildslave' entry point."""
+class _DeprecatedPlugins(object):
+    """
+    represent plugins from a deprecated namespace
+    """
 
-    def __init__(self, namespace, interface=None, check_extras=True):
-        assert namespace == 'buildslave'
-        _Plugins.__init__(self, namespace, interface=interface,
-                          check_extras=check_extras)
+    def __init__(self, namespace, target, mapping, warning=DeprecationWarning):
+        super(_DeprecatedPlugins, self).__init__()
+
+        assert isinstance(target, _Plugins)
+        assert issubclass(warning, (DeprecationWarning, Warning)), \
+                          'Oopsy: %r' % (warning,)
+
+        self._namespace = namespace
+        self._target = target
+        self._mapping = dict(mapping)
+        self._warning = warning
 
     def __contains__(self, name):
-        reportDeprecatedWorkerNameUsage(
-            "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
-            "use 'buildbot.plugins.worker' instead "
-            "(you checked is '{0}' name inside "
-            "'buildbot.plugins.buildslave').".format(name))
-
+        warn('"buildbot.plugins.{namespace}" plugins namespace is deprecated; '
+             'use "buildbot.plugins.{target}" instead '.format(
+                 namespace=self._namespace,
+                 target=self._target.namespace),
+             self._warning)
         return _Plugins.__contains__(self, name)
 
     def get(self, name):
-        reportDeprecatedWorkerNameUsage(
-            "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
-            "use 'buildbot.plugins.worker' instead "
-            "(you requested '{0}' name of "
-            "'buildbot.plugins.buildslave' plugin).".format(name))
+        warn('"buildbot.plugins.{namespace}" plugins namespace is deprecated, '
+             'use "buildbot.plugins.{target}" instead (you requested "{name}" '
+             'via "buildbot.plugins.{namespace}" namespace).'.format(
+                 name=name,
+                 namespace=self._namespace,
+                 target=self._target.namespace),
+             self._warning)
 
         return _Plugins.get(self, name)
 
     def __getattr__(self, name):
-        reportDeprecatedWorkerNameUsage(
-            "'buildbot.plugins.buildslave' plugins namespace is deprecated, "
-            "use 'buildbot.plugins.worker' instead "
-            "(you accessed 'buildslave.{0}' name).".format(name))
+        warn('"buildbot.plugins.buildslave" plugins namespace is deprecated; '
+             'use "buildbot.plugins.worker" instead '
+             '(you accessed "buildslave.{0}" name).'.format(name),
+             self._warning)
 
         return _Plugins.__getattr__(self, name)
 
@@ -350,10 +322,31 @@ class _PluginDB(object):
     """
 
     def __init__(self):
+        super(_PluginDB, self).__init__()
+
         self._namespaces = dict()
 
+    def add_transition_namespace(self, namespace, namespace_to, mapping,
+                                 exception=DeprecationWarning):
+        """
+        register given namespace in global database of plugins
+        """
+        tempo = self._namespaces.get(namespace)
+
+        if tempo is None:
+            target_ns = self._namespaces.get(namespace_to)
+
+            assert target_ns is not None, \
+                'Namespace "%s" must be defined' % (namespace_to,)
+
+            tempo = _DeprecatedPlugins(namespace, target_ns, mapping, exception)
+            self._namespaces[namespace] = tempo
+
+        return tempo
+
     def add_namespace(self, namespace, interface=None, check_extras=True,
-                      load_now=False):
+                      load_now=False, deprecations=None,
+                      warning=DeprecationWarning):
         """
         register given namespace in global database of plugins
 
@@ -362,80 +355,8 @@ class _PluginDB(object):
         tempo = self._namespaces.get(namespace)
 
         if tempo is None:
-            if namespace in ['worker', 'buildslave']:
-                # 'buildbot.worker' and 'buildbot.buildslave' namespaces are
-                # treated in the special way:
-                # 1. 'buildslave' namespace is deprecated and it's usage
-                #    should emit warnings.
-                # 2. Built-in into Buildbot plugins were moved from
-                #    'buildslave' namespace to 'worker' namespace.
-                # 3. Built-in plugins must still be available under old names
-                #    in 'buildslave' namespace.
-                # 4. For convenience of using plugins which API is not yet
-                #    moved from 'buildslave' namespace to 'worker', all
-                #    external plugins that are found under 'buildslave'
-                #    namespace should be available through 'worker' namespace
-                #    too.
-                #
-                # 'worker' and 'buildslave' namespaces are added at the
-                # same time with adding workarounds described above.
-
-                assert 'worker' not in self._namespaces
-                assert 'buildslave' not in self._namespaces
-
-                # Load plugins in deprecated 'buildbot.buildslave' namespace
-                # using wrapper that generates warnings, when namespace
-                # attributes are queried.
-                buildslave_ns = _DeprecatedWorkerPlugins(
-                    'buildslave', interface, check_extras)
-                self._namespaces['buildslave'] = buildslave_ns
-
-                # Load plugins in 'buildbot.worker' namespace.
-                worker_ns = _Plugins('worker', interface, check_extras)
-                self._namespaces['worker'] = worker_ns
-
-                # All plugins that use deprecated 'buildslave' namespace
-                # should be available under 'worker' namespace, so add
-                # fake entries for them.
-                worker_group = '%s.%s' % (_NAMESPACE_BASE, 'worker')
-                for name in buildslave_ns.names:
-                    entry = buildslave_ns._tree._get(name)
-                    assert isinstance(entry, _PluginEntry)
-                    proxy_entry = _PluginEntryProxy(worker_group, entry)
-                    worker_ns._tree.add(name, proxy_entry)
-
-                # Add aliases in deprecated 'buildslave' namespace for
-                # built-in plugins.
-                old_new_names = [
-                    ('BuildSlave', 'Worker'),
-                    ('EC2LatentBuildSlave', 'EC2LatentWorker'),
-                    ('LibVirtSlave', 'LibVirtWorker'),
-                    ('OpenStackLatentBuildSlave', 'OpenStackLatentWorker'),
-                ]
-                for compat_name, new_name in old_new_names:
-                    buildslave_ns._tree.add(
-                        compat_name, worker_ns._tree._children[new_name])
-
-                tempo = self._namespaces[namespace]
-
-            elif namespace == 'util':
-                tempo = _Plugins(namespace, interface, check_extras)
-
-                # Handle deprecated plugins names in util namespace
-                old_new_names = [
-                    ('SlaveLock', 'WorkerLock'),
-                    ('enforceChosenSlave', 'enforceChosenWorker'),
-                    ('BuildslaveChoiceParameter', 'WorkerChoiceParameter'),
-                ]
-                for compat_name, new_name in old_new_names:
-                    entry = tempo._tree._get(new_name)
-                    assert isinstance(entry, _PluginEntry)
-                    proxy_entry = _DeprecatedPluginEntry(
-                        compat_name, new_name, entry)
-                    tempo._tree.add(compat_name, proxy_entry)
-
-            else:
-                tempo = _Plugins(namespace, interface, check_extras)
+            tempo = _Plugins(namespace, interface, check_extras,
+                             deprecations=deprecations, warning=warning)
 
             self._namespaces[namespace] = tempo
 
@@ -486,8 +407,19 @@ def info():
     return _DB.info()
 
 
-def get_plugins(namespace, interface=None, check_extras=True, load_now=False):
+def get_plugins(namespace, interface=None, check_extras=True, load_now=False,
+                deprecations=None, warning=DeprecationWarning):
     """
-    helper to get a direct interface to _Plugins
+    get a direct interface to _Plugins
     """
-    return _DB.add_namespace(namespace, interface, check_extras, load_now)
+    return _DB.add_namespace(namespace, interface, check_extras, load_now,
+                             deprecations, warning)
+
+
+def handle_transition_plugins(namespace, namespace_to, mapping,
+                              warning=DeprecationWarning):
+    """
+    register a proxy for a deprecated namespace
+    """
+    return _DB.add_transition_namespace(namespace, namespace_to, mapping,
+                                        warning)
