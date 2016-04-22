@@ -271,7 +271,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
-        self.deferred = defer.Deferred()
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'starting')
+        self.build_status.buildStarted(self)
 
         try:
             self.setupBuild()  # create .steps
@@ -284,30 +286,14 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             # handler
             log.msg("Build.setupBuild failed")
             log.err(Failure())
-            self.finished = True
-            self.results = EXCEPTION
-            self.deferred = None
+            self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
         # flush properties in the beginning of the build
         yield self._flushProperties(None)
-        yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'starting')
-        self.build_status.buildStarted(self)
         yield self.acquireLocks()
 
-        try:
-            # start the sequence of steps and wait until it's finished
-            self.startNextStep()
-            yield self.deferred
-        finally:
-            metrics.MetricCountEvent.log('active_builds', -1)
-
-        yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'finished')
-        yield self.master.data.updates.finishBuild(self.buildid, self.results)
-
-        # mark the build as finished
-        self.workerforbuilder.buildFinished()
+        # start the sequence of steps
+        self.startNextStep()
 
     @staticmethod
     def canStartWithWorkerForBuilder(lockList, workerforbuilder):
@@ -531,6 +517,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         except Exception:
             log.err(Failure(), 'while finishing a build with an exception')
 
+    @defer.inlineCallbacks
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
         marks the Build as complete and returns the Builder to the 'idle'
@@ -542,20 +529,31 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         If 'results' is SUCCESS or WARNINGS, we will permit any dependant
         builds to start. If it is 'FAILURE', those builds will be
         abandoned."""
-        self.stopBuildConsumer.stopConsuming()
-        self.finished = True
-        if self.conn:
-            self.subs.unsubscribe()
-            self.subs = None
-            self.conn = None
-        log.msg(" %s: build finished" % self)
-        self.results = worst_status(self.results, results)
-        self.build_status.setText(text)
-        self.build_status.setResults(self.results)
-        self.build_status.buildFinished()
-        eventually(self.releaseLocks)
-        self.deferred.callback(self)
-        self.deferred = None
+        try:
+            self.stopBuildConsumer.stopConsuming()
+            self.finished = True
+            if self.conn:
+                self.subs.unsubscribe()
+                self.subs = None
+                self.conn = None
+            log.msg(" %s: build finished" % self)
+            self.results = worst_status(self.results, results)
+            self.build_status.setText(text)
+            self.build_status.setResults(self.results)
+            self.build_status.buildFinished()
+            eventually(self.releaseLocks)
+            metrics.MetricCountEvent.log('active_builds', -1)
+
+            yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                               u'finished')
+            yield self.master.data.updates.finishBuild(self.buildid, self.results)
+
+            # mark the build as finished
+            self.workerforbuilder.buildFinished()
+            self.builder.buildFinished(self, self.workerforbuilder)
+        except Exception:
+            log.err(None, 'from finishing a build; this is a '
+                          'serious error - please file a bug at http://buildbot.net')
 
     def releaseLocks(self):
         if self.locks:
@@ -563,9 +561,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         for lock, access in self.locks:
             if lock.isOwner(self, access):
                 lock.release(self, access)
-            else:
-                # This should only happen if we've been interrupted
-                assert self.stopped
 
     def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
         step_stats_list = [

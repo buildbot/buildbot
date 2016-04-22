@@ -436,7 +436,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # http://trac.buildbot.net/ticket/2428).
         d = defer.maybeDeferred(build.startBuild,
                                 bs, workerforbuilder)
-        d.addCallback(lambda _: self.buildFinished(build, workerforbuilder))
         # this shouldn't happen. if it does, the worker will be wedged
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')

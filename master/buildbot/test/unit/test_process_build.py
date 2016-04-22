@@ -20,7 +20,7 @@ from mock import call
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from zope.interface import implements
+from zope.interface import implements, implementer
 
 from buildbot import interfaces
 from buildbot.locks import WorkerLock
@@ -28,6 +28,7 @@ from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.process.properties import Properties
+from buildbot.process.metrics import MetricLogObserver
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -111,6 +112,9 @@ class FakeBuilder:
     def setupProperties(self, props):
         pass
 
+    def buildFinished(self, build, workerforbuilder):
+        pass
+
 
 class FakeStepFactory(object):
 
@@ -122,6 +126,41 @@ class FakeStepFactory(object):
 
     def buildStep(self):
         return self.step
+
+
+class TestException(Exception):
+    pass
+
+
+@implementer(interfaces.IBuildStepFactory)
+class FailingStepFactory(object):
+    """Fake step factory that just returns a fixed step object."""
+
+    def buildStep(self):
+        raise TestException("FailingStepFactory")
+
+
+class _StepController():
+    def __init__(self, step):
+        self._step = step
+
+    def finishStep(self, result):
+        self._step._deferred.callback(result)
+
+
+class _ControllableStep(BuildStep):
+    def __init__(self):
+        BuildStep.__init__(self)
+        self._deferred = defer.Deferred()
+
+    def run(self):
+        return self._deferred
+
+
+def makeControllableStepFactory():
+    step = _ControllableStep()
+    controller = _StepController(step)
+    return controller, FakeStepFactory(step)
 
 
 class TestBuild(unittest.TestCase):
@@ -749,6 +788,55 @@ class TestBuild(unittest.TestCase):
         self.build.number = 3
         url = yield self.build.getUrl()
         self.assertEqual(url, 'http://localhost:8080/#builders/83/builds/3')
+
+    def test_active_builds_metric(self):
+        """
+        The number of active builds is increased when a build starts
+        and decreased when it finishes.
+        """
+        b = self.build
+
+        controller, step_factory = makeControllableStepFactory()
+        b.setStepFactories([step_factory])
+
+        observer = MetricLogObserver()
+        observer.enable()
+        self.addCleanup(observer.disable)
+
+        def get_active_builds():
+            return observer.asDict()['counters'].get('active_builds', 0)
+        self.assertEqual(get_active_builds(), 0)
+
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+
+        self.assertEqual(get_active_builds(), 1)
+
+        controller.finishStep(SUCCESS)
+
+        self.assertEqual(get_active_builds(), 0)
+
+    def test_active_builds_metric_failure(self):
+        """
+        The number of active builds is increased when a build starts
+        and decreased when it finishes..
+        """
+        b = self.build
+
+        b.setStepFactories([FailingStepFactory()])
+
+        observer = MetricLogObserver()
+        observer.enable()
+        self.addCleanup(observer.disable)
+
+        def get_active_builds():
+            return observer.asDict()['counters'].get('active_builds', 0)
+        self.assertEqual(get_active_builds(), 0)
+
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+
+        self.flushLoggedErrors(TestException)
+
+        self.assertEqual(get_active_builds(), 0)
 
 
 class TestMultipleSourceStamps(unittest.TestCase):
