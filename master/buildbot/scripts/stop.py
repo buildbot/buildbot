@@ -22,9 +22,12 @@ import time
 from buildbot.scripts import base
 
 
-def stop(config, signame="TERM", wait=False):
+def stop(config, signame="TERM", wait=None):
     basedir = config['basedir']
     quiet = config['quiet']
+
+    if wait is None:
+        wait = not config['no-wait']
 
     if config['clean']:
         signame = 'USR1'

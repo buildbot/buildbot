@@ -27,6 +27,10 @@ Features
 
 * new :bb:reporter:GitLabStatusPush to report builds results to GitLab.
 
+* ``buildbot stop`` now waits for complete buildmaster stop by default.
+
+* New ``--no-wait`` argument for ``buildbot stop`` which allows not to wait for complete master shutdown.
+
 Fixes
 ~~~~~
 

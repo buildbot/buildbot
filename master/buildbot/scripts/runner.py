@@ -176,6 +176,7 @@ class StopOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
         ["clean", "c", "Clean shutdown master"],
+        ["no-wait", None, "Don't wait for complete master shutdown"],
     ]
 
     def getSynopsis(self):
