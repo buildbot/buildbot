@@ -181,7 +181,7 @@ described in :ref:`developer-Reconfiguration`.
 
     .. py:classmethod:: loadFromDict(config_dict, filename)
 
-        :param dict config_dict: The dictionary containg the configuration to load.
+        :param dict config_dict: The dictionary containing the configuration to load.
         :param string filename: The filename to use when reporting errors.
         :returns: new :py:class:`MasterConfig` instance
 
