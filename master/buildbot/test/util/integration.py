@@ -75,14 +75,16 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         mock_reactor.getThreadPool = reactor.getThreadPool
         mock_reactor.callFromThread = reactor.callFromThread
 
-        if self.proto == 'pb':
-            proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
-            workerclass = worker.Worker
-        elif self.proto == 'null':
-            proto = {"null": {}}
-            workerclass = worker.LocalWorker
-        config_dict['workers'] = [workerclass("local1", "localpw")]
-        config_dict['protocols'] = proto
+        if startWorker:
+            if self.proto == 'pb':
+                proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+                workerclass = worker.Worker
+            elif self.proto == 'null':
+                proto = {"null": {}}
+                workerclass = worker.LocalWorker
+            config_dict['workers'] = [workerclass("local1", "localpw")]
+            config_dict['protocols'] = proto
+
         # create the master and set its config
         m = BuildMaster(
             self.basedir, reactor=mock_reactor, config_loader=DictLoader(config_dict))
