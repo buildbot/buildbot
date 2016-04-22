@@ -501,7 +501,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     # Build Creation
 
-    def maybeStartBuild(self, workerforbuilder, breqs, _reactor=reactor):
+    def maybeStartBuild(self, workerforbuilder, breqs):
         # This method is called by the botmaster whenever this builder should
         # start a set of buildrequests on a worker. Do not call this method
         # directly - use master.botmaster.maybeStartBuildsForBuilder, or one of
