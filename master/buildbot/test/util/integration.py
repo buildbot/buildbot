@@ -32,6 +32,7 @@ from buildbot.test.util import dirs
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 try:
@@ -48,6 +49,41 @@ class DictLoader(object):
 
     def loadConfig(self):
         return MasterConfig.loadFromDict(self.config_dict, '<dict>')
+
+
+@defer.inlineCallbacks
+def getMaster(case, reactor, config_dict):
+    """
+    Create a started ``BuildMaster`` with the given configuration.
+    """
+    basedir = FilePath(case.mktemp())
+    basedir.createDirectory()
+    master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+
+    # TODO: Allow BuildMaster to transparently upgrade the database, at least for tests.
+    master.config = master.config_loader.loadConfig()
+    yield master.db.setup(check_version=False)
+    yield master.db.model.upgrade()
+    master.db.setup = lambda: None
+
+    yield master.startService()
+
+    defer.returnValue(master)
+
+
+def getBuilderIdByName(master, builder_name):
+    """
+    Get the ``builder_id`` of the given builder.
+    """
+    d = master.data.get(('builders',))
+
+    def find_builder(builders):
+        for builder in builders:
+            if builder['name'] == builder_name:
+                return builder['builderid']
+            raise LookupError("Builder not found", builder_name)
+    d.addCallback(find_builder)
+    return d
 
 
 class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
