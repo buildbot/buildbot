@@ -57,7 +57,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         skip = "buildbot-slave package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, config_dict):
+    def setupConfig(self, config_dict, startWorker=True):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
@@ -75,13 +75,12 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         mock_reactor.getThreadPool = reactor.getThreadPool
         mock_reactor.callFromThread = reactor.callFromThread
 
-        workerclass = worker.Worker
         if self.proto == 'pb':
             proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+            workerclass = worker.Worker
         elif self.proto == 'null':
             proto = {"null": {}}
             workerclass = worker.LocalWorker
-
         config_dict['workers'] = [workerclass("local1", "localpw")]
         config_dict['protocols'] = proto
         # create the master and set its config
@@ -104,6 +103,9 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         self.addCleanup(m.db.pool.shutdown)
         self.addCleanup(m.stopService)
 
+        if not startWorker:
+            return
+
         if self.proto == 'pb':
             # We find out the worker port automatically
             workerPort = list(itervalues(m.pbmanager.dispatchers))[
@@ -116,8 +118,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         elif self.proto == 'null':
             self.w = None
         if self.w is not None:
-            self.w.setServiceParent(m)
-            self.addCleanup(self.w.disownServiceParent)
+            self.w.startService()
+            self.addCleanup(self.w.stopService)
 
         @defer.inlineCallbacks
         def dump():
