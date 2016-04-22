@@ -16,20 +16,18 @@ import os
 
 import mock
 
-from buildbot import config
-from buildbot import master
 from buildbot import util
 from buildbot.clients import tryclient
 from buildbot.schedulers import trysched
-from buildbot.test.util import dirs
 from buildbot.test.util import www
+from buildbot.test.util.integration import RunMasterBase
 
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
+from twisted.python.filepath import FilePath
 from twisted.spread import pb
-from twisted.trial import unittest
 
 
 # wait for some asynchronous result
@@ -86,23 +84,11 @@ class FakeRemoteWorker(pb.Referenceable):
         return
 
 
-class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
+class Schedulers(RunMasterBase, www.RequiresWwwMixin):
 
     def setUp(self):
-        global BuildmasterConfig
-        BuildmasterConfig = {}
-        self.basedir = os.path.abspath('basedir')
-        self.setUpDirs(self.basedir)
-
-        self.configfile = os.path.join(self.basedir, 'master.cfg')
-        open(self.configfile, "w").write(
-            'from buildbot.test.integration.test_try_client \\\n'
-            'import masterConfig\n'
-            'BuildmasterConfig = masterConfig()\n')
-
         self.master = None
         self.sch = None
-        self.worker = None
 
         def spawnProcess(pp, executable, args, environ):
             tmpfile = os.path.join(self.jobdir, 'tmp', 'testy')
@@ -141,58 +127,23 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
             self.output.append(msg)
         self.patch(tryclient, 'output', output)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if self.worker:
-            log.msg("stopping worker")
-            yield self.worker.stop()
-        if self.master:
-            log.msg("stopping master")
-            yield self.master.stopService()
-            if self.master.db.pool:
-                log.msg("stopping master db pool")
-                yield self.master.db.pool.shutdown()
-        log.msg("tearDown complete")
-        yield self.tearDownDirs()
-
     def setupJobdir(self):
-        self.jobdir = os.path.join(self.basedir, 'jobs')
+        jobdir = FilePath(self.mktemp())
+        jobdir.createDirectory()
+        self.jobdir = jobdir.path
         for sub in 'new', 'tmp', 'cur':
-            p = os.path.join(self.jobdir, sub)
-            os.makedirs(p)
+            jobdir.child(sub).createDirectory()
         return self.jobdir
 
     @defer.inlineCallbacks
     def startMaster(self, sch, startWorker=False):
-        BuildmasterConfig['schedulers'] = [sch]
+        extra_config = {
+            'schedulers': [sch],
+            'status': [],
+        }
         self.sch = sch
 
-        BuildmasterConfig['status'] = []
-
-        # mock reactor.stop (which trial *really* doesn't
-        # like test code to call!)
-        mock_reactor = mock.Mock(spec=reactor)
-        mock_reactor.callWhenRunning = reactor.callWhenRunning
-        mock_reactor.getThreadPool = reactor.getThreadPool
-        mock_reactor.callFromThread = reactor.callFromThread
-
-        # create the master and set its config
-        m = self.master = master.BuildMaster(
-            self.basedir, self.configfile, reactor=mock_reactor)
-        m.config = config.FileLoader(
-            self.basedir, self.configfile).loadConfig()
-
-        # set up the db
-        yield m.db.setup(check_version=False)
-        yield m.db.model.create()
-
-        # stub out m.db.setup since it was already called above
-        m.db.setup = lambda: None
-
-        # start the service
-        yield m.startService()
-        self.failIf(mock_reactor.stop.called,
-                    "startService tried to stop the reactor; check logs")
+        yield self.setupConfig(masterConfig(extra_config))
 
         # wait until the scheduler is active
         yield waitFor(lambda: self.sch.active)
@@ -206,11 +157,6 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                 log.msg("Scheduler registered at port %d" % self.serverPort)
                 return True
             yield waitFor(getSchedulerPort)
-
-        # now start the fake worker
-        if startWorker:
-            self.worker = FakeRemoteWorker(self.serverPort)
-            yield self.worker.start()
 
     def runClient(self, config):
         self.clt = tryclient.Try(config)
@@ -327,12 +273,9 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)
 
-BuildmasterConfig = {}
 
-
-def masterConfig():
+def masterConfig(extra_config):
     c = {}
-    from buildbot.worker import Worker
     from buildbot.config import BuilderConfig
     from buildbot.process.buildstep import BuildStep
     from buildbot.process.factory import BuildFactory
@@ -343,8 +286,6 @@ def masterConfig():
         def start(self):
             self.finished(results.SUCCESS)
 
-    c['workers'] = [Worker("local1", "localpw")]
-    c['protocols'] = {'pb': {'port': 'tcp:0'}}
     c['change_source'] = []
     c['schedulers'] = []  # filled in above
     f1 = BuildFactory()
@@ -359,7 +300,6 @@ def masterConfig():
     c['buildbotURL'] = "http://localhost:8010/"
     c['db'] = {'db_url': "sqlite:///state.sqlite"}
     c['mq'] = {'debug': True}
-    # test wants to influence the config, but we still return a new config
-    # each time
-    c.update(BuildmasterConfig)
+    # test wants to influence the config, but we still return a new config each time
+    c.update(extra_config)
     return c
