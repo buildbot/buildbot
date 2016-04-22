@@ -45,6 +45,8 @@ Features
 Fixes
 ~~~~~
 
+* The :bb:step:`MsBuild4` and :bb:step:`MsBuild12` steps work again (:bug:`2878`).
+
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
