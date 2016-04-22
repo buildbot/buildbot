@@ -105,6 +105,7 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
 
         self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
                                                    self._doCleanup)
+        self.cleanup_timer.clock = self.master.reactor
         self.cleanup_timer.setServiceParent(self)
         return d
 
