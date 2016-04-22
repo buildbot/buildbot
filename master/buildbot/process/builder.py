@@ -34,7 +34,6 @@ from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import log
 
@@ -96,6 +95,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.updateStatusService = internet.TimerService(30 * 60,
                                                              self.updateBigStatus)
             self.updateStatusService.setServiceParent(self)
+
+    def setServiceParent(self, parent):
+        # botmaster needs to set before setServiceParent which calls startService
+        for child in [self.reclaim_svc, self.updateStatusService]:
+            child.clock = parent.master.reactor
+        return service.MultiService.setServiceParent(self, parent)
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -474,7 +479,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             d = self._resubmit_buildreqs(build)
             d.addErrback(log.err, 'while resubmitting a build request')
         else:
-            complete_at_epoch = reactor.seconds()
+            complete_at_epoch = self.master.reactor.seconds()
             complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
 
