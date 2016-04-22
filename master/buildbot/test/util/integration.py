@@ -70,10 +70,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
-        mock_reactor = mock.Mock(spec=reactor)
-        mock_reactor.callWhenRunning = reactor.callWhenRunning
-        mock_reactor.getThreadPool = reactor.getThreadPool
-        mock_reactor.callFromThread = reactor.callFromThread
+        stop = mock.create_autospec(reactor.stop)
+        self.patch(reactor, 'stop', stop)
 
         if startWorker:
             if self.proto == 'pb':
@@ -86,8 +84,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             config_dict['protocols'] = proto
 
         # create the master and set its config
-        m = BuildMaster(
-            self.basedir, reactor=mock_reactor, config_loader=DictLoader(config_dict))
+        m = BuildMaster(self.basedir, reactor=reactor, config_loader=DictLoader(config_dict))
         self.master = m
 
         # update the DB
@@ -99,7 +96,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
         # start the service
         yield m.startService()
-        self.failIf(mock_reactor.stop.called,
+        self.failIf(stop.called,
                     "startService tried to stop the reactor; check logs")
         # and shutdown the db threadpool, as is normally done at reactor stop
         self.addCleanup(m.db.pool.shutdown)
