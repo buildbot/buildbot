@@ -206,6 +206,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         def check(_):
             self.reactor.stop.assert_called_with()
             self.assertLogged("oh noes")
+            self.assertLogged("BuildMaster startup failed")
         return d
 
     def test_startup_db_not_ready(self):
@@ -220,6 +221,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         def check(_):
             self.reactor.stop.assert_called_with()
             self.assertLogged("GOT HERE")
+            self.assertLogged("BuildMaster startup failed")
         return d
 
     def test_startup_error(self):
@@ -233,6 +235,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         def check(_):
             self.reactor.stop.assert_called_with()
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+            self.assertLogged("BuildMaster startup failed")
         return d
 
     def test_startup_ok(self):
