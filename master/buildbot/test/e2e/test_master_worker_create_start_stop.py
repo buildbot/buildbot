@@ -46,7 +46,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def tearDown(self):
         os.chdir(self.origcwd)
-        
+
         if not self.success:
             # Output ran command logs to stdout to help debugging in CI systems
             # where logs are not available (e.g. Travis).
@@ -65,7 +65,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         log.msg(msg)
 
     def _run_command(self, args):
-        self._log("Running command: '{0}'".format(" ".join(args)))
+        command_str = " ".join(args)
+        self._log("Running command: '{0}'".format(command_str))
 
         shell = False
         if sys.platform == 'win32':
@@ -83,7 +84,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         if stdout:
             self._log("stdout:\n{0}".format(stdout))
         self._log("Process finished with code {0}".format(process.returncode))
-        assert process.returncode == 0, "command failed"
+        assert process.returncode == 0, "command failed: '{0}'".format(
+            command_str)
         return stdout, stderr
 
     def test_master_worker_setup(self):
@@ -113,31 +115,36 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         try:
             # Start master.
+            stdout = self._run_command(["buildbot", "start", master_dir])[0]
+        except:
+            # Try to stop master in case it's process is not actually stopped.
+            self._run_command(["buildbot", "stop", master_dir])
+            raise
+
+        self.assertIn(
+            "The buildmaster appears to have (re)started correctly",
+            stdout)
+
+        try:
+            # Start worker.
             stdout = self._run_command([
-                "buildbot", "start", master_dir])[0]
-            self.assertIn(
-                "The buildmaster appears to have (re)started correctly",
-                stdout)
+                "buildbot-worker", "start", worker_dir])[0]
+        except:
+            # Try to stop master in case it's process is not actually stopped.
+            self._run_command(["buildbot-worker", "stop", worker_dir])
+            raise
 
-            try:
-                # Start worker.
-                stdout = self._run_command([
-                    "buildbot-worker", "start", worker_dir])[0]
-                self.assertIn(
-                    "The buildbot-worker appears to have (re)started "
-                    "correctly",
-                    stdout)
+        self.assertIn(
+            "The buildbot-worker appears to have (re)started "
+            "correctly",
+            stdout)
 
-            finally:
-                # Stop worker.
-                stdout = self._run_command([
-                    "buildbot-worker", "stop", worker_dir])[0]
-                self.assertRegexpMatches(stdout, r"worker process \d+ is dead")
+        # Stop worker.
+        stdout = self._run_command(["buildbot-worker", "stop", worker_dir])[0]
+        self.assertRegexpMatches(stdout, r"worker process \d+ is dead")
 
-        finally:
-            # Stop master.
-            stdout = self._run_command([
-                "buildbot", "stop", master_dir])[0]
-            self.assertRegexpMatches(stdout, r"buildbot process \d+ is dead")
+        # Stop master.
+        stdout = self._run_command(["buildbot", "stop", master_dir])[0]
+        self.assertRegexpMatches(stdout, r"buildbot process \d+ is dead")
 
         self.success = True
