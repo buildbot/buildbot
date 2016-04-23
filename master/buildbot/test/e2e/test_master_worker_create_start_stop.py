@@ -83,6 +83,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         if stdout:
             self._log("stdout:\n{0}".format(stdout))
         self._log("Process finished with code {0}".format(process.returncode))
+        assert process.returncode == 0, "command failed"
         return stdout, stderr
 
     def test_master_worker_setup(self):
