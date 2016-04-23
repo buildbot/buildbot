@@ -25,6 +25,10 @@ install:
   - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
   - "%PYTHON%\\python.exe -m pip install -e slave"
   - "%PYTHON%\\python.exe -m pip install -e worker"
+
+  # Install prebuilt WWW packages, it's not easy to build them.
+  - "%PYTHON%\\python.exe -m pip install http://ftp.buildbot.net/pub/latest/buildbot_www-1latest-py2-none-any.whl"
+
   - "%PYTHON%\\python.exe -m pip list"
 
 build: false
