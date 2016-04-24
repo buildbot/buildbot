@@ -35,14 +35,12 @@ class TestPollingChangeHook(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True):
-        self.changeHook = change_hook.ChangeHookResource(
-            dialects={'poller': options}, master=mock.Mock())
-
         self.request = FakeRequest(args=args)
         self.request.uri = "/change_hook/poller"
         self.request.method = "GET"
-
         master = self.request.site.master
+
+        self.changeHook = change_hook.ChangeHookResource(dialects={'poller': options}, master=master)
         master.change_svc = ChangeManager()
         master.change_svc.setServiceParent(master)
         self.changesrc = self.Subclass("example", 21)
@@ -60,7 +58,7 @@ class TestPollingChangeHook(unittest.TestCase):
         anotherchangesrc.setServiceParent(master.change_svc)
 
         yield self.request.test_render(self.changeHook)
-        yield util.asyncSleep(0)
+        yield util.asyncSleep(0.1)
 
     def tearDown(self):
         return defer.gatherResults([
