@@ -3,7 +3,7 @@ beforeEach ->
     # Mock resultsService
     module ($provide) ->
         $provide.service 'resultsService', ->
-        $provide.service '$modal', ->
+        $provide.service '$uibModal', ->
         null
 
 describe 'Change row directive controller', ->

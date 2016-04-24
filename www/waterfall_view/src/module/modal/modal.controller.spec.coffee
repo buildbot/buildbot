@@ -1,16 +1,16 @@
 beforeEach ->
     # Mock modalService
     module ($provide) ->
-        $provide.service '$modalInstance', -> close: ->
+        $provide.service '$uibModalInstance', -> close: ->
         null
 
 describe 'Waterfall modal controller', ->
-    createController = $rootScope = $modalInstance = scope = null
+    createController = $rootScope = $uibModalInstance = scope = null
 
     injected = ($injector) ->
         $controller = $injector.get('$controller')
         $rootScope = $injector.get('$rootScope')
-        $modalInstance = $injector.get('$modalInstance')
+        $uibModalInstance = $injector.get('$uibModalInstance')
         scope = $rootScope.$new()
 
         createController = ->
@@ -35,10 +35,10 @@ describe 'Waterfall modal controller', ->
         $rootScope.$broadcast('$stateChangeStart')
         expect(m.close).toHaveBeenCalled()
 
-    it 'should call $modalInstance.close on close()', ->
+    it 'should call $uibModalInstance.close on close()', ->
         createController()
         m = scope.m
-        spyOn($modalInstance, 'close')
-        expect($modalInstance.close).not.toHaveBeenCalled()
+        spyOn($uibModalInstance, 'close')
+        expect($uibModalInstance.close).not.toHaveBeenCalled()
         m.close()
-        expect($modalInstance.close).toHaveBeenCalled()
+        expect($uibModalInstance.close).toHaveBeenCalled()

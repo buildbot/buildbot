@@ -4,7 +4,7 @@
             .change-avatar
                 img(ng-src="avatar?email={{cr.change.author_email}}")
             i.fa.fa-chevron-circle-right(ng-click='cr.toggleInfo()' ng-class="{'fa-rotate-90': !cr.infoIsCollapsed}")
-            span(tooltip='{{ cr.change.comments }}' tooltip-placement='top')
+            span(uib-tooltip='{{ cr.change.comments }}' uib-tooltip-placement='top')
                 a(ng-if='cr.change.author_email'
                   ng-href='mailto: {{cr.change.author_email}}'
                   target='_blank')

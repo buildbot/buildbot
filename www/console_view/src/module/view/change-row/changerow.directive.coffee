@@ -16,7 +16,7 @@ class ChangeRow extends Directive
 
 
 class _changeRow extends Controller
-    constructor: ($scope, resultsService, @$modal) ->
+    constructor: ($scope, resultsService, @$uibModal) ->
         angular.extend this, resultsService
         @infoIsCollapsed = true
 
@@ -36,7 +36,7 @@ class _changeRow extends Controller
         @change.link = "#{repository}/commit/#{@change.revision}"
 
     selectBuild: (build) ->
-        modal = @$modal.open
+        modal = @$uibModal.open
             templateUrl: 'console_view/views/modal.html'
             controller: 'consoleModalController as modal'
             windowClass: 'modal-small'

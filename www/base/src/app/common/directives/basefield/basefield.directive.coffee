@@ -10,8 +10,9 @@ class Basefield extends Directive('common')
             controller: '_basefieldController'
         }
 
+
 class _basefield extends Controller('common')
     constructor: ($scope) ->
         # clear error on value change
         $scope.$watch "field.value", (o,n) ->
-            $scope.field.errors = ""
+            $scope.field.haserrors = false

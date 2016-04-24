@@ -1,7 +1,7 @@
 class ConsoleModal extends Controller
-    constructor: ($scope, @$modalInstance, @selectedBuild) ->
+    constructor: ($scope, @$uibModalInstance, @selectedBuild) ->
         $scope.$on '$stateChangeStart', =>
             @close()
 
     close: ->
-        @$modalInstance.close()
+        @$uibModalInstance.close()

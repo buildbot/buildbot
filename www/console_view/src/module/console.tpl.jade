@@ -7,8 +7,8 @@
         .header-content(ng-style='{width: c.width}')
             .col-15
                 .buttons
-                    i.fa.fa-plus-circle(ng-click='c.openAll()' tooltip='Open information for all changes' tooltip-placement='right')
-                    i.fa.fa-minus-circle(ng-click='c.closeAll()' tooltip='Close information for all changes' tooltip-placement='right')
+                    i.fa.fa-plus-circle(ng-click='c.openAll()' uib-tooltip='Open information for all changes' uib-tooltip-placement='right')
+                    i.fa.fa-minus-circle(ng-click='c.closeAll()' uib-tooltip='Close information for all changes' uib-tooltip-placement='right')
                 .search-field
                     input(type='text' name='search' ng-model='search' placeholder='search')
             .col-85
