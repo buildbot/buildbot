@@ -52,7 +52,7 @@ def _assertRegexpMatches(self, text, regexp, msg=None):
     introduced in python 2.7. The goal for this function is to behave exactly
     as assertRegexpMatches() in standard library.
     """
-    if not re.search(text, regexp):
+    if not re.search(regexp, text):
         if msg is not None:
             self.fail(msg)
         else:
