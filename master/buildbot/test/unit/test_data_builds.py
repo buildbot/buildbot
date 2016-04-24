@@ -14,10 +14,6 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
-
 from buildbot.data import builds
 from buildbot.data import resultspec
 from buildbot.test.fake import fakedb
@@ -25,6 +21,10 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
 
 
 # override resultSpec implementation to be noop
@@ -87,7 +87,8 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_properties_injection(self):
-        resultSpec = MockedResultSpec(filters=[resultspec.Filter('property', 'eq', [False])])
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('property', 'eq', [False])])
         build = yield self.callGet(('builders', 77, 'builds', 5), resultSpec=resultSpec)
         self.validateData(build)
         self.assertIn('properties', build)
@@ -95,12 +96,14 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_action_stop(self):
         yield self.callControl("stop", {}, ('builders', 77, 'builds', 5))
-        self.master.mq.assertProductions([(('control', 'builds', '15', 'stop'), {'reason': 'no reason'})])
+        self.master.mq.assertProductions(
+            [(('control', 'builds', '15', 'stop'), {'reason': 'no reason'})])
 
     @defer.inlineCallbacks
     def test_action_stop_reason(self):
         yield self.callControl("stop", {'reason': 'because'}, ('builders', 77, 'builds', 5))
-        self.master.mq.assertProductions([(('control', 'builds', '15', 'stop'), {'reason': 'because'})])
+        self.master.mq.assertProductions(
+            [(('control', 'builds', '15', 'stop'), {'reason': 'because'})])
 
     @defer.inlineCallbacks
     def test_action_rebuild(self):
@@ -110,7 +113,8 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(r, (1, [2]))
 
         buildrequest = yield self.master.data.get(('buildrequests', 82))
-        self.master.data.updates.rebuildBuildrequest.assert_called_with(buildrequest)
+        self.master.data.updates.rebuildBuildrequest.assert_called_with(
+            buildrequest)
 
 
 class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -158,14 +162,16 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_buildrequest_via_filter(self):
-        resultSpec = MockedResultSpec(filters=[resultspec.Filter('buildrequestid', 'eq', [82])])
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('buildrequestid', 'eq', [82])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
     def test_get_buildrequest_via_filter_with_string(self):
-        resultSpec = MockedResultSpec(filters=[resultspec.Filter('buildrequestid', 'eq', ['82'])])
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('buildrequestid', 'eq', ['82'])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
@@ -178,14 +184,16 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_get_complete(self):
-        resultSpec = MockedResultSpec(filters=[resultspec.Filter('complete', 'eq', [False])])
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('complete', 'eq', [False])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
     def test_properties_injection(self):
-        resultSpec = MockedResultSpec(filters=[resultspec.Filter('property', 'eq', [False])])
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('property', 'eq', [False])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         for b in builds:
             self.validateData(b)
@@ -253,7 +261,8 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_event(addBuild,
                                   builderid=10, buildrequestid=13, workerid=20,
                                   exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
-                                              (('builds', '100', 'new'), self.new_build_event),
+                                              (('builds', '100', 'new'),
+                                               self.new_build_event),
                                               (('workers', '20', 'builds', '100', 'new'), self.new_build_event)])
 
     def test_signature_setBuildStateString(self):

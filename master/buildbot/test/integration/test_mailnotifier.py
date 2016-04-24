@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import base64
 
-from twisted.internet import defer
-
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.util.integration import RunMasterBase
+
+from twisted.internet import defer
 
 
 # This integration test creates a master and worker environment,
@@ -51,7 +51,8 @@ class MailMaster(RunMasterBase):
         self.assertEncodedIn("The Buildbot has detected a passing build", mail)
 
     def assertEncodedIn(self, text, mail):
-        if "base64" not in mail:  # python 2.6 default transfer in base64 for utf-8
+        # python 2.6 default transfer in base64 for utf-8
+        if "base64" not in mail:
             self.assertIn(text, mail)
         else:  # b64encode and remove '=' padding (hence [:-1])
             self.assertIn(base64.b64encode(text).rstrip("="), mail)
@@ -64,7 +65,8 @@ class MailMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
         yield self.setupConfig(masterConfig())
-        self.master.config.services = [MailNotifier("bot@foo.com", mode="all", buildSetSummary=True)]
+        self.master.config.services = [
+            MailNotifier("bot@foo.com", mode="all", buildSetSummary=True)]
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         yield self.doTest()
 

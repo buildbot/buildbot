@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 
 import sys
-import twisted
 
+import twisted
 from twisted.python import runtime
 from twisted.python import versions
 

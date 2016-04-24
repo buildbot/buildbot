@@ -12,12 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot import util
+from buildbot.util import misc
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
-
-from buildbot import util
-from buildbot.util import misc
 
 
 class deferredLocked(unittest.TestCase):
@@ -75,7 +75,8 @@ class deferredLocked(unittest.TestCase):
 
             @util.deferredLocked('aLock')
             def check_locked(self, arg1, arg2):
-                testcase.assertEqual([self.aLock.locked, arg1, arg2], [True, 1, 2])
+                testcase.assertEqual(
+                    [self.aLock.locked, arg1, arg2], [True, 1, 2])
                 return defer.succeed(None)
         obj = C()
         obj.aLock = defer.DeferredLock()

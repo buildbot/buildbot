@@ -18,11 +18,11 @@ import os
 
 import mock
 
+from buildbot import util
+
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
-
-from buildbot import util
 
 
 class formatInterval(unittest.TestCase):

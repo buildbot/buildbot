@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.trial import unittest
-
 from buildbot.process import cache
+
+from twisted.trial import unittest
 
 
 class CacheManager(unittest.TestCase):

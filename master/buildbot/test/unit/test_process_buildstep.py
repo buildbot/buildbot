@@ -12,14 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import mock
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.trial import unittest
+from future.utils import itervalues
 
 from buildbot import locks
 from buildbot.interfaces import WorkerTooOldError
@@ -31,9 +25,9 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
+from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -45,6 +39,11 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
 
 
 class OldStyleStep(buildstep.BuildStep):
@@ -152,7 +151,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         lock2 = mock.Mock(spec=locks.WorkerLock)
         lock2.name = "workerlock"
 
-        self.setupStep(self.FakeBuildStep(locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
+        self.setupStep(self.FakeBuildStep(
+            locks=[locks.LockAccess(lock1, 'counting'), locks.LockAccess(lock2, 'exclusive')]))
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
 
@@ -936,7 +936,8 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_extra_logfile(self):
-        self.setupStep(ShellMixinExample(logfiles={'cleanup': 'cleanup.log'}), wantDefaultWorkdir=False)
+        self.setupStep(ShellMixinExample(
+            logfiles={'cleanup': 'cleanup.log'}), wantDefaultWorkdir=False)
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'],
                         logfiles={'cleanup': 'cleanup.log'})
@@ -1000,7 +1001,8 @@ class TestShellMixin(steps.BuildStepMixin,
 
     @defer.inlineCallbacks
     def test_example_env(self):
-        self.setupStep(ShellMixinExample(env={'BAR': 'BAR'}), wantDefaultWorkdir=False)
+        self.setupStep(
+            ShellMixinExample(env={'BAR': 'BAR'}), wantDefaultWorkdir=False)
         self.build.builder.config.env = {'FOO': 'FOO'}
         self.expectCommands(
             ExpectShell(workdir='build', command=['./cleanup.sh'],

@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import cStringIO
 import os
 import re
@@ -21,12 +19,13 @@ import sys
 import textwrap
 
 import mock
-
-from twisted.trial import unittest
+from future.utils import iteritems
 
 from buildbot.scripts import base
 from buildbot.scripts import checkconfig
 from buildbot.test.util import dirs
+
+from twisted.trial import unittest
 
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
@@ -142,7 +141,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 class TestCheckconfig(unittest.TestCase):
 
     def setUp(self):
-        self.loadConfig = mock.Mock(spec=checkconfig._loadConfig, return_value=3)
+        self.loadConfig = mock.Mock(
+            spec=checkconfig._loadConfig, return_value=3)
         # checkconfig is decorated with @in_reactor, so strip that decoration
         # since the reactor is already running
         self.patch(checkconfig, 'checkconfig', checkconfig.checkconfig._orig)

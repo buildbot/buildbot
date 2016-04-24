@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.schedulers import timed
 from buildbot.test.util import scheduler
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
@@ -75,11 +75,14 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
                                                  periodicBuildTimer=-2))
 
     def test_constructor_no_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=10)
-        self.assertEqual(sched.reason, "The Periodic scheduler named 'test' triggered this build")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], periodicBuildTimer=10)
+        self.assertEqual(
+            sched.reason, "The Periodic scheduler named 'test' triggered this build")
 
     def test_constructor_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], periodicBuildTimer=10, reason="periodic")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], periodicBuildTimer=10, reason="periodic")
         self.assertEqual(sched.reason, "periodic")
 
     def test_iterations_simple(self):
@@ -136,7 +139,8 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
         self.clock.advance(3)  # get partway into that build
 
         d = sched.deactivate()  # begin stopping the service
-        d.addCallback(lambda _: self.events.append('STOP@%d' % self.clock.seconds()))
+        d.addCallback(
+            lambda _: self.events.append('STOP@%d' % self.clock.seconds()))
 
         # run the clock out
         while self.clock.seconds() < 40:
@@ -152,7 +156,8 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
     def test_iterations_with_initial_state(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    periodicBuildTimer=13)
-        self.state['last_build'] = self.clock.seconds() - 7  # so next build should start in 6s
+        # so next build should start in 6s
+        self.state['last_build'] = self.clock.seconds() - 7
 
         sched.activate()
         self.clock.advance(0)  # let it trigger the first build

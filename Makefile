@@ -48,6 +48,10 @@ prebuilt_frontend:
 # install git hooks for validating patches at commit time
 hooks:
 	cp common/hooks/* `git rev-parse --git-dir`/hooks
-
 rmpyc:
 	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
+
+isort:
+	isort -rc .
+	git diff --name-only --stat "HEAD" | grep '.py$$' | xargs autopep8 -i
+	git commit -a -m "isort+autopep8 run"

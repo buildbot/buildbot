@@ -18,13 +18,13 @@ import re
 
 from dateutil.parser import parse as dateparse
 
+from twisted.python import log
+
 try:
     import json
     assert json
 except ImportError:
     import simplejson as json
-
-from twisted.python import log
 
 
 def getChanges(request, options=None):

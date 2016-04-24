@@ -16,6 +16,17 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.process.workerforbuilder import AbstractWorkerForBuilder as _AbstractWorkerForBuilder
+from buildbot.process.workerforbuilder import LatentWorkerForBuilder as _LatentWorkerForBuilder
+from buildbot.process.workerforbuilder import WorkerForBuilder as _WorkerForBuilder
+# pylint: disable=unused-import
+from buildbot.process.workerforbuilder import ATTACHING  # noqa
+from buildbot.process.workerforbuilder import BUILDING  # noqa
+from buildbot.process.workerforbuilder import IDLE  # noqa
+from buildbot.process.workerforbuilder import LATENT  # noqa
+from buildbot.process.workerforbuilder import PINGING  # noqa
+from buildbot.process.workerforbuilder import SUBSTANTIATING  # noqa
+from buildbot.process.workerforbuilder import Ping  # noqa
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
@@ -23,17 +34,6 @@ reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.process.workerforbuilder' module instead".format(old=__name__))
 
-# pylint: disable=unused-import
-from buildbot.process.workerforbuilder import ATTACHING  # noqa
-from buildbot.process.workerforbuilder import AbstractWorkerForBuilder as _AbstractWorkerForBuilder
-from buildbot.process.workerforbuilder import BUILDING  # noqa
-from buildbot.process.workerforbuilder import IDLE  # noqa
-from buildbot.process.workerforbuilder import LATENT  # noqa
-from buildbot.process.workerforbuilder import LatentWorkerForBuilder as _LatentWorkerForBuilder
-from buildbot.process.workerforbuilder import PINGING  # noqa
-from buildbot.process.workerforbuilder import Ping  # noqa
-from buildbot.process.workerforbuilder import SUBSTANTIATING  # noqa
-from buildbot.process.workerforbuilder import WorkerForBuilder as _WorkerForBuilder
 
 deprecatedWorkerModuleAttribute(locals(), _AbstractWorkerForBuilder,
                                 compat_name="AbstractSlaveBuilder",

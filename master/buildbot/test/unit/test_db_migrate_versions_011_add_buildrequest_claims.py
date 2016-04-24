@@ -13,13 +13,12 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
-
 from sqlalchemy.engine import reflection
-
-from twisted.trial import unittest
 
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):

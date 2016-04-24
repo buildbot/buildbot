@@ -16,10 +16,6 @@ import datetime
 
 import mock
 
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot.db import buildsets
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -30,6 +26,10 @@ from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from buildbot.util import json
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class Tests(interfaces.InterfaceTests):
@@ -494,7 +494,8 @@ class RealTests(Tests):
 
                 # one buildset_sourcestamps row
                 r = conn.execute(self.db.model.buildset_sourcestamps.select())
-                self.assertEqual(list(r.keys()), [u'id', u'buildsetid', u'sourcestampid'])
+                self.assertEqual(
+                    list(r.keys()), [u'id', u'buildsetid', u'sourcestampid'])
                 self.assertEqual(r.fetchall(), [(1, bsid, 234)])
             return self.db.pool.do(thd)
         d.addCallback(check)
@@ -534,7 +535,8 @@ class RealTests(Tests):
                         for row in r.fetchall()]
                 self.assertEqual(rows, [(bsid, 234)])
 
-                # and two buildrequests rows (and don't re-check the default columns)
+                # and two buildrequests rows (and don't re-check the default
+                # columns)
                 r = conn.execute(self.db.model.buildrequests.select())
                 rows = [(row.buildsetid, row.id, row.builderid)
                         for row in r.fetchall()]

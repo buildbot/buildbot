@@ -14,11 +14,6 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot import locks
 from buildbot.test.fake import bworkermanager
@@ -32,6 +27,11 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import base
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class ConcreteWorker(base.AbstractWorker):
@@ -452,7 +452,8 @@ class TestAbstractWorker(unittest.TestCase):
         yield worker.startService()
 
         yield worker.shutdown()
-        self.assertEqual(worker.conn.remoteCalls, [('remoteSetBuilderList', []), ('remoteShutdown',)])
+        self.assertEqual(
+            worker.conn.remoteCalls, [('remoteSetBuilderList', []), ('remoteShutdown',)])
 
     @defer.inlineCallbacks
     def test_worker_shutdown_not_connected(self):
@@ -494,8 +495,10 @@ class TestAbstractLatentWorker(unittest.SynchronousTestCase):
         self.successResultOf(old.reconfigServiceWithSibling(new))
 
     def test_reconfigService(self):
-        old = base.AbstractLatentWorker("name", "password", build_wait_timeout=10)
-        new = base.AbstractLatentWorker("name", "password", build_wait_timeout=30)
+        old = base.AbstractLatentWorker(
+            "name", "password", build_wait_timeout=10)
+        new = base.AbstractLatentWorker(
+            "name", "password", build_wait_timeout=30)
 
         self.do_test_reconfigService(old, new)
 

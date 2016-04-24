@@ -12,14 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.python import log
-from twisted.python.failure import Failure
-
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
 from buildbot.util import service
 from buildbot.worker.protocols import pb as bbpb
+
+from twisted.internet import defer
+from twisted.python import log
+from twisted.python.failure import Failure
 
 
 class WorkerRegistration(object):
@@ -82,7 +82,8 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         # If the worker is connected, self.workers[workername].worker will
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
-        # workers attribute is actually just an alias to multiService's namedService
+        # workers attribute is actually just an alias to multiService's
+        # namedService
         return self.namedServices
 
     def getWorkerByName(self, workerName):
@@ -120,7 +121,8 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                 old_conn.loseConnection()
                 log.msg("Got error while trying to ping connected worker %s:"
                         "%s" % (workerName, e))
-            log.msg("Old connection for '%s' was lost, accepting new" % workerName)
+            log.msg("Old connection for '%s' was lost, accepting new" %
+                    workerName)
 
         try:
             yield conn.remotePrint(message="attached")

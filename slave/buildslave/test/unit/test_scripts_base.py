@@ -20,6 +20,7 @@ import sys
 
 from buildslave.scripts import base
 from buildslave.test.util import misc
+
 from twisted.trial import unittest
 
 

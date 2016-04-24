@@ -12,36 +12,34 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-from future.utils import itervalues
-
 import os
 import re
 import sys
 import traceback
 import warnings
-
 from types import MethodType
 
+from future.utils import iteritems
+from future.utils import itervalues
 from zope.interface import implementer
-
-from twisted.python import failure
-from twisted.python import log
 
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
-from buildbot.util import ComparableMixin
 from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
-from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
+from buildbot.util import ComparableMixin
+from buildbot.util import safeTranslate
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
+
+from twisted.python import failure
+from twisted.python import log
 
 
 class ConfigErrors(Exception):
@@ -150,7 +148,8 @@ class FileLoader(ComparableMixin, object):
         _errors = errors = ConfigErrors()
 
         try:
-            filename, config_dict = loadConfigDict(self.basedir, self.configFileName)
+            filename, config_dict = loadConfigDict(
+                self.basedir, self.configFileName)
             config = MasterConfig.loadFromDict(config_dict, filename)
         except ConfigErrors as e:
             errors.merge(e)
@@ -237,7 +236,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "schedulers", "services", "status", "title", "titleURL",
         "user_managers", "validation", "www", "workers",
 
-        "slavePortnum",  # deprecated, c['protocols']['pb']['port'] should be used
+        # deprecated, c['protocols']['pb']['port'] should be used
+        "slavePortnum",
         "slaves",  # deprecated, "worker" should be used
     ])
     compare_attrs = list(_known_config_keys)
@@ -344,9 +344,11 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         copy_int_param('logCompressionLimit')
 
-        self.logCompressionMethod = config_dict.get('logCompressionMethod', 'gz')
+        self.logCompressionMethod = config_dict.get(
+            'logCompressionMethod', 'gz')
         if self.logCompressionMethod not in ('raw', 'bz2', 'gz', 'lz4'):
-            error("c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+            error(
+                "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
         if self.logCompressionMethod == "lz4":
             try:
@@ -354,7 +356,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 import lz4
                 [lz4]
             except ImportError:
-                error("To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
+                error(
+                    "To set c['logCompressionMethod'] to 'lz4' you must install the lz4 library ('pip install lz4')")
 
         copy_int_param('logMaxSize')
         copy_int_param('logMaxTailSize')
@@ -376,7 +379,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         codebaseGenerator = config_dict.get('codebaseGenerator')
         if (codebaseGenerator is not None and
                 not callable(codebaseGenerator)):
-            error("codebaseGenerator must be a callable accepting a dict and returning a str")
+            error(
+                "codebaseGenerator must be a callable accepting a dict and returning a str")
         else:
             self.codebaseGenerator = codebaseGenerator
 
@@ -423,7 +427,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             self.multiMaster = config_dict["multiMaster"]
 
         if 'debugPassword' in config_dict:
-            log.msg("the 'debugPassword' parameter is unused and can be removed from the configuration flie")
+            log.msg(
+                "the 'debugPassword' parameter is unused and can be removed from the configuration flie")
 
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that
@@ -461,7 +466,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             config_dict = db
 
         if 'db_poll_interval' in config_dict and throwErrors:
-            warnDeprecated("0.8.7", "db_poll_interval is deprecated and will be ignored")
+            warnDeprecated(
+                "0.8.7", "db_poll_interval is deprecated and will be ignored")
 
         # we don't attempt to parse db URLs here - the engine strategy will do
         # so.
@@ -670,7 +676,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error(msg)
             return
 
-        msg = lambda s: "c['status'] contains an object that is not a status receiver (type %r)" % type(s)
+        msg = lambda s: "c['status'] contains an object that is not a status receiver (type %r)" % type(
+            s)
         for s in status:
             if not interfaces.IStatusReceiver.providedBy(s):
                 error(msg(s))
@@ -855,7 +862,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
                  slavename=None,  # deprecated, use `workername` instead
                  slavenames=None,  # deprecated, use `workernames` instead
-                 slavebuilddir=None,  # deprecated, use `workerbuilddir` instead
+                 # deprecated, use `workerbuilddir` instead
+                 slavebuilddir=None,
                  nextSlave=None,  # deprecated, use `nextWorker` instead
                  ):
 
@@ -890,7 +898,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
-            error("builder names must not start with an underscore: '%s'" % name)
+            error(
+                "builder names must not start with an underscore: '%s'" % name)
         try:
             self.name = util.ascii2unicode(name)
         except UnicodeDecodeError:
@@ -901,7 +910,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             error("builder '%s' has no factory" % name)
         from buildbot.process.factory import BuildFactory
         if factory is not None and not isinstance(factory, BuildFactory):
-            error("builder '%s's factory is not a BuildFactory instance" % name)
+            error("builder '%s's factory is not a BuildFactory instance" %
+                  name)
         self.factory = factory
 
         # workernames can be a single worker name or a list, and should also
@@ -920,7 +930,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                 error("builder '%s': workername must be a string" % (name,))
             workernames = workernames + [workername]
         if not workernames:
-            error("builder '%s': at least one workername is required" % (name,))
+            error("builder '%s': at least one workername is required" %
+                  (name,))
 
         self.workernames = workernames
         self._registerOldWorkerAttr("workernames")
@@ -953,7 +964,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                 error("builder '%s': tags must be a list" % (name,))
             bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
             if bad_tags:
-                error("builder '%s': tags list contains something that is not a string" % (name,))
+                error(
+                    "builder '%s': tags list contains something that is not a string" % (name,))
         else:
             tags = []
 
@@ -969,7 +981,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                             nextWorker.func_code.co_argcount == 3)):
             warnDeprecated(
                 "0.9", "nextWorker now takes a 3rd argument (build request)")
-            self.nextWorker = lambda x, y, z: nextWorker(x, y)  # pragma: no cover
+            self.nextWorker = lambda x, y, z: nextWorker(
+                x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')

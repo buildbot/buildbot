@@ -18,14 +18,14 @@ import os
 import shutil
 import sys
 
+from buildbot_worker import runprocess
+from buildbot_worker.commands import base
+from buildbot_worker.commands import utils
+
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import runtime
-
-from buildbot_worker import runprocess
-from buildbot_worker.commands import base
-from buildbot_worker.commands import utils
 
 
 class MakeDirectory(base.Command):
@@ -44,7 +44,8 @@ class MakeDirectory(base.Command):
             self.sendStatus({'rc': 0})
         except OSError as e:
             log.msg("MakeDirectory %s failed" % dirname, e)
-            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+            self.sendStatus(
+                {'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -89,7 +90,8 @@ class RemoveDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus({'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
+                self.sendStatus(
+                    {'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
         else:
@@ -121,7 +123,8 @@ class RemoveDirectory(base.Command):
             return defer.succeed(0)
         # Attempt a recursive chmod and re-try the rm -rf after.
 
-        command = ["chmod", "-Rf", "u+rwx", os.path.join(self.builder.basedir, self.dir)]
+        command = ["chmod", "-Rf", "u+rwx",
+                   os.path.join(self.builder.basedir, self.dir)]
         if sys.platform.startswith('freebsd'):
             # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
             # directory for which it doesn't have permission, before changing that
@@ -142,7 +145,8 @@ class CopyDirectory(base.Command):
 
     header = "cpdir"
 
-    # args['todir'] and args['fromdir'] are relative to Builder directory, and are required.
+    # args['todir'] and args['fromdir'] are relative to Builder directory, and
+    # are required.
     requiredArgs = ['todir', 'fromdir']
 
     def setup(self, args):
@@ -164,7 +168,8 @@ class CopyDirectory(base.Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus({'header': 'exception from copytree\n' + f.getTraceback()})
+                self.sendStatus(
+                    {'header': 'exception from copytree\n' + f.getTraceback()})
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
 
@@ -176,7 +181,8 @@ class CopyDirectory(base.Command):
                 os.makedirs(os.path.dirname(todir))
             if os.path.exists(todir):
                 # I don't think this happens, but just in case..
-                log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
+                log.msg(
+                    "cp target '%s' already exists -- cp will not do what you think!" % todir)
 
             command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
             c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
@@ -198,7 +204,8 @@ class StatFile(base.Command):
     requireArgs = ['file']
 
     def start(self):
-        filename = os.path.join(self.builder.basedir, self.args.get('workdir', ''), self.args['file'])
+        filename = os.path.join(
+            self.builder.basedir, self.args.get('workdir', ''), self.args['file'])
 
         try:
             stat = os.stat(filename)
@@ -206,7 +213,8 @@ class StatFile(base.Command):
             self.sendStatus({'rc': 0})
         except OSError as e:
             log.msg("StatFile %s failed" % filename, e)
-            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, filename)})
+            self.sendStatus(
+                {'header': '%s: %s: %s' % (self.header, e.strerror, filename)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -226,7 +234,8 @@ class GlobPath(base.Command):
             self.sendStatus({'rc': 0})
         except OSError as e:
             log.msg("GlobPath %s failed" % pathname, e)
-            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
+            self.sendStatus(
+                {'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -246,5 +255,6 @@ class ListDir(base.Command):
             self.sendStatus({'rc': 0})
         except OSError as e:
             log.msg("ListDir %s failed" % dirname, e)
-            self.sendStatus({'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+            self.sendStatus(
+                {'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})

@@ -19,14 +19,13 @@ import os
 import stat
 import sys
 import traceback
-
 from contextlib import contextmanager
+
+from buildbot import config as config_module
 
 from twisted.internet import defer
 from twisted.python import runtime
 from twisted.python import usage
-
-from buildbot import config as config_module
 
 
 @contextmanager
@@ -59,12 +58,14 @@ def checkBasedir(config):
         if isinstance(tac.get('rotateLength', 0), str):
             print("ERROR: rotateLength is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
-            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            print(
+                "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
         if isinstance(tac.get('maxRotatedFiles', 0), str):
             print("ERROR: maxRotatedFiles is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
-            print("ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
+            print(
+                "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
 
     return True
@@ -75,7 +76,8 @@ def loadConfig(config, configFileName='master.cfg'):
         print("checking %s" % configFileName)
 
     try:
-        master_cfg = config_module.FileLoader(config['basedir'], configFileName).loadConfig()
+        master_cfg = config_module.FileLoader(
+            config['basedir'], configFileName).loadConfig()
     except config_module.ConfigErrors as e:
         print("Errors loading configuration:")
 
@@ -112,7 +114,8 @@ def isBuildmasterDir(dir):
 def getConfigFromTac(basedir):
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
-        # don't mess with the global namespace, but set __file__ for relocatable buildmasters
+        # don't mess with the global namespace, but set __file__ for
+        # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
         execfile(tacFile, tacGlobals)
         return tacGlobals

@@ -15,19 +15,19 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot import config
 from buildbot.interfaces import ITriggerableScheduler
-from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import CANCELLED
 from buildbot.process.buildstep import EXCEPTION
 from buildbot.process.buildstep import SUCCESS
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class Trigger(BuildStep):
@@ -101,7 +101,8 @@ class Trigger(BuildStep):
         # are available at buildbot.data.buildrequests).
         for brid in self.brids:
             self.master.data.control("cancel",
-                                     {'reason': 'parent build was interrupted'},
+                                     {'reason':
+                                         'parent build was interrupted'},
                                      ("buildrequests", brid))
         if self.running and not self.ended:
             self.ended = True
@@ -122,10 +123,12 @@ class Trigger(BuildStep):
             raise ValueError("unknown triggered scheduler: %r" % (name,))
         sch = schedulers[name]
         if not ITriggerableScheduler.providedBy(sch):
-            raise ValueError("triggered scheduler is not ITriggerableScheduler: %r" % (name,))
+            raise ValueError(
+                "triggered scheduler is not ITriggerableScheduler: %r" % (name,))
         return sch
 
-    # This customization enpoint allows users to dynamically select which scheduler and properties to trigger
+    # This customization enpoint allows users to dynamically select which
+    # scheduler and properties to trigger
     def getSchedulersAndProperties(self):
         return [(sched, self.set_properties) for sched in self.schedulerNames]
 
@@ -228,7 +231,8 @@ class Trigger(BuildStep):
 
             self.brids.extend(itervalues(brids))
             for brid in brids.values():
-                # put the url to the brids, so that we can have the status from the beginning
+                # put the url to the brids, so that we can have the status from
+                # the beginning
                 url = self.master.status.getURLForBuildrequest(brid)
                 yield self.addURL("%s #%d" % (sch.name, brid), url)
             dl.append(resultsDeferred)

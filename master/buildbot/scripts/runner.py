@@ -25,10 +25,10 @@ import textwrap
 
 import sqlalchemy as sa
 
+from buildbot.scripts import base
+
 from twisted.python import reflect
 from twisted.python import usage
-
-from buildbot.scripts import base
 
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in
@@ -641,7 +641,8 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.dataspec.dataspec"
     optParameters = [
         ['out', 'o', "dataspec.json", "output to specified path"],
-        ['global', 'g', None, "output a js script, that sets a global, for inclusion in testsuite"],
+        ['global', 'g', None,
+            "output a js script, that sets a global, for inclusion in testsuite"],
     ]
 
     def getSynopsis(self):
@@ -655,7 +656,8 @@ class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
 
     subcommandFunction = "buildbot.scripts.processwwwindex.processwwwindex"
     optParameters = [
-        ['index-file', 'i', None, "Path to the index.html file to be processed"],
+        ['index-file', 'i', None,
+            "Path to the index.html file to be processed"],
     ]
 
 

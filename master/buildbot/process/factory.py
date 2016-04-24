@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 import warnings
 
-from twisted.python import deprecate
-from twisted.python import versions
-
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.build import Build
@@ -28,6 +25,9 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
+
+from twisted.python import deprecate
+from twisted.python import versions
 
 
 # deprecated, use BuildFactory.addStep
@@ -107,7 +107,8 @@ class GNUAutoconf(BuildFactory):
         if reconf is True:
             reconf = ["autoreconf", "-si"]
         if reconf is not None:
-            self.addStep(ShellCommand(name="autoreconf", command=reconf, env=configureEnv))
+            self.addStep(
+                ShellCommand(name="autoreconf", command=reconf, env=configureEnv))
 
         if configure is not None:
             # we either need to wind up with a string (which will be
@@ -215,7 +216,8 @@ class BasicBuildFactory(GNUAutoconf):
         method = "clobber"
         if cvsCopy:
             method = "copy"
-        source = CVS(cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode, method=method)
+        source = CVS(
+            cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode, method=method)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,

@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot import config
 from buildbot.changes import base
 from buildbot.pbutil import NewCredPerspective
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class ChangePerspective(NewCredPerspective):

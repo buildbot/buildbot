@@ -12,15 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import hashlib
+
 from future.moves.urllib.parse import urlencode
 from future.moves.urllib.parse import urljoin
 
-import hashlib
-
-from twisted.internet import defer
-
 from buildbot.util import config
 from buildbot.www import resource
+
+from twisted.internet import defer
 
 
 class AvatarBase(config.ConfiguredMixin):
@@ -53,7 +53,8 @@ class AvatarResource(resource.Resource):
 
     def reconfigResource(self, new_config):
         self.avatarMethods = new_config.www.get('avatar_methods', [])
-        self.defaultAvatarFullUrl = urljoin(new_config.buildbotURL, self.defaultAvatarUrl)
+        self.defaultAvatarFullUrl = urljoin(
+            new_config.buildbotURL, self.defaultAvatarUrl)
         self.cache = {}
         # ensure the avatarMethods is a iterable
         if isinstance(self.avatarMethods, AvatarBase):

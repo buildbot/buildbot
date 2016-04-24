@@ -21,7 +21,6 @@ Standard setup script.
 
 import os
 import sys
-
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils.core import setup

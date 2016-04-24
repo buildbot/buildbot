@@ -12,16 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import mock
-
-from twisted.internet import defer
-from twisted.trial import unittest
+from future.utils import itervalues
 
 from buildbot.process import buildrequest
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestBuildRequestCollapser(unittest.TestCase):
@@ -445,7 +444,8 @@ class TestBuildRequest(unittest.TestCase):
         d.addCallback(lambda _:
                       master.db.buildrequests.getBuildRequest(289))
         d.addCallback(lambda brdict: brDicts.append(brdict))
-        d.addCallback(lambda _: buildrequest.BuildRequest.canBeCollapsed(master, brDicts[0], brDicts[1]))
+        d.addCallback(lambda _: buildrequest.BuildRequest.canBeCollapsed(
+            master, brDicts[0], brDicts[1]))
 
         def check(canBeCollapsed):
             self.assertEqual(canBeCollapsed, False)

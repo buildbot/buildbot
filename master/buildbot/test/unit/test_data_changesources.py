@@ -14,16 +14,16 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.python import failure
-from twisted.trial import unittest
-
 from buildbot.data import changesources
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.trial import unittest
 
 
 class ChangeSourceEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -177,7 +177,8 @@ class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):
         self.master.db.changesources.findChangeSourceId = mock.Mock(
             return_value=defer.succeed(10))
         self.assertEqual((yield self.rtype.findChangeSourceId(u'cs')), 10)
-        self.master.db.changesources.findChangeSourceId.assert_called_with(u'cs')
+        self.master.db.changesources.findChangeSourceId.assert_called_with(
+            u'cs')
 
     def test_signature_trySetChangeSourceMaster(self):
         @self.assertArgSpecMatches(
@@ -191,7 +192,8 @@ class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):
         self.master.db.changesources.setChangeSourceMaster = mock.Mock(
             return_value=defer.succeed(None))
         yield self.rtype.trySetChangeSourceMaster(10, 20)
-        self.master.db.changesources.setChangeSourceMaster.assert_called_with(10, 20)
+        self.master.db.changesources.setChangeSourceMaster.assert_called_with(
+            10, 20)
 
     @defer.inlineCallbacks
     def test_trySetChangeSourceMaster_fails(self):

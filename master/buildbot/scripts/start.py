@@ -17,14 +17,14 @@ from __future__ import print_function
 import os
 import sys
 
-from twisted.internet import protocol
-from twisted.internet import reactor
-from twisted.python.runtime import platformType
-
 from buildbot.scripts import base
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
+
+from twisted.internet import protocol
+from twisted.internet import reactor
+from twisted.python.runtime import platformType
 
 
 class Follower:
@@ -102,7 +102,8 @@ def launch(config):
             "--python=buildbot.tac"]
 
     # ProcessProtocol just ignores all output
-    reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
+    reactor.spawnProcess(
+        protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
 
 
 def start(config):

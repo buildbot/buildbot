@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.reporters import irc
 from buildbot.reporters import words
 from buildbot.test.util import config
 from buildbot.util import service
+
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class FakeContact(service.AsyncService):
@@ -125,7 +125,8 @@ class TestIrcStatusBot(unittest.TestCase):
     def test_action_unrelated_buildbot(self):
         b = self.makeBot()
         b.contactClass = FakeContact
-        b.action('jimmy!~foo@bar', '#ch', 'waves at buildbot')  # b.nickname is not 'buildbot'
+        # b.nickname is not 'buildbot'
+        b.action('jimmy!~foo@bar', '#ch', 'waves at buildbot')
 
         c = b.getContact('jimmy', '#ch')
         self.assertEqual(c.actions, [])

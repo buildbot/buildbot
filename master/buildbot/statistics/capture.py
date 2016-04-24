@@ -15,11 +15,11 @@
 import abc
 import re
 
-from twisted.internet import defer
-from twisted.internet import threads
-
 from buildbot import config
 from buildbot.errors import CaptureCallbackError
+
+from twisted.internet import defer
+from twisted.internet import threads
 
 
 class Capture(object):
@@ -33,7 +33,8 @@ class Capture(object):
     def __init__(self, routingKey, callback):
         self.routingKey = routingKey
         self._callback = callback
-        # parent service and buildmaster to be set when StatsService initialized
+        # parent service and buildmaster to be set when StatsService
+        # initialized
         self.parent_svcs = []
         self.master = None
 
@@ -66,7 +67,8 @@ class CapturePropertyBase(Capture):
         routingKey = ("builders", None, "builds", None, "finished")
 
         def default_callback(props, property_name):
-            return props[property_name][0]  # index: 0 - prop_value, 1 - prop_source
+            # index: 0 - prop_value, 1 - prop_source
+            return props[property_name][0]
 
         if not callback:
             callback = default_callback
@@ -85,7 +87,8 @@ class CapturePropertyBase(Capture):
             properties = yield self.master.data.get(("builds", msg['buildid'], "properties"))
 
             if self._regex:
-                filtered_prop_names = [pn for pn in properties if re.match(self._property_name, pn)]
+                filtered_prop_names = [
+                    pn for pn in properties if re.match(self._property_name, pn)]
             else:
                 filtered_prop_names = [self._property_name]
 
@@ -162,7 +165,8 @@ class CaptureBuildTimes(Capture):
             try:
                 ret_val = self._callback(*self._retValParams(msg))
             except Exception as e:
-                # catching generic exceptions is okay here since we propagate it
+                # catching generic exceptions is okay here since we propagate
+                # it
                 raise CaptureCallbackError("%s Exception raised: %s with message: %s" %
                                            (self._err_msg(msg, builder_info['name']),
                                             type(e).__name__, str(e)))
@@ -325,7 +329,8 @@ class CaptureDataBase(Capture):
             callback = identity
 
         # this is the routing key which is used to register consumers on to mq layer
-        # this following key created in StatsService.yieldMetricsValue and used here
+        # this following key created in StatsService.yieldMetricsValue and used
+        # here
         routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
         Capture.__init__(self, routingKey, callback)
 

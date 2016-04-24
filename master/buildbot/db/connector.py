@@ -15,10 +15,6 @@
 
 import textwrap
 
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot import util
 from buildbot.db import builders
 from buildbot.db import buildrequests
@@ -41,6 +37,10 @@ from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
 from buildbot.worker_transition import WorkerAPICompatMixin
+
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.python import log
 
 
 upgrade_message = textwrap.dedent("""\
@@ -85,11 +85,13 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
         d = service.AsyncMultiService.setServiceParent(self, p)
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
-        self.changesources = changesources.ChangeSourcesConnectorComponent(self)
+        self.changesources = changesources.ChangeSourcesConnectorComponent(
+            self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
         self.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self)
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
-        self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
+        self.buildrequests = buildrequests.BuildRequestsConnectorComponent(
+            self)
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.workers = workers.WorkersConnectorComponent(self)
@@ -116,7 +118,8 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
         # set up the engine and pool
         self._engine = enginestrategy.create_engine(db_url,
                                                     basedir=self.basedir)
-        self.pool = pool.DBThreadPool(self._engine, reactor=self.master.reactor, verbose=verbose)
+        self.pool = pool.DBThreadPool(
+            self._engine, reactor=self.master.reactor, verbose=verbose)
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:

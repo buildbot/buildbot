@@ -12,14 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.revlinks import GithubRevlink
 from buildbot.revlinks import GitwebMatch
 from buildbot.revlinks import RevlinkMatch
 from buildbot.revlinks import SourceforgeGitRevlink
 from buildbot.revlinks import SourceforgeGitRevlink_AlluraPlatform
 from buildbot.revlinks import default_revlink_matcher
+
+from twisted.trial import unittest
 
 
 class TestGithubRevlink(unittest.TestCase):
@@ -102,7 +102,8 @@ class TestGitwebMatch(unittest.TestCase):
 
     def testOrgmode(self):
         revision = '490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8'
-        matcher = GitwebMatch('git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
+        matcher = GitwebMatch(
+            'git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
         self.assertEquals(matcher(revision, 'git://orgmode.org/org-mode.git'),
                           'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
 
@@ -112,8 +113,11 @@ class TestDefaultRevlinkMultiPlexer(unittest.TestCase):
 
     def testAllRevlinkMatchers(self):
         # GithubRevlink
-        self.assertTrue(default_revlink_matcher(self.revision, 'https://github.com/buildbot/buildbot.git'))
+        self.assertTrue(default_revlink_matcher(
+            self.revision, 'https://github.com/buildbot/buildbot.git'))
         # SourceforgeGitRevlink
-        self.assertTrue(default_revlink_matcher(self.revision, 'git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'))
+        self.assertTrue(default_revlink_matcher(
+            self.revision, 'git://gemrb.git.sourceforge.net/gitroot/gemrb/gemrb'))
         # SourceforgeGitRevlink_AlluraPlatform
-        self.assertTrue(default_revlink_matcher(self.revision, 'git://git.code.sf.net/p/klusters/klusters'))
+        self.assertTrue(default_revlink_matcher(
+            self.revision, 'git://git.code.sf.net/p/klusters/klusters'))

@@ -12,22 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import re
 
 import mock
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.trial import unittest
+from future.utils import iteritems
 
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import words
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import datetime2epoch
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class TestContactChannel(unittest.TestCase):
@@ -40,7 +39,8 @@ class TestContactChannel(unittest.TestCase):
                                              wantData=True, wantDb=True)
 
         for builderid, name in zip(self.BUILDER_IDS, self.BUILDER_NAMES):
-            self.master.db.builders.addTestBuilder(builderid=builderid, name=name)
+            self.master.db.builders.addTestBuilder(
+                builderid=builderid, name=name)
 
         # I think the 'bot' part of this is actually going away ...
         # TO REMOVE:
@@ -64,7 +64,8 @@ class TestContactChannel(unittest.TestCase):
 
         # fake out clean shutdown
         self.bot.master = self.master
-        self.bot.master.botmaster = mock.Mock(name='IRCStatusBot-instance.master.botmaster')
+        self.bot.master.botmaster = mock.Mock(
+            name='IRCStatusBot-instance.master.botmaster')
         self.bot.master.botmaster.shuttingDown = False
 
         def cleanShutdown():
@@ -328,8 +329,10 @@ class TestContactChannel(unittest.TestCase):
         self.master.db.insertTestData([
             fakedb.Worker(id=1, name=u'linux', info={}),  # connected one
             fakedb.Worker(id=2, name=u'linux', info={}),  # disconnected one
-            fakedb.BuilderMaster(id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
-            fakedb.BuilderMaster(id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
+            fakedb.BuilderMaster(
+                id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
+            fakedb.BuilderMaster(
+                id=4013, masterid=13, builderid=self.BUILDER_IDS[1]),
             fakedb.ConfiguredWorker(id=14013,
                                     workerid=2, buildermasterid=4012),
             fakedb.ConfiguredWorker(id=14013,
@@ -395,8 +398,10 @@ class TestContactChannel(unittest.TestCase):
         yield self.do_test_command('last')
         self.assertEqual(len(self.sent), 2)
         sent = self.sub_seconds(self.sent)
-        self.assertIn('last build [builder1]: last build N seconds ago: test', sent)
-        self.assertIn('last build [builder2]: (no builds run since last restart)', sent)
+        self.assertIn(
+            'last build [builder1]: last build N seconds ago: test', sent)
+        self.assertIn(
+            'last build [builder2]: (no builds run since last restart)', sent)
 
     @defer.inlineCallbacks
     def test_command_last_builder_bogus(self):
@@ -408,14 +413,16 @@ class TestContactChannel(unittest.TestCase):
         yield self.do_test_command('last', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 1)
         sent = self.sub_seconds(self.sent)
-        self.assertIn('last build [builder1]: last build N seconds ago: test', sent)
+        self.assertIn(
+            'last build [builder1]: last build N seconds ago: test', sent)
 
     @defer.inlineCallbacks
     def test_command_last_builder1(self):
         self.setupSomeBuilds()
         yield self.do_test_command('last', args=self.BUILDER_NAMES[1])
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('last build [builder2]: (no builds run since last restart)', self.sent)
+        self.assertIn(
+            'last build [builder2]: (no builds run since last restart)', self.sent)
 
     @defer.inlineCallbacks
     def test_command_watch(self):
@@ -450,8 +457,10 @@ class TestContactChannel(unittest.TestCase):
         self.setupSomeBuilds()
         yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
         self.assertEqual(len(self.sent), 2)
-        self.assertIn('watching build builder1 #3 until it finishes..', self.sent)
-        self.assertIn('watching build builder1 #6 until it finishes..', self.sent)
+        self.assertIn(
+            'watching build builder1 #3 until it finishes..', self.sent)
+        self.assertIn(
+            'watching build builder1 #6 until it finishes..', self.sent)
 
     @defer.inlineCallbacks
     def test_command_watch_builder0_get_notifications(self):
@@ -462,7 +471,8 @@ class TestContactChannel(unittest.TestCase):
 
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
-        self.assertIn('Hey! build builder1 #6 is complete: Success []', self.sent)
+        self.assertIn(
+            'Hey! build builder1 #6 is complete: Success []', self.sent)
 
     @defer.inlineCallbacks
     def sendBuildFinishedMessage(self, buildid, results=0):
@@ -476,12 +486,14 @@ class TestContactChannel(unittest.TestCase):
                                         buildrequestid=build['buildrequestid'],
                                         workerid=build['workerid'],
                                         masterid=build['masterid'],
-                                        started_at=datetime2epoch(build['started_at']),
+                                        started_at=datetime2epoch(
+                                            build['started_at']),
                                         complete=True,
-                                        complete_at=datetime2epoch(build['complete_at']),
+                                        complete_at=datetime2epoch(
+                                            build['complete_at']),
                                         state_string=u'',
                                         results=results,
-            ))
+        ))
 
     @defer.inlineCallbacks
     def test_command_stop(self):

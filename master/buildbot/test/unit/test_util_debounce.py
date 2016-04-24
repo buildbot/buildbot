@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
+from buildbot.util import debounce
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import failure
 from twisted.python import log
 from twisted.trial import unittest
-
-from buildbot.util import debounce
 
 
 class DebouncedClass(object):

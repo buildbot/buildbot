@@ -18,17 +18,16 @@ import os.path
 import socket
 import sys
 
+import buildbot_worker
+from buildbot_worker import monkeypatches
+from buildbot_worker.commands import base
+from buildbot_worker.commands import registry
+
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
-
-import buildbot_worker
-
-from buildbot_worker import monkeypatches
-from buildbot_worker.commands import base
-from buildbot_worker.commands import registry
 
 
 class UnknownCommand(pb.Error):
@@ -228,7 +227,8 @@ class WorkerForBuilderBase(service.Service):
 
     def remote_shutdown(self):
         log.msg("worker shutting down on command from master")
-        log.msg("NOTE: master is using deprecated WorkerForBuilder.shutdown method")
+        log.msg(
+            "NOTE: master is using deprecated WorkerForBuilder.shutdown method")
         reactor.stop()
 
 
@@ -244,7 +244,8 @@ class BotBase(service.MultiService):
         self.basedir = basedir
         self.numcpus = None
         self.usePTY = usePTY
-        self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
+        self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding(
+        ) or 'ascii'
         self.builders = {}
 
     def startService(self):

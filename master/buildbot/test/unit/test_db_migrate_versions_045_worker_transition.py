@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
-
 from sqlalchemy.engine.reflection import Inspector
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 from buildbot.db.types.json import JsonObject
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -79,7 +78,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                       nullable=False),
             sa.Column('started_at', sa.Integer, nullable=False),
             sa.Column('complete_at', sa.Integer),
-            sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+            sa.Column(
+                'state_string', sa.Text, nullable=False, server_default=''),
             sa.Column('results', sa.Integer),
         )
 
@@ -116,25 +116,29 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
 
         metadata.create_all()
 
-        sa.Index('builds_buildrequestid', self.builds.c.buildrequestid).create()
+        sa.Index(
+            'builds_buildrequestid', self.builds.c.buildrequestid).create()
         sa.Index('builds_number',
                  self.builds.c.builderid, self.builds.c.number,
                  unique=True).create()
         sa.Index('builds_buildslaveid', self.builds.c.buildslaveid).create()
         sa.Index('builds_masterid', self.builds.c.masterid).create()
 
-        sa.Index('buildslaves_name', self.buildslaves.c.name, unique=True).create()
+        sa.Index(
+            'buildslaves_name', self.buildslaves.c.name, unique=True).create()
 
         sa.Index('configured_slaves_buildmasterid',
                  self.configured_buildslaves.c.buildermasterid).create()
-        sa.Index('configured_slaves_slaves', self.configured_buildslaves.c.buildslaveid).create()
+        sa.Index('configured_slaves_slaves',
+                 self.configured_buildslaves.c.buildslaveid).create()
         sa.Index('configured_slaves_identity',
                  self.configured_buildslaves.c.buildermasterid,
                  self.configured_buildslaves.c.buildslaveid, unique=True).create()
 
         sa.Index('connected_slaves_masterid',
                  self.connected_buildslaves.c.masterid).create()
-        sa.Index('connected_slaves_slaves', self.connected_buildslaves.c.buildslaveid).create()
+        sa.Index('connected_slaves_slaves',
+                 self.connected_buildslaves.c.buildslaveid).create()
         sa.Index('connected_slaves_identity',
                  self.connected_buildslaves.c.masterid,
                  self.connected_buildslaves.c.buildslaveid, unique=True).create()
@@ -319,7 +323,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 ])
 
             # 'configured_workers' table contents.
-            configured_workers = sautils.Table('configured_workers', metadata, autoload=True)
+            configured_workers = sautils.Table(
+                'configured_workers', metadata, autoload=True)
             c = configured_workers.c
             q = sa.select(
                 [c.id, c.buildermasterid, c.workerid]

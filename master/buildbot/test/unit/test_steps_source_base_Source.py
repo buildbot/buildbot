@@ -16,11 +16,11 @@ from exceptions import AttributeError
 
 import mock
 
-from twisted.trial import unittest
-
 from buildbot.steps.source import Source
 from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
+
+from twisted.trial import unittest
 
 
 class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):

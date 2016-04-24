@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 from mock import Mock
 
-from twisted.trial import unittest
-
 from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import ws
+
+from twisted.trial import unittest
 
 
 class WsResource(www.WwwTestMixin, unittest.TestCase):
@@ -32,7 +32,8 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
 
     def test_ping(self):
         self.proto.onMessage(json.dumps(dict(cmd="ping", _id=1)), False)
-        self.proto.sendMessage.assert_called_with('{"msg":"pong","code":200,"_id":1}')
+        self.proto.sendMessage.assert_called_with(
+            '{"msg":"pong","code":200,"_id":1}')
 
     def test_bad_cmd(self):
         self.proto.onMessage(json.dumps(dict(cmd="poing", _id=1)), False)
@@ -50,7 +51,8 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
             '{"_id":null,"code":400,"error":"no \'_id\' in websocket frame"}')
 
     def test_startConsuming(self):
-        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
+        self.proto.onMessage(
+            json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
         self.proto.sendMessage.assert_called_with(
             '{"msg":"OK","code":200,"_id":1}')
         self.master.mq.verifyMessages = False
@@ -59,19 +61,23 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
             '{"k":"builds/1/new","m":{"buildid":1}}')
 
     def test_startConsumingBadPath(self):
-        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path={}, _id=1)), False)
+        self.proto.onMessage(
+            json.dumps(dict(cmd="startConsuming", path={}, _id=1)), False)
         self.proto.sendMessage.assert_called_with(
             '{"_id":1,"code":400,"error":"invalid path format \'{}\'"}')
 
     def test_stopConsumingNotRegistered(self):
-        self.proto.onMessage(json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=1)), False)
+        self.proto.onMessage(
+            json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=1)), False)
         self.proto.sendMessage.assert_called_with(
             '{"_id":1,"code":400,"error":"path was not consumed \'builds/*/*\'"}')
 
     def test_stopConsuming(self):
-        self.proto.onMessage(json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
+        self.proto.onMessage(
+            json.dumps(dict(cmd="startConsuming", path="builds/*/*", _id=1)), False)
         self.proto.sendMessage.assert_called_with(
             '{"msg":"OK","code":200,"_id":1}')
-        self.proto.onMessage(json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=2)), False)
+        self.proto.onMessage(
+            json.dumps(dict(cmd="stopConsuming", path="builds/*/*", _id=2)), False)
         self.proto.sendMessage.assert_called_with(
             '{"msg":"OK","code":200,"_id":2}')

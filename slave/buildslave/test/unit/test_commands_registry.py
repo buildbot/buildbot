@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-
 from buildslave.commands import registry
 from buildslave.commands import shell
+
+from twisted.trial import unittest
 
 
 class Registry(unittest.TestCase):
@@ -26,7 +26,8 @@ class Registry(unittest.TestCase):
         self.assertEqual(factory, shell.SlaveShellCommand)
 
     def test_getFactory_KeyError(self):
-        self.assertRaises(KeyError, lambda: registry.getFactory('nosuchcommand'))
+        self.assertRaises(
+            KeyError, lambda: registry.getFactory('nosuchcommand'))
 
     def test_getAllCommandNames(self):
         self.failUnless('shell' in registry.getAllCommandNames())

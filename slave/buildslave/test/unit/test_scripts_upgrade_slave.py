@@ -13,22 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import os
+
+import mock
 
 from buildslave.scripts import upgrade_slave
 from buildslave.test.util import misc
+
 from twisted.trial import unittest
 
 MODERN_BUILDBOT_TAC = \
-"""# dummy buildbot.tac
+    """# dummy buildbot.tac
 import os
 
 from buildslave.bot import BuildSlave
 """
 
 OLD_BUILDBOT_TAC = \
-"""# dummy buildbot.tac
+    """# dummy buildbot.tac
 import os
 
 from buildbot.slave.bot import BuildSlave

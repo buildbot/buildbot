@@ -13,19 +13,14 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
-from future.utils import itervalues
 
-import StringIO
 import os
+import StringIO
 import sys
 
 import mock
-
+from future.utils import itervalues
 from zope.interface import implementer
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
 
 from buildbot.config import MasterConfig
 from buildbot.interfaces import IConfigLoader
@@ -34,6 +29,11 @@ from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
 from buildbot.test.util import dirs
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
+
 try:
     from buildslave.bot import BuildSlave
 except ImportError:
@@ -42,6 +42,7 @@ except ImportError:
 
 @implementer(IConfigLoader)
 class DictLoader(object):
+
     def __init__(self, config_dict):
         self.config_dict = config_dict
 
@@ -83,7 +84,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         config_dict['workers'] = [workerclass("local1", "localpw")]
         config_dict['protocols'] = proto
         # create the master and set its config
-        m = BuildMaster(self.basedir, reactor=mock_reactor, config_loader=DictLoader(config_dict))
+        m = BuildMaster(
+            self.basedir, reactor=mock_reactor, config_loader=DictLoader(config_dict))
         self.master = m
 
         # update the DB
@@ -100,11 +102,13 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
         if self.proto == 'pb':
             # We find out the worker port automatically
-            workerPort = list(itervalues(m.pbmanager.dispatchers))[0].port.getHost().port
+            workerPort = list(itervalues(m.pbmanager.dispatchers))[
+                0].port.getHost().port
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
-            self.w = BuildSlave("127.0.0.1", workerPort, "local1", "localpw", self.basedir, False, False)
+            self.w = BuildSlave(
+                "127.0.0.1", workerPort, "local1", "localpw", self.basedir, False, False)
         elif self.proto == 'null':
             self.w = None
         if self.w is not None:
@@ -200,14 +204,17 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             print("    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
                                                        statusToString(step['results'])), file=out)
             for url in step['urls']:
-                print("       url:%s (%s)" % (url['name'], url['url']), file=out)
+                print("       url:%s (%s)" %
+                      (url['name'], url['url']), file=out)
             for log in step['logs']:
-                print("        log:%s (%d)" % (log['name'], log['num_lines']), file=out)
+                print("        log:%s (%d)" %
+                      (log['name'], log['num_lines']), file=out)
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
     def printLog(self, log, out):
-        print(" " * 8 + "*********** LOG: %s *********" % (log['name'],), file=out)
+        print(" " * 8 + "*********** LOG: %s *********" %
+              (log['name'],), file=out)
         if log['type'] == 's':
             for line in log['contents']['content'].splitlines():
                 linetype = line[0]

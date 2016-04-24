@@ -12,15 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import weakref
 import warnings
-
-from twisted.application import internet
-from twisted.application import service
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.python import log
+import weakref
 
 from zope.interface import implements
 
@@ -31,12 +24,19 @@ from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
 from buildbot.process.workerforbuilder import BUILDING
 from buildbot.status.builder import RETRY
+from buildbot.util import service as util_service
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
-from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
+
+from twisted.application import internet
+from twisted.application import service
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import log
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -286,7 +286,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.workers.remove(wfb)
 
         self.builder_status.addPointEvent(['disconnect', worker.workername])
-        wfb.detached()  # inform the WorkerForBuilder that their worker went away
+        # inform the WorkerForBuilder that their worker went away
+        wfb.detached()
         self.updateBigStatus()
 
     def updateBigStatus(self):
@@ -301,7 +302,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             else:
                 self.builder_status.setBigState("idle")
         except Exception:
-            log.err(None, "while trying to update status of builder '%s'" % (self.name,))
+            log.err(
+                None, "while trying to update status of builder '%s'" % (self.name,))
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
@@ -331,7 +333,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
                     fn = cleanups.pop()
                     fn()
             except Exception:
-                log.err(failure.Failure(), "while running %r" % (run_cleanups,))
+                log.err(failure.Failure(), "while running %r" %
+                        (run_cleanups,))
 
         # the last cleanup we want to perform is to update the big
         # status based on any other cleanup
@@ -340,7 +343,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
         build.setupProperties()
-        log.msg("starting build %s using worker %s" % (build, workerforbuilder))
+        log.msg("starting build %s using worker %s" %
+                (build, workerforbuilder))
 
         # set up locks
         build.setLocks(self.config.locks)
@@ -417,7 +421,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # and now.  If so, bail out.  The build.startBuild call below transfers
         # responsibility for monitoring this connection to the Build instance,
         # so this check ensures we hand off a working connection.
-        if not workerforbuilder.worker.conn:  # TODO: replace with isConnected()
+        # TODO: replace with isConnected()
+        if not workerforbuilder.worker.conn:
             log.msg("worker disappeared before build could start")
             run_cleanups()
             defer.returnValue(False)
@@ -473,7 +478,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             complete_at = epoch2datetime(complete_at_epoch)
             brids = [br.id for br in build.requests]
 
-            d = self.master.data.updates.completeBuildRequests(brids, results, complete_at=complete_at)
+            d = self.master.data.updates.completeBuildRequests(
+                brids, results, complete_at=complete_at)
             # nothing in particular to do with this deferred, so just log it if
             # it fails..
             d.addErrback(log.err, 'while marking build requests as completed')

@@ -12,15 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import sqlalchemy as sa
 import sqlalchemy.exc
-
-from twisted.internet import defer
+from future.utils import iteritems
 
 from buildbot.db import NULL
 from buildbot.db import base
+
+from twisted.internet import defer
 
 
 class SchedulerAlreadyClaimedError(Exception):

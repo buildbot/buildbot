@@ -19,6 +19,7 @@ import sys
 
 from buildbot_worker.scripts import base
 from buildbot_worker.test.util import misc
+
 from twisted.trial import unittest
 
 

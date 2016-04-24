@@ -16,9 +16,9 @@ import re
 
 from dateutil.parser import parse as dateparse
 
-from twisted.python import log
-
 from buildbot.util import json
+
+from twisted.python import log
 
 
 def _process_change(payload, user, repo, repo_url, project, codebase=None):
@@ -100,6 +100,7 @@ def getChanges(request, options=None):
         codebase = codebase[0]
     # This field is unused:
     # private = payload['repository']['private']
-    changes = _process_change(payload, user, repo, repo_url, project, codebase=codebase)
+    changes = _process_change(
+        payload, user, repo, repo_url, project, codebase=codebase)
     log.msg("Received %s changes from gitlab" % len(changes))
     return (changes, 'git')

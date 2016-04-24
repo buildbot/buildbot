@@ -15,13 +15,8 @@
 
 import re
 
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
-from buildbot.reporters import http
-
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -29,6 +24,10 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import http
+
+from twisted.internet import defer
+from twisted.python import log
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
@@ -84,8 +83,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             payload['name'] = context
 
         return self.session.post('%s/api/v3/projects/%d/statuses/%s' % (
-                                self.baseURL, project_id, sha),
-                                json=payload)
+            self.baseURL, project_id, sha),
+            json=payload)
 
     @defer.inlineCallbacks
     def send(self, build):
@@ -124,9 +123,9 @@ class GitLabStatusPush(http.HttpStatusPushBase):
 
         # retrieve project id
         proj = yield self.session.get('%s/api/v3/projects/%s%%2F%s' % (
-                                        self.baseURL,
-                                        repoOwner.encode('utf-8'),
-                                        repoName.encode('utf-8')))
+            self.baseURL,
+            repoOwner.encode('utf-8'),
+            repoName.encode('utf-8')))
         proj = proj.json()
 
         for sourcestamp in sourcestamps:
@@ -143,11 +142,11 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                 if res.status_code not in (200, 201, 204):
                     message = res.json().get('message', 'unspecified error')
                     log.msg(
-                         'Could not send status "{state}" for '
-                         '{repoOwner}/{repoName} at {sha}: {message}'.format(
-                             state=state, repoOwner=repoOwner,
-                             repoName=repoName, sha=sha,
-                             message=message))
+                        'Could not send status "{state}" for '
+                        '{repoOwner}/{repoName} at {sha}: {message}'.format(
+                            state=state, repoOwner=repoOwner,
+                            repoName=repoName, sha=sha,
+                            message=message))
                 elif self.verbose:
                     log.msg(
                         'Status "{state}" sent for '

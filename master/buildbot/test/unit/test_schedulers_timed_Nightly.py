@@ -16,15 +16,15 @@ import time
 
 import mock
 
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.trial import unittest
-
 from buildbot.changes import filter
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
 
 
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
@@ -41,7 +41,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(timed.Nightly(**kwargs),
                                      self.OBJECTID, overrideBuildsetMethods=True)
 
-        self.master.db.insertTestData([fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])])
+        self.master.db.insertTestData(
+            [fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])])
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()
@@ -81,7 +82,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     def mkss(self, **kwargs):
         # create sourcestamp for expected_sourcestamps in assertBuildset.
-        ss = dict(branch='master', project='', repository='', sourcestampsetid=100)
+        ss = dict(
+            branch='master', project='', repository='', sourcestampsetid=100)
         ss.update(kwargs)
         return ss
 
@@ -108,11 +110,14 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     # Tests
 
     def test_constructor_no_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default')
-        self.assertEqual(sched.reason, "The Nightly scheduler named 'test' triggered this build")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default')
+        self.assertEqual(
+            sched.reason, "The Nightly scheduler named 'test' triggered this build")
 
     def test_constructor_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', reason="hourly")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', reason="hourly")
         self.assertEqual(sched.reason, "hourly")
 
     def test_constructor_change_filter(self):
@@ -121,7 +126,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
         assert sched.change_filter
 
     def test_constructor_month(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], branch='default', month='1')
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default', month='1')
         self.assertEqual(sched.month, "1")
 
     # end-to-end tests: let's see the scheduler in action
@@ -281,15 +287,18 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_oneChanged(self):
-        # Test createAbsoluteSourceStamps=True when only one codebase has changed
+        # Test createAbsoluteSourceStamps=True when only one codebase has
+        # changed
         yield self.do_test_iterations_onlyIfChanged(
-            (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
+            (120, self.makeFakeChange(
+                number=3, codebase='a', revision='2345:bcd'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
                        'b': {'repository': "", 'branch': 'master'}},
             createAbsoluteSourceStamps=True)
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        # addBuildsetForChanges calls getCodebase, so this isn't too interesting
+        # addBuildsetForChanges calls getCodebase, so this isn't too
+        # interesting
         self.assertEqual(self.addBuildsetCallTimes, [300])
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForChanges', {
@@ -325,7 +334,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        # addBuildsetForChanges calls getCodebase, so this isn't too interesting
+        # addBuildsetForChanges calls getCodebase, so this isn't too
+        # interesting
         self.assertEqual(self.addBuildsetCallTimes, [300])
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForChanges', {
@@ -344,14 +354,17 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
     def test_iterations_onlyIfChanged_createAbsoluteSourceStamps_bothChanged(self):
         # Test createAbsoluteSourceStamps=True when both codebases have changed
         yield self.do_test_iterations_onlyIfChanged(
-            (120, self.makeFakeChange(number=3, codebase='a', revision='2345:bcd'), True),
-            (122, self.makeFakeChange(number=4, codebase='b', revision='1234:abc'), True),
+            (120, self.makeFakeChange(
+                number=3, codebase='a', revision='2345:bcd'), True),
+            (122, self.makeFakeChange(
+                number=4, codebase='b', revision='1234:abc'), True),
             codebases={'a': {'repository': "", 'branch': 'master'},
                        'b': {'repository': "", 'branch': 'master'}},
             createAbsoluteSourceStamps=True)
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
-        # addBuildsetForChanges calls getCodebase, so this isn't too interesting
+        # addBuildsetForChanges calls getCodebase, so this isn't too
+        # interesting
         self.assertEqual(self.addBuildsetCallTimes, [300])
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForChanges', {

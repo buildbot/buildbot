@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 import textwrap
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import message
 from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestMessage(unittest.TestCase):
@@ -51,8 +51,10 @@ class TestMessage(unittest.TestCase):
         ])
         for _id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="workername", value="wrkr"),
-                fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="workername", value="wrkr"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="reason", value="because"),
             ])
 
     @defer.inlineCallbacks
@@ -89,24 +91,29 @@ class TestMessage(unittest.TestCase):
     @defer.inlineCallbacks
     def test_message_failure(self):
         res = yield self.doOneTest(SUCCESS, FAILURE)
-        self.assertIn("The Buildbot has detected a failed build on builder", res['body'])
+        self.assertIn(
+            "The Buildbot has detected a failed build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_failure_change(self):
         res = yield self.doOneTest(SUCCESS, FAILURE, "change")
-        self.assertIn("The Buildbot has detected a new failure on builder", res['body'])
+        self.assertIn(
+            "The Buildbot has detected a new failure on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_success_change(self):
         res = yield self.doOneTest(FAILURE, SUCCESS, "change")
-        self.assertIn("The Buildbot has detected a restored build on builder", res['body'])
+        self.assertIn(
+            "The Buildbot has detected a restored build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_success_nochange(self):
         res = yield self.doOneTest(SUCCESS, SUCCESS, "change")
-        self.assertIn("The Buildbot has detected a passing build on builder", res['body'])
+        self.assertIn(
+            "The Buildbot has detected a passing build on builder", res['body'])
 
     @defer.inlineCallbacks
     def test_message_failure_nochange(self):
         res = yield self.doOneTest(FAILURE, FAILURE, "change")
-        self.assertIn("The Buildbot has detected a failed build on builder", res['body'])
+        self.assertIn(
+            "The Buildbot has detected a failed build on builder", res['body'])

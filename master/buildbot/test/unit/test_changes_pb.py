@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestPBChangeSource(
@@ -83,11 +83,13 @@ class TestPBChangeSource(
         self.setChangeSourceToMaster(None)
 
         # not quite enough time to cause it to activate
-        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 4 / 5)
+        self.changesource.clock.advance(
+            self.changesource.POLL_INTERVAL_SEC * 4 / 5)
         self.assertNotRegistered()
 
         # there we go!
-        self.changesource.clock.advance(self.changesource.POLL_INTERVAL_SEC * 2 / 5)
+        self.changesource.clock.advance(
+            self.changesource.POLL_INTERVAL_SEC * 2 / 5)
         self.assertRegistered(*self.EXP_DEFAULT_REGISTRATION)
 
     @defer.inlineCallbacks
@@ -119,7 +121,8 @@ class TestPBChangeSource(
         self.assertEqual(self.changesource.registration, None)
 
     def test_perspective(self):
-        self.attachChangeSource(pb.PBChangeSource('alice', 'sekrit', port='8888'))
+        self.attachChangeSource(
+            pb.PBChangeSource('alice', 'sekrit', port='8888'))
         persp = self.changesource.getPerspective(mock.Mock(), 'alice')
         self.assertIsInstance(persp, pb.ChangePerspective)
 
@@ -387,7 +390,8 @@ class TestChangePerspective(unittest.TestCase):
     def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
         d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
-                                          comments=u"\N{SNOWMAN}".encode('utf8'),
+                                          comments=u"\N{SNOWMAN}".encode(
+                                              'utf8'),
                                           files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
 
         def check(_):

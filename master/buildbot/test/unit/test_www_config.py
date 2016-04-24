@@ -16,14 +16,14 @@ import json
 
 import mock
 
+from buildbot.test.util import www
+from buildbot.www import auth
+from buildbot.www import config
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python import util
 from twisted.trial import unittest
-
-from buildbot.test.util import www
-from buildbot.www import auth
-from buildbot.www import config
 
 
 class IndexResource(www.WwwTestMixin, unittest.TestCase):
@@ -33,9 +33,11 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         _auth = auth.NoAuth()
         _auth.maybeAutoLogin = mock.Mock()
 
-        custom_versions = [('test compoent', '0.1.2'), ('test component 2', '0.2.1')]
+        custom_versions = [
+            ('test compoent', '0.1.2'), ('test component 2', '0.2.1')]
 
-        master = self.make_master(url='h:/a/b/', auth=_auth, versions=custom_versions)
+        master = self.make_master(
+            url='h:/a/b/', auth=_auth, versions=custom_versions)
         rsrc = config.IndexResource(master, "foo")
         rsrc.reconfigResource(master.config)
         rsrc.jinja = mock.Mock()
@@ -57,7 +59,8 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         exp = exp % vjson
         self.assertEqual(res, exp)
 
-        master = self.make_master(url='h:/a/c/', auth=_auth, versions=custom_versions)
+        master = self.make_master(
+            url='h:/a/c/', auth=_auth, versions=custom_versions)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, '/')
         exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'

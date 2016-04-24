@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -24,6 +22,8 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
+
+from twisted.trial import unittest
 
 
 class DynamicRun(shellsequence.ShellSequence):
@@ -67,7 +67,8 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         self.expectCommands(ExpectShell(workdir='build', command='make BUILDBOT-TEST',
                                         usePTY="slave-config")
                             + 0 + Expect.log('stdio make BUILDBOT-TEST'))
-        # TODO: need to factor command-summary stuff into a utility method and use it here
+        # TODO: need to factor command-summary stuff into a utility method and
+        # use it here
         self.expectOutcome(result=SUCCESS, state_string="'make BUILDBOT-TEST'")
         return self.runStep()
 
@@ -88,7 +89,8 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         return self.runStep()
 
     def testSanityChecksAreDoneInRuntimeWhenDynamicCmdIsInvalidShellArg(self):
-        self.setupStep(self.createDynamicRun([shellsequence.ShellArg(command=1)]))
+        self.setupStep(
+            self.createDynamicRun([shellsequence.ShellArg(command=1)]))
         self.expectOutcome(result=EXCEPTION,
                            state_string='finished (exception)')
         return self.runStep()

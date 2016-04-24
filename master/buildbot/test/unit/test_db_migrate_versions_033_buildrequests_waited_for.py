@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -58,7 +58,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
 
-            buildrequests = sautils.Table('buildrequests', metadata, autoload=True)
+            buildrequests = sautils.Table(
+                'buildrequests', metadata, autoload=True)
             q = sa.select([buildrequests.c.waited_for])
             for row in conn.execute(q):
                 # verify that the default value was set correctly

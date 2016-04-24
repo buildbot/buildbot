@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.changes.changes import Change
 from buildbot.process.properties import Properties
 from buildbot.process.results import FAILURE
@@ -24,6 +22,8 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
+
+from twisted.trial import unittest
 
 
 class RepoURL(unittest.TestCase):
@@ -420,7 +420,8 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_repo_downloads_mirror_sync(self):
         """repo downloads, with mirror synchronization issues"""
         self.mySetupStep()
-        self.step.mirror_sync_sleep = 0.001  # we dont really want the test to wait...
+        # we dont really want the test to wait...
+        self.step.mirror_sync_sleep = 0.001
         self.build.setProperty("repo_download",
                                "repo download test/bla 564/12", "test")
         self.expectnoClobber()
@@ -444,7 +445,8 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_repo_downloads_change_missing(self):
         """repo downloads, with no actual mirror synchronization issues (still retries 2 times)"""
         self.mySetupStep()
-        self.step.mirror_sync_sleep = 0.001  # we dont really want the test to wait...
+        # we dont really want the test to wait...
+        self.step.mirror_sync_sleep = 0.001
         self.step.mirror_sync_retry = 1  # on retry once
         self.build.setProperty("repo_download",
                                "repo download test/bla 564/12", "test")
@@ -522,7 +524,8 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
 
     def test_repo_downloads_from_change_source_codebase(self):
         """basic repo download from change source, and check that repo_downloaded is updated"""
-        self.mySetupStep(repoDownloads=repo.RepoDownloadsFromChangeSource("mycodebase"))
+        self.mySetupStep(
+            repoDownloads=repo.RepoDownloadsFromChangeSource("mycodebase"))
         chdict = TestGerritChangeSource.expected_change
         change = Change(None, None, None, properties=chdict['properties'])
         # getSourceStamp is faked by SourceStepMixin

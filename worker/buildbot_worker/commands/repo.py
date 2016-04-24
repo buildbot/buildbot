@@ -19,11 +19,11 @@ import os
 import re
 import textwrap
 
-from twisted.internet import defer
-
 from buildbot_worker import runprocess
 from buildbot_worker.commands.base import AbandonChain
 from buildbot_worker.commands.base import SourceBaseCommand
+
+from twisted.internet import defer
 
 
 class Repo(SourceBaseCommand):
@@ -56,12 +56,14 @@ class Repo(SourceBaseCommand):
         self.tarball = args.get('tarball')
         self.repo_downloads = args.get('repo_downloads')
         # we're using string instead of an array here, because it will be transferred back
-        # to the master as string anyway and using eval() could have security implications.
+        # to the master as string anyway and using eval() could have security
+        # implications.
         self.repo_downloaded = ""
         self.jobs = args.get('jobs')
 
         self.sourcedata = "%s %s" % (self.manifest_url, self.manifest_file)
-        self.re_change = re.compile(r".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
+        self.re_change = re.compile(
+            r".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
         self.re_head = re.compile("^HEAD is now at ([0-9a-f]+)...")
 
     def _fullSrcdir(self):
@@ -123,7 +125,8 @@ class Repo(SourceBaseCommand):
 
     def doVCUpdate(self):
         if self.repo_downloads:
-            self.sendStatus({'header': "will download:\n" + "repo download " + "\nrepo download ".join(self.repo_downloads) + "\n"})
+            self.sendStatus({'header': "will download:\n" + "repo download " +
+                             "\nrepo download ".join(self.repo_downloads) + "\n"})
         return self._doPreSyncCleanUp(None)
 
     # a simple shell script to gather all cleanup tweaks...
@@ -160,17 +163,21 @@ class Repo(SourceBaseCommand):
 
     def _doManifestOveride(self, dummy):
         if self.manifest_override_url:
-            self.sendStatus({"header": "overriding manifest with %s\n" % (self.manifest_override_url)})
+            self.sendStatus(
+                {"header": "overriding manifest with %s\n" % (self.manifest_override_url)})
             if os.path.exists(os.path.join(self._fullSrcdir(), self.manifest_override_url)):
-                os.system("cd %s; cp -f %s manifest_override.xml" % (self._fullSrcdir(), self.manifest_override_url))
+                os.system("cd %s; cp -f %s manifest_override.xml" %
+                          (self._fullSrcdir(), self.manifest_override_url))
             else:
-                command = ["wget", self.manifest_override_url, '-O', 'manifest_override.xml']
+                command = [
+                    "wget", self.manifest_override_url, '-O', 'manifest_override.xml']
                 return self._Cmd(command, self._doSync)
         return self._doSync(None)
 
     def _doSync(self, dummy):
         if self.manifest_override_url:
-            os.system("cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml" % (self._fullSrcdir()))
+            os.system(
+                "cd %s/.repo; ln -sf ../manifest_override.xml manifest.xml" % (self._fullSrcdir()))
         command = ['sync']
         if self.jobs:
             command.append('-j' + str(self.jobs))
@@ -193,22 +200,26 @@ class Repo(SourceBaseCommand):
             if "Automatic cherry-pick failed" in self.command.stderr or "Automatic revert failed" in self.command.stderr:
                 command = ['forall', '-c', 'git', 'diff', 'HEAD']
                 self.cherry_pick_failed = True
-                return self._repoCmd(command, self._DownloadAbandon, abandonOnFailure=False, keepStderr=True)  # call again
+                # call again
+                return self._repoCmd(command, self._DownloadAbandon, abandonOnFailure=False, keepStderr=True)
 
             lines = self.command.stderr.split('\n')
             if len(lines) > 2:
                 match1 = self.re_change.match(lines[1])
                 match2 = self.re_head.match(lines[-2])
                 if match1 and match2:
-                    self.repo_downloaded += "%s/%s %s " % (match1.group(1), match1.group(2), match2.group(1))
+                    self.repo_downloaded += "%s/%s %s " % (
+                        match1.group(1), match1.group(2), match2.group(1))
 
         if self.repo_downloads:
-            # download each changeset while the self.download variable is not empty
+            # download each changeset while the self.download variable is not
+            # empty
             download = self.repo_downloads.pop(0)
             command = ['download'] + download.split(' ')
             self.sendStatus({"header": "downloading changeset %s\n"
                                        % (download)})
-            return self._repoCmd(command, self._doDownload, abandonOnFailure=False, keepStderr=True)  # call again
+            # call again
+            return self._repoCmd(command, self._doDownload, abandonOnFailure=False, keepStderr=True)
 
         if self.repo_downloaded:
             self.sendStatus({"repo_downloaded": self.repo_downloaded[:-1]})

@@ -12,17 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 from StringIO import StringIO
 
 import mock
-
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
+from future.utils import iteritems
 
 from buildbot import config
 from buildbot.process import builder
@@ -36,6 +29,12 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.worker.base import Worker
+
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 
 class TestLogObserver(buildstep.LogObserver):
@@ -143,7 +142,8 @@ class OldPerlModuleTest(shell.Test):
     def evaluateCommand(self, cmd):
         # Get stdio, stripping pesky newlines etc.
         lines = map(
-            lambda line: line.replace('\r\n', '').replace('\r', '').replace('\n', ''),
+            lambda line: line.replace('\r\n', '').replace(
+                '\r', '').replace('\n', ''),
             self.getLog('stdio').readlines()
         )
         # .. the rest of this method isn't htat interesting, as long as the
@@ -262,7 +262,8 @@ class RunSteps(unittest.TestCase):
             # 'stdout\n\xe2\x98\x83\nstderr\n',
             u'ostdout\no\N{SNOWMAN}\nestderr\n',
             u'obs':
-            # if slowDB, the observer wont see anything before the end of this instant step
+            # if slowDB, the observer wont see anything before the end of this
+            # instant step
             u'Observer saw []\n' if slowDB else
             # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
             u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
@@ -302,7 +303,8 @@ class RunSteps(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_Latin1ProducingCustomBuildStep(self):
-        self.factory.addStep(Latin1ProducingCustomBuildStep(logEncoding='latin-1'))
+        self.factory.addStep(
+            Latin1ProducingCustomBuildStep(logEncoding='latin-1'))
         yield self.do_test_step()
         self.assertLogs({
             u'xx': u'o\N{CENT SIGN}\n',

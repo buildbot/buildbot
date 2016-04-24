@@ -5,12 +5,12 @@ command, and if LOCAL_HOST is acceptable for it, would check the requested user
 name and password would allow to send e-mail through it.
 """
 
-from smtplib import SMTP
-
 from getpass import getpass
+from smtplib import SMTP
 
 SMTP_HOST = 'the host you want to send e-mail through'
 LOCAL_HOST = 'hostname that the SMTP_HOST would accept'
+
 
 def main():
     """

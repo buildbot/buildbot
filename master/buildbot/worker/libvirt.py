@@ -17,11 +17,10 @@ from __future__ import absolute_import
 
 import os
 
-try:
-    import libvirt
-    libvirt = libvirt
-except ImportError:
-    libvirt = None
+from buildbot import config
+from buildbot.util.eventual import eventually
+from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker.base import AbstractWorker
 
 from twisted.internet import defer
 from twisted.internet import threads
@@ -29,10 +28,11 @@ from twisted.internet import utils
 from twisted.python import failure
 from twisted.python import log
 
-from buildbot import config
-from buildbot.util.eventual import eventually
-from buildbot.worker.base import AbstractLatentWorker
-from buildbot.worker.base import AbstractWorker
+try:
+    import libvirt
+    libvirt = libvirt
+except ImportError:
+    libvirt = None
 
 
 class WorkQueue(object):
@@ -161,7 +161,8 @@ class LibVirtWorker(AbstractLatentWorker):
                  **kwargs):
         AbstractLatentWorker.__init__(self, name, password, **kwargs)
         if not libvirt:
-            config.error("The python module 'libvirt' is needed to use a LibVirtWorker")
+            config.error(
+                "The python module 'libvirt' is needed to use a LibVirtWorker")
 
         self.connection = connection
         self.image = hd_image
@@ -200,7 +201,8 @@ class LibVirtWorker(AbstractLatentWorker):
             return False
 
         if self.domain and not self.isConnected():
-            log.msg("Not accepting builds as existing domain but worker not connected")
+            log.msg(
+                "Not accepting builds as existing domain but worker not connected")
             return False
 
         return AbstractLatentWorker.canStartBuild(self)
@@ -253,7 +255,8 @@ class LibVirtWorker(AbstractLatentWorker):
         in the list of defined virtual machines and start that.
         """
         if self.domain is not None:
-            log.msg("Cannot start_instance '%s' as already active" % self.workername)
+            log.msg("Cannot start_instance '%s' as already active" %
+                    self.workername)
             defer.returnValue(False)
 
         yield self._prepare_base_image()
@@ -296,12 +299,14 @@ class LibVirtWorker(AbstractLatentWorker):
 
         @d.addCallback
         def _disconnect(res):
-            log.msg("VM destroyed (%s): Forcing its connection closed." % self.workername)
+            log.msg("VM destroyed (%s): Forcing its connection closed." %
+                    self.workername)
             return AbstractWorker.disconnect(self)
 
         @d.addBoth
         def _disconnected(res):
-            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.workername)
+            log.msg(
+                "We forced disconnection (%s), cleaning up and triggering new build" % self.workername)
             if self.base_image:
                 os.remove(self.image)
             self.botmaster.maybeStartBuildsForWorker(self.workername)

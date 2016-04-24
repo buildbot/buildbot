@@ -11,9 +11,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.www.authz import roles
+
+from twisted.trial import unittest
 
 
 class RolesFromGroups(unittest.TestCase):
@@ -42,7 +42,8 @@ class RolesFromGroups(unittest.TestCase):
 class RolesFromEmails(unittest.TestCase):
 
     def setUp(self):
-        self.roles = roles.RolesFromEmails(employee=["homer@plant.com", "burns@plant.com"], boss=["burns@plant.com"])
+        self.roles = roles.RolesFromEmails(
+            employee=["homer@plant.com", "burns@plant.com"], boss=["burns@plant.com"])
 
     def test_noUser(self):
         ret = self.roles.getRolesFromUser(dict(

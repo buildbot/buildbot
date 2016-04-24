@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.spread import pb as twisted_pb
-from twisted.trial import unittest
-
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import protocols as util_protocols
 from buildbot.worker.protocols import base
 from buildbot.worker.protocols import pb
+
+from twisted.internet import defer
+from twisted.spread import pb as twisted_pb
+from twisted.trial import unittest
 
 
 class TestListener(unittest.TestCase):
@@ -45,23 +45,28 @@ class TestListener(unittest.TestCase):
         reg = yield listener.updateRegistration('example', 'pass', 'tcp:1234')
         self.assertEqual(self.master.pbmanager._registrations,
                          [('tcp:1234', 'example', 'pass')])
-        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:1234', reg))
+        self.assertEqual(
+            listener._registrations['example'], ('pass', 'tcp:1234', reg))
 
     @defer.inlineCallbacks
     def test_updateRegistration_pass_changed(self):
         listener = self.makeListener()
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass1', 'tcp:1234')
-        self.assertEqual(listener._registrations['example'], ('pass1', 'tcp:1234', reg1))
-        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
+        self.assertEqual(
+            listener._registrations['example'], ('pass1', 'tcp:1234', reg1))
+        self.assertEqual(
+            self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     @defer.inlineCallbacks
     def test_updateRegistration_port_changed(self):
         listener = self.makeListener()
         listener.updateRegistration('example', 'pass', 'tcp:1234')
         reg1 = yield listener.updateRegistration('example', 'pass', 'tcp:4321')
-        self.assertEqual(listener._registrations['example'], ('pass', 'tcp:4321', reg1))
-        self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
+        self.assertEqual(
+            listener._registrations['example'], ('pass', 'tcp:4321', reg1))
+        self.assertEqual(
+            self.master.pbmanager._unregistrations, [('tcp:1234', 'example')])
 
     @defer.inlineCallbacks
     def test_getPerspective(self):
@@ -145,9 +150,11 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
-        r = {'info': 'test', 'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
+        r = {'info': 'test', 'slave_commands': {
+            'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getSlaveInfo'), mock.call('getCommands'), mock.call('getVersion')]
+        calls = [mock.call('getSlaveInfo'), mock.call(
+            'getCommands'), mock.call('getVersion')]
         self.mind.callRemote.assert_has_calls(calls)
 
     @defer.inlineCallbacks
@@ -166,7 +173,8 @@ class TestConnection(unittest.TestCase):
 
         r = {'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getSlaveInfo'), mock.call('getCommands'), mock.call('getVersion')]
+        calls = [mock.call('getSlaveInfo'), mock.call(
+            'getCommands'), mock.call('getVersion')]
         self.mind.callRemote.assert_has_calls(calls)
 
     @defer.inlineCallbacks
@@ -187,13 +195,16 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         conn.remoteSetBuilderList(builders)
 
-        RCInstance, builder_name, commandID = base.RemoteCommandImpl(), "builder", None
+        RCInstance, builder_name, commandID = base.RemoteCommandImpl(
+        ), "builder", None
         remote_command, args = "command", {"args": 'args'}
 
-        conn.remoteStartCommand(RCInstance, builder_name, commandID, remote_command, args)
+        conn.remoteStartCommand(
+            RCInstance, builder_name, commandID, remote_command, args)
 
         callargs = ret_val['builder'].callRemote.call_args_list[0][0]
-        callargs_without_rc = (callargs[0], callargs[2], callargs[3], callargs[4])
+        callargs_without_rc = (
+            callargs[0], callargs[2], callargs[3], callargs[4])
         self.assertEqual(callargs_without_rc, ('startCommand',
                                                commandID, remote_command, args))
         self.assertIsInstance(callargs[1], pb.RemoteCommand)

@@ -14,17 +14,17 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import utils
-from twisted.python import failure
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.test.fake import libvirt
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import libvirt as libvirtworker
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import utils
+from twisted.python import failure
+from twisted.trial import unittest
 
 
 class TestLibVirtWorker(unittest.TestCase):

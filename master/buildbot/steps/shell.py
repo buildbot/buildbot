@@ -12,32 +12,32 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import inspect
 import re
+
+from future.utils import iteritems
+
+from buildbot import config
+from buildbot.process import buildstep
+from buildbot.process import logobserver
+from buildbot.process import remotecommand
+# for existing configurations that import WithProperties from here.  We like
+# to move this class around just to keep our readers guessing.
+from buildbot.process.properties import WithProperties
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
+from buildbot.steps.worker import CompositeStepMixin
+from buildbot.util import command_to_string
+from buildbot.util import flatten
+from buildbot.util import join_list
 
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
 
-from buildbot import config
-from buildbot.process import buildstep
-from buildbot.process import logobserver
-from buildbot.process import remotecommand
-from buildbot.process.results import FAILURE
-from buildbot.process.results import Results
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
-from buildbot.steps.worker import CompositeStepMixin
-from buildbot.util import command_to_string
-from buildbot.util import flatten
-from buildbot.util import join_list
-
-# for existing configurations that import WithProperties from here.  We like
-# to move this class around just to keep our readers guessing.
-from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
 
@@ -117,7 +117,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
-        # workdir is here first positional argument, but it belongs to BuildStep parent
+        # workdir is here first positional argument, but it belongs to
+        # BuildStep parent
         kwargs['workdir'] = workdir
         for k in list(kwargs):
             if k in self.__class__.parms:
@@ -127,7 +128,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        valid_rsc_args = inspect.getargspec(remotecommand.RemoteShellCommand.__init__)[0]
+        valid_rsc_args = inspect.getargspec(
+            remotecommand.RemoteShellCommand.__init__)[0]
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
@@ -237,12 +239,14 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # check for the usePTY flag
         if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
             if self.workerVersionIsOlderThan("svn", "2.7"):
-                warnings.append("NOTE: worker does not allow master to override usePTY\n")
+                warnings.append(
+                    "NOTE: worker does not allow master to override usePTY\n")
                 del kwargs['usePTY']
 
         # check for the interruptSignal flag
         if "interruptSignal" in kwargs and self.workerVersionIsOlderThan("shell", "2.15"):
-            warnings.append("NOTE: worker does not allow master to specify interruptSignal\n")
+            warnings.append(
+                "NOTE: worker does not allow master to specify interruptSignal\n")
             del kwargs['interruptSignal']
 
         return kwargs
@@ -384,7 +388,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     suppressionFile = None
 
     commentEmptyLineRe = re.compile(r"^\s*(#.*)?$")
-    suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
+    suppressionLineRe = re.compile(
+        r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
 
     def __init__(self,
                  warningPattern=None, warningExtractor=None, maxWarnCount=None,
@@ -538,7 +543,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     def start(self):
         if self.suppressionFile is None:
             return ShellCommand.start(self)
-        d = self.getFileContentFromWorker(self.suppressionFile, abandonOnFailure=True)
+        d = self.getFileContentFromWorker(
+            self.suppressionFile, abandonOnFailure=True)
         d.addCallback(self.uploadDone)
         d.addErrback(self.failed)
 
@@ -580,7 +586,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         self.setStatistic('warnings', warnings_stat + self.warnCount)
 
         old_count = self.getProperty("warnings-count", 0)
-        self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
+        self.setProperty(
+            "warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
     def evaluateCommand(self, cmd):
         if (cmd.didFail() or
@@ -701,7 +708,8 @@ class PerlModuleTest(Test):
 
     def __init__(self, *args, **kwargs):
         Test.__init__(self, *args, **kwargs)
-        self.observer = PerlModuleTestObserver(warningPattern=self.warningPattern)
+        self.observer = PerlModuleTestObserver(
+            warningPattern=self.warningPattern)
         self.addLogObserver('stdio', self.observer)
 
     def evaluateCommand(self, cmd):

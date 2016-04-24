@@ -18,14 +18,14 @@ import os
 
 import jinja2
 
-from twisted.internet import defer
-
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www.config import IndexResource
 from buildbot.www.service import WWWService
+
+from twisted.internet import defer
 
 
 @in_reactor
@@ -35,7 +35,8 @@ def processwwwindex(config):
     master_service = WWWService()
     master_service.setServiceParent(master)
     if not config.get('index-file'):
-        print("Path to the index.html file is required with option --index-file or -i")
+        print(
+            "Path to the index.html file is required with option --index-file or -i")
         defer.returnValue(1)
     path = config.get('index-file')
     if not os.path.isfile(path):
@@ -65,7 +66,8 @@ def processwwwindex(config):
     outputstr = ''
     with open(path) as indexfile:
         template = jinja2.Template(indexfile.read())
-        outputstr = template.render(configjson=json.dumps(fakeconfig), config=fakeconfig)
+        outputstr = template.render(
+            configjson=json.dumps(fakeconfig), config=fakeconfig)
     with open(path, 'w') as indexfile:
         indexfile.write(outputstr)
     defer.returnValue(0)

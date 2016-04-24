@@ -15,4 +15,5 @@
 
 # this used to be referenced here, so we keep a link for old time's sake
 import buildbot.steps.subunit
+
 SubunitShellCommand = buildbot.steps.subunit.SubunitShellCommand

@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.mq import base
 from buildbot.mq import connector
 from buildbot.test.fake import fakemaster
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class FakeMQ(service.ReconfigurableServiceMixin, base.MQBase):

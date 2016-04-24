@@ -12,30 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import re
-
-from StringIO import StringIO
-
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
 from email import charset
-charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from StringIO import StringIO
 
-try:
-    from twisted.mail.smtp import ESMTPSenderFactory
-    ESMTPSenderFactory = ESMTPSenderFactory  # for pyflakes
-except ImportError:
-    ESMTPSenderFactory = None
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log as twlog
-
+from future.utils import iteritems
 from zope.interface import implements
 
 from buildbot import config
@@ -45,12 +32,25 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
-from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log as twlog
+
+charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
+
+try:
+    from twisted.mail.smtp import ESMTPSenderFactory
+    ESMTPSenderFactory = ESMTPSenderFactory  # for pyflakes
+except ImportError:
+    ESMTPSenderFactory = None
+
 
 # Email parsing can be complex. We try to take a very liberal
 # approach. The local part of an email address matches ANY non
@@ -261,7 +261,8 @@ class MailNotifier(service.BuildbotService):
             wantPreviousBuild=self.wantPreviousBuild())
         # only include builds for which isMailNeeded returns true
         if self.isMailNeeded(build):
-            self.buildMessage(build['builder']['name'], [build], build['results'])
+            self.buildMessage(
+                build['builder']['name'], [build], build['results'])
 
     def matchesAnyTag(self, tags):
         return self.tags and any(tag for tag in self.tags if tag in tags)

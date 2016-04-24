@@ -15,15 +15,15 @@
 import base64
 import textwrap
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.db import logs
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class Tests(interfaces.InterfaceTests):

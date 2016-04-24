@@ -12,14 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import os
 
 import mock
-
-from twisted.internet import defer
-from twisted.trial import unittest
+from future.utils import itervalues
 
 from buildbot.db import connector
 from buildbot.db import model
@@ -27,6 +23,9 @@ from buildbot.scripts import create_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 def mkconfig(**kwargs):
@@ -159,7 +158,8 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_no_logrotate(self):
-        create_master.makeTAC(mkconfig(basedir='test', **{'no-logrotate': True}))
+        create_master.makeTAC(
+            mkconfig(basedir='test', **{'no-logrotate': True}))
         self.assertNotInTacFile("import Log")
         self.assertWasQuiet()
 

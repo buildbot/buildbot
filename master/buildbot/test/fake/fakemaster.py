@@ -16,10 +16,6 @@ import os
 import weakref
 
 import mock
-
-from twisted.internet import defer
-from twisted.internet import reactor
-
 from zope.interface import implements
 
 from buildbot import config
@@ -32,6 +28,9 @@ from buildbot.test.fake import fakemq
 from buildbot.test.fake import pbmanager
 from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.internet import reactor
 
 
 class FakeCache(object):

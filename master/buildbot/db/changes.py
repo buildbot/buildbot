@@ -16,19 +16,18 @@
 """
 Support for changes in the database
 """
+import sqlalchemy as sa
 from future.utils import iteritems
 from future.utils import itervalues
-
-import sqlalchemy as sa
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from buildbot.util import json
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class ChDict(dict):
@@ -157,7 +156,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = changes_tbl.select(whereclause=(changes_tbl.c.changeid == changeid))
+            q = changes_tbl.select(
+                whereclause=(changes_tbl.c.changeid == changeid))
             rp = conn.execute(q)
             row = rp.fetchone()
             if not row:
@@ -181,13 +181,15 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # Get the last successfull build on the same builder
         previousBuild = yield self.master.db.builds.getPrevSuccessfulBuild(currentBuild['builderid'],
-                                                                           currentBuild['number'],
+                                                                           currentBuild[
+                                                                               'number'],
                                                                            ssBuild)
         if previousBuild:
             for ss in (yield gssfb(previousBuild['id'])):
                 toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
         else:
-            # If no successfull previous build, then we need to catch all changes
+            # If no successfull previous build, then we need to catch all
+            # changes
             for cb in fromChanges:
                 toChanges[cb] = {'changeid': None}
 
@@ -199,7 +201,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                        change['parent_changeids']):
                     # For the moment, a Change only have 1 parent.
                     change = yield self.master.db.changes.getChange(change['parent_changeids'][0])
-                    # http://trac.buildbot.net/ticket/3461 sometimes, parent_changeids could be corrupted
+                    # http://trac.buildbot.net/ticket/3461 sometimes,
+                    # parent_changeids could be corrupted
                     if change is None:
                         break
                     changes.append(change)
@@ -211,7 +214,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             # get the row from the 'changes' table
             changes_tbl = self.db.model.changes
-            q = changes_tbl.select(whereclause=(changes_tbl.c.sourcestampid == sourcestampid))
+            q = changes_tbl.select(
+                whereclause=(changes_tbl.c.sourcestampid == sourcestampid))
             rp = conn.execute(q)
             row = rp.fetchone()
             if not row:

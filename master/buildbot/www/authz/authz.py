@@ -15,13 +15,13 @@
 import fnmatch
 import re
 
-from twisted.internet import defer
-from twisted.web.error import Error
-
 from zope.interface import implements
 
 from buildbot.interfaces import IConfigured
 from buildbot.www.authz.roles import RolesFromOwner
+
+from twisted.internet import defer
+from twisted.web.error import Error
 
 
 class Forbidden(Error):
@@ -52,8 +52,10 @@ class Authz(object):
         if roleMatchers is None:
             roleMatchers = []
         self.allowRules = allowRules
-        self.roleMatchers = [r for r in roleMatchers if not isinstance(r, RolesFromOwner)]
-        self.ownerRoleMatchers = [r for r in roleMatchers if isinstance(r, RolesFromOwner)]
+        self.roleMatchers = [
+            r for r in roleMatchers if not isinstance(r, RolesFromOwner)]
+        self.ownerRoleMatchers = [
+            r for r in roleMatchers if isinstance(r, RolesFromOwner)]
 
     def setMaster(self, master):
         self.master = master
@@ -82,10 +84,12 @@ class Authz(object):
                 if self.ownerRoleMatchers:
                     owner = yield match.getOwner()
                     if owner is not None:
-                        roles.update(self.getOwnerRolesFromUser(userDetails, owner))
+                        roles.update(
+                            self.getOwnerRolesFromUser(userDetails, owner))
                 if rule.role not in roles:
                     if rule.defaultDeny:
-                        raise Forbidden("you need to have role '%s'" % (rule.role,))
+                        raise Forbidden(
+                            "you need to have role '%s'" % (rule.role,))
                 elif not rule.defaultDeny:
                     defer.returnValue(None)
         defer.returnValue(None)

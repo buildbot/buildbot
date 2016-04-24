@@ -15,10 +15,10 @@
 
 import sqlalchemy as sa
 
-from twisted.python import log
-
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
+
+from twisted.python import log
 
 
 def _create_configured_workers_table(migrate_engine):
@@ -231,7 +231,8 @@ def _remove_invalid_references_in_builds(migrate_engine):
     q = sa.select(
         [builds.c.id, builds.c.buildslaveid, buildslaves.c.id]
     ).select_from(
-        builds.outerjoin(buildslaves, builds.c.buildslaveid == buildslaves.c.id)
+        builds.outerjoin(
+            buildslaves, builds.c.buildslaveid == buildslaves.c.id)
     ).where(
         (buildslaves.c.id == None) & (builds.c.buildslaveid != None)
     )

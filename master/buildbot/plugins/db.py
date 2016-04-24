@@ -14,16 +14,17 @@
 # Copyright Buildbot Team Members
 #
 # pylint: disable=C0111
+from types import StringTypes
+
 from future.utils import iteritems
 from future.utils import itervalues
+from pkg_resources import iter_entry_points
+from zope.interface import Invalid
+from zope.interface.verify import verifyClass
 
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
-from pkg_resources import iter_entry_points
-from types import StringTypes
-from zope.interface import Invalid
-from zope.interface.verify import verifyClass
 
 # Base namespace for Buildbot specific plugins
 _NAMESPACE_BASE = 'buildbot'
@@ -64,6 +65,7 @@ class _PluginEntry(object):
 
 
 class _PluginEntryProxy(_PluginEntry):
+
     """Proxy for specific entry with custom group name.
 
     Used to provided access to the same entry from different namespaces.
@@ -95,6 +97,7 @@ class _PluginEntryProxy(_PluginEntry):
 
 
 class _DeprecatedPluginEntry(_PluginEntry):
+
     """Plugin entry that emits warnings when it's value is requested."""
 
     def __init__(self, compat_name, new_name, plugin_entry):
@@ -221,6 +224,7 @@ class _NSNode(object):
 
 
 class _Plugins(object):
+
     """
     represent plugins within a namespace
     """
@@ -310,6 +314,7 @@ class _Plugins(object):
 
 
 class _DeprecatedWorkerPlugins(_Plugins):
+
     """Plugins for deprecated 'buildbot.buildslave' entry point."""
 
     def __init__(self, namespace, interface=None, check_extras=True):
@@ -345,6 +350,7 @@ class _DeprecatedWorkerPlugins(_Plugins):
 
 
 class _PluginDB(object):
+
     """
     Plugin infrastructure support for Buildbot
     """

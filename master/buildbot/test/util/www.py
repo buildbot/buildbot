@@ -12,26 +12,23 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.moves.urllib.parse import unquote as urlunquote
-from future.utils import iteritems
-
 import cgi
 import os
-
 from cStringIO import StringIO
 from uuid import uuid1
 
 import mock
-
 import pkg_resources
-
-from twisted.internet import defer
-from twisted.web import server
+from future.moves.urllib.parse import unquote as urlunquote
+from future.utils import iteritems
 
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
+
+from twisted.internet import defer
+from twisted.web import server
 
 
 class FakeSession(object):
@@ -124,7 +121,8 @@ class WwwTestMixin(RequiresWwwMixin):
         master = fakemaster.make_master(wantData=True, testcase=self)
         self.master = master
         master.www = mock.Mock()  # to handle the resourceNeedsReconfigs call
-        master.www.getUserInfos = lambda _: getattr(self.master.session, "user_info", {"anonymous": True})
+        master.www.getUserInfos = lambda _: getattr(
+            self.master.session, "user_info", {"anonymous": True})
         cfg = dict(port=None, auth=auth.NoAuth(), authz=authz.Authz())
         cfg.update(kwargs)
         master.config.www = cfg

@@ -18,15 +18,12 @@ A complete re-implementation of the database connector components, but without
 using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
-from future.utils import iteritems
-from future.utils import itervalues
-
 import base64
 import copy
 import hashlib
 
-from twisted.internet import defer
-from twisted.internet import reactor
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot.db import buildrequests
 from buildbot.db import changesources
@@ -35,6 +32,10 @@ from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
 from buildbot.util import json
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.internet import reactor
+
 
 # Fake DB Rows
 
@@ -851,11 +852,14 @@ class FakeChangesComponent(FakeDBComponent):
         return defer.succeed(len(self.changes))
 
     def getChangesForBuild(self, buildid):
-        # the algorithm is too complicated to be worth faked, better patch it ad-hoc
-        raise NotImplementedError("Please patch in tests to return appropriate results")
+        # the algorithm is too complicated to be worth faked, better patch it
+        # ad-hoc
+        raise NotImplementedError(
+            "Please patch in tests to return appropriate results")
 
     def getChangeFromSSid(self, ssid):
-        chdicts = [self._chdict(v) for v in itervalues(self.changes) if v['sourcestampid'] == ssid]
+        chdicts = [self._chdict(v) for v in itervalues(
+            self.changes) if v['sourcestampid'] == ssid]
         if chdicts:
             return defer.succeed(chdicts[0])
         else:

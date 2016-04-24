@@ -16,6 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker.openstack import OpenStackLatentWorker as _OpenStackLatentWorker
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
@@ -23,7 +24,6 @@ reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.openstack' module instead".format(old=__name__))
 
-from buildbot.worker.openstack import OpenStackLatentWorker as _OpenStackLatentWorker
 
 deprecatedWorkerModuleAttribute(locals(), _OpenStackLatentWorker,
                                 compat_name="OpenStackLatentBuildSlave",

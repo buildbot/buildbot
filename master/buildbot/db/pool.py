@@ -20,11 +20,11 @@ import traceback
 
 import sqlalchemy as sa
 
+from buildbot.process import metrics
+
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
-
-from buildbot.process import metrics
 
 # set this to True for *very* verbose query debugging output; this can
 # be monkey-patched from master.cfg, too:

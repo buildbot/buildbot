@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
-
 from buildbot.clients import sendchange as sendchange_client
 from buildbot.scripts import sendchange
 from buildbot.test.util import misc
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
 
 
 class TestSendChange(misc.StdoutAssertionsMixin, unittest.TestCase):

@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial.unittest import TestCase
-
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
@@ -21,8 +19,11 @@ from buildbot.worker.base import AbstractWorker
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
+from twisted.trial.unittest import TestCase
+
 
 class TestAbstractWorkerForBuilder(TestCase):
+
     """
     Tests for ``AbstractWorkerForBuilder``.
     """

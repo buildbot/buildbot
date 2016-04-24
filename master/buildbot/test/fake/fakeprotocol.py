@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-
 from buildbot.worker.protocols import base
+
+from twisted.internet import defer
 
 
 class FakeConnection(base.Connection):
@@ -60,5 +60,6 @@ class FakeConnection(base.Connection):
         return defer.succeed(None)
 
     def remoteInterruptCommand(self, builderName, commandId, why):
-        self.remoteCalls.append(('remoteInterruptCommand', builderName, commandId, why))
+        self.remoteCalls.append(
+            ('remoteInterruptCommand', builderName, commandId, why))
         return defer.succeed(None)

@@ -14,20 +14,19 @@
 # Copyright Buildbot Team Members
 import os
 
-import migrate
-import migrate.versioning.api
-
 import sqlalchemy as sa
 
-from twisted.internet import defer
-from twisted.python import log
-
+import migrate
+import migrate.versioning.api
 from buildbot.db import connector
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import querylog
 from buildbot.util import sautils
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 # test_upgrade vs. migration tests
@@ -83,7 +82,8 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                 changeset = schema.changeset(target_version)
                 with sautils.withoutSqliteForeignKeys(engine):
                     for version, change in changeset:
-                        log.msg('upgrading to schema version %d' % (version + 1))
+                        log.msg('upgrading to schema version %d' %
+                                (version + 1))
                         schema.runchange(version, change, 1)
         d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
 

@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from zope.interface import implements
+
+from buildbot.util import service
+
 from twisted.application import strports
 from twisted.cred import checkers
 from twisted.cred import credentials
@@ -22,10 +26,6 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 from twisted.spread import pb
-
-from zope.interface import implements
-
-from buildbot.util import service
 
 debug = False
 

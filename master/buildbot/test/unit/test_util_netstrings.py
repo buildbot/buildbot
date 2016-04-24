@@ -12,10 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot.util import netstrings
+
 from twisted.protocols import basic
 from twisted.trial import unittest
-
-from buildbot.util import netstrings
 
 
 class NetstringParser(unittest.TestCase):

@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 import os
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.test.util import dirs
 from buildbot.util import maildir
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestMaildirService(dirs.DirsMixin, unittest.TestCase):

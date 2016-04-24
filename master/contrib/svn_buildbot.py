@@ -31,6 +31,12 @@ import re
 import sets
 import sys
 
+from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import usage
+from twisted.spread import pb
+
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
 # PYTHONPATH; we want to be able to print that error to the log if
@@ -50,18 +56,12 @@ if DEBUG:
     sys.stdout = f
 
 
-from twisted.cred import credentials
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import usage
-from twisted.spread import pb
-
-
 class Options(usage.Options):
     optParameters = [
         ['repository', 'r', None,
          "The repository that was changed."],
-        ['slave-repo', 'c', None, "In case the repository differs for the slaves."],
+        ['slave-repo', 'c', None,
+            "In case the repository differs for the slaves."],
         ['revision', 'v', None,
          "The revision that we want to examine (default: latest)"],
         ['bbserver', 's', 'localhost',

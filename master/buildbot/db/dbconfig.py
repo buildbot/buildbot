@@ -13,12 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import ProgrammingError
+
 from buildbot.config import MasterConfig
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import state
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.exc import ProgrammingError
 
 
 class FakeDBConnector(object):
@@ -42,7 +43,8 @@ class FakePool(object):
 class DbConfig(object):
 
     def __init__(self, BuildmasterConfig, basedir, name="config"):
-        self.db_url = MasterConfig.getDbUrlFromConfig(BuildmasterConfig, throwErrors=False)
+        self.db_url = MasterConfig.getDbUrlFromConfig(
+            BuildmasterConfig, throwErrors=False)
         self.basedir = basedir
         self.name = name
 
@@ -51,7 +53,8 @@ class DbConfig(object):
             db_engine = enginestrategy.create_engine(self.db_url,
                                                      basedir=self.basedir)
         except Exception:
-            # db_url is probably trash. Just ignore, config.py db part will create proper message
+            # db_url is probably trash. Just ignore, config.py db part will
+            # create proper message
             return None
         db = FakeDBConnector()
         db.master = FakeMaster()
@@ -61,7 +64,8 @@ class DbConfig(object):
         db.model = model.Model(db)
         db.state = state.StateConnectorComponent(db)
         try:
-            self.objectid = db.state.thdGetObjectId(db_engine, self.name, "DbConfig")['id']
+            self.objectid = db.state.thdGetObjectId(
+                db_engine, self.name, "DbConfig")['id']
         except (ProgrammingError, OperationalError):
             # ProgrammingError: mysql&pg, OperationalError: sqlite
             # assume db is not initialized
@@ -72,7 +76,8 @@ class DbConfig(object):
     def get(self, name, default=state.StateConnectorComponent.Thunk):
         db = self.getDb()
         if db is not None:
-            ret = db.state.thdGetState(db.pool.engine, self.objectid, name, default=default)
+            ret = db.state.thdGetState(
+                db.pool.engine, self.objectid, name, default=default)
             db.pool.engine.close()
         else:
             if default is not state.StateConnectorComponent.Thunk:

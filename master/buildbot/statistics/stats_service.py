@@ -12,11 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class StatsService(service.BuildbotService):
@@ -33,7 +33,8 @@ class StatsService(service.BuildbotService):
                                 "is: {0!r}".format(type(StatsStorageBase)))
 
     def reconfigService(self, storage_backends):
-        log.msg("Reconfiguring StatsService with config: {0!r}".format(storage_backends))
+        log.msg(
+            "Reconfiguring StatsService with config: {0!r}".format(storage_backends))
 
         self.checkConfig(storage_backends)
 

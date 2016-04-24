@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.python import log
-
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
@@ -21,6 +19,8 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
 from buildbot.steps.worker import CompositeStepMixin
+
+from twisted.python import log
 
 
 class Source(LoggingBuildStep, CompositeStepMixin):
@@ -246,7 +246,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             return d
 
         d = _downloadFile(diff, ".buildbot-diff")
-        d.addCallback(lambda _: _downloadFile("patched\n", ".buildbot-patched"))
+        d.addCallback(
+            lambda _: _downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patch))
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
                                                     'logEnviron': self.logEnviron})
@@ -261,7 +262,8 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         return d
 
     def sourcedirIsPatched(self):
-        d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
+        d = self.pathExists(
+            self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
 
     def start(self):
@@ -298,8 +300,10 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 if patch:
                     self.addCompleteLog("patch", patch[1])
             else:
-                log.msg("No sourcestamp found in build for codebase '%s'" % self.codebase)
-                self.step_status.setText(["Codebase", '%s' % self.codebase, "not", "in", "build"])
+                log.msg(
+                    "No sourcestamp found in build for codebase '%s'" % self.codebase)
+                self.step_status.setText(
+                    ["Codebase", '%s' % self.codebase, "not", "in", "build"])
                 self.addCompleteLog("log",
                                     "No sourcestamp found in build for codebase '%s'"
                                     % self.codebase)

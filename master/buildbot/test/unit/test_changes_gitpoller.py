@@ -17,9 +17,6 @@ import re
 
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.changes import base
 from buildbot.changes import gitpoller
 from buildbot.test.util import changesource
@@ -27,6 +24,8 @@ from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.test.util import logging
 
+from twisted.internet import defer
+from twisted.trial import unittest
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
@@ -62,11 +61,13 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
         def cb_empty(_):
             if emptyRaisesException:
-                self.fail("getProcessOutput should have failed on empty output")
+                self.fail(
+                    "getProcessOutput should have failed on empty output")
 
         def eb_empty(f):
             if not emptyRaisesException:
-                self.fail("getProcessOutput should NOT have failed on empty output")
+                self.fail(
+                    "getProcessOutput should NOT have failed on empty output")
 
         d.addCallbacks(cb_empty, eb_empty)
         d.addCallback(lambda _: self.assertAllCommandsRan())
@@ -115,12 +116,14 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     def test_get_commit_author(self):
         authorStr = u'Sammy Jankis <email@example.com>'
         return self._perform_git_output_test(self.poller._get_commit_author,
-                                             ['log', '--no-walk', '--format=%aN <%aE>', self.dummyRevStr, '--'],
+                                             ['log', '--no-walk', '--format=%aN <%aE>',
+                                                 self.dummyRevStr, '--'],
                                              authorStr, authorStr)
 
     def _test_get_commit_comments(self, commentStr):
         return self._perform_git_output_test(self.poller._get_commit_comments,
-                                             ['log', '--no-walk', '--format=%s%n%b', self.dummyRevStr, '--'],
+                                             ['log', '--no-walk', '--format=%s%n%b',
+                                                 self.dummyRevStr, '--'],
                                              commentStr, commentStr, emptyRaisesException=False)
 
     def test_get_commit_comments(self):
@@ -132,14 +135,16 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         filesStr = '\n\nfile1\nfile2\n"\146ile_octal"\nfile space'
         filesRes = ['file1', 'file2', 'file_octal', 'file space']
         return self._perform_git_output_test(self.poller._get_commit_files,
-                                             ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
+                                             ['log', '--name-only', '--no-walk',
+                                                 '--format=%n', self.dummyRevStr, '--'],
                                              filesStr, filesRes, emptyRaisesException=False)
 
     def test_get_commit_files_with_space_in_changed_files(self):
         filesStr = 'normal_directory/file1\ndirectory with space/file2'
         return self._perform_git_output_test(
             self.poller._get_commit_files,
-            ['log', '--name-only', '--no-walk', '--format=%n', self.dummyRevStr, '--'],
+            ['log', '--name-only', '--no-walk',
+                '--format=%n', self.dummyRevStr, '--'],
             filesStr,
             filter(lambda x: x.strip(), filesStr.splitlines(), ),
             emptyRaisesException=False,
@@ -148,7 +153,8 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
-                                             ['log', '--no-walk', '--format=%ct', self.dummyRevStr, '--'],
+                                             ['log', '--no-walk', '--format=%ct',
+                                                 self.dummyRevStr, '--'],
                                              stampStr, float(stampStr))
 
     # _get_changes is tested in TestGitPoller, below
@@ -1191,7 +1197,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         @d.addCallback
         def check(_):
-            self.assertEqual(self.poller.workdir, os.path.join('basedir', 'gitpoller-work'))
+            self.assertEqual(
+                self.poller.workdir, os.path.join('basedir', 'gitpoller-work'))
             self.assertEqual(self.poller.lastRev, {})
             startService.assert_called_once_with(self.poller)
         return d

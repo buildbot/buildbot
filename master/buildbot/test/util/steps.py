@@ -13,23 +13,23 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+
+import mock
 from future.utils import iteritems
 from future.utils import itervalues
 
-import mock
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-
 from buildbot import interfaces
-from buildbot.process import buildstep
 from buildbot.process import remotecommand as real_remotecommand
+from buildbot.process import buildstep
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
 from buildbot.test.fake import worker
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
 
 
 def _dict_diff(d1, d2):
@@ -50,9 +50,12 @@ def _dict_diff(d1, d2):
 
     for k in both:
         if isinstance(d1[k], dict) and isinstance(d2[k], dict):
-            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(d1[k], d2[k])
-            missing_in_d1.extend(['{0}.{1}'.format(k, m) for m in missing_in_v1])
-            missing_in_d2.extend(['{0}.{1}'.format(k, m) for m in missing_in_v2])
+            missing_in_v1, missing_in_v2, different_in_v = _dict_diff(
+                d1[k], d2[k])
+            missing_in_d1.extend(['{0}.{1}'.format(k, m)
+                                  for m in missing_in_v1])
+            missing_in_d2.extend(['{0}.{1}'.format(k, m)
+                                  for m in missing_in_v2])
             for child_k, left, right in different_in_v:
                 different.append(('{0}.{1}'.format(k, child_k), left, right))
             continue

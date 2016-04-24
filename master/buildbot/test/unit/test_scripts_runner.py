@@ -19,14 +19,14 @@ import sys
 
 import mock
 
+from buildbot.scripts import base
+from buildbot.scripts import runner
+from buildbot.test.util import misc
+
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python import usage
 from twisted.trial import unittest
-
-from buildbot.scripts import base
-from buildbot.scripts import runner
-from buildbot.test.util import misc
 
 
 class OptionsMixin(object):

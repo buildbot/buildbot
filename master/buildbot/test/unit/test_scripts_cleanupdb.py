@@ -15,18 +15,9 @@
 import os
 import textwrap
 
-try:
-    import lz4
-    [lz4]
-    hasLz4 = True
-except ImportError:
-    hasLz4 = False
-
 import sqlalchemy as sa
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
+import test_db_logs
 from buildbot.db.connector import DBConnector
 from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
@@ -34,7 +25,15 @@ from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 
-import test_db_logs
+from twisted.internet import defer
+from twisted.trial import unittest
+
+try:
+    import lz4
+    [lz4]
+    hasLz4 = True
+except ImportError:
+    hasLz4 = False
 
 
 def mkconfig(**kwargs):
@@ -103,13 +102,15 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         if "BUILDBOT_TEST_DB_URL" not in os.environ:
 
             patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
-                                                                             "basedir", "state.sqlite"))
+                                                                                    "basedir", "state.sqlite"))
 
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
         res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
         self.assertEqual(res, 1)
-        self.assertInStdout("encountered a SyntaxError while parsing config file:")
-        # config logs an error via log.err, we must eat it or trial will complain
+        self.assertInStdout(
+            "encountered a SyntaxError while parsing config file:")
+        # config logs an error via log.err, we must eat it or trial will
+        # complain
         self.flushLoggedErrors()
 
     @defer.inlineCallbacks
@@ -119,7 +120,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         if "BUILDBOT_TEST_DB_URL" not in os.environ:
 
             patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
-                                                                             "basedir", "state.sqlite"))
+                                                                                    "basedir", "state.sqlite"))
         # we reuse RealDatabaseMixin to setup the db
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
@@ -150,7 +151,8 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
             res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
             self.assertEqual(res, 0)
 
-            # make sure the compression don't change the data we can retrieve via api
+            # make sure the compression don't change the data we can retrieve
+            # via api
             res = yield self.db.logs.getLogLines(logid, 0, 2000)
             self.assertEqual(res, LOGDATA)
 
@@ -162,7 +164,8 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                 return sum([len(row.content) for row in conn.execute(q)])
             lengths[mode] = yield self.db.pool.do(thd)
 
-        self.assertDictAlmostEqual(lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})
+        self.assertDictAlmostEqual(
+            lengths, {'raw': 5999, 'bz2': 44, 'lz4': 40, 'gz': 31})
 
     def assertDictAlmostEqual(self, d1, d2):
         # The test shows each methods return different size

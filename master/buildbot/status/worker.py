@@ -15,10 +15,11 @@
 
 import time
 
+from zope.interface import implements
+
 from buildbot import interfaces
 from buildbot.util import ascii2unicode
 from buildbot.util.eventual import eventually
-from zope.interface import implements
 
 
 class WorkerStatus:
@@ -109,7 +110,8 @@ class WorkerStatus:
     def recordConnectTime(self):
         # record this connnect, and keep data for the last hour
         now = time.time()
-        self.connect_times = [t for t in self.connect_times if t > now - 3600] + [now]
+        self.connect_times = [
+            t for t in self.connect_times if t > now - 3600] + [now]
 
     def buildStarted(self, build):
         self.runningBuilds.append(build)

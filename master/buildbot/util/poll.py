@@ -17,7 +17,6 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 
-
 _poller_instances = None
 
 

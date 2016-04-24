@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import masters
 from buildbot.data import types
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
+
+from twisted.internet import defer
 
 
 class Db2DataMixin(object):

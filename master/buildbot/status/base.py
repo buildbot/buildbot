@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 
 
-from buildbot.util import service
 from zope.interface import implements
 
 from buildbot import pbutil
 from buildbot import util
 from buildbot.interfaces import IStatusReceiver
+from buildbot.util import service
 
 
 class StatusReceiverBase:

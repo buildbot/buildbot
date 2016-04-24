@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.test.util import interfaces
+
+from twisted.trial import unittest
 
 
 class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
@@ -37,7 +37,8 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y=3, *args); got: (x, y=2, *args)',))
+        self.assertEqual(
+            error.args, ('Expected: (x, y=3, *args); got: (x, y=2, *args)',))
 
     def test_double_decorator(self):
         def myfunc(x, y):
@@ -97,4 +98,5 @@ class TestAssertArgSpecMatches(interfaces.InterfaceTests, unittest.TestCase):
             error = None
 
         self.assertIdentical(type(error), unittest.FailTest)
-        self.assertEqual(error.args, ('Expected: (x, y=2, *args); got: (x, y=3, *args)',))
+        self.assertEqual(
+            error.args, ('Expected: (x, y=2, *args); got: (x, y=3, *args)',))

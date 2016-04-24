@@ -14,16 +14,16 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.changes import changes
 from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
@@ -84,7 +84,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
-        sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
+        sched = self.makeScheduler(
+            codebases={'lib': {'repository': 'librepo'}})
         cbd = yield sched.getCodebaseDict('lib')
         self.assertEqual(cbd, {'repository': 'librepo'})
 
@@ -95,7 +96,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(cbd, {})
 
     def test_getCodebaseDict_not_found(self):
-        sched = self.makeScheduler(codebases={'lib': {'repository': 'librepo'}})
+        sched = self.makeScheduler(
+            codebases={'lib': {'repository': 'librepo'}})
         return self.assertFailure(sched.getCodebaseDict('app'), KeyError)
 
     def test_listBuilderNames(self):
@@ -228,7 +230,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertFalse(sched.activate.called)
         self.assertFalse(sched.deactivate.called)
         self.assertFalse(sched.isActive())
-        self.assertEqual(sched.serviceid, sched.objectid)  # objectid is attached by the test helper
+        # objectid is attached by the test helper
+        self.assertEqual(sched.serviceid, sched.objectid)
 
         # clear that masterid
         yield sched.stopService()
@@ -484,7 +487,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='n', builderNames=['b', 'x', 'y'])
         bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
                                                              waited_for=True,
-                                                             sourcestamps=[91, {'sourcestamp': True}],
+                                                             sourcestamps=[
+                                                                 91, {'sourcestamp': True}],
                                                              builderNames=['x', 'y'])
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         self.master.data.updates.addBuildset.assert_called_with(

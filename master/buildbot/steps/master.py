@@ -12,24 +12,23 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
-from builtins import bytes
-from builtins import str
-
 import os
 import pprint
 import re
+from builtins import bytes
+from builtins import str
+
+from future.utils import iteritems
+
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
+from buildbot.process.buildstep import BuildStep
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
-
-from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import FAILURE
-from buildbot.process.buildstep import SUCCESS
 
 
 class MasterShellCommand(BuildStep):
@@ -70,9 +69,11 @@ class MasterShellCommand(BuildStep):
 
         def processEnded(self, status_object):
             if status_object.value.exitCode is not None:
-                self.step.stdio_log.addHeader("exit status %d\n" % status_object.value.exitCode)
+                self.step.stdio_log.addHeader(
+                    "exit status %d\n" % status_object.value.exitCode)
             if status_object.value.signal is not None:
-                self.step.stdio_log.addHeader("signal %s\n" % status_object.value.signal)
+                self.step.stdio_log.addHeader(
+                    "signal %s\n" % status_object.value.signal)
             self.step.processEnded(status_object)
 
     def start(self):
@@ -81,7 +82,8 @@ class MasterShellCommand(BuildStep):
         # set up argv
         if isinstance(command, (str, bytes)):
             if runtime.platformType == 'win32':
-                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                # allow %COMSPEC% to have args
+                argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
                     argv += ['/c']
                 argv += [command]
@@ -91,7 +93,8 @@ class MasterShellCommand(BuildStep):
                 argv = ['/bin/sh', '-c', command]
         else:
             if runtime.platformType == 'win32':
-                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                # allow %COMSPEC% to have args
+                argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
                     argv += ['/c']
                 argv += list(command)
@@ -149,7 +152,8 @@ class MasterShellCommand(BuildStep):
             self.step_status.setText(self.describe(done=True))
             self.finished(FAILURE)
         elif status_object.value.exitCode != 0:
-            self.descriptionDone = ["failed (%d)" % status_object.value.exitCode]
+            self.descriptionDone = [
+                "failed (%d)" % status_object.value.exitCode]
             self.step_status.setText(self.describe(done=True))
             self.finished(FAILURE)
         else:
@@ -179,7 +183,8 @@ class SetProperty(BuildStep):
 
     def run(self):
         properties = self.build.getProperties()
-        properties.setProperty(self.property, self.value, self.name, runtime=True)
+        properties.setProperty(
+            self.property, self.value, self.name, runtime=True)
         return defer.succeed(SUCCESS)
 
 

@@ -13,15 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from twisted.python import log
-
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process import metrics
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -41,7 +41,8 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        timer = metrics.Timer("ChangeManager.reconfigServiceWithBuildbotConfig")
+        timer = metrics.Timer(
+            "ChangeManager.reconfigServiceWithBuildbotConfig")
         timer.start()
 
         removed, added = util.diffSets(

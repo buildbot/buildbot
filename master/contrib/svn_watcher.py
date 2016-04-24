@@ -24,10 +24,8 @@ import subprocess
 import sys
 import time
 import xml.dom.minidom
-
 from optparse import OptionParser
 from xml.parsers.expat import ExpatError
-
 
 if sys.platform == 'win32':
     import win32pipe
@@ -216,11 +214,13 @@ if __name__ == '__main__':
             try:
                 oldRevision = checkChanges(repo_url, bbmaster, oldRevision)
             except ExpatError:
-                # had an empty changeset.  Trapping the exception and moving on.
+                # had an empty changeset.  Trapping the exception and moving
+                # on.
                 pass
             try:
                 if opts.interval:
-                    # Check the repository every interval in minutes the user specified.
+                    # Check the repository every interval in minutes the user
+                    # specified.
                     time.sleep(int(opts.interval) * 60)
                 else:
                     # Check the repository every 10 minutes

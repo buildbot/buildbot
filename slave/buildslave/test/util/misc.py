@@ -15,14 +15,15 @@
 
 import __builtin__
 import errno
-import mock
 import os
-import shutil
 import re
+import shutil
 
-from twisted.python import log
+import mock
 
 from buildslave.scripts import base
+
+from twisted.python import log
 
 
 def nl(s):

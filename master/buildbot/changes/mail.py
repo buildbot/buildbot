@@ -20,21 +20,20 @@ import calendar
 import datetime
 import re
 import time
-
 from email import message_from_file
 from email.iterators import body_line_iterator
 from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
 
-from twisted.internet import defer
-from twisted.python import log
-
 from zope.interface import implements
 
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class MaildirSource(MaildirService, util.ComparableMixin):
@@ -101,7 +100,8 @@ class CVSMaildirSource(MaildirSource):
         # model)
         name, addr = parseaddr(m["from"])
         if not addr:
-            return None  # no From means this message isn't from buildbot-cvs-mail
+            # no From means this message isn't from buildbot-cvs-mail
+            return None
         at = addr.find("@")
         if at == -1:
             author = addr  # might still be useful
@@ -220,16 +220,21 @@ class CVSMaildirSource(MaildirSource):
             if m:
                 path = m.group(1)
             else:
-                log.msg('CVSMaildirSource can\'t get path from file list. Ignoring mail')
+                log.msg(
+                    'CVSMaildirSource can\'t get path from file list. Ignoring mail')
                 return
             fileList = fileList[len(path):].strip()
-            singleFileRE = re.compile(r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+            singleFileRE = re.compile(
+                r'(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
         elif cvsmode == '1.12':
-            singleFileRE = re.compile(r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+            singleFileRE = re.compile(
+                r'(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
             if path is None:
-                raise ValueError('CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
+                raise ValueError(
+                    'CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
         else:
-            raise ValueError('Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
+            raise ValueError(
+                'Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
 
         log.msg("CVSMaildirSource processing filelist: %s" % fileList)
         while(fileList):
@@ -455,7 +460,8 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         def gobble_renamed(s):
             match = re.search(r"^(.+) => (.+)$", s)
             if match:
-                d['files'].append('%s RENAMED %s' % (match.group(1), match.group(2)))
+                d['files'].append('%s RENAMED %s' %
+                                  (match.group(1), match.group(2)))
             else:
                 d['files'].append('%s RENAMED' % s)
 
@@ -477,13 +483,15 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
             # timestamp: Fri 2009-05-15 10:35:43 +0200
             # datetime.strptime() is supposed to support %z for time zone, but
             # it does not seem to work. So handle the time zone manually.
-            match = re.search(r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)
+            match = re.search(
+                r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)
             if match:
                 datestr = match.group(1)
                 tz_sign = match.group(2)
                 tz_hours = match.group(3)
                 tz_minutes = match.group(4)
-                when = parseLaunchpadDate(datestr, tz_sign, tz_hours, tz_minutes)
+                when = parseLaunchpadDate(
+                    datestr, tz_sign, tz_hours, tz_minutes)
 
             if re.search(r"^message:\s*$", line):
                 gobbler = gobble_comment

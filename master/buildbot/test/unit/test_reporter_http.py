@@ -15,14 +15,14 @@
 from mock import Mock
 from mock import call
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class BuildLookAlike(object):
@@ -110,7 +110,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
         yield self.createReporter(builders='Builder0')
-        config._errors.addError.assert_any_call("builders must be a list or None")
+        config._errors.addError.assert_any_call(
+            "builders must be a list or None")
 
     @defer.inlineCallbacks
     def test_wantKwargsCheck(self):

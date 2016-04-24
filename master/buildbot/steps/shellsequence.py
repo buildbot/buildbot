@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class ShellArg(results.ResultComputingConfigMixin):
@@ -48,8 +48,10 @@ class ShellArg(results.ResultComputingConfigMixin):
                          "it must be a string or a list" % (self.command,))
         if isinstance(self.command, list):
             if not all([isinstance(x, str) for x in self.command]):
-                config.error("%s must only have strings in it" % (self.command,))
-        runConfParams = [(p_attr, getattr(self, p_attr)) for p_attr in self.resultConfig]
+                config.error("%s must only have strings in it" %
+                             (self.command,))
+        runConfParams = [(p_attr, getattr(self, p_attr))
+                         for p_attr in self.resultConfig]
         not_bool = [(p_attr, p_val) for (p_attr, p_val) in runConfParams if not isinstance(p_val,
                                                                                            bool)]
         if not_bool:

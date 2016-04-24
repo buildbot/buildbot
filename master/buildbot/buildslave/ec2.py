@@ -16,6 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker.ec2 import EC2LatentWorker as _EC2LatentWorker
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
@@ -23,6 +24,6 @@ reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.ec2' module instead".format(old=__name__))
 
-from buildbot.worker.ec2 import EC2LatentWorker as _EC2LatentWorker
 
-deprecatedWorkerModuleAttribute(locals(), _EC2LatentWorker, compat_name="EC2LatentBuildSlave")
+deprecatedWorkerModuleAttribute(
+    locals(), _EC2LatentWorker, compat_name="EC2LatentBuildSlave")

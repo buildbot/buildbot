@@ -17,7 +17,6 @@ import os
 import shutil
 
 import buildslave.runprocess
-
 from buildslave.commands import utils
 from buildslave.test.fake import runprocess
 from buildslave.test.fake import slavebuilder
@@ -79,7 +78,8 @@ class CommandTestMixin(object):
         # set up the workdir and basedir
         if makedirs:
             basedir_abs = os.path.abspath(os.path.join(self.basedir))
-            workdir_abs = os.path.abspath(os.path.join(self.basedir, 'workdir'))
+            workdir_abs = os.path.abspath(
+                os.path.join(self.basedir, 'workdir'))
             if os.path.exists(basedir_abs):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
@@ -123,7 +123,8 @@ class CommandTestMixin(object):
         """
         Patch a fake RunProcess class in, and set the given expectations.
         """
-        self.patch(buildslave.runprocess, 'RunProcess', runprocess.FakeRunProcess)
+        self.patch(
+            buildslave.runprocess, 'RunProcess', runprocess.FakeRunProcess)
         buildslave.runprocess.RunProcess.expect(*expectations)
         self.runprocess_patched = True
 

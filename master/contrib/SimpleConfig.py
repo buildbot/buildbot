@@ -89,8 +89,6 @@ import os
 import random
 import socket
 
-from twisted.python import log
-
 from buildbot.buildslave import BuildSlave
 from buildbot.changes import filter
 from buildbot.changes.gitpoller import GitPoller
@@ -107,6 +105,8 @@ from buildbot.status.web import authz
 from buildbot.steps import trigger
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.source.git import Git
+
+from twisted.python import log
 
 
 class SimpleConfig(dict):
@@ -208,11 +208,13 @@ class SimpleConfig(dict):
         # Avoid checking secrets into git by keeping them in a json file.
         try:
             s = json.load(open(os.path.expanduser(secretsfile)))
-            self.__auth = auth.BasicAuth([(s["webuser"].encode('ascii', 'ignore'), s["webpass"].encode('ascii', 'ignore'))])
+            self.__auth = auth.BasicAuth(
+                [(s["webuser"].encode('ascii', 'ignore'), s["webpass"].encode('ascii', 'ignore'))])
             # For the moment, all slaves have same password
             self.slavepass = s["slavepass"].encode('ascii', 'ignore')
         except Exception:
-            exit("%s must be a json file containing webuser, webpass, and slavepass; ascii only, no commas in quotes" % secretsfile)
+            exit(
+                "%s must be a json file containing webuser, webpass, and slavepass; ascii only, no commas in quotes" % secretsfile)
 
         # STATUS TARGETS
         self['status'] = []
@@ -228,7 +230,8 @@ class SimpleConfig(dict):
             stopAllBuilds=True,
             cancelPendingBuild=True,
         )
-        # Need order_console_by_time for git or hg or any vcs that doesn't have numbered changesets
+        # Need order_console_by_time for git or hg or any vcs that doesn't have
+        # numbered changesets
         self['status'].append(
             html.WebStatus(http_port=self.__http_port, authz=authz_cfg, order_console_by_time=True))
 
@@ -259,7 +262,8 @@ class SimpleConfig(dict):
         # with an externally-visible host name which the buildbot cannot figure out
         # without some help.
 
-        self['buildbotURL'] = "http://" + socket.gethostname() + ":%d/" % self.__http_port
+        self['buildbotURL'] = "http://" + \
+            socket.gethostname() + ":%d/" % self.__http_port
 
         # SLAVES
         self._os2slaves = {}
@@ -269,21 +273,24 @@ class SimpleConfig(dict):
             sname = slaveconfig["name"].encode('ascii', 'ignore')
             sos = slaveconfig["os"].encode('ascii', 'ignore')
             # Restrict to a single build at a time because our buildshims
-            # typically assume they have total control of machine, and use sudo apt-get, etc. with abandon.
+            # typically assume they have total control of machine, and use sudo
+            # apt-get, etc. with abandon.
             s = BuildSlave(sname, self.slavepass, max_builds=1)
             self['slaves'].append(s)
             if sos not in self._os2slaves:
                 self._os2slaves[sos] = []
             self._os2slaves[sos].append(sname)
 
-        # These will be built up over the course of one or more calls to addSimpleProject
+        # These will be built up over the course of one or more calls to
+        # addSimpleProject
         self['change_source'] = []
         self['builders'] = []
         self['schedulers'] = []
 
         # Righty-o, wire 'em all up
         for project in masterjson["projects"]:
-            self.addSimpleProject(project["name"].encode('ascii', 'ignore'), project["category"].encode('ascii', 'ignore'), project["repourl"].encode('ascii', 'ignore'), project["builders"])
+            self.addSimpleProject(project["name"].encode('ascii', 'ignore'), project["category"].encode(
+                'ascii', 'ignore'), project["repourl"].encode('ascii', 'ignore'), project["builders"])
 
     def addSimpleBuilder(self, name, buildername, category, repourl, builderconfig, sos, sbranch, bparams):
         """Private.
@@ -292,7 +299,8 @@ class SimpleConfig(dict):
         """
 
         factory = BuildFactory()
-        factory.addStep(Git(repourl=repourl, mode='full', submodules=True, method='copy', branch=sbranch, getDescription={'tags': True}))
+        factory.addStep(Git(repourl=repourl, mode='full', submodules=True,
+                            method='copy', branch=sbranch, getDescription={'tags': True}))
         if "tag" in builderconfig and not(builderconfig["tag"] is None):
             stag = builderconfig["tag"].encode('ascii', 'ignore')
             factory.addStep(ShellCommand(
@@ -304,7 +312,8 @@ class SimpleConfig(dict):
         # Pass the step name as the first arg, and if params was given in the json for this builder, pass that as the
         # second arg.
         for step in ["patch", "install_deps", "configure", "compile", "check", "package", "upload", "compile_extra", "uninstall_deps"]:
-            factory.addStep(ShellCommand(command=["./buildshim", step, bparams], description=step, haltOnFailure=True))
+            factory.addStep(ShellCommand(
+                command=["./buildshim", step, bparams], description=step, haltOnFailure=True))
 
         self['builders'].append(
             BuilderConfig(name=buildername,
@@ -352,26 +361,33 @@ class SimpleConfig(dict):
             sos = sosses.pop()
             buildername = name + '-' + sos + '-' + sbranch + bsuffix
 
-            factory = self.addSimpleBuilder(name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)
+            factory = self.addSimpleBuilder(
+                name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)
             self['schedulers'].append(
                 SingleBranchScheduler(
                     name=buildername,
-                    change_filter=filter.ChangeFilter(branch=sbranch, repository=repourl),
-                    treeStableTimer=1 * 60,  # Set this just high enough so you don't swamp the slaves, or to None if you don't want changes batched
+                    change_filter=filter.ChangeFilter(
+                        branch=sbranch, repository=repourl),
+                    # Set this just high enough so you don't swamp the slaves,
+                    # or to None if you don't want changes batched
+                    treeStableTimer=1 * 60,
                     builderNames=[buildername]))
             buildernames.append(buildername)
 
-            # The rest of the OSes in the list, if any, are triggered when the previous OS in the list finishes
+            # The rest of the OSes in the list, if any, are triggered when the
+            # previous OS in the list finishes
             while len(sosses) > 0:
                 prev_factory = factory
                 sos = sosses.pop()
                 buildername = name + '-' + sos + '-' + sbranch + bsuffix
-                factory = self.addSimpleBuilder(name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)
+                factory = self.addSimpleBuilder(
+                    name, buildername, category, repourl, builderconfig, sos, sbranch, bparams)
                 self['schedulers'].append(
                     triggerable.Triggerable(
                         name=buildername,
                         builderNames=[buildername]))
-                prev_factory.addStep(trigger.Trigger(schedulerNames=[buildername], waitForFinish=False))
+                prev_factory.addStep(
+                    trigger.Trigger(schedulerNames=[buildername], waitForFinish=False))
 
         self['schedulers'].append(
             ForceScheduler(
@@ -389,7 +405,8 @@ class SimpleConfig(dict):
         already = False
         for cs in self['change_source']:
             if cs.repourl == repourl:
-                log.msg("There's already a changesource for %s.  Hope it has the branch you wanted." % cs.repourl)
+                log.msg(
+                    "There's already a changesource for %s.  Hope it has the branch you wanted." % cs.repourl)
                 already = True
         if not already:
             self['change_source'].append(

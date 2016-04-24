@@ -18,7 +18,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-
 # debounce phases
 PH_IDLE = 0
 PH_WAITING = 1

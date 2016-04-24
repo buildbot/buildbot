@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
-
-from twisted.internet import defer
-from twisted.python import failure
-from twisted.python import log
-
 from zope.interface import implements
 
 from buildbot import config
@@ -26,6 +21,10 @@ from buildbot.changes import changes
 from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
+
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
 
 
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
@@ -71,7 +70,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         elif isinstance(codebases, list):
             codebases = dict((codebase, {}) for codebase in codebases)
         elif not isinstance(codebases, dict):
-            config.error("Codebases must be a dict of dicts, or list of strings")
+            config.error(
+                "Codebases must be a dict of dicts, or list of strings")
         else:
             for codebase, attrs in iteritems(codebases):
                 if not isinstance(attrs, dict):

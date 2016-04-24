@@ -15,15 +15,16 @@
 import sys
 import textwrap
 
-from twisted.internet import defer
-from twisted.internet import reactor
-
 from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
 from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.util.integration import RunMasterBase
+
+from twisted.internet import defer
+from twisted.internet import reactor
+
 
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them. the triggered build never ends
@@ -134,7 +135,8 @@ class TriggeringMaster(RunMasterBase):
             if self.higherBuild is None:
                 self.higherBuild = data['buildid']
             else:
-                self.master.data.control("stop", {}, ("builds", self.higherBuild))
+                self.master.data.control(
+                    "stop", {}, ("builds", self.higherBuild))
                 self.higherBuild = None
         yield self.runTest(newCallback)
 
@@ -149,7 +151,8 @@ class TriggeringMaster(RunMasterBase):
             else:
 
                 def f():
-                    self.master.data.control("stop", {}, ("builds", self.higherBuild))
+                    self.master.data.control(
+                        "stop", {}, ("builds", self.higherBuild))
                     self.higherBuild = None
                 reactor.callLater(5.0, f)
 

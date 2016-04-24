@@ -16,9 +16,10 @@
 import os
 import sys
 import time
-from twisted.python import log
 
 from buildslave.scripts import base
+
+from twisted.python import log
 
 
 class Follower(object):

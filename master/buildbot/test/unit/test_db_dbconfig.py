@@ -12,12 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot.db import dbconfig
+from buildbot.test.util import db
+
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.trial import unittest
-
-from buildbot.db import dbconfig
-from buildbot.test.util import db
 
 
 class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
@@ -29,7 +29,8 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
         yield threads.deferToThread(self.createDbConfig)
 
     def createDbConfig(self):
-        self.dbConfig = dbconfig.DbConfig({"db_url": self.db_url}, self.basedir)
+        self.dbConfig = dbconfig.DbConfig(
+            {"db_url": self.db_url}, self.basedir)
 
     def tearDown(self):
         return self.tearDownRealDatabase()

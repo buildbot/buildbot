@@ -12,14 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import mock
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
+from future.utils import iteritems
 
 from buildbot import config
 from buildbot.db import buildrequests
@@ -29,6 +23,11 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 
 def nth_worker(n):
@@ -46,7 +45,8 @@ class SkipWorkerThatCantGetLock(buildrequestdistributor.BasicBuildChooser):
     """This class disables the 'rejectedWorkers' feature"""
 
     def __init__(self, *args, **kwargs):
-        buildrequestdistributor.BasicBuildChooser.__init__(self, *args, **kwargs)
+        buildrequestdistributor.BasicBuildChooser.__init__(
+            self, *args, **kwargs)
         self.rejectedWorkers = None  # disable this feature
 
 
@@ -64,7 +64,8 @@ class TestBRDBase(unittest.TestCase):
                                                                      wantData=True, wantDb=True)
         self.master.caches = fakemaster.FakeCaches()
         self.master.config.prioritizeBuilders = prioritizeBuilders
-        self.brd = buildrequestdistributor.BuildRequestDistributor(self.botmaster)
+        self.brd = buildrequestdistributor.BuildRequestDistributor(
+            self.botmaster)
         self.brd.parent = self.botmaster
         self.brd.startService()
 
@@ -98,8 +99,10 @@ class TestBRDBase(unittest.TestCase):
         for i in range(worker_count):
             self.addWorkers({'test-worker%d' % i: 1})
             rows.append(fakedb.Buildset(id=100 + i, reason='because'))
-            rows.append(fakedb.BuildsetSourceStamp(buildsetid=100 + i, sourcestampid=21))
-            rows.append(fakedb.BuildRequest(id=10 + i, buildsetid=100 + i, builderid=77))
+            rows.append(
+                fakedb.BuildsetSourceStamp(buildsetid=100 + i, sourcestampid=21))
+            rows.append(
+                fakedb.BuildRequest(id=10 + i, buildsetid=100 + i, builderid=77))
         return rows
 
     def addWorkers(self, workerforbuilders):
@@ -133,7 +136,8 @@ class TestBRDBase(unittest.TestCase):
         bldr.getCollapseRequestsFn = lambda: False
 
         bldr.workers = []
-        bldr.getAvailableWorkers = lambda: [s for s in bldr.workers if s.isAvailable()]
+        bldr.getAvailableWorkers = lambda: [
+            s for s in bldr.workers if s.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
         if builder_config is None:
             bldr.config.nextWorker = None
@@ -317,7 +321,8 @@ class Test(TestBRDBase):
 
     def test_sortBuilders_default_None(self):
         return self.do_test_sortBuilders(None,  # use the default sort
-                                         dict(bldr1=777, bldr2=None, bldr3=888),
+                                         dict(
+                                             bldr1=777, bldr2=None, bldr3=888),
                                          ['bldr1', 'bldr3', 'bldr2'])
 
     def test_sortBuilders_custom(self):
@@ -523,7 +528,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             return result in allowed
         self.bldr.config.canStartBuild = _canStartBuild
 
-        self.addWorkers({'test-worker1': 1, 'test-worker2': 1, 'test-worker3': 1})
+        self.addWorkers(
+            {'test-worker1': 1, 'test-worker2': 1, 'test-worker3': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
@@ -535,10 +541,12 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[10, 11], exp_builds=[('test-worker1', [10]), ('test-worker3', [11])])
 
-        self.assertEqual(workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
+        self.assertEqual(
+            workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
 
         # we expect brids in order (10-11-12),
-        # with each searched in reverse order of workers (3-2-1) available (due to nth_worker(-1))
+        # with each searched in reverse order of workers (3-2-1) available (due
+        # to nth_worker(-1))
         self.assertEqual(pairs_tested, [
             ('test-worker3', 10),
             ('test-worker2', 10),
@@ -576,7 +584,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             return defer.succeed(result in allowed)
         self.bldr.config.canStartBuild = _canStartBuild
 
-        self.addWorkers({'test-worker1': 1, 'test-worker2': 1, 'test-worker3': 1})
+        self.addWorkers(
+            {'test-worker1': 1, 'test-worker2': 1, 'test-worker3': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
@@ -588,7 +597,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[10], exp_builds=[('test-worker1', [10])])
 
-        self.assertEqual(workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
+        self.assertEqual(
+            workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
 
         # we expect brids in order (10-11-12),
         # with worker3 skipped, and worker2 unable to pair
@@ -608,7 +618,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             workers_attempted.append(workerforbuilder.name)
             return (workerforbuilder.name == 'test-worker3')
         self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
-        self.addWorkers({'test-worker1': 0, 'test-worker2': 1, 'test-worker3': 1})
+        self.addWorkers(
+            {'test-worker1': 0, 'test-worker2': 1, 'test-worker3': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
                                 submitted_at=130000),
@@ -653,7 +664,8 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[],  # reclaimed so none taken!
+                                                     # reclaimed so none taken!
+                                                     exp_claims=[],
                                                      exp_builds=[('test-worker2', [10]), ('test-worker1', [11])])
 
     @defer.inlineCallbacks
@@ -682,12 +694,15 @@ class TestMaybeStartBuilds(TestBRDBase):
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.assertMyClaims([11])  # reclaimed so none taken!
-        self.assertBuildsStarted([('test-worker2', [10]), ('test-worker1', [11])])
+        self.assertBuildsStarted(
+            [('test-worker2', [10]), ('test-worker1', [11])])
 
-        # second time around the #10 will pass, adding another request and it is claimed
+        # second time around the #10 will pass, adding another request and it
+        # is claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
         self.assertMyClaims([10, 11])
-        self.assertBuildsStarted([('test-worker2', [10]), ('test-worker1', [11]), ('test-worker2', [10])])
+        self.assertBuildsStarted(
+            [('test-worker2', [10]), ('test-worker1', [11]), ('test-worker2', [10])])
 
     @defer.inlineCallbacks
     def test_limited_by_requests(self):
@@ -711,7 +726,8 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_nextWorker_bogus(self):
-        self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(mock.Mock())
+        self.bldr.config.nextWorker = lambda _1, _2, _3: defer.succeed(
+            mock.Mock())
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})
         rows = self.base_rows + [
             fakedb.BuildRequest(id=11, buildsetid=11, builderid=77),

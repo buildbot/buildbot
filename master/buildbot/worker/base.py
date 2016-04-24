@@ -13,17 +13,11 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
-from future.utils import itervalues
-
 import time
-
 from email.message import Message
 from email.utils import formatdate
 
-from twisted.internet import defer
-from twisted.python import log
-from twisted.python.reflect import namedModule
-
+from future.utils import itervalues
 from zope.interface import implements
 
 from buildbot import config
@@ -38,6 +32,10 @@ from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
+
+from twisted.internet import defer
+from twisted.python import log
+from twisted.python.reflect import namedModule
 
 
 class AbstractWorker(service.BuildbotService, object):
@@ -211,7 +209,8 @@ class AbstractWorker(service.BuildbotService, object):
         self._applyWorkerInfo(worker['workerinfo'])
 
     def setServiceParent(self, parent):
-        # botmaster needs to set before setServiceParent which calls startService
+        # botmaster needs to set before setServiceParent which calls
+        # startService
 
         self.manager = parent
         return service.BuildbotService.setServiceParent(self, parent)
@@ -265,7 +264,8 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.updateLocks()
 
-        bids = [b._builderid for b in self.botmaster.getBuildersForWorker(self.name)]
+        bids = [
+            b._builderid for b in self.botmaster.getBuildersForWorker(self.name)]
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
 
         # update the attached worker's notion of which builders are attached.
@@ -287,7 +287,7 @@ class AbstractWorker(service.BuildbotService, object):
         if self.notify_on_missing and self.missing_timeout and self.parent:
             self.stopMissingTimer()  # in case it's already running
             self.missing_timer = self.master.reactor.callLater(self.missing_timeout,
-                                                   self._missing_timer_fired)
+                                                               self._missing_timer_fired)
 
     def stopMissingTimer(self):
         if self.missing_timer:
@@ -513,7 +513,8 @@ class AbstractWorker(service.BuildbotService, object):
 
     def _mail_missing_message(self, subject, text):
         # FIXME: This should be handled properly via the event api
-        # we should send a missing message on the mq, and let any reporter handle that
+        # we should send a missing message on the mq, and let any reporter
+        # handle that
 
         # first, see if we have a MailNotifier we can use. This gives us a
         # fromaddr and a relayhost.
@@ -701,7 +702,8 @@ class AbstractLatentWorker(AbstractWorker):
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
             if not result:
-                log.msg("Worker '%s' does not want to substantiate at this time" % (self.name,))
+                log.msg(
+                    "Worker '%s' does not want to substantiate at this time" % (self.name,))
                 d = self.substantiation_deferred
                 self.substantiation_deferred = None
                 d.callback(False)
@@ -913,7 +915,8 @@ class AbstractLatentWorker(AbstractWorker):
             if not self.substantiation_deferred:
                 log.msg("No substantiation deferred for %s" % (self.name,))
             if self.substantiation_deferred:
-                log.msg("Firing %s substantiation deferred with success" % (self.name,))
+                log.msg(
+                    "Firing %s substantiation deferred with success" % (self.name,))
                 d = self.substantiation_deferred
                 self.substantiation_deferred = None
                 self.substantiation_build = None

@@ -13,22 +13,19 @@
 #
 # Copyright Buildbot Team Members
 import hmac
-
-from StringIO import StringIO
 from calendar import timegm
 from hashlib import sha1
+from StringIO import StringIO
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
+from buildbot.test.fake.web import FakeRequest
+from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.github import _HEADER_CT
 from buildbot.www.hooks.github import _HEADER_EVENT
 from buildbot.www.hooks.github import _HEADER_SIGNATURE
 
-from buildbot.test.fake.web import FakeRequest
-from buildbot.test.fake.web import fakeMasterForHooks
-
+from twisted.internet import defer
+from twisted.trial import unittest
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modfied" and "removed", and change email
@@ -394,7 +391,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testGitWithDistinctFalse(self):
         self.request = _prepare_request('push', [gitJsonPayload.replace('"distinct": true,',
-                                               '"distinct": false,')])
+                                                                        '"distinct": false,')])
 
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.addedChanges), 1)

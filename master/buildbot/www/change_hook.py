@@ -19,12 +19,12 @@
 # but "the rest" is pretty minimal
 import re
 
+from buildbot.www import resource
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from twisted.web import server
-
-from buildbot.www import resource
 
 
 class ChangeHookResource(resource.Resource):
@@ -118,7 +118,8 @@ class ChangeHookResource(resource.Resource):
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)
-            raise ValueError("URI doesn't match change_hook regex: %s" % request.uri)
+            raise ValueError(
+                "URI doesn't match change_hook regex: %s" % request.uri)
 
         changes = []
         src = None
@@ -132,13 +133,15 @@ class ChangeHookResource(resource.Resource):
         if dialect in self.dialects:
             log.msg("Attempting to load module buildbot.www.hooks." + dialect)
             tempModule = namedModule('buildbot.www.hooks.' + dialect)
-            changes, src = tempModule.getChanges(request, self.dialects[dialect])
+            changes, src = tempModule.getChanges(
+                request, self.dialects[dialect])
             log.msg("Got the following changes %s" % changes)
             self.request_dialect = dialect
         else:
             m = "The dialect specified, '%s', wasn't whitelisted in change_hook" % dialect
             log.msg(m)
-            log.msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
+            log.msg(
+                "Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
             raise ValueError(m)
 
         return (changes, src)

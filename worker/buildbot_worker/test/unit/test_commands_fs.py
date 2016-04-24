@@ -16,12 +16,12 @@
 import os
 import shutil
 
-from twisted.trial import unittest
-
 from buildbot_worker.commands import fs
 from buildbot_worker.commands import utils
 from buildbot_worker.test.util.command import CommandTestMixin
+
 from twisted.python import runtime
+from twisted.trial import unittest
 
 # python-2.4 doesn't have os.errno
 if hasattr(os, 'errno'):
@@ -45,7 +45,8 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertFalse(os.path.exists(os.path.abspath(os.path.join(self.basedir, 'workdir'))))
+            self.assertFalse(
+                os.path.exists(os.path.abspath(os.path.join(self.basedir, 'workdir'))))
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -78,7 +79,8 @@ class TestRemoveDirectory(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             for dirname in ['workdir', 'sourcedir']:
-                self.assertFalse(os.path.exists(os.path.abspath(os.path.join(self.basedir, dirname))))
+                self.assertFalse(
+                    os.path.exists(os.path.abspath(os.path.join(self.basedir, dirname))))
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -102,7 +104,8 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir, 'copy'))))
+            self.assertTrue(
+                os.path.exists(os.path.abspath(os.path.join(self.basedir, 'copy'))))
             self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
                           self.get_updates(),
                           self.builder.show())
@@ -145,7 +148,8 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir, 'test-dir'))))
+            self.assertTrue(
+                os.path.exists(os.path.abspath(os.path.join(self.basedir, 'test-dir'))))
             self.assertUpdates(
                 [{'rc': 0}],
                 self.builder.show())
@@ -209,7 +213,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             import stat
-            self.assertTrue(stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
+            self.assertTrue(
+                stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -226,7 +231,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             import stat
-            self.assertTrue(stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
+            self.assertTrue(
+                stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -245,7 +251,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             import stat
-            self.assertTrue(stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
+            self.assertTrue(
+                stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -282,7 +289,8 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates()[0]['files'], [os.path.join(self.basedir, 'workdir')])
+            self.assertEqual(
+                self.get_updates()[0]['files'], [os.path.join(self.basedir, 'workdir')])
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())
@@ -298,7 +306,8 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         d = self.run_command()
 
         def check(_):
-            self.assertEqual(self.get_updates()[0]['files'], [os.path.join(self.basedir, 'test-file')])
+            self.assertEqual(
+                self.get_updates()[0]['files'], [os.path.join(self.basedir, 'test-file')])
             self.assertIn({'rc': 0},
                           self.get_updates(),
                           self.builder.show())

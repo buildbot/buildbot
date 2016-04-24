@@ -15,14 +15,14 @@
 
 # Visual studio steps
 
+import re
+
 from buildbot import config
 from buildbot.process.buildstep import LogLineObserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
-
-import re
 
 
 def addEnvPath(env, name, value):
@@ -173,7 +173,8 @@ class VisualStudio(ShellCommand):
         if done:
             if not description:
                 description = ['compile']
-            description.append('%d projects' % self.getStatistic('projects', 0))
+            description.append(
+                '%d projects' % self.getStatistic('projects', 0))
             description.append('%d files' % self.getStatistic('files', 0))
             warnings = self.getStatistic('warnings', 0)
             if warnings > 0:
@@ -264,12 +265,15 @@ class VC7(VisualStudio):
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir)
         addEnvPath(cmd.args['env'], "PATH", MSVCDir + '\\BIN')
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\Common7\\Tools')
-        addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\Common7\\Tools\\bin')
+        addEnvPath(
+            cmd.args['env'], "PATH", VCInstallDir + '\\Common7\\Tools\\bin')
 
         addEnvPath(cmd.args['env'], "INCLUDE", MSVCDir + '\\INCLUDE')
         addEnvPath(cmd.args['env'], "INCLUDE", MSVCDir + '\\ATLMFC\\INCLUDE')
-        addEnvPath(cmd.args['env'], "INCLUDE", MSVCDir + '\\PlatformSDK\\include')
-        addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\SDK\\v1.1\\include')
+        addEnvPath(
+            cmd.args['env'], "INCLUDE", MSVCDir + '\\PlatformSDK\\include')
+        addEnvPath(
+            cmd.args['env'], "INCLUDE", VCInstallDir + '\\SDK\\v1.1\\include')
 
         addEnvPath(cmd.args['env'], "LIB", MSVCDir + '\\LIB')
         addEnvPath(cmd.args['env'], "LIB", MSVCDir + '\\ATLMFC\\LIB')
@@ -322,26 +326,34 @@ class VC8(VC7):
 
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\Common7\\IDE')
         if self.arch == "x64":
-            addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\BIN\\x86_amd64')
+            addEnvPath(
+                cmd.args['env'], "PATH", VCInstallDir + '\\BIN\\x86_amd64')
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\BIN')
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\Common7\\Tools')
-        addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\Common7\\Tools\\bin')
-        addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\PlatformSDK\\bin')
+        addEnvPath(
+            cmd.args['env'], "PATH", VSInstallDir + '\\Common7\\Tools\\bin')
+        addEnvPath(
+            cmd.args['env'], "PATH", VCInstallDir + '\\PlatformSDK\\bin')
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\SDK\\v2.0\\bin')
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\VCPackages')
         addEnvPath(cmd.args['env'], "PATH", r'${PATH}')
 
         addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\INCLUDE')
-        addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\ATLMFC\\include')
-        addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\PlatformSDK\\include')
+        addEnvPath(
+            cmd.args['env'], "INCLUDE", VCInstallDir + '\\ATLMFC\\include')
+        addEnvPath(
+            cmd.args['env'], "INCLUDE", VCInstallDir + '\\PlatformSDK\\include')
 
         archsuffix = ''
         if self.arch == "x64":
             archsuffix = '\\amd64'
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\LIB' + archsuffix)
-        addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\ATLMFC\\LIB' + archsuffix)
-        addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\PlatformSDK\\lib' + archsuffix)
-        addEnvPath(cmd.args['env'], "LIB", VSInstallDir + '\\SDK\\v2.0\\lib' + archsuffix)
+        addEnvPath(
+            cmd.args['env'], "LIB", VCInstallDir + '\\ATLMFC\\LIB' + archsuffix)
+        addEnvPath(
+            cmd.args['env'], "LIB", VCInstallDir + '\\PlatformSDK\\lib' + archsuffix)
+        addEnvPath(
+            cmd.args['env'], "LIB", VSInstallDir + '\\SDK\\v2.0\\lib' + archsuffix)
 
 # alias VC8 as VS2005
 VS2005 = VC8
@@ -429,7 +441,8 @@ class MsBuild4(VisualStudio):
 
     def start(self):
         if self.platform is None:
-            config.error('platform is mandatory. Please specify a string such as "Win32"')
+            config.error(
+                'platform is mandatory. Please specify a string such as "Win32"')
 
         command = ["%VCENV_BAT%",
                    "x86",

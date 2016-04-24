@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process import debug
 from buildbot.test.fake import fakemaster
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class FakeManhole(service.AsyncService):

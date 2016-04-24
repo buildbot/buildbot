@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.test.fake import fakedb
 from buildbot.test.util import www
 from buildbot.www import authz
@@ -28,22 +25,30 @@ from buildbot.www.authz.roles import RolesFromEmails
 from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
 
+from twisted.internet import defer
+from twisted.trial import unittest
+
 
 class Authz(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
         authzcfg = authz.Authz(
-            stringsMatcher=authz.fnmatchStrMatcher,  # simple matcher with '*' glob character
-            # stringsMatcher = authz.Authz.reStrMatcher,  # if you prefer regular expressions
+            # simple matcher with '*' glob character
+            stringsMatcher=authz.fnmatchStrMatcher,
+            # stringsMatcher = authz.Authz.reStrMatcher,  # if you prefer
+            # regular expressions
             allowRules=[
                 # admins can do anything,
-                # defaultDeny=False: if user does not have the admin role, we continue parsing rules
+                # defaultDeny=False: if user does not have the admin role, we
+                # continue parsing rules
                 AnyEndpointMatcher(role="admins", defaultDeny=False),
 
                 # rules for viewing builds, builders, step logs
                 # depending on the sourcestamp or buildername
-                ViewBuildsEndpointMatcher(branch="secretbranch", role="agents"),
-                ViewBuildsEndpointMatcher(project="secretproject", role="agents"),
+                ViewBuildsEndpointMatcher(
+                    branch="secretbranch", role="agents"),
+                ViewBuildsEndpointMatcher(
+                    project="secretproject", role="agents"),
                 ViewBuildsEndpointMatcher(branch="*", role="*"),
                 ViewBuildsEndpointMatcher(project="*", role="*"),
 
@@ -60,7 +65,8 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                 # *-mergers groups can start "merge" builds
                 ForceBuildEndpointMatcher(builder="merge", role="*-mergers"),
                 # *-releasers groups can start "release" builds
-                ForceBuildEndpointMatcher(builder="release", role="*-releasers"),
+                ForceBuildEndpointMatcher(
+                    builder="release", role="*-releasers"),
             ],
             roleMatchers=[
                 RolesFromGroups(groupPrefix="buildbot-"),
@@ -73,7 +79,8 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                           bond=dict(email="007@mi6.uk"),
                           nineuser=dict(email="user@nine.com", groups=["buildbot-nine-mergers",
                                                                        "buildbot-nine-developers"]),
-                          eightuser=dict(email="user@eight.com", groups=["buildbot-eight-deverlopers"])
+                          eightuser=dict(
+                              email="user@eight.com", groups=["buildbot-eight-deverlopers"])
                           )
         self.master = self.make_master(url='h:/a/b/', authz=authzcfg)
         self.authz = self.master.authz

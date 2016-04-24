@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import mock
 
+from buildbot.changes import base
+from buildbot.test.util import changesource
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
-
-from buildbot.changes import base
-from buildbot.test.util import changesource
 
 
 class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):

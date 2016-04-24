@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 from __future__ import absolute_import
 
+from buildbot.worker.protocols import base
+
 from twisted.internet import defer
 from twisted.python import log
-
-from buildbot.worker.protocols import base
 
 
 class Listener(base.Listener):
@@ -63,7 +63,8 @@ class FileWriterProxy(ProxyMixin):
 
 
 class Connection(base.Connection):
-    proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
+    proxies = {base.FileWriterImpl: FileWriterProxy,
+               base.FileReaderImpl: FileReaderProxy}
 
     def remotePrint(self, message):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)

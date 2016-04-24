@@ -20,21 +20,20 @@ relative to the top of the maildir (so it will look like "new/blahblah").
 """
 import os
 
+from buildbot.util import service
+
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.internet import reactor
 # We have to put it here, since we use it to provide feedback
 from twisted.python import log
+from twisted.python import runtime
 
 dnotify = None
 try:
     import dnotify
 except ImportError:
     log.msg("unable to import dnotify, so Maildir will use polling instead")
-
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import runtime
-
-from buildbot.util import service
 
 
 class NoSuchMaildir(Exception):
@@ -77,7 +76,8 @@ class MaildirService(service.AsyncMultiService):
             # because of a python bug
             log.msg("DNotify failed, falling back to polling")
         if not self.dnotify:
-            self.timerService = internet.TimerService(self.pollinterval, self.poll)
+            self.timerService = internet.TimerService(
+                self.pollinterval, self.poll)
             self.timerService.setServiceParent(self)
         self.poll()
         return service.AsyncMultiService.startService(self)
@@ -122,7 +122,8 @@ class MaildirService(service.AsyncMultiService):
                 try:
                     yield self.messageReceived(n)
                 except Exception:
-                    log.err(None, "while reading '%s' from maildir '%s':" % (n, self.basedir))
+                    log.err(
+                        None, "while reading '%s' from maildir '%s':" % (n, self.basedir))
         except Exception:
             log.err(None, "while polling maildir '%s':" % (self.basedir,))
 

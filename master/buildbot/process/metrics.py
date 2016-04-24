@@ -31,28 +31,28 @@ Basic architecture:
           \/
     MetricWatcher
 """
-from future.utils import iteritems
-
 import gc
 import os
-
+import sys
 from collections import defaultdict
 from collections import deque
-# Make use of the resource module if we can
-try:
-    import resource
-    assert resource
-except ImportError:
-    resource = None
-import sys
+
+from future.utils import iteritems
+
+from buildbot import util
+from buildbot.util import service as util_service
 
 from twisted.application import service
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 
-from buildbot import util
-from buildbot.util import service as util_service
+# Make use of the resource module if we can
+try:
+    import resource
+    assert resource
+except ImportError:
+    resource = None
 
 
 class MetricEvent(object):
@@ -357,7 +357,8 @@ def periodicCheck(_reactor=reactor):
                 if a == 'ru_maxrss' and v == 0:
                     v = _get_rss() * resource.getpagesize() / 1024
                 MetricCountEvent.log('resource.%s' % a, v, absolute=True)
-            MetricCountEvent.log('resource.pagesize', resource.getpagesize(), absolute=True)
+            MetricCountEvent.log(
+                'resource.pagesize', resource.getpagesize(), absolute=True)
         # Measure the reactor delay
         then = util.now(_reactor)
         dt = 0.1

@@ -15,7 +15,6 @@ import logging
 import sys
 import tempfile
 import traceback
-
 from optparse import OptionParser
 
 from twisted.cred import credentials

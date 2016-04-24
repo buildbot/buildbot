@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
+
+from twisted.internet import defer
 
 
 class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
@@ -60,7 +60,8 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         if logid is None:
             return
         firstline = resultSpec.offset or 0
-        lastline = None if resultSpec.limit is None else firstline + resultSpec.limit - 1
+        lastline = None if resultSpec.limit is None else firstline + \
+            resultSpec.limit - 1
         resultSpec.removePagination()
 
         # get the number of lines, if necessary

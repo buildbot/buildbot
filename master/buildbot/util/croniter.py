@@ -8,11 +8,11 @@
 from __future__ import print_function
 
 import re
-
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from time import mktime
 from time import time
+
+from dateutil.relativedelta import relativedelta
 
 search_re = re.compile(r'^([^-]+)-([^-/]+)(/(.*))?$')
 only_int_re = re.compile(r'^\d+$')
@@ -91,7 +91,8 @@ class croniter(object):
 
                     if (not low or not high or int(low) > int(high)
                             or not only_int_re.search(str(step))):
-                        raise ValueError("[%s] is not acceptable" % expr_format)
+                        raise ValueError(
+                            "[%s] is not acceptable" % expr_format)
 
                     for j in xrange(int(low), int(high) + 1):
                         if j % int(step) == 0:
@@ -110,12 +111,14 @@ class croniter(object):
 
                     if t != '*' and (int(t) < self.RANGES[i][0] or
                                      int(t) > self.RANGES[i][1]):
-                        raise ValueError("[%s] is not acceptable, out of range" % expr_format)
+                        raise ValueError(
+                            "[%s] is not acceptable, out of range" % expr_format)
 
                     res.append(t)
 
             res.sort()
-            expanded.append(['*'] if (len(res) == 1 and res[0] == '*') else res)
+            expanded.append(
+                ['*'] if (len(res) == 1 and res[0] == '*') else res)
         self.expanded = expanded
 
     def get_next(self, ret_type=float):
@@ -197,18 +200,21 @@ class croniter(object):
                     if is_prev:
                         d += relativedelta(days=diff_day)
                     else:
-                        d += relativedelta(days=diff_day, hour=0, minute=0, second=0)
+                        d += relativedelta(days=diff_day,
+                                           hour=0, minute=0, second=0)
                     return True, d
             return False, d
 
         def proc_day_of_week(d):
             if expanded[4][0] != '*':
-                diff_day_of_week = nearest_diff_method(d.isoweekday() % 7, expanded[4], 7)
+                diff_day_of_week = nearest_diff_method(
+                    d.isoweekday() % 7, expanded[4], 7)
                 if diff_day_of_week is not None and diff_day_of_week != 0:
                     if is_prev:
                         d += relativedelta(days=diff_day_of_week)
                     else:
-                        d += relativedelta(days=diff_day_of_week, hour=0, minute=0, second=0)
+                        d += relativedelta(days=diff_day_of_week,
+                                           hour=0, minute=0, second=0)
                     return True, d
             return False, d
 

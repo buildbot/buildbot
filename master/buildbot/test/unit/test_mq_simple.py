@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.trial import unittest
-
 from buildbot.mq import simple
+
+from twisted.trial import unittest
 
 
 class SimpleMQ(unittest.TestCase):

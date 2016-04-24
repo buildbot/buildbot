@@ -16,11 +16,11 @@ import os
 
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.test.fake import fakemaster
 from buildbot.worker import local
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestLocalWorker(unittest.TestCase):
@@ -58,7 +58,8 @@ class TestLocalWorker(unittest.TestCase):
 
         old.updateWorker = mock.Mock(side_effect=lambda: defer.succeed(None))
         yield old.startService()
-        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
+        self.assertEqual(
+            old.remote_worker.bot.basedir, os.path.abspath('basedir/workers/bot'))
 
         yield old.reconfigServiceWithSibling(new)
 
@@ -69,7 +70,8 @@ class TestLocalWorker(unittest.TestCase):
         self.assertEqual(old.registration.updates, ['bot'])
         self.assertTrue(old.updateWorker.called)
         # make sure that we can provide an abosolute path
-        self.assertEqual(old.remote_worker.bot.basedir, os.path.abspath('custom'))
+        self.assertEqual(
+            old.remote_worker.bot.basedir, os.path.abspath('custom'))
 
     @defer.inlineCallbacks
     def test_workerinfo(self):

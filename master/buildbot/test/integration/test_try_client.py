@@ -16,13 +16,6 @@ import os
 
 import mock
 
-from twisted.cred import credentials
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.spread import pb
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot import master
 from buildbot import util
@@ -30,6 +23,13 @@ from buildbot.clients import tryclient
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import www
+
+from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread import pb
+from twisted.trial import unittest
 
 
 # wait for some asynchronous result
@@ -177,8 +177,10 @@ class Schedulers(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         mock_reactor.callFromThread = reactor.callFromThread
 
         # create the master and set its config
-        m = self.master = master.BuildMaster(self.basedir, self.configfile, reactor=mock_reactor)
-        m.config = config.FileLoader(self.basedir, self.configfile).loadConfig()
+        m = self.master = master.BuildMaster(
+            self.basedir, self.configfile, reactor=mock_reactor)
+        m.config = config.FileLoader(
+            self.basedir, self.configfile).loadConfig()
 
         # set up the db
         yield m.db.setup(check_version=False)
@@ -357,6 +359,7 @@ def masterConfig():
     c['buildbotURL'] = "http://localhost:8010/"
     c['db'] = {'db_url': "sqlite:///state.sqlite"}
     c['mq'] = {'debug': True}
-    # test wants to influence the config, but we still return a new config each time
+    # test wants to influence the config, but we still return a new config
+    # each time
     c.update(BuildmasterConfig)
     return c

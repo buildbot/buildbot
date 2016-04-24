@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from zope.interface import implements
+
 from buildbot import interfaces
 from buildbot import util
-from zope.interface import implements
 
 
 class Event:

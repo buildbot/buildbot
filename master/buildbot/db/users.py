@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
-
 from sqlalchemy.sql.expression import and_
 
 from buildbot.db import base
@@ -77,7 +76,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 # if we failed to insert the user, then it's because the
                 # identifier wasn't unique
                 if not inserted_user:
-                    identifier = identifiers.incrementIdentifier(256, identifier)
+                    identifier = identifiers.incrementIdentifier(
+                        256, identifier)
                 else:
                     no_recurse = True
 

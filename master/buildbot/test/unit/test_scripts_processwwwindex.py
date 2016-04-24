@@ -14,17 +14,18 @@
 # Copyright Buildbot Team Members
 import tempfile
 
-from twisted.trial import unittest
-
 from buildbot.scripts import processwwwindex
 from buildbot.util import json
+
+from twisted.trial import unittest
 
 
 class TestUsersClient(unittest.TestCase):
 
     def setUp(self):
         # un-do the effects of @in_reactor
-        self.patch(processwwwindex, 'processwwwindex', processwwwindex.processwwwindex._orig)
+        self.patch(processwwwindex, 'processwwwindex',
+                   processwwwindex.processwwwindex._orig)
 
     def test_no_input_file(self):
         d = processwwwindex.processwwwindex({})

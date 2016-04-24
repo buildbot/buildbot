@@ -18,7 +18,6 @@ import logging
 import os
 import re
 import sys
-
 from hashlib import sha1
 from httplib import ACCEPTED
 from httplib import BAD_REQUEST
@@ -378,7 +377,8 @@ def setup_options():
                             level=logging._levelNames[options.level.upper()])
     else:
         logging.basicConfig(format=log_format,
-                            handlers=[logging.StreamHandler(stream=sys.stdout)],
+                            handlers=[
+                                logging.StreamHandler(stream=sys.stdout)],
                             level=logging._levelNames[options.level.upper()])
 
     return options

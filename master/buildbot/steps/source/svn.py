@@ -12,25 +12,24 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import re
+import xml.dom.minidom
+import xml.parsers.expat
+from string import lower
+
 from future.moves.urllib.parse import quote as urlquote
 from future.moves.urllib.parse import unquote as urlunquote
 from future.moves.urllib.parse import urlparse
 from future.moves.urllib.parse import urlunparse
 
-import re
-import xml.dom.minidom
-import xml.parsers.expat
-
-from string import lower
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-
 from buildbot.config import ConfigErrors
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class SVN(Source):
@@ -62,7 +61,8 @@ class SVN(Source):
             errors.append("mode %s is not one of %s" %
                           (self.mode, self._listAttrGroupMembers('mode')))
         if self.method not in self.possible_methods:
-            errors.append("method %s is not one of %s" % (self.method, self.possible_methods))
+            errors.append("method %s is not one of %s" %
+                          (self.method, self.possible_methods))
 
         if repourl is None:
             errors.append("you must provide repourl")
@@ -75,7 +75,8 @@ class SVN(Source):
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
-        # if the version is new enough, and the password is set, then obfuscate it
+        # if the version is new enough, and the password is set, then obfuscate
+        # it
         if self.password is not None:
             if not self.workerVersionIsOlderThan('shell', '2.16'):
                 self.password = ('obfuscated', self.password, 'XXXXXX')
@@ -88,7 +89,8 @@ class SVN(Source):
         @d.addCallback
         def checkInstall(svnInstalled):
             if not svnInstalled:
-                raise buildstep.BuildStepFailed("SVN is not installed on worker")
+                raise buildstep.BuildStepFailed(
+                    "SVN is not installed on worker")
             return 0
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
@@ -168,7 +170,8 @@ class SVN(Source):
 
         checkout_dir = 'source'
         if self.codebase:
-            checkout_dir = self.build.path_module.join(checkout_dir, self.codebase)
+            checkout_dir = self.build.path_module.join(
+                checkout_dir, self.codebase)
         # temporarily set workdir = checkout_dir and do an incremental checkout
         try:
             old_workdir = self.workdir
@@ -269,19 +272,22 @@ class SVN(Source):
         # then run 'svn info --xml' to check that the URL matches our repourl
         stdout, stderr = yield self._dovccmd(['info', '--xml'], collectStdout=True, collectStderr=True, abandonOnFailure=False)
 
-        # svn: E155037: Previous operation has not finished; run 'cleanup' if it was interrupted
+        # svn: E155037: Previous operation has not finished; run 'cleanup' if
+        # it was interrupted
         if 'E155037:' in stderr:
             defer.returnValue(False)
             return
 
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
-            extractedurl = stdout_xml.getElementsByTagName('url')[0].firstChild.nodeValue
+            extractedurl = stdout_xml.getElementsByTagName(
+                'url')[0].firstChild.nodeValue
         except xml.parsers.expat.ExpatError:
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(extractedurl == self.svnUriCanonicalize(self.repourl))
+        defer.returnValue(
+            extractedurl == self.svnUriCanonicalize(self.repourl))
         return
 
     @defer.inlineCallbacks
@@ -310,7 +316,8 @@ class SVN(Source):
         revision = None
         if self.preferLastChangedRev:
             try:
-                revision = stdout_xml.getElementsByTagName('commit')[0].attributes['revision'].value
+                revision = stdout_xml.getElementsByTagName(
+                    'commit')[0].attributes['revision'].value
             except (KeyError, IndexError):
                 msg = ("SVN.parseGotRevision unable to detect Last Changed Rev in"
                        " output of svn info")
@@ -319,7 +326,8 @@ class SVN(Source):
 
         if revision is None:
             try:
-                revision = stdout_xml.getElementsByTagName('entry')[0].attributes['revision'].value
+                revision = stdout_xml.getElementsByTagName(
+                    'entry')[0].attributes['revision'].value
             except (KeyError, IndexError):
                 msg = ("SVN.parseGotRevision unable to detect revision in"
                        " output of svn info")
@@ -447,7 +455,8 @@ class SVN(Source):
                 last_path = path
 
         path = quote(urlunquote(path))
-        canonical_uri = urlunparse((scheme, authority, path, parameters, query, fragment))
+        canonical_uri = urlunparse(
+            (scheme, authority, path, parameters, query, fragment))
         if canonical_uri == '/':
             return canonical_uri
         elif canonical_uri[-1] == '/' and canonical_uri[-2] != '/':

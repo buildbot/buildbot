@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import abc
+
+from future.utils import iteritems
 
 from buildbot import config
 from buildbot.reporters import utils
@@ -113,4 +113,5 @@ class HttpStatusPush(HttpStatusPushBase):
     def send(self, build):
         response = yield self.session.post(self.serverUrl, build, auth=self.auth)
         if response.status_code != 200:
-            log.msg("%s: unable to upload status: %s" % (response.status_code, response.content))
+            log.msg("%s: unable to upload status: %s" %
+                    (response.status_code, response.content))

@@ -15,6 +15,7 @@
 
 # this is here for compatibility
 from collections import defaultdict
+
 assert defaultdict
 
 

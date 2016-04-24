@@ -17,10 +17,10 @@ try:
 except ImportError:
     InfluxDBClient = None
 
-from twisted.python import log
-
 from buildbot import config
 from buildbot.statistics.storage_backends.base import StatsStorageBase
+
+from twisted.python import log
 
 
 class InfluxStorageService(StatsStorageBase):

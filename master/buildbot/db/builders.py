@@ -15,9 +15,9 @@
 
 import sqlalchemy as sa
 
-from twisted.internet import defer
-
 from buildbot.db import base
+
+from twisted.internet import defer
 
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
@@ -52,7 +52,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             builders_tags_tbl = self.db.model.builders_tags
             transaction = conn.begin()
 
-            q = builders_tbl.update(whereclause=(builders_tbl.c.id == builderid))
+            q = builders_tbl.update(
+                whereclause=(builders_tbl.c.id == builderid))
             conn.execute(q, description=description)
             # remove previous builders_tags
             conn.execute(builders_tags_tbl.delete(
@@ -110,7 +111,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 j = j.join(limiting_bm_tbl,
                            onclause=(bldr_tbl.c.id == limiting_bm_tbl.c.builderid))
             q = sa.select(
-                [bldr_tbl.c.id, bldr_tbl.c.name, bldr_tbl.c.description, bm_tbl.c.masterid],
+                [bldr_tbl.c.id, bldr_tbl.c.name,
+                    bldr_tbl.c.description, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[bldr_tbl.c.id, bm_tbl.c.masterid])
             if masterid is not None:

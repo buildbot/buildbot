@@ -15,15 +15,15 @@
 import re
 import textwrap
 
-from twisted.internet import defer
-from twisted.internet import reactor
-
 from zope.interface import implements
 
 from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
+
+from twisted.internet import defer
+from twisted.internet import reactor
 
 
 class RepoDownloadsFromProperties(util.ComparableMixin, object):
@@ -83,7 +83,8 @@ class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
             if ("event.type" in change.properties and
                     change.properties["event.type"] == "patchset-created"):
                 downloads.append("%s %s/%s" % (change.properties["event.change.project"],
-                                               change.properties["event.change.number"],
+                                               change.properties[
+                                                   "event.change.number"],
                                                change.properties["event.patchSet.number"]))
         return downloads
 
@@ -103,8 +104,10 @@ class Repo(Source):
                                                  r"possibly due to conflict resolution."]))
     re_change = re.compile(r".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
     re_head = re.compile(r"^HEAD is now at ([0-9a-f]+)...")
-    mirror_sync_retry = 10  # number of retries, if we detect mirror desynchronization
-    mirror_sync_sleep = 60  # wait 1min between retries (thus default total retry time is 10min)
+    # number of retries, if we detect mirror desynchronization
+    mirror_sync_retry = 10
+    # wait 1min between retries (thus default total retry time is 10min)
+    mirror_sync_sleep = 60
 
     def __init__(self,
                  manifestURL=None,
@@ -208,15 +211,18 @@ class Repo(Source):
         # does not make sense to logEnviron for each command (just for first)
         self.logEnviron = False
         cmd.useLog(self.stdio_log, False)
-        self.stdio_log.addHeader("Starting command: %s\n" % (" ".join(command), ))
+        self.stdio_log.addHeader(
+            "Starting command: %s\n" % (" ".join(command), ))
         self.step_status.setText(["%s" % (" ".join(command[:2]))])
         d = self.runCommand(cmd)
 
         @d.addCallback
         def evaluateCommand(_):
             if abandonOnFailure and cmd.didFail():
-                self.descriptionDone = "repo failed at: %s" % (" ".join(command[:2]))
-                self.stdio_log.addStderr("Source step failed while running command %s\n" % cmd)
+                self.descriptionDone = "repo failed at: %s" % (
+                    " ".join(command[:2]))
+                self.stdio_log.addStderr(
+                    "Source step failed while running command %s\n" % cmd)
                 raise buildstep.BuildStepFailed()
             return cmd.rc
         return d
@@ -238,7 +244,8 @@ class Repo(Source):
         self.filterManifestPatches()
 
         if self.repoDownloads:
-            self.stdio_log.addHeader("will download:\n" + "repo download " + "\nrepo download ".join(self.repoDownloads) + "\n")
+            self.stdio_log.addHeader(
+                "will download:\n" + "repo download " + "\nrepo download ".join(self.repoDownloads) + "\n")
 
         self.willRetryInCaseOfFailure = True
 
@@ -282,7 +289,8 @@ class Repo(Source):
                              '--depth', str(self.depth)])
 
         if self.manifestOverrideUrl:
-            self.stdio_log.addHeader("overriding manifest with %s\n" % (self.manifestOverrideUrl))
+            self.stdio_log.addHeader(
+                "overriding manifest with %s\n" % (self.manifestOverrideUrl))
             local_file = yield self.pathExists(self.build.path_module.join(self.workdir,
                                                                            self.manifestOverrideUrl))
             if local_file:
@@ -339,7 +347,8 @@ class Repo(Source):
                 if not self._findErrorMessages(self.ref_not_found_re):
                     break
                 retry -= 1
-                self.stdio_log.addStderr("failed downloading changeset %s\n" % (download))
+                self.stdio_log.addStderr(
+                    "failed downloading changeset %s\n" % (download))
                 self.stdio_log.addHeader("wait one minute for mirror sync\n")
                 yield self._sleep(self.mirror_sync_sleep)
 
@@ -406,7 +415,8 @@ class Repo(Source):
             now_mtime = int(self.lastCommand.stdout)
             age = now_mtime - tarball_mtime
         if res or age > self.updateTarballAge:
-            tar = self.computeTarballOptions() + ['-cvf', self.tarball, ".repo"]
+            tar = self.computeTarballOptions() + \
+                ['-cvf', self.tarball, ".repo"]
             res = yield self._Cmd(tar, abandonOnFailure=False)
             if res:  # error with tarball.. erase tarball, but dont fail
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)

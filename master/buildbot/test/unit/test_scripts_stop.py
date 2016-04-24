@@ -16,12 +16,12 @@ import os
 import signal
 import time
 
-from twisted.trial import unittest
-
 from buildbot.scripts import stop
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import skipUnlessPlatformIs
+
+from twisted.trial import unittest
 
 
 def mkconfig(**kwargs):
@@ -93,7 +93,8 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     @skipUnlessPlatformIs('posix')
     def test_stop_dead_but_pidfile_remains_wait(self):
         rv = self.do_test_stop(mkconfig(no_wait=True),
-                               [(signal.SIGTERM, OSError(3, 'No such process'))],
+                               [(signal.SIGTERM, OSError(3, 'No such process'))
+                                ],
                                wait=True)
         self.assertEqual(rv, 0)
         self.assertFalse(os.path.exists(os.path.join('basedir', 'twistd.pid')))
@@ -133,7 +134,7 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
             ('sleep', 0.1), ] +
             [(0, None),
              ('sleep', 1), ] * 10,
-            )
+        )
         self.assertInStdout('never saw process')
         self.assertEqual(rv, 1)
 

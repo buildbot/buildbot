@@ -16,15 +16,9 @@ import os
 import re
 
 import mock
-
 from zope.interface import implementer
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
-
 import buildbot.worker
-
 from buildbot import config
 from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
@@ -35,6 +29,10 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
 
 
 # Template for master configuration just before worker renaming.
@@ -136,6 +134,7 @@ c['db'] = {
 
 @implementer(IConfigLoader)
 class DummyLoader(object):
+
     def __init__(self, loaded_config):
         self.loaded_config = loaded_config
 
@@ -165,7 +164,8 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         mock_reactor.callFromThread = reactor.callFromThread
 
         # create the master
-        m = BuildMaster(self.basedir, reactor=mock_reactor, config_loader=DummyLoader(loaded_config))
+        m = BuildMaster(
+            self.basedir, reactor=mock_reactor, config_loader=DummyLoader(loaded_config))
 
         # update the DB
         yield m.db.setup(check_version=False)
@@ -206,7 +206,8 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                     r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
                     r"'slavenames' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
-            loaded_config = config.FileLoader(self.basedir, self.configfile).loadConfig()
+            loaded_config = config.FileLoader(
+                self.basedir, self.configfile).loadConfig()
 
         return self._run_master(loaded_config)
 
@@ -217,7 +218,8 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
         self._write_config(sample_0_9_0b5_api_renamed)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            loaded_config = config.FileLoader(self.basedir, self.configfile).loadConfig()
+            loaded_config = config.FileLoader(
+                self.basedir, self.configfile).loadConfig()
 
         return self._run_master(loaded_config)
 

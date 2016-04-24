@@ -104,9 +104,16 @@ except ImportError:
 else:
     DEFINE_POLLER = True
 
+#
+# Work around Twisted bug.
+# See http://twistedmatrix.com/trac/ticket/3591
+import operator
+import socket
+
 import bzrlib.branch
 import bzrlib.errors
 import bzrlib.trace
+
 import twisted.cred.credentials
 import twisted.internet.base
 import twisted.internet.reactor
@@ -115,8 +122,8 @@ import twisted.internet.task
 import twisted.internet.threads
 import twisted.python.log
 import twisted.spread.pb
-
 from twisted.internet import defer
+from twisted.python import failure
 
 
 #
@@ -330,13 +337,6 @@ def _installed_hook(branch):
                     HOOK_KEY, PUSH_VALUE, COMMIT_VALUE, CHANGE_VALUE))
     return value
 
-#
-# Work around Twisted bug.
-# See http://twistedmatrix.com/trac/ticket/3591
-import operator
-import socket
-
-from twisted.python import failure
 
 # replaces twisted.internet.thread equivalent
 

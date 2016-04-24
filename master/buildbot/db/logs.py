@@ -12,14 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import sqlalchemy as sa
 from future.utils import itervalues
 
-import sqlalchemy as sa
+from buildbot.db import base
 
 from twisted.internet import defer
 from twisted.python import log
-
-from buildbot.db import base
 
 
 def dumps_gzip(data):
@@ -109,7 +108,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             rv = []
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
-                data = self.COMPRESSION_BYID[row.compressed]["read"](row.content)
+                data = self.COMPRESSION_BYID[
+                    row.compressed]["read"](row.content)
                 content = data.decode('utf-8')
 
                 if row.first_line < first_line:
@@ -148,7 +148,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         self.total_raw_bytes += len(chunk)
         # Do we have to compress the chunk?
         if self.master.config.logCompressionMethod != "raw":
-            compressed_mode = self.COMPRESSION_MODE[self.master.config.logCompressionMethod]
+            compressed_mode = self.COMPRESSION_MODE[
+                self.master.config.logCompressionMethod]
             compressed_chunk = compressed_mode["dumps"](chunk)
             # Is it useful to compress the chunk?
             if len(chunk) > len(compressed_chunk):
@@ -262,13 +263,15 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # do nothing if its not worth.
             # if uncompressed_length < 200 and numchunks < 4:
             #    return
-            q = sa.select([tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
+            q = sa.select(
+                [tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
             q = q.where(tbl.c.logid == logid)
             q = q.order_by(tbl.c.first_line)
             rows = conn.execute(q)
             wholelog = ""
             for row in rows:
-                wholelog += self.COMPRESSION_BYID[row.compressed]["read"](row.content).decode('utf-8') + "\n"
+                wholelog += self.COMPRESSION_BYID[row.compressed][
+                    "read"](row.content).decode('utf-8') + "\n"
 
             if len(wholelog) == 0:
                 return 0

@@ -20,4 +20,5 @@
 modules = []  # for the benefit of pyflakes
 
 from buildbot_worker.scripts import logwatcher
+
 modules.extend([logwatcher])

@@ -20,7 +20,6 @@ import sys
 
 from twisted.python import runtime
 
-
 _FLAKY_ENV_VAR = 'RUN_FLAKY_TESTS'
 
 

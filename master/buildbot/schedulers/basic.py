@@ -12,14 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-from future.utils import itervalues
-
 from collections import defaultdict
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot import config
 from buildbot import util
@@ -29,6 +25,10 @@ from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class BaseBasicScheduler(base.BaseScheduler):
@@ -270,7 +270,8 @@ class AnyBranchScheduler(BaseBasicScheduler):
         return (change.codebase, change.project, change.repository, change.branch)
 
     def getChangeClassificationsForTimer(self, objectid, timer_name):
-        codebase, project, repository, branch = timer_name  # set in getTimerNameForChange
+        # set in getTimerNameForChange
+        codebase, project, repository, branch = timer_name
         return self.master.db.schedulers.getChangeClassifications(
             self.objectid, branch=branch, repository=repository,
             codebase=codebase, project=project)

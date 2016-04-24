@@ -15,16 +15,15 @@
 # Portions Copyright 2013 Cray Inc.
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 import buildbot.test.fake.openstack as novaclient
-
 from buildbot import config
 from buildbot import interfaces
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestOpenStackWorker(unittest.TestCase):
@@ -50,7 +49,8 @@ class TestOpenStackWorker(unittest.TestCase):
                           **self.bs_image_args)
 
     def test_constructor_minimal(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.flavor, 1)
@@ -82,7 +82,8 @@ class TestOpenStackWorker(unittest.TestCase):
                           flavor=1, **self.os_auth)
 
     def test_getImage_string(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         self.assertEqual('image-uuid', bs._getImage(None, bs.image))
 
     def test_getImage_callable(self):
@@ -96,26 +97,30 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
 
     def test_start_instance_already_exists(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
         self.assertRaises(ValueError, bs.start_instance, None)
 
     def test_start_instance_fail_to_find(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
         self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
                           bs._start_instance)
 
     def test_start_instance_fail_to_start(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
         self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
                           bs._start_instance)
 
     def test_start_instance_success(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         uuid, image_uuid, time_waiting = bs._start_instance()
         self.assertTrue(uuid)
@@ -136,13 +141,15 @@ class TestOpenStackWorker(unittest.TestCase):
         """
         Test stopping the instance but with no instance to stop.
         """
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         bs.instance = None
         stopped = yield bs.stop_instance()
         self.assertEqual(stopped, None)
 
     def test_stop_instance_missing(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         instance = mock.Mock()
         instance.id = 'uuid'
         bs.instance = instance
@@ -150,7 +157,8 @@ class TestOpenStackWorker(unittest.TestCase):
         bs.stop_instance()
 
     def test_stop_instance_fast(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
         s = novaclient.Servers()
@@ -160,7 +168,8 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertNotIn(inst.id, s.instances)
 
     def test_stop_instance_notfast(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
         s = novaclient.Servers()
@@ -170,7 +179,8 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertNotIn(inst.id, s.instances)
 
     def test_stop_instance_unknown(self):
-        bs = openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
         # Make instance immediately active.
         self.patch(novaclient.Servers, 'gets_until_active', 0)
         s = novaclient.Servers()

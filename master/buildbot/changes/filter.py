@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import re
+
+from future.utils import iteritems
 
 from buildbot.util import ComparableMixin
 from buildbot.util import NotABranch
@@ -83,7 +83,8 @@ class ChangeFilter(ComparableMixin):
             return False
         for chg_attr, (filt_list, filt_re, filt_fn) in iteritems(self.checks):
             if chg_attr.startswith("prop:"):
-                chg_val = change.properties.getProperty(chg_attr.split(":", 1)[1], '')
+                chg_val = change.properties.getProperty(
+                    chg_attr.split(":", 1)[1], '')
             else:
                 chg_val = getattr(change, chg_attr, '')
             if filt_list is not None and chg_val not in filt_list:

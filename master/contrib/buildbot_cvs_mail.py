@@ -35,7 +35,6 @@ import socket
 import sys
 import textwrap
 import time
-
 from cStringIO import StringIO
 from email.Utils import formataddr
 
@@ -206,7 +205,8 @@ parser.add_option("-R", "--reply-to", dest='replyto', metavar="ADDR",
                   help=textwrap.dedent("""\
             Add a "Reply-To: ADDR" header to the email message.
             """))
-parser.add_option("-t", "--testing", action="store_true", dest="amTesting", default=False)
+parser.add_option(
+    "-t", "--testing", action="store_true", dest="amTesting", default=False)
 parser.set_defaults(smtplib=smtplib)
 
 

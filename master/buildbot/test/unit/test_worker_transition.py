@@ -18,10 +18,6 @@ import sys
 
 import mock
 
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
-from twisted.trial import unittest
-
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
@@ -31,6 +27,10 @@ from buildbot.worker_transition import _compat_name
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerClassProperty
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
+
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
+from twisted.trial import unittest
 
 
 class CompatNameGeneration(unittest.TestCase):

@@ -15,15 +15,15 @@
 from mock import Mock
 from mock import call
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.stash import StashStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):

@@ -12,28 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-from future.utils import itervalues
-
-try:
-    import cStringIO as StringIO
-    assert StringIO
-except ImportError:
-    import StringIO
 import re
 
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.python import components
-from twisted.python import deprecate
-from twisted.python import failure
-from twisted.python import log
-from twisted.python import util as twutil
-from twisted.python import versions
-from twisted.python.failure import Failure
-from twisted.python.reflect import accumulateClassList
-from twisted.web.util import formatFailure
-
+from future.utils import iteritems
+from future.utils import itervalues
 from zope.interface import implements
 
 from buildbot import config
@@ -45,19 +27,39 @@ from buildbot.process import logobserver
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import results
+# (WithProperties used to be available in this module)
+from buildbot.process.properties import WithProperties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
-from buildbot.process.results import Results
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
 from buildbot.process.results import worst_status
 from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
+
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import util as twutil
+from twisted.python import components
+from twisted.python import deprecate
+from twisted.python import failure
+from twisted.python import log
+from twisted.python import versions
+from twisted.python.failure import Failure
+from twisted.python.reflect import accumulateClassList
+from twisted.web.util import formatFailure
+
+try:
+    import cStringIO as StringIO
+    assert StringIO
+except ImportError:
+    import StringIO
 
 
 class BuildStepFailed(Exception):
@@ -350,7 +352,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setWorker(self, worker):
         self.worker = worker
-    deprecatedWorkerClassMethod(locals(), setWorker, compat_name="setBuildSlave")
+    deprecatedWorkerClassMethod(
+        locals(), setWorker, compat_name="setBuildSlave")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
@@ -363,7 +366,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self._workdir is not None or self.build is None:
             return self._workdir
         else:
-            # see :ref:`Factory-Workdir-Functions` for details on how to customize this
+            # see :ref:`Factory-Workdir-Functions` for details on how to
+            # customize this
             if callable(self.build.workdir):
                 return self.build.workdir(self.build.sources)
             else:
@@ -663,7 +667,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def start(self):
         # New-style classes implement 'run'.
-        # Old-style classes implemented 'start'. Advise them to do 'run' instead.
+        # Old-style classes implemented 'start'. Advise them to do 'run'
+        # instead.
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
@@ -965,7 +970,8 @@ class LoggingBuildStep(BuildStep):
         pass
 
     def evaluateCommand(self, cmd):
-        # NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
+        # NOTE: log_eval_func is undocumented, and will die with
+        # LoggingBuildStep/ShellCOmmand
         if self.log_eval_func:
             # self.step_status probably doesn't have the desired behaviors, but
             # those were never well-defined..
@@ -1195,7 +1201,8 @@ class ShellMixin(object):
 #   ...,
 #   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
 # )
-# NOTE: log_eval_func is undocumented, and will die with LoggingBuildStep/ShellCOmmand
+# NOTE: log_eval_func is undocumented, and will die with
+# LoggingBuildStep/ShellCOmmand
 
 
 def regex_log_evaluator(cmd, _, regexes):
@@ -1212,7 +1219,5 @@ def regex_log_evaluator(cmd, _, regexes):
                     worst = possible_status
     return worst
 
-# (WithProperties used to be available in this module)
-from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes

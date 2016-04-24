@@ -15,12 +15,13 @@
 
 import re
 
-from buildbot.util import sautils
 from sqlalchemy.dialects.sqlite.base import SQLiteDialect
 from sqlalchemy.dialects.sqlite.base import _pragma_cursor
 from sqlalchemy.dialects.sqlite.base import sqltypes
 from sqlalchemy.dialects.sqlite.base import util
 from sqlalchemy.engine import reflection
+
+from buildbot.util import sautils
 
 
 @reflection.cache
@@ -31,7 +32,8 @@ def get_columns_06x_fixed(self, connection, table_name, schema=None, **kw):
     else:
         pragma = "PRAGMA "
     qtable = quote(table_name)
-    c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable)))
+    c = _pragma_cursor(
+        connection.execute("%stable_info(%s)" % (pragma, qtable)))
     # found_table = False (pyflake)
     columns = []
     while True:
@@ -39,7 +41,8 @@ def get_columns_06x_fixed(self, connection, table_name, schema=None, **kw):
         if row is None:
             break
         # BUILDBOT: unused `has_default` removed
-        (name, type_, nullable, default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[5])
+        (name, type_, nullable, default, primary_key) = (
+            row[1], row[2].upper(), not row[3], row[4], row[5])
         name = re.sub(r'^\"|\"$', '', name)
         # if default:
         #     default = re.sub(r"^\'|\'$", '', default)
@@ -78,7 +81,8 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
     else:
         pragma = "PRAGMA "
     qtable = quote(table_name)
-    c = _pragma_cursor(connection.execute("%stable_info(%s)" % (pragma, qtable)))
+    c = _pragma_cursor(
+        connection.execute("%stable_info(%s)" % (pragma, qtable)))
     # found_table = False (pyflake)
     columns = []
     while True:
@@ -86,7 +90,8 @@ def get_columns_07x_fixed(self, connection, table_name, schema=None, **kw):
         if row is None:
             break
         # BUILDBOT: unused `has_default` removed
-        (name, type_, nullable, default, primary_key) = (row[1], row[2].upper(), not row[3], row[4], row[5])
+        (name, type_, nullable, default, primary_key) = (
+            row[1], row[2].upper(), not row[3], row[4], row[5])
         name = re.sub(r'^\"|\"$', '', name)
         # if default:
         #    default = re.sub(r"^\'|\'$", '', default)

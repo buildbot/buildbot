@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-# See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import iteritems
-
 import datetime
 import re
+
+# See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import iteritems
 
 from buildbot.util import UTC
 from buildbot.util import json
@@ -568,7 +568,8 @@ dbdict['dbbuilddict'] = buildbase = DictValidator(
 )
 
 # Validates DATA API layer
-dbdict['builddict'] = DictValidator(properties=NoneOk(SourcedPropertiesValidator()), **buildbase.keys)
+dbdict['builddict'] = DictValidator(
+    properties=NoneOk(SourcedPropertiesValidator()), **buildbase.keys)
 
 # steps
 

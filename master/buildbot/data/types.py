@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-# See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import iteritems
-
 import datetime
 import re
+
+# See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import iteritems
 
 from buildbot import util
 from buildbot.util import json
@@ -252,7 +252,7 @@ class SourcedProperties(Type):
                         'properties': {
                             1: 'string',
                             2: 'integer | string | object | array | boolean'
-                            }
+                        }
                         }}}
 
 

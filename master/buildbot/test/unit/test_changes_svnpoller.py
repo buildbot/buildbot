@@ -15,13 +15,12 @@
 import os
 import xml.dom.minidom
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.changes import svnpoller
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
 
+from twisted.internet import defer
+from twisted.trial import unittest
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -290,7 +289,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def do_test_get_prefix(self, base, output, expected):
         s = self.attachSVNPoller(base)
-        self.expectCommands(gpo.Expect('svn', 'info', '--xml', '--non-interactive', base).stdout(output))
+        self.expectCommands(
+            gpo.Expect('svn', 'info', '--xml', '--non-interactive', base).stdout(output))
         d = s.get_prefix()
 
         def check(prefix):
@@ -369,7 +369,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(base, split_file=split_file)
         s._prefix = "sample"
 
-        logentries = dict(zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+        logentries = dict(
+            zip(xrange(1, 7), reversed(make_logentry_elements(6))))
         changes = s.create_changes(reversed([logentries[3], logentries[2]]))
         self.failUnlessEqual(len(changes), 2)
         # note that parsing occurs in reverse
@@ -429,7 +430,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(base, split_file=custom_split_file)
         s._prefix = "sample"
 
-        logentries = dict(zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+        logentries = dict(
+            zip(xrange(1, 7), reversed(make_logentry_elements(6))))
         changes = s.create_changes(reversed([logentries[3], logentries[2]]))
         self.failUnlessEqual(len(changes), 2)
 
@@ -645,7 +647,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 class TestSplitFile(unittest.TestCase):
 
     def test_split_file_alwaystrunk(self):
-        self.assertEqual(svnpoller.split_file_alwaystrunk('foo'), dict(path='foo'))
+        self.assertEqual(
+            svnpoller.split_file_alwaystrunk('foo'), dict(path='foo'))
 
     def test_split_file_branches_trunk(self):
         self.assertEqual(
@@ -703,12 +706,15 @@ class TestSplitFile(unittest.TestCase):
 
     def test_split_file_projects_branches(self):
         self.assertEqual(
-            svnpoller.split_file_projects_branches('buildbot/trunk/subdir/file.c'),
+            svnpoller.split_file_projects_branches(
+                'buildbot/trunk/subdir/file.c'),
             dict(project='buildbot', path='subdir/file.c'))
         self.assertEqual(
-            svnpoller.split_file_projects_branches('buildbot/branches/1.5.x/subdir/file.c'),
+            svnpoller.split_file_projects_branches(
+                'buildbot/branches/1.5.x/subdir/file.c'),
             dict(project='buildbot', branch='branches/1.5.x', path='subdir/file.c'))
         # tags are ignored:
         self.assertEqual(
-            svnpoller.split_file_projects_branches('buildbot/tags/testthis/subdir/file.c'),
+            svnpoller.split_file_projects_branches(
+                'buildbot/tags/testthis/subdir/file.c'),
             None)

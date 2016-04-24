@@ -14,11 +14,7 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 import re
-
 from types import StringType
-
-from twisted.internet import defer
-from twisted.python import log
 
 from buildbot import config
 from buildbot import interfaces
@@ -27,6 +23,8 @@ from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
 
+from twisted.internet import defer
+from twisted.python import log
 
 # Notes:
 #  see
@@ -55,7 +53,8 @@ class P4(Source):
                  p4port=None, p4user=None,
                  p4passwd=None, p4extra_views=(), p4line_end='local',
                  p4viewspec=None, p4viewspec_suffix='...',
-                 p4client=Interpolate('buildbot_%(prop:workername)s_%(prop:buildername)s'),
+                 p4client=Interpolate(
+                     'buildbot_%(prop:workername)s_%(prop:buildername)s'),
                  p4client_spec_options='allwrite rmdir',
                  p4extra_args=None,
                  p4bin='p4',
@@ -81,25 +80,31 @@ class P4(Source):
         Source.__init__(self, **kwargs)
 
         if self.mode not in self.possible_modes and not interfaces.IRenderable.providedBy(self.mode):
-            config.error("mode %s is not an IRenderable, or one of %s" % (self.mode, self.possible_modes))
+            config.error("mode %s is not an IRenderable, or one of %s" % (
+                self.mode, self.possible_modes))
 
         if not p4viewspec and p4base is None:
             config.error("You must provide p4base or p4viewspec")
 
         if p4viewspec and (p4base or p4branch or p4extra_views):
-            config.error("Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
+            config.error(
+                "Either provide p4viewspec or p4base and p4branch (and optionally p4extra_views")
 
         if p4viewspec and isinstance(p4viewspec, StringType):
-            config.error("p4viewspec must not be a string, and should be a sequence of 2 element sequences")
+            config.error(
+                "p4viewspec must not be a string, and should be a sequence of 2 element sequences")
 
         if not interfaces.IRenderable.providedBy(p4base) and p4base and p4base.endswith('/'):
-            config.error('p4base should not end with a trailing / [p4base = %s]' % p4base)
+            config.error(
+                'p4base should not end with a trailing / [p4base = %s]' % p4base)
 
         if not interfaces.IRenderable.providedBy(p4branch) and p4branch and p4branch.endswith('/'):
-            config.error('p4branch should not end with a trailing / [p4branch = %s]' % p4branch)
+            config.error(
+                'p4branch should not end with a trailing / [p4branch = %s]' % p4branch)
 
         if (p4branch or p4extra_views) and not p4base:
-            config.error('If you specify either p4branch or p4extra_views you must also specify p4base')
+            config.error(
+                'If you specify either p4branch or p4extra_views you must also specify p4base')
 
         if self.p4client_spec_options is None:
             self.p4client_spec_options = ''
@@ -147,11 +152,13 @@ class P4(Source):
         # Then we need to sync the client
         if self.revision:
             if debug_logging:
-                log.msg("P4: full() sync command based on :base:%s changeset:%d", self._getP4BaseForLog(), int(self.revision))
+                log.msg("P4: full() sync command based on :base:%s changeset:%d",
+                        self._getP4BaseForLog(), int(self.revision))
             yield self._dovccmd(['sync', '%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))], collectStdout=True)
         else:
             if debug_logging:
-                log.msg("P4: full() sync command based on :base:%s no revision", self._getP4BaseForLog())
+                log.msg(
+                    "P4: full() sync command based on :base:%s no revision", self._getP4BaseForLog())
             yield self._dovccmd(['sync'], collectStdout=True)
 
         if debug_logging:
@@ -169,10 +176,12 @@ class P4(Source):
         command = ['sync', ]
 
         if self.revision:
-            command.extend(['%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))])
+            command.extend(
+                ['%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))])
 
         if debug_logging:
-            log.msg("P4:incremental() command:%s revision:%s", command, self.revision)
+            log.msg(
+                "P4:incremental() command:%s revision:%s", command, self.revision)
         yield self._dovccmd(command)
 
     def finish(self, res):
@@ -237,7 +246,8 @@ class P4(Source):
         def evaluateCommand(_):
             if cmd.rc != 0:
                 if debug_logging:
-                    log.msg("P4:_dovccmd():Source step failed while running command %s" % cmd)
+                    log.msg(
+                        "P4:_dovccmd():Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
@@ -333,7 +343,8 @@ class P4(Source):
 
         stdout = yield self._dovccmd(['client', '-i'], collectStdout=True, initialStdin=client_spec)
         mo = re.search(r'Client (\S+) (.+)$', stdout, re.M)
-        defer.returnValue(mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.'))
+        defer.returnValue(
+            mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.'))
 
     @defer.inlineCallbacks
     def _acquireTicket(self, _):
@@ -359,7 +370,8 @@ class P4(Source):
         def _setrev(_):
             stdout = cmd.stdout.strip()
             # Example output from p4 changes -m1 #have
-            #     Change 212798 on 2012/04/13 by user@user-unix-bldng2 'change to pickup build'
+            # Change 212798 on 2012/04/13 by user@user-unix-bldng2 'change to
+            # pickup build'
             revision = stdout.split()[1]
             try:
                 int(revision)

@@ -12,8 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -21,6 +19,8 @@ from buildbot.process.results import WARNINGS
 from buildbot.steps import cppcheck
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+
+from twisted.trial import unittest
 
 
 class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
@@ -42,7 +42,8 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_warnings(self):
-        self.setupStep(cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
+        self.setupStep(
+            cppcheck.Cppcheck(source=['file1.c'], enable=['warning', 'performance']))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=[
                         'cppcheck', 'file1.c', '--enable=warning,performance'], usePTY='slave-config')
@@ -77,7 +78,8 @@ class Cppcheck(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(cppcheck.Cppcheck(
             binary=P('a'), source=[P('.'), P('f.c')], extra_args=[P('--p'), P('--p')]))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', command=['a', '.', 'f.c', '--p', '--p'], usePTY='slave-config')
+            ExpectShell(workdir='wkdir', command=[
+                        'a', '.', 'f.c', '--p', '--p'], usePTY='slave-config')
             + ExpectShell.log(
                 'stdio',
                 stdout='Checking file1.c...')

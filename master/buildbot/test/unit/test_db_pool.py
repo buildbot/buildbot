@@ -17,13 +17,13 @@ import time
 
 import sqlalchemy as sa
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
-
 from buildbot.db import pool
 from buildbot.test.util import db
 from buildbot.util import sautils
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
 
 
 class Basic(unittest.TestCase):

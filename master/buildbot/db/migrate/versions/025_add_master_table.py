@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import hashlib
+
 import sqlalchemy as sa
 
 from buildbot.util import sautils
@@ -24,9 +25,12 @@ def rename_buildrequest_claims(migrate_engine):
     metadata.bind = migrate_engine
 
     buildrequest_claims = sautils.Table("buildrequest_claims", metadata,
-                                        sa.Column('brid', sa.Integer, index=True, unique=True),
-                                        sa.Column('objectid', sa.Integer, index=True, nullable=True),
-                                        sa.Column('claimed_at', sa.Integer, nullable=False),
+                                        sa.Column(
+                                            'brid', sa.Integer, index=True, unique=True),
+                                        sa.Column(
+                                            'objectid', sa.Integer, index=True, nullable=True),
+                                        sa.Column(
+                                            'claimed_at', sa.Integer, nullable=False),
                                         )
     for index in buildrequest_claims.indexes:
         index.drop()
@@ -46,7 +50,8 @@ def upgrade(migrate_engine):
     objects = sautils.Table("objects", metadata,
                             sa.Column("id", sa.Integer, primary_key=True),
                             sa.Column('name', sa.String(128), nullable=False),
-                            sa.Column('class_name', sa.String(128), nullable=False),
+                            sa.Column(
+                                'class_name', sa.String(128), nullable=False),
                             )
 
     masters = sautils.Table(
@@ -67,8 +72,10 @@ def upgrade(migrate_engine):
 
     buildrequest_claims = sautils.Table(
         'buildrequest_claims', metadata,
-        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'), nullable=False),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'), index=True, nullable=True),
+        sa.Column('brid', sa.Integer, sa.ForeignKey(
+            'buildrequests.id'), nullable=False),
+        sa.Column('masterid', sa.Integer, sa.ForeignKey(
+            'masters.id'), index=True, nullable=True),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
 
@@ -92,7 +99,8 @@ def upgrade(migrate_engine):
     for row in r.fetchall():
         r = migrate_engine.execute(masters.insert(),
                                    name=row.name,
-                                   name_hash=hashlib.sha1(row.name).hexdigest(),
+                                   name_hash=hashlib.sha1(
+                                       row.name).hexdigest(),
                                    active=0,
                                    last_active=0)
         masterid = r.inserted_primary_key[0]

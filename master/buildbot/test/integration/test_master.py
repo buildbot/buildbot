@@ -16,13 +16,21 @@ import os
 
 import mock
 
+from buildbot.changes.filter import ChangeFilter
+from buildbot.changes.pb import PBChangeSource
+from buildbot.config import BuilderConfig
+from buildbot.master import BuildMaster
+from buildbot.process.factory import BuildFactory
+from buildbot.schedulers.basic import AnyBranchScheduler
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.steps.shell import ShellCommand
+from buildbot.test.util import dirs
+from buildbot.test.util import www
+from buildbot.worker import Worker
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
-
-from buildbot.master import BuildMaster
-from buildbot.test.util import dirs
-from buildbot.test.util import www
 
 
 class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
@@ -92,21 +100,14 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
 # will help to flush out any bugs that may otherwise be difficult to find.
 
 c = BuildmasterConfig = {}
-from buildbot.changes.filter import ChangeFilter
-from buildbot.changes.pb import PBChangeSource
-from buildbot.config import BuilderConfig
-from buildbot.process.factory import BuildFactory
-from buildbot.schedulers.basic import AnyBranchScheduler
-from buildbot.schedulers.forcesched import ForceScheduler
-from buildbot.steps.shell import ShellCommand
-from buildbot.worker import Worker
 c['workers'] = [Worker("local1", "localpw")]
 c['protocols'] = {'pb': {'port': 'tcp:0'}}
 c['change_source'] = []
 c['change_source'] = PBChangeSource()
 c['schedulers'] = []
 c['schedulers'].append(AnyBranchScheduler(name="all",
-                                          change_filter=ChangeFilter(project_re='^testy/'),
+                                          change_filter=ChangeFilter(
+                                              project_re='^testy/'),
                                           treeStableTimer=1 * 60,
                                           builderNames=['testy', ]))
 c['schedulers'].append(ForceScheduler(

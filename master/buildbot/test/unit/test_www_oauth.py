@@ -17,10 +17,8 @@ import webbrowser
 
 import mock
 
-try:
-    import requests
-except ImportError:
-    requests = None
+from buildbot.test.util import www
+from buildbot.util import json
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -30,8 +28,12 @@ from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
 
-from buildbot.test.util import www
-from buildbot.util import json
+try:
+    import requests
+except ImportError:
+    requests = None
+
+
 if requests:
     from buildbot.www import oauth2
 
@@ -58,7 +60,8 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
         self.googleAuth = oauth2.GoogleAuth("ggclientID", "clientSECRET")
         self.githubAuth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
-        self.gitlabAuth = oauth2.GitLabAuth("https://gitlab.test/", "glclientID", "clientSECRET")
+        self.gitlabAuth = oauth2.GitLabAuth(
+            "https://gitlab.test/", "glclientID", "clientSECRET")
 
         for auth in [self.googleAuth, self.githubAuth, self.gitlabAuth]:
             self._master = master = self.make_master(url='h:/a/b/', auth=auth)
@@ -227,14 +230,17 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest("Need to install requests to test oauth2")
 
         if "OAUTHCONF" not in os.environ:
-            raise unittest.SkipTest("Need to pass OAUTHCONF path to json file via environ to run this e2e test")
+            raise unittest.SkipTest(
+                "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
         import json
         config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
         from buildbot.www import oauth2
-        self.auth = self._instantiateAuth(getattr(oauth2, self.authClass), config)
+        self.auth = self._instantiateAuth(
+            getattr(oauth2, self.authClass), config)
 
-        # 5000 has to be hardcoded, has oauth clientids are bound to a fully classified web site
+        # 5000 has to be hardcoded, has oauth clientids are bound to a fully
+        # classified web site
         master = self.make_master(url='http://localhost:5000/', auth=self.auth)
         self.auth.reconfigAuth(master, master.config)
 

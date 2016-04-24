@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import error
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process import remotetransfer
 from buildbot.process.results import RETRY
@@ -24,6 +21,9 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
+
+from twisted.internet import error
+from twisted.trial import unittest
 
 
 class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
@@ -76,7 +76,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_full_copy(self):
@@ -110,7 +111,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_full_no_method(self):
@@ -144,7 +146,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_incremental(self):
@@ -171,7 +174,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_incremental_patched(self):
@@ -212,7 +216,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_incremental_patch(self):
@@ -234,12 +239,14 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['darcs', 'pull', '--all', '--verbose'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
@@ -257,7 +264,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_full_clobber_retry(self):
@@ -299,7 +307,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_full_clobber_revision(self):
@@ -318,7 +327,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  logEnviron=True))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.darcs-context', workdir='wkdir',
                                         mode=None))
             + 0,
@@ -334,7 +344,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_mode_incremental_no_existing_repo(self):
@@ -362,7 +373,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
         return self.runStep()
 
     def test_worker_connection_lost(self):

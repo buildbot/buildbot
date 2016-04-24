@@ -16,9 +16,6 @@ import stat
 
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
@@ -30,6 +27,9 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
@@ -44,7 +44,8 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(worker.SetPropertiesFromEnv(
             variables=["one", "two", "three", "five", "six"],
             source="me"))
-        self.worker.worker_environ = {"one": "1", "two": None, "six": "6", "FIVE": "555"}
+        self.worker.worker_environ = {
+            "one": "1", "two": None, "six": "6", "FIVE": "555"}
         self.worker.worker_system = 'linux'
         self.properties.setProperty("four", 4, "them")
         self.properties.setProperty("five", 5, "them")
@@ -180,7 +181,8 @@ class TestCopyDirectory(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_render(self):
-        self.setupStep(worker.CopyDirectory(src=properties.Property("x"), dest=properties.Property("y")))
+        self.setupStep(worker.CopyDirectory(
+            src=properties.Property("x"), dest=properties.Property("y")))
         self.properties.setProperty('x', 'XXX', 'here')
         self.properties.setProperty('y', 'YYY', 'here')
         self.expectCommands(

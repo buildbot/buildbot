@@ -15,11 +15,6 @@
 
 from functools import reduce
 
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.python import components
-from twisted.python import log
-from twisted.python.failure import Failure
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -29,15 +24,21 @@ from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
-from buildbot.process.results import Results
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
 from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
+
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import components
+from twisted.python import log
+from twisted.python.failure import Failure
 
 
 class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
@@ -92,7 +93,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.terminate = False
 
         self._acquiringLock = None
-        self.results = SUCCESS   # overall results, may downgrade after each step
+        # overall results, may downgrade after each step
+        self.results = SUCCESS
         self.properties = properties.Properties()
 
     def setBuilder(self, builder):
@@ -111,7 +113,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     def setWorkerEnvironment(self, env):
         # TODO: remove once we don't have anything depending on this method or attribute
-        # e.g., old-style steps (ShellMixin pulls the environment out of the builder directly)
+        # e.g., old-style steps (ShellMixin pulls the environment out of the
+        # builder directly)
         self.workerEnvironment = env
 
     def getSourceStamp(self, codebase=''):

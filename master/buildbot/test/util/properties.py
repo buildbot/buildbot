@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.interfaces import IRenderable
 from zope.interface import implements
+
+from buildbot.interfaces import IRenderable
 
 
 class ConstantRenderable(object):

@@ -16,13 +16,12 @@ import calendar
 
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 import buildbot.www.change_hook as change_hook
-
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
@@ -70,7 +69,8 @@ gitJsonPayload = """
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
-        self.changeHook = change_hook.ChangeHookResource(dialects={'gitlab': True}, master=fakeMasterForHooks())
+        self.changeHook = change_hook.ChangeHookResource(
+            dialects={'gitlab': True}, master=fakeMasterForHooks())
 
     def check_changes(self, r, project='', codebase=None):
         self.assertEquals(len(self.changeHook.master.addedChanges), 2)
@@ -81,11 +81,15 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             calendar.timegm(change["when_timestamp"].utctimetuple()),
             1323692851
         )
-        self.assertEquals(change["author"], "Jordi Mallach <jordi@softcatala.org>")
-        self.assertEquals(change["revision"], 'b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327')
-        self.assertEquals(change["comments"], "Update Catalan translation to e38cb41.")
+        self.assertEquals(
+            change["author"], "Jordi Mallach <jordi@softcatala.org>")
+        self.assertEquals(
+            change["revision"], 'b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327')
+        self.assertEquals(
+            change["comments"], "Update Catalan translation to e38cb41.")
         self.assertEquals(change["branch"], "master")
-        self.assertEquals(change["revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
+        self.assertEquals(change[
+                          "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
         change = self.changeHook.master.addedChanges[1]
         self.assertEquals(change["repository"], "git@localhost:diaspora.git")
@@ -93,12 +97,15 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             calendar.timegm(change["when_timestamp"].utctimetuple()),
             1325626589
         )
-        self.assertEquals(change["author"], "GitLab dev user <gitlabdev@dv6700.(none)>")
+        self.assertEquals(
+            change["author"], "GitLab dev user <gitlabdev@dv6700.(none)>")
         self.assertEquals(change["src"], "git")
-        self.assertEquals(change["revision"], 'da1560886d4f094c3e6c9ef40349f7d38b5d27d7')
+        self.assertEquals(
+            change["revision"], 'da1560886d4f094c3e6c9ef40349f7d38b5d27d7')
         self.assertEquals(change["comments"], "fixed readme")
         self.assertEquals(change["branch"], "master")
-        self.assertEquals(change["revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
+        self.assertEquals(change[
+                          "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 
         self.assertEquals(change.get("project"), project)
         self.assertEquals(change.get("codebase"), codebase)

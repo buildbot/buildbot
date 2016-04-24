@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 import StringIO
 
-from twisted.internet import defer
-
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
+
+from twisted.internet import defer
+
 
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
@@ -53,15 +54,18 @@ class TriggeringMaster(RunMasterBase):
                       )
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
 
-        self.assertEqual(build['steps'][1]['state_string'], 'triggered trigsched')
+        self.assertEqual(
+            build['steps'][1]['state_string'], 'triggered trigsched')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         dump = StringIO.StringIO()
         for b in builds:
             yield self.printBuild(b, dump)
-        # depending on the environment the number of lines is different between test hosts
+        # depending on the environment the number of lines is different between
+        # test hosts
         loglines = builds[1]['steps'][0]['logs'][0]['num_lines']
-        self.assertEqual(dump.getvalue(), expectedOutput % dict(loglines=loglines))
+        self.assertEqual(dump.getvalue(), expectedOutput %
+                         dict(loglines=loglines))
 
 
 # master configuration

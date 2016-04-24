@@ -12,10 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot.process import results
+
 from twisted.python import log
 from twisted.trial import unittest
-
-from buildbot.process import results
 
 
 class TestResults(unittest.TestCase):
@@ -40,8 +40,10 @@ class TestResults(unittest.TestCase):
         ])
 
     def do_test_carc(self, result, previousResult, newResult, terminate,
-                     haltOnFailure=[True, False], flunkOnWarnings=[True, False],
-                     flunkOnFailure=[True, False], warnOnWarnings=[True, False],
+                     haltOnFailure=[True, False], flunkOnWarnings=[
+                         True, False],
+                     flunkOnFailure=[True, False], warnOnWarnings=[
+                         True, False],
                      warnOnFailure=[True, False]):
         for hof in haltOnFailure:
             for fow in flunkOnWarnings:

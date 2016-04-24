@@ -13,12 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-from builtins import range
-
-import mock
 import multiprocessing
 import os
 import shutil
+from builtins import range
+
+import mock
+
+import buildslave
+from buildslave import base
+from buildslave import pb
+from buildslave.test.fake.remote import FakeRemote
+from buildslave.test.fake.runprocess import Expect
+from buildslave.test.util import command
+from buildslave.test.util import compat
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -26,15 +34,6 @@ from twisted.internet import task
 from twisted.python import failure
 from twisted.python import log
 from twisted.trial import unittest
-
-import buildslave
-
-from buildslave import base
-from buildslave import pb
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util import command
-from buildslave.test.util import compat
 
 
 class TestBot(unittest.TestCase):
@@ -98,7 +97,8 @@ class TestBot(unittest.TestCase):
         d = self.bot.callRemote("getSlaveInfo")
 
         def check(info):
-            self.assertEqual(set(info.keys()), set(['environ', 'system', 'numcpus', 'basedir', 'slave_commands', 'version']))
+            self.assertEqual(set(info.keys()), set(
+                ['environ', 'system', 'numcpus', 'basedir', 'slave_commands', 'version']))
         d.addCallback(check)
         return d
 
@@ -115,7 +115,8 @@ class TestBot(unittest.TestCase):
 
         def check(builders):
             self.assertEqual(list(builders), ['mybld'])
-            self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
+            self.assertTrue(
+                os.path.exists(os.path.join(self.basedir, 'myblddir')))
             # note that we test the SlaveBuilder instance below
         d.addCallback(check)
         return d
@@ -131,7 +132,8 @@ class TestBot(unittest.TestCase):
 
             def check(builders):
                 self.assertEqual(list(builders), ['mybld'])
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 slavebuilders['my'] = builders['mybld']
             d.addCallback(check)
             return d
@@ -142,11 +144,15 @@ class TestBot(unittest.TestCase):
                 ('mybld', 'myblddir'), ('yourbld', 'yourblddir')])
 
             def check(builders):
-                self.assertEqual(sorted(builders.keys()), sorted(['mybld', 'yourbld']))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+                self.assertEqual(
+                    sorted(builders.keys()), sorted(['mybld', 'yourbld']))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'yourblddir')))
                 # 'my' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['my']), id(builders['mybld']))
+                self.assertEqual(
+                    id(slavebuilders['my']), id(builders['mybld']))
                 slavebuilders['your'] = builders['yourbld']
             d.addCallback(check)
             return d
@@ -159,11 +165,15 @@ class TestBot(unittest.TestCase):
             def check(builders):
                 self.assertEqual(sorted(builders.keys()), sorted(['yourbld']))
                 # note that build dirs are not deleted..
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
                 # 'your' should still be the same slavebuilder object
-                self.assertEqual(id(slavebuilders['your']), id(builders['yourbld']))
+                self.assertEqual(
+                    id(slavebuilders['your']), id(builders['yourbld']))
             d.addCallback(check)
             return d
         d.addCallback(remove_my)
@@ -174,9 +184,12 @@ class TestBot(unittest.TestCase):
 
             def check(builders):
                 self.assertEqual(sorted(builders.keys()), sorted(['theirbld']))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
-                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'theirblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'myblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+                self.assertTrue(
+                    os.path.exists(os.path.join(self.basedir, 'theirblddir')))
             d.addCallback(check)
             return d
         d.addCallback(add_and_remove)
@@ -247,7 +260,8 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
     def test_setMaster(self):
         # not much to check here - what the SlaveBuilder does with the
-        # master is not part of the interface (and, in fact, it does very little)
+        # master is not part of the interface (and, in fact, it does very
+        # little)
         return self.sb.callRemote("setMaster", mock.Mock())
 
     def test_shutdown(self):
@@ -270,7 +284,8 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
-            Expect(['echo', 'hello'], os.path.join(self.basedir, 'sb', 'workdir'))
+            Expect(['echo', 'hello'], os.path.join(
+                self.basedir, 'sb', 'workdir'))
             + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
             + 0,
         )
@@ -303,7 +318,8 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to pretend to sleep (it will really just hang forever,
         # except that we interrupt it)
         self.patch_runprocess(
-            Expect(['sleep', '10'], os.path.join(self.basedir, 'sb', 'workdir'))
+            Expect(['sleep', '10'], os.path.join(
+                self.basedir, 'sb', 'workdir'))
             + {'hdr': 'headers'}
             + {'wait': True}
         )
@@ -347,10 +363,12 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # patch runprocess to generate a failure
         self.patch_runprocess(
-            Expect(['sleep', '10'], os.path.join(self.basedir, 'sb', 'workdir'))
+            Expect(['sleep', '10'], os.path.join(
+                self.basedir, 'sb', 'workdir'))
             + failure.Failure(Exception("Oops"))
         )
-        # patch the log.err, otherwise trial will think something *actually* failed
+        # patch the log.err, otherwise trial will think something *actually*
+        # failed
         self.patch(log, "err", lambda f: None)
 
         d = defer.succeed(None)

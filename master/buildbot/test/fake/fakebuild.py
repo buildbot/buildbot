@@ -17,8 +17,6 @@ import posixpath
 
 import mock
 
-from twisted.python import components
-
 from buildbot import config
 from buildbot import interfaces
 from buildbot.process import factory
@@ -26,6 +24,8 @@ from buildbot.process import properties
 from buildbot.process import workerforbuilder
 from buildbot.test.fake import fakemaster
 from buildbot.worker import base
+
+from twisted.python import components
 
 
 class FakeBuildStatus(properties.PropertiesMixin, object):
@@ -70,7 +70,8 @@ class FakeBuild(properties.PropertiesMixin):
     def __init__(self, props=None, master=None):
         self.build_status = FakeBuildStatus()
         self.builder = fakemaster.FakeBuilderStatus(master)
-        self.workerforbuilder = mock.Mock(spec=workerforbuilder.WorkerForBuilder)
+        self.workerforbuilder = mock.Mock(
+            spec=workerforbuilder.WorkerForBuilder)
         self.workerforbuilder.worker = mock.Mock(spec=base.Worker)
         self.builder.config = config.BuilderConfig(
             name='bldr',

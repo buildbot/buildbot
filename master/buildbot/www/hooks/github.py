@@ -15,18 +15,17 @@
 import hmac
 import logging
 import re
-
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
+
+from twisted.python import log
 
 try:
     import json
     assert json
 except ImportError:
     import simplejson as json
-
-from twisted.python import log
 
 
 _HEADER_CT = 'Content-Type'
@@ -35,6 +34,7 @@ _HEADER_SIGNATURE = 'X-Hub-Signature'
 
 
 class GitHubEventHandler(object):
+
     def __init__(self, secret, strict, codebase=None):
         self._secret = secret
         self._strict = strict

@@ -22,14 +22,14 @@ Standard setup script.
 import glob
 import os
 import sys
-
-from buildbot import version
-from distutils.core import setup
-from distutils.version import LooseVersion
-import pkg_resources
-
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
+from distutils.core import setup
+from distutils.version import LooseVersion
+
+import pkg_resources
+
+from buildbot import version
 
 if "bdist_wheel" in sys.argv:
     BUILDING_WHEEL = True
@@ -342,7 +342,7 @@ setup_args = {
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
                 'StringParameter', 'TextParameter', 'UserNameParameter',
                 'WorkerChoiceParameter',
-                ]),
+            ]),
             ('buildbot.process.results', [
                 'Results', 'SUCCESS', 'WARNINGS', 'FAILURE', 'SKIPPED',
                 'EXCEPTION', 'RETRY', 'CANCELLED']),
@@ -375,7 +375,8 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)
+py_26 = sys.version_info[0] > 2 or (
+    sys.version_info[0] == 2 and sys.version_info[1] >= 6)
 if not py_26:
     raise RuntimeError("Buildbot master requires at least Python-2.6")
 
@@ -398,7 +399,8 @@ if 'a' in version or 'b' in version:
             raise RuntimeError(VERSION_MSG)
 
 if sys.version_info[:2] == (2, 6):
-    # Twisted-15.4.0, txaio >=2.3.0 and autobahn >=0.13.0 don't support Python 2.6 anymore
+    # Twisted-15.4.0, txaio >=2.3.0 and autobahn >=0.13.0 don't support Python
+    # 2.6 anymore
     twisted_ver = ">= 14.0.1, < 15.4.0"
     autobahn_ver = ">= 0.10.2, < 0.13.0"
     txaio_ver = "== 2.2.2"
@@ -422,7 +424,8 @@ else:
     setup_args['install_requires'] = [
         'Twisted ' + twisted_ver,
         'Jinja2 >= 2.1',
-        'zope.interface >= 4.1.1',  # required for tests, but Twisted requires this anyway
+        # required for tests, but Twisted requires this anyway
+        'zope.interface >= 4.1.1',
         'future',
         'sqlalchemy>=0.8.0',
         'sqlalchemy-migrate>=0.9',
@@ -455,6 +458,7 @@ else:
         'test': [
             'setuptools_trial',
             'pep8',
+            'isort',
             'pylint==1.1.0',
             'pyflakes',
         ] + test_deps,

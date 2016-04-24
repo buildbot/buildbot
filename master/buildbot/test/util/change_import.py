@@ -15,10 +15,9 @@
 import os
 import shutil
 
+from buildbot.changes.changes import Change
 from buildbot.test.util import db
 from buildbot.util import pickle
-
-from buildbot.changes.changes import Change
 
 
 class ChangeImportMixin(db.RealDatabaseMixin):

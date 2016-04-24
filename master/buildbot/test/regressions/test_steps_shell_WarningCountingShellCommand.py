@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 import re
 
-from twisted.trial import unittest
-
 from buildbot.steps.shell import WarningCountingShellCommand
+
+from twisted.trial import unittest
 
 
 class TestWarningCountingShellCommand(unittest.TestCase):

@@ -12,16 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot import interfaces
+from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
-from buildbot.process.properties import Interpolate
 from buildbot.test.fake import docker
 from buildbot.worker import docker as dockerworker
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestDockerLatentWorker(unittest.TestCase):
@@ -30,28 +30,34 @@ class TestDockerLatentWorker(unittest.TestCase):
         pass
 
     def setUp(self):
-        self.build = Properties(image="busybox:latest", builder="docker_worker")
+        self.build = Properties(
+            image="busybox:latest", builder="docker_worker")
         self.patch(dockerworker, 'client', docker)
 
     def test_constructor_nodocker(self):
         self.patch(dockerworker, 'client', None)
-        self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
+        self.assertRaises(config.ConfigErrors, self.ConcreteWorker,
+                          'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
 
     def test_constructor_noimage_nodockerfile(self):
-        self.assertRaises(config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'http://localhost:2375')
+        self.assertRaises(
+            config.ConfigErrors, self.ConcreteWorker, 'bot', 'pass', 'http://localhost:2375')
 
     def test_constructor_noimage_dockerfile(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', dockerfile="FROM ubuntu")
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'http://localhost:2375', dockerfile="FROM ubuntu")
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.image, None)
 
     def test_constructor_image_nodockerfile(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', image="myworker")
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'http://localhost:2375', image="myworker")
         self.assertEqual(bs.dockerfile, None)
         self.assertEqual(bs.image, 'myworker')
 
     def test_constructor_networking_config(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'http://localhost:2375', 'worker', networking_config='host')
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'http://localhost:2375', 'worker', networking_config='host')
         self.assertEqual(bs.networking_config, 'host')
 
     def test_constructor_minimal(self):
@@ -75,8 +81,10 @@ class TestDockerLatentWorker(unittest.TestCase):
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.volumes, [])
         self.assertEqual(bs.binds, {})
-        self.assertEqual(bs.client_args, {'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
-        self.assertEqual(bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
+        self.assertEqual(bs.client_args, {
+                         'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
+        self.assertEqual(
+            bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
 
     @defer.inlineCallbacks
     def test_start_instance_volume_renderable(self):
@@ -87,10 +95,12 @@ class TestDockerLatentWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_volume_no_suffix(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
         yield bs.start_instance(self.build)
         self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp'])
-        self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
+        self.assertEqual(
+            bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
 
     @defer.inlineCallbacks
     def test_volume_ro_rw(self):
@@ -98,7 +108,8 @@ class TestDockerLatentWorker(unittest.TestCase):
                                  volumes=['/src/webapp:/opt/webapp:ro',
                                           '~:/backup:rw'])
         yield bs.start_instance(self.build)
-        self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
+        self.assertEqual(
+            bs.volumes, ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
                                     '~': {'bind': '/backup', 'ro': False}})
 
@@ -114,31 +125,36 @@ class TestDockerLatentWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_image_no_version(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'busybox', ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox')
 
     @defer.inlineCallbacks
     def test_start_instance_image_right_version(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
     def test_start_instance_image_wrong_version(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'busybox:123', ['bin/bash'])
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'busybox:123', ['bin/bash'])
         yield self.assertFailure(bs.start_instance(self.build),
                                  interfaces.LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
     def test_start_instance_image_renderable(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', Property('image'), ['bin/bash'])
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', Property('image'), ['bin/bash'])
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'busybox:latest')
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_nodockerfile(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'])
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'])
         try:
             id, name = yield bs.start_instance(self.build)
         except interfaces.LatentWorkerFailedToSubstantiate:
@@ -146,7 +162,8 @@ class TestDockerLatentWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_dockefilefails(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', dockerfile='BUG')
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', dockerfile='BUG')
         try:
             id, name = yield bs.start_instance(self.build)
         except interfaces.LatentWorkerFailedToSubstantiate:
@@ -154,7 +171,8 @@ class TestDockerLatentWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_instance_noimage_gooddockerfile(self):
-        bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', dockerfile='FROM debian:wheezy')
+        bs = self.ConcreteWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', dockerfile='FROM debian:wheezy')
         id, name = yield bs.start_instance(self.build)
         self.assertEqual(name, 'worker')
 
@@ -169,7 +187,8 @@ class testDockerPyStreamLogs(unittest.TestCase):
         self.compare([], '{"stream":"\\n"}\r\n')
 
     def testOneLine(self):
-        self.compare([" ---> Using cache"], '{"stream":" ---\\u003e Using cache\\n"}\r\n')
+        self.compare(
+            [" ---> Using cache"], '{"stream":" ---\\u003e Using cache\\n"}\r\n')
 
     def testMultipleLines(self):
         self.compare(["Fetched 8298 kB in 3s (2096 kB/s)", "Reading package lists..."],
