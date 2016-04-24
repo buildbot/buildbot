@@ -14,10 +14,8 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-import re
-
-from StringIO import StringIO
-
+# Check when finally switching to Python 3
+from io import BytesIO
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
 from email import charset
@@ -26,6 +24,7 @@ from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+import re
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
@@ -492,7 +491,7 @@ class MailNotifier(service.BuildbotService):
 
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
-            self.fromaddr, recipients, StringIO(s),
+            self.fromaddr, recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 

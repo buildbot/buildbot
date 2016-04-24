@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
-from __future__ import with_statement
 
 import os
 import sys
@@ -21,8 +20,8 @@ import sys
 from twisted.internet import defer
 
 from buildbot import config as config_module
-from buildbot import monkeypatches
 from buildbot.master import BuildMaster
+from buildbot import monkeypatches
 from buildbot.scripts import base
 from buildbot.util import in_reactor
 

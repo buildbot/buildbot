@@ -15,19 +15,25 @@
 
 import sys
 
+import twisted
 from twisted.python import util
 
 from buildbot.util import sautils
 
 
-def onlyOnce(fn):
-    'Set up FN to only run once within an interpreter instance'
+def only_once(fun):
+    """
+    Set up FN to only run once within an interpreter instance
+    """
     def wrap(*args, **kwargs):
-        if hasattr(fn, 'called'):
+        """
+        the actual wrapper
+        """
+        if hasattr(fun, 'called'):
             return
-        fn.called = 1
-        return fn(*args, **kwargs)
-    util.mergeFunctionMetadata(fn, wrap)
+        fun.called = 1
+        return fun(*args, **kwargs)
+    util.mergeFunctionMetadata(fun, wrap)
     return wrap
 
 # NOTE: all of these patches test for applicability *before* importing the
@@ -36,58 +42,78 @@ def onlyOnce(fn):
 # private things in external libraries that no longer exist.
 
 
-@onlyOnce
+@only_once
 def patch_sqlalchemy2364():
-    # fix for SQLAlchemy bug 2364
+    """
+    fix for SQLAlchemy bug 2364
+    """
     if sautils.sa_version() < (0, 7, 5):
         from buildbot.monkeypatches import sqlalchemy2364
         sqlalchemy2364.patch()
 
 
-@onlyOnce
+@only_once
 def patch_sqlalchemy2189():
-    # fix for SQLAlchemy bug 2189
+    """
+    fix for SQLAlchemy bug 2189
+    """
     if sautils.sa_version() <= (0, 7, 1):
         from buildbot.monkeypatches import sqlalchemy2189
         sqlalchemy2189.patch()
 
 
-@onlyOnce
+@only_once
 def patch_python14653():
-    # this bug was fixed in Python 2.7.4: http://bugs.python.org/issue14653
+    """
+    this bug was fixed in Python 2.7.4: http://bugs.python.org/issue14653
+    """
     if sys.version_info[:3] < (2, 7, 4):
         from buildbot.monkeypatches import python14653
         python14653.patch()
 
 
-@onlyOnce
+@only_once
 def patch_servicechecks():
+    """
+    apply monkey patches for services
+    """
     from buildbot.monkeypatches import servicechecks
     servicechecks.patch()
 
 
-@onlyOnce
+@only_once
 def patch_testcase_assert_raises_regexp():
-    # pythons before 2.7 does not have TestCase.assertRaisesRegexp() method
-    # add our local implementation if needed
+    """
+    Pythons before 2.7 does not have TestCase.assertRaisesRegexp() method add
+    our local implementation if needed
+    """
     if sys.version_info[:2] < (2, 7):
         from buildbot.monkeypatches import testcase_assert
         testcase_assert.patch()
 
 
-@onlyOnce
+@only_once
 def patch_decorators():
+    """
+    apply monkey patches for decorators
+    """
     from buildbot.monkeypatches import decorators
     decorators.patch()
 
 
-@onlyOnce
+@only_once
 def patch_mock_asserts():
+    """
+    apply monkey patches for mock asserts
+    """
     from buildbot.monkeypatches import mock_asserts
     mock_asserts.patch()
 
 
 def patch_all(for_tests=False):
+    """
+    apply all monkey patches
+    """
     if for_tests:
         patch_servicechecks()
         patch_testcase_assert_raises_regexp()

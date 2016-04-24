@@ -14,15 +14,16 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
+import json
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 
-from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
-from buildbot.util import json
+from buildbot import util
 
 
 class GerritChangeFilter(ChangeFilter):

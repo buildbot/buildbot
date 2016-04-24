@@ -24,8 +24,8 @@ from twisted.python import log
 
 from zope.interface import implements
 
-from buildbot import interfaces
 from buildbot.data import resultspec
+from buildbot import interfaces
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build

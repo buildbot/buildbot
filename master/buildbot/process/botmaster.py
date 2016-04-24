@@ -20,10 +20,10 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot import locks
-from buildbot import util
 from buildbot.process import metrics
 from buildbot.process.builder import Builder
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+from buildbot import util
 from buildbot.util import service
 
 

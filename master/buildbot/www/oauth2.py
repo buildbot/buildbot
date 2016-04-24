@@ -16,6 +16,7 @@ from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
 
+import json
 from posixpath import join
 
 import requests
@@ -23,7 +24,6 @@ import requests
 from twisted.internet import defer
 from twisted.internet import threads
 
-from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import resource
 

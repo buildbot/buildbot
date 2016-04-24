@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 
 import mock
 
@@ -40,7 +42,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.errors = []
         self.logobserver.skips = []
         self.logobserver.testsRun = 0
-        self.logobserver.warningio = StringIO.StringIO()
+        self.logobserver.warningio = BytesIO()
         self.patch(subunit, 'SubunitLogObserver',
                    lambda: self.logobserver)
         return self.setUpBuildStep()

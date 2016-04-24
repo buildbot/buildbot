@@ -15,6 +15,8 @@
 """
 Support for buildsets in the database
 """
+import json
+
 import sqlalchemy as sa
 
 from twisted.internet import defer
@@ -24,7 +26,6 @@ from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class BsDict(dict):

@@ -21,12 +21,12 @@ from twisted.python import log
 from zope.interface import implements
 
 from buildbot import config
-from buildbot import util
 from buildbot.changes.filter import ChangeFilter
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.schedulers import base
+from buildbot import util
 from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
 

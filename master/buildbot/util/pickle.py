@@ -16,17 +16,16 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
 
+from bz2 import BZ2File
+from collections import defaultdict
 import cPickle
-import cStringIO
+# Check when finally switching to Python 3
+from io import BytesIO
+from functools import reduce
+from gzip import GzipFile
 import new
 import os
 import sys
-
-from bz2 import BZ2File
-from cStringIO import StringIO
-from collections import defaultdict
-from functools import reduce
-from gzip import GzipFile
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -705,7 +704,7 @@ class HTMLLogFile(LogFile):
         # buildbot <= 0.8.8 stored all html logs in the html property
         if 'html' in self.__dict__:
             buf = "%d:%d%s," % (len(self.html) + 1, STDERR, self.html)
-            self.openfile = StringIO(buf)
+            self.openfile = BytesIO(buf)
             del self.__dict__['html']
 substituteClasses['buildbot.status.logfile', 'HTMLLogFile'] = HTMLLogFile
 substituteClasses['buildbot.status.builder', 'HTMLLogFile'] = HTMLLogFile
@@ -1076,7 +1075,7 @@ def load(file):
 
 
 def loads(str):
-    file = cStringIO.StringIO(str)
+    file = BytesIO(str)
     return _makeUnpickler(file).load()
 
 dump = cPickle.dump

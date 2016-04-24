@@ -12,7 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-
 """
 A wrapper around `sqlalchemy.create_engine` that handles all of the
 special cases that Buildbot needs.  Those include:
@@ -20,7 +19,6 @@ special cases that Buildbot needs.  Those include:
  - pool_recycle for MySQL
  - %(basedir) substitution
  - optimal thread pool size calculation
-
 """
 
 import migrate
@@ -28,7 +26,6 @@ import os
 import re
 
 import sqlalchemy as sa
-
 from sqlalchemy.engine import strategies
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool

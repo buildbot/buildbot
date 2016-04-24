@@ -172,26 +172,6 @@ def ascii2unicode(x):
         return x
     return unicode(x, 'ascii')
 
-# place a working json module at 'buildbot.util.json'.  Code is adapted from
-# Paul Wise <pabs@debian.org>:
-#   http://lists.debian.org/debian-python/2010/02/msg00016.html
-# json doesn't exist as a standard module until python2.6
-# However python2.6's json module is much slower than simplejson, so we prefer
-# to use simplejson if available.
-try:
-    import simplejson as json
-    assert json
-except ImportError:
-    import json  # python 2.6 or 2.7
-try:
-    _tmp = json.loads
-except AttributeError:
-    import warnings
-    import sys
-    warnings.warn("Use simplejson, not the old json module.")
-    sys.modules.pop('json')  # get rid of the bad json module
-    import simplejson as json
-
 
 def toJson(obj):
     if isinstance(obj, datetime.datetime):
@@ -372,7 +352,7 @@ def command_to_string(command):
 
 
 __all__ = [
-    'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
+    'naturalSort', 'now', 'formatInterval', 'ComparableMixin',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'UTC',
     'diffSets', 'makeList', 'in_reactor', 'string2boolean',

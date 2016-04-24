@@ -17,10 +17,10 @@
 from future.utils import iteritems
 
 import datetime
+import json
 import re
 
 from buildbot import util
-from buildbot.util import json
 
 
 class Type(object):

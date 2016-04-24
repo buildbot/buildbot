@@ -13,14 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+# Check when finally switching to Python 3
+from io import BytesIO
 import os
 import tarfile
 import tempfile
-try:
-    from cStringIO import StringIO
-    assert StringIO
-except ImportError:
-    from StringIO import StringIO
 
 
 from buildbot.worker.protocols import base
@@ -195,4 +192,4 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
-        FileReader.__init__(self, StringIO(s))
+        FileReader.__init__(self, BytesIO(s))

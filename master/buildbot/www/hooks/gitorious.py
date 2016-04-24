@@ -15,14 +15,9 @@
 #
 # note: this file is based on github.py
 import re
+import json
 
 from dateutil.parser import parse as dateparse
-
-try:
-    import json
-    assert json
-except ImportError:
-    import simplejson as json
 
 from twisted.python import log
 

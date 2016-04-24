@@ -15,6 +15,7 @@
 from future.utils import iteritems
 
 import collections
+import json
 import re
 import weakref
 
@@ -28,7 +29,6 @@ from buildbot import util
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
 from buildbot.util import flatten
-from buildbot.util import json
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 

@@ -12,22 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import hmac
-
-from StringIO import StringIO
 from calendar import timegm
 from hashlib import sha1
+import hmac
+# Check when finally switching to Python 3
+from io import BytesIO
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.test.fake.web import FakeRequest
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.github import _HEADER_CT
 from buildbot.www.hooks.github import _HEADER_EVENT
 from buildbot.www.hooks.github import _HEADER_SIGNATURE
-
-from buildbot.test.fake.web import FakeRequest
-from buildbot.test.fake.web import fakeMasterForHooks
 
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
@@ -288,7 +287,7 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     }
 
     if isinstance(payload, str):
-        request.content = StringIO(payload)
+        request.content = BytesIO(payload)
         request.received_headers[_HEADER_CT] = _CT_JSON
 
         if _secret is not None:

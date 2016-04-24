@@ -15,12 +15,12 @@
 from future.moves.urllib.parse import urlparse
 from future.utils import iteritems
 
+from contextlib import contextmanager
 import datetime
 import fnmatch
+import json
 import mimetools
 import re
-
-from contextlib import contextmanager
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,7 +28,6 @@ from twisted.web.error import Error
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
-from buildbot.util import json
 from buildbot.util import toJson
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden

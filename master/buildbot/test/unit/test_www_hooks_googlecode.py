@@ -14,14 +14,15 @@
 # Copyright 2011 Louis Opter <kalessin@kalessin.fr>
 #
 # Written from the github change hook unit test
-import StringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
-
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+import buildbot.www.change_hook as change_hook
 
 
 # Sample Google Code commit payload extracted from a Google Code test project
@@ -52,7 +53,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
     def setUp(self):
         self.request = FakeRequest()
         # Google Code simply transmit the payload as an UTF-8 JSON body
-        self.request.content = StringIO.StringIO(googleCodeJsonBody)
+        self.request.content = BytesIO(googleCodeJsonBody)
         self.request.received_headers = {
             'Google-Code-Project-Hosting-Hook-Hmac': '85910bf93ba5c266402d9328b0c7a856',
             'Content-Length': '509',

@@ -21,6 +21,9 @@ import traceback
 from twisted.internet import defer
 from twisted.python import util
 
+from twisted.internet import defer
+from twisted.python import util
+
 from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster

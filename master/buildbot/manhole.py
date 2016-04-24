@@ -19,12 +19,11 @@ import binascii
 import os
 import types
 
-from builtins import str
-
 from twisted.application import strports
+from twisted.conch.insults import insults
 from twisted.conch import manhole
 from twisted.conch import telnet
-from twisted.conch.insults import insults
+
 try:
     from twisted.conch import checkers as conchc, manhole_ssh
     _hush_pyflakes = [manhole_ssh, conchc]

@@ -15,7 +15,8 @@
 from __future__ import print_function
 from future.utils import itervalues
 
-import StringIO
+# Check when finally switching to Python 3
+from io import BytesIO
 import os
 import sys
 
@@ -113,7 +114,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def tearDown(self):
         if not self._passed:
-            dump = StringIO.StringIO()
+            dump = BytesIO()
             print("FAILED! dumping build db for debug", file=dump)
             builds = yield self.master.data.get(("builds",))
             for build in builds:

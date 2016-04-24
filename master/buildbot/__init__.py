@@ -17,8 +17,6 @@
 #
 # We can't put this method in utility modules, because they import dependancy packages
 #
-from __future__ import with_statement
-
 import os
 import re
 

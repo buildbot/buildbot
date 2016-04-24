@@ -480,15 +480,6 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
         Force a call to the decorated method now.
         If the decorated method is currently running, another call will begin as soon as it completes.
 
-:py:mod:`buildbot.util.json`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. py:module:: buildbot.util.json
-
-This package is just an import of the best available JSON module.
-Use it instead of a more complex conditional import of :mod:`simplejson` or :mod:`json`::
-
-    from buildbot.util import json
 
 :py:mod:`buildbot.util.maildir`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

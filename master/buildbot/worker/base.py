@@ -16,7 +16,6 @@
 from future.utils import itervalues
 
 import time
-
 from email.message import Message
 from email.utils import formatdate
 

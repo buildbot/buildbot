@@ -18,10 +18,9 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-import buildbot.test.fake.openstack as novaclient
-
 from buildbot import config
 from buildbot import interfaces
+import buildbot.test.fake.openstack as novaclient
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
 from buildbot.worker_transition import DeprecatedWorkerNameWarning

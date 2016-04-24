@@ -15,6 +15,7 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
+import json
 import re
 
 import mock
@@ -24,7 +25,6 @@ from twisted.trial import unittest
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
-from buildbot.util import json
 from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import BadRequest

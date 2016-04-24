@@ -12,16 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-from future.utils import itervalues
+from future.utils import (iteritems,
+                          itervalues)
 
 import os
 import re
 import sys
 import traceback
-import warnings
-
 from types import MethodType
+import warnings
 
 from zope.interface import implementer
 
@@ -30,7 +29,6 @@ from twisted.python import log
 
 from buildbot import interfaces
 from buildbot import locks
-from buildbot import util
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
 from buildbot.util import config as util_config
@@ -163,7 +161,7 @@ class FileLoader(ComparableMixin, object):
         return config
 
 
-class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
+class MasterConfig(ComparableMixin, WorkerAPICompatMixin):
 
     def __init__(self):
         # local import to avoid circular imports

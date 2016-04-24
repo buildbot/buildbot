@@ -12,11 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import json
 import os
 import random
 import re
 import shlex
-import string
 import sys
 import time
 
@@ -32,7 +32,6 @@ from twisted.python.procutils import which
 from twisted.spread import pb
 
 from buildbot.status import builder
-from buildbot.util import json
 from buildbot.util import now
 from buildbot.util.eventual import fireEventually
 
@@ -644,7 +643,7 @@ class Try(pb.Referenceable):
                     # separators, as it's simpler to do it like this. And then we
                     # just need to get all of them together using the slice and
                     # also remove the quotes from those that were quoted.
-                    argv = [string.strip(a, '"') for a in
+                    argv = [arg.strip('"') for arg in
                             re.split(r'''([^" ]+|"[^"]+")''', ssh_command)[1::2]]
                 else:
                     # Do use standard tokenization logic under POSIX.

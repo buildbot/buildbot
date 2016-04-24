@@ -15,11 +15,8 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-try:
-    import cStringIO as StringIO
-    assert StringIO
-except ImportError:
-    import StringIO
+# Check when finally switching to Python 3
+from io import BytesIO
 import re
 
 from twisted.internet import defer
@@ -214,7 +211,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = StringIO.StringIO(alltext)
+        io = BytesIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):

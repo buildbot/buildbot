@@ -19,6 +19,9 @@ import sys
 import time
 
 import twisted
+from twisted.internet.utils import getProcessOutputAndValue
+from twisted.python import versions
+from twisted.trial import unittest
 
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions

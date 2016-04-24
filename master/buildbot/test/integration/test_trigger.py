@@ -12,7 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
+#
+# Check when finally switching to Python 3
+from io import BytesIO
 
 from twisted.internet import defer
 
@@ -56,7 +58,7 @@ class TriggeringMaster(RunMasterBase):
         self.assertEqual(build['steps'][1]['state_string'], 'triggered trigsched')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
-        dump = StringIO.StringIO()
+        dump = BytesIO()
         for b in builds:
             yield self.printBuild(b, dump)
         # depending on the environment the number of lines is different between test hosts

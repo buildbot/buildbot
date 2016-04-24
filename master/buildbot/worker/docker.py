@@ -16,9 +16,16 @@
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
 
+from io import BytesIO
+import json
 import socket
 
-from io import BytesIO
+try:
+    import docker
+    from docker import client
+    _hush_pyflakes = [docker, client]
+except ImportError:
+    client = None
 
 try:
     import docker
@@ -33,7 +40,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util import json
 from buildbot.worker import AbstractLatentWorker
 
 
