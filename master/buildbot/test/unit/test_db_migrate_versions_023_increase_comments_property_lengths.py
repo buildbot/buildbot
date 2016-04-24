@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -42,7 +42,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('changeid', sa.Integer, primary_key=True),
             sa.Column('author', sa.String(256), nullable=False),
             sa.Column('comments', sa.String(1024), nullable=False),
-            sa.Column('is_dir', sa.SmallInteger, nullable=False),  # old, for CVS
+            # old, for CVS
+            sa.Column('is_dir', sa.SmallInteger, nullable=False),
             sa.Column('branch', sa.String(256)),
             sa.Column('revision', sa.String(256)),  # CVS uses NULL
             sa.Column('revlink', sa.String(256)),

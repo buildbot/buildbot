@@ -16,6 +16,11 @@
 import os.path
 import signal
 
+from buildbot_worker.base import BotBase
+from buildbot_worker.base import WorkerBase
+from buildbot_worker.base import WorkerForBuilderBase
+from buildbot_worker.pbutil import ReconnectingPBClientFactory
+
 from twisted.application import internet
 from twisted.application import service
 from twisted.cred import credentials
@@ -24,11 +29,6 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from twisted.spread import pb
-
-from buildbot_worker.base import BotBase
-from buildbot_worker.base import WorkerBase
-from buildbot_worker.base import WorkerForBuilderBase
-from buildbot_worker.pbutil import ReconnectingPBClientFactory
 
 
 class UnknownCommand(pb.Error):
@@ -79,7 +79,8 @@ class BotFactory(ReconnectingPBClientFactory):
         self.connector = connector
 
     def gotPerspective(self, perspective):
-        log.msg("Connected to %s:%s; worker is ready" % (self.buildmaster_host, self.port))
+        log.msg("Connected to %s:%s; worker is ready" %
+                (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:
@@ -99,12 +100,14 @@ class BotFactory(ReconnectingPBClientFactory):
         why = reason
         if reason.check(error.ConnectionRefusedError):
             why = "Connection Refused"
-        log.msg("Connection to %s:%s failed: %s" % (self.buildmaster_host, self.port, why))
+        log.msg("Connection to %s:%s failed: %s" %
+                (self.buildmaster_host, self.port, why))
         ReconnectingPBClientFactory.clientConnectionFailed(self,
                                                            connector, reason)
 
     def clientConnectionLost(self, connector, reason):
-        log.msg("Lost connection to %s:%s" % (self.buildmaster_host, self.port))
+        log.msg("Lost connection to %s:%s" %
+                (self.buildmaster_host, self.port))
         self.connector = None
         self.stopTimers()
         self.perspective = None
@@ -154,7 +157,8 @@ class Worker(WorkerBase, service.MultiService):
         # backward-compatibility
 
         service.MultiService.__init__(self)
-        WorkerBase.__init__(self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
+        WorkerBase.__init__(
+            self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
         if keepalive == 0:
             keepalive = None
 
@@ -170,7 +174,8 @@ class Worker(WorkerBase, service.MultiService):
 
         self.allow_shutdown = allow_shutdown
         bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
-        bf.startLogin(credentials.UsernamePassword(name, passwd), client=self.bot)
+        bf.startLogin(
+            credentials.UsernamePassword(name, passwd), client=self.bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
 
@@ -181,7 +186,8 @@ class Worker(WorkerBase, service.MultiService):
             log.msg("Setting up SIGHUP handler to initiate shutdown")
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         elif self.allow_shutdown == 'file':
-            log.msg("Watching %s's mtime to initiate shutdown" % self.shutdown_file)
+            log.msg("Watching %s's mtime to initiate shutdown" %
+                    self.shutdown_file)
             if os.path.exists(self.shutdown_file):
                 self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
             self.shutdown_loop = l = task.LoopingCall(self._checkShutdownFile)
@@ -202,7 +208,8 @@ class Worker(WorkerBase, service.MultiService):
     def _checkShutdownFile(self):
         if os.path.exists(self.shutdown_file) and \
                 os.path.getmtime(self.shutdown_file) > self.shutdown_mtime:
-            log.msg("Initiating shutdown because %s was touched" % self.shutdown_file)
+            log.msg("Initiating shutdown because %s was touched" %
+                    self.shutdown_file)
             self.gracefulShutdown()
 
             # In case the shutdown fails, update our mtime so we don't keep
@@ -218,12 +225,14 @@ class Worker(WorkerBase, service.MultiService):
             reactor.stop()
             return
 
-        log.msg("Telling the master we want to shutdown after any running builds are finished")
+        log.msg(
+            "Telling the master we want to shutdown after any running builds are finished")
         d = self.bf.perspective.callRemote("shutdown")
 
         def _shutdownfailed(err):
             if err.check(AttributeError):
-                log.msg("Master does not support worker initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+                log.msg(
+                    "Master does not support worker initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
             else:
                 log.msg('callRemote("shutdown") failed')
                 log.err(err)

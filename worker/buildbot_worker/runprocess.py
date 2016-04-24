@@ -17,8 +17,6 @@
 Support for running 'shell commands'
 """
 
-from future.utils import iteritems
-
 import os
 import pprint
 import re
@@ -27,22 +25,23 @@ import stat
 import subprocess
 import sys
 import traceback
-
 from collections import deque
 from tempfile import NamedTemporaryFile
+
+from future.utils import iteritems
+
+from buildbot_worker import util
+from buildbot_worker.exceptions import AbandonChain
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import task
-from twisted.python import log
 from twisted.python import failure
+from twisted.python import log
 from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
-
-from buildbot_worker import util
-from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process
@@ -221,8 +220,10 @@ class RunProcessPP(protocol.ProcessProtocol):
         # a zero exit status.  So we force it.  See
         # http://stackoverflow.com/questions/2061735/42-passed-to-terminateprocess-sometimes-getexitcodeprocess-returns-0
         if self.killed and rc == 0:
-            log.msg("process was killed, but exited with status 0; faking a failure")
-            # windows returns '1' even for signalled failures, while POSIX returns -1
+            log.msg(
+                "process was killed, but exited with status 0; faking a failure")
+            # windows returns '1' even for signalled failures, while POSIX
+            # returns -1
             if runtime.platformType == 'win32':
                 rc = 1
             else:
@@ -340,7 +341,8 @@ class RunProcess(object):
                 return os.environ.get(match.group(1), "")
             newenv = {}
             for key in os.environ:
-                # setting a key to None will delete it from the worker environment
+                # setting a key to None will delete it from the worker
+                # environment
                 if key not in environ or environ[key] is not None:
                     newenv[key] = os.environ[key]
             for key, v in iteritems(environ):
@@ -379,7 +381,8 @@ class RunProcess(object):
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
             if self.usePTY and usePTY != "slave-config":
-                self.sendStatus({'header': "WARNING: disabling usePTY for this command"})
+                self.sendStatus(
+                    {'header': "WARNING: disabling usePTY for this command"})
             self.usePTY = False
 
         # use an explicit process group on POSIX, noting that usePTY always implies
@@ -448,7 +451,8 @@ class RunProcess(object):
         self.using_comspec = False
         if isinstance(self.command, basestring):
             if runtime.platformType == 'win32':
-                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                # allow %COMSPEC% to have args
+                argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
                     argv += ['/c']
                 argv += [self.command]
@@ -466,14 +470,16 @@ class RunProcess(object):
             # handle path searching, etc.
             if runtime.platformType == 'win32' and not \
                     (self.command[0].lower().endswith(".exe") and os.path.isabs(self.command[0])):
-                argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
+                # allow %COMSPEC% to have args
+                argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
                     argv += ['/c']
                 argv += list(self.command)
                 self.using_comspec = True
             else:
                 argv = self.command
-            # Attempt to format this for use by a shell, although the process isn't perfect
+            # Attempt to format this for use by a shell, although the process
+            # isn't perfect
             display = shell_quote(self.fake_command)
 
         # $PWD usually indicates the current directory; spawnProcess may not
@@ -549,10 +555,12 @@ class RunProcess(object):
         # set up timeouts
 
         if self.timeout:
-            self.ioTimeoutTimer = self._reactor.callLater(self.timeout, self.doTimeout)
+            self.ioTimeoutTimer = self._reactor.callLater(
+                self.timeout, self.doTimeout)
 
         if self.maxTime:
-            self.maxTimeoutTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
+            self.maxTimeoutTimer = self._reactor.callLater(
+                self.maxTime, self.doMaxTimeout)
 
         for w in self.logFileWatchers:
             w.start()
@@ -706,7 +714,8 @@ class RunProcess(object):
         if self.buflen > self.BUFFER_SIZE:
             self._sendBuffers()
         elif not self.sendBuffersTimer:
-            self.sendBuffersTimer = self._reactor.callLater(self.BUFFER_TIMEOUT, self._bufferTimeout)
+            self.sendBuffersTimer = self._reactor.callLater(
+                self.BUFFER_TIMEOUT, self._bufferTimeout)
 
     def addStdout(self, data):
         if self.sendStdout:
@@ -734,7 +743,8 @@ class RunProcess(object):
 
     def finished(self, sig, rc):
         self.elapsedTime = util.now(self._reactor) - self.startTime
-        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig, rc, self.elapsedTime))
+        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (
+            sig, rc, self.elapsedTime))
         for w in self.logFileWatchers:
             # this will send the final updates
             w.stop()
@@ -768,12 +778,14 @@ class RunProcess(object):
 
     def doTimeout(self):
         self.ioTimeoutTimer = None
-        msg = "command timed out: %d seconds without output running %s" % (self.timeout, self.fake_command)
+        msg = "command timed out: %d seconds without output running %s" % (
+            self.timeout, self.fake_command)
         self.kill(msg)
 
     def doMaxTimeout(self):
         self.maxTimeoutTimer = None
-        msg = "command timed out: %d seconds elapsed running %s" % (self.maxTime, self.fake_command)
+        msg = "command timed out: %d seconds elapsed running %s" % (
+            self.maxTime, self.fake_command)
         self.kill(msg)
 
     def isDead(self):
@@ -842,20 +854,25 @@ class RunProcess(object):
                 log.msg("interruptSignal==None, only pretending to kill child")
             elif self.process.pid is not None:
                 if interruptSignal == "TERM":
-                    log.msg("using TASKKILL PID /T to kill pid %s" % self.process.pid)
-                    subprocess.check_call("TASKKILL /PID %s /T" % self.process.pid)
+                    log.msg("using TASKKILL PID /T to kill pid %s" %
+                            self.process.pid)
+                    subprocess.check_call(
+                        "TASKKILL /PID %s /T" % self.process.pid)
                     log.msg("taskkill'd pid %s" % self.process.pid)
                     hit = 1
                 elif interruptSignal == "KILL":
-                    log.msg("using TASKKILL PID /F /T to kill pid %s" % self.process.pid)
-                    subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
+                    log.msg("using TASKKILL PID /F /T to kill pid %s" %
+                            self.process.pid)
+                    subprocess.check_call(
+                        "TASKKILL /F /PID %s /T" % self.process.pid)
                     log.msg("taskkill'd pid %s" % self.process.pid)
                     hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
         if not hit:
             try:
-                log.msg("trying process.signalProcess('%s')" % (interruptSignal,))
+                log.msg("trying process.signalProcess('%s')" %
+                        (interruptSignal,))
                 self.process.signalProcess(interruptSignal)
                 log.msg(" signal %s sent successfully" % (interruptSignal,))
                 hit = 1
@@ -887,7 +904,8 @@ class RunProcess(object):
         sendSigterm = self.sigtermTime is not None
         if sendSigterm:
             self.sendSig("TERM")
-            self.sigtermTimer = self._reactor.callLater(self.sigtermTime, self.checkProcess)
+            self.sigtermTimer = self._reactor.callLater(
+                self.sigtermTime, self.checkProcess)
         else:
             hit = self.sendSig(self.interruptSignal)
             self.cleanUp(hit)

@@ -12,14 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import os
 
-from twisted.internet import defer
-from twisted.protocols import basic
-from twisted.python import log
-from twisted.spread import pb
+from future.utils import iteritems
 
 from buildbot import pbutil
 from buildbot.process.properties import Properties
@@ -28,6 +23,11 @@ from buildbot.util import ascii2unicode
 from buildbot.util import json
 from buildbot.util import netstrings
 from buildbot.util.maildir import MaildirService
+
+from twisted.internet import defer
+from twisted.protocols import basic
+from twisted.python import log
+from twisted.spread import pb
 
 
 class TryBase(base.BaseScheduler):
@@ -63,7 +63,8 @@ class BadJobfile(Exception):
 
 class JobdirService(MaildirService):
     # NOTE: tightly coupled with Try_Jobdir, below. We used to track it as a "parent"
-    # via the MultiService API, but now we just track it as the member "self.scheduler"
+    # via the MultiService API, but now we just track it as the member
+    # "self.scheduler"
 
     def __init__(self, scheduler, basedir=None):
         self.scheduler = scheduler
@@ -141,7 +142,8 @@ class Try_Jobdir(TryBase):
         p = netstrings.NetstringParser()
         f.seek(0, 2)
         if f.tell() > basic.NetstringReceiver.MAX_LENGTH:
-            raise BadJobfile("The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
+            raise BadJobfile(
+                "The patch size is greater that NetStringReceiver.MAX_LENGTH. Please Set this higher in the master.cfg")
         f.seek(0, 0)
         try:
             p.feed(f.read())
@@ -219,7 +221,8 @@ class Try_Jobdir(TryBase):
                            patch_level=parsed_job['patch_level'],
                            patch_author=who,
                            patch_comment=comment,
-                           patch_subdir='',  # TODO: can't set this remotely - #1769
+                           # TODO: can't set this remotely - #1769
+                           patch_subdir='',
                            project=parsed_job['project'],
                            repository=parsed_job['repository'])
         reason = u"'try' job"
@@ -279,7 +282,8 @@ class RemoteBuildRequest(pb.Referenceable):
                 return
             reportedBuilds.add(msg['buildid'])
             return subscriber.callRemote('newbuild',
-                                         RemoteBuild(self.master, msg, self.builderName),
+                                         RemoteBuild(
+                                             self.master, msg, self.builderName),
                                          self.builderName)
         self.consumer = yield self.master.mq.startConsuming(
             gotBuild, ('builders', str(builderId), 'builds', None, None))
@@ -293,7 +297,8 @@ class RemoteBuildRequest(pb.Referenceable):
                 continue
             reportedBuilds.add(build['buildid'])
             yield subscriber.callRemote('newbuild',
-                                        RemoteBuild(self.master, build, self.builderName),
+                                        RemoteBuild(
+                                            self.master, build, self.builderName),
                                         self.builderName)
 
     def remote_unsubscribe(self, subscriber):

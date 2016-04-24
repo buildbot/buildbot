@@ -17,27 +17,29 @@ import os
 import sys
 import textwrap
 
+import pkg_resources
+
+from buildbot.util.raml import RamlSpec
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 here = os.path.abspath('.')
 sys.path.append(here)
-from buildbot.util.raml import RamlSpec
 
-# -- General configuration -----------------------------------------------------
+# -- General configuration -----------------------------------------------
 try:
     import sphinxcontrib.blockdiag
     assert sphinxcontrib.blockdiag
 except ImportError:
     raise RuntimeError("sphinxcontrib.blockdiag is not installed. "
-        "Please install documentation dependencies with `pip install buildbot[docs]`")
+                       "Please install documentation dependencies with `pip install buildbot[docs]`")
 
-import pkg_resources
 try:
     pkg_resources.require('docutils>=0.8')
 except pkg_resources.ResolutionError:
     raise RuntimeError("docutils is not installed or has incompatible version. "
-        "Please install documentation dependencies with `pip install buildbot[docs]`")
+                       "Please install documentation dependencies with `pip install buildbot[docs]`")
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.0'
 
@@ -139,7 +141,7 @@ extlinks = {
     'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None)
 }
 
-# -- Options for HTML output ---------------------------------------------------
+# -- Options for HTML output ---------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -223,7 +225,7 @@ html_use_modindex = True
 htmlhelp_basename = 'Buildbotdoc'
 
 
-# -- Options for LaTeX output --------------------------------------------------
+# -- Options for LaTeX output --------------------------------------------
 
 # The paper size ('letter' or 'a4').
 latex_paper_size = 'a4'
@@ -265,7 +267,7 @@ latex_show_urls = 'inline'
 # latex_domain_indices = True
 
 
-# -- Options for manual page output --------------------------------------------
+# -- Options for manual page output --------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).

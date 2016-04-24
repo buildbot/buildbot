@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.util import identifiers
+
+from twisted.internet import defer
 
 
 class EndpointMixin(object):

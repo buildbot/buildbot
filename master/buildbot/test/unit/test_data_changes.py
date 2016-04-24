@@ -14,10 +14,6 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot.data import changes
 from buildbot.data import resultspec
 from buildbot.process.users import users
@@ -26,6 +22,10 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
+
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -112,7 +112,8 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChangesOtherOffset(self):
-        resultSpec = resultspec.ResultSpec(limit=1, offset=1, order=['-changeid'])
+        resultSpec = resultspec.ResultSpec(
+            limit=1, offset=1, order=['-changeid'])
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         # limit not implemented for other offset

@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot.process import properties
 from buildbot.schedulers import timed
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
+
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
@@ -64,14 +64,17 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_constructor_no_reason(self):
         sched = self.makeScheduler(name='test', builderNames=['test'])
-        self.assertEqual(sched.reason, "The NightlyTriggerable scheduler named 'test' triggered this build")
+        self.assertEqual(
+            sched.reason, "The NightlyTriggerable scheduler named 'test' triggered this build")
 
     def test_constructor_reason(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], reason="hourlytriggerable")
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], reason="hourlytriggerable")
         self.assertEqual(sched.reason, "hourlytriggerable")
 
     def test_constructor_month(self):
-        sched = self.makeScheduler(name='test', builderNames=['test'], month='1')
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], month='1')
         self.assertEqual(sched.month, "1")
 
     def test_timer_noBuilds(self):
@@ -181,7 +184,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
         self.db.insertTestData([
-            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.Object(
+                id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
                                value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {}, null, null ]'),
         ])
@@ -199,7 +203,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
         self.db.insertTestData([
-            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.Object(
+                id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
                                value_json='[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} }, {}, null, null ]'),
         ])
@@ -217,7 +222,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
         self.db.insertTestData([
-            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.Object(
+                id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
         sched.activate()
@@ -240,7 +246,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
         self.db.insertTestData([
-            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.Object(
+                id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
         sched.activate()
@@ -262,7 +269,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
         self.db.insertTestData([
-            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.Object(
+                id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
         ])
 
         sched.activate()
@@ -290,7 +298,8 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
         self.db.insertTestData([
-            fakedb.Object(id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
+            fakedb.Object(
+                id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
                                value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {"testprop": ["test", "TEST"]}, null, null ]'),
         ])

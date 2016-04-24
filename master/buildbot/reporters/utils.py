@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 from UserList import UserList
 
-from twisted.internet import defer
-
 from buildbot.data import resultspec
 from buildbot.process.properties import renderer
 from buildbot.process.results import RETRY
 from buildbot.util import flatten
+
+from twisted.internet import defer
 
 
 @defer.inlineCallbacks
@@ -83,7 +83,8 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     builders = yield defer.gatherResults([master.data.get(("builders", _id))
                                           for _id in builderids])
 
-    buildersbyid = dict([(builder['builderid'], builder) for builder in builders])
+    buildersbyid = dict([(builder['builderid'], builder)
+                         for builder in builders])
 
     if wantProperties:
         buildproperties = yield defer.gatherResults(
@@ -115,7 +116,8 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
         build['builder'] = buildersbyid[build['builderid']]
         build['buildset'] = buildset
-        build['url'] = getURLForBuild(master, build['builderid'], build['number'])
+        build['url'] = getURLForBuild(
+            master, build['builderid'], build['number'])
 
         if wantProperties:
             build['properties'] = properties
@@ -137,7 +139,8 @@ def getResponsibleUsersForSourceStamp(master, sourcestampid):
     # normally, we get only one, but just assume there might be several
     for c in changes:
         blamelist.add(c['author'])
-    if 'patch' in sourcestamp and sourcestamp['patch'] is not None:  # Add patch author to blamelist
+    # Add patch author to blamelist
+    if 'patch' in sourcestamp and sourcestamp['patch'] is not None:
         blamelist.add(sourcestamp['patch']['author'])
     blamelist = list(blamelist)
     blamelist.sort()
@@ -150,7 +153,7 @@ def getResponsibleUsersForBuild(master, buildid):
     dl = [
         master.data.get(("builds", buildid, "changes")),
         master.data.get(("builds", buildid, 'properties'))
-        ]
+    ]
     changes, properties = yield defer.gatherResults(dl)
     blamelist = set()
 

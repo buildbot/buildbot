@@ -14,14 +14,16 @@
 # Copyright Buildbot Team Members
 
 import errno
-import mock
 import os
 import signal
 import time
 
+import mock
+
 from buildslave.scripts import stop
 from buildslave.test.util import compat
 from buildslave.test.util import misc
+
 from twisted.trial import unittest
 
 

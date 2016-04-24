@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.db import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -26,6 +23,9 @@ from buildbot.test.util import querylog
 from buildbot.test.util import validation
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class Tests(interfaces.InterfaceTests):
@@ -182,7 +182,7 @@ class Tests(interfaces.InterfaceTests):
                               connected_to=[10, 11], configured_on=[
                                   {'builderid': 20, 'masterid': 10},
                                   {'builderid': 20, 'masterid': 11},
-                                  ]))
+                         ]))
 
     @defer.inlineCallbacks
     def test_getWorker_by_name_not_configured(self):
@@ -258,7 +258,7 @@ class Tests(interfaces.InterfaceTests):
                          dict(id=30, name='zero', workerinfo={'a': 'b'},
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
-                                  ], connected_to=[]))
+                         ], connected_to=[]))
 
     @defer.inlineCallbacks
     def test_getWorker_with_multiple_masters_builderid_masterid(self):
@@ -270,7 +270,7 @@ class Tests(interfaces.InterfaceTests):
                          dict(id=30, name='zero', workerinfo={'a': 'b'},
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
-                                  ], connected_to=[]))
+                         ], connected_to=[]))
 
     @defer.inlineCallbacks
     def test_getWorker_by_name_with_multiple_masters_builderid_masterid(self):
@@ -282,7 +282,7 @@ class Tests(interfaces.InterfaceTests):
                          dict(id=30, name='zero', workerinfo={'a': 'b'},
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
-                                  ], connected_to=[]))
+                         ], connected_to=[]))
 
     @defer.inlineCallbacks
     def test_getWorkers_no_config(self):

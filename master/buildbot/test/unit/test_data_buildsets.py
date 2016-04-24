@@ -12,10 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
-
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -25,10 +21,13 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces as util_interfaces
+from buildbot.test.util import endpoint
 from buildbot.util import epoch2datetime
 
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 A_TIMESTAMP = 1341700729
 A_TIMESTAMP_EPOCH = epoch2datetime(A_TIMESTAMP)
@@ -185,7 +184,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             (bsid, brids) = xxx_todo_changeme
             self.assertEqual((bsid, brids), expectedReturn)
             # check the correct message was received
-            self.master.mq.assertProductions(expectedMessages, orderMatters=False)
+            self.master.mq.assertProductions(
+                expectedMessages, orderMatters=False)
             # and that the correct data was inserted into the db
             self.master.db.buildsets.assertBuildset(bsid, expectedBuildset)
         d.addCallback(check)
@@ -331,7 +331,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
         def mkbr(brid, bsid=72):
             return fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=42,
-                                       complete=buildRequestCompletions.get(brid),
+                                       complete=buildRequestCompletions.get(
+                                           brid),
                                        results=buildRequestResults.get(brid, SUCCESS))
         yield self.master.db.insertTestData([
             fakedb.Builder(id=42, name='bldr1'),

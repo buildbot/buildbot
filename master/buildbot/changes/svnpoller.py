@@ -15,17 +15,18 @@
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
-from future.moves.urllib.parse import quote_plus as urlquote_plus
-
 import os
 import xml.dom.minidom
+
+from future.moves.urllib.parse import quote_plus as urlquote_plus
+
+from buildbot import util
+from buildbot.changes import base
 
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
 
-from buildbot import util
-from buildbot.changes import base
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
@@ -116,7 +117,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.svnbin = svnbin
         self.histmax = histmax
         self._prefix = None
-        self.category = category if callable(category) else util.ascii2unicode(category)
+        self.category = category if callable(
+            category) else util.ascii2unicode(category)
         self.project = util.ascii2unicode(project)
 
         self.cachepath = cachepath

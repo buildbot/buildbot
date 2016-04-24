@@ -12,15 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.moves.urllib.parse import urlparse
-
 import ldap3
-
-from twisted.internet import threads
+from future.moves.urllib.parse import urlparse
 
 from buildbot.util import flatten
 from buildbot.www import auth
 from buildbot.www import avatar
+
+from twisted.internet import threads
 
 
 class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
@@ -70,7 +69,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         return c
 
     def search(self, c, base, filterstr='f', attributes=None):
-        c.search(base, filterstr, ldap3.SEARCH_SCOPE_WHOLE_SUBTREE, attributes=attributes)
+        c.search(
+            base, filterstr, ldap3.SEARCH_SCOPE_WHOLE_SUBTREE, attributes=attributes)
         return c.response
 
     def getUserInfo(self, username):
@@ -79,10 +79,12 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             infos = {'username': username}
             pattern = self.accountPattern % dict(username=username)
             res = self.search(c, self.accountBase, pattern,
-                              attributes=[self.accountEmail, self.accountFullName]
+                              attributes=[
+                                  self.accountEmail, self.accountFullName]
                               + self.accountExtraFields)
             if len(res) != 1:
-                raise KeyError("ldap search \"%s\" returned %d results" % (pattern, len(res)))
+                raise KeyError(
+                    "ldap search \"%s\" returned %d results" % (pattern, len(res)))
             dn, ldap_infos = res[0]['dn'], res[0]['raw_attributes']
             if isinstance(dn, bytes):
                 dn = dn.decode('utf-8')
@@ -100,7 +102,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             pattern = self.groupMemberPattern % dict(dn=dn)
             res = self.search(c, self.groupBase, pattern,
                               attributes=[self.groupName])
-            infos['groups'] = flatten([group_infos['raw_attributes'][self.groupName] for group_infos in res])
+            infos['groups'] = flatten(
+                [group_infos['raw_attributes'][self.groupName] for group_infos in res])
             return infos
         return threads.deferToThread(thd)
 

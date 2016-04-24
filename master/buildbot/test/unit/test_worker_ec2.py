@@ -14,7 +14,13 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
 
+from buildbot.test.util.warnings import assertNotProducesWarnings
+from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
 from twisted.trial import unittest
+
 try:
     from moto import mock_ec2
     assert mock_ec2
@@ -24,10 +30,6 @@ except ImportError:
     boto = None
     ec2 = None
 
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import assertProducesWarnings
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 if boto is not None:
     from buildbot.worker import ec2
@@ -206,14 +208,15 @@ class TestEC2LatentWorker(unittest.TestCase):
                                              "size": 30,
                                              "delete_on_termination": False
                                          }
-                                         }
+                                     }
                                      )
 
         # moto does not currently map volumes properly.  below ensures
         # that my conversion code properly composes it, including
         # delete_on_termination default.
         from boto.ec2.blockdevicemapping import BlockDeviceType
-        self.assertEqual(set(['/dev/xvdb', '/dev/xvdc']), set(bs.block_device_map.keys()))
+        self.assertEqual(
+            set(['/dev/xvdb', '/dev/xvdc']), set(bs.block_device_map.keys()))
 
         def assertBlockDeviceEqual(a, b):
             self.assertEqual(a.volume_type, b.volume_type)
@@ -222,11 +225,13 @@ class TestEC2LatentWorker(unittest.TestCase):
             self.assertEqual(a.delete_on_termination, b.delete_on_termination)
 
         assertBlockDeviceEqual(
-            BlockDeviceType(volume_type='io1', iops=10, size=20, delete_on_termination=True),
+            BlockDeviceType(
+                volume_type='io1', iops=10, size=20, delete_on_termination=True),
             bs.block_device_map['/dev/xvdb'])
 
         assertBlockDeviceEqual(
-            BlockDeviceType(volume_type='gp2', size=30, delete_on_termination=False),
+            BlockDeviceType(
+                volume_type='gp2', size=30, delete_on_termination=False),
             bs.block_device_map['/dev/xvdc'])
 
     @mock_ec2

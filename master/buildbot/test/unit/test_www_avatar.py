@@ -12,28 +12,31 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.test.util import www
 from buildbot.www import auth
 from buildbot.www import avatar
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class AvatarResource(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_default(self):
-        master = self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[])
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[])
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
         res = yield self.render_resource(rsrc, '/')
-        self.assertEquals(res, dict(redirected=avatar.AvatarResource.defaultAvatarUrl))
+        self.assertEquals(
+            res, dict(redirected=avatar.AvatarResource.defaultAvatarUrl))
 
     @defer.inlineCallbacks
     def test_gravatar(self):
-        master = self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGravatar()])
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[avatar.AvatarGravatar()])
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
@@ -48,7 +51,8 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
             def getUserAvatar(self, email, size, defaultAvatarUrl):
                 return defer.succeed(("image/png", email + str(size) + defaultAvatarUrl))
 
-        master = self.make_master(url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[CustomAvatar()])
+        master = self.make_master(
+            url='http://a/b/', auth=auth.NoAuth(), avatar_methods=[CustomAvatar()])
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 

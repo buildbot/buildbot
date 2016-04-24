@@ -15,4 +15,5 @@
 
 # old (pre-0.8.4) location for ChangeFilter
 from buildbot.changes.filter import ChangeFilter
+
 _hush_pyflakes = ChangeFilter  # keep pyflakes happy

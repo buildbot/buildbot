@@ -16,10 +16,6 @@ import datetime
 
 import mock
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.trial import unittest
-
 from buildbot.data import buildrequests
 from buildbot.data import resultspec
 from buildbot.test.fake import fakedb
@@ -27,6 +23,10 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import UTC
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
 
 
 class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -58,8 +58,10 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testGetExisting(self):
-        self.db.buildrequests.claimBuildRequests([44], claimed_at=self.CLAIMED_AT)
-        self.db.buildrequests.completeBuildRequests([44], 75, complete_at=self.COMPLETE_AT)
+        self.db.buildrequests.claimBuildRequests(
+            [44], claimed_at=self.CLAIMED_AT)
+        self.db.buildrequests.completeBuildRequests(
+            [44], 75, complete_at=self.COMPLETE_AT)
         buildrequest = yield self.callGet(('buildrequests', 44))
         self.validateData(buildrequest)
         # check data formatting:
@@ -130,7 +132,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def testGetBuilderid(self):
         buildrequests = yield self.callGet(('builders', 78, 'buildrequests'))
         [self.validateData(br) for br in buildrequests]
-        self.assertEqual(sorted([br['buildrequestid'] for br in buildrequests]), [46])
+        self.assertEqual(
+            sorted([br['buildrequestid'] for br in buildrequests]), [46])
 
     @defer.inlineCallbacks
     def testGetUnknownBuilderid(self):
@@ -140,7 +143,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetNoFilters(self):
         getBuildRequestsMock = mock.Mock(return_value={})
-        self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
+        self.patch(
+            self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         yield self.callGet(('buildrequests',))
         getBuildRequestsMock.assert_called_with(
             builderid=None,
@@ -151,7 +155,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetFilters(self):
         getBuildRequestsMock = mock.Mock(return_value={})
-        self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
+        self.patch(
+            self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         f1 = resultspec.Filter('complete', 'eq', [False])
         f2 = resultspec.Filter('claimed', 'eq', [True])
         f3 = resultspec.Filter('buildsetid', 'eq', [55])
@@ -169,7 +174,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetClaimedByMasterIdFilters(self):
         getBuildRequestsMock = mock.Mock(return_value={})
-        self.patch(self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
+        self.patch(
+            self.master.db.buildrequests, 'getBuildRequests', getBuildRequestsMock)
         f1 = resultspec.Filter('claimed', 'eq', [True])
         f2 = resultspec.Filter('claimed_by_masterid', 'eq',
                                [fakedb.FakeBuildRequestsComponent.MASTER_ID])
@@ -208,9 +214,11 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
             except expectedException:
                 pass
             except Exception as e:
-                self.fail('%s exception should be raised, but got %r' % (expectedException, e))
+                self.fail('%s exception should be raised, but got %r' %
+                          (expectedException, e))
             else:
-                self.fail('%s exception should be raised' % (expectedException,))
+                self.fail('%s exception should be raised' %
+                          (expectedException,))
         else:
             res = yield method(*methodargs, **methodkwargs)
             self.assertEqual(res, expectedRes)
@@ -273,7 +281,8 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(sorted(self.master.mq.productions), sorted([
             (('buildrequests', '44', 'claimed'), msg),
             (('builders', '123', 'buildrequests', '44', 'claimed'), msg),
-            (('buildsets', '8822', 'builders', '123', 'buildrequests', '44', 'claimed'), msg),
+            (('buildsets', '8822', 'builders', '123',
+              'buildrequests', '44', 'claimed'), msg),
         ]))
 
     @defer.inlineCallbacks
@@ -364,7 +373,8 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(sorted(self.master.mq.productions), sorted([
             (('buildrequests', '44', 'update'), msg),
             (('builders', '123', 'buildrequests', '44', 'update'), msg),
-            (('buildsets', '8822', 'builders', '123', 'buildrequests', '44', 'update'), msg),
+            (('buildsets', '8822', 'builders', '123',
+              'buildrequests', '44', 'update'), msg),
         ]))
 
     @defer.inlineCallbacks
@@ -451,7 +461,8 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(sorted(self.master.mq.productions), sorted([
             (('buildrequests', '44', 'unclaimed'), msg),
             (('builders', '123', 'buildrequests', '44', 'unclaimed'), msg),
-            (('buildsets', '8822', 'builders', '123', 'buildrequests', '44', 'unclaimed'), msg),
+            (('buildsets', '8822', 'builders', '123',
+              'buildrequests', '44', 'unclaimed'), msg),
         ]))
 
     @defer.inlineCallbacks
@@ -559,7 +570,8 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testUnclaimExpiredRequests(self):
-        unclaimExpiredRequestsMock = mock.Mock(return_value=defer.succeed(None))
+        unclaimExpiredRequestsMock = mock.Mock(
+            return_value=defer.succeed(None))
         yield self.doTestCallthrough('unclaimExpiredRequests',
                                      unclaimExpiredRequestsMock,
                                      self.rtype.unclaimExpiredRequests,
@@ -607,4 +619,5 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
                                     'sourcestamps': None, 'parent_buildid': None, 'results': -1, 'parent_relationship': None, 'reason': u'rebuild', 'external_idstring': u'extid', 'complete': False})
 
         properties = yield self.master.data.get(('buildsets', new_bsid, 'properties'))
-        self.assertEqual(properties, {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
+        self.assertEqual(
+            properties, {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})

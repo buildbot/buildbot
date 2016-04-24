@@ -12,15 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import sqlalchemy as sa
-
-from twisted.internet import defer
+from future.utils import itervalues
 
 from buildbot.db import base
 from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerClassMethod
+
+from twisted.internet import defer
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
@@ -49,14 +48,17 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and worker
-            # as sqlalchemy does not support delete with join, we need to do that in 2 queries
+            # as sqlalchemy does not support delete with join, we need to do
+            # that in 2 queries
             cfg_tbl = self.db.model.configured_workers
             bm_tbl = self.db.model.builder_masters
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
-            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
+            q = sa.select(
+                [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
-            buildermasterids = [row['buildermasterid'] for row in conn.execute(q)]
+            buildermasterids = [row['buildermasterid']
+                                for row in conn.execute(q)]
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
         return self.db.pool.do(thd)
@@ -79,15 +81,18 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             j = cfg_tbl
             j = j.outerjoin(bm_tbl)
-            q = sa.select([cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
+            q = sa.select(
+                [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
-            oldbuildermasterids = set([row['buildermasterid'] for row in conn.execute(q)])
+            oldbuildermasterids = set(
+                [row['buildermasterid'] for row in conn.execute(q)])
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
             toinsertbuildermasterids = buildermasterids - oldbuildermasterids
             transaction = conn.begin()
-            self._deleteFromConfiguredWorkers_thd(conn, todeletebuildermasterids)
+            self._deleteFromConfiguredWorkers_thd(
+                conn, todeletebuildermasterids)
 
             # and insert the new ones
             if toinsertbuildermasterids:
@@ -186,7 +191,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
-    deprecatedWorkerClassMethod(locals(), getWorkers, compat_name="getBuildslaves")
+    deprecatedWorkerClassMethod(
+        locals(), getWorkers, compat_name="getBuildslaves")
 
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):

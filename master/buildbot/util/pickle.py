@@ -13,20 +13,25 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
-from future.utils import iteritems
-from future.utils import itervalues
 
 import cPickle
 import cStringIO
 import new
 import os
 import sys
-
 from bz2 import BZ2File
-from cStringIO import StringIO
 from collections import defaultdict
+from cStringIO import StringIO
 from functools import reduce
 from gzip import GzipFile
+
+from future.utils import iteritems
+from future.utils import itervalues
+from zope.interface import implements
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.util import netstrings
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -34,13 +39,6 @@ from twisted.persisted import styles
 from twisted.python import log
 from twisted.python import reflect
 from twisted.spread import pb
-
-from zope.interface import implements
-
-from buildbot import interfaces
-from buildbot import util
-from buildbot.util import netstrings
-
 
 # This module contains classes that are referenced in pickles, and thus needed
 # during upgrade operations, but are no longer used in a running Buildbot
@@ -64,7 +62,8 @@ class SourceStamp(styles.Versioned):  # pragma: no cover
     sourcestampsetid = None
     ssid = None
 
-    compare_attrs = ('branch', 'revision', 'patch', 'patch_info', 'changes', 'project', 'repository', 'codebase')
+    compare_attrs = ('branch', 'revision', 'patch', 'patch_info',
+                     'changes', 'project', 'repository', 'codebase')
 
     implements(interfaces.ISourceStamp)
 
@@ -110,7 +109,8 @@ class SourceStamp(styles.Versioned):  # pragma: no cover
         self.wasUpgraded = True
 
     def upgradeToVersion2(self):
-        # version 1 did not have project or repository; just set them to a default ''
+        # version 1 did not have project or repository; just set them to a
+        # default ''
         self.project = ''
         self.repository = ''
         self.wasUpgraded = True
@@ -405,8 +405,10 @@ class BuildStepStatus(styles.Versioned):
 # fully qualified class name.  This module appeared in two different modules
 # historically
 BuildStepStatus.__module__ = 'buildbot.status.builder'
-substituteClasses['buildbot.status.buildstep', 'BuildStepStatus'] = BuildStepStatus
-substituteClasses['buildbot.status.builder', 'BuildStepStatus'] = BuildStepStatus
+substituteClasses[
+    'buildbot.status.buildstep', 'BuildStepStatus'] = BuildStepStatus
+substituteClasses[
+    'buildbot.status.builder', 'BuildStepStatus'] = BuildStepStatus
 
 STDOUT = 0
 STDERR = 1

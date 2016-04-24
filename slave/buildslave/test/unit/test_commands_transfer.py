@@ -19,15 +19,15 @@ import shutil
 import sys
 import tarfile
 
+from buildslave.commands import transfer
+from buildslave.test.fake.remote import FakeRemote
+from buildslave.test.util.command import CommandTestMixin
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import runtime
 from twisted.trial import unittest
-
-from buildslave.commands import transfer
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.util.command import CommandTestMixin
 
 
 class FakeMasterMethods(object):
@@ -117,7 +117,8 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         os.makedirs(self.datadir)
 
         self.datafile = os.path.join(self.datadir, 'data')
-        # note: use of 'wb' here ensures newlines aren't translated on the upload
+        # note: use of 'wb' here ensures newlines aren't translated on the
+        # upload
         open(self.datafile, "wb").write("this is some data\n" * 10)
 
     def tearDown(self):
@@ -294,7 +295,8 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.datadir)
         os.makedirs(self.datadir)
         open(os.path.join(self.datadir, "aa"), "wb").write("lots of a" * 100)
-        open(os.path.join(self.datadir, "bb"), "wb").write("and a little b" * 17)
+        open(os.path.join(self.datadir, "bb"), "wb").write(
+            "and a little b" * 17)
 
     def tearDown(self):
         self.tearDownCommand()
@@ -329,7 +331,8 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             a = tarfile.open(fileobj=f, name='check.tar')
             exp_names = ['.', 'aa', 'bb']
             got_names = [n.rstrip('/') for n in a.getnames()]
-            got_names = sorted([n or '.' for n in got_names])  # py27 uses '' instead of '.'
+            # py27 uses '' instead of '.'
+            got_names = sorted([n or '.' for n in got_names])
             self.assertEqual(got_names, exp_names, "expected archive contents")
             a.close()
             f.close()

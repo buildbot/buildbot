@@ -17,22 +17,24 @@ import os
 import shutil
 import socket
 
+from mock import Mock
+from zope.interface import implements
+
+from buildbot_worker import bot
+from buildbot_worker.test.util import misc
+
 from twisted.cred import checkers
 from twisted.cred import portal
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.trial import unittest
-from zope.interface import implements
 
-from buildbot_worker import bot
-from buildbot_worker.test.util import misc
-
-from mock import Mock
 
 # I don't see any simple way to test the PB equipment without actually setting
 # up a TCP connection.  This just tests that the PB code will connect and can
-# execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
+# execute a basic ping.  The rest is done without TCP (or PB) in other
+# test modules.
 
 
 class MasterPerspective(pb.Avatar):
@@ -100,7 +102,8 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         p = portal.Portal(self.realm)
         p.registerChecker(
             checkers.InMemoryUsernamePasswordDatabaseDontUse(testy="westy"))
-        self.listeningport = reactor.listenTCP(0, pb.PBServerFactory(p), interface='127.0.0.1')
+        self.listeningport = reactor.listenTCP(
+            0, pb.PBServerFactory(p), interface='127.0.0.1')
         # return the dynamically allocated port number
         return self.listeningport.getHost().port
 

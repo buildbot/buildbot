@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 import textwrap
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestDataUtils(unittest.TestCase):
@@ -66,8 +66,10 @@ class TestDataUtils(unittest.TestCase):
         ])
         for _id in (20, 21):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
-                fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="workername", value="sl"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="reason", value="because"),
                 fakedb.Step(id=100 + _id, buildid=_id, name="step1"),
                 fakedb.Step(id=200 + _id, buildid=_id, name="step2"),
                 fakedb.Log(id=60 + _id, stepid=100 + _id, name='stdio', slug='stdio', type='s',
@@ -111,7 +113,8 @@ class TestDataUtils(unittest.TestCase):
                                                 wantSteps=True, wantPreviousBuild=True, wantLogs=True)
 
         build1 = res['builds'][0]
-        self.assertEqual(build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
+        self.assertEqual(
+            build1['steps'][0]['logs'][0]['content']['content'], self.LOGCONTENT)
 
     @defer.inlineCallbacks
     def test_getResponsibleUsers(self):

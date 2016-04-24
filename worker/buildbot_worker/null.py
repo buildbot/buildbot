@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from buildbot_worker.base import WorkerBase
+
 from twisted.internet import defer
 
 

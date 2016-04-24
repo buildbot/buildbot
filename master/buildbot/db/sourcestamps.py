@@ -17,12 +17,12 @@ import base64
 
 import sqlalchemy as sa
 
+from buildbot.db import base
+from buildbot.util import epoch2datetime
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
-
-from buildbot.db import base
-from buildbot.util import epoch2datetime
 
 
 class SsDict(dict):
@@ -118,7 +118,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             from_clause = from_clause.join(sstamps_tbl,
                                            bsss_tbl.c.sourcestampid == sstamps_tbl.c.id)
 
-            q = sa.select([sstamps_tbl]).select_from(from_clause).where(builds_tbl.c.id == buildid)
+            q = sa.select([sstamps_tbl]).select_from(
+                from_clause).where(builds_tbl.c.id == buildid)
             res = conn.execute(q)
             return [self._rowToSsdict_thd(conn, row)
                     for row in res.fetchall()]

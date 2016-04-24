@@ -17,26 +17,24 @@ import shutil
 import tarfile
 import textwrap
 
-import migrate
-import migrate.versioning.api
-
-from migrate.versioning import schemadiff
-
 import sqlalchemy as sa
-
 from sqlalchemy.engine import reflection
 
-from twisted.internet import defer
-from twisted.persisted import styles
-from twisted.python import util
-from twisted.trial import unittest
-
+import migrate
+import migrate.versioning.api
 from buildbot.db import connector
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import change_import
 from buildbot.test.util import db
 from buildbot.test.util import querylog
 from buildbot.util import pickle
+from migrate.versioning import schemadiff
+
+from twisted.internet import defer
+from twisted.persisted import styles
+from twisted.python import util
+from twisted.trial import unittest
+
 
 # monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
 # http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
@@ -262,7 +260,8 @@ class UpgradeTestV075(UpgradeTestMixin,
             sa.select([model.changes], order_by=model.changes.c.changeid))
         ch = r.fetchone()
         self.failUnlessEqual(ch.changeid, 1)
-        self.failUnlessEqual(ch.author, u'the snowman <\N{SNOWMAN}@norpole.net>')
+        self.failUnlessEqual(
+            ch.author, u'the snowman <\N{SNOWMAN}@norpole.net>')
         self.failUnlessEqual(ch.comments, u'shooting star or \N{COMET}?')
         self.failUnlessEqual(ch.revision, u'\N{BLACK STAR}-devel')
         self.failUnlessEqual(ch.branch, u'\N{COMET}')
@@ -271,7 +270,8 @@ class UpgradeTestV075(UpgradeTestMixin,
         self.failUnlessEqual(ch.author, u"dustin <dustin@v.igoro.us>")
         self.failUnlessEqual(ch.comments, u'on-branch change')
         self.failUnlessEqual(ch.revision, u'1234')
-        self.failUnlessEqual(ch.branch, u'')  # arguably a bug - should be None?
+        # arguably a bug - should be None?
+        self.failUnlessEqual(ch.branch, u'')
 
         r = conn.execute(
             sa.select([model.change_files]))
@@ -325,8 +325,10 @@ class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
         ch = r.fetchone()
         self.failUnlessEqual(ch.changeid, 70)
         self.failUnlessEqual(ch.author, u'Jakub Vysoky <jakub@borka.cz>')
-        self.failUnlessEqual(ch.comments, u'some failing tests in check_downgrade and metapackage_version')
-        self.failUnlessEqual(ch.revision, u'2ce0c33b7e10cce98e8d9c5b734b8c133ee4d320')
+        self.failUnlessEqual(
+            ch.comments, u'some failing tests in check_downgrade and metapackage_version')
+        self.failUnlessEqual(
+            ch.revision, u'2ce0c33b7e10cce98e8d9c5b734b8c133ee4d320')
         self.failUnlessEqual(ch.branch, u'master')
 
         r = conn.execute(
@@ -340,7 +342,8 @@ class UpgradeTestCitools(UpgradeTestMixin, unittest.TestCase):
         ch = r.fetchone()
         self.failUnlessEqual(ch.changeid, 77)
         self.failUnlessEqual(ch.author, u'BuildBot')
-        self.failUnlessEqual(ch.comments, u'Dependency changed, sending dummy commit')
+        self.failUnlessEqual(
+            ch.comments, u'Dependency changed, sending dummy commit')
         self.failUnlessEqual(ch.revision, u'HEAD')
         self.failUnlessEqual(ch.branch, u'master')
 
@@ -655,7 +658,8 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
         buildreqs = [(br.id, br.buildsetid,
                       br.complete, br.results)
                      for br in r.fetchall()]
-        self.assertEqual(buildreqs, [(1, 1, 1, 0), (2, 2, 1, 0)])  # two successful builds
+        # two successful builds
+        self.assertEqual(buildreqs, [(1, 1, 1, 0), (2, 2, 1, 0)])
 
         br_claims = model.buildrequest_claims
         masters = model.masters
@@ -664,8 +668,10 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
         buildreqs = [(brc.brid, int(brc.claimed_at), brc.name)
                      for brc in r.fetchall()]
         self.assertEqual(buildreqs, [
-            (1, 1363642117, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master'),
-            (2, 1363642156, u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master'),
+            (1, 1363642117,
+             u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master'),
+            (2, 1363642156,
+             u'Eriks-MacBook-Air.local:/Users/erik/buildbot-work/master'),
         ])
 
     def test_upgrade(self):
@@ -736,7 +742,8 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
             self.assertEquals(c['properties'].get('list')[1], 'Change')
             self.assertEquals(c['properties'].get('list')[0], ['a', 'b'])
             self.assertEquals(c['properties'].get('num')[0], 13)
-            self.assertEquals(c['properties'].get('str')[0], u'SNOW\N{SNOWMAN}MAN')
+            self.assertEquals(
+                c['properties'].get('str')[0], u'SNOW\N{SNOWMAN}MAN')
             self.assertEquals(c['properties'].get('d')[0], dict(a=1, b=2))
         return d
 

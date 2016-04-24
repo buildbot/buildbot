@@ -12,10 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import error
-from twisted.python.reflect import namedModule
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
@@ -27,6 +23,10 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 
+from twisted.internet import error
+from twisted.python.reflect import namedModule
+from twisted.trial import unittest
+
 
 class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
 
@@ -37,7 +37,8 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.tearDownSourceStep()
 
     def patch_workerVersionIsOlderThan(self, result):
-        self.patch(mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)
+        self.patch(
+            mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
         self.assertRaises(config.ConfigErrors, lambda:
@@ -238,17 +239,20 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean', '--rev', 'default'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
+                        command=[
+                            'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
             + 0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
@@ -301,17 +305,20 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--clean', '--rev', 'default'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
+                        command=[
+                            'hg', '--verbose', 'import', '--no-commit', '-p', '1', '-'],
                         initialStdin='patch')
             + 1,
         )

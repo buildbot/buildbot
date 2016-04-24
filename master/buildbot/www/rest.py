@@ -12,19 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.moves.urllib.parse import urlparse
-from future.utils import iteritems
-
 import datetime
 import fnmatch
 import mimetools
 import re
-
 from contextlib import contextmanager
 
-from twisted.internet import defer
-from twisted.python import log
-from twisted.web.error import Error
+from future.moves.urllib.parse import urlparse
+from future.utils import iteritems
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
@@ -32,6 +27,10 @@ from buildbot.util import json
 from buildbot.util import toJson
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
+
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web.error import Error
 
 
 class BadRequest(Exception):
@@ -138,8 +137,10 @@ class V2RootResource(resource.Resource):
             writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
             return
         except Forbidden as e:
-            # There is nothing in jsonrc spec about forbidden error, so pick invalid request
-            writeError(e.message, errcode=403, jsonrpccode=JSONRPC_CODES["invalid_request"])
+            # There is nothing in jsonrc spec about forbidden error, so pick
+            # invalid request
+            writeError(
+                e.message, errcode=403, jsonrpccode=JSONRPC_CODES["invalid_request"])
             return
         except Exception as e:
             log.err(_why='while handling API request')
@@ -407,7 +408,8 @@ class V2RootResource(resource.Resource):
                 request.write(data)
 
     def reconfigResource(self, new_config):
-        # buildbotURL may contain reverse proxy path, Origin header is just scheme + host + port
+        # buildbotURL may contain reverse proxy path, Origin header is just
+        # scheme + host + port
         buildbotURL = urlparse(new_config.buildbotURL)
         origin_self = buildbotURL.scheme + "://" + buildbotURL.netloc
         # pre-translate the origin entries in the config

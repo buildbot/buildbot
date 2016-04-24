@@ -17,6 +17,7 @@ import mock
 
 from buildslave.scripts import start
 from buildslave.test.util import misc
+
 from twisted.trial import unittest
 
 

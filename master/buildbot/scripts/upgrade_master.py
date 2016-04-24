@@ -18,14 +18,14 @@ import os
 import sys
 import traceback
 
-from twisted.internet import defer
-from twisted.python import util
-
 from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
+
+from twisted.internet import defer
+from twisted.python import util
 
 
 def installFile(config, target, source, overwrite=False):
@@ -121,7 +121,8 @@ def upgradeMaster(config, _noMonkey=False):
     try:
         configFile = base.getConfigFileFromTac(config['basedir'])
     except (SyntaxError, ImportError):
-        print("Unable to load 'buildbot.tac' from '%s':" % config['basedir'], file=sys.stderr)
+        print("Unable to load 'buildbot.tac' from '%s':" %
+              config['basedir'], file=sys.stderr)
         e = traceback.format_exc()
         print(e, file=sys.stderr)
         return defer.succeed(1)

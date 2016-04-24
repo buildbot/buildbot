@@ -12,10 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import error
-from twisted.python.reflect import namedModule
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import remotetransfer
@@ -28,6 +24,10 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
+
+from twisted.internet import error
+from twisted.python.reflect import namedModule
+from twisted.trial import unittest
 
 
 class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
@@ -1319,12 +1319,14 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                         command=['svn', 'export', 'source', 'wkdir'])
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
-                                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
@@ -1622,7 +1624,9 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--non-interactive',
                                  '--no-auth-cache', '--username', 'user',
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
-            + ExpectShell.log('stdio', stdout="""<?xml version="1.0"?><entry kind="dir" path="/a/b/c" revision="1"><url>http://svn.local/app/trunk</url></entry>""")
+            +
+            ExpectShell.log(
+                'stdio', stdout="""<?xml version="1.0"?><entry kind="dir" path="/a/b/c" revision="1"><url>http://svn.local/app/trunk</url></entry>""")
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
@@ -1854,7 +1858,8 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
+        self.assertEquals(
+            ["svn_external_path/unversioned_file"], unversioned_files)
 
     def test_getUnversionedFiles_does_not_list_missing(self):
         svn_st_xml = """<?xml version="1.0"?>
@@ -1920,7 +1925,8 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
+        self.assertEquals(
+            ["svn_external_path/unversioned_file"], unversioned_files)
 
 
 class TestSvnUriCanonicalize(unittest.TestCase):

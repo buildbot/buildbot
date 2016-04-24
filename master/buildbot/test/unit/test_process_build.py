@@ -16,19 +16,16 @@ import operator
 
 from mock import Mock
 from mock import call
-
-from twisted.internet import defer
-from twisted.trial import unittest
-
-from zope.interface import implements, implementer
+from zope.interface import implementer
+from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.locks import WorkerLock
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import LoggingBuildStep
-from buildbot.process.properties import Properties
 from buildbot.process.metrics import MetricLogObserver
+from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -43,6 +40,9 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class FakeChange:
@@ -134,6 +134,7 @@ class TestException(Exception):
 
 @implementer(interfaces.IBuildStepFactory)
 class FailingStepFactory(object):
+
     """Fake step factory that just returns a fixed step object."""
 
     def buildStep(self):
@@ -141,6 +142,7 @@ class FailingStepFactory(object):
 
 
 class _StepController():
+
     def __init__(self, step):
         self._step = step
 
@@ -149,6 +151,7 @@ class _StepController():
 
 
 class _ControllableStep(BuildStep):
+
     def __init__(self):
         BuildStep.__init__(self)
         self._deferred = defer.Deferred()
@@ -197,7 +200,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(b.results, SUCCESS)
         self.assertIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
-                     step.method_calls)
+                      step.method_calls)
 
     def testStopBuild(self):
         b = self.build
@@ -271,30 +274,43 @@ class TestBuild(unittest.TestCase):
         counting_access = l.access('counting')
         real_lock = b.builder.botmaster.getLockByID(l)
 
-        # no locks, so both these pass (call twice to verify there's no state/memory)
+        # no locks, so both these pass (call twice to verify there's no
+        # state/memory)
         lock_list = [(real_lock, counting_access)]
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
 
         worker_lock_1 = real_lock.getLock(workerforbuilder1.worker)
         worker_lock_2 = real_lock.getLock(workerforbuilder2.worker)
 
         # then have workerforbuilder2 claim its lock:
         worker_lock_2.claim(workerforbuilder2, counting_access)
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
-        self.assertFalse(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
-        self.assertFalse(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+        self.assertFalse(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+        self.assertFalse(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
         worker_lock_2.release(workerforbuilder2, counting_access)
 
         # then have workerforbuilder1 claim its lock:
         worker_lock_1.claim(workerforbuilder1, counting_access)
-        self.assertFalse(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
-        self.assertFalse(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
-        self.assertTrue(Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+        self.assertFalse(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+        self.assertFalse(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder1))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
+        self.assertTrue(
+            Build.canStartWithWorkerForBuilder(lock_list, workerforbuilder2))
         worker_lock_1.release(workerforbuilder1, counting_access)
 
     def testBuilddirPropType(self):
@@ -425,7 +441,7 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
-                     step.method_calls)
+                         step.method_calls)
         self.assertEquals(claimCount[0], 1)
         self.assertTrue(b.currentStep is None)
         self.assertTrue(b._acquiringLock is not None)
@@ -457,7 +473,7 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
-                     step.method_calls)
+                         step.method_calls)
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, CANCELLED)
         self.assertNotIn(('interrupt', ('stop it',), {}), step.method_calls)
@@ -489,11 +505,12 @@ class TestBuild(unittest.TestCase):
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
-                     step.method_calls)
+                         step.method_calls)
         self.assertTrue(b.currentStep is None)
         self.assertEqual(b.results, RETRY)
         self.assertNotIn(('interrupt', ('stop it',), {}), step.method_calls)
-        self.build.build_status.setText.assert_called_with(["retry", "lost", "connection"])
+        self.build.build_status.setText.assert_called_with(
+            ["retry", "lost", "connection"])
         self.build.build_status.setResults.assert_called_with(RETRY)
 
     def testStopBuildWaitingForStepLocks(self):
@@ -869,8 +886,10 @@ class TestMultipleSourceStamps(unittest.TestCase):
         source1 = self.build.getSourceStamp("A")
         source2 = self.build.getSourceStamp("B")
 
-        self.assertEqual([source1.repository, source1.revision], ["repoA", "12345"])
-        self.assertEqual([source2.repository, source2.revision], ["repoB", "67890"])
+        self.assertEqual(
+            [source1.repository, source1.revision], ["repoA", "12345"])
+        self.assertEqual(
+            [source2.repository, source2.revision], ["repoB", "67890"])
 
     def test_buildReturnSourceStamp_empty_codebase(self):
         """
@@ -879,7 +898,8 @@ class TestMultipleSourceStamps(unittest.TestCase):
         codebase = ''
         source3 = self.build.getSourceStamp(codebase)
         self.assertTrue(source3 is not None)
-        self.assertEqual([source3.repository, source3.revision], ["repoC", "111213"])
+        self.assertEqual(
+            [source3.repository, source3.revision], ["repoC", "111213"])
 
 
 class TestBuildBlameList(unittest.TestCase):

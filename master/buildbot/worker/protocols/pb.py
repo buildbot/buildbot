@@ -13,14 +13,15 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import absolute_import
+
 from future.utils import itervalues
+
+from buildbot.worker.protocols import base
 
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
-
-from buildbot.worker.protocols import base
 
 
 class Listener(base.Listener):
@@ -102,8 +103,10 @@ class FileWriterProxy(ReferenceableProxy):
 
 
 class Connection(base.Connection, pb.Avatar):
-    proxies = {base.FileWriterImpl: FileWriterProxy, base.FileReaderImpl: FileReaderProxy}
-    # TODO: configure keepalive_interval in c['protocols']['pb']['keepalive_interval']
+    proxies = {base.FileWriterImpl: FileWriterProxy,
+               base.FileReaderImpl: FileReaderProxy}
+    # TODO: configure keepalive_interval in
+    # c['protocols']['pb']['keepalive_interval']
     keepalive_timer = None
     keepalive_interval = 3600
     info = None

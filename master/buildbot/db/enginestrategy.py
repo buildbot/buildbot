@@ -23,19 +23,19 @@ special cases that Buildbot needs.  Those include:
 
 """
 
-import migrate
 import os
 import re
 
 import sqlalchemy as sa
-
 from sqlalchemy.engine import strategies
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
 
+import migrate
+from buildbot.util import sautils
+
 from twisted.python import log
 
-from buildbot.util import sautils
 
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
@@ -230,7 +230,8 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # calculate the maximum number of connections from the pool parameters,
         # if it hasn't already been specified
         if max_conns is None:
-            max_conns = kwargs.get('pool_size', 5) + kwargs.get('max_overflow', 10)
+            max_conns = kwargs.get(
+                'pool_size', 5) + kwargs.get('max_overflow', 10)
 
         engine = strategies.ThreadLocalEngineStrategy.create(self,
                                                              u, **kwargs)

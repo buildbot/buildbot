@@ -17,12 +17,11 @@
 """Base classes handy for use with PB clients.
 """
 
-from twisted.spread import pb
-
 from twisted.cred import error
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
+from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 
 
@@ -100,11 +99,13 @@ class ReconnectingPBClientFactory(PBClientFactory,
         self.stopHungConnectionTimer()
 
         def hungConnection():
-            log.msg("connection attempt timed out (is the port number correct?)")
+            log.msg(
+                "connection attempt timed out (is the port number correct?)")
             self.hungConnectionTimer = None
             connector.disconnect()
             # (this will trigger the retry)
-        self.hungConnectionTimer = reactor.callLater(self.HUNG_CONNECTION_TIMEOUT, hungConnection)
+        self.hungConnectionTimer = reactor.callLater(
+            self.HUNG_CONNECTION_TIMEOUT, hungConnection)
 
     def stopHungConnectionTimer(self):
         if self.hungConnectionTimer:

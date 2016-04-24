@@ -18,9 +18,6 @@ import warnings
 from mock import Mock
 from mock import call
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
@@ -34,6 +31,8 @@ from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
+from twisted.internet import defer
+from twisted.trial import unittest
 
 warnings.filterwarnings('error', message='.*Gerrit status')
 
@@ -249,7 +248,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         }
         without_identity = yield self.setupGerritStatusPush(**kwargs)
 
-        expected1 = ['ssh', 'buildbot@example.com', '-p', '29418', 'gerrit', 'foo']
+        expected1 = [
+            'ssh', 'buildbot@example.com', '-p', '29418', 'gerrit', 'foo']
         self.assertEqual(expected1, without_identity._gerritCmd('foo'))
         yield without_identity.disownServiceParent()
         with_identity = yield self.setupGerritStatusPush(
@@ -263,7 +263,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_buildsetComplete_success_sends_summary_review_deferred(self):
         d = self.check_summary_build_deferred(buildResults=[SUCCESS, SUCCESS],
                                               finalResult=SUCCESS,
-                                              resultText=["succeeded", "succeeded"],
+                                              resultText=[
+                                                  "succeeded", "succeeded"],
                                               verifiedScore=1)
         return d
 
@@ -291,7 +292,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_buildsetComplete_success_sends_summary_review_legacy(self):
         d = self.check_summary_build_legacy(buildResults=[SUCCESS, SUCCESS],
                                             finalResult=SUCCESS,
-                                            resultText=["succeeded", "succeeded"],
+                                            resultText=[
+                                                "succeeded", "succeeded"],
                                             verifiedScore=1)
         return d
 
@@ -316,7 +318,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
                                           ["failed", "failed"])
 
-        self.assertFalse(gsp.sendCodeReview.called, "sendCodeReview should not be called")
+        self.assertFalse(
+            gsp.sendCodeReview.called, "sendCodeReview should not be called")
 
     @defer.inlineCallbacks
     def test_buildsetComplete_filtered_matching_builder(self):
@@ -325,7 +328,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.run_fake_summary_build(gsp, [FAILURE, FAILURE], FAILURE,
                                           ["failed", "failed"])
 
-        self.assertTrue(gsp.sendCodeReview.called, "sendCodeReview should be called")
+        self.assertTrue(
+            gsp.sendCodeReview.called, "sendCodeReview should be called")
 
     @defer.inlineCallbacks
     def run_fake_single_build(self, gsp, buildResult, expWarning=False):
@@ -411,11 +415,13 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
 
         gsp.builders = ["Builder0"]
         yield self.run_fake_single_build(gsp, SUCCESS)
-        self.assertTrue(gsp.sendCodeReview.called, "sendCodeReview should be called")
+        self.assertTrue(
+            gsp.sendCodeReview.called, "sendCodeReview should be called")
         gsp.sendCodeReview = Mock()
         gsp.builders = ["foo"]
         yield self.run_fake_single_build(gsp, SUCCESS)
-        self.assertFalse(gsp.sendCodeReview.called, "sendCodeReview should not be called")
+        self.assertFalse(
+            gsp.sendCodeReview.called, "sendCodeReview should not be called")
 
     def test_defaultReviewCBSuccess(self):
         res = defaultReviewCB("builderName", {}, SUCCESS, None, None)
@@ -424,10 +430,12 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         self.assertEqual(res['labels'], {})
 
     def test_defaultSummaryCB(self):
-        info = self.makeBuildInfo([SUCCESS, FAILURE], ["yes", "no"], [None, None])
+        info = self.makeBuildInfo(
+            [SUCCESS, FAILURE], ["yes", "no"], [None, None])
         res = defaultSummaryCB(info, SUCCESS, None, None)
         self.assertEqual(res['labels'], {'Verified': -1})
-        info = self.makeBuildInfo([SUCCESS, SUCCESS], ["yes", "yes"], [None, None])
+        info = self.makeBuildInfo(
+            [SUCCESS, SUCCESS], ["yes", "yes"], [None, None])
         res = defaultSummaryCB(info, SUCCESS, None, None)
         self.assertEqual(res['labels'], {'Verified': 1})
 

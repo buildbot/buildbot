@@ -16,14 +16,15 @@
 import os
 import tarfile
 import tempfile
+
+from buildbot.worker.protocols import base
+
 try:
     from cStringIO import StringIO
     assert StringIO
 except ImportError:
     from StringIO import StringIO
 
-
-from buildbot.worker.protocols import base
 
 """
 module for regrouping all FileWriterImpl and FileReaderImpl away from steps
@@ -74,7 +75,8 @@ class FileWriter(base.FileWriterImpl):
         """
         self.fp.close()
         self.fp = None
-        # on windows, os.rename does not automatically unlink, so do it manually
+        # on windows, os.rename does not automatically unlink, so do it
+        # manually
         if os.path.exists(self.destfile):
             os.unlink(self.destfile)
         os.rename(self.tmpname, self.destfile)

@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -60,7 +60,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             q = sa.select([builders])
             num_rows = 0
             for row in conn.execute(q):
-                self.assertEqual(row, (1, u'bname', u'description', u'dontcare'))
+                self.assertEqual(
+                    row, (1, u'bname', u'description', u'dontcare'))
                 num_rows += 1
             self.assertEqual(num_rows, 1)
 

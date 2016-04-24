@@ -20,8 +20,8 @@ from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.python import log
 from twisted.protocols.basic import LineOnlyReceiver
+from twisted.python import log
 from twisted.python.failure import Failure
 
 

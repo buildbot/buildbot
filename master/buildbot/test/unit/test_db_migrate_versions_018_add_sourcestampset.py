@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
-
 from sqlalchemy.engine import reflection
-
-from twisted.python import log
-from twisted.trial import unittest
 
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.python import log
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -50,7 +49,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         )
         self.buildsets.create(bind=conn)
         sa.Index('buildsets_complete', self.buildsets.c.complete).create()
-        sa.Index('buildsets_submitted_at', self.buildsets.c.submitted_at).create()
+        sa.Index(
+            'buildsets_submitted_at', self.buildsets.c.submitted_at).create()
 
         self.patches = sautils.Table(
             'patches', metadata,
@@ -69,9 +69,12 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('branch', sa.String(256)),
             sa.Column('revision', sa.String(256)),
             sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
-            sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
-            sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
-            sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id')),
+            sa.Column('repository', sa.String(
+                length=512), nullable=False, server_default=''),
+            sa.Column(
+                'project', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column(
+                'sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id')),
         )
         self.sourcestamps.create(bind=conn)
 
@@ -102,7 +105,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         metadata = sa.MetaData()
         metadata.bind = conn
         tbl = sautils.Table('buildsets', metadata, autoload=True)
-        res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
+        res = conn.execute(
+            sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
         got_buildsets = res.fetchall()
 
         tbl = sautils.Table('sourcestamps', metadata, autoload=True)
@@ -162,7 +166,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 'referred_columns':['id']},
             ], with_constrained_columns=['sourcestampsetid'])
 
-            res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
+            res = conn.execute(
+                sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
             got_buildsets = res.fetchall()
             self.assertEqual(got_buildsets, buildsetdata)
 
@@ -228,7 +233,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata.bind = conn
             # Test for the buildsets
             tbl = sautils.Table('buildsets', metadata, autoload=True)
-            res = conn.execute(sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
+            res = conn.execute(
+                sa.select([tbl.c.id, tbl.c.sourcestampsetid], order_by=tbl.c.id))
             got_buildsets = res.fetchall()
             self.assertEqual(got_buildsets, buildsetdata)
 

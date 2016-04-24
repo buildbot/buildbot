@@ -13,26 +13,25 @@
 #
 # Copyright Buildbot Team Members
 
-import migrate
-import migrate.versioning.repository
-
-from migrate import exceptions
-try:
-    from migrate.versioning.schema import ControlledSchema
-    assert ControlledSchema  # hush pyflakes
-except ImportError:
-    ControlledSchema = None
-
 import sqlalchemy as sa
 
-from twisted.python import log
-from twisted.python import util
-
+import migrate
+import migrate.versioning.repository
 from buildbot.db import base
 from buildbot.db.migrate_utils import should_import_changes
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
+from migrate import exceptions
+
+from twisted.python import log
+from twisted.python import util
+
+try:
+    from migrate.versioning.schema import ControlledSchema
+    assert ControlledSchema  # hush pyflakes
+except ImportError:
+    ControlledSchema = None
 
 
 class Model(base.DBConnectorComponent):
@@ -126,7 +125,8 @@ class Model(base.DBConnectorComponent):
         # We use use_alter to prevent circular reference
         # (buildrequests -> buildsets -> builds).
         sa.Column('buildrequestid', sa.Integer,
-                  sa.ForeignKey('buildrequests.id', use_alter=True, name='buildrequestid'),
+                  sa.ForeignKey(
+                      'buildrequests.id', use_alter=True, name='buildrequestid'),
                   nullable=False),
         # worker which performed this build
         # keep nullable to support worker-free builds
@@ -154,7 +154,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('state_string', sa.Text, nullable=False, server_default=''),
         sa.Column('results', sa.Integer),
         sa.Column('urls_json', sa.Text, nullable=False),
-        sa.Column('hidden', sa.SmallInteger, nullable=False, server_default='0'),
+        sa.Column(
+            'hidden', sa.SmallInteger, nullable=False, server_default='0'),
     )
 
     # logs
@@ -366,8 +367,10 @@ class Model(base.DBConnectorComponent):
 
         # The parent of the change
         # Even if for the moment there's only 1 parent for a change, we use plural here because
-        # somedays a change will have multiple parent. This way we don't need to change the API
-        sa.Column('parent_changeids', sa.Integer, sa.ForeignKey('changes.changeid'), nullable=True),
+        # somedays a change will have multiple parent. This way we don't need
+        # to change the API
+        sa.Column('parent_changeids', sa.Integer, sa.ForeignKey(
+            'changes.changeid'), nullable=True),
     )
 
     # sourcestamps
@@ -854,7 +857,8 @@ class Model(base.DBConnectorComponent):
                 version_control(engine)
                 upgrade(engine)
             # otherwise, this db is new, so we dont bother using the migration engine
-            # and just create the tables, and put the version directly to latest
+            # and just create the tables, and put the version directly to
+            # latest
             else:
                 # do some tests before getting started
                 test_unicode(engine)

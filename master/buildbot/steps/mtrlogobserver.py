@@ -15,12 +15,12 @@
 import re
 import sys
 
+from buildbot.process.buildstep import LogLineObserver
+from buildbot.steps.shell import Test
+
 from twisted.enterprise import adbapi
 from twisted.internet import defer
 from twisted.python import log
-
-from buildbot.process.buildstep import LogLineObserver
-from buildbot.steps.shell import Test
 
 
 class EqConnectionPool(adbapi.ConnectionPool):
@@ -88,9 +88,12 @@ class MtrLogObserver(LogLineObserver):
     the Waterfall page. It also passes the information to methods that can be
     overridden in a subclass to do further processing on the information."""
 
-    _line_re = re.compile(r"^([-._0-9a-zA-z]+)( '[-_ a-zA-Z]+')?\s+(w[0-9]+\s+)?\[ (fail|pass) \]\s*(.*)$")
-    _line_re2 = re.compile(r"^[-._0-9a-zA-z]+( '[-_ a-zA-Z]+')?\s+(w[0-9]+\s+)?\[ [-a-z]+ \]")
-    _line_re3 = re.compile(r"^\*\*\*Warnings generated in error logs during shutdown after running tests: (.*)")
+    _line_re = re.compile(
+        r"^([-._0-9a-zA-z]+)( '[-_ a-zA-Z]+')?\s+(w[0-9]+\s+)?\[ (fail|pass) \]\s*(.*)$")
+    _line_re2 = re.compile(
+        r"^[-._0-9a-zA-z]+( '[-_ a-zA-Z]+')?\s+(w[0-9]+\s+)?\[ [-a-z]+ \]")
+    _line_re3 = re.compile(
+        r"^\*\*\*Warnings generated in error logs during shutdown after running tests: (.*)")
     _line_re4 = re.compile(r"^The servers were restarted [0-9]+ times$")
     _line_re5 = re.compile(r"^Only\s+[0-9]+\s+of\s+[0-9]+\s+completed.$")
 
@@ -123,7 +126,8 @@ class MtrLogObserver(LogLineObserver):
                     variant = ""
                 else:
                     variant = variant[2:-1]
-                self.openTestFail(testname, variant, result, info, stripLine + "\n")
+                self.openTestFail(
+                    testname, variant, result, info, stripLine + "\n")
 
         else:
             m = self._line_re3.search(stripLine)
@@ -145,7 +149,8 @@ class MtrLogObserver(LogLineObserver):
                 self.addTestFailOutput(stripLine + "\n")
 
     def openTestFail(self, testname, variant, result, info, line):
-        self.testFail = MtrTestFailData(testname, variant, result, info, line, self.doCollectTestFail)
+        self.testFail = MtrTestFailData(
+            testname, variant, result, info, line, self.doCollectTestFail)
 
     def addTestFailOutput(self, line):
         if self.testFail is not None:
@@ -190,7 +195,8 @@ class MtrLogObserver(LogLineObserver):
         displayTestName = self.strip_re.sub("", testname)
 
         if len(displayTestName) > self.testNameLimit:
-            displayTestName = displayTestName[:(self.testNameLimit - 2)] + "..."
+            displayTestName = displayTestName[
+                :(self.testNameLimit - 2)] + "..."
         return displayTestName
 
     def doCollectTestFail(self, testname, variant, result, info, text):
@@ -353,7 +359,8 @@ class MTR(Test):
                     if retryCount >= 5:
                         raise
                     excType, excValue, excTraceback = sys.exc_info()
-                    log.msg("Database transaction failed (caught exception %s(%s)), retrying ..." % (excType, excValue))
+                    log.msg("Database transaction failed (caught exception %s(%s)), retrying ..." % (
+                        excType, excValue))
                     txn.close()
                     txn.reconnect()
                     txn.reopen()

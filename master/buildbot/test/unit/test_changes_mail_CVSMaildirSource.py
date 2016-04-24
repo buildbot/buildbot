@@ -16,9 +16,9 @@ from email import message_from_string
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
 
-from twisted.trial import unittest
-
 from buildbot.changes.mail import CVSMaildirSource
+
+from twisted.trial import unittest
 
 
 #
@@ -82,14 +82,16 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assertNotEqual(chdict, None)
         self.assertEqual(chdict['author'], 'andy')
         self.assertEqual(len(chdict['files']), 1)
-        self.assertEqual(chdict['files'][0], 'base/module/src/make/GNUmakefile')
+        self.assertEqual(
+            chdict['files'][0], 'base/module/src/make/GNUmakefile')
         self.assertEqual(chdict['comments'], 'Commented out some stuff.\n')
         self.assertFalse(chdict['isdir'])
         self.assertEqual(chdict['revision'], '2010-08-07 11:11:49')
         dateTuple = parsedate_tz('Sat, 07 Aug 2010 11:11:49 +0000')
         self.assertEqual(chdict['when'], mktime_tz(dateTuple))
         self.assertEqual(chdict['branch'], None)
-        self.assertEqual(chdict['repository'], ':ext:cvshost.example.com:/cvsroot')
+        self.assertEqual(
+            chdict['repository'], ':ext:cvshost.example.com:/cvsroot')
         self.assertEqual(chdict['project'], 'MyModuleName')
         self.assertEqual(len(chdict['properties']), 0)
         self.assertEqual(src, 'cvs')
@@ -109,7 +111,8 @@ class TestCVSMaildirSource(unittest.TestCase):
         dateTuple = parsedate_tz('Wed, 11 Aug 2010 04:56:44 +0000')
         self.assertEqual(chdict['when'], mktime_tz(dateTuple))
         self.assertEqual(chdict['branch'], None)
-        self.assertEqual(chdict['repository'], ':ext:cvshost.example.com:/cvsroot')
+        self.assertEqual(
+            chdict['repository'], ':ext:cvshost.example.com:/cvsroot')
         self.assertEqual(chdict['project'], 'MyModuleName')
         self.assertEqual(len(chdict['properties']), 0)
         self.assertEqual(src, 'cvs')
@@ -163,7 +166,8 @@ class TestCVSMaildirSource(unittest.TestCase):
 
     def test_CVSMaildirSource_create_change_with_no_files(self):
         # A message with no files is likely not for us
-        msg = cvs1_11_msg.replace('Files: base/module/src/make GNUmakefile,1.362,1.363', '')
+        msg = cvs1_11_msg.replace(
+            'Files: base/module/src/make GNUmakefile,1.362,1.363', '')
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         chdict = src.parse(m)
@@ -177,7 +181,8 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assertEqual(chdict['project'], None)
 
     def test_CVSMaildirSource_create_change_with_no_repository(self):
-        msg = cvs1_11_msg.replace('CVSROOT: :ext:cvshost.example.com:/cvsroot', '')
+        msg = cvs1_11_msg.replace(
+            'CVSROOT: :ext:cvshost.example.com:/cvsroot', '')
         m = message_from_string(msg)
         src = CVSMaildirSource('/dev/null')
         chdict = src.parse(m)[1]

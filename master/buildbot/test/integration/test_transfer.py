@@ -15,15 +15,17 @@
 import os
 import shutil
 
-from twisted.internet import defer
-
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
+
+from twisted.internet import defer
+
 
 # This integration test creates a master and worker environment
 # and make sure the transfer steps are working
 
-# When new protocols are added, make sure you update this test to exercice your proto implementation
+# When new protocols are added, make sure you update this test to exercice
+# your proto implementation
 
 
 class TransferStepsMasterPb(RunMasterBase):
@@ -76,8 +78,10 @@ def masterConfig():
     # do a bunch of transfer to exercise the protocol
     f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
     f.addStep(steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
-    f.addStep(steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
-    f.addStep(steps.FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
+    f.addStep(
+        steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
+    f.addStep(
+        steps.FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
     f.addStep(steps.DirectoryUpload(workersrc="dir", masterdest="dir"))
     c['builders'] = [
         BuilderConfig(name="testy",

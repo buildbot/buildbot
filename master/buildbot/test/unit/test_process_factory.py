@@ -15,14 +15,14 @@
 from random import choice
 from string import ascii_uppercase
 
-from twisted.trial import unittest
-
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import _BuildStepFactory
 from buildbot.process.factory import BuildFactory
 from buildbot.process.factory import GNUAutoconf
 from buildbot.process.factory import s
 from buildbot.steps.shell import Configure
+
+from twisted.trial import unittest
 
 
 class TestBuildFactory(unittest.TestCase):
@@ -60,7 +60,8 @@ class TestBuildFactory(unittest.TestCase):
         self.assertEqual(self.factory.steps[-1],
                          _BuildStepFactory(BuildStep, name='test'))
 
-        warnings = self.flushWarnings([self.test_addStep_deprecated_withArguments])
+        warnings = self.flushWarnings(
+            [self.test_addStep_deprecated_withArguments])
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
 
@@ -84,7 +85,8 @@ class TestBuildFactory(unittest.TestCase):
         to construct a step.
         """
         stepFactory = s(BuildStep, name='test')
-        self.assertEqual(stepFactory, _BuildStepFactory(BuildStep, name='test'))
+        self.assertEqual(
+            stepFactory, _BuildStepFactory(BuildStep, name='test'))
         warnings = self.flushWarnings([self.test_s])
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
@@ -94,7 +96,8 @@ class TestBuildFactory(unittest.TestCase):
         self.assertRaises(TypeError, self.factory.addStep, object())
 
     def test_addStep_ArgumentsInTheWrongPlace(self):
-        self.assertRaises(TypeError, self.factory.addStep, BuildStep(), name="name")
+        self.assertRaises(
+            TypeError, self.factory.addStep, BuildStep(), name="name")
         # this also raises a deprecation error, which we don't care about (see
         # test_s)
         self.flushWarnings()

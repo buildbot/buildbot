@@ -12,18 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import __builtin__
 import os
 import re
 import textwrap
 
 import mock
-
-from twisted.internet import defer
-from twisted.trial import unittest
-
+from future.utils import iteritems
 from zope.interface import implements
 
 from buildbot import config
@@ -44,6 +39,8 @@ from buildbot.util import service
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
+from twisted.internet import defer
+from twisted.trial import unittest
 
 global_defaults = dict(
     title='Buildbot',
@@ -432,12 +429,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_protocols_key_int(self):
         self.cfg.load_global(self.filename,
                              dict(protocols={321: {"port": 123}}))
-        self.assertConfigError(self.errors, "c['protocols'] keys must be strings")
+        self.assertConfigError(
+            self.errors, "c['protocols'] keys must be strings")
 
     def test_load_global_protocols_value_not_dict(self):
         self.cfg.load_global(self.filename,
                              dict(protocols={"pb": 123}))
-        self.assertConfigError(self.errors, "c['protocols']['pb'] must be a dict")
+        self.assertConfigError(
+            self.errors, "c['protocols']['pb'] must be a dict")
 
     def do_test_load_global(self, config_dict, **expected):
         self.cfg.load_global(self.filename, config_dict)
@@ -481,7 +480,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_logCompressionMethod_invalid(self):
         self.cfg.load_global(self.filename,
                              dict(logCompressionMethod='foo'))
-        self.assertConfigError(self.errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
+        self.assertConfigError(
+            self.errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
     def test_load_global_codebaseGenerator(self):
         func = lambda _: "dummy"
@@ -746,7 +746,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_builders_not_instance(self):
         self.cfg.load_builders(self.filename,
                                dict(builders=[mock.Mock()]))
-        self.assertConfigError(self.errors, "is not a builder config (in c['builders']")
+        self.assertConfigError(
+            self.errors, "is not a builder config (in c['builders']")
 
     def test_load_builders(self):
         bldr = config.BuilderConfig(name='x',
@@ -811,7 +812,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         name = u""
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
-        self.errors.errors[:] = self.errors.errors[1:2]  # only get necessary error
+        self.errors.errors[:] = self.errors.errors[
+            1:2]  # only get necessary error
         self.assertConfigError(self.errors, "cannot be an empty string")
         self.errors.errors[:] = []  # clear out the errors
 
@@ -947,7 +949,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             ('Test Custom Component', '0.0.1'),
             ('Test Custom Component 2', '0.1.0'),
         ]
-        self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
+        self.cfg.load_www(
+            self.filename, {'www': dict(versions=custom_versions)})
         self.assertResults(www=dict(port=None,
                                     plugins={}, auth={'name': 'NoAuth'},
                                     authz={},
@@ -960,13 +963,17 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             'Test Custom Component': '0.0.1',
             'Test Custom Component 2': '0.0.2',
         }
-        self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
-        self.assertConfigError(self.errors, 'Invalid www configuration value of versions')
+        self.cfg.load_www(
+            self.filename, {'www': dict(versions=custom_versions)})
+        self.assertConfigError(
+            self.errors, 'Invalid www configuration value of versions')
 
     def test_load_www_versions_value_invalid(self):
         custom_versions = [('a', '1'), 'abc', ('b',)]
-        self.cfg.load_www(self.filename, {'www': dict(versions=custom_versions)})
-        self.assertConfigError(self.errors, 'Invalid www configuration value of versions')
+        self.cfg.load_www(
+            self.filename, {'www': dict(versions=custom_versions)})
+        self.assertConfigError(
+            self.errors, 'Invalid www configuration value of versions')
 
     def test_load_www_unknown(self):
         self.cfg.load_www(self.filename,
@@ -1569,7 +1576,8 @@ class FakeService(service.ReconfigurableServiceMixin,
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
+            self, new_config)
         if not self.succeed:
             @d.addCallback
             def fail(_):
@@ -1582,7 +1590,8 @@ class FakeMultiService(service.ReconfigurableServiceMixin,
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = True
-        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self, new_config)
+        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
+            self, new_config)
         return d
 
 

@@ -15,10 +15,10 @@
 import datetime
 import random
 
-from twisted.trial import unittest
-
 from buildbot.data import base
 from buildbot.data import resultspec
+
+from twisted.trial import unittest
 
 
 def mklist(fld, *values):

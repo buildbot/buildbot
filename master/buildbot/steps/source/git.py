@@ -12,12 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 from distutils.version import LooseVersion
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
+
+from future.utils import iteritems
 
 from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerTooOldError
@@ -25,6 +22,9 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40
@@ -56,8 +56,10 @@ git_describe_flags = [
     # string parameter
     ('match', lambda v: ['--match', v] if v else None),
     # numeric parameter
-    ('abbrev', lambda v: ['--abbrev=%s' % v] if isTrueOrIsExactlyZero(v) else None),
-    ('candidates', lambda v: ['--candidates=%s' % v] if isTrueOrIsExactlyZero(v) else None),
+    ('abbrev', lambda v: ['--abbrev=%s' % v]
+     if isTrueOrIsExactlyZero(v) else None),
+    ('candidates', lambda v: ['--candidates=%s' %
+                              v] if isTrueOrIsExactlyZero(v) else None),
     # optional string parameter
     ('dirty', lambda v: ['--dirty'] if (v is True or v == '') else None),
     ('dirty', lambda v: ['--dirty=%s' % v] if (v and v is not True) else None),
@@ -68,7 +70,8 @@ class Git(Source):
 
     """ Class for Git with all the smarts """
     name = 'git'
-    renderables = ["repourl", "reference", "branch", "codebase", "mode", "method", "origin"]
+    renderables = ["repourl", "reference", "branch",
+                   "codebase", "mode", "method", "origin"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
@@ -147,7 +150,8 @@ class Git(Source):
                 if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
-                    bbconfig.error("Git: shallow only possible with mode 'full' and method 'clobber'.")
+                    bbconfig.error(
+                        "Git: shallow only possible with mode 'full' and method 'clobber'.")
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
@@ -353,7 +357,8 @@ class Git(Source):
             # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
             # killing.  This should be safe.
             if self.workerVersionIsOlderThan("shell", "2.15"):
-                log.msg("NOTE: worker does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
+                log.msg(
+                    "NOTE: worker does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
             else:
                 interruptSignal = 'TERM'
 
@@ -552,7 +557,8 @@ class Git(Source):
     def _cleanSubmodule(self, _=None):
         rc = RC_SUCCESS
         if self.submodules:
-            command = ['submodule', 'foreach', '--recursive', 'git', 'clean', '-f', '-f', '-d']
+            command = ['submodule', 'foreach', '--recursive',
+                       'git', 'clean', '-f', '-f', '-d']
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
             rc = yield self._dovccmd(command)

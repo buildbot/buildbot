@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import datetime
 
-from twisted.trial import unittest
-
 from buildbot.test.unit import test_data_changes
 from buildbot.test.util import www
 from buildbot.util import datetime2epoch
 from buildbot.util import json
 from buildbot.www import sse
+
+from twisted.trial import unittest
 
 
 class EventResource(www.WwwTestMixin, unittest.TestCase):
@@ -51,7 +51,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.request.finished, True)
         self.assertEqual(request.finished, False)
         request.finish()  # fake close connection on client side
-        self.assertRaises(AssertionError, self.assertReceivesChangeNewMessage, request)
+        self.assertRaises(
+            AssertionError, self.assertReceivesChangeNewMessage, request)
 
     def test_listen_add_then_remove(self):
         self.render_resource(self.sse, '/listen')
@@ -61,7 +62,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertReceivesChangeNewMessage(request)
         self.assertEqual(request.finished, False)
         self.render_resource(self.sse, '/remove/' + uuid + "/changes/*/*")
-        self.assertRaises(AssertionError, self.assertReceivesChangeNewMessage, request)
+        self.assertRaises(
+            AssertionError, self.assertReceivesChangeNewMessage, request)
 
     def test_listen_add_nouuid(self):
         self.render_resource(self.sse, '/listen')
@@ -102,12 +104,14 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         return kw["data"]
 
     def assertReceivesChangeNewMessage(self, request):
-        self.master.mq.callConsumer(("changes", "500", "new"), test_data_changes.Change.changeEvent)
+        self.master.mq.callConsumer(
+            ("changes", "500", "new"), test_data_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw["event"], "event")
         msg = json.loads(kw["data"])
         self.assertEqual(msg["key"], [u'changes', u'500', u'new'])
-        self.assertEqual(msg["message"], json.loads(json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
+        self.assertEqual(msg["message"], json.loads(
+            json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
 
     def _toJson(self, obj):
         if isinstance(obj, datetime.datetime):

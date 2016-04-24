@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.process import log
 from buildbot.process import logobserver
 from buildbot.test.fake import fakemaster
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class MyLogObserver(logobserver.LogObserver):

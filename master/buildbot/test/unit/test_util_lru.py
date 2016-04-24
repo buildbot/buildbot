@@ -16,12 +16,12 @@ import gc
 import random
 import string
 
+from buildbot.util import lru
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
-
-from buildbot.util import lru
 
 
 # construct weakref-able objects for particular keys

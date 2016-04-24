@@ -17,10 +17,10 @@ import os
 import tarfile
 import tempfile
 
+from buildslave.commands.base import Command
+
 from twisted.internet import defer
 from twisted.python import log
-
-from buildslave.commands.base import Command
 
 
 class TransferCommand(Command):

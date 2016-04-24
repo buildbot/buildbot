@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 
-from twisted.internet import defer
-from twisted.internet import reactor
-
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
 from buildbot.util import json
+
+from twisted.internet import defer
+from twisted.internet import reactor
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
@@ -85,7 +85,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                     ss['branch'],
                                     ss['codebase']) for ss in (yield gssfb(prevBuild['id']))])
                 if prevssBuild == matchssBuild:
-                    # A successful build with the same repository/branch/codebase was found !
+                    # A successful build with the same
+                    # repository/branch/codebase was found !
                     rv = prevBuild
                     break
             offset += 10

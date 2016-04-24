@@ -14,9 +14,8 @@
 #
 # Copyright Buildbot Team Members
 
-from builtins import range
-
 import os
+from builtins import range
 
 from twisted.internet import process
 from twisted.python import log

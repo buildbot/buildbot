@@ -15,15 +15,15 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
 from buildbot.util import json
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
 
 
 class FakeUpdates(service.AsyncService):
@@ -36,7 +36,8 @@ class FakeUpdates(service.AsyncService):
 
         # test cases should assert the values here:
         self.changesAdded = []  # Changes are numbered starting at 1.
-        self.changesourceIds = {}  # { name : id }; users can add changesources here
+        # { name : id }; users can add changesources here
+        self.changesourceIds = {}
         self.buildsetsAdded = []  # Buildsets are numbered starting at 1
         self.maybeBuildsetCompleteCalls = 0
         self.masterStateChanges = []  # dictionaries
@@ -222,7 +223,8 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(True)
 
     def unclaimExpiredRequests(self, old, _reactor=reactor):
-        validation.verifyType(self.testcase, "old", old, validation.IntValidator())
+        validation.verifyType(
+            self.testcase, "old", old, validation.IntValidator())
         return defer.succeed(None)
 
     def rebuildBuildrequest(self, buildrequest):
@@ -245,14 +247,16 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'scheduler name', name,
                               validation.StringValidator())
         if name not in self.schedulerIds:
-            self.schedulerIds[name] = max([0] + list(itervalues(self.schedulerIds))) + 1
+            self.schedulerIds[name] = max(
+                [0] + list(itervalues(self.schedulerIds))) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
         validation.verifyType(self.testcase, 'changesource name', name,
                               validation.StringValidator())
         if name not in self.changesourceIds:
-            self.changesourceIds[name] = max([0] + list(itervalues(self.changesourceIds))) + 1
+            self.changesourceIds[name] = max(
+                [0] + list(itervalues(self.changesourceIds))) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):
@@ -374,7 +378,8 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'type', type,
                               validation.IdentifierValidator(1))
         logid = max([0] + list(self.logs)) + 1
-        self.logs[logid] = dict(name=name, type=type, content=[], finished=False)
+        self.logs[logid] = dict(
+            name=name, type=type, content=[], finished=False)
         return defer.succeed(logid)
 
     def finishLog(self, logid):

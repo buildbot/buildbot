@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-
 from buildbot_worker import util
+
+from twisted.trial import unittest
 
 
 class remove_userpassword(unittest.TestCase):
@@ -28,19 +28,23 @@ class remove_userpassword(unittest.TestCase):
         self.assertUrl('http://myurl.com/myrepo', 'http://myurl.com/myrepo')
 
     def test_url_with_user_and_password(self):
-        self.assertUrl('http://myuser:mypass@myurl.com/myrepo', 'http://myurl.com/myrepo')
+        self.assertUrl(
+            'http://myuser:mypass@myurl.com/myrepo', 'http://myurl.com/myrepo')
 
     def test_another_url_with_no_user_and_password(self):
-        self.assertUrl('http://myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
+        self.assertUrl(
+            'http://myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
 
     def test_another_url_with_user_and_password(self):
-        self.assertUrl('http://myuser2:mypass2@myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
+        self.assertUrl(
+            'http://myuser2:mypass2@myurl2.com/myrepo2', 'http://myurl2.com/myrepo2')
 
     def test_with_different_protocol_without_user_and_password(self):
         self.assertUrl('ssh://myurl3.com/myrepo3', 'ssh://myurl3.com/myrepo3')
 
     def test_with_different_protocol_with_user_and_password(self):
-        self.assertUrl('ssh://myuser3:mypass3@myurl3.com/myrepo3', 'ssh://myurl3.com/myrepo3')
+        self.assertUrl(
+            'ssh://myuser3:mypass3@myurl3.com/myrepo3', 'ssh://myurl3.com/myrepo3')
 
     def test_file_path(self):
         self.assertUrl('/home/me/repos/my-repo', '/home/me/repos/my-repo')
@@ -62,8 +66,10 @@ class TestObfuscated(unittest.TestCase):
     def testObfuscatedCommand(self):
         cmd = ['echo', util.Obfuscated('password', '*******')]
 
-        self.failUnlessEqual(['echo', 'password'], util.Obfuscated.get_real(cmd))
-        self.failUnlessEqual(['echo', '*******'], util.Obfuscated.get_fake(cmd))
+        self.failUnlessEqual(
+            ['echo', 'password'], util.Obfuscated.get_real(cmd))
+        self.failUnlessEqual(
+            ['echo', '*******'], util.Obfuscated.get_fake(cmd))
 
     def testObfuscatedNonString(self):
         cmd = ['echo', 1]

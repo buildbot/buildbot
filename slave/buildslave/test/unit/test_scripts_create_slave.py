@@ -13,12 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import os
 import re
 
+import mock
+
 from buildslave.scripts import create_slave
 from buildslave.test.util import misc
+
 from twisted.trial import unittest
 
 

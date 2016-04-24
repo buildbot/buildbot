@@ -14,15 +14,7 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.cred import credentials
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.spread import pb
-from twisted.trial import unittest
-
 import buildbot
-
 from buildbot import config
 from buildbot import pbmanager
 from buildbot import worker
@@ -34,6 +26,13 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.decorators import flaky
 from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
+
+from twisted.cred import credentials
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread import pb
+from twisted.trial import unittest
 
 
 class FakeWorkerForBuilder(pb.Referenceable):
@@ -158,9 +157,11 @@ class TestWorkerComm(unittest.TestCase):
         self.pbmanager = self.master.pbmanager = pbmanager.PBManager()
         self.pbmanager.setServiceParent(self.master)
 
-        # remove the fakeServiceParent from fake service hierarchy, and replace by a real one
+        # remove the fakeServiceParent from fake service hierarchy, and replace
+        # by a real one
         yield self.master.workers.disownServiceParent()
-        self.workers = self.master.workers = workermanager.WorkerManager(self.master)
+        self.workers = self.master.workers = workermanager.WorkerManager(
+            self.master)
         self.workers.setServiceParent(self.master)
 
         self.botmaster = botmaster.BotMaster()

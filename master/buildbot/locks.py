@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
@@ -22,6 +19,8 @@ from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
+from twisted.internet import defer
+from twisted.python import log
 
 if False:  # for debugging
     debuglog = log.msg
@@ -126,7 +125,8 @@ class BaseLock:
         self.owners.remove(entry)
         # who can we wake up?
         # After an exclusive access, we may need to wake up several waiting.
-        # Break out of the loop when the first waiting client should not be awakened.
+        # Break out of the loop when the first waiting client should not be
+        # awakened.
         num_excl, num_counting = self._getOwnersCount()
         for i, (w_owner, w_access, d) in enumerate(self.waiting):
             if w_access.mode == 'counting':
@@ -317,7 +317,8 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
     lockClass = RealWorkerLock
 
     def __init__(self, name, maxCount=1, maxCountForWorker=None,
-                 maxCountForSlave=None  # deprecated, use `maxCountForWorker` instead
+                 # deprecated, use `maxCountForWorker` instead
+                 maxCountForSlave=None
                  ):
         # Deprecated API support.
         if maxCountForSlave is not None:
@@ -335,5 +336,6 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
         self._registerOldWorkerAttr("maxCountForWorker")
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
-        self._maxCountForWorkerList = tuple(sorted(self.maxCountForWorker.items()))
+        self._maxCountForWorkerList = tuple(
+            sorted(self.maxCountForWorker.items()))
 deprecatedWorkerModuleAttribute(locals(), WorkerLock)

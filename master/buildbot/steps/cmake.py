@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 
-from twisted.internet import defer
-
 from buildbot import config
-from buildbot.process.buildstep import LoggingBuildStep, ShellMixin
+from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.process.buildstep import ShellMixin
+
+from twisted.internet import defer
 
 
 class CMake(ShellMixin, LoggingBuildStep):

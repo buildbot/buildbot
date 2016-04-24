@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 import random
 
+from buildbot.test.util import fuzz
+from buildbot.util import lru
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.test.util import fuzz
-from buildbot.util import lru
 
 # construct weakref-able objects for particular keys
 

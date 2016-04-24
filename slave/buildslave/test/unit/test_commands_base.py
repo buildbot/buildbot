@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from buildslave.commands.base import Command
+from buildslave.test.util.command import CommandTestMixin
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildslave.commands.base import Command
-from buildslave.test.util.command import CommandTestMixin
 
 # set up a fake Command subclass to test the handling in Command.  Think of
 # this as testing Command's subclassability.
@@ -80,17 +81,20 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
 
     def test_run(self):
         cmd = self.make_command(DummyCommand, {'stdout': 'yay'})
-        self.assertState(True, False, False, False, "setup called by constructor")
+        self.assertState(
+            True, False, False, False, "setup called by constructor")
 
         # start the command
         d = self.run_command()
-        self.assertState(True, True, True, False, "started and running both set")
+        self.assertState(
+            True, True, True, False, "started and running both set")
 
         # allow the command to finish and check the result
         cmd.finishCommand()
 
         def check(_):
-            self.assertState(True, False, True, False, "started and not running when done")
+            self.assertState(
+                True, False, True, False, "started and not running when done")
         d.addCallback(check)
 
         def checkresult(_):
@@ -100,17 +104,20 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
 
     def test_run_failure(self):
         cmd = self.make_command(DummyCommand, {})
-        self.assertState(True, False, False, False, "setup called by constructor")
+        self.assertState(
+            True, False, False, False, "setup called by constructor")
 
         # start the command
         d = self.run_command()
-        self.assertState(True, True, True, False, "started and running both set")
+        self.assertState(
+            True, True, True, False, "started and running both set")
 
         # fail the command with an exception, and check the result
         cmd.failCommand()
 
         def check(_):
-            self.assertState(True, False, True, False, "started and not running when done")
+            self.assertState(
+                True, False, True, False, "started and not running when done")
         d.addErrback(check)
 
         def checkresult(_):
@@ -120,18 +127,21 @@ class TestDummyCommand(CommandTestMixin, unittest.TestCase):
 
     def test_run_interrupt(self):
         cmd = self.make_command(DummyCommand, {})
-        self.assertState(True, False, False, False, "setup called by constructor")
+        self.assertState(
+            True, False, False, False, "setup called by constructor")
 
         # start the command
         d = self.run_command()
-        self.assertState(True, True, True, False, "started and running both set")
+        self.assertState(
+            True, True, True, False, "started and running both set")
 
         # interrupt the command
         cmd.doInterrupt()
         self.assertTrue(cmd.interrupted)
 
         def check(_):
-            self.assertState(True, False, True, True, "finishes with interrupted set")
+            self.assertState(
+                True, False, True, True, "finishes with interrupted set")
         d.addCallback(check)
         return d
 

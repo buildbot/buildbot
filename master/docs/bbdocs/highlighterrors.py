@@ -1,11 +1,11 @@
 
 
+import sys
+import textwrap
+
 # Monkey-patch Sphinx to treat unhiglighted code as error.
 import sphinx
 import sphinx.highlighting
-import textwrap
-import sys
-
 from pkg_resources import parse_version
 from sphinx.errors import SphinxWarning
 

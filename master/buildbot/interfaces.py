@@ -27,6 +27,7 @@ from zope.interface import Interface
 
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
+
 # exceptions that can be raised while trying to start a build
 
 
@@ -322,7 +323,7 @@ class IConfigured(Interface):
         pass
 
 
-# #################### Deprecated Status Interfaces   ###############################
+# #################### Deprecated Status Interfaces   ####################
 
 
 class IStatus(Interface):

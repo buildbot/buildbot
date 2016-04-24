@@ -15,16 +15,16 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-
 from buildbot import locks
 from buildbot import util
 from buildbot.process import metrics
 from buildbot.process.builder import Builder
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
 from buildbot.util import service
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -93,7 +93,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 for builder in self.builders.values():
                     n = len(builder.builder_status.getCurrentBuilds())
                     if n > 0:
-                        log.msg("Not shutting down, builder %s has %i builds running" % (builder, n))
+                        log.msg(
+                            "Not shutting down, builder %s has %i builds running" % (builder, n))
                         log.msg("Trying shutdown sequence again")
                         self.shuttingDown = False
                         self.cleanShutdown()

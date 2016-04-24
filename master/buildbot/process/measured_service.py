@@ -12,10 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-
 from buildbot.process import metrics
 from buildbot.util.service import BuildbotServiceManager
+
+from twisted.internet import defer
 
 
 class MeasuredBuildbotServiceManager(BuildbotServiceManager):
@@ -23,7 +23,8 @@ class MeasuredBuildbotServiceManager(BuildbotServiceManager):
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
-        timer = metrics.Timer("{0}.reconfigServiceWithBuildbotConfig".format(self.name))
+        timer = metrics.Timer(
+            "{0}.reconfigServiceWithBuildbotConfig".format(self.name))
         timer.start()
         yield super(MeasuredBuildbotServiceManager, self).reconfigServiceWithBuildbotConfig(new_config)
         metrics.MetricCountEvent.log("num_{0}".format(self.managed_services_name),

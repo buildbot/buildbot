@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 import inspect
 
-from twisted.internet import defer
-
 from buildbot.data.exceptions import InvalidPathError
+
+from twisted.internet import defer
 
 
 class EndpointMatcherBase(object):
@@ -36,7 +36,8 @@ class EndpointMatcherBase(object):
         try:
             epobject, epdict = self.master.data.getEndpoint(ep)
             for klass in inspect.getmro(epobject.__class__):
-                m = getattr(self, "match_" + klass.__name__ + "_" + action, None)
+                m = getattr(
+                    self, "match_" + klass.__name__ + "_" + action, None)
                 if m is not None:
                     return m(epobject, epdict, options)
                 m = getattr(self, "match_" + klass.__name__, None)

@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 import hashlib
-import sqlalchemy as sa
-
 import time
+
+import sqlalchemy as sa
 
 from buildbot.util import sautils
 
@@ -29,7 +29,8 @@ def rename_sourcestamps_to_old(migrate_engine):
                                  sa.Column('id', sa.Integer, primary_key=True),
                                  sa.Column('branch', sa.String(256)),
                                  sa.Column('revision', sa.String(256)),
-                                 sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+                                 sa.Column(
+                                     'patchid', sa.Integer, sa.ForeignKey('patches.id')),
                                  sa.Column('repository', sa.String(length=512), nullable=False,
                                            server_default=''),
                                  sa.Column('codebase', sa.String(256), nullable=False,
@@ -122,17 +123,20 @@ def migrate_data(migrate_engine):
 
     sourcestamps = sautils.Table('sourcestamps', metadata,
                                  sa.Column('id', sa.Integer, primary_key=True),
-                                 sa.Column('ss_hash', sa.String(40), nullable=False, unique=True),
+                                 sa.Column(
+                                     'ss_hash', sa.String(40), nullable=False, unique=True),
                                  sa.Column('branch', sa.String(256)),
                                  sa.Column('revision', sa.String(256)),
-                                 sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+                                 sa.Column(
+                                     'patchid', sa.Integer, sa.ForeignKey('patches.id')),
                                  sa.Column('repository', sa.String(length=512), nullable=False,
                                            server_default=''),
                                  sa.Column('codebase', sa.String(256), nullable=False,
                                            server_default=sa.DefaultClause("")),
                                  sa.Column('project', sa.String(length=512), nullable=False,
                                            server_default=''),
-                                 sa.Column('created_at', sa.Integer, nullable=False),
+                                 sa.Column(
+                                     'created_at', sa.Integer, nullable=False),
                                  )
 
     # define a select-or-insert function, similar to that for the sourcestamp
@@ -177,10 +181,12 @@ def migrate_data(migrate_engine):
 
     # set up the tables we'll need to migrate
     sourcestamps_old = sautils.Table('sourcestamps_old', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True),
+                                     sa.Column(
+                                         'id', sa.Integer, primary_key=True),
                                      sa.Column('branch', sa.String(256)),
                                      sa.Column('revision', sa.String(256)),
-                                     sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+                                     sa.Column(
+                                         'patchid', sa.Integer, sa.ForeignKey('patches.id')),
                                      sa.Column('repository', sa.String(length=512), nullable=False,
                                                server_default=''),
                                      sa.Column('codebase', sa.String(256), nullable=False,
@@ -191,14 +197,19 @@ def migrate_data(migrate_engine):
                                                sa.ForeignKey('sourcestampsets.id')),
                                      )
     changes = sautils.Table('changes', metadata,
-                            sa.Column('changeid', sa.Integer, primary_key=True),
-                            sa.Column('author', sa.String(256), nullable=False),
-                            sa.Column('comments', sa.String(1024), nullable=False),
-                            sa.Column('is_dir', sa.SmallInteger, nullable=False),
+                            sa.Column(
+                                'changeid', sa.Integer, primary_key=True),
+                            sa.Column(
+                                'author', sa.String(256), nullable=False),
+                            sa.Column(
+                                'comments', sa.String(1024), nullable=False),
+                            sa.Column(
+                                'is_dir', sa.SmallInteger, nullable=False),
                             sa.Column('branch', sa.String(256)),
                             sa.Column('revision', sa.String(256)),
                             sa.Column('revlink', sa.String(256)),
-                            sa.Column('when_timestamp', sa.Integer, nullable=False),
+                            sa.Column(
+                                'when_timestamp', sa.Integer, nullable=False),
                             sa.Column('category', sa.String(256)),
                             sa.Column('repository', sa.String(length=512), nullable=False,
                                       server_default=''),
@@ -227,7 +238,8 @@ def migrate_data(migrate_engine):
                               sa.Column('id', sa.Integer, primary_key=True),
                               sa.Column('external_idstring', sa.String(256)),
                               sa.Column('reason', sa.String(256)),
-                              sa.Column('submitted_at', sa.Integer, nullable=False),
+                              sa.Column(
+                                  'submitted_at', sa.Integer, nullable=False),
                               sa.Column('complete', sa.SmallInteger, nullable=False,
                                         server_default=sa.DefaultClause("0")),
                               sa.Column('complete_at', sa.Integer),
@@ -289,7 +301,8 @@ def drop_old_schema_parts(migrate_engine):
                               sa.Column('id', sa.Integer, primary_key=True),
                               sa.Column('external_idstring', sa.String(256)),
                               sa.Column('reason', sa.String(256)),
-                              sa.Column('submitted_at', sa.Integer, nullable=False),
+                              sa.Column(
+                                  'submitted_at', sa.Integer, nullable=False),
                               sa.Column('complete', sa.SmallInteger, nullable=False,
                                         server_default=sa.DefaultClause("0")),
                               sa.Column('complete_at', sa.Integer),
@@ -304,13 +317,15 @@ def drop_old_schema_parts(migrate_engine):
     buildsets.c.sourcestampsetid.drop()
 
     sourcestamps_old = sautils.Table('sourcestamps_old', metadata,
-                                     sa.Column('id', sa.Integer, primary_key=True),
+                                     sa.Column(
+                                         'id', sa.Integer, primary_key=True),
                                      # ...
                                      )
     sourcestamps_old.drop()
 
     sourcestampsets = sautils.Table('sourcestampsets', metadata,
-                                    sa.Column('id', sa.Integer, primary_key=True),
+                                    sa.Column(
+                                        'id', sa.Integer, primary_key=True),
                                     )
     sourcestampsets.drop()
 

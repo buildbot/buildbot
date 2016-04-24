@@ -15,25 +15,26 @@
 import os
 import stat
 
-from twisted.internet import defer
-from twisted.python import log
-
 from buildbot import config
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
-from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SKIPPED
 from buildbot.process.buildstep import SUCCESS
+from buildbot.process.buildstep import BuildStep
 from buildbot.util import json
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
+from twisted.internet import defer
+from twisted.python import log
+
 
 def makeStatusRemoteCommand(step, remote_command, args):
-    self = remotecommand.RemoteCommand(remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
+    self = remotecommand.RemoteCommand(
+        remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
     callback = lambda arg: step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self
@@ -134,10 +135,12 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
-            self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
+            self.addURL(
+                os.path.basename(os.path.normpath(masterdest)), self.url)
 
         # we use maxsize to limit the amount of data on both sides
-        fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
+        fileWriter = remotetransfer.FileWriter(
+            masterdest, self.maxsize, self.mode)
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This worker (%s) does not support preserving timestamps. "
@@ -211,10 +214,12 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
-            self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
+            self.addURL(
+                os.path.basename(os.path.normpath(masterdest)), self.url)
 
         # we use maxsize to limit the amount of data on both sides
-        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
+        dirWriter = remotetransfer.DirectoryWriter(
+            masterdest, self.maxsize, self.compress, 0o600)
 
         # default arguments
         args = {
@@ -273,7 +278,8 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         self.url = url
 
     def uploadFile(self, source, masterdest):
-        fileWriter = remotetransfer.FileWriter(masterdest, self.maxsize, self.mode)
+        fileWriter = remotetransfer.FileWriter(
+            masterdest, self.maxsize, self.mode)
 
         args = {
             'slavesrc': source,
@@ -288,7 +294,8 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         return self.runTransferCommand(cmd, fileWriter)
 
     def uploadDirectory(self, source, masterdest):
-        dirWriter = remotetransfer.DirectoryWriter(masterdest, self.maxsize, self.compress, 0o600)
+        dirWriter = remotetransfer.DirectoryWriter(
+            masterdest, self.maxsize, self.compress, 0o600)
 
         args = {
             'slavesrc': source,
@@ -324,7 +331,8 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         @d.addCallback
         def uploadDone(result):
-            d = defer.maybeDeferred(self.uploadDone, result, source, masterdest)
+            d = defer.maybeDeferred(
+                self.uploadDone, result, source, masterdest)
             d.addCallback(lambda _: result)
             return d
 
@@ -335,7 +343,8 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     def allUploadsDone(self, result, sources, masterdest):
         if self.url is not None:
-            self.addURL(os.path.basename(os.path.normpath(masterdest)), self.url)
+            self.addURL(
+                os.path.basename(os.path.normpath(masterdest)), self.url)
 
     def start(self):
         self.checkWorkerHasCommand("uploadDirectory")
@@ -366,7 +375,8 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         @d.addCallback
         def allUploadsDone(result):
-            d = defer.maybeDeferred(self.allUploadsDone, result, sources, masterdest)
+            d = defer.maybeDeferred(
+                self.allUploadsDone, result, sources, masterdest)
             d.addCallback(lambda _: result)
             return d
 
@@ -427,7 +437,8 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
         log.msg("FileDownload started, from master %r to worker %r" %
                 (source, workerdest))
 
-        self.descriptionDone = "downloading to %s" % os.path.basename(workerdest)
+        self.descriptionDone = "downloading to %s" % os.path.basename(
+            workerdest)
 
         # setup structures for reading the file
         try:
@@ -499,9 +510,11 @@ class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
         workerdest = self.workerdest
-        log.msg("StringDownload started, from master to worker %r" % workerdest)
+        log.msg("StringDownload started, from master to worker %r" %
+                workerdest)
 
-        self.descriptionDone = "downloading to %s" % os.path.basename(workerdest)
+        self.descriptionDone = "downloading to %s" % os.path.basename(
+            workerdest)
 
         # setup structures for reading the file
         fileReader = remotetransfer.StringFileReader(self.s)
@@ -543,7 +556,8 @@ class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
         s = json.dumps(o)
-        StringDownload.__init__(self, s=s, workerdest=workerdest, **buildstep_kwargs)
+        StringDownload.__init__(
+            self, s=s, workerdest=workerdest, **buildstep_kwargs)
 
 
 class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
@@ -568,7 +582,8 @@ class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
         self.super_class = StringDownload
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
-        StringDownload.__init__(self, s=None, workerdest=workerdest, **buildstep_kwargs)
+        StringDownload.__init__(
+            self, s=None, workerdest=workerdest, **buildstep_kwargs)
 
     def start(self):
         properties = self.build.getProperties()
@@ -578,7 +593,8 @@ class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
 
         self.s = json.dumps(dict(
             properties=props,
-            sourcestamps=[ss.asDict() for ss in self.build.getAllSourceStamps()],
+            sourcestamps=[ss.asDict()
+                          for ss in self.build.getAllSourceStamps()],
         ),
         )
         return self.super_class.start(self)

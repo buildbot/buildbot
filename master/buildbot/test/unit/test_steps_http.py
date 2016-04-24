@@ -12,6 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot.process import properties
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.steps import http
+from buildbot.test.util import steps
+
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web.resource import Resource
@@ -24,12 +30,6 @@ try:
     assert requests
 except ImportError:
     txrequests = requests = None
-
-from buildbot.process import properties
-from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
-from buildbot.steps import http
-from buildbot.test.util import steps
 
 
 # We use twisted's internal webserver instead of mocking requests
@@ -53,7 +53,8 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         if txrequests is None:
-            raise unittest.SkipTest("Need to install txrequests to test http steps")
+            raise unittest.SkipTest(
+                "Need to install txrequests to test http steps")
 
         # ignore 'http_proxy' environment variable when running tests
         session = http.getSession()
@@ -76,7 +77,8 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
     def test_basic(self):
         url = self.getURL()
         self.setupStep(http.GET(url))
-        self.expectLogfile('log', "URL: %s\nStatus: 200\n ------ Content ------\nOK" % (url, ))
+        self.expectLogfile(
+            'log', "URL: %s\nStatus: 200\n ------ Content ------\nOK" % (url, ))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()
@@ -84,9 +86,11 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
     def test_404(self):
         url = self.getURL("404")
         self.setupStep(http.GET(url))
-        self.expectLogfile('log', "URL: %s\n ------ Content ------\n404" % (url, ))
+        self.expectLogfile(
+            'log', "URL: %s\n ------ Content ------\n404" % (url, ))
         self.expectLogfile('content', "404")
-        self.expectOutcome(result=FAILURE, state_string="Status code: 404 (failure)")
+        self.expectOutcome(
+            result=FAILURE, state_string="Status code: 404 (failure)")
         return self.runStep()
 
     def test_POST(self):
@@ -97,23 +101,28 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
                   "approached me (at /POST) with the method \"POST\".  I only allow the " \
                   "methods HEAD, GET here.</p>\n  </body>\n</html>\n"
         self.setupStep(http.POST(url))
-        self.expectLogfile('log', "URL: %s\n ------ Content ------\n%s" % (url, content))
+        self.expectLogfile(
+            'log', "URL: %s\n ------ Content ------\n%s" % (url, content))
         self.expectLogfile('content', content)
-        self.expectOutcome(result=FAILURE, state_string="Status code: 405 (failure)")
+        self.expectOutcome(
+            result=FAILURE, state_string="Status code: 405 (failure)")
         return self.runStep()
 
     def test_header(self):
         url = self.getURL("header")
         self.setupStep(http.GET(url, headers={"X-Test": "True"}))
-        self.expectLogfile('log', "URL: %s\nStatus: 200\n ------ Content ------\nTrue" % (url, ))
+        self.expectLogfile(
+            'log', "URL: %s\nStatus: 200\n ------ Content ------\nTrue" % (url, ))
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()
 
     def test_params_renderable(self):
         url = self.getURL()
         self.setupStep(http.GET(url, params=properties.Property("x")))
-        self.properties.setProperty('x', {'param_1': 'param_1', 'param_2': 2}, 'here')
-        self.expectLogfile('log', "URL: %s?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK" % (url, ))
+        self.properties.setProperty(
+            'x', {'param_1': 'param_1', 'param_2': 2}, 'here')
+        self.expectLogfile(
+            'log', "URL: %s?param_1=param_1&param_2=2\nStatus: 200\n ------ Content ------\nOK" % (url, ))
         self.expectLogfile('content', "OK")
         self.expectOutcome(result=SUCCESS, state_string="Status code: 200")
         return self.runStep()

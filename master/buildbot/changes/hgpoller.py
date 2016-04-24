@@ -16,14 +16,14 @@
 import os
 import time
 
-from twisted.internet import defer
-from twisted.internet import utils
-from twisted.python import log
-
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
 from buildbot.util import deferredLocked
+
+from twisted.internet import defer
+from twisted.internet import utils
+from twisted.python import log
 
 
 class HgPoller(base.PollingChangeSource):
@@ -60,7 +60,8 @@ class HgPoller(base.PollingChangeSource):
         self.hgbin = hgbin
         self.workdir = workdir
         self.usetimestamps = usetimestamps
-        self.category = category if callable(category) else ascii2unicode(category)
+        self.category = category if callable(
+            category) else ascii2unicode(category)
         self.project = project
         self.commitInfo = {}
         self.initLock = defer.DeferredLock()
@@ -215,7 +216,8 @@ class HgPoller(base.PollingChangeSource):
         yet, one shouldn't be surprised to get errors)
         """
         d = utils.getProcessOutput(self.hgbin,
-                                   ['heads', self.branch, '--template={rev}' + os.linesep],
+                                   ['heads', self.branch,
+                                       '--template={rev}' + os.linesep],
                                    path=self._absWorkdir(), env=os.environ, errortoo=False)
 
         @d.addErrback
@@ -295,14 +297,16 @@ class HgPoller(base.PollingChangeSource):
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')
         log.err(f)
-        # eat the failure to continue along the deferred chain - we still want to catch up
+        # eat the failure to continue along the deferred chain - we still want
+        # to catch up
         return None
 
     def _convertNonZeroToFailure(self, res):
         "utility method to handle the result of getProcessOutputAndValue"
         (stdout, stderr, code) = res
         if code != 0:
-            raise EnvironmentError('command failed with exit code %d: %s' % (code, stderr))
+            raise EnvironmentError(
+                'command failed with exit code %d: %s' % (code, stderr))
         return (stdout, stderr, code)
 
     def _stopOnFailure(self, f):

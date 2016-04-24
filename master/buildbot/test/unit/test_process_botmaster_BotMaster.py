@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
 from buildbot.test.fake import fakemaster
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestCleanShutdown(unittest.TestCase):

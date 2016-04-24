@@ -12,14 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import random
 
 import mock
-
-from twisted.internet import defer
-from twisted.trial import unittest
+from future.utils import iteritems
 
 from buildbot import config
 from buildbot.process import builder
@@ -31,6 +27,9 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class BuilderMixin(object):
@@ -50,7 +49,8 @@ class BuilderMixin(object):
                            workerbuilddir="sbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
-        self.bldr = builder.Builder(self.builder_config.name, _addServices=False)
+        self.bldr = builder.Builder(
+            self.builder_config.name, _addServices=False)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
 
@@ -88,7 +88,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         ]
 
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
-        d = BuilderMixin.makeBuilder(self, patch_random=patch_random, **config_kwargs)
+        d = BuilderMixin.makeBuilder(
+            self, patch_random=patch_random, **config_kwargs)
 
         @d.addCallback
         def patch_startBuildsFor(_):
@@ -260,7 +261,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
+        self.assertEqual(
+            record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
         # set a configurable one to return Deferred
         record = []
@@ -276,7 +278,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
+        self.assertEqual(
+            record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
 
     @defer.inlineCallbacks
     def test_enforceChosenWorker(self):

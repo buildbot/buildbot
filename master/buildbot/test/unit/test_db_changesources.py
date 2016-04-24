@@ -12,15 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.db import changesources
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class Tests(interfaces.InterfaceTests):
@@ -173,7 +173,8 @@ class Tests(interfaces.InterfaceTests):
             self.cs87,
         ])
         cslist = yield self.db.changesources.getChangeSources()
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
             dict(id=87, name='lame_source', masterid=None),
@@ -187,7 +188,8 @@ class Tests(interfaces.InterfaceTests):
             self.cs87,
         ])
         cslist = yield self.db.changesources.getChangeSources(masterid=13)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
         ]))
@@ -200,7 +202,8 @@ class Tests(interfaces.InterfaceTests):
             self.cs87
         ])
         cslist = yield self.db.changesources.getChangeSources(active=True)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
         ]))
@@ -214,14 +217,16 @@ class Tests(interfaces.InterfaceTests):
         ])
         cslist = yield self.db.changesources.getChangeSources(
             active=True, masterid=13)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=42, name='cool_source', masterid=13),
         ]))
 
         cslist = yield self.db.changesources.getChangeSources(
             active=True, masterid=14)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), [])
 
     @defer.inlineCallbacks
@@ -232,7 +237,8 @@ class Tests(interfaces.InterfaceTests):
             self.cs87
         ])
         cslist = yield self.db.changesources.getChangeSources(active=False)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), sorted([
             dict(id=87, name='lame_source', masterid=None),
         ]))
@@ -246,12 +252,14 @@ class Tests(interfaces.InterfaceTests):
         ])
         cslist = yield self.db.changesources.getChangeSources(
             active=False, masterid=13)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), [])
 
         cslist = yield self.db.changesources.getChangeSources(
             active=False, masterid=14)
-        [validation.verifyDbDict(self, 'changesourcedict', cs) for cs in cslist]
+        [validation.verifyDbDict(self, 'changesourcedict', cs)
+         for cs in cslist]
         self.assertEqual(sorted(cslist), [])   # always returns [] by spec!
 
 

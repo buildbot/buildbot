@@ -2,9 +2,10 @@
 
 """Based on the fakechanges.py contrib script"""
 
-import MySQLdb  # @UnresolvedImport
 import os.path
 import time
+
+import MySQLdb  # @UnresolvedImport
 
 from twisted.cred import credentials
 from twisted.internet import reactor

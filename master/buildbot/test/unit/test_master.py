@@ -16,13 +16,7 @@ import os
 import signal
 
 import mock
-
 from zope.interface import implementer
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import master
@@ -36,15 +30,22 @@ from buildbot.test.fake import fakemq
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.trial import unittest
+
 
 @implementer(IConfigLoader)
 class FailingLoader(object):
+
     def loadConfig(self):
         config.error('oh noes')
 
 
 @implementer(IConfigLoader)
 class DefaultLoader(object):
+
     def loadConfig(self):
         return config.MasterConfig()
 
@@ -134,6 +135,7 @@ class OldTriggeringMethods(unittest.TestCase):
 
 
 class InitTests(unittest.SynchronousTestCase):
+
     def test_configfile_configloader_conflict(self):
         """
         If both configfile and config_loader are specified, a configuration
@@ -168,15 +170,18 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             # patch out a few other annoying things the master likes to do
             self.patch(monkeypatches, 'patch_all', lambda: None)
             self.patch(signal, 'signal', lambda sig, hdlr: None)
-            self.patch(master, 'Status', lambda master: mock.Mock())  # XXX temporary
+            # XXX temporary
+            self.patch(master, 'Status', lambda master: mock.Mock())
 
             self.reactor = self.make_reactor()
-            self.master = master.BuildMaster(self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
+            self.master = master.BuildMaster(
+                self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.db.setServiceParent(self.master)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self)
             self.mq.setServiceParent(self.master)
-            self.data = self.master.data = fakedata.FakeDataConnector(self.master, self)
+            self.data = self.master.data = fakedata.FakeDataConnector(
+                self.master, self)
             self.data.setServiceParent(self.master)
 
         return d
@@ -255,7 +260,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         yield self.master.startService()
         yield self.master.reconfig()
         yield self.master.stopService()
-        self.master.reconfigServiceWithBuildbotConfig.assert_called_with(mock.ANY)
+        self.master.reconfigServiceWithBuildbotConfig.assert_called_with(
+            mock.ANY)
 
     @defer.inlineCallbacks
     def test_reconfig_bad_config(self):

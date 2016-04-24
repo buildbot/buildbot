@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.test.fake import fakemaster
 from buildbot.util import service
 from buildbot.wamp import connector
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class FakeConfig(object):
@@ -66,21 +66,24 @@ class WampConnector(unittest.TestCase):
         self.connector.app.gotConnection()
         yield d
         # 824 is the hardcoded masterid of fakemaster
-        self.connector.service.publish.assert_called_with("org.buildbot.824.connected")
+        self.connector.service.publish.assert_called_with(
+            "org.buildbot.824.connected")
 
     @defer.inlineCallbacks
     def test_subscribe(self):
         d = self.connector.subscribe('callback', 'topic', 'options')
         self.connector.app.gotConnection()
         yield d
-        self.connector.service.subscribe.assert_called_with('callback', 'topic', 'options')
+        self.connector.service.subscribe.assert_called_with(
+            'callback', 'topic', 'options')
 
     @defer.inlineCallbacks
     def test_publish(self):
         d = self.connector.publish('topic', 'data', 'options')
         self.connector.app.gotConnection()
         yield d
-        self.connector.service.publish.assert_called_with('topic', 'data', options='options')
+        self.connector.service.publish.assert_called_with(
+            'topic', 'data', options='options')
 
     @defer.inlineCallbacks
     def test_OnLeave(self):

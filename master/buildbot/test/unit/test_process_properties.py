@@ -15,11 +15,6 @@
 from copy import deepcopy
 
 import mock
-
-from twisted.internet import defer
-from twisted.python import components
-from twisted.trial import unittest
-
 from zope.interface import implements
 
 from buildbot.interfaces import IProperties
@@ -40,6 +35,10 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.internet import defer
+from twisted.python import components
+from twisted.trial import unittest
 
 
 class FakeSource:
@@ -516,7 +515,8 @@ class TestInterpolateProperties(unittest.TestCase):
         self.props.setProperty("P", "present", "test")
         self.props.setProperty("one", "proj1", "test")
         self.props.setProperty("two", "proj2", "test")
-        command = Interpolate("echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+        command = Interpolate(
+            "echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'true'")
@@ -525,7 +525,8 @@ class TestInterpolateProperties(unittest.TestCase):
     def test_property_colon_ternary_substitute_recursively_delimited_false(self):
         self.props.setProperty("one", "proj1", "test")
         self.props.setProperty("two", "proj2", "test")
-        command = Interpolate("echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
+        command = Interpolate(
+            "echo '%(prop:P:?|%(prop:one:?|true|false)s|%(prop:two:?|false|true)s)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'false'")
@@ -564,7 +565,8 @@ class TestInterpolateSrc(unittest.TestCase):
         return d
 
     def test_src_src(self):
-        command = Interpolate("echo %(src:cbB:repository)s %(src:cbB:project)s")
+        command = Interpolate(
+            "echo %(src:cbB:repository)s %(src:cbB:project)s")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://B.. Project")
@@ -620,7 +622,8 @@ class TestInterpolateSrc(unittest.TestCase):
         return d
 
     def test_src_colon_minus_codebase_notfound(self):
-        command = Interpolate("echo '%(src:unknown_codebase:project:-noproject)s'")
+        command = Interpolate(
+            "echo '%(src:unknown_codebase:project:-noproject)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'noproject'")
@@ -641,14 +644,16 @@ class TestInterpolateSrc(unittest.TestCase):
         return d
 
     def test_src_colon_tilde_false_src_as_replacement(self):
-        command = Interpolate("echo '%(src:cbC:project:~%(src:cbA:project)s)s'")
+        command = Interpolate(
+            "echo '%(src:cbC:project:~%(src:cbA:project)s)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'Project'")
         return d
 
     def test_src_colon_tilde_codebase_notfound(self):
-        command = Interpolate("echo '%(src:unknown_codebase:project:~noproject)s'")
+        command = Interpolate(
+            "echo '%(src:unknown_codebase:project:~noproject)s'")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'noproject'")
@@ -698,63 +703,72 @@ class TestInterpolateKwargs(unittest.TestCase):
         return d
 
     def test_kwarg_colon_minus_not_available_default(self):
-        command = Interpolate("echo %(kw:repository:-cvs://A..)s", project="projectA")
+        command = Interpolate(
+            "echo %(kw:repository:-cvs://A..)s", project="projectA")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://A..")
         return d
 
     def test_kwarg_colon_minus_available(self):
-        command = Interpolate("echo %(kw:repository:-cvs://A..)s", repository="cvs://B..")
+        command = Interpolate(
+            "echo %(kw:repository:-cvs://A..)s", repository="cvs://B..")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://B..")
         return d
 
     def test_kwarg_colon_tilde_true(self):
-        command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository="cvs://A..")
+        command = Interpolate(
+            "echo %(kw:repository:~cvs://B..)s", repository="cvs://A..")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://A..")
         return d
 
     def test_kwarg_colon_tilde_false(self):
-        command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository="")
+        command = Interpolate(
+            "echo %(kw:repository:~cvs://B..)s", repository="")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://B..")
         return d
 
     def test_kwarg_colon_tilde_none(self):
-        command = Interpolate("echo %(kw:repository:~cvs://B..)s", repository=None)
+        command = Interpolate(
+            "echo %(kw:repository:~cvs://B..)s", repository=None)
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://B..")
         return d
 
     def test_kwarg_colon_plus_false(self):
-        command = Interpolate("echo %(kw:repository:+cvs://B..)s", project="project")
+        command = Interpolate(
+            "echo %(kw:repository:+cvs://B..)s", project="project")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo ")
         return d
 
     def test_kwarg_colon_plus_true(self):
-        command = Interpolate("echo %(kw:repository:+cvs://B..)s", repository=None)
+        command = Interpolate(
+            "echo %(kw:repository:+cvs://B..)s", repository=None)
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo cvs://B..")
         return d
 
     def test_kwargs_colon_minus_false_src_as_replacement(self):
-        command = Interpolate("echo '%(kw:text:-%(src:cbA:branch)s)s'", notext='ddd')
+        command = Interpolate(
+            "echo '%(kw:text:-%(src:cbA:branch)s)s'", notext='ddd')
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'default'")
         return d
 
     def test_kwargs_renderable(self):
-        command = Interpolate("echo '%(kw:test)s'", test=ConstantRenderable('testing'))
+        command = Interpolate(
+            "echo '%(kw:test)s'", test=ConstantRenderable('testing'))
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'testing'")
@@ -780,7 +794,8 @@ class TestInterpolateKwargs(unittest.TestCase):
 
     def test_nested_kwarg_deferred(self):
         renderable = DeferredRenderable()
-        command = Interpolate("echo '%(kw:missing:~%(kw:fishy)s)s'", missing=renderable, fishy="so long!")
+        command = Interpolate(
+            "echo '%(kw:missing:~%(kw:fishy)s)s'", missing=renderable, fishy="so long!")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "echo 'so long!'")
@@ -819,7 +834,8 @@ class TestWithProperties(unittest.TestCase):
     def testDictColonMinus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
-        command = WithProperties("build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
+        command = WithProperties(
+            "build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "build-foo-empty.tar.gz")
@@ -828,7 +844,8 @@ class TestWithProperties(unittest.TestCase):
     def testDictColonPlus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
-        command = WithProperties("build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
+        command = WithProperties(
+            "build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual,
                       "build-exists-.tar.gz")
@@ -894,12 +911,14 @@ class TestWithProperties(unittest.TestCase):
         return d
 
     def testLambdaCallable(self):
-        self.assertRaises(ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
+        self.assertRaises(
+            ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
 
     def testLambdaUseExisting(self):
         self.props.setProperty('x', 10, 'test')
         self.props.setProperty('y', 20, 'test')
-        command = WithProperties('%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
+        command = WithProperties(
+            '%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
         d = self.build.render(command)
         d.addCallback(self.failUnlessEqual, '30')
         return d
@@ -1013,8 +1032,10 @@ class TestProperties(unittest.TestCase):
         self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
 
     def test_setProperty_notJsonable(self):
-        self.assertRaises(TypeError, self.props.setProperty, "project", ConstantRenderable('testing'), "test")
-        self.assertRaises(TypeError, self.props.setProperty, "project", object, "test")
+        self.assertRaises(TypeError, self.props.setProperty,
+                          "project", ConstantRenderable('testing'), "test")
+        self.assertRaises(
+            TypeError, self.props.setProperty, "project", object, "test")
 
     # IProperties methods
 
@@ -1204,8 +1225,10 @@ class TestProperty(unittest.TestCase):
         self.props.setProperty("do-tests-None", None, "scheduler")
 
         value = [Property("do-tests-string", default="Hello!", defaultWhenFalse=False),
-                 Property("do-tests-int", default="Hello!", defaultWhenFalse=False),
-                 Property("do-tests-list", default="Hello!", defaultWhenFalse=False),
+                 Property(
+                     "do-tests-int", default="Hello!", defaultWhenFalse=False),
+                 Property(
+                     "do-tests-list", default="Hello!", defaultWhenFalse=False),
                  Property("do-tests-None", default="Hello!", defaultWhenFalse=False)]
 
         d = self.build.render(value)
@@ -1345,7 +1368,8 @@ class Renderer(unittest.TestCase):
 class Compare(unittest.TestCase):
 
     def test_WithProperties_lambda(self):
-        self.failIfEqual(WithProperties("%(key)s", key=lambda p: 'val'), WithProperties("%(key)s", key=lambda p: 'val'))
+        self.failIfEqual(WithProperties("%(key)s", key=lambda p: 'val'), WithProperties(
+            "%(key)s", key=lambda p: 'val'))
 
         def rend(p):
             return "val"

@@ -17,6 +17,7 @@ import mock
 
 from buildbot_worker.scripts import start
 from buildbot_worker.test.util import misc
+
 from twisted.trial import unittest
 
 
@@ -60,5 +61,5 @@ class TestStartCommand(unittest.TestCase, misc.IsWorkerDirMixin):
         # with correct argument
         self.isWorkerDir.assert_called_once_with("dummy")
         mocked_startWorker.assert_called_once_with(config["basedir"],
-                                                  config["quiet"],
-                                                  config["nodaemon"])
+                                                   config["quiet"],
+                                                   config["nodaemon"])

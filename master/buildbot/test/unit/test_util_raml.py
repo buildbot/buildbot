@@ -15,6 +15,7 @@
 import textwrap
 
 from buildbot.util import raml
+
 from twisted.trial import unittest
 
 
@@ -33,7 +34,8 @@ class TestRaml(unittest.TestCase):
 
     def test_endpoints_uri_parameters(self):
         # comparaison of OrderedDict do not take in account order :(
-        # this is why we compare str repr, to make sure the endpoints are in the right order
+        # this is why we compare str repr, to make sure the endpoints are in
+        # the right order
         self.assertEqual(str(self.api.endpoints[
             "/masters/{masterid}/builders/{builderid}/workers/{workerid}"]['uriParameters']),
             str(raml.OrderedDict([
@@ -52,7 +54,8 @@ class TestRaml(unittest.TestCase):
 
     def test_json_example(self):
         self.assertEqual(
-            textwrap.dedent(self.api.format_json(self.api.types["build"]['example'], 0)),
+            textwrap.dedent(
+                self.api.format_json(self.api.types["build"]['example'], 0)),
             textwrap.dedent("""
             {
                 "builderid": 10,

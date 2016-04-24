@@ -17,6 +17,7 @@ import sqlalchemy as sa
 
 from buildbot.util import sautils
 
+
 # The existing builds table doesn't contain much useful information, and it's
 # horrendously denormalized.  So we kill it dead.
 

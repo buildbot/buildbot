@@ -12,15 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import re
 
-from twisted.python.components import registerAdapter
-
+from future.utils import iteritems
 from zope.interface import implements
 
 from buildbot.interfaces import IConfigured
+
+from twisted.python.components import registerAdapter
 
 
 class _DefaultConfigured(object):

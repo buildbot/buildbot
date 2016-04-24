@@ -16,9 +16,9 @@
 # Quite inspired from the github hook.
 import hmac
 
-from twisted.python import log
-
 from buildbot.util import json
+
+from twisted.python import log
 
 
 class GoogleCodeAuthFailed(Exception):

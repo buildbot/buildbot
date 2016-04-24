@@ -19,16 +19,15 @@ import sys
 
 import mock
 
-import twisted
-
-from twisted.internet import defer
-from twisted.protocols import basic
-from twisted.trial import unittest
-
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
 from buildbot.util import json
+
+import twisted
+from twisted.internet import defer
+from twisted.protocols import basic
+from twisted.trial import unittest
 
 
 class TryBase(unittest.TestCase):
@@ -62,7 +61,8 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
         self.tearDownDirs()
 
     def test_messageReceived(self):
-        scheduler = mock.Mock()       # stub out svc.scheduler.handleJobFile and .jobdir
+        # stub out svc.scheduler.handleJobFile and .jobdir
+        scheduler = mock.Mock()
 
         def handleJobFile(filename, f):
             self.assertEqual(filename, 'jobdata')
@@ -176,7 +176,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_parseJob_longer_than_netstring_MAXLENGTH(self):
         self.patch(basic.NetstringReceiver, 'MAX_LENGTH', 100)
-        sched = trysched.Try_Jobdir(name='tsched', builderNames=['a'], jobdir='foo')
+        sched = trysched.Try_Jobdir(
+            name='tsched', builderNames=['a'], jobdir='foo')
         jobstr = self.makeNetstring(
             '1', 'extid', 'trunk', '1234', '1', 'this is my diff, -- ++, etc.',
             'buildera', 'builderc'

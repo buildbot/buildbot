@@ -5,7 +5,9 @@ import sys
 from coverage import coverage
 from coverage.results import Numbers
 from coverage.summary import SummaryReporter
+
 from twisted.python import usage
+
 
 # this is an adaptation of the code behind "coverage report", modified to
 # display+sortby "lines uncovered", which (IMHO) is more important of a

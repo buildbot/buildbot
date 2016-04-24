@@ -16,6 +16,11 @@
 import commands
 import sys
 
+from twisted.cred import credentials
+from twisted.internet import reactor
+from twisted.python import usage
+from twisted.spread import pb
+
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
 # PYTHONPATH; we want to be able to print that error to the log if
@@ -33,12 +38,6 @@ if DEBUG:
     f = open(DEBUG, 'a')
     sys.stderr = f
     sys.stdout = f
-
-
-from twisted.cred import credentials
-from twisted.internet import reactor
-from twisted.python import usage
-from twisted.spread import pb
 
 
 class Options(usage.Options):
@@ -83,13 +82,15 @@ class ChangeSender:
         changed = commands.getoutput("bk changes -v %s -d':GFILE:\\n' '%s'" % (
             rev_arg, repo)).split('\n')
 
-        # Remove the first line, it's an info message you can't remove (annoying)
+        # Remove the first line, it's an info message you can't remove
+        # (annoying)
         del changed[0]
 
         change_info = commands.getoutput("bk changes %s -d':USER:\\n$each(:C:){(:C:)\\n}' '%s'" % (
             rev_arg, repo)).split('\n')
 
-        # Remove the first line, it's an info message you can't remove (annoying)
+        # Remove the first line, it's an info message you can't remove
+        # (annoying)
         del change_info[0]
 
         who = change_info.pop(0)

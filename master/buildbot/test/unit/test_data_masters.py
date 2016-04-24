@@ -14,10 +14,6 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot.data import masters
 from buildbot.process.results import RETRY
 from buildbot.test.fake import fakedb
@@ -26,6 +22,9 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
 
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 SOMETIME = 1349016870
 OTHERTIME = 1249016870
@@ -313,7 +312,8 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         # see that we finished off that build and its steps and logs
         updates = self.master.data.updates
         updates.finishLog.assert_called_with(logid=2000)
-        updates.finishStep.assert_called_with(stepid=200, results=RETRY, hidden=False)
+        updates.finishStep.assert_called_with(
+            stepid=200, results=RETRY, hidden=False)
         updates.finishBuild.assert_called_with(buildid=13, results=RETRY)
 
         self.assertEqual(self.master.mq.productions, [

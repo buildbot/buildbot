@@ -16,11 +16,11 @@ from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import TransportLost
 
+from buildbot.util import service
+
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
-
-from buildbot.util import service
 
 
 class MasterService(ApplicationSession, service.AsyncMultiService):
@@ -58,7 +58,8 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         # It is possible that such failure is practically non-existant
         # so for now, we just crash the master
         log.msg("Guru meditation! We have been disconnected from wamp server")
-        log.msg("We don't know how to recover this without restarting the whole system")
+        log.msg(
+            "We don't know how to recover this without restarting the whole system")
         log.msg(str(details))
         yield self.master.stopService()
 
@@ -130,7 +131,8 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         # how would we continue the current transactions ?
         # how would we tell the workers to switch router ?
         if self.app is not None and self.router_url != router_url:
-            raise ValueError("Cannot use different wamp router url when reconfiguring")
+            raise ValueError(
+                "Cannot use different wamp router url when reconfiguring")
         if router_url is None:
             return
         self.router_url = router_url

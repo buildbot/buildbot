@@ -19,8 +19,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
-import ConfigParser
 import commands
+import ConfigParser
 import os.path
 import xml.dom.minidom
 

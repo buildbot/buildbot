@@ -1,23 +1,21 @@
-import pkg_resources
 import re
 
-from genshi.builder import tag
+import pkg_resources
 
+from api import BuildBotSystem
+from genshi.builder import tag
 from trac.config import Option
 from trac.core import Component
 from trac.core import implements
 from trac.mimeview.api import Context
-from trac.util.datefmt import to_datetime
-from trac.util.datefmt import to_timestamp
-from trac.wiki.formatter import format_to_oneliner
-
 # Interfaces
 from trac.timeline.api import ITimelineEventProvider
+from trac.util.datefmt import to_datetime
+from trac.util.datefmt import to_timestamp
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor
 from trac.web.chrome import ITemplateProvider
-
-from api import BuildBotSystem
+from trac.wiki.formatter import format_to_oneliner
 
 
 class TracBuildBotWatcher(Component):

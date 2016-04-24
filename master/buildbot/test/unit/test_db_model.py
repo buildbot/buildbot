@@ -16,12 +16,12 @@ import os
 
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.test.util import db
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
@@ -39,7 +39,8 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
 
             # mock out the pool, and set up the model
             self.db = mock.Mock()
-            self.db.pool.do_with_engine = lambda thd: defer.maybeDeferred(thd, engine)
+            self.db.pool.do_with_engine = lambda thd: defer.maybeDeferred(
+                thd, engine)
             self.db.model = model.Model(self.db)
             self.db.start()
         d.addCallback(make_fake_pool)

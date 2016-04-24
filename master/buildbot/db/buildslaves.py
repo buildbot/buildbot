@@ -16,6 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.db.workers import WorkersConnectorComponent as _WorkersConnectorComponent
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
@@ -23,7 +24,6 @@ reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.db.worker' module instead".format(old=__name__))
 
-from buildbot.db.workers import WorkersConnectorComponent as _WorkersConnectorComponent
 
 deprecatedWorkerModuleAttribute(locals(), _WorkersConnectorComponent,
                                 compat_name="BuildslavesConnectorComponent",

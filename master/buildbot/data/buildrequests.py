@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from twisted.internet import reactor
-
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.db.buildrequests import NotClaimedError
 from buildbot.process import results
+
+from twisted.internet import defer
+from twisted.internet import reactor
 
 
 class Db2DataMixin(object):
@@ -79,7 +79,8 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             builds = yield self.master.data.get(("buildrequests", brid, "builds"))
 
             # Don't call the data API here, as the buildrequests might have been
-            # taken by another master. We just send the stop message and forget about those.
+            # taken by another master. We just send the stop message and forget
+            # about those.
             mqKwargs = {'reason': kwargs.get('reason', 'no reason')}
             for b in builds:
                 self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
@@ -106,7 +107,8 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         builderid = kwargs.get("builderid", None)
         complete = resultSpec.popBooleanFilter('complete')
-        claimed_by_masterid = resultSpec.popBooleanFilter('claimed_by_masterid')
+        claimed_by_masterid = resultSpec.popBooleanFilter(
+            'claimed_by_masterid')
         if claimed_by_masterid:
             # claimed_by_masterid takes precedence over 'claimed' filter
             # (no need to check consistency with 'claimed' filter even if
@@ -168,7 +170,8 @@ class BuildRequest(base.ResourceType):
             yield db_callable(brids, **kw)
         except AlreadyClaimedError:
             # the db layer returned an AlreadyClaimedError exception, usually
-            # because one of the buildrequests has already been claimed by another master
+            # because one of the buildrequests has already been claimed by
+            # another master
             defer.returnValue(False)
         yield self.generateEvent(brids, event)
         defer.returnValue(True)
@@ -210,7 +213,8 @@ class BuildRequest(base.ResourceType):
                 _reactor=_reactor)
         except NotClaimedError:
             # the db layer returned a NotClaimedError exception, usually
-            # because one of the buildrequests has been claimed by another master
+            # because one of the buildrequests has been claimed by another
+            # master
             defer.returnValue(False)
         yield self.generateEvent(brids, "complete")
 
@@ -244,7 +248,9 @@ class BuildRequest(base.ResourceType):
         ssids = [ss['ssid'] for ss in buildset['sourcestamps']]
         res = yield self.master.data.updates.addBuildset(waited_for=False, scheduler=u'rebuild',
                                                          sourcestamps=ssids, reason=u'rebuild',
-                                                         properties=properties, builderids=[buildrequest['builderid']], external_idstring=buildset['external_idstring'],
-                                                         parent_buildid=buildset['parent_buildid'], parent_relationship=buildset['parent_relationship'],
+                                                         properties=properties, builderids=[
+                                                             buildrequest['builderid']], external_idstring=buildset['external_idstring'],
+                                                         parent_buildid=buildset['parent_buildid'], parent_relationship=buildset[
+                                                             'parent_relationship'],
                                                          )
         defer.returnValue(res)

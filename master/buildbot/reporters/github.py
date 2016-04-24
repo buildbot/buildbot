@@ -15,8 +15,6 @@
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
-from buildbot.reporters import http
-
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -24,9 +22,10 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import http
+
 from twisted.internet import defer
 from twisted.python import log
-
 
 HOSTED_BASE_URL = 'https://api.github.com'
 

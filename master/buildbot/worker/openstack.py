@@ -15,6 +15,14 @@
 # Portions Copyright 2013 Cray Inc.
 import time
 
+from buildbot import config
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.worker.base import AbstractLatentWorker
+
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.python import log
+
 try:
     import novaclient.exceptions as nce
     from novaclient import client
@@ -23,13 +31,6 @@ except ImportError:
     nce = None
     client = None
 
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.python import log
-
-from buildbot import config
-from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.worker.base import AbstractLatentWorker
 
 ACTIVE = 'ACTIVE'
 BUILD = 'BUILD'
@@ -74,7 +75,8 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.client_version = client_version
 
         if block_devices is not None:
-            self.block_devices = [self._parseBlockDevice(bd) for bd in block_devices]
+            self.block_devices = [
+                self._parseBlockDevice(bd) for bd in block_devices]
         else:
             self.block_devices = None
         self.image = image
@@ -95,12 +97,17 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             volume_size: Size of the device in GiB.
         """
         client_block_device = {}
-        client_block_device['device_name'] = block_device.get('device_name', 'vda')
-        client_block_device['source_type'] = block_device.get('source_type', 'image')
-        client_block_device['destination_type'] = block_device.get('destination_type', 'volume')
-        client_block_device['delete_on_termination'] = bool(block_device.get('delete_on_termination', True))
+        client_block_device['device_name'] = block_device.get(
+            'device_name', 'vda')
+        client_block_device['source_type'] = block_device.get(
+            'source_type', 'image')
+        client_block_device['destination_type'] = block_device.get(
+            'destination_type', 'volume')
+        client_block_device['delete_on_termination'] = bool(
+            block_device.get('delete_on_termination', True))
         client_block_device['uuid'] = block_device['uuid']
-        client_block_device['boot_index'] = int(block_device.get('boot_index', 0))
+        client_block_device['boot_index'] = int(
+            block_device.get('boot_index', 0))
         client_block_device['volume_size'] = block_device['volume_size']
         return client_block_device
 

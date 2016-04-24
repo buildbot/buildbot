@@ -13,12 +13,6 @@
 #
 # Copyright Buildbot Team Members
 from mock import Mock
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
-
 from zope.interface import implements
 
 from buildbot import config
@@ -33,6 +27,11 @@ from buildbot.steps import trigger
 from buildbot.test.fake import fakedb
 from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 
 class FakeTriggerable(object):
@@ -339,9 +338,9 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
                                            revision='12345'),
                            FakeSourceStamp(codebase='cb2',
                                            revision='12345')
-                           ],
-                       gotRevisionsInBuild={'cb1': 23456, 'cb2': 34567},
-                       )
+        ],
+            gotRevisionsInBuild={'cb1': 23456, 'cb2': 34567},
+        )
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(
             a=(False,

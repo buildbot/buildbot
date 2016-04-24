@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 import os
 
-from twisted.python import util
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.scripts import runner
 from buildbot.test.util import dirs
@@ -24,6 +21,9 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+from twisted.python import util
+from twisted.trial import unittest
 
 
 class RealConfigs(dirs.DirsMixin, unittest.TestCase):

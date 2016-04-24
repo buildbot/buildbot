@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import itervalues
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-
 from zope.interface import implements
 
 from buildbot import config
@@ -29,6 +24,10 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
@@ -64,7 +63,8 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
         self.reason = util.ascii2unicode(reason % {'name': name})
         self.branch = branch
-        self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(change_filter=change_filter)
+        self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(
+            change_filter=change_filter)
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
         self.onlyIfChanged = onlyIfChanged
         if fileIsImportant and not callable(fileIsImportant):
@@ -282,7 +282,9 @@ class NightlyBase(Timed):
     def _timeToCron(self, time, isDayOfWeek=False):
         if isinstance(time, int):
             if isDayOfWeek:
-                time = (time + 1) % 7  # Convert from Mon = 0 format to Sun = 0 format for use in croniter
+                # Convert from Mon = 0 format to Sun = 0 format for use in
+                # croniter
+                time = (time + 1) % 7
             return time
 
         if isinstance(time, basestring):
@@ -292,16 +294,19 @@ class NightlyBase(Timed):
                 for i, time_val in enumerate(time_array):
                     try:
                         # try to convert value in place
-                        time_array[i] = (int(time_val) + 1) % 7  # Conversion for croniter (see above)
+                        # Conversion for croniter (see above)
+                        time_array[i] = (int(time_val) + 1) % 7
                     except ValueError:
                         # all non-int values are kept
                         pass
-                return ','.join([str(s) for s in time_array])  # Convert the list to a string
+                # Convert the list to a string
+                return ','.join([str(s) for s in time_array])
 
             return time
 
         if isDayOfWeek:
-            time = [(t + 1) % 7 for t in time]  # Conversion for croniter (see above)
+            # Conversion for croniter (see above)
+            time = [(t + 1) % 7 for t in time]
 
         return ','.join([str(s) for s in time])  # Convert the list to a string
 
@@ -352,13 +357,15 @@ class NightlyTriggerable(NightlyBase):
             try:
                 if isinstance(lastTrigger[0], list):
                     self._lastTrigger = (lastTrigger[0],
-                                         properties.Properties.fromDict(lastTrigger[1]),
+                                         properties.Properties.fromDict(
+                                             lastTrigger[1]),
                                          lastTrigger[2],
                                          lastTrigger[3])
                 # handle state from before Buildbot-0.9.0
                 elif isinstance(lastTrigger[0], dict):
                     self._lastTrigger = (list(itervalues(lastTrigger[0])),
-                                         properties.Properties.fromDict(lastTrigger[1]),
+                                         properties.Properties.fromDict(
+                                             lastTrigger[1]),
                                          None,
                                          None)
             except Exception:
@@ -404,7 +411,8 @@ class NightlyTriggerable(NightlyBase):
         if self._lastTrigger is None:
             return
 
-        (sourcestamps, set_props, parent_buildid, parent_relationship) = self._lastTrigger
+        (sourcestamps, set_props, parent_buildid,
+         parent_relationship) = self._lastTrigger
         self._lastTrigger = None
         yield self.setState('lastTrigger', None)
 

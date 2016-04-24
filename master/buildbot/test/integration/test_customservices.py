@@ -12,10 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
+
+from twisted.internet import defer
+
 
 # This integration test creates a master and worker environment,
 # with one builder and a custom step
@@ -58,7 +59,8 @@ class CustomServiceMaster(RunMasterBase):
         yield self.master.reconfig()
 
         # second service removed
-        self.assertNotIn('myService2', self.master.service_manager.namedServices)
+        self.assertNotIn(
+            'myService2', self.master.service_manager.namedServices)
         self.assertFalse(myService2.running)
         self.assertEqual(myService2.num_reconfig, 3)
         self.assertEqual(myService.num_reconfig, 4)
@@ -106,5 +108,6 @@ def masterConfig():
 
     c['services'] = [MyService(num_reconfig=num_reconfig)]
     if num_reconfig == 3:
-        c['services'].append(MyService(name="myService2", num_reconfig=num_reconfig))
+        c['services'].append(
+            MyService(name="myService2", num_reconfig=num_reconfig))
     return c

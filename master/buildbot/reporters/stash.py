@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
 
-from buildbot.process.results import SUCCESS
 from twisted.internet import defer
 from twisted.python import log
 
@@ -45,8 +45,10 @@ class StashStatusPush(http.HttpStatusPushBase):
             status = STASH_INPROGRESS
         for sourcestamp in build['buildset']['sourcestamps']:
             sha = sourcestamp['revision']
-            body = {'state': status, 'key': build['builder']['name'], 'url': build['url']}
+            body = {'state': status, 'key': build[
+                'builder']['name'], 'url': build['url']}
             stash_uri = self.base_url + sha
             response = yield self.session.post(stash_uri, body, auth=self.auth)
             if response.status_code != 200:
-                log.msg("%s: unable to upload stash status: %s" % (response.status, response.content))
+                log.msg("%s: unable to upload stash status: %s" %
+                        (response.status, response.content))

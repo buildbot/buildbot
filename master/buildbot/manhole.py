@@ -18,13 +18,23 @@ import base64
 import binascii
 import os
 import types
-
 from builtins import str
+
+from zope.interface import implements  # requires Twisted-2.0 or later
+
+from buildbot import config
+from buildbot.util import ComparableMixin
+from buildbot.util import service
 
 from twisted.application import strports
 from twisted.conch import manhole
 from twisted.conch import telnet
 from twisted.conch.insults import insults
+from twisted.cred import checkers
+from twisted.cred import portal
+from twisted.internet import protocol
+from twisted.python import log
+
 try:
     from twisted.conch import checkers as conchc, manhole_ssh
     _hush_pyflakes = [manhole_ssh, conchc]
@@ -32,16 +42,7 @@ try:
 except ImportError:
     manhole_ssh = None
     conchc = None
-from twisted.cred import checkers
-from twisted.cred import portal
-from twisted.internet import protocol
-from twisted.python import log
 
-from zope.interface import implements  # requires Twisted-2.0 or later
-
-from buildbot import config
-from buildbot.util import ComparableMixin
-from buildbot.util import service
 
 # makeTelnetProtocol and _TelnetRealm are for the TelnetManhole
 
@@ -100,7 +101,8 @@ if conchc:
         """
 
         def __init__(self, authorized_keys_file):
-            self.authorized_keys_file = os.path.expanduser(authorized_keys_file)
+            self.authorized_keys_file = os.path.expanduser(
+                authorized_keys_file)
 
         def checkKey(self, credentials):
             with open(self.authorized_keys_file) as f:

@@ -16,9 +16,9 @@
 import os
 import time
 
-from twisted.python import log
-
 from buildslave.scripts import base
+
+from twisted.python import log
 
 
 class SlaveNotRunning(Exception):

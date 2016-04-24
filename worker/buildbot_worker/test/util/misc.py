@@ -16,15 +16,16 @@
 import __builtin__
 import cStringIO
 import errno
-import mock
 import os
 import re
 import shutil
 import sys
 
-from twisted.python import log
+import mock
 
 from buildbot_worker.scripts import base
+
+from twisted.python import log
 
 
 def nl(s):

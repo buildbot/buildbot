@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 import re
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.persisted import styles
-
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.persisted import styles
 
 
 class BuildStatus(styles.Versioned):

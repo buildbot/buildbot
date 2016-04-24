@@ -12,13 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import sqlalchemy as sa
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
+from future.utils import iteritems
 
 from buildbot.db import builds
 from buildbot.db import changes
@@ -30,6 +25,9 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
 
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 SOMETIME = 20398573
 OTHERTIME = 937239287
@@ -657,7 +655,8 @@ class RealTests(Tests):
                                  'change_properties', 'changes'):
                     tbl = self.db.model.metadata.tables[tbl_name]
                     res = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = sorted([row[0] for row in res.fetchall()])
+                    results[tbl_name] = sorted(
+                        [row[0] for row in res.fetchall()])
                 self.assertEqual(results, {
                     'scheduler_changes': [14],
                     'change_files': [14],
@@ -741,7 +740,8 @@ class RealTests(Tests):
                                         revision=revision,
                                         sourcestampid=lastID["sourcestampid"],
                                         parent_changeids=parent_changeids,
-                                        when_timestamp=SOMETIME + lastID["changeid"],
+                                        when_timestamp=SOMETIME +
+                                        lastID["changeid"],
                                         branch=branch,
                                         category=category,
                                         project=project,

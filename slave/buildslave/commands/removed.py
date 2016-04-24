@@ -15,7 +15,6 @@
 
 
 import buildslave
-
 from buildslave.commands import base
 
 

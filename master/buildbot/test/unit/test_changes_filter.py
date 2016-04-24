@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import re
 
-from twisted.trial import unittest
-
 from buildbot.changes import filter
 from buildbot.test.fake.change import Change
+
+from twisted.trial import unittest
 
 
 class ChangeFilter(unittest.TestCase):
@@ -56,15 +56,19 @@ class ChangeFilter(unittest.TestCase):
 
     def test_filter_change_filt_str(self):
         self.setfilter(project="myproj")
-        self.no(Change(project="yourproj"), "non-matching PROJECT returns False")
+        self.no(Change(project="yourproj"),
+                "non-matching PROJECT returns False")
         self.yes(Change(project="myproj"), "matching PROJECT returns True")
         self.check()
 
     def test_filter_change_filt_list(self):
         self.setfilter(repository=["vc://a", "vc://b"])
-        self.yes(Change(repository="vc://a"), "matching REPOSITORY vc://a returns True")
-        self.yes(Change(repository="vc://b"), "matching REPOSITORY vc://b returns True")
-        self.no(Change(repository="vc://c"), "non-matching REPOSITORY returns False")
+        self.yes(Change(repository="vc://a"),
+                 "matching REPOSITORY vc://a returns True")
+        self.yes(Change(repository="vc://b"),
+                 "matching REPOSITORY vc://b returns True")
+        self.no(Change(repository="vc://c"),
+                "non-matching REPOSITORY returns False")
         self.no(Change(repository=None), "None for REPOSITORY returns False")
         self.check()
 
@@ -78,21 +82,25 @@ class ChangeFilter(unittest.TestCase):
     def test_filter_change_filt_re(self):
         self.setfilter(category_re="^a.*")
         self.yes(Change(category="albert"), "matching CATEGORY returns True")
-        self.no(Change(category="boris"), "non-matching CATEGORY returns False")
+        self.no(
+            Change(category="boris"), "non-matching CATEGORY returns False")
         self.check()
 
     def test_filter_change_branch_re(self):  # regression - see #927
         self.setfilter(branch_re="^t.*")
         self.yes(Change(branch="trunk"), "matching BRANCH returns True")
-        self.no(Change(branch="development"), "non-matching BRANCH returns False")
+        self.no(Change(branch="development"),
+                "non-matching BRANCH returns False")
         self.no(Change(branch=None), "branch=None returns False")
         self.check()
 
     def test_filter_change_filt_re_compiled(self):
         self.setfilter(category_re=re.compile("^b.*", re.I))
-        self.no(Change(category="albert"), "non-matching CATEGORY returns False")
+        self.no(Change(category="albert"),
+                "non-matching CATEGORY returns False")
         self.yes(Change(category="boris"), "matching CATEGORY returns True")
-        self.yes(Change(category="Bruce"), "matching CATEGORY returns True, using re.I")
+        self.yes(
+            Change(category="Bruce"), "matching CATEGORY returns True, using re.I")
         self.check()
 
     def test_filter_change_combination(self):
@@ -127,7 +135,9 @@ class ChangeFilter(unittest.TestCase):
             self.filt.createChecks(
                 ("ref-updated", None, None, "prop:event.type"),
             ))
-        self.yes(Change(properties={'event.type': 'ref-updated'}), "matching property")
-        self.no(Change(properties={'event.type': 'patch-uploaded'}), "non matching property")
+        self.yes(
+            Change(properties={'event.type': 'ref-updated'}), "matching property")
+        self.no(
+            Change(properties={'event.type': 'patch-uploaded'}), "non matching property")
         self.no(Change(properties={}), "no property")
         self.check()

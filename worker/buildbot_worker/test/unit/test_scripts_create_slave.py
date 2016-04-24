@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-import mock
 import os
+
+import mock
 
 from buildbot_worker.scripts import create_worker
 from buildbot_worker.test.util import misc
+
 from twisted.trial import unittest
 
 

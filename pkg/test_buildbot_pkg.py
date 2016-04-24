@@ -15,11 +15,11 @@
 
 import os
 import shutil
-
 from subprocess import call
 from subprocess import check_call
-from twisted.trial import unittest
 from textwrap import dedent
+
+from twisted.trial import unittest
 
 
 class BuildbotWWWPkg(unittest.TestCase):

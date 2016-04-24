@@ -16,11 +16,11 @@ import datetime
 
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import datetime2epoch
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):

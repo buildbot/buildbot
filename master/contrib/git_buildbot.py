@@ -25,17 +25,16 @@
 
 import commands
 import logging
-import subprocess
 import os
 import re
+import subprocess
 import sys
+from optparse import OptionParser
 
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
-
-from optparse import OptionParser
 
 # Modify this to fit your setup, or pass in --master server:port on the
 # command line
@@ -86,7 +85,8 @@ changes = []
 
 
 def connectFailed(error):
-    logging.error("Could not connect to %s: %s", master, error.getErrorMessage())
+    logging.error(
+        "Could not connect to %s: %s", master, error.getErrorMessage())
     return error
 
 
@@ -205,7 +205,8 @@ def gen_create_branch_changes(newrev, refname, branch):
 
     f = os.popen("git rev-parse --not --branches"
                  + "| grep -v $(git rev-parse %s)" % refname
-                 + "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
+                 +
+                 "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
                  'r')
 
     gen_changes(f, branch)
@@ -237,12 +238,14 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     # newrev. Then, generate Change events for each commit between the
     # common ancestor and newrev.
 
-    logging.info("Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
+    logging.info(
+        "Branch `%s' updated %s .. %s", branch, oldrev[:8], newrev[:8])
 
-    mergebasecommand = subprocess.Popen(["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE)
+    mergebasecommand = subprocess.Popen(
+        ["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE)
     (baserev, err) = mergebasecommand.communicate()
-    baserev = baserev.strip() # remove newline
-    
+    baserev = baserev.strip()  # remove newline
+
     logging.debug("oldrev=%s newrev=%s baserev=%s", oldrev, newrev, baserev)
     if baserev != oldrev:
         c = {'revision': baserev,
@@ -289,7 +292,8 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             # Add the --first-parent to avoid adding the merge commits which
             # have already been tested.
             options += ' --first-parent'
-        f = os.popen("git rev-list %s %s..%s" % (options, baserev, newrev), 'r')
+        f = os.popen("git rev-list %s %s..%s" %
+                     (options, baserev, newrev), 'r')
         gen_changes(f, branch)
 
         status = f.close()

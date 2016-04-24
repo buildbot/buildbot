@@ -15,9 +15,6 @@
 import StringIO
 
 import mock
-
-from twisted.trial import unittest
-
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -26,6 +23,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+
+from twisted.trial import unittest
 
 
 class StubLogObserver(mock.Mock):

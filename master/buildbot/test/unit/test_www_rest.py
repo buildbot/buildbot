@@ -12,23 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-from future.utils import itervalues
-
 import re
 
 import mock
-
-from twisted.internet import defer
-from twisted.trial import unittest
+from future.utils import iteritems
+from future.utils import itervalues
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import authz
 from buildbot.www import rest
-from buildbot.www.rest import BadRequest
 from buildbot.www.rest import JSONRPC_CODES
+from buildbot.www.rest import BadRequest
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class RestRootResource(www.WwwTestMixin, unittest.TestCase):
@@ -76,7 +75,8 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_failure(self):
-        self.rsrc.renderRest = mock.Mock(return_value=defer.fail(RuntimeError('oh noes')))
+        self.rsrc.renderRest = mock.Mock(
+            return_value=defer.fail(RuntimeError('oh noes')))
         yield self.render_resource(self.rsrc, '/')
         self.assertSimpleError('internal error - see logs', 500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -89,19 +89,23 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
     def test_default_origin(self):
         self.master.config.buildbotURL = 'http://server/path/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
+        self.assertEqual(
+            [r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
 
         self.master.config.buildbotURL = 'http://server/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
+        self.assertEqual(
+            [r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
 
         self.master.config.buildbotURL = 'http://server:8080/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\:8080\Z(?ms)'])
+        self.assertEqual(
+            [r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\:8080\Z(?ms)'])
 
         self.master.config.buildbotURL = 'https://server:8080/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual([r.pattern for r in self.rsrc.origins], [r'https\:\/\/server\:8080\Z(?ms)'])
+        self.assertEqual(
+            [r.pattern for r in self.rsrc.origins], [r'https\:\/\/server\:8080\Z(?ms)'])
 
 
 class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
@@ -511,7 +515,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         expected_props = [None, 'test2']
         self.make_request('/test')
         self.request.args = {'property': expected_props}
-        self.assertRaises(BadRequest, lambda: self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint))
+        self.assertRaises(BadRequest, lambda: self.rsrc.decodeResultSpec(
+            self.request, endpoint.TestsEndpoint))
 
     def test_decode_result_spec_limit(self):
         expected_limit = 5
@@ -782,11 +787,13 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
 class ContentTypeParser(unittest.TestCase):
 
     def test_simple(self):
-        self.assertEqual(rest.ContentTypeParser("application/json").gettype(), "application/json")
+        self.assertEqual(
+            rest.ContentTypeParser("application/json").gettype(), "application/json")
 
     def test_complex(self):
         self.assertEqual(rest.ContentTypeParser("application/json; Charset=UTF-8").gettype(),
                          "application/json")
 
     def test_text(self):
-        self.assertEqual(rest.ContentTypeParser("text/plain; Charset=UTF-8").gettype(), "text/plain")
+        self.assertEqual(
+            rest.ContentTypeParser("text/plain; Charset=UTF-8").gettype(), "text/plain")

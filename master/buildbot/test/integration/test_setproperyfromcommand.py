@@ -12,11 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from buildbot.test.util.integration import RunMasterBase
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
 
-from buildbot.test.util.integration import RunMasterBase
 
 # This integration test helps reproduce http://trac.buildbot.net/ticket/3024
 # we make sure that we can reconfigure the master while build is running
@@ -32,14 +33,16 @@ class SetProperyFromCommand(RunMasterBase):
         @defer.inlineCallbacks
         def newLog(*arg, **kw):
             # Simulate db delay. We usually don't test race conditions
-            # with delays, but in integrations test, that would be pretty tricky
+            # with delays, but in integrations test, that would be pretty
+            # tricky
             yield task.deferLater(reactor, .1, lambda: None)
             res = yield oldNewLog(*arg, **kw)
             defer.returnValue(res)
         self.master.data.updates.addLog = newLog
         build = yield self.doForceBuild(wantProperties=True)
 
-        self.assertEqual(build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))
+        self.assertEqual(
+            build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))
 
 
 # master configuration
@@ -59,7 +62,8 @@ def masterConfig():
             builderNames=["testy"])]
 
     f = util.BuildFactory()
-    f.addStep(steps.SetPropertyFromCommand(property="test", command=["echo", "foo"]))
+    f.addStep(steps.SetPropertyFromCommand(
+        property="test", command=["echo", "foo"]))
     c['builders'] = [
         util.BuilderConfig(name="testy",
                            workernames=["local1"],

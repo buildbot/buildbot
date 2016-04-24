@@ -13,13 +13,12 @@
 #
 # Copyright Buildbot Team Members
 import os
-
 from hashlib import sha1
+
+from buildbot.util import flatten
 
 from twisted.internet import defer
 from twisted.python import log
-
-from buildbot.util import flatten
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
@@ -101,7 +100,8 @@ def _filter(contacts):
 
 
 def getUsersContacts(master, contact_types, uids):
-    d = defer.gatherResults([getUserContact(master, contact_types, uid) for uid in uids])
+    d = defer.gatherResults(
+        [getUserContact(master, contact_types, uid) for uid in uids])
     d.addCallback(_filter)
     return d
 
@@ -113,7 +113,8 @@ def getChangeContacts(master, change, contact_types):
 
 
 def getSourceStampContacts(master, ss, contact_types):
-    dl = [getChangeContacts(master, change, contact_types) for change in ss.changes]
+    dl = [getChangeContacts(master, change, contact_types)
+          for change in ss.changes]
     if False and ss.patch_info:
         d = master.db.users.getUserByUsername(ss.patch_into[0])
         d.addCallback(_extractContact, contact_types, ss.patch_info[0])

@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.trial import unittest
-
 from buildbot_worker.commands import shell
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util.command import CommandTestMixin
+
+from twisted.trial import unittest
 
 
 class TestWorkerShellCommand(CommandTestMixin, unittest.TestCase):

@@ -12,25 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import datetime
 import os
 import signal
 import socket
 
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.internet import threads
-from twisted.python import components
-from twisted.python import failure
-from twisted.python import log
+from future.utils import iteritems
 from zope.interface import implements
 
 import buildbot
 import buildbot.pbmanager
-
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches
@@ -57,6 +48,14 @@ from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
+
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.internet import threads
+from twisted.python import components
+from twisted.python import failure
+from twisted.python import log
 
 
 class LogRotation(object):
@@ -235,7 +234,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         try:
             # load the configuration file, treating errors as fatal
             try:
-                # run the master.cfg in thread, so that it can use blocking code
+                # run the master.cfg in thread, so that it can use blocking
+                # code
                 self.config = yield threads.deferToThreadPool(
                     self.reactor, self.reactor.getThreadPool(),
                     self.config_loader.loadConfig)

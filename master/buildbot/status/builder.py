@@ -12,35 +12,33 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import itertools
 import os
 import re
 
-from twisted.persisted import styles
-from twisted.python import log
-
+from future.utils import itervalues
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
+# user modules expect these symbols to be present here
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
+from buildbot.process.results import SKIPPED
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
+from buildbot.process.results import Results
+from buildbot.process.results import worst_status
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.event import Event
 from buildbot.util import pickle
 from buildbot.util.lru import LRUCache
 
-# user modules expect these symbols to be present here
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
-from buildbot.process.results import RETRY
-from buildbot.process.results import Results
-from buildbot.process.results import SKIPPED
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
-from buildbot.process.results import worst_status
+from twisted.persisted import styles
+from twisted.python import log
 
 _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
                   EXCEPTION, RETRY, CANCELLED, Results, worst_status]
@@ -221,7 +219,8 @@ class BuilderStatus(styles.Versioned):
         if earliest_build == 0:
             return
 
-        # skim the directory and delete anything that shouldn't be there anymore
+        # skim the directory and delete anything that shouldn't be there
+        # anymore
         build_re = re.compile(r"^([0-9]+)$")
         build_log_re = re.compile(r"^([0-9]+)-.*$")
         # if the directory doesn't exist, bail out here
@@ -273,7 +272,8 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getWorker(name) for name in self.workernames]
 
     def getPendingBuildRequestStatuses(self):
-        # just assert 0 here. According to dustin the whole class will go away soon.
+        # just assert 0 here. According to dustin the whole class will go away
+        # soon.
         assert 0
         db = self.status.master.db
         d = db.buildrequests.getBuildRequests(claimed=False,
@@ -544,7 +544,8 @@ class BuilderStatus(styles.Versioned):
                     d = s.waitUntilFinished()
                     d.addCallback(lambda s: s.unsubscribe(receiver))
             except Exception:
-                log.msg("Exception caught notifying %r of buildStarted event" % w)
+                log.msg(
+                    "Exception caught notifying %r of buildStarted event" % w)
                 log.err()
 
     def _buildFinished(self, s):
@@ -558,7 +559,8 @@ class BuilderStatus(styles.Versioned):
             try:
                 w.buildFinished(name, s, results)
             except Exception:
-                log.msg("Exception caught notifying %r of buildFinished event" % w)
+                log.msg(
+                    "Exception caught notifying %r of buildFinished event" % w)
                 log.err()
 
         self.prune()  # conserve disk

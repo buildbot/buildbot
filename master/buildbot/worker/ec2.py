@@ -22,6 +22,11 @@ import os
 import re
 import time
 
+from buildbot import config
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
+
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
@@ -32,10 +37,6 @@ try:
 except ImportError:
     boto = None
 
-from buildbot import config
-from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.worker.base import AbstractLatentWorker
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 PENDING = 'pending'
 RUNNING = 'running'
@@ -236,10 +237,12 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.elastic_ip = elastic_ip
         self.subnet_id = subnet_id
         self.security_group_ids = security_group_ids
-        self.classic_security_groups = [self.security_name] if self.security_name else None
+        self.classic_security_groups = [
+            self.security_name] if self.security_name else None
         self.instance_profile_name = instance_profile_name
         self.tags = tags
-        self.block_device_map = self.create_block_device_mapping(block_device_map)
+        self.block_device_map = self.create_block_device_mapping(
+            block_device_map)
 
     def create_block_device_mapping(self, mapping_definitions):
         if not mapping_definitions:
@@ -351,7 +354,8 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _attach_volumes(self):
         for volume_id, device_node in self.volumes:
-            self.ec2_conn.attach_volume(volume_id, self.instance.id, device_node)
+            self.ec2_conn.attach_volume(
+                volume_id, self.instance.id, device_node)
             log.msg('Attaching EBS volume %s to %s.' %
                     (volume_id, device_node))
 
@@ -401,7 +405,8 @@ class EC2LatentWorker(AbstractLatentWorker):
         if price_count == 0:
             self.current_spot_price = 0.02
         else:
-            self.current_spot_price = (price_sum / price_count) * self.price_multiplier
+            self.current_spot_price = (
+                price_sum / price_count) * self.price_multiplier
         if self.current_spot_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.3f exceeds '
                     'configured maximum of %0.3f' %
@@ -418,7 +423,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                         (self.__class__.__name__, self.workername, self.current_spot_price))
         reservations = self.ec2_conn.request_spot_instances(self.current_spot_price, self.ami,
                                                             key_name=self.keypair_name,
-                                                            security_groups=[self.classic_security_groups],
+                                                            security_groups=[
+                                                                self.classic_security_groups],
                                                             instance_type=self.instance_type,
                                                             user_data=self.user_data,
                                                             placement=self.placement,
@@ -432,9 +438,11 @@ class EC2LatentWorker(AbstractLatentWorker):
             return request, None, None, False
         else:
             instance_id = request.instance_id
-            reservations = self.ec2_conn.get_all_instances(instance_ids=[instance_id])
+            reservations = self.ec2_conn.get_all_instances(
+                instance_ids=[instance_id])
             self.instance = reservations[0].instances[0]
-            instance_id, image_id, start_time = self._wait_for_instance(self.get_image())
+            instance_id, image_id, start_time = self._wait_for_instance(
+                self.get_image())
             return instance_id, image_id, start_time, True
 
     def _request_spot_instance(self):

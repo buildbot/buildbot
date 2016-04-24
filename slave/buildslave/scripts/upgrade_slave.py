@@ -15,9 +15,9 @@
 
 import os
 
-from twisted.python import log
-
 from buildslave.scripts import base
+
+from twisted.python import log
 
 
 def upgradeSlave(config):
@@ -31,7 +31,8 @@ def upgradeSlave(config):
         "from buildbot.slave.bot import BuildSlave",
         "from buildslave.bot import BuildSlave")
     if new_buildbot_tac != buildbot_tac:
-        open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
+        open(os.path.join(basedir, "buildbot.tac"), "w").write(
+            new_buildbot_tac)
         log.msg("buildbot.tac updated")
     else:
         log.msg("No changes made")

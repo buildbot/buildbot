@@ -18,9 +18,6 @@ import sys
 
 from mock import Mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.config import ConfigErrors
 from buildbot.process import properties
@@ -35,6 +32,8 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 
+from twisted.internet import defer
+from twisted.trial import unittest
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
@@ -49,7 +48,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setupBuildResults(self, results, wantPreviousBuild=False):
         # this testsuite always goes through setupBuildResults so that
-        # the data is sure to be the real data schema known coming from data api
+        # the data is sure to be the real data schema known coming from data
+        # api
 
         self.db = self.master.db
         self.db.insertTestData([
@@ -76,8 +76,10 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         ])
         for _id in (20,):
             self.db.insertTestData([
-                fakedb.BuildProperty(buildid=_id, name="workername", value="sl"),
-                fakedb.BuildProperty(buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="workername", value="sl"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="reason", value="because"),
             ])
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
                                                 wantPreviousBuild=wantPreviousBuild)
@@ -180,12 +182,14 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         try:
             s = m.as_string()
-            if "base64" not in s:  # python 2.6 default transfer in base64 for utf-8
+            # python 2.6 default transfer in base64 for utf-8
+            if "base64" not in s:
                 self.assertIn("Unicode log", s)
             else:  # b64encode and remove '=' padding (hence [:-1])
                 self.assertIn(base64.b64encode("Unicode log")[:-1], s)
 
-            self.assertIn('Content-Disposition: attachment; filename="fakestep.stdio"', s)
+            self.assertIn(
+                'Content-Disposition: attachment; filename="fakestep.stdio"', s)
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
 
@@ -204,7 +208,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         _, builds = yield self.setupBuildResults(SUCCESS)
         mn = yield self.setupMailNotifier('from@example.org',
                                           buildSetSummary=True,
-                                          mode=("failing", "passing", "warnings"),
+                                          mode=(
+                                              "failing", "passing", "warnings"),
                                           builders=["Builder1", "Builder2"])
 
         mn.buildMessage = Mock()
@@ -379,7 +384,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.messageFormatter.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
-        mn.findInterrestedUsersEmails = Mock(spec=mn.findInterrestedUsersEmails)
+        mn.findInterrestedUsersEmails = Mock(
+            spec=mn.findInterrestedUsersEmails)
         mn.findInterrestedUsersEmails.return_value = "<recipients>"
 
         mn.processRecipients = Mock(spec=mn.processRecipients)
@@ -411,7 +417,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         # make sure the logs are send
         self.assertEqual(mn.createEmail.call_args[0][6][0]['logid'], 60)
         # make sure the log has content
-        self.assertIn("log with", mn.createEmail.call_args[0][6][0]['content']['content'])
+        self.assertIn(
+            "log with", mn.createEmail.call_args[0][6][0]['content']['content'])
 
     @defer.inlineCallbacks
     def test_buildMessage_addPatch(self):

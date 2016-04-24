@@ -16,12 +16,12 @@ import datetime
 
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -43,8 +43,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('branch', sa.String(256)),
             sa.Column('revision', sa.String(256)),
             sa.Column('patchid', sa.Integer),
-            sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
-            sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('repository', sa.String(
+                length=512), nullable=False, server_default=''),
+            sa.Column(
+                'project', sa.String(length=512), nullable=False, server_default=''),
             sa.Column('sourcestampsetid', sa.Integer),
         )
         self.sourcestamps.create(bind=conn)
@@ -60,15 +62,18 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('revlink', sa.String(256)),
             sa.Column('when_timestamp', sa.Integer, nullable=False),
             sa.Column('category', sa.String(256)),
-            sa.Column('repository', sa.String(length=512), nullable=False, server_default=''),
-            sa.Column('project', sa.String(length=512), nullable=False, server_default=''),
+            sa.Column('repository', sa.String(
+                length=512), nullable=False, server_default=''),
+            sa.Column(
+                'project', sa.String(length=512), nullable=False, server_default=''),
         )
         self.changes.create(bind=conn)
 
     def reload_tables_after_migration(self, conn):
         metadata = sa.MetaData()
         metadata.bind = conn
-        self.sourcestamps = sautils.Table('sourcestamps', metadata, autoload=True)
+        self.sourcestamps = sautils.Table(
+            'sourcestamps', metadata, autoload=True)
         self.changes = sautils.Table('changes', metadata, autoload=True)
 
     def fill_tables_with_testdata(self, conn, testdata):
@@ -110,7 +115,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def verify_thd(conn):
             self.reload_tables_after_migration(conn)
             tbl = self.changes
-            self.assertTrue(hasattr(tbl.c, 'codebase'), 'Column codebase not found')
+            self.assertTrue(
+                hasattr(tbl.c, 'codebase'), 'Column codebase not found')
 
             # insert data in the table and new column
             self.fill_tables_with_testdata(conn, changesdata)
@@ -118,7 +124,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             res = conn.execute(sa.select([tbl.c.changeid, tbl.c.repository,
                                           tbl.c.codebase, ]))
             got_changes = res.fetchall()
-            self.assertEqual(got_changes, [(1, 'https://svn.com/repo_a', 'repo_a')])
+            self.assertEqual(
+                got_changes, [(1, 'https://svn.com/repo_a', 'repo_a')])
 
         return self.do_test_migration(21, 22, setup_thd, verify_thd)
 
@@ -131,7 +138,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         def verify_thd(conn):
             self.reload_tables_after_migration(conn)
             tbl = self.sourcestamps
-            self.assertTrue(hasattr(tbl.c, 'codebase'), 'Column codebase not found')
+            self.assertTrue(
+                hasattr(tbl.c, 'codebase'), 'Column codebase not found')
 
             # insert data in the table and new column
             self.fill_tables_with_testdata(conn, changesdata)
@@ -139,6 +147,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             res = conn.execute(sa.select([tbl.c.id, tbl.c.repository,
                                           tbl.c.codebase, ]))
             got_sourcestamps = res.fetchall()
-            self.assertEqual(got_sourcestamps, [(1000, 'https://svn.com/repo_a', 'repo_a')])
+            self.assertEqual(
+                got_sourcestamps, [(1000, 'https://svn.com/repo_a', 'repo_a')])
 
         return self.do_test_migration(21, 22, setup_thd, verify_thd)

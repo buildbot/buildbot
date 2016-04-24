@@ -15,10 +15,6 @@
 """
 Source step code for darcs
 """
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-
 from buildbot.config import ConfigErrors
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
@@ -26,6 +22,10 @@ from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class Darcs(Source):
@@ -157,10 +157,12 @@ class Darcs(Source):
         return d
 
     def _clone(self, abandonOnFailure=False):
-        command = ['darcs', 'get', '--verbose', '--lazy', '--repo-name', self.workdir]
+        command = ['darcs', 'get', '--verbose',
+                   '--lazy', '--repo-name', self.workdir]
         d = defer.succeed(0)
         if self.revision:
-            d.addCallback(lambda _: self._downloadFile(self.revision, '.darcs-context'))
+            d.addCallback(
+                lambda _: self._downloadFile(self.revision, '.darcs-context'))
             command.append('--context')
             command.append('.darcs-context')
 

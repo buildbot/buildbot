@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot import interfaces
 from zope.interface import implements
+
+from buildbot import interfaces
 
 
 class LogObserver(object):

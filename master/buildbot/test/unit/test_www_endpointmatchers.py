@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.fake import fakedb
 from buildbot.test.util import www
 from buildbot.www.authz import endpointmatchers
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 # AnyEndpointMatcher
@@ -49,7 +49,8 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
     def insertData(self):
         self.db.insertTestData([
             fakedb.SourceStamp(id=13, branch=u'secret'),
-            fakedb.Build(id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
+            fakedb.Build(
+                id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
             fakedb.BuildRequest(id=16, buildsetid=17),
             fakedb.Buildset(id=17),
             fakedb.BuildsetSourceStamp(id=20, buildsetid=17, sourcestampid=13),
@@ -117,7 +118,8 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 
     def insertData(self):
         EndpointBase.insertData(self)
-        self.master.allSchedulers = lambda: [ForceScheduler(name="sched1", builderNames=["builder"])]
+        self.master.allSchedulers = lambda: [
+            ForceScheduler(name="sched1", builderNames=["builder"])]
 
     @defer.inlineCallbacks
     def test_build(self):

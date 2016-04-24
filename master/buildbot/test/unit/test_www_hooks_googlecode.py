@@ -16,13 +16,11 @@
 # Written from the github change hook unit test
 import StringIO
 
-from twisted.trial import unittest
-
 import buildbot.www.change_hook as change_hook
-
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 
+from twisted.trial import unittest
 
 # Sample Google Code commit payload extracted from a Google Code test project
 # {
@@ -83,13 +81,17 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
             # First changeset.
             change = self.changeHook.master.addedChanges[0]
             self.assertEquals(change['files'], ['/CMakeLists.txt'])
-            self.assertEquals(change["repository"], "https://code.google.com/p/webhook-test/")
+            self.assertEquals(
+                change["repository"], "https://code.google.com/p/webhook-test/")
             self.assertEquals(change["when"], 1324082130)
-            self.assertEquals(change["author"], "Louis Opter <louis@lse.epitech.net>")
-            self.assertEquals(change["revision"], '68e5df283a8e751cdbf95516b20357b2c46f93d4')
+            self.assertEquals(
+                change["author"], "Louis Opter <louis@lse.epitech.net>")
+            self.assertEquals(
+                change["revision"], '68e5df283a8e751cdbf95516b20357b2c46f93d4')
             self.assertEquals(change["comments"], "Print a message")
             self.assertEquals(change["branch"], "test")
-            self.assertEquals(change["revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
+            self.assertEquals(change[
+                              "revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
 
         d.addCallback(check_changes)
         return d

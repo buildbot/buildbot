@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
+from buildbot import util
+from buildbot.util import ascii2unicode
+from buildbot.util import config
+
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
 from twisted.python import reflect
-
-from buildbot import util
-from buildbot.util import ascii2unicode
-from buildbot.util import config
 
 
 class ReconfigurableServiceMixin(object):
@@ -122,7 +122,8 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
             self.name = ascii2unicode(name)
         self.checkConfig(*args, **kwargs)
         if self.name is None:
-            raise ValueError("%s: must pass a name to constructor" % type(self))
+            raise ValueError(
+                "%s: must pass a name to constructor" % type(self))
         self._config_args = args
         self._config_kwargs = kwargs
         AsyncMultiService.__init__(self)
@@ -227,7 +228,8 @@ class ClusteredBuildbotService(BuildbotService):
     @defer.inlineCallbacks
     def startService(self):
         # subclasses should override startService only to perform actions that should
-        # run on all instances, even if they never get activated on this master.
+        # run on all instances, even if they never get activated on this
+        # master.
         yield super(ClusteredBuildbotService, self).startService()
         self._startServiceDeferred = defer.Deferred()
         self._startActivityPolling()
@@ -235,7 +237,8 @@ class ClusteredBuildbotService(BuildbotService):
 
     def stopService(self):
         # subclasses should override stopService only to perform actions that should
-        # run on all instances, even if they never get activated on this master.
+        # run on all instances, even if they never get activated on this
+        # master.
 
         self._stopActivityPolling()
 
@@ -251,14 +254,18 @@ class ClusteredBuildbotService(BuildbotService):
                 self.active = False
 
                 d = defer.maybeDeferred(self.deactivate)
-                # no errback here: skip the "unclaim" if the deactivation is uncertain
+                # no errback here: skip the "unclaim" if the deactivation is
+                # uncertain
 
-                d.addCallback(lambda _: defer.maybeDeferred(self._unclaimService))
+                d.addCallback(
+                    lambda _: defer.maybeDeferred(self._unclaimService))
 
-                d.addErrback(log.err, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
+                d.addErrback(
+                    log.err, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
                 return d
 
-        d.addCallback(lambda _: super(ClusteredBuildbotService, self).stopService())
+        d.addCallback(
+            lambda _: super(ClusteredBuildbotService, self).stopService())
         return d
 
     def _startActivityPolling(self):
@@ -297,7 +304,8 @@ class ClusteredBuildbotService(BuildbotService):
             try:
                 claimed = yield self._claimService()
             except Exception:
-                log.err(_why='WARNING: ClusteredService(%s) got exception while trying to claim' % self.name)
+                log.err(
+                    _why='WARNING: ClusteredService(%s) got exception while trying to claim' % self.name)
                 return
 
             if not claimed:
@@ -316,7 +324,8 @@ class ClusteredBuildbotService(BuildbotService):
                 yield self.activate()
             except Exception:
                 # this service is half-active, and noted as such in the db..
-                log.err(_why='WARNING: ClusteredService(%s) is only partially active' % self.name)
+                log.err(
+                    _why='WARNING: ClusteredService(%s) is only partially active' % self.name)
             finally:
                 # cannot wait for its deactivation
                 # with yield self._stopActivityPolling
@@ -327,8 +336,10 @@ class ClusteredBuildbotService(BuildbotService):
                 self._stopActivityPolling()
                 self._callbackStartServiceDeferred()
         except Exception:
-            # don't pass exceptions into LoopingCall, which can cause it to fail
-            log.err(_why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
+            # don't pass exceptions into LoopingCall, which can cause it to
+            # fail
+            log.err(
+                _why='WARNING: ClusteredService(%s) failed during activity poll' % self.name)
 
 
 class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
@@ -354,7 +365,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         elif isinstance(new_config_attr, dict):
             new_by_name = new_config_attr
         else:
-            raise TypeError("config.%s should be a list or dictionary" % (self.config_attr))
+            raise TypeError(
+                "config.%s should be a list or dictionary" % (self.config_attr))
         new_set = set(new_by_name)
 
         # calculate new childs, by name, and removed childs
@@ -409,6 +421,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
 
         for svc in reconfigurable_services:
             if not svc.name:
-                raise ValueError("%r: child %r should have a defined name attribute", self, svc)
+                raise ValueError(
+                    "%r: child %r should have a defined name attribute", self, svc)
             config_sibling = new_by_name.get(svc.name)
             yield svc.reconfigServiceWithSibling(config_sibling)

@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 from buildbot.data import builders
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -207,8 +207,10 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
         yield self.rtype.updateBuilderList(13, [])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
                          sorted([
-                             dict(id=1, masterids=[], name='somebuilder', description=None, tags=[]),
-                             dict(id=2, masterids=[14], name='another', description=None, tags=[]),
+                             dict(
+                                 id=1, masterids=[], name='somebuilder', description=None, tags=[]),
+                             dict(
+                                 id=2, masterids=[14], name='another', description=None, tags=[]),
                          ]))
         self.master.mq.assertProductions([
             (('builders', '1', 'stopped'),

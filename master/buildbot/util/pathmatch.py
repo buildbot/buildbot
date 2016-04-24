@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import re
+
+from future.utils import iteritems
 
 _ident_re = re.compile('^[a-zA-Z_-][.a-zA-Z0-9_-]*$')
 

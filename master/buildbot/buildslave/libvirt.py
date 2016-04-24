@@ -16,6 +16,7 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker.libvirt import LibVirtWorker as _LibVirtWorker
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
@@ -23,7 +24,6 @@ reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker.libvirt' module instead".format(old=__name__))
 
-from buildbot.worker.libvirt import LibVirtWorker as _LibVirtWorker
 
 deprecatedWorkerModuleAttribute(locals(), _LibVirtWorker,
                                 compat_name="LibVirtSlave",

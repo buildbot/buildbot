@@ -17,8 +17,16 @@
 from __future__ import absolute_import
 
 import socket
-
 from io import BytesIO
+
+from buildbot import config
+from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util import json
+from buildbot.worker import AbstractLatentWorker
+
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.python import log
 
 try:
     import docker
@@ -26,15 +34,6 @@ try:
     _hush_pyflakes = [docker, client]
 except ImportError:
     client = None
-
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.python import log
-
-from buildbot import config
-from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util import json
-from buildbot.worker import AbstractLatentWorker
 
 
 def _handle_stream_line(line):
@@ -202,7 +201,8 @@ class DockerLatentWorker(AbstractLatentWorker):
         docker_client.start(instance)
         log.msg('Container started')
         if self.followStartupLogs:
-            logs = docker_client.attach(container=instance, stdout=True, stderr=True, stream=True)
+            logs = docker_client.attach(
+                container=instance, stdout=True, stderr=True, stream=True)
             for line in logs:
                 log.msg("docker VM %s: %s" % (shortid, line.strip()))
                 if self.conn:

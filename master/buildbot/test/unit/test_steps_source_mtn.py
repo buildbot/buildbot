@@ -12,9 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import error
-from twisted.trial import unittest
-
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -25,6 +22,9 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+
+from twisted.internet import error
+from twisted.trial import unittest
 
 
 class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
@@ -748,7 +748,8 @@ class TestMonotone(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin,
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
-        self.expectProperty('got_revision', 'abcdef019a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
+        self.expectProperty(
+            'got_revision', 'abcdef019a9f8b6f5c9664e3807cd34617ea928c', 'Monotone')
         return self.runStep()
 
     def test_mode_full_copy(self):

@@ -16,12 +16,6 @@ import os
 import pprint
 import sys
 
-from twisted.internet import error
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.python import runtime
-from twisted.trial import unittest
-
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import EXCEPTION
@@ -30,6 +24,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.util import steps
 
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import runtime
+from twisted.trial import unittest
 
 _COMSPEC_ENV = 'COMSPEC'
 
@@ -214,11 +213,15 @@ class TestSetProperty(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_simple(self):
-        self.setupStep(master.SetProperty(property="testProperty", value=Interpolate("sch=%(prop:scheduler)s, worker=%(prop:workername)s")))
-        self.properties.setProperty('scheduler', 'force', source='SetProperty', runtime=True)
-        self.properties.setProperty('workername', 'testWorker', source='SetProperty', runtime=True)
+        self.setupStep(master.SetProperty(property="testProperty", value=Interpolate(
+            "sch=%(prop:scheduler)s, worker=%(prop:workername)s")))
+        self.properties.setProperty(
+            'scheduler', 'force', source='SetProperty', runtime=True)
+        self.properties.setProperty(
+            'workername', 'testWorker', source='SetProperty', runtime=True)
         self.expectOutcome(result=SUCCESS, state_string="Set")
-        self.expectProperty('testProperty', 'sch=force, worker=testWorker', source='SetProperty')
+        self.expectProperty(
+            'testProperty', 'sch=force, worker=testWorker', source='SetProperty')
         return self.runStep()
 
 
@@ -231,9 +234,13 @@ class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_simple(self):
-        self.setupStep(master.LogRenderable(content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')))
-        self.properties.setProperty('scheduler', 'force', source='TestSetProperty', runtime=True)
-        self.properties.setProperty('workername', 'testWorker', source='TestSetProperty', runtime=True)
+        self.setupStep(master.LogRenderable(
+            content=Interpolate('sch=%(prop:scheduler)s, worker=%(prop:workername)s')))
+        self.properties.setProperty(
+            'scheduler', 'force', source='TestSetProperty', runtime=True)
+        self.properties.setProperty(
+            'workername', 'testWorker', source='TestSetProperty', runtime=True)
         self.expectOutcome(result=SUCCESS, state_string='Logged')
-        self.expectLogfile('Output', pprint.pformat('sch=force, worker=testWorker'))
+        self.expectLogfile(
+            'Output', pprint.pformat('sch=force, worker=testWorker'))
         return self.runStep()

@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -80,8 +80,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             self.assertRaises((sa.exc.IntegrityError,
                                sa.exc.ProgrammingError), lambda:
                               conn.execute(q,
-                                           dict(name='master', active=1, last_active=0),
-                                           dict(name='master', active=1, last_active=1),
+                                           dict(
+                                               name='master', active=1, last_active=0),
+                                           dict(
+                                               name='master', active=1, last_active=1),
                                            ))
 
         return self.do_test_migration(24, 25, setup_thd, verify_thd)
@@ -110,7 +112,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                          dict(brid=20, objectid=7, claimed_at=1349011179),
                          dict(brid=21, objectid=9, claimed_at=1349022279),
                          dict(brid=22, objectid=9, claimed_at=1349033379),
-                         dict(brid=23, objectid=10, claimed_at=1349444479),  # tricky
+                         # tricky
+                         dict(brid=23, objectid=10, claimed_at=1349444479),
                          )
 
         def verify_thd(conn):

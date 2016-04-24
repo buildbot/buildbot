@@ -18,13 +18,9 @@ Unit tests for the plugin framework
 import re
 
 import mock
-
-from twisted.trial import unittest
-
 from zope.interface import implements
 
 import buildbot.plugins.db
-
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
 from buildbot.test.util.warnings import assertNotProducesWarnings
@@ -32,6 +28,7 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
+from twisted.trial import unittest
 
 # buildbot.plugins.db needs to be imported for patching, however just 'db' is
 # much shorter for using in tests
@@ -310,7 +307,8 @@ class TestWorkerPluginsTransition(unittest.TestCase):
         # Access of newly named workers through old entry point is an error.
         with assertProducesWarning(DeprecatedWorkerNameWarning,
                                    message_pattern="namespace is deprecated"):
-            self.assertRaises(AttributeError, lambda: self.buildslave_ns.Worker)
+            self.assertRaises(
+                AttributeError, lambda: self.buildslave_ns.Worker)
 
     def test_old_api_through_new_namespace(self):
         # Access of old-named workers through new API is an error.

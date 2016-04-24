@@ -15,7 +15,6 @@
 
 
 import buildbot_worker
-
 from buildbot_worker.commands import base
 
 

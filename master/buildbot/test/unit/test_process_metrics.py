@@ -15,11 +15,11 @@
 import gc
 import sys
 
-from twisted.internet import task
-from twisted.trial import unittest
-
 from buildbot.process import metrics
 from buildbot.test.fake import fakemaster
+
+from twisted.internet import task
+from twisted.trial import unittest
 
 
 class TestMetricBase(unittest.TestCase):
@@ -129,7 +129,8 @@ class TestMetricTimeEvent(TestMetricBase):
         for i in data:
             metrics.MetricTimeEvent.log('foo_time', i)
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['foo_time'], sum(data) / float(len(data)))
+        self.assertEquals(
+            report['timers']['foo_time'], sum(data) / float(len(data)))
 
 
 class TestPeriodicChecks(TestMetricBase):
@@ -243,7 +244,9 @@ class TestReports(unittest.TestCase):
 
     def testMetricAlarmReport(self):
         handler = metrics.MetricAlarmHandler(None)
-        handler.handle({}, metrics.MetricAlarmEvent('alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN))
+        handler.handle({}, metrics.MetricAlarmEvent(
+            'alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN))
 
         self.assertEquals("WARN alarm_foo: Uh oh", handler.report())
-        self.assertEquals({"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())
+        self.assertEquals(
+            {"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())

@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 
-from twisted.trial import unittest
-
 from buildbot.test.util import migration
 from buildbot.util import sautils
+
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -64,7 +64,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 'logchunks', metadata,
                 sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
                 # 0-based line number range in this chunk (inclusive); note that for
-                # HTML logs, this counts lines of HTML, not lines of rendered output
+                # HTML logs, this counts lines of HTML, not lines of rendered
+                # output
                 sa.Column('first_line', sa.Integer, nullable=False),
                 sa.Column('last_line', sa.Integer, nullable=False),
                 # log contents, including a terminating newline, encoded in utf-8 or,

@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.data.resultspec import ResultSpec
+
+from twisted.internet import defer
 
 
 class Db2DataMixin(object):
@@ -78,14 +78,16 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         data = yield self.db2data(dbdict) if dbdict else None
         # In some cases, data could be None
         if data:
-            filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
+            filters = resultSpec.popProperties() if hasattr(
+                resultSpec, 'popProperties') else []
             # Avoid to request DB for Build's properties if not specified
             if filters:  # pragma: no cover
                 try:
                     props = yield self.master.db.builds.getBuildProperties(data['buildid'])
                 except (KeyError, TypeError):
                     props = {}
-                filtered_properties = self._generate_filtered_properties(props, filters)
+                filtered_properties = self._generate_filtered_properties(
+                    props, filters)
                 if filtered_properties:
                     data['properties'] = filtered_properties
         defer.returnValue(data)
@@ -111,7 +113,8 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def actionRebuild(self, args, kwargs):
-        # we use the self.get and not self.data.get to be able to support all the pathPatterns of this endpoint
+        # we use the self.get and not self.data.get to be able to support all
+        # the pathPatterns of this endpoint
         build = yield self.get(ResultSpec(), kwargs)
         buildrequest = yield self.master.data.get(('buildrequests', build['buildrequestid']))
         res = yield self.master.data.updates.rebuildBuildrequest(buildrequest)
@@ -148,7 +151,8 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
             # Avoid to request DB for Build's properties if not specified
             if filters:  # pragma: no cover
                 props = yield self.master.db.builds.getBuildProperties(b['id'])
-                filtered_properties = self._generate_filtered_properties(props, filters)
+                filtered_properties = self._generate_filtered_properties(
+                    props, filters)
                 if filtered_properties:
                     data['properties'] = filtered_properties
             buildscol.append(data)

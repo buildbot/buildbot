@@ -12,15 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import re
 
-from twisted.internet import defer
-from twisted.python import log
+from future.utils import itervalues
 
 from buildbot import util
 from buildbot.util import lineboundaries
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class Log(object):
@@ -107,7 +107,8 @@ class Log(object):
         # start a compressLog call but don't make our caller wait for
         # it to complete
         d = self.master.data.updates.compressLog(self.logid)
-        d.addErrback(log.err, "while compressing log %d (ignored)" % self.logid)
+        d.addErrback(
+            log.err, "while compressing log %d (ignored)" % self.logid)
 
 
 class PlainLog(Log):

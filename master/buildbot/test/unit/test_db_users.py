@@ -12,11 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.trial import unittest
-
 from buildbot.db import users
 from buildbot.test.fake import fakedb
 from buildbot.test.util import connector_component
+
+from twisted.trial import unittest
 
 
 class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
@@ -211,8 +211,10 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
             def thd(conn):
                 users_tbl = self.db.model.users
                 users_info_tbl = self.db.model.users_info
-                users = conn.execute(users_tbl.select(order_by=users_tbl.c.identifier)).fetchall()
-                infos = conn.execute(users_info_tbl.select(users_info_tbl.c.uid == uid)).fetchall()
+                users = conn.execute(
+                    users_tbl.select(order_by=users_tbl.c.identifier)).fetchall()
+                infos = conn.execute(
+                    users_info_tbl.select(users_info_tbl.c.uid == uid)).fetchall()
                 self.assertEqual(len(users), 2)
                 self.assertEqual(users[1].uid, uid)
                 self.assertEqual(users[1].identifier, 'soap_2')  # unique'd

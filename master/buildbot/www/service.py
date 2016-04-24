@@ -12,9 +12,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import os
+
+from future.utils import iteritems
+from zope.interface import implements
+
+from buildbot.plugins.db import get_plugins
+from buildbot.util import service
+from buildbot.www import config as wwwconfig
+from buildbot.www import auth
+from buildbot.www import avatar
+from buildbot.www import change_hook
+from buildbot.www import rest
+from buildbot.www import sse
+from buildbot.www import ws
 
 from twisted.application import strports
 from twisted.cred.portal import IRealm
@@ -24,18 +35,6 @@ from twisted.python import log
 from twisted.web import guard
 from twisted.web import resource
 from twisted.web import server
-
-from zope.interface import implements
-
-from buildbot.plugins.db import get_plugins
-from buildbot.util import service
-from buildbot.www import auth
-from buildbot.www import avatar
-from buildbot.www import change_hook
-from buildbot.www import config as wwwconfig
-from buildbot.www import rest
-from buildbot.www import sse
-from buildbot.www import ws
 
 
 # todo: need to store session infos in the db for multimaster
@@ -143,7 +142,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         for key, plugin in iteritems(new_config.www.get('plugins', {})):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
-                raise RuntimeError("could not find plugin %s; is it installed?" % (key,))
+                raise RuntimeError(
+                    "could not find plugin %s; is it installed?" % (key,))
             self.apps.get(key).setMaster(self.master)
             root.putChild(key, self.apps.get(key).resource)
         known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
@@ -152,7 +152,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     "configured" % (plugin_name,))
 
         # /
-        root.putChild('', wwwconfig.IndexResource(self.master, self.apps.get('base').static_dir))
+        root.putChild('', wwwconfig.IndexResource(
+            self.master, self.apps.get('base').static_dir))
 
         # /auth
         root.putChild('auth', auth.AuthRootResource(self.master))
@@ -181,8 +182,10 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.root = root
 
-        rotateLength = new_config.www.get('logRotateLength') or self.master.log_rotation.rotateLength
-        maxRotatedFiles = new_config.www.get('maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
+        rotateLength = new_config.www.get(
+            'logRotateLength') or self.master.log_rotation.rotateLength
+        maxRotatedFiles = new_config.www.get(
+            'maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
 
         class RotateLogSite(server.Site):
 
@@ -193,19 +196,23 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     from twisted.python.logfile import LogFile
                     log.msg("Setting up http.log rotating %s files of %s bytes each" %
                             (maxRotatedFiles, rotateLength))
-                    if hasattr(LogFile, "fromFullPath"):  # not present in Twisted-2.5.0
+                    # not present in Twisted-2.5.0
+                    if hasattr(LogFile, "fromFullPath"):
                         return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
                     else:
-                        log.msg("WebStatus: rotated http logs are not supported on this version of Twisted")
+                        log.msg(
+                            "WebStatus: rotated http logs are not supported on this version of Twisted")
                 except ImportError as e:
-                    log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
+                    log.msg(
+                        "WebStatus: Unable to set up rotating http.log: %s" % e)
 
                 # if all else fails, just call the parent method
                 return server.Site._openLogFile(self, path)
 
         httplog = None
         if new_config.www['logfileName']:
-            httplog = os.path.abspath(os.path.join(self.master.basedir, new_config.www['logfileName']))
+            httplog = os.path.abspath(
+                os.path.join(self.master.basedir, new_config.www['logfileName']))
         self.site = RotateLogSite(root, logPath=httplog)
 
         self.site.sessionFactory = BuildbotSession

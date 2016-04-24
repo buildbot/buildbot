@@ -17,8 +17,9 @@ import sqlalchemy as sa
 
 from buildbot.test.util import migration
 from buildbot.util import sautils
-from twisted.trial import unittest
+
 from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class Migration(migration.MigrateTestMixin, unittest.TestCase):
@@ -96,7 +97,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             for table, columns in self.table_columns.items():
                 tbl = sautils.Table(table, metadata, autoload=True)
                 for column in columns:
-                    self.assertIsInstance(getattr(tbl.c, column).type, sa.String)
+                    self.assertIsInstance(
+                        getattr(tbl.c, column).type, sa.String)
                     self.assertEquals(getattr(tbl.c, column).type.length, 255)
 
         return self.do_test_migration(45, 46, setup_thd, verify_thd)

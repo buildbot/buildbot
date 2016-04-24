@@ -12,20 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
 import time
 
-from twisted.internet import defer
-from twisted.python import log
-from twisted.web import html
-
+from future.utils import iteritems
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
 from buildbot.util import datetime2epoch
+
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web import html
 
 
 class Change:
@@ -107,7 +106,8 @@ class Change:
         elif when > now:
             # this happens when the committing system has an incorrect clock, for example.
             # handle it gracefully
-            log.msg("received a Change with when > now; assuming the change happened now")
+            log.msg(
+                "received a Change with when > now; assuming the change happened now")
             self.when = now
         else:
             self.when = when

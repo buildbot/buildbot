@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from twisted.python import log
-
 from zope.interface import implements
 
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
+
+from twisted.internet import defer
+from twisted.python import log
 
 
 class ChangeSource(service.ClusteredBuildbotService):

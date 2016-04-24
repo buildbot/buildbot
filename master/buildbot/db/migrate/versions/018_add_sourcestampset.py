@@ -16,7 +16,6 @@
 import sqlalchemy as sa
 
 from buildbot.util import sautils
-
 from migrate.changeset import constraint
 
 
@@ -40,7 +39,8 @@ def upgrade(migrate_engine):
     # Insert all sourcestampid's as setid's into sourcestampsets table
     sourcestampsetids = sa.select([sourcestamps_table.c.id])
     # this doesn't seem to work without str() -- verified in sqla 0.6.0 - 0.7.1
-    migrate_engine.execute(str(sautils.InsertFromSelect(sourcestampsets_table, sourcestampsetids)))
+    migrate_engine.execute(
+        str(sautils.InsertFromSelect(sourcestampsets_table, sourcestampsetids)))
 
     # rename the buildsets table column
     buildsets_table.c.sourcestampid.alter(name='sourcestampsetid')
@@ -66,7 +66,8 @@ def upgrade(migrate_engine):
                                            sourcestampsets_table.c.id])
     cons.create()
 
-    # Add index for performance reasons to find all sourcestamps in a set quickly
+    # Add index for performance reasons to find all sourcestamps in a set
+    # quickly
     idx = sa.Index('sourcestamps_sourcestampsetid',
                    sourcestamps_table.c.sourcestampsetid, unique=False)
     idx.create()

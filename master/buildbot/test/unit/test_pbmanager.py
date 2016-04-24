@@ -17,12 +17,12 @@ Test clean shutdown functionality of the master
 """
 import mock
 
+from buildbot import pbmanager
+
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.spread import pb
 from twisted.trial import unittest
-
-from buildbot import pbmanager
 
 
 class TestPBManager(unittest.TestCase):
@@ -43,14 +43,17 @@ class TestPBManager(unittest.TestCase):
         return defer.succeed(persp)
 
     def test_repr(self):
-        reg = self.pbm.register('tcp:0:interface=127.0.0.1', "x", "y", self.perspectiveFactory)
+        reg = self.pbm.register(
+            'tcp:0:interface=127.0.0.1', "x", "y", self.perspectiveFactory)
         self.assertEqual(repr(self.pbm.dispatchers['tcp:0:interface=127.0.0.1']),
                          '<pbmanager.Dispatcher for x on tcp:0:interface=127.0.0.1>')
-        self.assertEqual(repr(reg), '<pbmanager.Registration for x on tcp:0:interface=127.0.0.1>')
+        self.assertEqual(
+            repr(reg), '<pbmanager.Registration for x on tcp:0:interface=127.0.0.1>')
 
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
-        reg = self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
+        reg = self.pbm.register(
+            portstr, "boris", "pass", self.perspectiveFactory)
 
         # make sure things look right
         self.assertIn(portstr, self.pbm.dispatchers)

@@ -12,12 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from twisted.internet import defer
-
 from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
+
+from twisted.internet import defer
 
 
 class SchedulerMixin(interfaces.InterfaceTests):
@@ -76,7 +76,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         rows = [fakedb.Object(id=objectid, name=scheduler.name,
                               class_name='SomeScheduler')]
         if createBuilderDB is True:
-            rows.extend([fakedb.Builder(name=bname) for bname in scheduler.builderNames])
+            rows.extend([fakedb.Builder(name=bname)
+                         for bname in scheduler.builderNames])
 
         db.insertTestData(rows)
 
@@ -142,9 +143,11 @@ class SchedulerMixin(interfaces.InterfaceTests):
         return scheduler
 
     def setSchedulerToMaster(self, otherMaster):
-        self.master.data.updates.schedulerIds[self.sched.name] = self.sched.objectid
+        self.master.data.updates.schedulerIds[
+            self.sched.name] = self.sched.objectid
         if otherMaster:
-            self.master.data.updates.schedulerMasters[self.sched.objectid] = otherMaster
+            self.master.data.updates.schedulerMasters[
+                self.sched.objectid] = otherMaster
         else:
             del self.master.data.updates.schedulerMasters[self.sched.objectid]
 

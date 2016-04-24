@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.util import identifiers
+
+from twisted.internet import defer
 
 
 class Db2DataMixin(object):
@@ -113,7 +113,8 @@ class Worker(base.ResourceType):
     @base.updateMethod
     def findWorkerId(self, name):
         if not identifiers.isIdentifier(50, name):
-            raise ValueError("Worker name %r is not a 50-character identifier" % (name,))
+            raise ValueError(
+                "Worker name %r is not a 50-character identifier" % (name,))
         return self.master.db.workers.findWorkerId(name)
 
     @base.updateMethod

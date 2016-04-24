@@ -14,10 +14,10 @@
 # Portions Copyright Buildbot Team Members
 import os
 
-from twisted.internet import defer
-
 from buildbot.config import error
 from buildbot.worker.base import Worker
+
+from twisted.internet import defer
 
 
 class LocalWorker(Worker):
@@ -30,7 +30,8 @@ class LocalWorker(Worker):
             from buildslave.bot import LocalBuildSlave as RemoteLocalWorker
             self.LocalWorkerFactory = RemoteLocalWorker
         except ImportError:
-            error("LocalWorker needs the buildbot-slave package installed (pip install buildbot-slave)")
+            error(
+                "LocalWorker needs the buildbot-slave package installed (pip install buildbot-slave)")
         self.remote_worker = None
 
     @defer.inlineCallbacks
@@ -38,13 +39,15 @@ class LocalWorker(Worker):
         Worker.reconfigService(self, name, None, **kwargs)
         if workdir is None:
             workdir = name
-        workdir = os.path.abspath(os.path.join(self.master.basedir, "workers", workdir))
+        workdir = os.path.abspath(
+            os.path.join(self.master.basedir, "workers", workdir))
         if not os.path.isdir(workdir):
             os.makedirs(workdir)
 
         if self.remote_worker is None:
             # create the actual worker as a child service
-            # we only create at reconfig, to avoid poluting memory in case of reconfig
+            # we only create at reconfig, to avoid poluting memory in case of
+            # reconfig
             self.remote_worker = self.LocalWorkerFactory(name, workdir, usePty)
             yield self.remote_worker.setServiceParent(self)
         else:

@@ -16,10 +16,6 @@
 import platform
 import textwrap
 
-from twisted.internet import error
-from twisted.python import reflect
-from twisted.trial import unittest
-
 from buildbot import config
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
@@ -29,6 +25,9 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
 
+from twisted.internet import error
+from twisted.python import reflect
+from twisted.trial import unittest
 
 _is_windows = (platform.system() == 'Windows')
 
@@ -42,10 +41,12 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.tearDownSourceStep()
 
     def setupStep(self, step, args={}, patch=None, **kwargs):
-        step = sourcesteps.SourceStepMixin.setupStep(self, step, args={}, patch=None, **kwargs)
+        step = sourcesteps.SourceStepMixin.setupStep(
+            self, step, args={}, patch=None, **kwargs)
         self.build.getSourceStamp().revision = args.get('revision', None)
 
-        # builddir propety used to create absolute path required in perforce client spec.
+        # builddir propety used to create absolute path required in perforce
+        # client spec.
         workspace_dir = '/home/user/workspace'
         if _is_windows:
             workspace_dir = r'C:\Users\username\Workspace'
@@ -298,7 +299,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
                           p4viewspec_suffix=None,
                           p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
-                                      ('//depot/white space/...', 'white space/...'),
+                                      ('//depot/white space/...',
+                                       'white space/...'),
                                       ('-//depot/white space/excluded/...', 'white space/excluded/...')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 
@@ -692,7 +694,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.setupStep(P4(p4port='localhost:12000', mode='full',
                           p4viewspec_suffix=None,
                           p4viewspec=[('//depot/trunk/foo.xml', 'bar.xml'),
-                                      ('//depot/trunk/white space/...', 'white space/...'),
+                                      ('//depot/trunk/white space/...',
+                                       'white space/...'),
                                       ('-//depot/trunk/white space/excluded/...', 'white space/excluded/...')],
                           p4user='user', p4client='p4_client1', p4passwd='pass'))
 

@@ -29,7 +29,6 @@ from twisted.python.deprecate import getWarningMethod
 from twisted.python.deprecate import setWarningMethod
 from twisted.python.versions import Version
 
-
 __all__ = (
     "DeprecatedWorkerNameWarning",
     "deprecatedWorkerClassMethod",
@@ -89,10 +88,12 @@ def _compat_name(new_name, compat_name=None):
 # so by default old-API usage warnings will be ignored - this is not what
 # we want.
 class DeprecatedWorkerAPIWarning(Warning):
+
     """Base class for deprecated API warnings."""
 
 
 class DeprecatedWorkerNameWarning(DeprecatedWorkerAPIWarning):
+
     """Warning class for use of deprecated classes, functions, methods
     and attributes.
     """
@@ -103,6 +104,7 @@ class DeprecatedWorkerNameWarning(DeprecatedWorkerAPIWarning):
 # predict in tests exact places where warning should be issued (in contrast
 # warnings about other identifiers will be issued every usage).
 class DeprecatedWorkerModuleWarning(DeprecatedWorkerAPIWarning):
+
     """Warning class for use of deprecated modules."""
 
 
@@ -274,6 +276,7 @@ def deprecatedWorkerClassMethod(scope, method, compat_name=None):
 
 
 class WorkerAPICompatMixin(object):
+
     """Mixin class for classes that have old-named worker attributes."""
 
     def __getattr__(self, name):

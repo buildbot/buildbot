@@ -14,15 +14,14 @@
 # Copyright Buildbot Team Members
 import mock
 
-from twisted.internet import defer
-from twisted.trial import unittest
-
 import buildbot.www.change_hook as change_hook
-
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.manager import ChangeManager
 from buildbot.test.fake.web import FakeRequest
+
+from twisted.internet import defer
+from twisted.trial import unittest
 
 
 class TestPollingChangeHook(unittest.TestCase):
@@ -36,7 +35,8 @@ class TestPollingChangeHook(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True):
-        self.changeHook = change_hook.ChangeHookResource(dialects={'poller': options}, master=mock.Mock())
+        self.changeHook = change_hook.ChangeHookResource(
+            dialects={'poller': options}, master=mock.Mock())
 
         self.request = FakeRequest(args=args)
         self.request.uri = "/change_hook/poller"

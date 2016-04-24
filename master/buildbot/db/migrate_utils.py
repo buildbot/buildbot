@@ -15,6 +15,7 @@
 
 
 import os
+
 import sqlalchemy as sa
 
 from buildbot.util import sautils

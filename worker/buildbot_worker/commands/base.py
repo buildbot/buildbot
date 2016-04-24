@@ -17,15 +17,8 @@
 import os
 import shutil
 import sys
-
 from base64 import b64encode
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import threads
-from twisted.python import failure
-from twisted.python import log
-from twisted.python import runtime
 from zope.interface import implements
 
 from buildbot_worker import runprocess
@@ -33,6 +26,13 @@ from buildbot_worker import util
 from buildbot_worker.commands import utils
 from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.interfaces import IWorkerCommand
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import threads
+from twisted.python import failure
+from twisted.python import log
+from twisted.python import runtime
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -70,7 +70,7 @@ command_version = "2.16"
 #  >= 2.14: RemoveDirectory can delete multiple directories
 #  >= 2.15: 'interruptSignal' option is added to SlaveShellCommand
 #  >= 2.16: 'sigtermTime' option is added to SlaveShellCommand
-#  >= 2.16: runprocess supports obfuscation via tuples (#1748)
+# >= 2.16: runprocess supports obfuscation via tuples (#1748)
 #  >= 2.16: listdir command added to read a directory
 
 
@@ -163,7 +163,8 @@ class Command(object):
         d = defer.maybeDeferred(self.start)
 
         def commandComplete(res):
-            self.sendStatus({"elapsed": util.now(self._reactor) - self.startTime})
+            self.sendStatus(
+                {"elapsed": util.now(self._reactor) - self.startTime})
             self.running = False
             return res
         d.addBoth(commandComplete)
@@ -287,7 +288,8 @@ class SourceBaseCommand(Command):
                 self._commandPaths[name] = utils.getCommand(name)
             except RuntimeError:
                 self.sendStatus({'stderr': "could not find '%s'\n" % name})
-                self.sendStatus({'stderr': "PATH is '%s'\n" % os.environ.get('PATH', '')})
+                self.sendStatus(
+                    {'stderr': "PATH is '%s'\n" % os.environ.get('PATH', '')})
                 raise AbandonChain(-1)
         return self._commandPaths[name]
 
@@ -305,13 +307,15 @@ class SourceBaseCommand(Command):
                                            ".buildbot-sourcedata-" + b64encode(self.srcdir))
 
         # upgrade older versions to the new sourcedata location
-        old_sd_path = os.path.join(self.builder.basedir, self.srcdir, ".buildbot-sourcedata")
+        old_sd_path = os.path.join(
+            self.builder.basedir, self.srcdir, ".buildbot-sourcedata")
         if os.path.exists(old_sd_path) and not os.path.exists(self.sourcedatafile):
             os.rename(old_sd_path, self.sourcedatafile)
 
         # also upgrade versions that didn't include the encoded version of the
         # source directory
-        old_sd_path = os.path.join(self.builder.basedir, ".buildbot-sourcedata")
+        old_sd_path = os.path.join(
+            self.builder.basedir, ".buildbot-sourcedata")
         if os.path.exists(old_sd_path) and not os.path.exists(self.sourcedatafile):
             os.rename(old_sd_path, self.sourcedatafile)
 
@@ -504,7 +508,8 @@ class SourceBaseCommand(Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus({'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
+                self.sendStatus(
+                    {'header': 'exception from rmdirRecursive\n' + f.getTraceback()})
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
             return d
@@ -533,7 +538,8 @@ class SourceBaseCommand(Command):
             return defer.succeed(0)
         # Attempt a recursive chmod and re-try the rm -rf after.
 
-        command = ["chmod", "-Rf", "u+rwx", os.path.join(self.builder.basedir, dirname)]
+        command = ["chmod", "-Rf", "u+rwx",
+                   os.path.join(self.builder.basedir, dirname)]
         if sys.platform.startswith('freebsd'):
             # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
             # directory for which it doesn't have permission, before changing that
@@ -561,7 +567,8 @@ class SourceBaseCommand(Command):
                 return 0  # rc=0
 
             def eb(f):
-                self.sendStatus({'header': 'exception from copytree\n' + f.getTraceback()})
+                self.sendStatus(
+                    {'header': 'exception from copytree\n' + f.getTraceback()})
                 return -1  # rc=-1
             d.addCallbacks(cb, eb)
             return d
@@ -570,7 +577,8 @@ class SourceBaseCommand(Command):
             os.makedirs(os.path.dirname(todir))
         if os.path.exists(todir):
             # I don't think this happens, but just in case..
-            log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
+            log.msg(
+                "cp target '%s' already exists -- cp will not do what you think!" % todir)
 
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,

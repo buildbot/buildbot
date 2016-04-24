@@ -17,14 +17,14 @@ BuildSteps that are specific to the Twisted source tree
 """
 import re
 
-from twisted.python import log
-
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
+
+from twisted.python import log
 
 
 class HLint(ShellCommand):
@@ -398,7 +398,8 @@ class Trial(ShellCommand):
             # using -j/--jobs flag produces more than one test log.
             self.logfiles = {}
             for i in xrange(self.jobs):
-                self.logfiles['test.%d.log' % i] = '_trial_temp/%d/test.log' % i
+                self.logfiles['test.%d.log' %
+                              i] = '_trial_temp/%d/test.log' % i
                 self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
                 self.logfiles['out.%d.log' % i] = '_trial_temp/%d/out.log' % i
                 self.addLogObserver('test.%d.log' % i, output_observer)

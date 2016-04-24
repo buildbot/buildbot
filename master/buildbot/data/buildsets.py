@@ -12,22 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import itervalues
-
 import copy
 
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
+from future.utils import itervalues
 
-from buildbot.data import base
 from buildbot.data import sourcestamps as sourcestampsapi
+from buildbot.data import base
 from buildbot.data import types
 from buildbot.process.buildrequest import BuildRequestCollapser
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import worst_status
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
+
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 
 class Db2DataMixin(object):
@@ -190,7 +190,8 @@ class Buildset(base.ResourceType):
         # figure out the overall results of the buildset:
         cumulative_results = SUCCESS
         for brdict in brdicts:
-            cumulative_results = worst_status(cumulative_results, brdict['results'])
+            cumulative_results = worst_status(
+                cumulative_results, brdict['results'])
 
         # get a copy of the buildset
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
