@@ -622,8 +622,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
             # on Windows, this file does not contain the password, per
             # http://trac.buildbot.net/ticket/2355
-            + \
-            Expect.behavior(
+            + Expect.behavior(
                 uploadString(':pserver:dustin@cvs-mirror.mozilla.org:/cvsroot'))
             + 0,
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
@@ -634,8 +633,7 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                       slavesrc='Entries', workdir='wkdir/CVS',
                                       writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
-            + \
-            Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
+            + Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])

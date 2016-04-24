@@ -105,7 +105,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             .path('/some/dir').stdout(os.linesep.join([
                 '1273258100.0 -7200',
                 'Bob Test <bobtest@example.org>',
-                'file1 with spaces' + os.pathsep + \
+                'file1 with spaces' + os.pathsep +
                 os.path.join('dir with spaces', 'file2') + os.pathsep,
                 'This is rev 73591',
                 ''])),
