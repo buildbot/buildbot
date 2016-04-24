@@ -6,7 +6,7 @@
             i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':buildsummary.fulldisplay}")
         .btn.btn-xs.btn-default(ng-click="buildsummary.toggleDetails()", title="Show steps according to their importance")
             i.fa.fa-expand
-            {{buildsummary.levelOfDetails()}}
+            | {{buildsummary.levelOfDetails()}}
         | &nbsp;
         span(ng-if="buildsummary.prefix") {{buildsummary.prefix}}&nbsp;
         a(ui-sref="build({builder:buildsummary.builder.builderid, build:buildsummary.build.number})")
@@ -28,7 +28,8 @@
                     | {{buildsummary.parentrelationship}}:
                     | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
   ul.list-group.no-select
-    li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)", ng-repeat="step in buildsummary.steps")
+    li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)"
+                       ng-repeat="step in buildsummary.steps | orderBy: ['stepid']")
       div(ng-click="step.fulldisplay=!step.fulldisplay")
           span.pull-right(ng-if="step.started_at")
             span(ng-show="step.complete")
