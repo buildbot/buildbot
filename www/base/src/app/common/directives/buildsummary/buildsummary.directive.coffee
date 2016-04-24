@@ -4,7 +4,7 @@ class Buildsummary extends Directive('common')
             replace: true
             restrict: 'E'
             scope: {}
-            bindToController: {buildid: '=', build: '=', condensed: '=', parentbuild: '=', parentrelationship: '='}
+            bindToController: {buildid: '=?', build: '=?', condensed: '=?', parentbuild: '=?', parentrelationship: '=?'}
             templateUrl: 'views/buildsummary.html'
             compile: RecursionHelper.compile
             controller: '_buildsummaryController'

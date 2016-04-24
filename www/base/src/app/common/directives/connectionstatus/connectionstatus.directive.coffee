@@ -3,7 +3,7 @@ class connectionstatus extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {data:'='}
+            scope: {}
             templateUrl: 'views/connectionstatus.html'
             compile: RecursionHelper.compile
             controller: '_connectionstatusController'

@@ -3,7 +3,7 @@ class Buildrequestsummary extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {buildrequestid: '='}
+            scope: {buildrequestid: '=?'}
             templateUrl: 'views/buildrequestsummary.html'
             compile: RecursionHelper.compile
             controller: '_buildrequestsummaryController'
