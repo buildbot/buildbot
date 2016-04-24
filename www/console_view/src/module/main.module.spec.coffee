@@ -145,9 +145,9 @@ describe 'Console view controller', ->
         createController()
         $timeout.flush()
         expect(scope.c.changes[0]).toBeDefined()
-        expect(scope.c.changes[0].buildsPerBuilder).toBeDefined()
-        builds = scope.c.changes[0].buildsPerBuilder
-        expect(builds[1][0].buildid).toBe(1)
-        expect(builds[2][0].buildid).toBe(2)
-        expect(builds[3][0].buildid).toBe(4)
-        expect(builds[4][0].buildid).toBe(3)
+        expect(scope.c.changes[0].builders).toBeDefined()
+        builders = scope.c.changes[0].builders
+        expect(builders[0].builds[0].buildid).toBe(1)
+        expect(builders[1].builds[0].buildid).toBe(2)
+        expect(builders[2].builds[0].buildid).toBe(4)
+        expect(builders[3].builds[0].buildid).toBe(3)

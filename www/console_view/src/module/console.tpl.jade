@@ -15,8 +15,7 @@
                 builders-header(builders='c.builders' width='c.width' cell-width='c.cellWidth')
     .content
         .change-rows(ng-style='{width: c.width}')
-            change-row(ng-repeat="change in c.changes | filter: search | orderBy: 'changeid':true track by change.changeid"
+            change-row(ng-repeat="change in c.changes | filter: search | orderBy: ['changeid'] track by change.changeid"
                        change='change'
-                       builders='builders'
                        width='c.width'
                        cell-width='c.cellWidth')

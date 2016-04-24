@@ -6,8 +6,7 @@ class ChangeRow extends Directive
             scope: {
                 width: '='
                 cellWidth: '='
-                change: '='
-                builders: '='
+                change: '=?'
             }
             templateUrl: 'console_view/views/changerow.html'
             controller: '_changeRowController'
@@ -29,7 +28,6 @@ class _changeRow extends Controller
             if @change
                 if angular.isString(@change.repository)
                     @createLink()
-        $scope.$watch 'builders', (@builders) ->
 
     createLink: ->
         repository = @change.repository.replace('.git', '')

@@ -12,9 +12,9 @@
                 span(ng-if='!cr.change.author_email')  {{ cr.change.author }}
     .col-85
         .builds
-            span.build(ng-repeat="builder in builders | orderBy: 'name' track by builder.builderid"
-                 ng-style="{'width': cr.cellWidth}", title="{{builder.name}}")
-                a(ng-repeat="build in cr.change.buildsPerBuilder[builder.builderid] track by $index| orderBy:'started_at'")
+            span.build(ng-repeat="builder in change.builders | orderBy: ['name'] track by builder.builderid"
+                       ng-style="{'width': cr.cellWidth}", title="{{builder.name}}")
+                a(ng-repeat="build in builder.builds | orderBy: ['started_at']")
                     .badge-status(ng-if='build.buildid'
                                   ng-class="cr.results2class(build, 'pulse')"
                                   ng-click='cr.selectBuild(build)')

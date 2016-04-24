@@ -86,6 +86,11 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
         @d.addCallback
         def db2data(buildsets):
+            # buildset db2data is pretty heavy. for the sake of console_view prefilter the data
+            # should fix it properly in http://trac.buildbot.net/ticket/3537
+            if (resultSpec.order == ['-submitted_at'] and resultSpec.limit and resultSpec.offset is None):
+                buildsets.sort(key=lambda x: x['submitted_at'], reverse=True)
+                buildsets = buildsets[:resultSpec.limit]
             d = defer.DeferredList([self.db2data(bs) for bs in buildsets],
                                    fireOnOneErrback=True, consumeErrors=True)
 
