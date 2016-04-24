@@ -51,7 +51,7 @@ class Console extends Controller
             return not v.masterids? or v.masterids.length > 0
 
         @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
-        @changes = @dataAccessor.getChanges({limit: @changeLimit, order: '-when_timestamp'})
+        @changes = @dataAccessor.getChanges({limit: @changeLimit, order: '-changeid'})
         @buildrequests = @dataAccessor.getBuildrequests({limit: @buildLimit, order: '-submitted_at'})
         @buildsets = @dataAccessor.getBuildsets({limit: @buildLimit, order: '-submitted_at'})
 
