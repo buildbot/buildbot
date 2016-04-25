@@ -138,7 +138,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
-                                 keypair_name="test_key",
+                                 keypair_name="latent_buildbot_slave",
                                  security_group_ids=[sg.id],
                                  subnet_id=subnet.id,
                                  ami=amis[0].id
@@ -153,6 +153,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].subnet_id, subnet.id)
         self.assertEqual(len(instances[0].groups), 1)
         self.assertEqual(instances[0].groups[0].id, sg.id)
+        self.assertEqual(instances[0].key_name, 'latent_buildbot_slave')
 
     @mock_ec2
     def test_start_instance(self):
@@ -235,6 +236,26 @@ class TestEC2LatentWorker(unittest.TestCase):
             bs.block_device_map['/dev/xvdc'])
 
     @mock_ec2
+    def test_start_instance_attach_volume(self):
+        c = self.botoSetup()
+        vol = c.create_volume('10', 'us-east-1a')
+        amis = c.get_all_images()
+        ami = amis[0]
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_slave",
+                                 security_name='latent_buildbot_slave',
+                                 ami=ami.id,
+                                 volumes=[(vol.id, "/dev/sdz")]
+                                 )
+        id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        instance = instances[0]
+        self.assertEqual(vol.id, instance.block_device_mapping['/dev/sdz'].volume_id)
+
+    @mock_ec2
     def test_start_instance_tags(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -261,6 +282,26 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].tags, tags)
 
     @mock_ec2
+    def test_start_instance_ip(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        eip = c.allocate_address(domain='vpc')
+        elastic_ip = eip.public_ip
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_slave",
+                                 security_name='latent_buildbot_slave',
+                                 elastic_ip=elastic_ip,
+                                 ami=amis[0].id
+                                 )
+        id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        addresses = c.get_all_addresses()
+        self.assertEqual(instances[0].id, addresses[0].instance_id)
+
+    @mock_ec2
     def test_start_vpc_spot_instance(self):
         c = self.botoSetup()
 
@@ -274,7 +315,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
-                                 keypair_name="test_key",
+                                 keypair_name="latent_buildbot_slave",
                                  ami=amis[0].id, spot_instance=True,
                                  max_spot_price=1.5,
                                  security_group_ids=[sg.id],
@@ -351,6 +392,69 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.attempt, 1)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
+
+    @mock_ec2
+    def test_get_image_ami(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        ami = amis[0]
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_slave",
+                                 security_name='latent_buildbot_slave',
+                                 ami=ami.id
+                                 )
+        image = bs.get_image()
+
+        self.assertEqual(image.id, ami.id)
+
+    @mock_ec2
+    def test_get_image_owners(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        ami = amis[0]
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_slave",
+                                 security_name='latent_buildbot_slave',
+                                 valid_ami_owners=[int(ami.ownerId)]
+                                 )
+        image = bs.get_image()
+
+        self.assertEqual(image.id, ami.id)
+
+    @mock_ec2
+    def test_get_image_location(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        ami = amis[0]
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_slave",
+                                 security_name='latent_buildbot_slave',
+                                 valid_ami_location_regex='amazon/.*'
+                                 )
+        image = bs.get_image()
+
+        self.assertEqual(image.id, ami.id)
+
+    @mock_ec2
+    def test_get_image_location_not_found(self):
+        self.botoSetup()
+
+        def create_worker():
+            ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                identifier='publickey',
+                                secret_identifier='privatekey',
+                                keypair_name="latent_buildbot_slave",
+                                security_name='latent_buildbot_slave',
+                                valid_ami_location_regex='foobar.*'
+                                )
+
+        self.assertRaises(ValueError, create_worker)
 
     @mock_ec2
     def test_start_spot_instance_retry_low_price(self):
