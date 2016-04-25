@@ -78,11 +78,37 @@ class TestStopWorker(misc.FileIOMixin,
 
         # check that stopWorker() sends expected signal to right PID
         # and print correct message to stdout
-        stop.stopWorker(None, False)
+        exit_code = stop.stopWorker(None, False)
+        self.assertEqual(exit_code, 0)
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
 
         self.assertStdoutEqual("worker process %s is dead\n" % self.PID)
+
+    @compat.skipUnlessPlatformIs("posix")
+    def test_stop_timeout(self):
+        """
+        test stopWorker() when stop timeouts
+        """
+
+        # patch open() to return a pid file
+        self.setUpOpen(str(self.PID))
+
+        # patch os.kill to emulate successful kill
+        mocked_kill = mock.Mock()
+        self.patch(os, "kill", mocked_kill)
+
+        # don't waste time
+        self.patch(time, "sleep", mock.Mock())
+
+        # check that stopWorker() sends expected signal to right PID
+        # and print correct message to stdout
+        exit_code = stop.stopWorker(None, False)
+        self.assertEqual(exit_code, 1)
+        mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
+                                      mock.call(self.PID, 0)])
+
+        self.assertStdoutEqual("never saw process go away\n")
 
 
 class TestStop(misc.IsWorkerDirMixin,
@@ -121,7 +147,8 @@ class TestStop(misc.IsWorkerDirMixin,
         mock_stopWorker = mock.Mock(side_effect=stop.WorkerNotRunning())
         self.patch(stop, "stopWorker", mock_stopWorker)
 
-        stop.stop(self.config)
+        exit_code = stop.stop(self.config)
+        self.assertEqual(exit_code, 0)
 
         self.assertStdoutEqual("worker not running\n")
 
@@ -134,10 +161,29 @@ class TestStop(misc.IsWorkerDirMixin,
         self.setupUpIsWorkerDir(True)
 
         # patch stopWorker() to do nothing
-        mock_stopWorker = mock.Mock()
+        mock_stopWorker = mock.Mock(return_value=0)
         self.patch(stop, "stopWorker", mock_stopWorker)
 
-        stop.stop(self.config)
+        exit_code = stop.stop(self.config)
+        self.assertEqual(exit_code, 0)
+        mock_stopWorker.assert_called_once_with(self.config["basedir"],
+                                                self.config["quiet"],
+                                                "TERM")
+
+    def test_failed_stop(self):
+        """
+        test failing stop()
+        """
+
+        # patch basedir check to always succeed
+        self.setupUpIsWorkerDir(True)
+
+        # patch stopWorker() to do nothing
+        mock_stopWorker = mock.Mock(return_value=17)
+        self.patch(stop, "stopWorker", mock_stopWorker)
+
+        exit_code = stop.stop(self.config)
+        self.assertEqual(exit_code, 17)
         mock_stopWorker.assert_called_once_with(self.config["basedir"],
                                                 self.config["quiet"],
                                                 "TERM")
