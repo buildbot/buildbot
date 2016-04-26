@@ -39,3 +39,10 @@ def skipUnlessPlatformIs(platform):
             test.skip = "not a %s platform" % platform
         return test
     return closure
+
+def skipIfRunningPypy(test):
+    test.skip = runningPypy()
+    return test
+
+def runningPypy():
+    return '__pypy__' in sys.builtin_module_names

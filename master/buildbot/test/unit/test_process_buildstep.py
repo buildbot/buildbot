@@ -180,6 +180,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self._setupWaterfallTest(hideStepIf=lambda : 0/0, expect=False, expectedResult=EXCEPTION)
         return self.runStep()
 
+    @compat.skipIfRunningPypy
     @compat.usesFlushLoggedErrors
     def test_hideStepIf_Callable_Exception(self):
         called = [False]

@@ -244,8 +244,8 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
                                                             ['x@y'], None))
         def check(result):
             exp_format = 'user(s) found:\ngit: x <x@y>\nidentifier: x@y\n' \
-                         'bb_username: None\nuid: 1\n\n'
-            self.assertEqual(result, exp_format)
+                         'bb_username: None\nuid: 1\n\n'.split('\n')
+            self.assertTrue(all(value in result for value in exp_format))
         d.addCallback(check)
         return d
 

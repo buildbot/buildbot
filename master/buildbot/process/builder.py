@@ -121,7 +121,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         if self.building:
             for b in self.building:
-                d.addCallback(self._resubmit_buildreqs, b)
+                d.addCallback(self._resubmit_buildreqs, b.requests)
                 d.addErrback(log.err)
         return d
 
@@ -560,33 +560,49 @@ class Builder(config.ReconfigurableServiceMixin,
         # mark the builds as finished, although since nothing ever reads this
         # table, it's not too important that it complete successfully
         brids = [br.id for br in build.requests]
-        d = self.master.db.builds.finishBuilds(bids)
-        # todo: get build number
-        d.addCallback(lambda _ : self.master.db.builds.finishedMergedBuilds(brids, build.build_status.number))
-        d.addErrback(log.err, 'while marking builds as finished (ignored)')
-        d.addCallback(lambda _: self.master.db.buildrequests.maybeUpdateMergedBrids(brids))
+        d = self.finishBuildRequests(brids, build.requests, build, bids)
 
-        results = build.build_status.getResults()
         self.building.remove(build)
-        if results == RETRY:
-            self._resubmit_buildreqs(build=build).addErrback(log.err)
-        else:
-            db = self.master.db
-            if results == RESUME:
-                d = db.buildrequests.updateBuildRequests(brids, results=results,
-                                                         slavepool=build.build_status.resumeSlavepool)
-            else:
-                d = db.buildrequests.completeBuildRequests(brids, results)
-            d.addCallback(
-                lambda _ : self._maybeBuildsetsComplete(build.requests, results=results))
-            # nothing in particular to do with this deferred, so just log it if
-            # it fails..
-            d.addErrback(log.err, 'while marking build requests as completed')
 
         if sb.slave:
             sb.slave.releaseLocks()
 
         self.updateBigStatus()
+
+        return d
+
+    def finishBuildRequests(self, brids, requests, build, bids=None, mergedbrids=None):
+
+        d = self.master.db.builds.finishBuilds(bids) if bids else defer.succeed(None)
+
+        mergedbrids = brids if mergedbrids is None else mergedbrids
+
+        # TODO: we should probably do better error handle
+
+        d.addCallback(lambda _: self.master.db.builds.finishedMergedBuilds(mergedbrids, build.build_status.number))
+        d.addErrback(log.err, 'while marking builds as finished (ignored)')
+        d.addCallback(lambda _: self.master.db.buildrequests.maybeUpdateMergedBrids(mergedbrids))
+
+        results = build.build_status.getResults()
+        if results == RETRY:
+            d.addCallback(lambda _: self._resubmit_buildreqs(requests=requests))
+            d.addErrback(log.err, 'while resubmitting build requests')
+        else:
+            db = self.master.db
+            if results == RESUME:
+                d.addCallback(lambda _:
+                              db.buildrequests.updateBuildRequests(brids,
+                                                                   results=results,
+                                                                   slavepool=build.build_status.resumeSlavepool))
+            else:
+                d.addCallback(lambda _: db.buildrequests.completeBuildRequests(brids, results))
+
+            d.addCallback(lambda _: self._maybeBuildsetsComplete(requests, results=results))
+            # nothing in particular to do with this deferred, so just log it if
+            # it fails..
+            d.addErrback(log.err, 'while marking build requests as completed')
+        return d
+
 
     @defer.inlineCallbacks
     def _maybeBuildsetsComplete(self, requests, results=None):
@@ -598,8 +614,8 @@ class Builder(config.ReconfigurableServiceMixin,
                 self.master.buildRequestAdded(br.bsid, br.id, self.name)
 
     @defer.inlineCallbacks
-    def _resubmit_buildreqs(self, out=None, build=None):
-        brids = [br.id for br in build.requests]
+    def _resubmit_buildreqs(self, out=None, requests=None):
+        brids = [br.id for br in requests]
         yield self.master.db.buildrequests.unclaimBuildRequests(brids, results=BEGINNING)
         defer.returnValue(out)
 

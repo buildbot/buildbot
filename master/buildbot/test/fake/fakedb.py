@@ -1140,10 +1140,10 @@ class FakeBuildRequestsComponent(FakeDBComponent):
     # assertions
 
     def assertMyClaims(self, claimed_brids):
-        self.t.assertEqual(
-                [ id for (id, brc) in self.claims.iteritems()
-                  if brc.objectid == self.MASTER_ID ],
-                claimed_brids)
+        myclaims = [id for (id, brc) in self.claims.iteritems()
+                        if brc.objectid == self.MASTER_ID]
+
+        self.t.assertTrue(all(brid in claimed_brids for brid in myclaims))
 
 
 class FakeBuildsComponent(FakeDBComponent):
