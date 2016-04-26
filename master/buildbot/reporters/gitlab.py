@@ -95,7 +95,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             state = {
                 SUCCESS: 'success',
                 WARNINGS: 'success',
-                FAILURE: 'failure',
+                FAILURE: 'failed',
                 SKIPPED: 'success',
                 EXCEPTION: 'error',
                 RETRY: 'pending',
