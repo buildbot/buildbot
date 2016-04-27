@@ -14,13 +14,15 @@
 # Copyright Buildbot Team Members
 import mock
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.trial import unittest
+
+
 from buildbot.process import log
 from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class Tests(unittest.TestCase):
@@ -287,3 +289,56 @@ class TestFakeLogFile(unittest.TestCase, InterfaceTests):
         step = mock.Mock(name='fake step')
         step.logobservers = []
         self.log = fakelogfile.FakeLogFile('stdio', step)
+
+
+class TestErrorRaised(unittest.TestCase):
+
+    def instrumentTestedLoggerForError(self, testedLog):
+        def addRawLines(msg):
+            d = defer.Deferred()
+
+            def raiseError(_):
+                d.errback(RuntimeError('DB has gone away'))
+            reactor.callLater(10 ** (-6), raiseError, None)
+            return d
+
+        self.patch(testedLog, 'addRawLines', addRawLines)
+        return testedLog
+
+    @defer.inlineCallbacks
+    def testErrorOnStreamLog(self):
+        tested_log = self.instrumentTestedLoggerForError(
+            log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
+                          101, unicode))
+
+        correct_error_raised = False
+        try:
+            yield tested_log.addStdout('msg\n')
+        except Exception as e:
+            correct_error_raised = 'DB has gone away' in str(e)
+        self.assertTrue(correct_error_raised)
+
+    @defer.inlineCallbacks
+    def testErrorOnPlainLog(self):
+        tested_log = self.instrumentTestedLoggerForError(
+            log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
+                         101, unicode))
+        correct_error_raised = False
+        try:
+            yield tested_log.addContent('msg\n')
+        except Exception as e:
+            correct_error_raised = 'DB has gone away' in str(e)
+        self.assertTrue(correct_error_raised)
+
+    @defer.inlineCallbacks
+    def testErrorOnPlainLogFlush(self):
+        tested_log = self.instrumentTestedLoggerForError(
+            log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
+                         101, unicode))
+        correct_error_raised = False
+        try:
+            yield tested_log.addContent('msg')
+            yield tested_log.finish()
+        except Exception as e:
+            correct_error_raised = 'DB has gone away' in str(e)
+        self.assertTrue(correct_error_raised)

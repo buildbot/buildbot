@@ -125,7 +125,7 @@ class PlainLog(Log):
 
     def addContent(self, text):
         # add some text in the log's default stream
-        self.lbf.append(text)
+        return self.lbf.append(text)
 
     @defer.inlineCallbacks
     def finish(self):
@@ -166,7 +166,7 @@ class StreamLog(Log):
                 self.subPoint.deliver(stream, lines)
                 # strip the last character, as the regexp will add a
                 # prefix character after the trailing newline
-                self.addRawLines(self.pat.sub(stream, lines)[:-1])
+                return self.addRawLines(self.pat.sub(stream, lines)[:-1])
             lbf = self.lbfs[stream] = \
                 lineboundaries.LineBoundaryFinder(wholeLines)
             return lbf
