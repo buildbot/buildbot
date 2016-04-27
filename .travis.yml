@@ -166,7 +166,7 @@ script:
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"
   - "[ $TESTS != lint ] || make flake8"
-  - "[ $TESTS != lint ] || isort **/*.py --check"
+  - "[ $TESTS != lint ] || isort --check -df `git ls-files |grep '.py$'`"
   # Build documentation
   - "[ $TESTS != docs ] || make docs"
   # Run spell checker on documentation
