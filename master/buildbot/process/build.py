@@ -276,6 +276,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'starting')
+        yield self.master.data.updates.startBuild(self.buildid)
         self.build_status.buildStarted(self)
 
         try:

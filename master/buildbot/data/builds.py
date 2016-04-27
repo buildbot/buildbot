@@ -216,6 +216,10 @@ class Build(base.ResourceType):
         defer.returnValue(res)
 
     @base.updateMethod
+    def startBuild(self, buildid):
+        return self.generateEvent(buildid, "started")
+
+    @base.updateMethod
     @defer.inlineCallbacks
     def finishBuild(self, buildid, results):
         res = yield self.master.db.builds.finishBuild(
