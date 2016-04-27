@@ -28,6 +28,8 @@ Features
 Fixes
 ~~~~~
 
+* :bb:reporter:`GerritStatusPush` now includes build properties in the ``startCB`` and ``reviewCB`` functions. ``startCB`` now must return a dictionary.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
