@@ -261,8 +261,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                                                                      ("control", "builds",
                                                                       str(self.buildid),
                                                                       "stop"))
-        yield self.master.data.updates.generateNewBuildEvent(self.buildid)
-
         self.setupOwnProperties()
         self.setupWorkerForBuilder(workerforbuilder)
 
@@ -274,9 +272,11 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
-        yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'starting')
+        # make sure properties are available to people listening on 'new' events
+        yield self._flushProperties(None)
         self.build_status.buildStarted(self)
+        yield self.master.data.updates.setBuildStateString(self.buildid, u'starting')
+        yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
         try:
             self.setupBuild()  # create .steps
