@@ -40,3 +40,10 @@ on_failure:
           [IO.Directory]::GetFiles($root.Path, '*.*', 'AllDirectories') | % {
               Push-AppveyorArtifact $_ -FileName $_.Substring($root.Path.Length + 1) -DeploymentName trial-log
             }
+
+# Uncomment this part if you want to interactively debug tests on AppVeyor.
+# This will pause build at the end and setup RDP server.
+# Connection details will be printed in the build log.
+# For detail see: https://www.appveyor.com/docs/how-to/rdp-to-build-worker
+#on_finish:
+#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
