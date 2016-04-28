@@ -33,6 +33,10 @@ class BuildmasterTimeoutError(Exception):
     pass
 
 
+class BuildmasterStartupError(Exception):
+    pass
+
+
 class ReconfigError(Exception):
     pass
 
@@ -141,3 +145,5 @@ class LogWatcher(LineOnlyReceiver):
             return self.finished("buildmaster")
         if "BuildMaster is running" in line:
             return self.finished("buildmaster")
+        if "BuildMaster startup failed" in line:
+            return self.finished(Failure(BuildmasterStartupError()))

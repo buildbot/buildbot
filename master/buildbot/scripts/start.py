@@ -18,6 +18,7 @@ import os
 import sys
 
 from buildbot.scripts import base
+from buildbot.scripts.logwatcher import BuildmasterStartupError
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
@@ -55,6 +56,10 @@ line that says 'BuildMaster is running' to verify correct startup.
 The buildmaster appears to have encountered an error in the master.cfg config
 file during startup. Please inspect and fix master.cfg, then restart the
 buildmaster.
+""")
+        elif why.check(BuildmasterStartupError):
+            print("""
+The buildmaster startup failed. Please see 'twistd.log' for possible reason.
 """)
         else:
             print("""

@@ -231,6 +231,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         self.reactor.callWhenRunning(d.callback, None)
         yield d
 
+        startup_succeed = False
         try:
             # load the configuration file, treating errors as fatal
             try:
@@ -295,13 +296,20 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             yield self.data.updates.masterActive(
                 name=self.name,
                 masterid=self.masterid)
+
+            startup_succeed = True
         except Exception:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
             self.reactor.stop()
 
-        self._master_initialized = True
-        log.msg("BuildMaster is running")
+        finally:
+            if startup_succeed:
+                log.msg("BuildMaster is running")
+            else:
+                log.msg("BuildMaster startup failed")
+
+            self._master_initialized = True
 
     @defer.inlineCallbacks
     def stopService(self):
