@@ -226,4 +226,7 @@ class Tests(SynchronousTestCase):
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
 
+        # If the worker started again after the failure, then the retry logic will have
+        # already kicked in to start a new build on this (the only) worker. We check that
+        # a new instance was requested, which indicates that the worker accepted the build.
         self.assertEqual(controller.started, True)
