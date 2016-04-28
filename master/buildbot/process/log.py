@@ -72,9 +72,7 @@ class Log(object):
         # formatted for the log type, and newline-terminated
         assert lines[-1] == '\n'
         assert not self.finished
-        yield self.lock.acquire()
-        yield self.master.data.updates.appendLog(self.logid, lines)
-        yield self.lock.release()
+        yield self.lock.run(lambda: self.master.data.updates.appendLog(self.logid, lines))
 
     # completion
 
@@ -92,11 +90,11 @@ class Log(object):
     @defer.inlineCallbacks
     def finish(self):
         assert not self.finished
-        yield self.lock.acquire()
-        self.finished = True
-        yield self.master.data.updates.finishLog(self.logid)
-        yield self.lock.release()
 
+        def fToRun():
+            self.finished = True
+            return self.master.data.updates.finishLog(self.logid)
+        yield self.lock.run(fToRun)
         # notify subscribers *after* finishing the log
         self.subPoint.deliver(None, None)
 
