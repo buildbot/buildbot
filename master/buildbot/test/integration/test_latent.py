@@ -30,6 +30,8 @@ from twisted.trial.unittest import SynchronousTestCase
 class LatentController(object):
     """
     A controller for ``ControllableLatentWorker``.
+
+    https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
     def __init__(self, name):
@@ -93,6 +95,7 @@ class Tests(SynchronousTestCase):
             ],
             'workers': [controller.worker],
             'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
             'multiMaster': True,
         }
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
@@ -141,6 +144,7 @@ class Tests(SynchronousTestCase):
             ],
             'workers': [controller.worker],
             'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
             'multiMaster': True,
         }
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
@@ -191,6 +195,7 @@ class Tests(SynchronousTestCase):
             ],
             'workers': [controller.worker],
             'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
             'multiMaster': True,
         }
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
