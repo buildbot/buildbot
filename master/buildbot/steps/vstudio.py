@@ -415,7 +415,7 @@ VS2013 = VC12
 
 class MsBuild4(VisualStudio):
     platform = None
-    vcenv_bat = "\"${VS110COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+    vcenv_bat = r"${VS110COMNTOOLS}..\..\VC\vcvarsall.bat"
     renderables = ['platform']
 
     def __init__(self, platform, **kwargs):
@@ -444,21 +444,17 @@ class MsBuild4(VisualStudio):
             config.error(
                 'platform is mandatory. Please specify a string such as "Win32"')
 
-        command = ["%VCENV_BAT%",
-                   "x86",
-                   "&&",
-                   "msbuild",
-                   self.projectfile,
-                   "/p:Configuration=%s" % (self.config),
-                   "/p:Platform=%s" % (self.platform)]
+        command = ('"%%VCENV_BAT%%" x86 && msbuild "%s" /p:Configuration="%s" /p:Platform="%s"'
+                   % (self.projectfile, self.config, self.platform))
+
         if self.project is not None:
-            command.append("/t:%s" % (self.project))
+            command += ' /t:"%s"' % (self.project)
         elif self.mode == "build":
-            command.append("/t:Build")
+            command += ' /t:Build'
         elif self.mode == "clean":
-            command.append("/t:Clean")
+            command += ' /t:Clean'
         elif self.mode == "rebuild":
-            command.append("/t:Rebuild")
+            command += ' /t:Rebuild'
 
         self.setCommand(command)
 
@@ -468,4 +464,4 @@ MsBuild = MsBuild4
 
 
 class MsBuild12(MsBuild4):
-    vcenv_bat = "\"${VS120COMNTOOLS}..\\..\\VC\\vcvarsall.bat\""
+    vcenv_bat = r"${VS120COMNTOOLS}..\..\VC\vcvarsall.bat"
