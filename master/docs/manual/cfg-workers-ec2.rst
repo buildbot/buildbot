@@ -236,6 +236,25 @@ Then specify its name on EC2LatentWorker via instance_profile_name.
                                )
     ]
 
+You may also supply your own boto3.Session object to allow for more flexible session options (ex. cross-account)
+To use this capability, you must first create a boto3.Session object.
+Then provide it to EC2LatentWorker via ``session`` argument.
+
+::
+
+    import boto3
+    from buildbot.plugins import worker
+
+    session = boto3.session.Session()
+    c['workers'] = [
+        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                               ami='ami-12345',
+                               keypair_name='latent_buildbot_worker',
+                               security_name='latent_buildbot_worker',
+                               session=session
+                               )
+    ]
+
 The :class:`~buildbot.worker.ec2.EC2LatentWorker` supports all other configuration from the standard :class:`Worker`.
 The ``missing_timeout`` and ``notify_on_missing`` specify how long to wait for an EC2 instance to attach before considering the attempt to have failed, and email addresses to alert, respectively.
 ``missing_timeout`` defaults to 20 minutes.
@@ -249,7 +268,7 @@ This mechanism can be valuable if you want to maintain state on a conceptual wor
 ``volumes`` expects a list of (volume_id, mount_point) tuples to attempt attaching when your instance has been created.
 
 If you want to attach new ephemeral volumes, use the the block_device_map attribute.
-This follows the BlockDeviceMap configuration of boto almost exactly, essentially acting as a passthrough.
+This follows the AWS API syntax, essentially acting as a passthrough.
 The only distinction is that the volumes default to deleting on termination to avoid leaking volume resources when workers are terminated.
 See boto documentation for further details.
 
@@ -261,13 +280,14 @@ See boto documentation for further details.
                                ami='ami-12345',
                                keypair_name='latent_buildbot_worker',
                                security_name='latent_buildbot_worker',
-                               block_device_map= {
-                                "/dev/xvdb" : {
-                                  "volume_type": "io1",
-                                  "iops": 1000,
-                                  "size": 100
-                                }
-                               }
+                               block_device_map= [
+                                 "DeviceName": "/dev/xvdb",
+                                 "Ebs" : {
+                                    "VolumeType": "io1",
+                                    "Iops": 1000,
+                                    "VolumeSize": 100
+                                  }
+                               ]
                                )
     ]
 
