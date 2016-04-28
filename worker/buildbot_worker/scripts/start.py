@@ -20,6 +20,7 @@ import sys
 import time
 
 from buildbot_worker.scripts import base
+from buildbot_worker.util import rewrap
 
 
 class Follower(object):
@@ -45,23 +46,25 @@ class Follower(object):
         from twisted.internet import reactor
         from buildbot_worker.scripts.logwatcher import WorkerTimeoutError
         if why.check(WorkerTimeoutError):
-            print("""
-The worker took more than 10 seconds to start and/or connect to the
-buildmaster, so we were unable to confirm that it started and connected
-correctly. Please 'tail twistd.log' and look for a line that says 'message
-from master: attached' to verify correct startup. If you see a bunch of
-messages like 'will retry in 6 seconds', your worker might not have the
-correct hostname or portnumber for the buildmaster, or the buildmaster might
-not be running. If you see messages like
-   'Failure: twisted.cred.error.UnauthorizedLogin'
-then your worker might be using the wrong botname or password. Please
-correct these problems and then restart the worker.
-""")
+            print(rewrap("""\
+                The worker took more than 10 seconds to start and/or connect
+                to the buildmaster, so we were unable to confirm that it
+                started and connected correctly.
+                Please 'tail twistd.log' and look for a line that says
+                'message from master: attached' to verify correct startup.
+                If you see a bunch of messages like 'will retry in 6 seconds',
+                your worker might not have the correct hostname or portnumber
+                for the buildmaster, or the buildmaster might not be running.
+                If you see messages like
+                   'Failure: twisted.cred.error.UnauthorizedLogin'
+                then your worker might be using the wrong botname or password.
+                Please correct these problems and then restart the worker.
+                """))
         else:
-            print("""
-Unable to confirm that the worker started correctly. You may need to
-stop it, fix the config file, and restart.
-""")
+            print(rewrap("""\
+                Unable to confirm that the worker started correctly.
+                You may need to stop it, fix the config file, and restart.
+                """))
             print(why)
         self.rc = 1
         reactor.stop()
