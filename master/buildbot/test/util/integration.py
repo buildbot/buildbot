@@ -57,7 +57,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         skip = "buildbot-slave package is not installed"
 
     @defer.inlineCallbacks
-    def setupConfig(self, config_dict):
+    def setupConfig(self, config_dict, startWorker=True):
         """
         Setup and start a master configured
         by the function configFunc defined in the test module.
@@ -66,6 +66,7 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         """
         self.basedir = os.path.abspath('basdir')
         self.setUpDirs(self.basedir)
+        self.addCleanup(self.tearDownDirs)
 
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
@@ -74,15 +75,16 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         mock_reactor.getThreadPool = reactor.getThreadPool
         mock_reactor.callFromThread = reactor.callFromThread
 
-        workerclass = worker.Worker
-        if self.proto == 'pb':
-            proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
-        elif self.proto == 'null':
-            proto = {"null": {}}
-            workerclass = worker.LocalWorker
+        if startWorker:
+            if self.proto == 'pb':
+                proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+                workerclass = worker.Worker
+            elif self.proto == 'null':
+                proto = {"null": {}}
+                workerclass = worker.LocalWorker
+            config_dict['workers'] = [workerclass("local1", "localpw")]
+            config_dict['protocols'] = proto
 
-        config_dict['workers'] = [workerclass("local1", "localpw")]
-        config_dict['protocols'] = proto
         # create the master and set its config
         m = BuildMaster(
             self.basedir, reactor=mock_reactor, config_loader=DictLoader(config_dict))
@@ -99,6 +101,12 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         yield m.startService()
         self.failIf(mock_reactor.stop.called,
                     "startService tried to stop the reactor; check logs")
+        # and shutdown the db threadpool, as is normally done at reactor stop
+        self.addCleanup(m.db.pool.shutdown)
+        self.addCleanup(m.stopService)
+
+        if not startWorker:
+            return
 
         if self.proto == 'pb':
             # We find out the worker port automatically
@@ -112,29 +120,20 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         elif self.proto == 'null':
             self.w = None
         if self.w is not None:
-            self.w.setServiceParent(m)
+            self.w.startService()
+            self.addCleanup(self.w.stopService)
 
-    @defer.inlineCallbacks
-    def tearDown(self):
-        if not self._passed:
-            dump = StringIO.StringIO()
-            print("FAILED! dumping build db for debug", file=dump)
-            builds = yield self.master.data.get(("builds",))
-            for build in builds:
-                yield self.printBuild(build, dump, withLogs=True)
-        m = self.master
-        # stop the service
-        if self.w is not None:
-            yield self.w.disownServiceParent()
-        yield m.stopService()
+        @defer.inlineCallbacks
+        def dump():
+            if not self._passed:
+                dump = StringIO.StringIO()
+                print("FAILED! dumping build db for debug", file=dump)
+                builds = yield self.master.data.get(("builds",))
+                for build in builds:
+                    yield self.printBuild(build, dump, withLogs=True)
 
-        # and shutdown the db threadpool, as is normally done at reactor stop
-        m.db.pool.shutdown()
-
-        # (trial will verify all reactor-based timers have been cleared, etc.)
-        self.tearDownDirs()
-        if not self._passed:
-            raise self.failureException(dump.getvalue())
+                raise self.failureException(dump.getvalue())
+        self.addCleanup(dump)
 
     @defer.inlineCallbacks
     def doForceBuild(self, wantSteps=False, wantProperties=False,

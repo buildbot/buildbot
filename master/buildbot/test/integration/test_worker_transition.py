@@ -12,18 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import os
 import re
 
-import mock
 from zope.interface import implementer
 
 import buildbot.worker
 from buildbot import config
 from buildbot.interfaces import IConfigLoader
-from buildbot.master import BuildMaster
-from buildbot.test.util import dirs
 from buildbot.test.util import www
+from buildbot.test.util.integration import RunMasterBase
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
@@ -32,6 +29,8 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet.task import deferLater
+from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 
@@ -142,63 +141,29 @@ class DummyLoader(object):
         return self.loaded_config
 
 
-class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
+class RunMaster(RunMasterBase, www.RequiresWwwMixin):
 
     """Test that master can actually run with configuration after renaming."""
-
-    def setUp(self):
-        self.basedir = os.path.abspath('basdir')
-        self.setUpDirs(self.basedir)
-        self.configfile = os.path.join(self.basedir, 'master.cfg')
-
-    def tearDown(self):
-        return self.tearDownDirs()
 
     @defer.inlineCallbacks
     def _run_master(self, loaded_config):
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
-        mock_reactor = mock.Mock(spec=reactor)
-        mock_reactor.callWhenRunning = reactor.callWhenRunning
-        mock_reactor.getThreadPool = reactor.getThreadPool
-        mock_reactor.callFromThread = reactor.callFromThread
-
-        # create the master
-        m = BuildMaster(
-            self.basedir, reactor=mock_reactor, config_loader=DummyLoader(loaded_config))
-
-        # update the DB
-        yield m.db.setup(check_version=False)
-        yield m.db.model.upgrade()
-
-        # stub out m.db.setup since it was already called above
-        m.db.setup = lambda: None
-
-        yield m.startService()
-        self.failIf(mock_reactor.stop.called,
-                    "startService tried to stop the reactor; check logs")
+        yield self.setupConfig(loaded_config, startWorker=False)
 
         # hang out for a fraction of a second, to let startup processes run
-        d = defer.Deferred()
-        reactor.callLater(0.01, d.callback, None)
-        yield d
-
-        # stop the service
-        yield m.stopService()
-
-        # and shutdown the db threadpool, as is normally done at reactor stop
-        m.db.pool.shutdown()
-
-        # (trial will verify all reactor-based timers have been cleared, etc.)
+        yield deferLater(reactor, 0.01, lambda: None)
 
     def _write_config(self, config_str):
-        with open(self.configfile, "w") as f:
-            f.write(config_str)
+        configfile = FilePath(self.mktemp())
+        configfile.setContent(config_str)
+        return configfile
 
+    @defer.inlineCallbacks
     def test_config_0_9_0b5(self):
         # Load configuration and start master.
         # TODO: check for expected warnings.
-        self._write_config(sample_0_9_0b5)
+        configfile = self._write_config(sample_0_9_0b5)
 
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
@@ -206,22 +171,21 @@ class RunMaster(dirs.DirsMixin, www.RequiresWwwMixin, unittest.TestCase):
                     r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
                     r"'slavenames' keyword argument is deprecated",
                     r"c\['slaves'\] key is deprecated"]):
-            loaded_config = config.FileLoader(
-                self.basedir, self.configfile).loadConfig()
+            _, loaded_config = config.loadConfigDict(".", configfile.path)
 
-        return self._run_master(loaded_config)
+            yield self._run_master(loaded_config)
 
+    @defer.inlineCallbacks
     def test_config_0_9_0b5_api_renamed(self):
         # Load configuration and start master.
         # TODO: check for expected warnings.
 
-        self._write_config(sample_0_9_0b5_api_renamed)
+        configfile = self._write_config(sample_0_9_0b5_api_renamed)
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            loaded_config = config.FileLoader(
-                self.basedir, self.configfile).loadConfig()
+            _, loaded_config = config.loadConfigDict(".", configfile.path)
 
-        return self._run_master(loaded_config)
+            yield self._run_master(loaded_config)
 
 
 class PluginsTransition(unittest.TestCase):
