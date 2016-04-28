@@ -403,3 +403,62 @@ class CommandToString(unittest.TestCase):
 
     def test_invalid_ascii(self):
         self.assertEqual(util.command_to_string('a\xffc'), u"'a\ufffdc'")
+
+
+class TestRewrap(unittest.TestCase):
+
+    def test_main(self):
+        tests = [
+            ("", "", None),
+            ("\n", "\n", None),
+            ("\n  ", "\n", None),
+            ("  \n", "\n", None),
+            ("  \n  ", "\n", None),
+            ("""
+                multiline
+                with
+                indent
+                """,
+             "\nmultiline with indent",
+             None),
+            ("""\
+                multiline
+                with
+                indent
+
+                """,
+             "multiline with indent\n",
+             None),
+            ("""\
+                 multiline
+                 with
+                 indent
+
+                 """,
+             "multiline with indent\n",
+             None),
+            ("""\
+                multiline
+                with
+                indent
+
+                  and
+                   formatting
+                """,
+             "multiline with indent\n  and\n   formatting\n",
+             None),
+            ("""\
+                multiline
+                with
+                indent
+                and wrapping
+
+                  and
+                   formatting
+                """,
+             "multiline with\nindent and\nwrapping\n  and\n   formatting\n",
+             15),
+        ]
+
+        for text, expected, width in tests:
+            self.assertEqual(util.rewrap(text, width=width), expected)
