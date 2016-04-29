@@ -44,9 +44,9 @@ class LineBoundaryFinder(object):
                     self.partialLine = text
                     return defer.succeed(None)
             return self.callback(text)
+        return defer.succeed(None)
 
     def flush(self):
         if self.partialLine:
             return self.append('\n')
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
