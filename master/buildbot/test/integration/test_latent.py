@@ -17,7 +17,6 @@ from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
-from buildbot.test.util.integration import getBuilderIdByName
 from buildbot.test.util.integration import getMaster
 from buildbot.worker.base import AbstractLatentWorker
 
@@ -99,7 +98,7 @@ class Tests(SynchronousTestCase):
             'multiMaster': True,
         }
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_id = self.successResultOf(getBuilderIdByName(master, 'testy'))
+        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(
@@ -148,7 +147,7 @@ class Tests(SynchronousTestCase):
             'multiMaster': True,
         }
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_id = self.successResultOf(getBuilderIdByName(master, 'testy'))
+        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(
@@ -199,7 +198,7 @@ class Tests(SynchronousTestCase):
             'multiMaster': True,
         }
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_id = self.successResultOf(getBuilderIdByName(master, 'testy'))
+        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(

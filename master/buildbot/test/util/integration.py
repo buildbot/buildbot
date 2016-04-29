@@ -68,21 +68,6 @@ def getMaster(case, reactor, config_dict):
     defer.returnValue(master)
 
 
-def getBuilderIdByName(master, builder_name):
-    """
-    Get the ``builder_id`` of the given builder.
-    """
-    d = master.data.get(('builders',))
-
-    def find_builder(builders):
-        for builder in builders:
-            if builder['name'] == builder_name:
-                return builder['builderid']
-            raise LookupError("Builder not found", builder_name)
-    d.addCallback(find_builder)
-    return d
-
-
 class RunMasterBase(unittest.TestCase):
     proto = "null"
 
