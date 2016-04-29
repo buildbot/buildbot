@@ -6,7 +6,7 @@ class BuildersHeader extends Directive
             scope: {
                 width: '='
                 cellWidth: '='
-                builders: '='
+                builders: '=?'
             }
             templateUrl: 'console_view/views/buildersheader.html'
             controller: '_buildersHeaderController'

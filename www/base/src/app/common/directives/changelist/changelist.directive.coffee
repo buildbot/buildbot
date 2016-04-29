@@ -3,7 +3,7 @@ class Changelist extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {changes: '='}
+            scope: {changes: '=?'}
             templateUrl: 'views/changelist.html'
             controller: '_changeListController'
         }

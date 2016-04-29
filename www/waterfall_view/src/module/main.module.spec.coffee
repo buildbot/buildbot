@@ -1,6 +1,6 @@
 beforeEach ->
     module ($provide) ->
-        $provide.service '$modal', -> open: ->
+        $provide.service '$uibModal', -> open: ->
         null
 
     # Mock bbSettingsProvider
@@ -20,7 +20,7 @@ beforeEach ->
     module 'waterfall_view'
 
 describe 'Waterfall view controller', ->
-    $rootScope = $state = elem = w = $document = $window = $modal = $timeout =
+    $rootScope = $state = elem = w = $document = $window = $uibModal = $timeout =
         bbSettingsService = dataService = null
 
     builders = [
@@ -95,7 +95,7 @@ describe 'Waterfall view controller', ->
         $state = $injector.get('$state')
         $document = $injector.get('$document')
         $window = $injector.get('$window')
-        $modal = $injector.get('$modal')
+        $uibModal = $injector.get('$uibModal')
         $timeout = $injector.get('$timeout')
         bbSettingsService = $injector.get('bbSettingsService')
         dataService = $injector.get('dataService')

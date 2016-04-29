@@ -6,8 +6,7 @@ class ChangeRow extends Directive
             scope: {
                 width: '='
                 cellWidth: '='
-                change: '='
-                builders: '='
+                change: '=?'
             }
             templateUrl: 'console_view/views/changerow.html'
             controller: '_changeRowController'
@@ -16,7 +15,7 @@ class ChangeRow extends Directive
 
 
 class _changeRow extends Controller
-    constructor: ($scope, resultsService, @$modal) ->
+    constructor: ($scope, resultsService, @$uibModal) ->
         angular.extend this, resultsService
         @infoIsCollapsed = true
 
@@ -29,14 +28,13 @@ class _changeRow extends Controller
             if @change
                 if angular.isString(@change.repository)
                     @createLink()
-        $scope.$watch 'builders', (@builders) ->
 
     createLink: ->
         repository = @change.repository.replace('.git', '')
         @change.link = "#{repository}/commit/#{@change.revision}"
 
     selectBuild: (build) ->
-        modal = @$modal.open
+        modal = @$uibModal.open
             templateUrl: 'console_view/views/modal.html'
             controller: 'consoleModalController as modal'
             windowClass: 'modal-small'

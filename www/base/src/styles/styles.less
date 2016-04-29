@@ -3,7 +3,6 @@
 @import "../../libs/font-awesome/less/font-awesome.less";
 @import (inline) "../../libs/guanlecoja-ui/styles.css";
 @fa-font-path: "./fonts";
-
 /* base css for angular, dont display anything until angular is running */
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
@@ -29,9 +28,9 @@
   }
 }
 
-/* make the sidebar be on the back when dialog is open */
-.modal-open .sidebar {
-    z-index: 0;
+/* make the sidebar be on the back of the modals dialog */
+.sidebar {
+    z-index: (@zindex-modal - 1) !important;
 }
 
 /* button bar inside the breadcrum, used for forcesched buttons */

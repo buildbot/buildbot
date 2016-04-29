@@ -13,13 +13,13 @@
             span.badge-status(ng-class="results2class(nextbuild, 'pulse')") &rarr;
         span(ng-if="last_build") Next &rarr;
   .row
-      tabset
-          tab(heading="Build steps")
+      uib-tabset
+          uib-tab(heading="Build steps")
               buildsummary(ng-if="build", build="build", parentbuild="parent_build",
                            parentrelationship="buildset.parent_relationship")
-          tab(heading="Build Properties")
+          uib-tab(heading="Build Properties")
               properties(properties="properties")
-          tab(heading="Worker: {{worker.name}}")
+          uib-tab(heading="Worker: {{worker.name}}")
             table.table.table-hover.table-striped.table-condensed
               tbody
                   tr
@@ -28,16 +28,16 @@
                 tr(ng-repeat="(name, value) in worker.workerinfo")
                   td.text-left {{ name }}
                   td.text-right {{ value }}
-          tab(heading="Responsible Users")
+          uib-tab(heading="Responsible Users")
             ul.list-group
                 li.list-group-item(ng-repeat="(author, email) in responsibles")
                     .change-avatar
                         img(ng-src="avatar?email={{email}}")
                     a(ng-href="mailto:{{email}}")
                         | {{ author }}
-          tab(heading="Changes")
+          uib-tab(heading="Changes")
               changelist(changes="changes")
-          tab(heading="Debug")
+          uib-tab(heading="Debug")
               h4
                   a(ui-sref="buildrequest({buildrequest:buildrequest.buildrequestid})")
                      | Buildrequest:

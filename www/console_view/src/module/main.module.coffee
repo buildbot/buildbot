@@ -51,7 +51,7 @@ class Console extends Controller
             return not v.masterids? or v.masterids.length > 0
 
         @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
-        @changes = @dataAccessor.getChanges({limit: @changeLimit, order: '-when_timestamp'})
+        @changes = @dataAccessor.getChanges({limit: @changeLimit, order: '-changeid'})
         @buildrequests = @dataAccessor.getBuildrequests({limit: @buildLimit, order: '-submitted_at'})
         @buildsets = @dataAccessor.getBuildsets({limit: @buildLimit, order: '-submitted_at'})
 
@@ -62,13 +62,24 @@ class Console extends Controller
         # @todo: no way to know if there are no builds, or if its not yet loaded
         if @builds.length == 0 or @builders.length == 0 or @changes.length == 0 or @buildsets.length == 0 or @buildrequests == 0
             return
-        @loading = false
+
+        @changesBySSID = {}
+        for change in @changes
+            @changesBySSID[change.sourcestamp.ssid] = change
+            change.builders = []
+            change.buildersById = {}
+            for builder in @builders
+                builder = builderid:builder.builderid, name:builder.name, builds: []
+                change.builders.push(builder)
+                change.buildersById[builder.builderid] = builder
 
         for build in @builds
             @matchBuildWithChange(build)
+
         for change in @changes
             change.maxbuilds = 1
-            for k, b of change.buildsPerBuilder
+            for builder in change.builders
+                b = builder.builds
                 if b.length > change.maxbuilds
                     change.maxbuilds = b.length
 
@@ -76,6 +87,8 @@ class Console extends Controller
         angular.element(@$window).bind 'resize', =>
             @setWidth(@$window.innerWidth)
             @$scope.$apply()
+
+        @loading = false
 
     ###
     # Match builds with a change
@@ -88,12 +101,9 @@ class Console extends Controller
         if not buildset? or not buildset.sourcestamps?
             return
         for sourcestamp in buildset.sourcestamps
-            for change in @changes
-                if change.sourcestamp.ssid == sourcestamp.ssid
-                    change.buildsPerBuilder ?= {}
-                    change.buildsPerBuilder[build.builderid] ?= []
-                    if build not in change.buildsPerBuilder[build.builderid]
-                        change.buildsPerBuilder[build.builderid].push(build)
+            change = @changesBySSID[sourcestamp.ssid]
+            if change?
+                change.buildersById[build.builderid].builds.push(build)
     ###
     # Set the content width
     ###

@@ -11,7 +11,7 @@ class WaterfallView extends App
 class Waterfall extends Controller
     self = null
     constructor: (@$scope, $q, $timeout, @$window, @$log,
-                  @$modal, dataService, d3Service, @dataProcessorService,
+                  @$uibModal, dataService, d3Service, @dataProcessorService,
                   scaleService, @bbSettingsService) ->
         self = this
 
@@ -491,7 +491,7 @@ class Waterfall extends Controller
 
     click: (build) ->
         # Open modal on click
-        modal = self.$modal.open
+        modal = self.$uibModal.open
             templateUrl: 'waterfall_view/views/modal.html'
             controller: 'waterfallModalController as modal'
             windowClass: 'modal-small'

@@ -6,6 +6,6 @@
     },
     "dependencies": {
         "gulp": "3.9.0",
-        "guanlecoja": "~0.5.3"
+        "guanlecoja": "~0.6.0"
     }
 }

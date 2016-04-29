@@ -1,7 +1,7 @@
 beforeEach module 'app'
 
 describe 'buildsticker controller', ->
-    dataService = scope = $compile = results = $timeout = null
+    dataService = scope = $compile = results = $timeout = $rootScope = null
 
     injected = ($injector) ->
         $compile = $injector.get('$compile')
@@ -19,10 +19,12 @@ describe 'buildsticker controller', ->
         build = buildid: 3, builderid: 2, number: 1
         dataService.when('builds/3', [build])
         dataService.when('builders/2', [{builderid: 2}])
-        dataService.getBuilds(build.buildid).then (builds) ->
-            scope.build = builds[0]
+        data = dataService.open()
+        data.getBuilds(build.buildid).onNew = (build) ->
+            scope.build = build
         element = $compile("<buildsticker build='build'></buildsticker>")(scope)
         $timeout.flush()
+        $rootScope.$digest()
 
         sticker = element.children().eq(0)
 
