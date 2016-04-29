@@ -176,12 +176,18 @@ check_sa_Table || warning "use (buildbot.util.)sautils.Table instead of sa.Table
 status "checking for release notes"
 check_relnotes || warning "$REVRANGE does not add release notes"
 
-status "checking import module convention in modified files"
-if [[ -z `command -v isort` ]]; then
-    warning "isort is not installed"
-else
-    if ! isort ${py_files[@]}; then
-        warning "unable to run isort on modified files"
+if [ ${#py_files[@]} -ne 0 ]; then
+    status "checking import module convention in modified files"
+    if [[ -z `command -v isort` ]]; then
+        warning "isort is not installed"
+    else
+        if ! isort ${py_files[@]}; then
+            warning "unable to run isort on modified files"
+        else
+            if ! git diff --quiet --exit-code ${py_files[@]}; then
+                not_ok "isort made changes"
+            fi
+        fi
     fi
 fi
 
