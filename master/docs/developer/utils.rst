@@ -208,6 +208,19 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`ascii2unicode`.
     This is useful for configuration parameters that may be strings or lists of strings.
 
+.. py:class:: Notifier():
+
+    This is a helper for firing mulitple deferreds with the same result.
+
+    .. py:method:: wait()
+
+        Return a deferred that will fire when when the notifier is notified.
+
+    .. py:method:: notify(value)
+
+        Fire all the outstanding deferreds with the given value.
+
+
 :py:mod:`buildbot.util.lru`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
