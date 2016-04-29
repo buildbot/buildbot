@@ -195,7 +195,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         # For each codebase, append changes until we match the parent
         for cb, change in iteritems(fromChanges):
-            if change and change['changeid'] != toChanges.get(cb, {}).get('changeid'):
+            # Careful; toChanges[cb] may be None from getChangeFromSSid
+            toCbChange = toChanges.get(cb) or {}
+            if change and change['changeid'] != toCbChange.get('changeid'):
                 changes.append(change)
                 while ((toChanges.get(cb, {}).get('changeid') not in change['parent_changeids']) and
                        change['parent_changeids']):
