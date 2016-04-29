@@ -126,7 +126,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            {req['buildrequestid'] for req in unclaimed_build_requests},
+            set([req['buildrequestid'] for req in unclaimed_build_requests]),
         )
 
     def test_failed_substantiations_get_requeued(self):
@@ -177,7 +177,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            {req['buildrequestid'] for req in unclaimed_build_requests},
+            set([req['buildrequestid'] for req in unclaimed_build_requests]),
         )
 
     def test_worker_accepts_builds_after_failure(self):
