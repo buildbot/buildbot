@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import itertools
+import textwrap
 import time
 
 
@@ -85,3 +87,39 @@ class Obfuscated(object):
                 else:
                     rv.append(Obfuscated.to_text(elt))
         return rv
+
+
+def rewrap(text, width=None):
+    """
+    Rewrap text for output to the console.
+
+    Removes common indentation and rewraps paragraphs according to the console
+    width.
+
+    Line feeds between paragraphs preserved.
+    Formatting of paragraphs that starts with additional indentation
+    preserved.
+    """
+
+    if width is None:
+        width = 80
+
+    # Remove common indentation.
+    text = textwrap.dedent(text)
+
+    def needs_wrapping(line):
+        # Line always non-empty.
+        return not line[0].isspace()
+
+    # Split text by lines and group lines that comprise paragraphs.
+    wrapped_text = ""
+    for do_wrap, lines in itertools.groupby(text.splitlines(True),
+                                            key=needs_wrapping):
+        paragraph = ''.join(lines)
+
+        if do_wrap:
+            paragraph = textwrap.fill(paragraph, width)
+
+        wrapped_text += paragraph
+
+    return wrapped_text
