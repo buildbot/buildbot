@@ -138,6 +138,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
+    def stopReactor(self):
+        self.reactor.stop()
+
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
@@ -245,11 +248,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 for msg in e.errors:
                     log.msg("  " + msg)
                 log.msg("Halting master.")
-                self.reactor.stop()
+                self.stopReactor()
                 return
             except Exception:
                 log.err(failure.Failure(), 'while starting BuildMaster')
-                self.reactor.stop()
+                self.stopReactor()
                 return
 
             # set up services that need access to the config before everything
@@ -258,7 +261,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 yield self.db.setup()
             except exceptions.DatabaseNotReadyError:
                 # (message was already logged)
-                self.reactor.stop()
+                self.stopReactor()
                 return
 
             self.mq.setup()
@@ -300,7 +303,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         except Exception:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
-            self.reactor.stop()
+            self.stopReactor()
 
         finally:
             if startup_succeed:

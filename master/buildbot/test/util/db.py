@@ -38,6 +38,17 @@ def skip_for_dialect(dialect):
         return wrap
     return dec
 
+SQLITE_MEMORY_URL = 'sqlite://'
+
+
+def getDbUrlForTests(basedir, sqlite_memory=True):
+    default = SQLITE_MEMORY_URL
+    if not sqlite_memory:
+        default = "sqlite:///tmp.sqlite"
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
+
+    return os.environ.get('BUILDBOT_TEST_DB_URL', default)
 
 class RealDatabaseMixin(object):
 
@@ -55,7 +66,7 @@ class RealDatabaseMixin(object):
 
     @ivar db_engine: the engine created for the test database
     """
-
+    ALL_TABLES = object()  # marker for creating all tables
     # Note that this class uses the production database model.  A
     # re-implementation would be virtually identical and just require extra
     # work to keep synchronized.
@@ -154,9 +165,12 @@ class RealDatabaseMixin(object):
             raise
 
     def __thd_create_tables(self, conn, table_names):
-        table_names_set = set(table_names)
-        tables = [t for t in model.Model.metadata.tables.values()
-                  if t.name in table_names_set]
+        if table_names == self.ALL_TABLES:
+            tables = model.Model.metadata.tables.values()
+        else:
+            table_names_set = set(table_names)
+            tables = [t for t in model.Model.metadata.tables.values()
+                      if t.name in table_names_set]
         # Create tables using create_all() method. This way not only tables
         # and direct indices are created, but also deferred references
         # (that use use_alter=True in definition).
@@ -179,14 +193,7 @@ class RealDatabaseMixin(object):
         @returns: Deferred
         """
         self.__want_pool = want_pool
-
-        default = 'sqlite://'
-        if not sqlite_memory:
-            default = "sqlite:///tmp.sqlite"
-            if not os.path.exists(basedir):
-                os.makedirs(basedir)
-
-        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default)
+        self.db_url = getDbUrlForTests(basedir, sqlite_memory=sqlite_memory)
         self.basedir = basedir
         self.db_engine = enginestrategy.create_engine(self.db_url,
                                                       basedir=basedir)
