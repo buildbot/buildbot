@@ -279,12 +279,12 @@ class CompositeStepMixin():
                                                'logEnviron': self.logEnviron, },
                                      **kwargs)
 
-    def runGlob(self, glob):
+    def runGlob(self, path):
         """ find files matching a shell-style pattern"""
         def commandComplete(cmd):
             return cmd.updates['files'][-1]
 
-        return self.runRemoteCommand('glob', {'glob': glob,
+        return self.runRemoteCommand('glob', {'path': path,
                                               'logEnviron': self.logEnviron, },
                                      evaluateCommand=commandComplete)
 
