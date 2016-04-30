@@ -62,6 +62,10 @@ Worker
 Fixes
 ~~~~~
 
+* ``runGlob()`` uses the correct remote protocol for both :py:class:`~buildbot.process.buildstep.CommandMixin` and :py:class:`~buildbot.steps.worker.ComposititeStepMixin`.
+
+* Rename ``glob()`` to ``runGlob()`` in :py:class:`~buildbot.process.buildstep.CommandMixin`
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
