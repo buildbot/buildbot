@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from __future__ import print_function
 
-import os
 import StringIO
 import sys
 
@@ -28,10 +27,10 @@ from buildbot.master import BuildMaster
 from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
-from buildbot.test.util import dirs
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 try:
@@ -50,7 +49,26 @@ class DictLoader(object):
         return MasterConfig.loadFromDict(self.config_dict, '<dict>')
 
 
-class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
+@defer.inlineCallbacks
+def getMaster(case, reactor, config_dict):
+    """
+    Create a started ``BuildMaster`` with the given configuration.
+    """
+    basedir = FilePath(case.mktemp())
+    basedir.createDirectory()
+    master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+
+    # TODO: Allow BuildMaster to transparently upgrade the database, at least for tests.
+    yield master.db.setup(check_version=False)
+    yield master.db.model.upgrade()
+    master.db.setup = lambda: None
+
+    yield master.startService()
+
+    defer.returnValue(master)
+
+
+class RunMasterBase(unittest.TestCase):
     proto = "null"
 
     if BuildSlave is None:
@@ -64,10 +82,6 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
         @type config_dict: dict
         @param configFunc: The BuildmasterConfig dictionary.
         """
-        self.basedir = os.path.abspath('basdir')
-        self.setUpDirs(self.basedir)
-        self.addCleanup(self.tearDownDirs)
-
         # mock reactor.stop (which trial *really* doesn't
         # like test code to call!)
         stop = mock.create_autospec(reactor.stop)
@@ -83,19 +97,8 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
             config_dict['workers'] = [workerclass("local1", "localpw")]
             config_dict['protocols'] = proto
 
-        # create the master and set its config
-        m = BuildMaster(self.basedir, reactor=reactor, config_loader=DictLoader(config_dict))
+        m = yield getMaster(self, reactor, config_dict)
         self.master = m
-
-        # update the DB
-        yield m.db.setup(check_version=False)
-        yield m.db.model.upgrade()
-
-        # stub out m.db.setup since it was already called above
-        m.db.setup = lambda: None
-
-        # start the service
-        yield m.startService()
         self.failIf(stop.called,
                     "startService tried to stop the reactor; check logs")
         # and shutdown the db threadpool, as is normally done at reactor stop
@@ -112,8 +115,9 @@ class RunMasterBase(dirs.DirsMixin, unittest.TestCase):
 
             # create a worker, and attach it to the master, it will be started, and stopped
             # along with the master
-            self.w = BuildSlave(
-                "127.0.0.1", workerPort, "local1", "localpw", self.basedir, False, False)
+            worker_dir = FilePath(self.mktemp())
+            worker_dir.createDirectory()
+            self.w = BuildSlave("127.0.0.1", workerPort, "local1", "localpw", worker_dir.path, False, False)
         elif self.proto == 'null':
             self.w = None
         if self.w is not None:

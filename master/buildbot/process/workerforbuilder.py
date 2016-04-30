@@ -244,8 +244,6 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         def substantiation_failed(f):
             builder_status.addPointEvent(['removing', 'latent',
                                           self.worker.workername])
-            self.worker.disconnect()
-            # TODO: should failover to a new Build
             return f
         return d
 
@@ -267,6 +265,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
                 return res
 
             def substantiation_failed(res):
+                self.state = LATENT
                 event.text = ["substantiate", "failed"]
                 # TODO add log of traceback to event
                 event.finish()
