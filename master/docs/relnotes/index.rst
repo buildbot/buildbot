@@ -67,6 +67,8 @@ Fixes
 
 * ``buildbot-worker`` script now outputs message to terminal.
 
+* Windows helper script now called ``buildbot-worker.bat`` (was ``buildbot_worker.bat``, notice underscore), so that ``buildbot-worker`` command can be used in virtualenv both on Windows and POSIX systems.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
