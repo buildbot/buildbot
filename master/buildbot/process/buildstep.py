@@ -1062,9 +1062,9 @@ class CommandMixin(object):
         return self._runRemoteCommand('mkdir', abandonOnFailure,
                                       {'dir': dir, 'logEnviron': False})
 
-    def glob(self, glob):
+    def runGlob(self, path):
         return self._runRemoteCommand(
-            'glob', True, {'glob': glob, 'logEnviron': False},
+            'glob', True, {'path': path, 'logEnviron': False},
             makeResult=lambda cmd: cmd.updates['files'][0])
 
 
