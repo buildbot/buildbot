@@ -128,8 +128,11 @@ class FakeRunProcess(object):
                 elif exp.kwargs[key] != kwargs[key]:
                     msg.append('%s: expected %r,\n  got %r' % (key, exp.kwargs[key], kwargs[key]))
             if msg:
-                msg.insert(0, 'did not get expected __init__ arguments for\n '
-                              + " ".join(map(repr, kwargs.get('command', ['unknown command']))))
+                msg.insert(
+                    0,
+                    'did not get expected __init__ arguments for\n {0}'.format(
+                        " ".join(map(repr, kwargs.get('command',
+                                                      ['unknown command'])))))
                 self._expectations[:] = []  # don't expect any more instances, since we're failing
                 raise AssertionError("\n".join(msg))
 

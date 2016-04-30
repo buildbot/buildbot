@@ -284,8 +284,8 @@ class RunProcess(object):
         self.builder = builder
         if isinstance(command, list):
             def obfus(w):
-                if (isinstance(w, tuple) and len(w) == 3
-                        and w[0] == 'obfuscated'):
+                if (isinstance(w, tuple) and len(w) == 3 and
+                        w[0] == 'obfuscated'):
                     return util.Obfuscated(w[1], w[2])
                 return w
             command = [obfus(w) for w in command]
