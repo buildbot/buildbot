@@ -897,7 +897,7 @@ If the path does not exist (or anything fails) we mark the step as failed; if th
                 self.finished(util.WARNINGS)
                 return
 
-            cmd = buildstep.RemoteCommand('glob', {'glob': self.dirname + '/*.pyc'})
+            cmd = buildstep.RemoteCommand('glob', {'path': self.dirname + '/*.pyc'})
 
             d = self.runCommand(cmd)
             d.addCallback(lambda res: self.evaluateGlob(cmd))

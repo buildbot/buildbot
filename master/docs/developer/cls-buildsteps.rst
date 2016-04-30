@@ -584,14 +584,14 @@ This class can only be used in new-style steps.
         Determine if the given path exists on the worker (in any form - file, directory, or otherwise).
         This uses the ``stat`` command.
 
-    .. py:method:: runGlob(glob)
+    .. py:method:: runGlob(path)
 
         :param path: path to test
         :returns: list of filenames
 
         Get the list of files matching the given path pattern on the worker.
         This uses Python's ``glob`` module.
-        If the ``glob`` method fails, it aborts the step.
+        If the ``runGlob`` method fails, it aborts the step.
 
     .. py:method:: getFileContentFromWorker(path, abandonOnFailure=False)
 
