@@ -57,6 +57,9 @@ Deprecations, Removals, and Non-Compatible Changes
   This should be easy to implement if you need it.
   One could port the old image generation code, or implement a redirection to http://shields.io/.
 
+* Support of worker-side ``usePTY`` was removed from ``buildbot-worker``.
+  ``usePTY`` argument was removed from ``WorkerForBuilder`` and ``Worker`` classes.
+
 * html is not permitted anymore in 'label' attributes of forcescheduler parameters.
 
 Worker

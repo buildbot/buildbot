@@ -176,14 +176,13 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         self.patch(runner.MakerBase, "postOptions", mock.Mock())
 
         opts = self.parse("--force", "--relocatable", "--no-logrotate",
-                          "--keepalive=4", "--usepty=0", "--umask=022",
+                          "--keepalive=4", "--umask=022",
                           "--maxdelay=3", "--numcpus=4", "--log-size=2", "--log-count=1",
                           "--allow-shutdown=file", *self.req_args)
         self.assertOptions(opts,
                            {"force": True,
                             "relocatable": True,
                             "no-logrotate": True,
-                            "usepty": 0,
                             "umask": "022",
                             "maxdelay": 3,
                             "numcpus": "4",
@@ -205,11 +204,6 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         self.assertRaisesRegexp(usage.UsageError,
                                 "keepalive parameter needs to be an number",
                                 self.parse, "--keepalive=X", *self.req_args)
-
-    def test_inv_usepty(self):
-        self.assertRaisesRegexp(usage.UsageError,
-                                "usepty parameter needs to be an number",
-                                self.parse, "--usepty=X", *self.req_args)
 
     def test_inv_maxdelay(self):
         self.assertRaisesRegexp(usage.UsageError,

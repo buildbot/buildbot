@@ -235,15 +235,13 @@ class WorkerForBuilderBase(service.Service):
 class BotBase(service.MultiService):
 
     """I represent the worker-side bot."""
-    usePTY = None
     name = "bot"
     WorkerForBuilder = WorkerForBuilderBase
 
-    def __init__(self, basedir, usePTY, unicode_encoding=None):
+    def __init__(self, basedir, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.numcpus = None
-        self.usePTY = usePTY
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding(
         ) or 'ascii'
         self.builders = {}
@@ -274,7 +272,6 @@ class BotBase(service.MultiService):
                     b.setBuilddir(builddir)
             else:
                 b = self.WorkerForBuilder(name)
-                b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
@@ -348,12 +345,12 @@ class WorkerBase(service.MultiService):
     Bot = BotBase
 
     def __init__(self, name, basedir,
-                 usePTY, umask=None,
+                 umask=None,
                  unicode_encoding=None):
 
         service.MultiService.__init__(self)
         self.name = name
-        bot = self.Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
+        bot = self.Bot(basedir, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
         self.bot = bot
         self.umask = umask

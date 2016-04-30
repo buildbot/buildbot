@@ -109,8 +109,6 @@ class CreateWorkerOptions(MakerBase):
     optParameters = [
         ["keepalive", "k", 600,
          "Interval at which keepalives should be sent (in seconds)"],
-        ["usepty", None, 0,
-         "(1 or 0) child processes should be run in a pty (default 0)"],
         ["umask", None, "None",
          "controls permissions of generated files. "
          "Use --umask=022 to be world-readable"],
@@ -187,7 +185,7 @@ class CreateWorkerOptions(MakerBase):
         MakerBase.postOptions(self)
 
         # check and convert numeric parameters
-        for argument in ["usepty", "keepalive", "maxdelay", "log-size"]:
+        for argument in ["keepalive", "maxdelay", "log-size"]:
             try:
                 self[argument] = int(self[argument])
             except ValueError:

@@ -26,10 +26,9 @@ class FakeWorkerForBuilder(object):
     """
     debug = False
 
-    def __init__(self, usePTY=False, basedir="/slavebuilder/basedir"):
+    def __init__(self, basedir="/slavebuilder/basedir"):
         self.updates = []
         self.basedir = basedir
-        self.usePTY = usePTY
         self.unicode_encoding = 'utf-8'
 
     def sendUpdate(self, data):

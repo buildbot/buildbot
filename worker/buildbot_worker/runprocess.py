@@ -265,7 +265,7 @@ class RunProcess(object):
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config",
+                 logEnviron=True, logfiles={}, usePTY=False,
                  useProcGroup=True):
         """
 
@@ -275,8 +275,7 @@ class RunProcess(object):
                            has finished.
         @param keepStderr: same, for stderr
 
-        @param usePTY: "slave-config" -> use the WorkerForBuilder's usePTY;
-            otherwise, true to use a PTY, false to not use a PTY.
+        @param usePTY: true to use a PTY, false to not use a PTY.
 
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
@@ -370,17 +369,16 @@ class RunProcess(object):
         self.buflen = 0
         self.sendBuffersTimer = None
 
-        if usePTY == "slave-config":
-            self.usePTY = self.builder.usePTY
-        else:
-            self.usePTY = usePTY
+        # Previously `usePTY` was True, False or special string.
+        assert isinstance(usePTY, bool)
+        self.usePTY = usePTY
 
         # usePTY=True is a convenience for cleaning up all children and
         # grandchildren of a hung command. Fall back to usePTY=False on systems
         # and in situations where ptys cause problems.  PTYs are posix-only,
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
-            if self.usePTY and usePTY != "slave-config":
+            if self.usePTY:
                 self.sendStatus(
                     {'header': "WARNING: disabling usePTY for this command"})
             self.usePTY = False
