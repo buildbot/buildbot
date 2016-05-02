@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import os
+import textwrap
 
 import mock
 from autobahn.wamp.types import EventDetails
@@ -157,10 +158,9 @@ class WampMQReal(unittest.TestCase):
         Tests a little bit more painful to run, but which involve real communication with
         a wamp router
     """
-    HOW_TO_RUN = """ \
-        define WAMP_ROUTER_URL to a wamp router to run this test\
-        e.g: WAMP_ROUTER_URL=ws://localhost:8000/ws
-    """
+    HOW_TO_RUN = textwrap.dedent("""\
+        define WAMP_ROUTER_URL to a wamp router to run this test
+        e.g: WAMP_ROUTER_URL=ws://localhost:8000/ws""")
     # if connection is bad, this test can timeout easily
     # we reduce the timeout to help maintain the sanity of the developer
     timeout = 2
