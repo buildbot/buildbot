@@ -27,34 +27,10 @@ class LocalWorker(WorkerBase):
         from buildbot.worker.protocols.null import Connection
 
         yield WorkerBase.startService(self)
-        # TODO: This is a workaround for using worker with "slave"-api with
-        # updated master.  Later buildbot-slave package will be replaced with
-        # buildbot-worker package which will be "slave"-free, and this patch
-        # will not be needed.
-        self._workername = self.name
+        self.workername = self.name
         conn = Connection(self.parent, self)
         # I don't have a master property, but my parent has.
         master = self.parent.master
-        # TODO: This is a workaround for using worker with "slave"-api with
-        # updated master.  Later buildbot-slave package will be replaced with
-        # buildbot-worker package which will be "slave"-free, and this patch
-        # will not be needed.
         res = yield master.workers.newConnection(conn, self.name)
         if res:
             yield self.parent.attached(conn)
-
-    # TODO: This is a workaround for using worker with "slave"-api with
-    # updated master.  Later buildbot-slave package will be replaced with
-    # buildbot-worker package which will be "slave"-free, and this patch
-    # will not be needed.
-    @property
-    def workername(self):
-        return self._workername
-
-    # TODO: This is a workaround for using worker with "slave"-api with
-    # updated master.  Later buildbot-slave package will be replaced with
-    # buildbot-worker package which will be "slave"-free, and this patch
-    # will not be needed.
-    @property
-    def slavename(self):
-        return self._workername
