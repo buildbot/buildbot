@@ -69,10 +69,16 @@
                         <td class="txt-align-left">
                             <h5><strong>{{ test.name }}</strong></h5>
                             {% if data.utrPrefix %}
+
+                                {% set additionalCommandLineArguments = '' %}
+                                {% if suite.minimalCommandLine %}
+                                    {% set additionalCommandLineArguments = suite.minimalCommandLine|join(" ") %}
+                                {% endif %}
+
                                 <a class="label label-default collapse" data-target="#testCommand{{ outer_loop.index }}{{ loop.index }}">Command to run locally</a>
 
                                 <div id="testCommand{{ outer_loop.index }}{{ loop.index }}" class="report-command">
-                                    <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
+                                    <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} {{ additionalCommandLineArguments }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
                                 </div>
                             {% endif %}
 
