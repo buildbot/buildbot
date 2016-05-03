@@ -210,8 +210,8 @@ class TestPropertyMap(unittest.TestCase):
         return d
 
     def testTempValue(self):
-        self.doTestSimpleWithProperties('%(prop_temp)s', 'present',
-                                        prop_temp=lambda b: 'present')
+        return self.doTestSimpleWithProperties('%(prop_temp)s', 'present',
+                                               prop_temp=lambda b: 'present')
 
     def testTempValueOverrides(self):
         return self.doTestSimpleWithProperties('%(prop_one)s', 2,
