@@ -171,6 +171,45 @@ class TestAbstractBuildSlave(unittest.TestCase):
         self.assertEqual(self.master.pbmanager._unregistrations, [('tcp:1234', 'bot')])
         self.assertEqual(self.master.pbmanager._registrations, [('tcp:1234', 'bot', 'pass')])
 
+    @defer.inlineCallbacks
+    def setUpSlaveService(self, pause=False):
+        master = self.master = fakemaster.make_master()
+        slave = self.ConcreteBuildSlave('bot', 'pass')
+
+        if pause:
+            slave.slave_status.setPaused(True)
+        slave.master = master
+        slave.sendBuilderList = lambda: ['bldr1']
+        slave.botmaster = master.botmaster
+        slave.startService()
+
+        bot = self.createRemoteBot()
+        yield slave.attached(bot)
+
+        config = mock.Mock()
+        config.slavePortnum = "tcp:1234"
+        config.slaves = [ slave ]
+
+        yield slave.reconfigService(config)
+        defer.returnValue(slave)
+
+    def shuttingDown(self, slave):
+        return ('shutdown',) in slave.slave.commands
+
+    @defer.inlineCallbacks
+    def test_stopServicePausedSlave(self):
+        slave = yield self.setUpSlaveService(pause=True)
+        self.assertTrue(not self.shuttingDown(slave))
+        yield slave.stopService()
+        self.assertTrue(self.shuttingDown(slave))
+
+    @defer.inlineCallbacks
+    def test_stopServiceIdleSlave(self):
+        slave = yield self.setUpSlaveService()
+        self.assertTrue(not self.shuttingDown(slave))
+        yield slave.stopService()
+        self.assertTrue(not self.shuttingDown(slave))
+
     # FIXME: Test that reconfig properly deals with
     #   1) locks
     #   2) telling slave about builder
