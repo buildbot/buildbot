@@ -523,6 +523,21 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             if hasattr(t, 'slaveDisconnected'):
                 t.slaveDisconnected(name)
 
+    def slavePaused(self, slavename, user):
+        for t in self.watchers:
+            if hasattr(t, 'slavePaused'):
+                t.slavePaused(slavename, user)
+
+    def slaveUnpaused(self, slavename, user):
+        for t in self.watchers:
+            if hasattr(t, 'slaveUnpaused'):
+                t.slaveUnpaused(slavename, user)
+
+    def slaveShutdownGraceFully(self, slavename, user):
+        for t in self.watchers:
+            if hasattr(t, 'slaveShutdownGraceFully'):
+                t.slaveShutdownGraceFully(slavename, user)
+
     def changeAdded(self, change):
         for t in self.watchers:
             if hasattr(t, 'changeAdded'):

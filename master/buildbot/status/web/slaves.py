@@ -38,8 +38,9 @@ class ShutdownActionResource(ActionResource):
 
         url = None
         if res:
-            name = authz.getUsernameFull(request)
-            log.msg("Shutdown %s gracefully requested by %s" % (self.slave.name, name))
+            username = authz.getUsernameFull(request)
+            log.msg("Shutdown %s gracefully requested by %s" % (self.slave.name, username))
+            self.slave.master.status.slaveShutdownGraceFully(self.slave.name, username)
             self.slave.setGraceful(True)
             url = path_to_slave(request, self.slave)
         else:
@@ -61,9 +62,14 @@ class PauseActionResource(ActionResource):
 
         url = None
         if res:
-            name = authz.getUsernameFull(request)
-            action = "Unpause" if self.slave.isPaused() else "Pause"
-            log.msg("%s %s requested by %s" % (action, self.slave.name, name))
+            username = authz.getUsernameFull(request)
+            if self.slave.isPaused():
+                self.slave.master.status.slaveUnpaused(self.slave.name, username)
+                action = "Unpause"
+            else:
+                self.slave.master.status.slavePaused(self.slave.name, username)
+                action = "Pause"
+            log.msg("%s %s requested by %s" % (action, self.slave.name, username))
             self.slave.setPaused(self.state)
             url = path_to_slave(request, self.slave)
         else:
