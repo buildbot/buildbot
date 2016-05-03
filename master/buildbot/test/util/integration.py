@@ -119,7 +119,7 @@ class RunMasterBase(unittest.TestCase):
             worker_dir.createDirectory()
             self.w = Worker(
                 "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                False, False)
+                False)
         elif self.proto == 'null':
             self.w = None
         if self.w is not None:
