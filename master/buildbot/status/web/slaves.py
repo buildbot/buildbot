@@ -15,6 +15,7 @@
 import json
 
 from twisted.internet import defer
+from twisted.python import log
 
 from twisted.web import html
 from twisted.web.util import Redirect
@@ -32,12 +33,13 @@ class ShutdownActionResource(ActionResource):
 
     @defer.inlineCallbacks
     def performAction(self, request):
-        res = yield self.getAuthz(request).actionAllowed(self.action,
-                                                         request,
-                                                         self.slave)
+        authz = self.getAuthz(request)
+        res = yield authz.actionAllowed(self.action, request, self.slave)
 
         url = None
         if res:
+            name = authz.getUsernameFull(request)
+            log.msg("Shutdown %s gracefully requested by %s" % (self.slave.name, name))
             self.slave.setGraceful(True)
             url = path_to_slave(request, self.slave)
         else:
@@ -54,12 +56,14 @@ class PauseActionResource(ActionResource):
 
     @defer.inlineCallbacks
     def performAction(self, request):
-        res = yield self.getAuthz(request).actionAllowed(self.action,
-                                                        request,
-                                                        self.slave)
+        authz = self.getAuthz(request)
+        res = yield authz.actionAllowed(self.action, request, self.slave)
 
         url = None
         if res:
+            name = authz.getUsernameFull(request)
+            action = "Unpause" if self.slave.isPaused() else "Pause"
+            log.msg("%s %s requested by %s" % (action, self.slave.name, name))
             self.slave.setPaused(self.state)
             url = path_to_slave(request, self.slave)
         else:
