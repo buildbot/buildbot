@@ -105,11 +105,6 @@ To use these, just include them on the ``buildslave create-slave`` command line,
     This disables internal worker log management mechanism.
     With this option worker does not override the default logfile name and its behaviour giving a possibility to control those with command-line options of twistd daemon.
 
-.. option:: --usepty
-
-    This is a boolean flag that tells the worker whether to launch child processes in a PTY or with regular pipes (the default) when the master does not specify.
-    This option is deprecated, as this particular parameter is better specified on the master.
-
 .. option:: --umask
 
     This is a string (generally an octal representation of an integer) which will cause the worker process' ``umask`` value to be set shortly after initialization.

@@ -1089,7 +1089,7 @@ The :bb:step:`ShellCommand` arguments are:
 
 ``usePTY``
     Should this command be run in a ``pty``?
-    The default is to observe the configuration of the client (:ref:`Worker-Options`), but specifying ``True`` or ``False`` here will override the default.
+    ``False`` by default.
     This option is not available on Windows.
 
     In general, you do not want to use a pseudo-terminal.

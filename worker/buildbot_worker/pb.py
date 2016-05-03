@@ -149,16 +149,18 @@ class Worker(WorkerBase, service.MultiService):
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
-                 keepalive, usePTY, keepaliveTimeout=None, umask=None,
+                 keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=300, numcpus=None, unicode_encoding=None,
                  allow_shutdown=None):
 
         # note: keepaliveTimeout is ignored, but preserved here for
         # backward-compatibility
 
+        assert usePTY is None, "worker-side usePTY is not supported anymore"
+
         service.MultiService.__init__(self)
         WorkerBase.__init__(
-            self, name, basedir, usePTY, umask=umask, unicode_encoding=unicode_encoding)
+            self, name, basedir, umask=umask, unicode_encoding=unicode_encoding)
         if keepalive == 0:
             keepalive = None
 

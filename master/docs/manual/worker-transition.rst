@@ -548,3 +548,5 @@ List of database-related changes in API (fallback for old API is provided):
    * - buildbot-worker
      - no
      - yes
+
+``buildbot-worker`` doesn't support worker-side specification of ``usePTY`` (with ``--usepty`` command line switch of ``buildbot-worker create-worker``), you need to specify this option on master side.

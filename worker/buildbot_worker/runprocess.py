@@ -265,7 +265,7 @@ class RunProcess(object):
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY="slave-config",
+                 logEnviron=True, logfiles={}, usePTY=False,
                  useProcGroup=True):
         """
 
@@ -275,8 +275,7 @@ class RunProcess(object):
                            has finished.
         @param keepStderr: same, for stderr
 
-        @param usePTY: "slave-config" -> use the WorkerForBuilder's usePTY;
-            otherwise, true to use a PTY, false to not use a PTY.
+        @param usePTY: true to use a PTY, false to not use a PTY.
 
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
@@ -285,8 +284,8 @@ class RunProcess(object):
         self.builder = builder
         if isinstance(command, list):
             def obfus(w):
-                if (isinstance(w, tuple) and len(w) == 3
-                        and w[0] == 'obfuscated'):
+                if (isinstance(w, tuple) and len(w) == 3 and
+                        w[0] == 'obfuscated'):
                     return util.Obfuscated(w[1], w[2])
                 return w
             command = [obfus(w) for w in command]
@@ -370,8 +369,10 @@ class RunProcess(object):
         self.buflen = 0
         self.sendBuffersTimer = None
 
+        # TODO: remove this when master will have non-generic support of
+        # buildbot-worker.
         if usePTY == "slave-config":
-            self.usePTY = self.builder.usePTY
+            self.usePTY = False
         else:
             self.usePTY = usePTY
 
@@ -380,7 +381,7 @@ class RunProcess(object):
         # and in situations where ptys cause problems.  PTYs are posix-only,
         # and for .closeStdin to matter, we must use a pipe, not a PTY
         if runtime.platformType != "posix" or initialStdin is not None:
-            if self.usePTY and usePTY != "slave-config":
+            if self.usePTY:
                 self.sendStatus(
                     {'header': "WARNING: disabling usePTY for this command"})
             self.usePTY = False

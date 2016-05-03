@@ -109,16 +109,16 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
     def test_constructor_minimal(self):
         # only required arguments
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False)
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10)
 
     def test_constructor_083_tac(self):
         # invocation as made from default 083 tac files
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
                    umask=0o123, maxdelay=10)
 
     def test_constructor_full(self):
         # invocation with all args
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
                    umask=0o123, maxdelay=10, keepaliveTimeout=10,
                    unicode_encoding='utf8', allow_shutdown=True)
 
@@ -136,7 +136,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         port = self.start_master(persp, on_attachment=call_print)
         self.worker = bot.Worker("127.0.0.1", port,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, usePTY=False, umask=0o22)
+                                 keepalive=0, umask=0o22)
         self.worker.startService()
 
         # and wait for the result of the print
@@ -147,7 +147,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         self.worker = bot.Worker("127.0.0.1", 9999,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, usePTY=False, umask=0o22)
+                                 keepalive=0, umask=0o22)
         self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
@@ -160,7 +160,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         self.worker = bot.Worker("127.0.0.1", 9999,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, usePTY=False, umask=0o22)
+                                 keepalive=0, umask=0o22)
         self.worker.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
@@ -191,7 +191,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         self.worker = bot.Worker("127.0.0.1", port,
                                  "testy", "westy", self.basedir,
-                                 keepalive=0, usePTY=False, umask=0o22)
+                                 keepalive=0, umask=0o22)
 
         self.worker.startService()
 
@@ -207,7 +207,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
         worker = bot.Worker("127.0.0.1", 1234,
                             "testy", "westy", self.basedir,
-                            keepalive=0, usePTY=False, umask=0o22,
+                            keepalive=0, umask=0o22,
                             allow_shutdown='file')
 
         # Mock out gracefulShutdown
