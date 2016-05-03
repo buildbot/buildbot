@@ -32,13 +32,14 @@ class NightlyBase(scheduler.SchedulerMixin, unittest.TestCase):
     """detailed getNextBuildTime tests"""
 
     OBJECTID = 133
+    SCHEDULERID = 33
 
     def setUp(self):
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         return self.attachScheduler(timed.NightlyBase(**kwargs),
-                                    self.OBJECTID)
+                                    self.OBJECTID, self.SCHEDULERID)
 
     @defer.inlineCallbacks
     def do_getNextBuildTime_test(self, sched, *expectations):

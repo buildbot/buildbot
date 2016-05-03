@@ -33,7 +33,7 @@ class CommonStuffMixin(object):
 
         self.master.db.insertTestData(
             [fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
-        sched = self.attachScheduler(klass(**kwargs), self.SCHEDULERID)
+        sched = self.attachScheduler(klass(**kwargs), self.OBJECTID, self.SCHEDULERID)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()
@@ -69,7 +69,8 @@ class CommonStuffMixin(object):
 class BaseBasicScheduler(CommonStuffMixin,
                          scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 244
+    OBJECTID = 244
+    SCHEDULERID = 4
 
     # a custom subclass since we're testing the base class.  This basically
     # re-implements SingleBranchScheduler, but with more asserts
@@ -296,7 +297,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         self.master.db.insertTestData(
             [fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
         sched = self.attachScheduler(basic.SingleBranchScheduler(**kwargs),
-                                     self.SCHEDULERID,
+                                     self.OBJECTID, self.SCHEDULERID,
                                      overrideBuildsetMethods=True)
 
         # add a Clock to help checking timing issues
@@ -452,7 +453,8 @@ class SingleBranchScheduler(CommonStuffMixin,
 class AnyBranchScheduler(CommonStuffMixin,
                          scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 246
+    SCHEDULERID = 6
+    OBJECTID = 246
 
     def setUp(self):
         self.setUpScheduler()

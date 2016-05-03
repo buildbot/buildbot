@@ -23,11 +23,12 @@ from twisted.trial import unittest
 
 class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
-    SCHEDULERID = 1327
+    SCHEDULERID = 327
+    OBJECTID = 1327
 
     def makeScheduler(self, firstBuildDuration=0, **kwargs):
         sched = self.attachScheduler(timed.NightlyTriggerable(**kwargs),
-                                     self.SCHEDULERID,
+                                     self.OBJECTID, self.SCHEDULERID,
                                      overrideBuildsetMethods=True,
                                      createBuilderDB=True)
 

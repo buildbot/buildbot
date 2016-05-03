@@ -27,6 +27,7 @@ from twisted.trial import unittest
 SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
 OBJECTID = 33
+SCHEDULERID = 133
 UPSTREAM_NAME = u'uppy'
 
 
@@ -49,7 +50,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched = dependent.Dependent(name='n', builderNames=['b'],
                                     upstream=upstream)
-        self.attachScheduler(sched, OBJECTID,
+        self.attachScheduler(sched, OBJECTID, SCHEDULERID,
                              overrideBuildsetMethods=True,
                              createBuilderDB=True)
 

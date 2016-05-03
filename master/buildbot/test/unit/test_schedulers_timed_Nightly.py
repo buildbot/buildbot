@@ -30,6 +30,7 @@ from twisted.trial import unittest
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 132
+    SCHEDULERID = 32
 
     # not all timezones are even multiples of 1h from GMT.  This variable
     # holds the number of seconds ahead of the hour for the current timezone.
@@ -39,7 +40,8 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
 
     def makeScheduler(self, **kwargs):
         sched = self.attachScheduler(timed.Nightly(**kwargs),
-                                     self.OBJECTID, overrideBuildsetMethods=True)
+                                     self.OBJECTID, self.SCHEDULERID,
+                                     overrideBuildsetMethods=True)
 
         self.master.db.insertTestData(
             [fakedb.Builder(name=bname) for bname in kwargs.get("builderNames", [])])

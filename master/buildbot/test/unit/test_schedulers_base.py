@@ -29,6 +29,7 @@ from twisted.trial import unittest
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 19
+    SCHEDULERID = 9
     exp_bsid_brids = (123, {'b': 456})
 
     def setUp(self):
@@ -50,7 +51,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(
             base.BaseScheduler(name=name, builderNames=builderNames,
                                properties=properties, codebases=codebases),
-            self.OBJECTID)
+            self.OBJECTID, self.SCHEDULERID)
         self.master.data.updates.addBuildset = mock.Mock(
             name='data.addBuildset',
             side_effect=lambda *args, **kwargs:
