@@ -62,6 +62,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * html is not permitted anymore in 'label' attributes of forcescheduler parameters.
 
+* ``LocalWorker`` now requires ``buildbot-worker`` package, instead of ``buildbot-slave``.
+
 Worker
 ------
 

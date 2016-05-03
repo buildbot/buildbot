@@ -26,9 +26,9 @@ from twisted.trial import unittest
 class TestLocalWorker(unittest.TestCase):
 
     try:
-        from buildslave.bot import LocalBuildSlave as _  # noqa
+        from buildbot_worker.bot import LocalWorker as _  # noqa
     except ImportError:
-        skip = "buildbot-slave package is not installed"
+        skip = "buildbot-worker package is not installed"
 
     def setUp(self):
         self.master = fakemaster.make_master(wantDb=True, wantData=True,

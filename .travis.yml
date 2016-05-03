@@ -86,6 +86,10 @@ matrix:
 #    - python: "2.7"
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
+    # Configuration to run tests without installed buildbot-slave.
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
+
 # Dependencies installation commands
 install:
   # codecov is the interface to codecov.io; see after_success
@@ -110,6 +114,9 @@ install:
                   MySQL-python \
                   psycopg2 \
                   pg8000 \
+
+  - "[ $TESTS != trial_worker ] || pip install -e pkg -e master[tls,test] -e worker"
+
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
 
@@ -168,6 +175,9 @@ script:
   - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
+
+  - "[ $TESTS != trial_worker ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+
   - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
 notifications:
