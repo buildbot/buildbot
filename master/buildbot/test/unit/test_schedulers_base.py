@@ -222,7 +222,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         sched.deactivate = mock.Mock(return_value=defer.succeed(None))
 
         # set the schedulerid, and claim the scheduler on another master
-        self.setSchedulerToMaster(self.OTHER_MASTER_ID)
+        yield self.setSchedulerToMaster(self.OTHER_MASTER_ID)
 
         yield sched.startService()
         sched.clock.advance(sched.POLL_INTERVAL_SEC / 2)
@@ -232,7 +232,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertFalse(sched.deactivate.called)
         self.assertFalse(sched.isActive())
         # objectid is attached by the test helper
-        self.assertEqual(sched.serviceid, sched.objectid)
+        self.assertEqual(sched.serviceid, self.SCHEDULERID)
 
         # clear that masterid
         yield sched.stopService()

@@ -144,14 +144,13 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.sched = scheduler
         return scheduler
 
+    @defer.inlineCallbacks
     def setSchedulerToMaster(self, otherMaster):
-        self.master.data.updates.schedulerIds[
-            self.sched.name] = self.sched.objectid
+        sched_id = yield self.master.data.updates.findSchedulerId(self.sched.name)
         if otherMaster:
-            self.master.data.updates.schedulerMasters[
-                self.sched.objectid] = otherMaster
+            self.master.data.updates.schedulerMasters[sched_id] = otherMaster
         else:
-            del self.master.data.updates.schedulerMasters[self.sched.objectid]
+            del self.master.data.updates.schedulerMasters[sched_id]
 
     class FakeChange:
         who = ''

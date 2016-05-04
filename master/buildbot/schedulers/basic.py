@@ -89,6 +89,11 @@ class BaseBasicScheduler(base.BaseScheduler):
     @defer.inlineCallbacks
     def activate(self):
         yield base.BaseScheduler.activate(self)
+        # even if we aren't called via _activityPoll(), at this point we
+        # need to ensure the service id is set correctly
+        if self.serviceid is None:
+            self.serviceid = yield self._getServiceId()
+
         yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                          change_filter=self.change_filter,
                                          onlyImportant=self.onlyImportant)
@@ -102,8 +107,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         # changes, so get rid of any hanging around from previous
         # configurations
         else:
-            sched_id = yield self.master.db.schedulers.findSchedulerId(self.name)
-            yield self.master.db.schedulers.flushChangeClassifications(sched_id)
+            yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -146,10 +150,8 @@ class BaseBasicScheduler(base.BaseScheduler):
                 self.treeStableTimer, fire_timer)
 
         # record the change's importance
-        deferred = self.master.db.schedulers.findSchedulerId(self.name)
-        deferred.addCallback(
-            lambda sched_id: self.master.db.schedulers.classifyChanges(
-                sched_id, {change.number: important}))
+        return self.master.db.schedulers.classifyChanges(
+            self.serviceid, {change.number: important})
 
     @defer.inlineCallbacks
     def scanExistingClassifiedChanges(self):
@@ -159,9 +161,8 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # NOTE: this may double-call gotChange for changes that arrive just as
         # the scheduler starts up.  In practice, this doesn't hurt anything.
-        sched_id = yield self.master.db.schedulers.findSchedulerId(self.name)
         classifications = \
-            yield self.master.db.schedulers.getChangeClassifications(sched_id)
+            yield self.master.db.schedulers.getChangeClassifications(self.serviceid)
 
         # call gotChange for each change, after first fetching it from the db
         for changeid, important in iteritems(classifications):
@@ -189,9 +190,8 @@ class BaseBasicScheduler(base.BaseScheduler):
         if not self._stable_timers.pop(timer_name, None):
             return
 
-        sched_id = yield self.master.db.schedulers.findSchedulerId(self.name)
         classifications = \
-            yield self.getChangeClassificationsForTimer(sched_id, timer_name)
+            yield self.getChangeClassificationsForTimer(self.serviceid, timer_name)
 
         # just in case: databases do weird things sometimes!
         if not classifications:  # pragma: no cover
@@ -203,7 +203,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         max_changeid = changeids[-1]  # (changeids are sorted)
         yield self.master.db.schedulers.flushChangeClassifications(
-            sched_id, less_than=max_changeid + 1)
+            self.serviceid, less_than=max_changeid + 1)
 
 
 class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
