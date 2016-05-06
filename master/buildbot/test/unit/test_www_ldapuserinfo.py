@@ -35,28 +35,25 @@ class FakeLdap(object):
         self.search = mock.Mock(spec=search)
 
 
-class LdapUserInfo(unittest.TestCase):
-    # we completetly fake the python3-ldap module, so no need to require
-    # it to run the unit tests
+class CommonTestCase(unittest.TestCase):
+    """Common fixture for all ldapuserinfo tests
+
+    we completetly fake the python3-ldap module, so no need to require
+    it to run the unit tests
+    """
 
     def setUp(self):
         self.ldap = FakeLdap()
-
-        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
-            uri="ldap://uri", bindUser="user", bindPw="pass",
-            accountBase="accbase", groupBase="groupbase",
-            accountPattern="accpattern", groupMemberPattern="groupMemberPattern",
-            accountFullName="accountFullName",
-            accountEmail="accountEmail",
-            groupName="groupName",
-            avatarPattern="avatar",
-            avatarData="picture",
-            accountExtraFields=["myfield"])
+        self.makeUserInfoProvider()
         self.userInfoProvider.connectLdap = lambda: self.ldap
 
         def search(base, filterstr='f', attributes=None):
             pass
         self.userInfoProvider.search = mock.Mock(spec=search)
+
+    def makeUserInfoProvider(self):
+        """To be implemented by subclasses"""
+        raise NotImplementedError
 
     def makeSearchSideEffect(self, l):
         l = [[{'dn': i[0], 'raw_attributes': i[1]} for i in r]
@@ -70,6 +67,20 @@ class LdapUserInfo(unittest.TestCase):
             self.assertEqual(exp[i][0][0], got[i][0][1])
             self.assertEqual(exp[i][0][1], got[i][0][2])
             self.assertEqual(exp[i][0][2], got[i][1]['attributes'])
+
+
+class LdapUserInfo(CommonTestCase):
+    def makeUserInfoProvider(self):
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
+            uri="ldap://uri", bindUser="user", bindPw="pass",
+            accountBase="accbase", groupBase="groupbase",
+            accountPattern="accpattern", groupMemberPattern="groupMemberPattern",
+            accountFullName="accountFullName",
+            accountEmail="accountEmail",
+            groupName="groupName",
+            avatarPattern="avatar",
+            avatarData="picture",
+            accountExtraFields=["myfield"])
 
     @defer.inlineCallbacks
     def test_updateUserInfoNoResults(self):
@@ -147,3 +158,65 @@ class LdapUserInfo(unittest.TestCase):
             (('accbase', 'avatar', ['picture']), {}),
         ])
         self.assertEqual(res, ('image/png', '\x89PNG lljklj'))
+
+
+class LdapUserInfoNoGroups(CommonTestCase):
+
+    def makeUserInfoProvider(self):
+        self.userInfoProvider = ldapuserinfo.LdapUserInfo(
+            uri="ldap://uri", bindUser="user", bindPw="pass",
+            accountBase="accbase",
+            accountPattern="accpattern",
+            accountFullName="accountFullName",
+            accountEmail="accountEmail",
+            avatarPattern="avatar",
+            avatarData="picture",
+            accountExtraFields=["myfield"])
+
+    @defer.inlineCallbacks
+    def test_updateUserInfo(self):
+        self.makeSearchSideEffect([[(
+            "cn", {"accountFullName": "me too",
+                   "accountEmail": "mee@too"})], [], []])
+        res = yield self.userInfoProvider.getUserInfo("me")
+        self.assertSearchCalledWith([
+            (('accbase', 'accpattern',
+              ['accountEmail', 'accountFullName', 'myfield']), {}),
+        ])
+        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
+                               'groups': [], 'username': 'me'})
+
+
+class Config(unittest.TestCase):
+
+    def test_missing_group_name(self):
+        self.assertRaises(ValueError,
+                          ldapuserinfo.LdapUserInfo,
+                          groupMemberPattern="member=%(dn)s",
+                          groupBase="grpbase",
+                          uri="ldap://uri", bindUser="user", bindPw="pass",
+                          accountBase="accbase",
+                          accountPattern="accpattern",
+                          accountFullName="accountFullName",
+                          accountEmail="accountEmail")
+
+    def test_missing_group_base(self):
+        self.assertRaises(ValueError,
+                          ldapuserinfo.LdapUserInfo,
+                          groupMemberPattern="member=%(dn)s",
+                          groupName="group",
+                          uri="ldap://uri", bindUser="user", bindPw="pass",
+                          accountBase="accbase",
+                          accountPattern="accpattern",
+                          accountFullName="accountFullName",
+                          accountEmail="accountEmail")
+
+    def test_missing_two_params(self):
+        self.assertRaises(ValueError,
+                          ldapuserinfo.LdapUserInfo,
+                          groupName="group",
+                          uri="ldap://uri", bindUser="user", bindPw="pass",
+                          accountBase="accbase",
+                          accountPattern="accpattern",
+                          accountFullName="accountFullName",
+                          accountEmail="accountEmail")
