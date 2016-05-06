@@ -302,19 +302,19 @@ In this case the username provided by oauth2 will be used, and all other informa
 
 Currently only one provider is available:
 
-.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, groupBase, accountPattern, groupMemberPattern, accountFullName, accountEmail, groupName, avatarPattern, avatarData, accountExtraFields)
+.. py:class:: buildbot.ldapuserinfo.LdapUserInfo(uri, bindUser, bindPw, accountBase, accountPattern, groupBase=None, groupMemberPattern=None, groupName=None, accountFullName, accountEmail, avatarPattern=None, avatarData=None, accountExtraFields=None)
 
         :param uri: uri of the ldap server
         :param bindUser: username of the ldap account that is used to get the infos for other users (usually a "faceless" account)
         :param bindPw: password of the ``bindUser``
         :param accountBase: the base dn (distinguished name)of the user database
-        :param groupBase: the base dn of the groups database
         :param accountPattern: the pattern for searching in the account database.
                                This must contain the ``%(username)s`` string, which is replaced by the searched username
-        :param groupMemberPattern: the pattern for searching in the group database.
-                                   This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
         :param accountFullName: the name of the field in account ldap database where the full user name is to be found.
         :param accountEmail: the name of the field in account ldap database where the user email is to be found.
+        :param groupBase: the base dn of the groups database.
+        :param groupMemberPattern: the pattern for searching in the group database.
+                                   This must contain the ``%(dn)s`` string, which is replaced by the searched username's dn
         :param groupName: the name of the field in groups ldap database where the group name is to be found.
         :param avatarPattern: the pattern for searching avatars from emails in the account database.
                               This must contain the ``%(email)s`` string, which is replaced by the searched email
@@ -322,7 +322,9 @@ Currently only one provider is available:
                            This field is supposed to contain the raw picture, format is automatically detected from jpeg, png or git.
         :param accountExtraFields: extra fields to extracts for use with the authorization policies.
 
-        Example::
+        If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
+
+     Example::
 
             from buildbot.plugins import util
 

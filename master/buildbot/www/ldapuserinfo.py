@@ -26,11 +26,13 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
     name = 'ldap'
 
     def __init__(self, uri, bindUser, bindPw,
-                 accountBase, groupBase,
-                 accountPattern, groupMemberPattern,
+                 accountBase,
+                 accountPattern,
                  accountFullName,
                  accountEmail,
-                 groupName,
+                 groupBase=None,
+                 groupMemberPattern=None,
+                 groupName=None,
                  avatarPattern=None,
                  avatarData=None,
                  accountExtraFields=None):
@@ -43,6 +45,14 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         self.accountEmail = accountEmail
         self.accountPattern = accountPattern
         self.accountFullName = accountFullName
+        group_params = [p for p in (groupName, groupMemberPattern, groupBase)
+                        if p is not None]
+        if len(group_params) not in (0, 3):
+            raise ValueError(
+                "Incomplete LDAP groups configuration. "
+                "To use Ldap groups, you need to specify the three "
+                "parameters (groupName, groupMemberPattern and groupBase). ")
+
         self.groupName = groupName
         self.groupMemberPattern = groupMemberPattern
         self.groupBase = groupBase
@@ -98,6 +108,11 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             for f in self.accountExtraFields:
                 if f in ldap_infos:
                     infos[f] = getLdapInfo(ldap_infos[f])
+
+            if self.groupMemberPattern is None:
+                infos['groups'] = []
+                return infos
+
             # needs double quoting of backslashing
             pattern = self.groupMemberPattern % dict(dn=dn)
             res = self.search(c, self.groupBase, pattern,
