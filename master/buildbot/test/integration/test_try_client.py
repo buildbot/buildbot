@@ -298,7 +298,6 @@ def masterConfig(extra_config):
     c['title'] = "test"
     c['titleURL'] = "test"
     c['buildbotURL'] = "http://localhost:8010/"
-    c['db'] = {'db_url': "sqlite:///state.sqlite"}
     c['mq'] = {'debug': True}
     # test wants to influence the config, but we still return a new config each time
     c.update(extra_config)

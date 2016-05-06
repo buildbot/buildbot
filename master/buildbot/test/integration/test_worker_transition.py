@@ -76,10 +76,6 @@ c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
 
 c['buildbotURL'] = "http://localhost:8010/"
-
-c['db'] = {
-    'db_url' : "sqlite:///state.sqlite",
-}
 """
 
 # Template for master configuration after renaming.
@@ -124,10 +120,6 @@ c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
 
 c['buildbotURL'] = "http://localhost:8010/"
-
-c['db'] = {
-    'db_url' : "sqlite:///state.sqlite",
-}
 """
 
 
