@@ -57,15 +57,15 @@ class HttpStatusPushBase(service.BuildbotService):
     def startService(self):
         self.session = self.sessionFactory()
         yield service.BuildbotService.startService(self)
-        startConsuming = self.master.mq.startConsuming
 
+        startConsuming = self.master.mq.startConsuming
         self._buildCompleteConsumer = yield startConsuming(
             self.buildFinished,
             ('builds', None, 'finished'))
 
         self._buildStartedConsumer = yield startConsuming(
             self.buildStarted,
-            ('builds', None, 'started'))
+            ('builds', None, 'new'))
 
     def stopService(self):
         self._buildCompleteConsumer.stopConsuming()
@@ -99,9 +99,6 @@ class HttpStatusPush(HttpStatusPushBase):
 
     def checkConfig(self, serverUrl, user, password, **kwargs):
         HttpStatusPushBase.checkConfig(self, **kwargs)
-        if txrequests is None:
-            config.error("Please install txrequests and requests to use %s (pip install txrequest)" %
-                         (self.__class__,))
 
     def reconfigService(self, serverUrl, user, password, **kwargs):
         HttpStatusPushBase.reconfigService(self, **kwargs)
