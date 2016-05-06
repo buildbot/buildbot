@@ -28,38 +28,11 @@ from buildbot.test.util import change_import
 from buildbot.test.util import db
 from buildbot.test.util import querylog
 from buildbot.util import pickle
-from migrate.versioning import schemadiff
 
 from twisted.internet import defer
 from twisted.persisted import styles
 from twisted.python import util
 from twisted.trial import unittest
-
-
-# monkey-patch for "compare_model_to_db gets confused by sqlite_sequence",
-# http://code.google.com/p/sqlalchemy-migrate/issues/detail?id=124
-
-
-def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
-    """
-    Return differences of model against database.
-
-    :return: object which will evaluate to :keyword:`True` if there \
-      are differences else :keyword:`False`.
-    """
-    db_metadata = sa.MetaData(engine, reflect=True)
-
-    # sqlite will include a dynamically generated 'sqlite_sequence' table if
-    # there are autoincrement sequences in the database; this should not be
-    # compared.
-    if engine.dialect.name == 'sqlite':
-        if 'sqlite_sequence' in db_metadata.tables:
-            db_metadata.remove(db_metadata.tables['sqlite_sequence'])
-
-    return schemadiff.SchemaDiff(metadata, db_metadata,
-                                 labelA='model',
-                                 labelB='database',
-                                 excludeTables=excludeTables)
 
 
 class UpgradeTestMixin(db.RealDatabaseMixin):
@@ -141,17 +114,6 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
         return self.tearDownUpgradeTest()
 
     def assertModelMatches(self):
-        # this patch only applies to sqlalchemy-migrate-0.7.x.  We prefer to
-        # skip the remainder of the test, even though some significant testing
-        # has already occcurred (verify_thd), to indicate that the test was not
-        # complete.
-        if (not hasattr(migrate, '__version__')
-                or not migrate.__version__.startswith('0.7.')):
-            raise unittest.SkipTest("model comparison skipped: unsupported "
-                                    "version of sqlalchemy-migrate")
-        self.patch(schemadiff, 'getDiffOfModelAgainstDatabase',
-                   getDiffMonkeyPatch)
-
         def comp(engine):
             # use compare_model_to_db, which gets everything but foreign
             # keys and indexes
