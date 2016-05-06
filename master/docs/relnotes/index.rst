@@ -25,6 +25,8 @@ Master
 Features
 ~~~~~~~~
 
+* new :bb:reporter:`HipchatStatusPush` to report build results to Hipchat.
+
 Fixes
 ~~~~~
 
