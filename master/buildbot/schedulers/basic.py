@@ -89,6 +89,11 @@ class BaseBasicScheduler(base.BaseScheduler):
     @defer.inlineCallbacks
     def activate(self):
         yield base.BaseScheduler.activate(self)
+        # even if we aren't called via _activityPoll(), at this point we
+        # need to ensure the service id is set correctly
+        if self.serviceid is None:
+            self.serviceid = yield self._getServiceId()
+
         yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                          change_filter=self.change_filter,
                                          onlyImportant=self.onlyImportant)
@@ -102,8 +107,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         # changes, so get rid of any hanging around from previous
         # configurations
         else:
-            yield self.master.db.schedulers.flushChangeClassifications(
-                self.objectid)
+            yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -147,7 +151,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         # record the change's importance
         return self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
+            self.serviceid, {change.number: important})
 
     @defer.inlineCallbacks
     def scanExistingClassifiedChanges(self):
@@ -158,8 +162,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         # NOTE: this may double-call gotChange for changes that arrive just as
         # the scheduler starts up.  In practice, this doesn't hurt anything.
         classifications = \
-            yield self.master.db.schedulers.getChangeClassifications(
-                self.objectid)
+            yield self.master.db.schedulers.getChangeClassifications(self.serviceid)
 
         # call gotChange for each change, after first fetching it from the db
         for changeid, important in iteritems(classifications):
@@ -174,7 +177,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     def getTimerNameForChange(self, change):
         raise NotImplementedError  # see subclasses
 
-    def getChangeClassificationsForTimer(self, objectid, timer_name):
+    def getChangeClassificationsForTimer(self, sched_id, timer_name):
         """similar to db.schedulers.getChangeClassifications, but given timer
         name"""
         raise NotImplementedError  # see subclasses
@@ -188,8 +191,7 @@ class BaseBasicScheduler(base.BaseScheduler):
             return
 
         classifications = \
-            yield self.getChangeClassificationsForTimer(self.objectid,
-                                                        timer_name)
+            yield self.getChangeClassificationsForTimer(self.serviceid, timer_name)
 
         # just in case: databases do weird things sometimes!
         if not classifications:  # pragma: no cover
@@ -201,7 +203,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         max_changeid = changeids[-1]  # (changeids are sorted)
         yield self.master.db.schedulers.flushChangeClassifications(
-            self.objectid, less_than=max_changeid + 1)
+            self.serviceid, less_than=max_changeid + 1)
 
 
 class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
@@ -240,9 +242,8 @@ class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
     def getTimerNameForChange(self, change):
         return "only"  # this class only uses one timer
 
-    def getChangeClassificationsForTimer(self, objectid, timer_name):
-        return self.master.db.schedulers.getChangeClassifications(
-            self.objectid)
+    def getChangeClassificationsForTimer(self, sched_id, timer_name):
+        return self.master.db.schedulers.getChangeClassifications(sched_id)
 
 
 class Scheduler(SingleBranchScheduler):
@@ -269,11 +270,11 @@ class AnyBranchScheduler(BaseBasicScheduler):
         # Py2.6+: could be a namedtuple
         return (change.codebase, change.project, change.repository, change.branch)
 
-    def getChangeClassificationsForTimer(self, objectid, timer_name):
+    def getChangeClassificationsForTimer(self, sched_id, timer_name):
         # set in getTimerNameForChange
         codebase, project, repository, branch = timer_name
         return self.master.db.schedulers.getChangeClassifications(
-            self.objectid, branch=branch, repository=repository,
+            sched_id, branch=branch, repository=repository,
             codebase=codebase, project=project)
 
 # now at buildbot.schedulers.dependent, but keep the old name alive

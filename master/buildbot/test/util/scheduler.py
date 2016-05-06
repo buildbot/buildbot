@@ -47,7 +47,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
     def tearDownScheduler(self):
         pass
 
-    def attachScheduler(self, scheduler, objectid,
+    def attachScheduler(self, scheduler, objectid, schedulerid,
                         overrideBuildsetMethods=False,
                         createBuilderDB=False):
         """Set up a scheduler with a fake master and db; sets self.sched, and
@@ -74,7 +74,9 @@ class SchedulerMixin(interfaces.InterfaceTests):
         scheduler.setServiceParent(self.master)
 
         rows = [fakedb.Object(id=objectid, name=scheduler.name,
-                              class_name='SomeScheduler')]
+                              class_name='SomeScheduler'),
+                fakedb.Scheduler(id=schedulerid, name=scheduler.name),
+                ]
         if createBuilderDB is True:
             rows.extend([fakedb.Builder(name=bname)
                          for bname in scheduler.builderNames])
@@ -142,14 +144,13 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.sched = scheduler
         return scheduler
 
+    @defer.inlineCallbacks
     def setSchedulerToMaster(self, otherMaster):
-        self.master.data.updates.schedulerIds[
-            self.sched.name] = self.sched.objectid
+        sched_id = yield self.master.data.updates.findSchedulerId(self.sched.name)
         if otherMaster:
-            self.master.data.updates.schedulerMasters[
-                self.sched.objectid] = otherMaster
+            self.master.data.updates.schedulerMasters[sched_id] = otherMaster
         else:
-            del self.master.data.updates.schedulerMasters[self.sched.objectid]
+            del self.master.data.updates.schedulerMasters[sched_id]
 
     class FakeChange:
         who = ''

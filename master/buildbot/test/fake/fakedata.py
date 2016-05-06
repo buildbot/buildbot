@@ -244,6 +244,9 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     def findSchedulerId(self, name):
+        return self.master.db.schedulers.findSchedulerId(name)
+
+    def forget_about_it(self, name):
         validation.verifyType(self.testcase, 'scheduler name', name,
                               validation.StringValidator())
         if name not in self.schedulerIds:

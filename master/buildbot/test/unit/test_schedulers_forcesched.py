@@ -43,6 +43,7 @@ from twisted.trial import unittest
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):
 
     OBJECTID = 19
+    SCHEDULERID = 9
 
     def setUp(self):
         self.setUpScheduler()
@@ -54,7 +55,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                       **kw):
         sched = self.attachScheduler(
             ForceScheduler(name=name, builderNames=builderNames, **kw),
-            self.OBJECTID,
+            self.OBJECTID, self.SCHEDULERID,
             overrideBuildsetMethods=True,
             createBuilderDB=True)
         sched.master.config = config.MasterConfig()

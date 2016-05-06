@@ -37,6 +37,7 @@ class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 33
+    SCHEDULERID = 13
 
     def setUp(self):
         # Necessary to get an assertable submitted_at time.
@@ -59,7 +60,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
         sched = self.attachScheduler(
             triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
-            self.OBJECTID, overrideBuildsetMethods=overrideBuildsetMethods)
+            self.OBJECTID, self.SCHEDULERID,
+            overrideBuildsetMethods=overrideBuildsetMethods)
         sched._updateWaiters._reactor = self.clock
 
         return sched

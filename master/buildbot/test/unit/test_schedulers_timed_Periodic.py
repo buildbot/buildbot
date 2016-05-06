@@ -24,13 +24,14 @@ from twisted.trial import unittest
 class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 23
+    SCHEDULERID = 3
 
     def setUp(self):
         self.setUpScheduler()
 
     def makeScheduler(self, firstBuildDuration=0, exp_branch=None, **kwargs):
         self.sched = sched = timed.Periodic(**kwargs)
-        self.attachScheduler(self.sched, self.OBJECTID)
+        self.attachScheduler(self.sched, self.OBJECTID, self.SCHEDULERID)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()
