@@ -58,7 +58,11 @@ def getMaster(case, reactor, config_dict):
     basedir.createDirectory()
     master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
+    if 'db_url' not in config_dict:
+        config_dict['db_url'] = 'sqlite://'
+
     # TODO: Allow BuildMaster to transparently upgrade the database, at least for tests.
+    master.config.db['db_url'] = config_dict['db_url']
     yield master.db.setup(check_version=False)
     yield master.db.model.upgrade()
     master.db.setup = lambda: None
