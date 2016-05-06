@@ -23,7 +23,6 @@ from buildbot.worker_transition import WorkerAPICompatMixin
 class States(Names):
     ATTACHING = NamedConstant()  # worker attached, still checking hostinfo/etc
     IDLE = NamedConstant()  # idle, available for use
-    PINGING = NamedConstant()  # build about to start, making sure it is still alive
     BUILDING = NamedConstant()  # build is running
     LATENT = NamedConstant()  # latent worker is not substantiated; similar to idle
     SUBSTANTIATING = NamedConstant()
@@ -129,8 +128,6 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         @param status: if you point this at a BuilderStatus, a 'pinging'
                        event will be pushed.
         """
-        oldstate = self.state
-        self.state = States.PINGING
         newping = not self.ping_watchers
         d = defer.Deferred()
         self.ping_watchers.append(d)
@@ -144,11 +141,6 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
                 # is updated before the ping completes
             Ping().ping(self.worker.conn).addCallback(self._pong)
 
-        @d.addCallback
-        def reset_state(res):
-            if self.state == States.PINGING:
-                self.state = oldstate
-            return res
         return d
 
     def _pong(self, res):
