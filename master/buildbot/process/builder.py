@@ -22,7 +22,6 @@ from buildbot.data import resultspec
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
-from buildbot.process.workerforbuilder import BUILDING
 from buildbot.status.builder import RETRY
 from buildbot.util import service as util_service
 from buildbot.util import ascii2unicode
@@ -279,11 +278,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
                                          self.attaching_workers,
                                          self.workers))
             return
-        if wfb.state == BUILDING:
-            # the Build's .lostRemote method (invoked by a notifyOnDisconnect
-            # handler) will cause the Build to be stopped, probably right
-            # after the notifyOnDisconnect that invoked us finishes running.
-            pass
 
         if wfb in self.attaching_workers:
             self.attaching_workers.remove(wfb)
