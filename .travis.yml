@@ -19,10 +19,14 @@ language: python
 # Available Python versions:
 # http://about.travis-ci.org/docs/user/ci-environment/#Python-VM-images
 python:
-  - "2.6"
   - "2.7"
 
 env:
+  # lint, docs and coverage first as they're more likely to find issues
+  - TWISTED=latest SQLALCHEMY=latest TESTS=lint
+  - TWISTED=latest SQLALCHEMY=latest TESTS=docs
+  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
+
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
@@ -37,6 +41,23 @@ env:
   # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
+
+  # Test different versions of SQLAlchemy
+  - TWISTED=15.5.0 SQLALCHEMY=0.6.0 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=0.6.8 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=0.7.0 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=0.7.4 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=0.7.8 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
+
+  # add extra tests in separate jobs
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js
+
+  # Configuration to run `python setup.py test` to check this test runner.
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
+
+  # Configuration to run tests without installed buildbot-slave.
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
 
 cache:
   directories:
@@ -54,43 +75,13 @@ cache:
 
 matrix:
   include:
-    # lint, docs and coverage first as they're more likely to find issues
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=lint
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
-
-    # Test different versions of SQLAlchemy
-    - python: "2.7"
-      env: TWISTED=15.5.0 SQLALCHEMY=0.6.0 TESTS=trial
-    - python: "2.7"
-      env: TWISTED=15.5.0 SQLALCHEMY=0.6.8 TESTS=trial
-    - python: "2.7"
-      env: TWISTED=15.5.0 SQLALCHEMY=0.7.0 TESTS=trial
-    - python: "2.7"
-      env: TWISTED=15.5.0 SQLALCHEMY=0.7.4 TESTS=trial
-    - python: "2.7"
-      env: TWISTED=15.5.0 SQLALCHEMY=0.7.8 TESTS=trial
-    - python: "2.7"
-      env: TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
-
-    # add extra tests in separate jobs
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=js
-
+    - python: "2.6"
+      env: TWISTED=14.0.2 TESTS=worker-slave
+    - python: "2.6"
+      env: TWISTED=15.4.0 TESTS=worker-slave
     # python 3 tests
 #    - python: "3.4"
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
-
-    # Configuration to run `python setup.py test` to check this test runner.
-#    - python: "2.7"
-#      env: TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
-
-    # Configuration to run tests without installed buildbot-slave.
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
 
 # Dependencies installation commands
 install:
@@ -116,6 +107,11 @@ install:
                   MySQL-python \
                   psycopg2 \
                   pg8000 \
+
+  - |
+      [ $TESTS != worker-slave] || \
+      pip install -e slave \
+                  -e worker \
 
   - "[ $TESTS != trial_worker ] || pip install -e pkg -e master[tls,test] -e worker"
 
@@ -160,6 +156,7 @@ script:
   - "[ $TESTS != js ] || make frontend_install_tests"
   # run tests under coverage for latest only (it's slower..)
   - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  - "[ $TESTS != worker-slave ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
   - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
 
   # run tests that are know to work on py3
