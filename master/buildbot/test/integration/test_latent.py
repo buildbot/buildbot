@@ -13,98 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet.defer import Deferred
 from twisted.python import threadpool
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SynchronousTestCase
-from zope.interface import implementer
 
 from buildbot.config import BuilderConfig
-from buildbot.interfaces import IBuildStepFactory
-from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
+from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util.integration import getMaster
-from buildbot.worker.base import AbstractLatentWorker
-
-try:
-    from buildbot_worker.bot import LocalWorker
-except ImportError:
-    LocalWorker = None
-
-
-class LatentController(object):
-
-    """
-    A controller for ``ControllableLatentWorker``.
-
-    https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
-    """
-
-    def __init__(self, name):
-        self.worker = ControllableLatentWorker(name, self)
-        self.started = False
-
-    def start_instance(self, result):
-        assert self.started
-        self.started = False
-        d, self._start_deferred = self._start_deferred, None
-        d.callback(result)
-
-    def connect_worker(self, workdir):
-        LocalWorker(self.worker.name, workdir.path, False).setServiceParent(
-            self.worker)
-
-
-class ControllableLatentWorker(AbstractLatentWorker):
-
-    """
-    A latent worker that can be contolled by tests.
-    """
-
-    def __init__(self, name, controller):
-        AbstractLatentWorker.__init__(self, name, None)
-        self._controller = controller
-
-    def checkConfig(self, name, _):
-        AbstractLatentWorker.checkConfig(self, name, None)
-
-    def reconfigService(self, name, _):
-        AbstractLatentWorker.reconfigService(self, name, None)
-
-    def start_instance(self, build):
-        self._controller.started = True
-        self._controller._start_deferred = Deferred()
-        return self._controller._start_deferred
-
-    def stop_instance(self, build):
-        return Deferred()
-
-
-@implementer(IBuildStepFactory)
-class StepController(object):
-    def __init__(self, **kwargs):
-        self.kwargs = kwargs
-        self.steps = []
-
-    def buildStep(self):
-        step_deferred = Deferred()
-        step = ControllableStep(step_deferred, **self.kwargs)
-        self.steps.append((step, step_deferred))
-        return step
-
-
-class ControllableStep(BuildStep):
-
-    def run(self):
-        return self._step_deferred
-
-    def __init__(self, step_deferred, **kwargs):
-        BuildStep.__init__(self, **kwargs)
-        self._step_deferred = step_deferred
 
 
 class TestException(Exception):
@@ -382,67 +302,3 @@ class Tests(SynchronousTestCase):
         # that they both finished with success
         self.assertEqual([build['results']
                           for build in finished_builds], [SUCCESS] * 2)
-
-    def test_worker_max_builds_honored(self):
-        """
-        If max_builds is set, only one build is started on a worker
-        at a time.
-        """
-        controller = LatentController(
-            'local',
-            max_builds=1,
-        )
-        step_controller = StepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy-1",
-                              workernames=["local"],
-                              factory=BuildFactory([step_controller]),
-                              ),
-                BuilderConfig(name="testy-2",
-                              workernames=["local"],
-                              factory=BuildFactory([step_controller]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_ids = [
-            self.successResultOf(master.data.updates.findBuilderId('testy-1')),
-            self.successResultOf(master.data.updates.findBuilderId('testy-2')),
-        ]
-
-        started_builds = []
-        self.successResultOf(master.mq.startConsuming(
-            lambda key, build: started_builds.append(build),
-            ('builds', None, 'new')))
-
-        # Trigger a buildrequest
-        bsid, brids = self.successResultOf(
-            master.data.updates.addBuildset(
-                waited_for=False,
-                builderids=builder_ids,
-                sourcestamps=[
-                    {'codebase': '',
-                     'repository': '',
-                     'branch': None,
-                     'revision': None,
-                     'project': ''},
-                ],
-            )
-        )
-
-        # The worker fails to substantiate.
-        controller.start_instance(True)
-
-        local_workdir = FilePath(self.mktemp())
-        local_workdir.createDirectory()
-        controller.connect_worker(local_workdir)
-
-        self.assertEqual(len(started_builds), 1)
-
-    if LocalWorker is None:
-        test_worker_multiple_substantiations_succeed.skip = "buildbot-slave package is not installed"
-        test_worker_max_builds_honored.skip = "buildbot-slave package is not installed"
