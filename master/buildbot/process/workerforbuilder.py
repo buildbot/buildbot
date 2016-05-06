@@ -280,10 +280,6 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         AbstractWorkerForBuilder.detached(self)
         self.state = States.LATENT
 
-    def _attachFailure(self, why, where):
-        self.state = States.LATENT
-        return AbstractWorkerForBuilder._attachFailure(self, why, where)
-
     def ping(self, status=None):
         if not self.worker.substantiated:
             if status:
