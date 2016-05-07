@@ -63,6 +63,9 @@ Deprecations, Removals, and Non-Compatible Changes
 * html is not permitted anymore in 'label' attributes of forcescheduler parameters.
 
 * ``LocalWorker`` now requires ``buildbot-worker`` package, instead of ``buildbot-slave``.
+* :ref:`Collapse-Request-Functions` now takes master as first argument.
+  The previous callable contained too few data in order to be really usable.
+  As collapseRequests has never been released outside of beta, backward compatibility with previous release has **not** been implemented.
 
 Worker
 ------
