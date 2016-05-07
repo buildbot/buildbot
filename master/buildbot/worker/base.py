@@ -28,6 +28,7 @@ from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.reporters.mail import MailNotifier
 from buildbot.status.worker import WorkerStatus
+from buildbot.util import Notifier
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
@@ -637,7 +638,6 @@ class AbstractLatentWorker(AbstractWorker):
     implements(ILatentWorker)
 
     substantiated = False
-    substantiation_deferred = None
     substantiation_build = None
     insubstantiating = False
     build_wait_timer = None
@@ -649,6 +649,7 @@ class AbstractLatentWorker(AbstractWorker):
         AbstractWorker.checkConfig(self, name, password, **kwargs)
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
+        self._substantiation_notifier = Notifier()
 
     def reconfigService(self, name, password,
                         build_wait_timeout=60 * 10,
@@ -678,20 +679,19 @@ class AbstractLatentWorker(AbstractWorker):
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
             return defer.succeed(True)
-        if self.substantiation_deferred is None:
+        if not self._substantiation_notifier:
             if self.parent and not self.missing_timer:
                 # start timer.  if timer times out, fail deferred
                 self.missing_timer = self.master.reactor.callLater(
                     self.missing_timeout,
                     self._substantiation_failed, defer.TimeoutError())
-            self.substantiation_deferred = defer.Deferred()
             self.substantiation_build = build
             if self.conn is None:
                 d = self._substantiate(build)  # start up instance
                 d.addErrback(log.err, "while substantiating")
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
-        return self.substantiation_deferred
+        return self._substantiation_notifier.wait()
 
     def _substantiate(self, build):
         # register event trigger
@@ -704,9 +704,7 @@ class AbstractLatentWorker(AbstractWorker):
             if not result:
                 log.msg(
                     "Worker '%s' does not want to substantiate at this time" % (self.name,))
-                d = self.substantiation_deferred
-                self.substantiation_deferred = None
-                d.callback(False)
+                self._substantiation_notifier.notify(False)
             return result
 
         def clean_up(failure):
@@ -722,7 +720,7 @@ class AbstractLatentWorker(AbstractWorker):
         return d
 
     def attached(self, bot):
-        if self.substantiation_deferred is None and self.build_wait_timeout >= 0:
+        if not self._substantiation_notifier and self.build_wait_timeout >= 0:
             msg = 'Worker %s received connection while not trying to ' \
                 'substantiate.  Disconnecting.' % (self.name,)
             log.msg(msg)
@@ -732,17 +730,15 @@ class AbstractLatentWorker(AbstractWorker):
 
     def detached(self):
         AbstractWorker.detached(self)
-        if self.substantiation_deferred is not None:
+        if self._substantiation_notifier:
             d = self._substantiate(self.substantiation_build)
             d.addErrback(log.err, 'while re-substantiating')
 
     def _substantiation_failed(self, failure):
         self.missing_timer = None
-        if self.substantiation_deferred:
-            d = self.substantiation_deferred
-            self.substantiation_deferred = None
+        if self._substantiation_notifier:
             self.substantiation_build = None
-            d.errback(failure)
+            self._substantiation_notifier.notify(failure)
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
         # notify people, but only if we're still in the config
@@ -830,11 +826,10 @@ class AbstractLatentWorker(AbstractWorker):
             self.missing_timer.cancel()
             self.missing_timer = None
 
-        if self.substantiation_deferred is not None:
+        if self._substantiation_notifier:
             log.msg("Weird: Got request to stop before started. Allowing "
                     "worker to start cleanly to avoid inconsistent state")
-            yield self.substantiation_deferred
-            self.substantiation_deferred = None
+            yield self._substantiation_notifier.wait()
             self.substantiation_build = None
             log.msg("Substantiation complete, immediately terminating.")
 
@@ -896,11 +891,9 @@ class AbstractLatentWorker(AbstractWorker):
             log.err(why)
             # TODO: hang up on them?, without setBuilderList we can't use
             # them
-            if self.substantiation_deferred:
-                d = self.substantiation_deferred
-                self.substantiation_deferred = None
+            if self._substantiation_notifier:
                 self.substantiation_build = None
-                d.errback(why)
+                self._substantiation_notifier.notify(why)
             if self.missing_timer:
                 self.missing_timer.cancel()
                 self.missing_timer = None
@@ -912,15 +905,13 @@ class AbstractLatentWorker(AbstractWorker):
         def _substantiated(res):
             log.msg(r"Worker %s substantiated \o/" % (self.name,))
             self.substantiated = True
-            if not self.substantiation_deferred:
+            if not self._substantiation_notifier:
                 log.msg("No substantiation deferred for %s" % (self.name,))
-            if self.substantiation_deferred:
+            else:
                 log.msg(
                     "Firing %s substantiation deferred with success" % (self.name,))
-                d = self.substantiation_deferred
-                self.substantiation_deferred = None
                 self.substantiation_build = None
-                d.callback(True)
+                self._substantiation_notifier.notify(True)
             # note that the missing_timer is already handled within
             # ``attached``
             if not self.building:

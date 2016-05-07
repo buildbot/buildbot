@@ -31,6 +31,7 @@ from zope.interface import implements
 
 from buildbot.interfaces import IConfigured
 from buildbot.util.misc import deferredLocked
+from ._notifier import Notifier
 
 
 def naturalSort(l):
@@ -416,4 +417,5 @@ __all__ = [
     'diffSets', 'makeList', 'in_reactor', 'string2boolean',
     'check_functional_environment', 'human_readable_delta',
     'rewrap',
+    'Notifier',
 ]
