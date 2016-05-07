@@ -13,11 +13,9 @@
 #
 # Copyright Buildbot Team Members
 import mock
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
-
 
 from buildbot.process import log
 from buildbot.test.fake import logfile as fakelogfile

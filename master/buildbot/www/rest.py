@@ -20,6 +20,9 @@ from contextlib import contextmanager
 
 from future.moves.urllib.parse import urlparse
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web.error import Error
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
@@ -27,10 +30,6 @@ from buildbot.util import json
 from buildbot.util import toJson
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
-
-from twisted.internet import defer
-from twisted.python import log
-from twisted.web.error import Error
 
 
 class BadRequest(Exception):

@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.schedulers import basic
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
 
 
 class CommonStuffMixin(object):
@@ -33,7 +32,8 @@ class CommonStuffMixin(object):
 
         self.master.db.insertTestData(
             [fakedb.Builder(name=builderName) for builderName in kwargs['builderNames']])
-        sched = self.attachScheduler(klass(**kwargs), self.OBJECTID, self.SCHEDULERID)
+        sched = self.attachScheduler(
+            klass(**kwargs), self.OBJECTID, self.SCHEDULERID)
 
         # add a Clock to help checking timing issues
         self.clock = sched._reactor = task.Clock()

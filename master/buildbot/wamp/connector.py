@@ -15,12 +15,11 @@
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import TransportLost
-
-from buildbot.util import service
-
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
+
+from buildbot.util import service
 
 
 class MasterService(ApplicationSession, service.AsyncMultiService):

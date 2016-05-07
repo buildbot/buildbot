@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 import mock
-
-from buildbot.steps import mtrlogobserver
-
 from twisted.enterprise import adbapi
 from twisted.trial import unittest
+
+from buildbot.steps import mtrlogobserver
 
 
 class TestEqConnectionPool(unittest.TestCase):

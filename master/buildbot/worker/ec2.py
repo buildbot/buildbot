@@ -22,14 +22,14 @@ import os
 import re
 import time
 
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.python import log
+
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker.base import AbstractLatentWorker
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
-
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.python import log
 
 try:
     import boto

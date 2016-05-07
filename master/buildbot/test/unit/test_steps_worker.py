@@ -15,6 +15,8 @@
 import stat
 
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
@@ -27,9 +29,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):

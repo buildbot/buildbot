@@ -15,15 +15,14 @@
 import json
 
 import mock
-
-from buildbot.test.util import www
-from buildbot.www import auth
-from buildbot.www import config
-
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python import util
 from twisted.trial import unittest
+
+from buildbot.test.util import www
+from buildbot.www import auth
+from buildbot.www import config
 
 
 class IndexResource(www.WwwTestMixin, unittest.TestCase):

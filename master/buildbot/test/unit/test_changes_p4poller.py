@@ -15,6 +15,10 @@
 import datetime
 
 import dateutil.tz
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 from buildbot.changes.p4poller import P4PollerError
 from buildbot.changes.p4poller import P4Source
@@ -22,11 +26,6 @@ from buildbot.changes.p4poller import get_simple_split
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
 from buildbot.util import datetime2epoch
-
-from twisted.internet import error
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
 
 first_p4changes = \
     """Change 1 on 2006/04/13 by slamb@testclient 'first rev'

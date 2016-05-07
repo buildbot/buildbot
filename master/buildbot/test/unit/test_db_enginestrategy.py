@@ -14,11 +14,10 @@
 # Copyright Buildbot Team Members
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
-
-from buildbot.db import enginestrategy
-
 from twisted.python import runtime
 from twisted.trial import unittest
+
+from buildbot.db import enginestrategy
 
 
 class BuildbotEngineStrategy_special_cases(unittest.TestCase):

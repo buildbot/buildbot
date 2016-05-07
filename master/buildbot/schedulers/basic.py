@@ -16,6 +16,9 @@ from collections import defaultdict
 
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 from buildbot import config
 from buildbot import util
@@ -25,10 +28,6 @@ from buildbot.schedulers import base
 from buildbot.schedulers import dependent
 from buildbot.util import NotABranch
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 
 class BaseBasicScheduler(base.BaseScheduler):

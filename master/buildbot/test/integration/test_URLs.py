@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
-
-from twisted.internet import defer
 
 
 # This integration test creates a master and worker environment

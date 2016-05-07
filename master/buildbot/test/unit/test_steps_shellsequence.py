@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from twisted.trial import unittest
+
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -22,8 +24,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
-
-from twisted.trial import unittest
 
 
 class DynamicRun(shellsequence.ShellSequence):

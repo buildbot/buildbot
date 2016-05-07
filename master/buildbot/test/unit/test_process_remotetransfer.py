@@ -17,10 +17,9 @@ import stat
 import tempfile
 
 from mock import Mock
+from twisted.trial import unittest
 
 from buildbot.process import remotetransfer
-
-from twisted.trial import unittest
 
 
 # Test buildbot.steps.remotetransfer.FileWriter class.

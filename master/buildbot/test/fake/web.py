@@ -15,7 +15,6 @@
 from StringIO import StringIO
 
 from mock import Mock
-
 from twisted.internet import defer
 from twisted.web import server
 

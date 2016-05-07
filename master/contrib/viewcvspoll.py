@@ -6,7 +6,6 @@ import os.path
 import time
 
 import MySQLdb  # @UnresolvedImport
-
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log

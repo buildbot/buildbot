@@ -16,12 +16,11 @@ from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.util import json
 from buildbot.util import toJson
-
-from twisted.internet import defer
-from twisted.python import log
 
 
 class WsProtocol(WebSocketServerProtocol):

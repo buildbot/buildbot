@@ -16,14 +16,14 @@
 import os
 import time
 
+from twisted.internet import defer
+from twisted.internet import utils
+from twisted.python import log
+
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
 from buildbot.util import deferredLocked
-
-from twisted.internet import defer
-from twisted.internet import utils
-from twisted.python import log
 
 
 class HgPoller(base.PollingChangeSource):

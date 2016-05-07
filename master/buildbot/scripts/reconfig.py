@@ -16,13 +16,13 @@ import os
 import platform
 import signal
 
+from twisted.internet import reactor
+
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.util import in_reactor
 from buildbot.util import rewrap
-
-from twisted.internet import reactor
 
 
 class Reconfigurator:

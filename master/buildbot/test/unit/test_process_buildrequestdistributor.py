@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 import mock
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.db import buildrequests
@@ -23,11 +27,6 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.trial import unittest
 
 
 def nth_worker(n):

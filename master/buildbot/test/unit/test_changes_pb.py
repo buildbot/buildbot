@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.changes import pb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import changesource
 from buildbot.test.util import pbmanager
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestPBChangeSource(

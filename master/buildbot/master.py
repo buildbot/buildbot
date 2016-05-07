@@ -18,6 +18,13 @@ import signal
 import socket
 
 from future.utils import iteritems
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.internet import threads
+from twisted.python import components
+from twisted.python import failure
+from twisted.python import log
 from zope.interface import implements
 
 import buildbot
@@ -48,14 +55,6 @@ from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
-
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.internet import threads
-from twisted.python import components
-from twisted.python import failure
-from twisted.python import log
 
 
 class LogRotation(object):

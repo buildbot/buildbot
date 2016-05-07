@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 from buildbot.data import masters
 from buildbot.process.results import RETRY
@@ -21,10 +24,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
 
 SOMETIME = 1349016870
 OTHERTIME = 1249016870

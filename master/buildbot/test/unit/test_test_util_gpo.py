@@ -14,13 +14,13 @@
 # Copyright Buildbot Team Members
 import sys
 
-from buildbot.test.util.gpo import Expect
-from buildbot.test.util.gpo import GetProcessOutputMixin
-
 import twisted
 from twisted.internet import utils
 from twisted.trial import reporter
 from twisted.trial import unittest
+
+from buildbot.test.util.gpo import Expect
+from buildbot.test.util.gpo import GetProcessOutputMixin
 
 
 class TestGPOMixin(unittest.TestCase):

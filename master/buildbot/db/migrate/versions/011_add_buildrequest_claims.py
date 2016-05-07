@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+import migrate
 import sqlalchemy as sa
 
-import migrate
 from buildbot.db import NULL
 from buildbot.util import sautils
 

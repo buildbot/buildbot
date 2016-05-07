@@ -23,6 +23,9 @@ from email.utils import formatdate
 from StringIO import StringIO
 
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log as twlog
 from zope.interface import implements
 
 from buildbot import config
@@ -38,10 +41,6 @@ from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.util import service
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log as twlog
 
 charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 

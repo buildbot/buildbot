@@ -18,14 +18,14 @@ import os
 import sys
 import traceback
 
+from twisted.internet import defer
+from twisted.python import util
+
 from buildbot import monkeypatches
 from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
-
-from twisted.internet import defer
-from twisted.python import util
 
 
 def installFile(config, target, source, overwrite=False):

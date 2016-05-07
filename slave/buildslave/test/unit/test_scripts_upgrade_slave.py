@@ -16,11 +16,10 @@
 import os
 
 import mock
+from twisted.trial import unittest
 
 from buildslave.scripts import upgrade_slave
 from buildslave.test.util import misc
-
-from twisted.trial import unittest
 
 MODERN_BUILDBOT_TAC = \
     """# dummy buildbot.tac

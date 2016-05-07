@@ -17,22 +17,21 @@ import shutil
 import tarfile
 import textwrap
 
-import sqlalchemy as sa
-from sqlalchemy.engine import reflection
-
 import migrate
 import migrate.versioning.api
+import sqlalchemy as sa
+from sqlalchemy.engine import reflection
+from twisted.internet import defer
+from twisted.persisted import styles
+from twisted.python import util
+from twisted.trial import unittest
+
 from buildbot.db import connector
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import change_import
 from buildbot.test.util import db
 from buildbot.test.util import querylog
 from buildbot.util import pickle
-
-from twisted.internet import defer
-from twisted.persisted import styles
-from twisted.python import util
-from twisted.trial import unittest
 
 
 class UpgradeTestMixin(db.RealDatabaseMixin):

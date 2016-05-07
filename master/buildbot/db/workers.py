@@ -14,12 +14,11 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 from future.utils import itervalues
+from twisted.internet import defer
 
 from buildbot.db import base
 from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-
-from twisted.internet import defer
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):

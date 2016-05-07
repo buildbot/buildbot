@@ -18,16 +18,15 @@ import shutil
 import sys
 
 import mock
+import twisted
+from twisted.internet import defer
+from twisted.protocols import basic
+from twisted.trial import unittest
 
 from buildbot.schedulers import trysched
 from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
 from buildbot.util import json
-
-import twisted
-from twisted.internet import defer
-from twisted.protocols import basic
-from twisted.trial import unittest
 
 
 class TryBase(unittest.TestCase):

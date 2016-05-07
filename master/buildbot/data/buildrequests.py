@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+from twisted.internet import reactor
+
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.db.buildrequests import NotClaimedError
 from buildbot.process import results
-
-from twisted.internet import defer
-from twisted.internet import reactor
 
 
 class Db2DataMixin(object):

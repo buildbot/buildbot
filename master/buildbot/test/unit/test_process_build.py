@@ -16,6 +16,8 @@ import operator
 
 from mock import Mock
 from mock import call
+from twisted.internet import defer
+from twisted.trial import unittest
 from zope.interface import implementer
 from zope.interface import implements
 
@@ -40,9 +42,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class FakeChange:

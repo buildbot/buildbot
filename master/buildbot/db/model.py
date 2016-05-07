@@ -13,19 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-import sqlalchemy as sa
-
 import migrate
 import migrate.versioning.repository
+import sqlalchemy as sa
+from migrate import exceptions
+from twisted.python import log
+from twisted.python import util
+
 from buildbot.db import base
 from buildbot.db.migrate_utils import should_import_changes
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
-from migrate import exceptions
-
-from twisted.python import log
-from twisted.python import util
 
 try:
     from migrate.versioning.schema import ControlledSchema

@@ -19,19 +19,21 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from buildbot.util import Notifier
-
 from twisted.python.failure import Failure
 from twisted.trial.unittest import SynchronousTestCase
 
+from buildbot.util import Notifier
+
 
 class TestException(Exception):
+
     """
     An exception thrown in tests.
     """
 
 
 class Tests(SynchronousTestCase):
+
     def test_wait(self):
         """
         Calling `Notifier.wait` returns a deferred that hasn't fired.

@@ -1,9 +1,9 @@
+from twisted.internet import defer
+from twisted.trial import unittest
+
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.www.change_hook import ChangeHookResource
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 def _prepare_base_change_hook():

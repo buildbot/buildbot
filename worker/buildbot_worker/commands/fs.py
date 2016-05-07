@@ -18,14 +18,14 @@ import os
 import shutil
 import sys
 
-from buildbot_worker import runprocess
-from buildbot_worker.commands import base
-from buildbot_worker.commands import utils
-
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import runtime
+
+from buildbot_worker import runprocess
+from buildbot_worker.commands import base
+from buildbot_worker.commands import utils
 
 
 class MakeDirectory(base.Command):

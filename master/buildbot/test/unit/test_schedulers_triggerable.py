@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 import mock
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.python import log
+from twisted.trial import unittest
 
 from buildbot.process import properties
 from buildbot.schedulers import triggerable
@@ -21,11 +25,6 @@ from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
 from buildbot.test.util.decorators import flaky
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.python import log
-from twisted.trial import unittest
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):

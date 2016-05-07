@@ -19,15 +19,15 @@ import shutil
 import sys
 import tarfile
 
-from buildbot_worker.commands import transfer
-from buildbot_worker.test.fake.remote import FakeRemote
-from buildbot_worker.test.util.command import CommandTestMixin
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import runtime
 from twisted.trial import unittest
+
+from buildbot_worker.commands import transfer
+from buildbot_worker.test.fake.remote import FakeRemote
+from buildbot_worker.test.util.command import CommandTestMixin
 
 
 class FakeMasterMethods(object):

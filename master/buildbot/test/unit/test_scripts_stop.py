@@ -16,12 +16,12 @@ import os
 import signal
 import time
 
+from twisted.trial import unittest
+
 from buildbot.scripts import stop
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import skipUnlessPlatformIs
-
-from twisted.trial import unittest
 
 
 def mkconfig(**kwargs):

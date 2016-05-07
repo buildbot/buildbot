@@ -19,14 +19,14 @@ from __future__ import absolute_import
 import socket
 from io import BytesIO
 
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.python import log
+
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import json
 from buildbot.worker import AbstractLatentWorker
-
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.python import log
 
 try:
     import docker

@@ -17,12 +17,11 @@
 # no current implementation utilizes it aside from scripts.runner.
 
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.process.users import manual
 from buildbot.test.fake import fakemaster
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class ManualUsersMixin(object):

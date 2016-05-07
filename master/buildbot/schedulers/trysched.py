@@ -15,6 +15,10 @@
 import os
 
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.protocols import basic
+from twisted.python import log
+from twisted.spread import pb
 
 from buildbot import pbutil
 from buildbot.process.properties import Properties
@@ -23,11 +27,6 @@ from buildbot.util import ascii2unicode
 from buildbot.util import json
 from buildbot.util import netstrings
 from buildbot.util.maildir import MaildirService
-
-from twisted.internet import defer
-from twisted.protocols import basic
-from twisted.python import log
-from twisted.spread import pb
 
 
 class TryBase(base.BaseScheduler):

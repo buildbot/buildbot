@@ -16,6 +16,10 @@ import os
 import signal
 
 import mock
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot import config
@@ -29,11 +33,6 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.trial import unittest
 
 
 @implementer(IConfigLoader)

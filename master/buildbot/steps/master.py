@@ -19,16 +19,15 @@ from builtins import bytes
 from builtins import str
 
 from future.utils import iteritems
-
-from buildbot.process.buildstep import FAILURE
-from buildbot.process.buildstep import SUCCESS
-from buildbot.process.buildstep import BuildStep
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import runtime
+
+from buildbot.process.buildstep import FAILURE
+from buildbot.process.buildstep import SUCCESS
+from buildbot.process.buildstep import BuildStep
 
 
 class MasterShellCommand(BuildStep):

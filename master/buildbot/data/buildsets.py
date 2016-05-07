@@ -15,6 +15,9 @@
 import copy
 
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import base
@@ -24,10 +27,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import worst_status
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 
 class Db2DataMixin(object):

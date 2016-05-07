@@ -16,6 +16,8 @@ import os
 import textwrap
 
 import sqlalchemy as sa
+from twisted.internet import defer
+from twisted.trial import unittest
 
 import test_db_logs
 from buildbot.db.connector import DBConnector
@@ -24,9 +26,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 try:
     import lz4

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.internet import threads
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.errors import CaptureCallbackError
@@ -25,10 +28,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakestats
 from buildbot.test.util import logging
 from buildbot.test.util import steps
-
-from twisted.internet import defer
-from twisted.internet import threads
-from twisted.trial import unittest
 
 
 class TestStatsServicesBase(unittest.TestCase):

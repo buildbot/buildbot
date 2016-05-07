@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.data import base
 from buildbot.data import patches
 from buildbot.data import types
-
-from twisted.internet import defer
 
 
 def _db2data(ss):

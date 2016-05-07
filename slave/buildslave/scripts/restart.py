@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.python import log
+
 from buildslave.scripts import base
 from buildslave.scripts import start
 from buildslave.scripts import stop
-
-from twisted.python import log
 
 
 def restart(config):

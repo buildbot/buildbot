@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from migrate import changeset
 
 from buildbot.util import sautils
-from migrate import changeset
 
 
 def upgrade(migrate_engine):

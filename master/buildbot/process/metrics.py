@@ -38,14 +38,13 @@ from collections import defaultdict
 from collections import deque
 
 from future.utils import iteritems
-
-from buildbot import util
-from buildbot.util import service as util_service
-
 from twisted.application import service
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+
+from buildbot import util
+from buildbot.util import service as util_service
 
 # Make use of the resource module if we can
 try:

@@ -15,13 +15,12 @@
 import fnmatch
 import re
 
+from twisted.internet import defer
+from twisted.web.error import Error
 from zope.interface import implements
 
 from buildbot.interfaces import IConfigured
 from buildbot.www.authz.roles import RolesFromOwner
-
-from twisted.internet import defer
-from twisted.web.error import Error
 
 
 class Forbidden(Error):

@@ -17,6 +17,8 @@ import copy
 import sys
 
 from mock import Mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.config import ConfigErrors
@@ -31,9 +33,6 @@ from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)

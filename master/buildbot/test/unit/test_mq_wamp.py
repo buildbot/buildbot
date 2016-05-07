@@ -18,14 +18,13 @@ import textwrap
 import mock
 from autobahn.wamp.types import EventDetails
 from autobahn.wamp.types import SubscribeOptions
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.mq import wamp
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.wamp import connector
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class ComparableSubscribeOptions(SubscribeOptions):

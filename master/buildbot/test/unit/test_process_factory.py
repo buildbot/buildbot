@@ -15,14 +15,14 @@
 from random import choice
 from string import ascii_uppercase
 
+from twisted.trial import unittest
+
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import _BuildStepFactory
 from buildbot.process.factory import BuildFactory
 from buildbot.process.factory import GNUAutoconf
 from buildbot.process.factory import s
 from buildbot.steps.shell import Configure
-
-from twisted.trial import unittest
 
 
 class TestBuildFactory(unittest.TestCase):

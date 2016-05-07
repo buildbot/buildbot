@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.python import log
 
 from buildbot import util
 from buildbot.util import lineboundaries
-
-from twisted.internet import defer
-from twisted.python import log
 
 
 class FakeLogFile(object):

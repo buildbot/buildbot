@@ -15,6 +15,14 @@
 import os
 
 from future.utils import iteritems
+from twisted.application import strports
+from twisted.cred.portal import IRealm
+from twisted.cred.portal import Portal
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web import guard
+from twisted.web import resource
+from twisted.web import server
 from zope.interface import implements
 
 from buildbot.plugins.db import get_plugins
@@ -26,15 +34,6 @@ from buildbot.www import change_hook
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
-
-from twisted.application import strports
-from twisted.cred.portal import IRealm
-from twisted.cred.portal import Portal
-from twisted.internet import defer
-from twisted.python import log
-from twisted.web import guard
-from twisted.web import resource
-from twisted.web import server
 
 
 # todo: need to store session infos in the db for multimaster

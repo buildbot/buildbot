@@ -14,13 +14,12 @@
 # Copyright Buildbot Team Members
 
 import mock
+from twisted.trial import unittest
 
 from buildbot_worker.scripts import restart
 from buildbot_worker.scripts import start
 from buildbot_worker.scripts import stop
 from buildbot_worker.test.util import misc
-
-from twisted.trial import unittest
 
 
 class TestRestart(misc.IsWorkerDirMixin,

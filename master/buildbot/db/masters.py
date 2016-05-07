@@ -14,11 +14,10 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from twisted.internet import reactor
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
-
-from twisted.internet import reactor
 
 
 class MasterDict(dict):

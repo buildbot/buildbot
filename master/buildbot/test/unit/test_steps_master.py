@@ -16,6 +16,12 @@ import os
 import pprint
 import sys
 
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
+from twisted.python import runtime
+from twisted.trial import unittest
+
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import WithProperties
 from buildbot.process.results import EXCEPTION
@@ -23,12 +29,6 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import master
 from buildbot.test.util import steps
-
-from twisted.internet import error
-from twisted.internet import reactor
-from twisted.python import failure
-from twisted.python import runtime
-from twisted.trial import unittest
 
 _COMSPEC_ENV = 'COMSPEC'
 

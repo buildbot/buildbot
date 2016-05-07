@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 import time
 
+from twisted.internet import error
+from twisted.trial import unittest
+
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -23,9 +26,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
-
-from twisted.internet import error
-from twisted.trial import unittest
 
 
 def uploadString(cvsroot):
@@ -633,7 +633,8 @@ class TestCVS(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
                                       slavesrc='Entries', workdir='wkdir/CVS',
                                       writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
-            + Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
+            + \
+            Expect.behavior(uploadString('/file/1.1/Fri May 17 23:20:00//\nD'))
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['cvs', '-z3', 'update', '-dP'])

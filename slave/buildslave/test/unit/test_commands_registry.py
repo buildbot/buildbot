@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.trial import unittest
+
 from buildslave.commands import registry
 from buildslave.commands import shell
-
-from twisted.trial import unittest
 
 
 class Registry(unittest.TestCase):

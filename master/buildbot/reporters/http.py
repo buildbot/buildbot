@@ -16,13 +16,12 @@
 import abc
 
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.python import log
 
 from buildbot import config
 from buildbot.reporters import utils
 from buildbot.util import service
-
-from twisted.internet import defer
-from twisted.python import log
 
 # use the 'requests' lib: http://python-requests.org
 try:

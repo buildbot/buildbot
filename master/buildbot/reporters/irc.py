@@ -12,15 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from buildbot import config
-from buildbot.reporters.words import StatusBot
-from buildbot.reporters.words import ThrottledClientFactory
-from buildbot.util import service
-
 from twisted.application import internet
 from twisted.internet import task
 from twisted.python import log
 from twisted.words.protocols import irc
+
+from buildbot import config
+from buildbot.reporters.words import StatusBot
+from buildbot.reporters.words import ThrottledClientFactory
+from buildbot.util import service
 
 # twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
 try:

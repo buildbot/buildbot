@@ -16,10 +16,11 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
-# pylint: disable=unused-import
+
 # pylint: disable=wildcard-import
 # pylint: disable=unused-wildcard-import
 from buildbot.steps.worker import *  # noqa
+# pylint: disable=unused-import
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 

@@ -21,6 +21,8 @@ from types import MethodType
 
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.python import failure
+from twisted.python import log
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -37,9 +39,6 @@ from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
-
-from twisted.python import failure
-from twisted.python import log
 
 
 class ConfigErrors(Exception):

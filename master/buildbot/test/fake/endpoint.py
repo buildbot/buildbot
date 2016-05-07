@@ -16,11 +16,10 @@
 # This is a static resource type and set of endpoints uesd as common data by
 # tests.
 from future.utils import itervalues
+from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
-
-from twisted.internet import defer
 
 testData = {
     13: {'id': 13, 'info': 'ok', 'success': True, 'tags': []},

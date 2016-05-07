@@ -17,12 +17,12 @@ import os
 import re
 import textwrap
 
+from twisted.internet import defer
+from twisted.python import log
+
 from buildslave import runprocess
 from buildslave.commands.base import AbandonChain
 from buildslave.commands.base import SourceBaseCommand
-
-from twisted.internet import defer
-from twisted.python import log
 
 
 class Repo(SourceBaseCommand):

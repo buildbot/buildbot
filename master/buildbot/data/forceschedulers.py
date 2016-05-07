@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.schedulers import forcesched
 from buildbot.www.rest import JSONRPC_CODES
 from buildbot.www.rest import BadJsonRpc2
-
-from twisted.internet import defer
 
 
 def forceScheduler2Data(sched):

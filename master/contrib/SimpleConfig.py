@@ -89,6 +89,8 @@ import os
 import random
 import socket
 
+from twisted.python import log
+
 from buildbot.buildslave import BuildSlave
 from buildbot.changes import filter
 from buildbot.changes.gitpoller import GitPoller
@@ -105,8 +107,6 @@ from buildbot.status.web import authz
 from buildbot.steps import trigger
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.source.git import Git
-
-from twisted.python import log
 
 
 class SimpleConfig(dict):

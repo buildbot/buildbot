@@ -13,19 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.config import BuilderConfig
-from buildbot.process.results import SUCCESS
-from buildbot.process.factory import BuildFactory
-from buildbot.test.fake.reactor import NonThreadPool
-from buildbot.test.fake.reactor import TestReactor
-from buildbot.test.util.integration import getMaster
-from buildbot.worker.base import AbstractLatentWorker
-
 from twisted.internet.defer import Deferred
 from twisted.python import threadpool
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SynchronousTestCase
+
+from buildbot.config import BuilderConfig
+from buildbot.process.factory import BuildFactory
+from buildbot.process.results import SUCCESS
+from buildbot.test.fake.reactor import NonThreadPool
+from buildbot.test.fake.reactor import TestReactor
+from buildbot.test.util.integration import getMaster
+from buildbot.worker.base import AbstractLatentWorker
 
 try:
     from buildbot_worker.bot import LocalWorker
@@ -34,6 +34,7 @@ except ImportError:
 
 
 class LatentController(object):
+
     """
     A controller for ``ControllableLatentWorker``.
 
@@ -51,10 +52,12 @@ class LatentController(object):
         d.callback(result)
 
     def connect_worker(self, workdir):
-        LocalWorker(self.worker.name, workdir.path, False).setServiceParent(self.worker)
+        LocalWorker(self.worker.name, workdir.path, False).setServiceParent(
+            self.worker)
 
 
 class ControllableLatentWorker(AbstractLatentWorker):
+
     """
     A latent worker that can be contolled by tests.
     """
@@ -79,6 +82,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
 
 class TestException(Exception):
+
     """
     An exception thrown in tests.
     """
@@ -107,8 +111,10 @@ class Tests(SynchronousTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
+        master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(
@@ -156,8 +162,10 @@ class Tests(SynchronousTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
+        master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(
@@ -180,7 +188,8 @@ class Tests(SynchronousTestCase):
             ('buildrequests', None, 'unclaimed')))
 
         # The worker fails to substantiate.
-        controller.start_instance(Failure(TestException("substantiation failed")))
+        controller.start_instance(
+            Failure(TestException("substantiation failed")))
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
 
@@ -207,8 +216,10 @@ class Tests(SynchronousTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
-        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
+        master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(
@@ -231,13 +242,15 @@ class Tests(SynchronousTestCase):
             ('buildrequests', None, 'unclaimed')))
 
         # The worker fails to substantiate.
-        controller.start_instance(Failure(TestException("substantiation failed")))
+        controller.start_instance(
+            Failure(TestException("substantiation failed")))
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
 
         # If the worker started again after the failure, then the retry logic will have
         # already kicked in to start a new build on this (the only) worker. We check that
-        # a new instance was requested, which indicates that the worker accepted the build.
+        # a new instance was requested, which indicates that the worker
+        # accepted the build.
         self.assertEqual(controller.started, True)
 
     def test_worker_multiple_substantiations_succeed(self):
@@ -262,7 +275,8 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
         builder_ids = [
             self.successResultOf(master.data.updates.findBuilderId('testy-1')),
             self.successResultOf(master.data.updates.findBuilderId('testy-2')),
@@ -297,7 +311,8 @@ class Tests(SynchronousTestCase):
 
         # We check that there were two builds that finished, and
         # that they both finished with success
-        self.assertEqual([build['results'] for build in finished_builds], [SUCCESS] * 2)
+        self.assertEqual([build['results']
+                          for build in finished_builds], [SUCCESS] * 2)
 
     if LocalWorker is None:
         test_worker_multiple_substantiations_succeed.skip = "buildbot-slave package is not installed"

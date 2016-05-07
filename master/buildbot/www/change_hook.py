@@ -19,12 +19,12 @@
 # but "the rest" is pretty minimal
 import re
 
-from buildbot.www import resource
-
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from twisted.web import server
+
+from buildbot.www import resource
 
 
 class ChangeHookResource(resource.Resource):

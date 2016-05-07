@@ -15,12 +15,12 @@
 import os
 import xml.dom.minidom
 
+from twisted.internet import defer
+from twisted.trial import unittest
+
 from buildbot.changes import svnpoller
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"

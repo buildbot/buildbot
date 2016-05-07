@@ -15,11 +15,11 @@
 import gc
 import sys
 
-from buildbot.process import metrics
-from buildbot.test.fake import fakemaster
-
 from twisted.internet import task
 from twisted.trial import unittest
+
+from buildbot.process import metrics
+from buildbot.test.fake import fakemaster
 
 
 class TestMetricBase(unittest.TestCase):

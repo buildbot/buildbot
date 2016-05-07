@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import reactor
 
 from buildbot import config
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
-
-from twisted.internet import defer
-from twisted.internet import reactor
 
 # use the 'requests' lib: http://python-requests.org
 try:

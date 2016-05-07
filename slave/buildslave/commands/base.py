@@ -19,6 +19,12 @@ import shutil
 import sys
 from base64 import b64encode
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import threads
+from twisted.python import failure
+from twisted.python import log
+from twisted.python import runtime
 from zope.interface import implements
 
 from buildslave import runprocess
@@ -26,13 +32,6 @@ from buildslave import util
 from buildslave.commands import utils
 from buildslave.exceptions import AbandonChain
 from buildslave.interfaces import ISlaveCommand
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import threads
-from twisted.python import failure
-from twisted.python import log
-from twisted.python import runtime
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each

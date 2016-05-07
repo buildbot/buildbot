@@ -17,11 +17,10 @@ import os
 import re
 
 import mock
+from twisted.trial import unittest
 
 from buildslave.scripts import create_slave
 from buildslave.test.util import misc
-
-from twisted.trial import unittest
 
 
 def _regexp_path(name, *names):

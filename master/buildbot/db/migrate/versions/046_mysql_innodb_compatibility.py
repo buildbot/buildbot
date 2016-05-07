@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 
 import sqlalchemy as sa
+from migrate import changeset
 from sqlalchemy.sql import func
 from sqlalchemy.sql import or_
 
 from buildbot.util import sautils
-from migrate import changeset
 
 
 def _incompatible_changes(metadata, migrate_engine):
@@ -89,7 +89,8 @@ def upgrade(migrate_engine):
                                'object_state': ['name'],
                                'users': ['identifier']}.items():
             for column in columns:
-                migrate_engine.execute(reduce_table_column_length(table, column))
+                migrate_engine.execute(
+                    reduce_table_column_length(table, column))
         return
 
     changeset.alter_column(

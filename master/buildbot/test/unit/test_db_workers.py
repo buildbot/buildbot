@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import workers
 from buildbot.test.fake import fakedb
@@ -23,9 +25,6 @@ from buildbot.test.util import querylog
 from buildbot.test.util import validation
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class Tests(interfaces.InterfaceTests):

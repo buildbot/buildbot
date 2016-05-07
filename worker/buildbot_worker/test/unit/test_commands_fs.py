@@ -16,12 +16,12 @@
 import os
 import shutil
 
+from twisted.python import runtime
+from twisted.trial import unittest
+
 from buildbot_worker.commands import fs
 from buildbot_worker.commands import utils
 from buildbot_worker.test.util.command import CommandTestMixin
-
-from twisted.python import runtime
-from twisted.trial import unittest
 
 # python-2.4 doesn't have os.errno
 if hasattr(os, 'errno'):

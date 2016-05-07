@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot_worker import util
-
 from twisted.trial import unittest
+
+from buildbot_worker import util
 
 
 class remove_userpassword(unittest.TestCase):

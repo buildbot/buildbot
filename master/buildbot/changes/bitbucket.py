@@ -15,17 +15,17 @@
 import time
 from datetime import datetime
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.web import client
+
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
 from buildbot.util import json
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.web import client
 
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):

@@ -15,7 +15,6 @@
 import inspect
 
 import pkg_resources
-
 from twisted.trial import unittest
 
 
@@ -89,7 +88,8 @@ class InterfaceTests(object):
         zi_vers = pkg_resources.working_set.find(
             pkg_resources.Requirement.parse('zope.interface')).version
         if pkg_resources.parse_version(zi_vers) < pkg_resources.parse_version('4.1.1'):
-            raise unittest.SkipTest("zope.interfaces is too old to run this test")
+            raise unittest.SkipTest(
+                "zope.interfaces is too old to run this test")
 
         import zope.interface.interface
         for interface in zope.interface.implementedBy(cls):
@@ -102,7 +102,8 @@ class InterfaceTests(object):
                 actual_argspec = getattr(cls, attr)
                 while hasattr(actual_argspec, '__wrapped__'):
                     actual_argspec = actual_argspec.__wrapped__
-                actual_argspec = zope.interface.interface.fromMethod(actual_argspec)
+                actual_argspec = zope.interface.interface.fromMethod(
+                    actual_argspec)
 
                 if actual_argspec.getSignatureInfo() != template_argspec.getSignatureInfo():
                     msg = "%s: expected: %s; got: %s" % (

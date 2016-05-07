@@ -26,14 +26,13 @@ from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
 
+from twisted.internet import defer
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
-
-from twisted.internet import defer
-from twisted.python import log
 
 
 class MaildirSource(MaildirService, util.ComparableMixin):

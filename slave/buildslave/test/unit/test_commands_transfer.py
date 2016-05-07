@@ -19,15 +19,15 @@ import shutil
 import sys
 import tarfile
 
-from buildslave.commands import transfer
-from buildslave.test.fake.remote import FakeRemote
-from buildslave.test.util.command import CommandTestMixin
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.python import runtime
 from twisted.trial import unittest
+
+from buildslave.commands import transfer
+from buildslave.test.fake.remote import FakeRemote
+from buildslave.test.util.command import CommandTestMixin
 
 
 class FakeMasterMethods(object):

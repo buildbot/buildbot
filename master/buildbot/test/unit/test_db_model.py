@@ -15,13 +15,12 @@
 import os
 
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.test.util import db
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):

@@ -19,6 +19,8 @@ import textwrap
 
 import mock
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.trial import unittest
 from zope.interface import implements
 
 from buildbot import config
@@ -38,9 +40,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 global_defaults = dict(
     title='Buildbot',

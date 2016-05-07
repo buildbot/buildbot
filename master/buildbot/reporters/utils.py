@@ -14,12 +14,12 @@
 # Copyright Buildbot Team Members
 from UserList import UserList
 
+from twisted.internet import defer
+
 from buildbot.data import resultspec
 from buildbot.process.properties import renderer
 from buildbot.process.results import RETRY
 from buildbot.util import flatten
-
-from twisted.internet import defer
 
 
 @defer.inlineCallbacks

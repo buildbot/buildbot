@@ -12,14 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from twisted.internet import defer
+from twisted.python import log
+from twisted.python.failure import Failure
+
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
 from buildbot.util import service
 from buildbot.worker.protocols import pb as bbpb
-
-from twisted.internet import defer
-from twisted.python import log
-from twisted.python.failure import Failure
 
 
 class WorkerRegistration(object):

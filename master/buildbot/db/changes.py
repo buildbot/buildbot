@@ -19,15 +19,14 @@ Support for changes in the database
 import sqlalchemy as sa
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 from buildbot.util import json
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 
 class ChDict(dict):

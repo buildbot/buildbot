@@ -20,13 +20,13 @@ import re
 import stat
 import time
 
+from twisted.python import log
+
 from buildbot import config
 from buildbot.process import logobserver
 from buildbot.process import remotecommand
 from buildbot.process.buildstep import FAILURE
 from buildbot.steps.shell import WarningCountingShellCommand
-
-from twisted.python import log
 
 
 class DebPbuilder(WarningCountingShellCommand):

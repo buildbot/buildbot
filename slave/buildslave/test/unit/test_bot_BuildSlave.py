@@ -18,17 +18,16 @@ import shutil
 import socket
 
 from mock import Mock
-from zope.interface import implements
-
-from buildslave import bot
-from buildslave.test.util import misc
-
 from twisted.cred import checkers
 from twisted.cred import portal
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.trial import unittest
+from zope.interface import implements
+
+from buildslave import bot
+from buildslave.test.util import misc
 
 
 # I don't see any simple way to test the PB equipment without actually setting

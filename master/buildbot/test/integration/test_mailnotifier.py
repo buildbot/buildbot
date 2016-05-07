@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import base64
 
+from twisted.internet import defer
+
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.util.integration import RunMasterBase
-
-from twisted.internet import defer
 
 
 # This integration test creates a master and worker environment,

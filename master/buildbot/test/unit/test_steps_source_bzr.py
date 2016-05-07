@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 import os
 
+from twisted.internet import error
+from twisted.python.reflect import namedModule
+from twisted.trial import unittest
+
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -23,10 +27,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
-
-from twisted.internet import error
-from twisted.python.reflect import namedModule
-from twisted.trial import unittest
 
 
 class TestBzr(sourcesteps.SourceStepMixin, unittest.TestCase):

@@ -15,17 +15,16 @@
 import os
 
 from sqlalchemy.schema import MetaData
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.trial import unittest
 
 from buildbot.db import enginestrategy
 from buildbot.db import model
 from buildbot.db import pool
 from buildbot.util.sautils import sa_version
 from buildbot.util.sautils import withoutSqliteForeignKeys
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.trial import unittest
 
 
 def skip_for_dialect(dialect):

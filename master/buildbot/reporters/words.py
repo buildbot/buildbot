@@ -20,6 +20,12 @@ from string import capitalize
 from string import join
 from string import lower
 
+from twisted.internet import defer
+from twisted.internet import protocol
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.python import usage
+
 from buildbot import util
 from buildbot import version
 from buildbot.data import resultspec
@@ -31,12 +37,6 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.util import service
-
-from twisted.internet import defer
-from twisted.internet import protocol
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.python import usage
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 

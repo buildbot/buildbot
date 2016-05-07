@@ -14,12 +14,12 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
 
+from twisted.trial import unittest
+
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.trial import unittest
 
 try:
     from moto import mock_ec2
@@ -253,7 +253,8 @@ class TestEC2LatentWorker(unittest.TestCase):
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
         instance = instances[0]
-        self.assertEqual(vol.id, instance.block_device_mapping['/dev/sdz'].volume_id)
+        self.assertEqual(
+            vol.id, instance.block_device_mapping['/dev/sdz'].volume_id)
 
     @mock_ec2
     def test_start_instance_tags(self):

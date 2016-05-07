@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
@@ -23,9 +26,6 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
-
-from twisted.internet import defer
-from twisted.python import log
 
 HOSTED_BASE_URL = 'https://api.github.com'
 

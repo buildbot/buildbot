@@ -21,6 +21,7 @@ from cStringIO import StringIO
 
 from future.utils import iteritems
 from mock import Mock
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import remotetransfer
@@ -38,8 +39,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import json
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.trial import unittest
 
 
 def uploadString(string, timestamp=None):

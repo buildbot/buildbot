@@ -19,13 +19,12 @@ import os
 import xml.dom.minidom
 
 from future.moves.urllib.parse import quote_plus as urlquote_plus
-
-from buildbot import util
-from buildbot.changes import base
-
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
+
+from buildbot import util
+from buildbot.changes import base
 
 
 # these split_file_* functions are available for use as values to the

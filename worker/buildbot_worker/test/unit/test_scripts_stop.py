@@ -19,12 +19,11 @@ import signal
 import time
 
 import mock
+from twisted.trial import unittest
 
 from buildbot_worker.scripts import stop
 from buildbot_worker.test.util import compat
 from buildbot_worker.test.util import misc
-
-from twisted.trial import unittest
 
 
 class TestStopWorker(misc.FileIOMixin,

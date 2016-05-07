@@ -20,6 +20,13 @@ import sys
 import time
 
 from mock import Mock
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import log
+from twisted.python import runtime
+from twisted.python import util
+from twisted.trial import unittest
 
 from buildbot_worker import util as bsutil
 from buildbot_worker import runprocess
@@ -28,14 +35,6 @@ from buildbot_worker.test.fake.workerforbuilder import FakeWorkerForBuilder
 from buildbot_worker.test.util import compat
 from buildbot_worker.test.util.misc import BasedirMixin
 from buildbot_worker.test.util.misc import nl
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.python import log
-from twisted.python import runtime
-from twisted.python import util
-from twisted.trial import unittest
 
 
 def catCommand():

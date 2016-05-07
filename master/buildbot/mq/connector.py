@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from buildbot.util import service
-
 from twisted.python.reflect import namedObject
+
+from buildbot.util import service
 
 
 class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):
