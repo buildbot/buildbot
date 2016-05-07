@@ -81,6 +81,3 @@ c['status'] = []
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
-c['db'] = {
-    'db_url': "sqlite:///state.sqlite"
-}
