@@ -29,10 +29,8 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.util import bbcollections
-from buildbot.util import pickle
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-
 
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     implements(interfaces.IStatus)
