@@ -14,11 +14,10 @@
 # Copyright Buildbot Team Members
 
 import mock
+from twisted.trial import unittest
 
 from buildslave.scripts import start
 from buildslave.test.util import misc
-
-from twisted.trial import unittest
 
 
 class TestStartCommand(unittest.TestCase, misc.IsBuildslaveDirMixin):

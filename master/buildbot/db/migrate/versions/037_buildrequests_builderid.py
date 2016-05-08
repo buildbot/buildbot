@@ -16,9 +16,9 @@
 import hashlib
 
 import sqlalchemy as sa
+from migrate import changeset
 
 from buildbot.util import sautils
-from migrate import changeset
 
 
 def add_new_schema_parts(migrate_engine):

@@ -15,14 +15,13 @@
 import uuid
 
 from future.utils import itervalues
+from twisted.python import log
+from twisted.web import resource
+from twisted.web import server
 
 from buildbot.data.exceptions import InvalidPathError
 from buildbot.util import json
 from buildbot.util import toJson
-
-from twisted.python import log
-from twisted.web import resource
-from twisted.web import server
 
 
 class Consumer(object):

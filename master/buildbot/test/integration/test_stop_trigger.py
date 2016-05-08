@@ -15,15 +15,15 @@
 import sys
 import textwrap
 
+from twisted.internet import defer
+from twisted.internet import reactor
+
 from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
 from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.util.integration import RunMasterBase
-
-from twisted.internet import defer
-from twisted.internet import reactor
 
 
 # This integration test creates a master and worker environment,

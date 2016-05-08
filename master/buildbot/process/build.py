@@ -15,6 +15,11 @@
 
 from functools import reduce
 
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import components
+from twisted.python import log
+from twisted.python.failure import Failure
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -33,12 +38,6 @@ from buildbot.reporters.utils import getURLForBuild
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.python import components
-from twisted.python import log
-from twisted.python.failure import Failure
 
 
 class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
@@ -272,7 +271,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         metrics.MetricCountEvent.log('active_builds', 1)
 
-        # make sure properties are available to people listening on 'new' events
+        # make sure properties are available to people listening on 'new'
+        # events
         yield self._flushProperties(None)
         self.build_status.buildStarted(self)
         yield self.master.data.updates.setBuildStateString(self.buildid, u'starting')

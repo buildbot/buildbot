@@ -15,6 +15,9 @@
 from copy import deepcopy
 
 import mock
+from twisted.internet import defer
+from twisted.python import components
+from twisted.trial import unittest
 from zope.interface import implements
 
 from buildbot.interfaces import IProperties
@@ -35,10 +38,6 @@ from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.python import components
-from twisted.trial import unittest
 
 
 class FakeSource:

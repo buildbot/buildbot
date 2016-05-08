@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.python import failure
 from zope.interface import implements
 
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.util import debounce
-
-from twisted.internet import defer
-from twisted.python import failure
 
 
 class Triggerable(base.BaseScheduler):

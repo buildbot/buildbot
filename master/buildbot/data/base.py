@@ -17,9 +17,9 @@ import copy
 import re
 import UserList
 
-from buildbot.data import exceptions
-
 from twisted.internet import defer
+
+from buildbot.data import exceptions
 
 
 class ResourceType(object):

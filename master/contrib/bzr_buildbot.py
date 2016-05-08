@@ -104,15 +104,12 @@ except ImportError:
 else:
     DEFINE_POLLER = True
 
-#
+
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
 import operator
+#
 import socket
-
-import bzrlib.branch
-import bzrlib.errors
-import bzrlib.trace
 
 import twisted.cred.credentials
 import twisted.internet.base
@@ -124,6 +121,10 @@ import twisted.python.log
 import twisted.spread.pb
 from twisted.internet import defer
 from twisted.python import failure
+
+import bzrlib.branch
+import bzrlib.errors
+import bzrlib.trace
 
 
 #

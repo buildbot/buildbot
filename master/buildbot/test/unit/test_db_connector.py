@@ -15,6 +15,8 @@
 import os
 
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.db import connector
@@ -25,9 +27,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class DBConnector(db.RealDatabaseMixin, unittest.TestCase):

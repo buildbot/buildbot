@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import tempfile
 
+from twisted.trial import unittest
+
 from buildbot.scripts import processwwwindex
 from buildbot.util import json
-
-from twisted.trial import unittest
 
 
 class TestUsersClient(unittest.TestCase):

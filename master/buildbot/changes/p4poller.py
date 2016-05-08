@@ -23,16 +23,15 @@ import os
 import re
 
 import dateutil
-
-from buildbot import config
-from buildbot import util
-from buildbot.changes import base
-
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import utils
 from twisted.python import log
+
+from buildbot import config
+from buildbot import util
+from buildbot.changes import base
 
 debug_logging = False
 

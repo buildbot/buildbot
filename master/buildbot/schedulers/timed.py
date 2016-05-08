@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import config
@@ -24,10 +27,6 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.util import croniter
 from buildbot.util.codebase import AbsoluteSourceStampsMixin
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 
 class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):

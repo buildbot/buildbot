@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 import warnings
 
+from twisted.python import deprecate
+from twisted.python import versions
+
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.build import Build
@@ -25,9 +28,6 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.steps.shell import Test
 from buildbot.steps.source.cvs import CVS
 from buildbot.steps.source.svn import SVN
-
-from twisted.python import deprecate
-from twisted.python import versions
 
 
 # deprecated, use BuildFactory.addStep

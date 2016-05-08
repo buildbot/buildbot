@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 import re
 
+from twisted.trial import unittest
+
 from buildbot.changes import filter
 from buildbot.test.fake.change import Change
-
-from twisted.trial import unittest
 
 
 class ChangeFilter(unittest.TestCase):

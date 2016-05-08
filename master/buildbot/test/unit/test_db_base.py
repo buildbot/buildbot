@@ -16,14 +16,13 @@ import hashlib
 
 import mock
 import sqlalchemy as sa
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.db import base
 from buildbot.test.fake import fakedb
 from buildbot.test.util import connector_component
 from buildbot.util import sautils
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestBase(unittest.TestCase):

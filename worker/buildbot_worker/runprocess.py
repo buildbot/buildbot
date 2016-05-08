@@ -29,10 +29,6 @@ from collections import deque
 from tempfile import NamedTemporaryFile
 
 from future.utils import iteritems
-
-from buildbot_worker import util
-from buildbot_worker.exceptions import AbandonChain
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
@@ -42,6 +38,9 @@ from twisted.python import failure
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
+
+from buildbot_worker import util
+from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
     from twisted.internet.process import Process

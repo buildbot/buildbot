@@ -19,6 +19,10 @@ import sys
 
 import mock
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python.filepath import FilePath
+from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot.config import MasterConfig
@@ -27,11 +31,6 @@ from buildbot.master import BuildMaster
 from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python.filepath import FilePath
-from twisted.trial import unittest
 
 try:
     from buildbot_worker.bot import Worker
@@ -56,12 +55,14 @@ def getMaster(case, reactor, config_dict):
     """
     basedir = FilePath(case.mktemp())
     basedir.createDirectory()
-    master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+    master = BuildMaster(
+        basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
     if 'db_url' not in config_dict:
         config_dict['db_url'] = 'sqlite://'
 
-    # TODO: Allow BuildMaster to transparently upgrade the database, at least for tests.
+    # TODO: Allow BuildMaster to transparently upgrade the database, at least
+    # for tests.
     master.config.db['db_url'] = config_dict['db_url']
     yield master.db.setup(check_version=False)
     yield master.db.model.upgrade()

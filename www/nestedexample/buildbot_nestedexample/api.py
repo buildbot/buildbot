@@ -1,7 +1,6 @@
 import json
 
 from klein import Klein
-
 from twisted.internet import defer
 
 

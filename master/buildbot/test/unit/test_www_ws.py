@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 from mock import Mock
+from twisted.trial import unittest
 
 from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import ws
-
-from twisted.trial import unittest
 
 
 class WsResource(www.WwwTestMixin, unittest.TestCase):

@@ -15,19 +15,18 @@
 import os
 
 import mock
-
-from buildbot import util
-from buildbot.clients import tryclient
-from buildbot.schedulers import trysched
-from buildbot.test.util import www
-from buildbot.test.util.integration import RunMasterBase
-
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.filepath import FilePath
 from twisted.spread import pb
+
+from buildbot import util
+from buildbot.clients import tryclient
+from buildbot.schedulers import trysched
+from buildbot.test.util import www
+from buildbot.test.util.integration import RunMasterBase
 
 
 # wait for some asynchronous result
@@ -299,6 +298,7 @@ def masterConfig(extra_config):
     c['titleURL'] = "test"
     c['buildbotURL'] = "http://localhost:8010/"
     c['mq'] = {'debug': True}
-    # test wants to influence the config, but we still return a new config each time
+    # test wants to influence the config, but we still return a new config
+    # each time
     c.update(extra_config)
     return c

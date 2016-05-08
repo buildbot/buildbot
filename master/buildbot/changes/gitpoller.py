@@ -20,15 +20,14 @@ import re
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import iterkeys
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import utils
+from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
 from buildbot.util.state import StateMixin
-
-from twisted.internet import defer
-from twisted.internet import utils
-from twisted.python import log
 
 
 class GitError(Exception):

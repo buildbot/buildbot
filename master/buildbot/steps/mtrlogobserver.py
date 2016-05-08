@@ -15,12 +15,12 @@
 import re
 import sys
 
-from buildbot.process.buildstep import LogLineObserver
-from buildbot.steps.shell import Test
-
 from twisted.enterprise import adbapi
 from twisted.internet import defer
 from twisted.python import log
+
+from buildbot.process.buildstep import LogLineObserver
+from buildbot.steps.shell import Test
 
 
 class EqConnectionPool(adbapi.ConnectionPool):

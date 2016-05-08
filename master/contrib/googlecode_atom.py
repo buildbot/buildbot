@@ -26,11 +26,11 @@
 import datetime
 from xml.dom import minidom
 
-from buildbot.changes import base
-
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.client import getPage
+
+from buildbot.changes import base
 
 
 def googleCodePollerForProject(project, vcs, pollinterval=3600):

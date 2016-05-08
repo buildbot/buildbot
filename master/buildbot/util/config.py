@@ -15,11 +15,10 @@
 import re
 
 from future.utils import iteritems
+from twisted.python.components import registerAdapter
 from zope.interface import implements
 
 from buildbot.interfaces import IConfigured
-
-from twisted.python.components import registerAdapter
 
 
 class _DefaultConfigured(object):

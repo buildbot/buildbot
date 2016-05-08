@@ -18,10 +18,10 @@ import os
 import re
 import sys
 
+from twisted.trial import unittest
+
 from buildslave.scripts import base
 from buildslave.test.util import misc
-
-from twisted.trial import unittest
 
 
 class TestIsBuildslaveDir(misc.FileIOMixin, misc.LoggingMixin, unittest.TestCase):

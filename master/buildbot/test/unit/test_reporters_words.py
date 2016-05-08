@@ -16,17 +16,16 @@ import re
 
 import mock
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import words
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import datetime2epoch
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.trial import unittest
 
 
 class TestContactChannel(unittest.TestCase):

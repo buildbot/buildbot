@@ -20,10 +20,9 @@ import re
 import shutil
 
 import mock
+from twisted.python import log
 
 from buildslave.scripts import base
-
-from twisted.python import log
 
 
 def nl(s):

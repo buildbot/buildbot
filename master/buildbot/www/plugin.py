@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 import pkg_resources
-
 from twisted.web import static
 
 
@@ -21,8 +20,10 @@ class Application(object):
 
     def __init__(self, modulename, description):
         self.description = description
-        self.version = pkg_resources.resource_string(modulename, "/VERSION").strip()
-        self.static_dir = pkg_resources.resource_filename(modulename, "/static")
+        self.version = pkg_resources.resource_string(
+            modulename, "/VERSION").strip()
+        self.static_dir = pkg_resources.resource_filename(
+            modulename, "/static")
         self.resource = static.File(self.static_dir)
 
     def setMaster(self, master):

@@ -17,14 +17,14 @@ BuildSteps that are specific to the Twisted source tree
 """
 import re
 
+from twisted.python import log
+
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.steps.shell import ShellCommand
-
-from twisted.python import log
 
 
 class HLint(ShellCommand):

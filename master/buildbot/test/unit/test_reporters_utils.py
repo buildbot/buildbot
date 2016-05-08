@@ -14,15 +14,15 @@
 # Copyright Buildbot Team Members
 import textwrap
 
+from twisted.internet import defer
+from twisted.trial import unittest
+
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestDataUtils(unittest.TestCase):

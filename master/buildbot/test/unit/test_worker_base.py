@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import locks
@@ -27,11 +31,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import base
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.trial import unittest
 
 
 class ConcreteWorker(base.AbstractWorker):

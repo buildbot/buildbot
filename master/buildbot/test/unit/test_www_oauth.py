@@ -16,10 +16,6 @@ import os
 import webbrowser
 
 import mock
-
-from buildbot.test.util import www
-from buildbot.util import json
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import threads
@@ -27,6 +23,9 @@ from twisted.python import failure
 from twisted.trial import unittest
 from twisted.web.resource import Resource
 from twisted.web.server import Site
+
+from buildbot.test.util import www
+from buildbot.util import json
 
 try:
     import requests

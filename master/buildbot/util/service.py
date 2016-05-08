@@ -13,16 +13,15 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import itervalues
-
-from buildbot import util
-from buildbot.util import ascii2unicode
-from buildbot.util import config
-
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
 from twisted.python import reflect
+
+from buildbot import util
+from buildbot.util import ascii2unicode
+from buildbot.util import config
 
 
 class ReconfigurableServiceMixin(object):

@@ -14,11 +14,11 @@
 # Copyright Buildbot Team Members
 import time
 
-from buildbot.schedulers import timed
-from buildbot.test.util import scheduler
-
 from twisted.internet import defer
 from twisted.trial import unittest
+
+from buildbot.schedulers import timed
+from buildbot.test.util import scheduler
 
 try:
     from multiprocessing import Process

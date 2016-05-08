@@ -14,11 +14,6 @@
 # Copyright Buildbot Team Members
 import re
 
-from zope.interface import implements
-
-from buildbot.util import config
-from buildbot.www import resource
-
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.cred.portal import IRealm
@@ -29,6 +24,10 @@ from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import DigestCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
+from zope.interface import implements
+
+from buildbot.util import config
+from buildbot.www import resource
 
 
 class AuthRootResource(resource.Resource):

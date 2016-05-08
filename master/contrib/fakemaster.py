@@ -13,11 +13,6 @@
 
 import sys
 
-from zope.interface import implements
-
-from buildbot.process.buildstep import RemoteShellCommand
-from buildbot.util import service
-
 from twisted.application import strports
 from twisted.cred import checkers
 from twisted.cred import portal
@@ -26,6 +21,10 @@ from twisted.internet import reactor
 from twisted.internet import stdio
 from twisted.protocols import basic
 from twisted.spread import pb
+from zope.interface import implements
+
+from buildbot.process.buildstep import RemoteShellCommand
+from buildbot.util import service
 
 
 class Dispatcher:

@@ -19,6 +19,12 @@ import shutil
 from builtins import range
 
 import mock
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import failure
+from twisted.python import log
+from twisted.trial import unittest
 
 import buildslave
 from buildslave import base
@@ -27,13 +33,6 @@ from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util import command
 from buildslave.test.util import compat
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet import task
-from twisted.python import failure
-from twisted.python import log
-from twisted.trial import unittest
 
 
 class TestBot(unittest.TestCase):

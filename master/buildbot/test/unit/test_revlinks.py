@@ -12,14 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from twisted.trial import unittest
+
 from buildbot.revlinks import GithubRevlink
 from buildbot.revlinks import GitwebMatch
 from buildbot.revlinks import RevlinkMatch
 from buildbot.revlinks import SourceforgeGitRevlink
 from buildbot.revlinks import SourceforgeGitRevlink_AlluraPlatform
 from buildbot.revlinks import default_revlink_matcher
-
-from twisted.trial import unittest
 
 
 class TestGithubRevlink(unittest.TestCase):

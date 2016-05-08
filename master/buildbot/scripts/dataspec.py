@@ -15,12 +15,12 @@
 import os
 import sys
 
+from twisted.internet import defer
+
 from buildbot.data import connector
 from buildbot.test.fake import fakemaster
 from buildbot.util import in_reactor
 from buildbot.util import json
-
-from twisted.internet import defer
 
 
 @in_reactor

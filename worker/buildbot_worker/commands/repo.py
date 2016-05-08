@@ -19,11 +19,11 @@ import os
 import re
 import textwrap
 
+from twisted.internet import defer
+
 from buildbot_worker import runprocess
 from buildbot_worker.commands.base import AbandonChain
 from buildbot_worker.commands.base import SourceBaseCommand
-
-from twisted.internet import defer
 
 
 class Repo(SourceBaseCommand):

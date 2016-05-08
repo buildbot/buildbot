@@ -14,11 +14,10 @@
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
 from future.utils import itervalues
-
-from buildbot.db import base
-
 from twisted.internet import defer
 from twisted.python import log
+
+from buildbot.db import base
 
 
 def dumps_gzip(data):

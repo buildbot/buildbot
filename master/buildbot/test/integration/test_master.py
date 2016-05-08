@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.task import deferLater
+
 from buildbot.changes.filter import ChangeFilter
 from buildbot.changes.pb import PBChangeSource
 from buildbot.config import BuilderConfig
@@ -23,10 +27,6 @@ from buildbot.steps.shell import ShellCommand
 from buildbot.test.util import www
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker import Worker
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet.task import deferLater
 
 
 class RunMaster(RunMasterBase, www.RequiresWwwMixin):

@@ -16,9 +16,9 @@ from email import message_from_string
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
 
-from buildbot.changes.mail import CVSMaildirSource
-
 from twisted.trial import unittest
+
+from buildbot.changes.mail import CVSMaildirSource
 
 
 #

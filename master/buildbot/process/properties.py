@@ -17,6 +17,8 @@ import re
 import weakref
 
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.python.components import registerAdapter
 from zope.interface import implements
 
 from buildbot import config
@@ -26,9 +28,6 @@ from buildbot.interfaces import IRenderable
 from buildbot.util import flatten
 from buildbot.util import json
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
-
-from twisted.internet import defer
-from twisted.python.components import registerAdapter
 
 
 class Properties(util.ComparableMixin):

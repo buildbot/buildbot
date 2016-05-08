@@ -21,11 +21,11 @@ import sys
 import traceback
 from contextlib import contextmanager
 
-from buildbot import config as config_module
-
 from twisted.internet import defer
 from twisted.python import runtime
 from twisted.python import usage
+
+from buildbot import config as config_module
 
 
 @contextmanager

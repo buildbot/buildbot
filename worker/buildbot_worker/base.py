@@ -18,16 +18,16 @@ import os.path
 import socket
 import sys
 
-import buildbot_worker
-from buildbot_worker import monkeypatches
-from buildbot_worker.commands import base
-from buildbot_worker.commands import registry
-
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
+
+import buildbot_worker
+from buildbot_worker import monkeypatches
+from buildbot_worker.commands import base
+from buildbot_worker.commands import registry
 
 
 class UnknownCommand(pb.Error):

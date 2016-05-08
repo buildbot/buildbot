@@ -18,15 +18,14 @@ import traceback
 
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.python.reflect import accumulateClassList
 
 from buildbot import config
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-
-from twisted.internet import defer
-from twisted.python.reflect import accumulateClassList
 
 
 class ValidationError(ValueError):

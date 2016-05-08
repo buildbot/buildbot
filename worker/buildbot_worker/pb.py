@@ -16,11 +16,6 @@
 import os.path
 import signal
 
-from buildbot_worker.base import BotBase
-from buildbot_worker.base import WorkerBase
-from buildbot_worker.base import WorkerForBuilderBase
-from buildbot_worker.pbutil import ReconnectingPBClientFactory
-
 from twisted.application import internet
 from twisted.application import service
 from twisted.cred import credentials
@@ -29,6 +24,11 @@ from twisted.internet import reactor
 from twisted.internet import task
 from twisted.python import log
 from twisted.spread import pb
+
+from buildbot_worker.base import BotBase
+from buildbot_worker.base import WorkerBase
+from buildbot_worker.base import WorkerForBuilderBase
+from buildbot_worker.pbutil import ReconnectingPBClientFactory
 
 
 class UnknownCommand(pb.Error):

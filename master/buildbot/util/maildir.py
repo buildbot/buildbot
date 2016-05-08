@@ -20,14 +20,14 @@ relative to the top of the maildir (so it will look like "new/blahblah").
 """
 import os
 
-from buildbot.util import service
-
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import reactor
 # We have to put it here, since we use it to provide feedback
 from twisted.python import log
 from twisted.python import runtime
+
+from buildbot.util import service
 
 dnotify = None
 try:

@@ -20,12 +20,11 @@ import textwrap
 
 import mock
 from future.utils import iteritems
+from twisted.trial import unittest
 
 from buildbot.scripts import base
 from buildbot.scripts import checkconfig
 from buildbot.test.util import dirs
-
-from twisted.trial import unittest
 
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):

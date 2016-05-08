@@ -16,11 +16,10 @@
 import os
 
 import mock
+from twisted.trial import unittest
 
 from buildbot_worker.scripts import create_worker
 from buildbot_worker.test.util import misc
-
-from twisted.trial import unittest
 
 
 def _regexp_path(name, *names):

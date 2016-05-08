@@ -14,6 +14,11 @@
 # Copyright Buildbot Team Members
 import re
 
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.task import deferLater
+from twisted.python.filepath import FilePath
+from twisted.trial import unittest
 from zope.interface import implementer
 
 import buildbot.worker
@@ -26,12 +31,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet.task import deferLater
-from twisted.python.filepath import FilePath
-from twisted.trial import unittest
 
 
 # Template for master configuration just before worker renaming.

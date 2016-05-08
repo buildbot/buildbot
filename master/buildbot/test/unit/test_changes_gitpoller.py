@@ -16,6 +16,8 @@ import os
 import re
 
 import mock
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.changes import base
 from buildbot.changes import gitpoller
@@ -23,9 +25,6 @@ from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.test.util import logging
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'

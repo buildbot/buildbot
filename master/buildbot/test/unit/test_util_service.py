@@ -13,13 +13,12 @@
 #
 # Copyright Buildbot Team Members
 import mock
-
-from buildbot import config
-from buildbot.util import service
-
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
+
+from buildbot import config
+from buildbot.util import service
 
 
 class DeferredStartStop(service.AsyncService):

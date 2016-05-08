@@ -18,17 +18,17 @@ import os
 import sys
 import time
 
+import twisted
+from twisted.internet.utils import getProcessOutputAndValue
+from twisted.python import versions
+from twisted.trial import unittest
+
 from buildbot.scripts import start
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.decorators import skipIfPythonVersionIsLess
 from buildbot.test.util.decorators import skipUnlessPlatformIs
-
-import twisted
-from twisted.internet.utils import getProcessOutputAndValue
-from twisted.python import versions
-from twisted.trial import unittest
 
 
 def mkconfig(**kwargs):

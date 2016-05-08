@@ -16,14 +16,13 @@ import os
 import posixpath
 
 import jinja2
+from twisted.internet import defer
+from twisted.python import log
+from twisted.web.error import Error
 
 from buildbot.interfaces import IConfigured
 from buildbot.util import json
 from buildbot.www import resource
-
-from twisted.internet import defer
-from twisted.python import log
-from twisted.web.error import Error
 
 
 class IndexResource(resource.Resource):

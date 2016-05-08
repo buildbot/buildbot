@@ -18,11 +18,11 @@ import os
 import shutil
 import sys
 
-from buildbot_worker.commands import utils
-
 import twisted.python.procutils
 from twisted.python import runtime
 from twisted.trial import unittest
+
+from buildbot_worker.commands import utils
 
 
 class GetCommand(unittest.TestCase):

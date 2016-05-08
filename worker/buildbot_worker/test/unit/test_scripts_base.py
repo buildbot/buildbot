@@ -17,10 +17,10 @@ import io
 import os
 import sys
 
+from twisted.trial import unittest
+
 from buildbot_worker.scripts import base
 from buildbot_worker.test.util import misc
-
-from twisted.trial import unittest
 
 
 class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,

@@ -15,11 +15,11 @@
 import abc
 import re
 
-from buildbot import config
-from buildbot.errors import CaptureCallbackError
-
 from twisted.internet import defer
 from twisted.internet import threads
+
+from buildbot import config
+from buildbot.errors import CaptureCallbackError
 
 
 class Capture(object):

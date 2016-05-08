@@ -17,7 +17,6 @@ import new
 import sys
 
 import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -36,6 +35,7 @@ class FakeLdap(object):
 
 
 class CommonTestCase(unittest.TestCase):
+
     """Common fixture for all ldapuserinfo tests
 
     we completetly fake the python3-ldap module, so no need to require
@@ -70,6 +70,7 @@ class CommonTestCase(unittest.TestCase):
 
 
 class LdapUserInfo(CommonTestCase):
+
     def makeUserInfoProvider(self):
         self.userInfoProvider = ldapuserinfo.LdapUserInfo(
             uri="ldap://uri", bindUser="user", bindPw="pass",

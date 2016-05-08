@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot_worker.base import WorkerBase
-
 from twisted.internet import defer
+
+from buildbot_worker.base import WorkerBase
 
 
 class LocalWorker(WorkerBase):

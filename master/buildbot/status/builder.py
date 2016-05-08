@@ -17,6 +17,8 @@ import os
 import re
 
 from future.utils import itervalues
+from twisted.persisted import styles
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -36,9 +38,6 @@ from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.event import Event
 from buildbot.util import pickle
 from buildbot.util.lru import LRUCache
-
-from twisted.persisted import styles
-from twisted.python import log
 
 _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
                   EXCEPTION, RETRY, CANCELLED, Results, worst_status]

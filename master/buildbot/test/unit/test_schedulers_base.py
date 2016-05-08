@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.changes import changes
@@ -20,10 +23,6 @@ from buildbot.process import properties
 from buildbot.schedulers import base
 from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
 
 
 class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):

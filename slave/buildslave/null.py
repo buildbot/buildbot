@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from buildslave.base import BuildSlaveBase
-
 from twisted.internet import defer
+
+from buildslave.base import BuildSlaveBase
 
 
 class LocalBuildSlave(BuildSlaveBase):

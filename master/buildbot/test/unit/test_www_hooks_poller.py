@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+from twisted.trial import unittest
+
 import buildbot.www.change_hook as change_hook
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.manager import ChangeManager
 from buildbot.test.fake.web import FakeRequest
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class TestPollingChangeHook(unittest.TestCase):
@@ -39,7 +39,8 @@ class TestPollingChangeHook(unittest.TestCase):
         self.request.method = "GET"
         master = self.request.site.master
 
-        self.changeHook = change_hook.ChangeHookResource(dialects={'poller': options}, master=master)
+        self.changeHook = change_hook.ChangeHookResource(
+            dialects={'poller': options}, master=master)
         master.change_svc = ChangeManager()
         master.change_svc.setServiceParent(master)
         self.changesrc = self.Subclass("example", 21)

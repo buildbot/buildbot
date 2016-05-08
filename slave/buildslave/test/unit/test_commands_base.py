@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from buildslave.commands.base import Command
-from buildslave.test.util.command import CommandTestMixin
-
 from twisted.internet import defer
 from twisted.trial import unittest
+
+from buildslave.commands.base import Command
+from buildslave.test.util.command import CommandTestMixin
 
 
 # set up a fake Command subclass to test the handling in Command.  Think of

@@ -22,10 +22,9 @@ import shutil
 import sys
 
 import mock
+from twisted.python import log
 
 from buildbot_worker.scripts import base
-
-from twisted.python import log
 
 
 def nl(s):

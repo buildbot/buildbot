@@ -16,11 +16,10 @@ import hashlib
 
 from future.moves.urllib.parse import urlencode
 from future.moves.urllib.parse import urljoin
+from twisted.internet import defer
 
 from buildbot.util import config
 from buildbot.www import resource
-
-from twisted.internet import defer
 
 
 class AvatarBase(config.ConfiguredMixin):

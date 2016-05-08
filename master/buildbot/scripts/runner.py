@@ -24,11 +24,10 @@ import sys
 import textwrap
 
 import sqlalchemy as sa
-
-from buildbot.scripts import base
-
 from twisted.python import reflect
 from twisted.python import usage
+
+from buildbot.scripts import base
 
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in

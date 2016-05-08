@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process.results import SUCCESS
-from buildbot.reporters import http
-
 from twisted.internet import defer
 from twisted.python import log
+
+from buildbot.process.results import SUCCESS
+from buildbot.reporters import http
 
 # Magic words understood by Stash REST API
 STASH_INPROGRESS = 'INPROGRESS'

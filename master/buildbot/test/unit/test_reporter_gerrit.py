@@ -17,6 +17,8 @@ import warnings
 
 from mock import Mock
 from mock import call
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -30,9 +32,6 @@ from buildbot.reporters.gerrit import defaultSummaryCB
 from buildbot.reporters.gerrit import makeReviewResult
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 warnings.filterwarnings('error', message='.*Gerrit status')
 

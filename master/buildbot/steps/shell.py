@@ -16,6 +16,10 @@ import inspect
 import re
 
 from future.utils import iteritems
+from twisted.python import failure
+from twisted.python import log
+from twisted.python.deprecate import deprecatedModuleAttribute
+from twisted.python.versions import Version
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -32,11 +36,6 @@ from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
 from buildbot.util import join_list
-
-from twisted.python import failure
-from twisted.python import log
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes

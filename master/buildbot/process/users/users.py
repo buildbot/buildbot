@@ -15,10 +15,10 @@
 import os
 from hashlib import sha1
 
-from buildbot.util import flatten
-
 from twisted.internet import defer
 from twisted.python import log
+
+from buildbot.util import flatten
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8

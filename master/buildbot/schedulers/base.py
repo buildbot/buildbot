@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import config
@@ -21,10 +24,6 @@ from buildbot.changes import changes
 from buildbot.process.properties import Properties
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
-
-from twisted.internet import defer
-from twisted.python import failure
-from twisted.python import log
 
 
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
@@ -307,7 +306,8 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)
         # but that would merely only optimize the single builder case, while
-        # probably the multiple builder case will be severaly impacted by the several db requests needed.
+        # probably the multiple builder case will be severaly impacted by the
+        # several db requests needed.
         builderids = list()
         for bldr in (yield self.master.data.get(('builders', ))):
             if bldr['name'] in builderNames:

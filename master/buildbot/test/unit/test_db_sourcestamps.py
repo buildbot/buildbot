@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.trial import unittest
 
 from buildbot.db import sourcestamps
 from buildbot.test.fake import fakedb
@@ -21,10 +24,6 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 from buildbot.util import epoch2datetime
-
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.trial import unittest
 
 CREATED_AT = 927845299
 

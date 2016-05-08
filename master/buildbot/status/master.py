@@ -17,6 +17,9 @@ import os
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.persisted import styles
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -29,10 +32,6 @@ from buildbot.util import bbcollections
 from buildbot.util import pickle
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-
-from twisted.internet import defer
-from twisted.persisted import styles
-from twisted.python import log
 
 
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):

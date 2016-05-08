@@ -21,14 +21,13 @@ import mock
 import pkg_resources
 from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.web import server
 
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
-
-from twisted.internet import defer
-from twisted.web import server
 
 
 class FakeSession(object):

@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 import textwrap
 
-from buildbot.util import raml
-
 from twisted.trial import unittest
+
+from buildbot.util import raml
 
 
 class TestRaml(unittest.TestCase):

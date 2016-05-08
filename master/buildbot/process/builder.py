@@ -15,6 +15,11 @@
 import warnings
 import weakref
 
+from twisted.application import internet
+from twisted.application import service
+from twisted.internet import defer
+from twisted.python import failure
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import interfaces
@@ -29,12 +34,6 @@ from buildbot.util import epoch2datetime
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-
-from twisted.application import internet
-from twisted.application import service
-from twisted.internet import defer
-from twisted.python import failure
-from twisted.python import log
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -96,7 +95,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.updateStatusService.setServiceParent(self)
 
     def setServiceParent(self, parent):
-        # botmaster needs to set before setServiceParent which calls startService
+        # botmaster needs to set before setServiceParent which calls
+        # startService
         for child in [self.reclaim_svc, self.updateStatusService]:
             child.clock = parent.master.reactor
         return service.MultiService.setServiceParent(self, parent)

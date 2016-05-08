@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.trial import unittest
 
 from buildbot.process import remotecommand
 from buildbot.test.fake import remotecommand as fakeremotecommand
@@ -22,8 +23,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
-
-from twisted.trial import unittest
 
 
 class TestRemoteShellCommand(unittest.TestCase):

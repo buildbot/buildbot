@@ -20,6 +20,10 @@ import warnings
 from distutils.version import LooseVersion
 
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.internet.protocol import ProcessProtocol
+from twisted.python import log
 
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -29,11 +33,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.util import service
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.internet.protocol import ProcessProtocol
-from twisted.python import log
 
 # Cache the version that the gerrit server is running for this many seconds
 GERRIT_VERSION_CACHE_TIMEOUT = 600

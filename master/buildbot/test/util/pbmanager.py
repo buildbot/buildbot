@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 import mock
-
 from twisted.internet import defer
 
 

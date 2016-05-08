@@ -20,11 +20,6 @@ import string
 import sys
 import time
 
-from buildbot.status import builder
-from buildbot.util import json
-from buildbot.util import now
-from buildbot.util.eventual import fireEventually
-
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import protocol
@@ -35,6 +30,11 @@ from twisted.python import log
 from twisted.python import runtime
 from twisted.python.procutils import which
 from twisted.spread import pb
+
+from buildbot.status import builder
+from buildbot.util import json
+from buildbot.util import now
+from buildbot.util.eventual import fireEventually
 
 
 class SourceStamp(object):

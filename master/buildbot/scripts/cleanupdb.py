@@ -18,13 +18,13 @@ from __future__ import with_statement
 import os
 import sys
 
+from twisted.internet import defer
+
 from buildbot import config as config_module
 from buildbot import monkeypatches
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
-
-from twisted.internet import defer
 
 
 @defer.inlineCallbacks

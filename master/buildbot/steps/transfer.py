@@ -15,6 +15,9 @@
 import os
 import stat
 
+from twisted.internet import defer
+from twisted.python import log
+
 from buildbot import config
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import remotecommand
@@ -27,9 +30,6 @@ from buildbot.util import json
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
-
-from twisted.internet import defer
-from twisted.python import log
 
 
 def makeStatusRemoteCommand(step, remote_command, args):

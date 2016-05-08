@@ -17,13 +17,12 @@ import os
 import sys
 
 import mock
-
-from buildslave.scripts import runner
-from buildslave.test.util import misc
-
 from twisted.python import log
 from twisted.python import usage
 from twisted.trial import unittest
+
+from buildslave.scripts import runner
+from buildslave.test.util import misc
 
 
 class OptionsMixin(object):

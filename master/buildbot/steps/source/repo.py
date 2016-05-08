@@ -15,15 +15,14 @@
 import re
 import textwrap
 
+from twisted.internet import defer
+from twisted.internet import reactor
 from zope.interface import implements
 
 from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
-
-from twisted.internet import defer
-from twisted.internet import reactor
 
 
 class RepoDownloadsFromProperties(util.ComparableMixin, object):

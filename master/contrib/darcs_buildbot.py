@@ -23,10 +23,10 @@ import sys
 import xml
 from xml.dom import minidom
 
-from buildbot.clients import sendchange
-
 from twisted.internet import defer
 from twisted.internet import reactor
+
+from buildbot.clients import sendchange
 
 
 def getText(node):

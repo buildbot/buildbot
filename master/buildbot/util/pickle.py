@@ -27,18 +27,17 @@ from gzip import GzipFile
 
 from future.utils import iteritems
 from future.utils import itervalues
-from zope.interface import implements
-
-from buildbot import interfaces
-from buildbot import util
-from buildbot.util import netstrings
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.persisted import styles
 from twisted.python import log
 from twisted.python import reflect
 from twisted.spread import pb
+from zope.interface import implements
+
+from buildbot import interfaces
+from buildbot import util
+from buildbot.util import netstrings
 
 # This module contains classes that are referenced in pickles, and thus needed
 # during upgrade operations, but are no longer used in a running Buildbot

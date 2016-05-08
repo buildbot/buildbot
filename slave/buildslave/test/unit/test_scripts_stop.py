@@ -19,12 +19,11 @@ import signal
 import time
 
 import mock
+from twisted.trial import unittest
 
 from buildslave.scripts import stop
 from buildslave.test.util import compat
 from buildslave.test.util import misc
-
-from twisted.trial import unittest
 
 
 class TestStopSlave(misc.FileIOMixin,

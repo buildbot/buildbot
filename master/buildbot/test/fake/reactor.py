@@ -20,13 +20,13 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from zope.interface import implementer
-
 from twisted.internet.base import _ThreePhaseEvent
 from twisted.internet.interfaces import IReactorCore
 from twisted.internet.interfaces import IReactorThreads
 from twisted.internet.task import Clock
 from twisted.python.failure import Failure
+from zope.interface import implementer
+
 
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295
@@ -35,9 +35,11 @@ from twisted.python.failure import Failure
 
 @implementer(IReactorCore)
 class CoreReactor(object):
+
     """
     Partial implementation of ``IReactorCore``.
     """
+
     def __init__(self):
         self._triggers = {}
 
@@ -60,6 +62,7 @@ class CoreReactor(object):
 
 
 class NonThreadPool(object):
+
     """
     A stand-in for ``twisted.python.threadpool.ThreadPool`` so that the
     majority of the test suite does not need to use multithreading.
@@ -96,10 +99,12 @@ class NonThreadPool(object):
 
 @implementer(IReactorThreads)
 class NonReactor(object):
+
     """
     A partial implementation of ``IReactorThreads`` which fits into
     the execution model defined by ``NonThreadPool``.
     """
+
     def callFromThread(self, f, *args, **kwargs):
         f(*args, **kwargs)
 
@@ -108,6 +113,7 @@ class NonReactor(object):
 
 
 class TestReactor(NonReactor, CoreReactor, Clock):
+
     def __init__(self):
         Clock.__init__(self)
         CoreReactor.__init__(self)

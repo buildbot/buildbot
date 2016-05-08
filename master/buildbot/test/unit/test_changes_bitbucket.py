@@ -15,14 +15,14 @@
 import re
 from datetime import datetime
 
-from buildbot.changes.bitbucket import BitbucketPullrequestPoller
-from buildbot.test.util import changesource
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
 from twisted.web import client
 from twisted.web.error import Error
+
+from buildbot.changes.bitbucket import BitbucketPullrequestPoller
+from buildbot.test.util import changesource
 
 
 class SourceRest():

@@ -15,6 +15,10 @@
 """
 Source step code for darcs
 """
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
+
 from buildbot.config import ConfigErrors
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
@@ -22,10 +26,6 @@ from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 
 class Darcs(Source):

@@ -16,6 +16,10 @@
 import platform
 import textwrap
 
+from twisted.internet import error
+from twisted.python import reflect
+from twisted.trial import unittest
+
 from buildbot import config
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
@@ -24,10 +28,6 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
-
-from twisted.internet import error
-from twisted.python import reflect
-from twisted.trial import unittest
 
 _is_windows = (platform.system() == 'Windows')
 

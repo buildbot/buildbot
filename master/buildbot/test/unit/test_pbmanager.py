@@ -16,13 +16,12 @@
 Test clean shutdown functionality of the master
 """
 import mock
-
-from buildbot import pbmanager
-
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.spread import pb
 from twisted.trial import unittest
+
+from buildbot import pbmanager
 
 
 class TestPBManager(unittest.TestCase):

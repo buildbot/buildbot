@@ -15,16 +15,15 @@
 from distutils.version import LooseVersion
 
 from future.utils import iteritems
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40

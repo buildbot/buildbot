@@ -16,6 +16,17 @@ import re
 
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.internet import error
+from twisted.python import util as twutil
+from twisted.python import components
+from twisted.python import deprecate
+from twisted.python import failure
+from twisted.python import log
+from twisted.python import versions
+from twisted.python.failure import Failure
+from twisted.python.reflect import accumulateClassList
+from twisted.web.util import formatFailure
 from zope.interface import implements
 
 from buildbot import config
@@ -42,18 +53,6 @@ from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-
-from twisted.internet import defer
-from twisted.internet import error
-from twisted.python import util as twutil
-from twisted.python import components
-from twisted.python import deprecate
-from twisted.python import failure
-from twisted.python import log
-from twisted.python import versions
-from twisted.python.failure import Failure
-from twisted.python.reflect import accumulateClassList
-from twisted.web.util import formatFailure
 
 try:
     import cStringIO as StringIO

@@ -21,15 +21,14 @@ from future.moves.urllib.parse import quote as urlquote
 from future.moves.urllib.parse import unquote as urlunquote
 from future.moves.urllib.parse import urlparse
 from future.moves.urllib.parse import urlunparse
+from twisted.internet import defer
+from twisted.internet import reactor
+from twisted.python import log
 
 from buildbot.config import ConfigErrors
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
-
-from twisted.internet import defer
-from twisted.internet import reactor
-from twisted.python import log
 
 
 class SVN(Source):

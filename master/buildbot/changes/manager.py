@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+from twisted.python import log
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process import metrics
 from buildbot.util import service
-
-from twisted.internet import defer
-from twisted.python import log
 
 
 class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiService):

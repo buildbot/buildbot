@@ -13,15 +13,14 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from twisted.application import internet
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.reporters import irc
 from buildbot.reporters import words
 from buildbot.test.util import config
 from buildbot.util import service
-
-from twisted.application import internet
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class FakeContact(service.AsyncService):

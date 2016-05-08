@@ -17,6 +17,8 @@ import re
 import mock
 from future.utils import iteritems
 from future.utils import itervalues
+from twisted.internet import defer
+from twisted.trial import unittest
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
@@ -25,9 +27,6 @@ from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
 from buildbot.www.rest import BadRequest
-
-from twisted.internet import defer
-from twisted.trial import unittest
 
 
 class RestRootResource(www.WwwTestMixin, unittest.TestCase):
