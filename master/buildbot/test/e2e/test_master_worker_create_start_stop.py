@@ -74,10 +74,9 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        os.chdir(self._origcwd)
-
         if not self.success:
             yield self._force_stop()
+            os.chdir(self._origcwd)
 
             # Output ran command logs to stdout to help debugging in CI systems
             # where logs are not available (e.g. Travis).
@@ -87,7 +86,10 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             print("-" * 80)
             print("\n".join(self.logs))
             print("-" * 80)
+
         else:
+            os.chdir(self._origcwd)
+
             # Clean working directory only when test succeeded.
             yield self.tearDownDirs()
 
