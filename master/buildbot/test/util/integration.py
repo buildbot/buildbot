@@ -31,9 +31,9 @@ from buildbot.master import BuildMaster
 from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
-from buildbot.test.util.db import RealDatabaseMixin
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
+from buildbot.test.util.db import RealDatabaseMixin
 
 try:
     from buildbot_worker.bot import Worker
@@ -66,10 +66,12 @@ def getMaster(case, reactor, config_dict):
     yield realdb.setUpRealDatabase(table_names=RealDatabaseMixin.ALL_TABLES)
     config_dict['db_url'] = realdb.db_url
 
-    master = BuildMaster(basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+    master = BuildMaster(
+        basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
     def stopReactor():
-        raise RuntimeError("master could not be started and wanted to stop the reactor!")
+        raise RuntimeError(
+            "master could not be started and wanted to stop the reactor!")
     master.stopReactor = stopReactor
 
     # TODO: Allow BuildMaster to transparently upgrade the database, at least
@@ -248,6 +250,7 @@ class RunMasterBase(_RunMasterBase, unittest.TestCase):
 
 
 class SyncRunMasterBase(_RunMasterBase, unittest.SynchronousTestCase):
+
     def setUp(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
