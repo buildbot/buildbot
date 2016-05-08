@@ -450,6 +450,7 @@ else:
         'txgithub',
         'ramlfications',
         'mock',
+        'shutilwhich',
     ]
     if sys.platform != 'win32':
         test_deps += [
