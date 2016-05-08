@@ -39,7 +39,7 @@ before_test:
   - cmd: SET "PATH=%PATH%;%PYTHON%\Scripts"
 
 test_script:
-  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  - "%PYTHON%\\python.exe -u %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
