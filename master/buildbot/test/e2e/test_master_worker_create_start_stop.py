@@ -32,6 +32,27 @@ except ImportError:
     # Backport of shutil.which() from Python 3.3.
     from shutilwhich import which
 
+try:
+    from textwrap import indent
+except ImportError:
+    # textwrap.indent() implementation from Python 3.3
+    def indent(text, prefix, predicate=None):
+        """Adds 'prefix' to the beginning of selected lines in 'text'.
+
+        If 'predicate' is provided, 'prefix' will only be added to the lines
+        where 'predicate(line)' is True. If 'predicate' is not provided,
+        it will default to adding 'prefix' to all non-empty lines that do not
+        consist solely of whitespace characters.
+        """
+        if predicate is None:
+            def predicate(line):  # pylint: disable=function-redefined
+                return line.strip()
+
+        def prefixed_lines():
+            for line in text.splitlines(True):
+                yield (prefix + line if predicate(line) else line)
+        return ''.join(prefixed_lines())
+
 
 def get_open_port():
     # TODO: This is synchronous code which might be blocking, which is
@@ -131,9 +152,9 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             executable_path, args)
 
         if stderr:
-            self._log("stderr:\n{0}".format(stderr))
+            self._log("stderr:\n{0}".format(indent(stderr, "    ")))
         if stdout:
-            self._log("stdout:\n{0}".format(stdout))
+            self._log("stdout:\n{0}".format(indent(stdout, "    ")))
         self._log("Process finished with code {0}".format(exitcode))
         assert exitcode == 0, "command failed: '{0}'".format(command_str)
 
