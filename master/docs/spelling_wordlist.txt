@@ -690,6 +690,7 @@ seemlessly
 sendchange
 sepcified
 serializable
+serviceid
 setDefaultWorkdir
 sha
 sherrif

@@ -20,10 +20,8 @@ Features
 
 * Builder page is now sorted by builder name
 
-* LogViewer page now supports ansi color codes, and is displayed white on black.
+* LogViewer page now supports ANSI color codes, and is displayed white on black.
 
-* This is the last version of buildbot nine which supports python 2.6 for the master.
-  Next version will drop python 2.6 support.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -47,7 +45,7 @@ Fixes
 
 * Buildbot nine do not write pickles anymore in the master directory
 
-* Fix build page to not display build urls, but rather directly the buildsummary, which already contain the URL.
+* Fix build page to not display build urls, but rather directly the build-summary, which already contain the URL.
 
 * UI Automatically reconnect on disconnection from the websocket. (:bug:`3462`)
 
@@ -56,7 +54,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The buildmaster now requires at least Twisted-14.0.1.
 
-* The webui has upgrade its web components dependencies to `latest versions <https://github.com/buildbot/guanlecoja-ui/tree/master#changelog>`_.
+* The web ui has upgrade its web components dependencies to `latest versions <https://github.com/buildbot/guanlecoja-ui/tree/master#changelog>`_.
   This can impact web-ui plugin.
 
 * Web server does not provide /png and /redirect anymore (:bug:`3357`).
@@ -67,13 +65,16 @@ Deprecations, Removals, and Non-Compatible Changes
 * Support of worker-side ``usePTY`` was removed from ``buildbot-worker``.
   ``usePTY`` argument was removed from ``WorkerForBuilder`` and ``Worker`` classes.
 
-* html is not permitted anymore in 'label' attributes of forcescheduler parameters.
+* html is no longer permitted in 'label' attributes of forcescheduler parameters.
 
 * ``LocalWorker`` now requires ``buildbot-worker`` package, instead of ``buildbot-slave``.
 
 * :ref:`Collapse-Request-Functions` now takes master as first argument.
   The previous callable contained too few data in order to be really usable.
   As collapseRequests has never been released outside of beta, backward compatibility with previous release has **not** been implemented.
+
+* This is the last version of buildbot nine which supports python 2.6 for the master.
+  Next version will drop python 2.6 support.
 
 Worker
 ------
