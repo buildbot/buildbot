@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import print_function
+
 import os
 import time
-
-from twisted.python import log
 
 from buildslave.scripts import base
 
@@ -65,12 +65,12 @@ def stopSlave(basedir, quiet, signame="TERM"):
             os.kill(pid, 0)
         except OSError:
             if not quiet:
-                log.msg("buildslave process %d is dead" % pid)
+                print("buildslave process %d is dead" % pid)
             return
         timer += 1
         time.sleep(1)
     if not quiet:
-        log.msg("never saw process go away")
+        print("never saw process go away")
 
 
 def stop(config, signame="TERM"):
@@ -84,6 +84,6 @@ def stop(config, signame="TERM"):
         stopSlave(basedir, quiet, signame)
     except SlaveNotRunning:
         if not quiet:
-            log.msg("buildslave not running")
+            print("buildslave not running")
 
     return 0

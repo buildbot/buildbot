@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+from __future__ import print_function
 
-from twisted.python import log
+import os
 
 
 slaveTACTemplate = ["""
@@ -88,11 +88,11 @@ def _makeBaseDir(basedir, quiet):
     """
     if os.path.exists(basedir):
         if not quiet:
-            log.msg("updating existing installation")
+            print("updating existing installation")
         return
 
     if not quiet:
-        log.msg("mkdir", basedir)
+        print("mkdir", basedir)
 
     try:
         os.mkdir(basedir)
@@ -123,12 +123,12 @@ def _makeBuildbotTac(basedir, tac_file_contents, quiet):
 
         if oldcontents == tac_file_contents:
             if not quiet:
-                log.msg("buildbot.tac already exists and is correct")
+                print("buildbot.tac already exists and is correct")
             return
 
         if not quiet:
-            log.msg("not touching existing buildbot.tac")
-            log.msg("creating buildbot.tac.new instead")
+            print("not touching existing buildbot.tac")
+            print("creating buildbot.tac.new instead")
 
         tacfile = os.path.join(basedir, "buildbot.tac.new")
 
@@ -159,8 +159,8 @@ def _makeInfoFiles(basedir, quiet):
             return False
 
         if not quiet:
-            log.msg("Creating %s, you need to edit it appropriately." %
-                    os.path.join("info", file))
+            print("Creating %s, you need to edit it appropriately." %
+                  os.path.join("info", file))
 
         try:
             open(filepath, "wt").write(contents)
@@ -172,7 +172,7 @@ def _makeInfoFiles(basedir, quiet):
     path = os.path.join(basedir, "info")
     if not os.path.exists(path):
         if not quiet:
-            log.msg("mkdir", path)
+            print("mkdir", path)
         try:
             os.mkdir(path)
         except OSError as exception:
@@ -191,11 +191,11 @@ def _makeInfoFiles(basedir, quiet):
 
     if not os.path.exists(access_uri):
         if not quiet:
-            log.msg("Not creating %s - add it if you wish" %
-                    os.path.join("info", "access_uri"))
+            print("Not creating %s - add it if you wish" %
+                  os.path.join("info", "access_uri"))
 
     if created and not quiet:
-        log.msg("Please edit the files in %s appropriately." % path)
+        print("Please edit the files in %s appropriately." % path)
 
 
 def createSlave(config):
@@ -220,11 +220,11 @@ def createSlave(config):
         _makeBuildbotTac(basedir, contents, quiet)
         _makeInfoFiles(basedir, quiet)
     except CreateSlaveError as exception:
-        log.msg("%s\nfailed to configure buildslave in %s" %
-                (exception, config['basedir']))
+        print("%s\nfailed to configure buildslave in %s" %
+              (exception, config['basedir']))
         return 1
 
     if not quiet:
-        log.msg("buildslave configured in %s" % basedir)
+        print("buildslave configured in %s" % basedir)
 
     return 0
