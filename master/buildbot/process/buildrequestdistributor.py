@@ -413,9 +413,10 @@ class KatanaBuildChooser(BasicBuildChooser):
         else:
             yield self.master.db.buildrequests.claimBuildRequests(brids)
 
-    def _removeBreq(self, breq):
+    def removeBuildRequest(self, breq):
         # reset the checkMerges in case the breq still in the master cache
         breq.checkMerges = True
+        breq.retries = 0
         if hasattr(breq, 'brdict') and breq.brdict:
             if self.unclaimedBrdicts and breq.brdict in self.unclaimedBrdicts:
                 self.unclaimedBrdicts.remove(breq.brdict)
@@ -423,12 +424,21 @@ class KatanaBuildChooser(BasicBuildChooser):
                 self.resumeBrdicts.remove(breq.brdict)
         self.breqCache.remove(breq.id)
 
-    def _removeBuildRequests(self, breqs):
+    def removeBuildRequests(self, breqs):
         # Remove a BuildrRequest object (and its brdict)
         # from the caches
 
         for breq in breqs:
-            self._removeBreq(breq)
+            self.removeBuildRequest(breq)
+
+    def retryBuildRequest(self):
+        msg = "Katana failed to process buildrequest.id %s, Katana will retry again" % self.nextBreq.id
+        self.nextBreq.retries += 1
+        if self.nextBreq.retries > 4:
+            msg = "Katana failed to process buildrequest.id %s after %d retries, " \
+                  "Katana will retry after the queue is proccessed " % (self.nextBreq.id, self.nextBreq.retries)
+            self.removeBuildRequest(self.nextBreq)
+        log.msg(msg)
 
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
@@ -440,20 +450,22 @@ class KatanaBuildChooser(BasicBuildChooser):
         breq.brdict = brdict
         if not hasattr(breq, 'checkMerges'):
             breq.checkMerges = True
+        if not hasattr(breq, 'retries'):
+            breq.retries = 0
         timerLogFinished(msg="_getBuildRequestForBrdict finished", timer=timer)
         defer.returnValue(breq)
 
     @defer.inlineCallbacks
     def _getBuildRequestsQueue(self, queue):
         if queue == Queue.unclaimed:
-            if not self.unclaimedBrdicts:
+            if self.unclaimedBrdicts is None:
                 self.unclaimedBrdicts = yield self.master.db.buildrequests\
                     .getBuildRequestsInQueue(queue=queue)
             defer.returnValue(self.unclaimedBrdicts)
             return
 
         if queue == Queue.resume:
-            if not self.resumeBrdicts:
+            if self.resumeBrdicts is None:
                 self.resumeBrdicts = yield self.master.db.buildrequests\
                     .getBuildRequestsInQueue(queue=queue)
             defer.returnValue(self.resumeBrdicts)
@@ -656,7 +668,7 @@ class KatanaBuildChooser(BasicBuildChooser):
     # notify the master that the buildrequests were removed from queue
     def notifyRequestsRemoved(self, buildrequests):
         for br in buildrequests:
-            self._removeBreq(br)
+            self.removeBuildRequest(br)
             self.master.buildRequestRemoved(br.bsid, br.id, self.bldr.name)
 
     @defer.inlineCallbacks
@@ -666,7 +678,7 @@ class KatanaBuildChooser(BasicBuildChooser):
             yield self.master.maybeBuildsetComplete(br.bsid)
             # notify the master that the buildrequest was remove from queue
             self.master.buildRequestRemoved(br.bsid, br.id, self.bldr.name)
-            self._removeBreq(br)
+            self.removeBuildRequest(br)
 
     @defer.inlineCallbacks
     def mergeBuildingRequests(self, brids, breqs, queue):
@@ -1143,10 +1155,12 @@ class KatanaBuildRequestDistributor(service.Service):
             return
 
         try:
-            log.msg("_nextBuilder:  %s, queue: %s" % (breq.buildername, queue))
+            log.msg("_nextBuilder:  %s, brid %s, queue: %s" % (breq.buildername, breq.id, queue))
             timer = timerLogStart(msg="starting asyncFunc queue %s" % queue,
                                    function_name="KatanaBuildRequestDistributor._selectNextBuildRequest()")
-            yield asyncFunc()
+
+            if not (yield asyncFunc()):
+                self.katanaBuildChooser.retryBuildRequest()
 
         except Exception:
             self.katanaBuildChooser.initializeBuildRequestQueue()
@@ -1217,7 +1231,7 @@ class KatanaBuildRequestDistributor(service.Service):
             self.botmaster.maybeStartBuildsForBuilder(self.katanaBuildChooser.bldr.name)
             msg = "_maybeResumeBuildOnBuilder could not resume build"
         else:
-            self.katanaBuildChooser._removeBuildRequests(breqs)
+            self.katanaBuildChooser.removeBuildRequests(breqs)
 
         self.logResumeOrStartBuildStatus(msg, slave, breqs)
         defer.returnValue(buildStarted)
@@ -1245,7 +1259,7 @@ class KatanaBuildRequestDistributor(service.Service):
             self.botmaster.maybeStartBuildsForBuilder(self.katanaBuildChooser.bldr.name)
             msg = "_maybeStartNewBuildsOnBuilder could not start build"
         else:
-            self.katanaBuildChooser._removeBuildRequests(breqs)
+            self.katanaBuildChooser.removeBuildRequests(breqs)
 
         self.logResumeOrStartBuildStatus(msg, slave, breqs)
         defer.returnValue(buildStarted)
