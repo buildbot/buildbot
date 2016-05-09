@@ -31,6 +31,8 @@ For example, the following will generate a builder for each of a range of suppor
                 factory=f,
                 workernames=pytest_workers))
 
+Next step would be the loading of ``pythons`` list from a .yaml/.ini file.
+
 .. _Collapse-Request-Functions:
 
 Collapse Request Functions
@@ -38,49 +40,109 @@ Collapse Request Functions
 
 .. index:: Builds; collapsing
 
-.. warning:
-
-    This section is no longer accurate in Buildbot 0.9.x
 
 The logic Buildbot uses to decide which build request can be merged can be customized by providing a Python function (a callable) instead of ``True`` or ``False`` described in :ref:`Collapsing-Build-Requests`.
 
-The callable will be invoked with three positional arguments: a :class:`Builder` object and two :class:`BuildRequest` objects.
+Arguments for the callable are:
+
+    ``master``
+        pointer to the master object, which can be used to make additional data api calls via `master.data.get`
+
+    ``builder``
+        dictionary of type :bb:rtype:`builder`
+
+    ``req1``
+        dictionary of type :bb:rtype:`buildrequest`
+
+    ``req2``
+        dictionary of type :bb:rtype:`buildrequest`
+
+.. warning::
+
+    The number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
+
 It should return true if the requests can be merged, and False otherwise.
 For example::
 
-    def collapseRequests(builder, req1, req2):
+    @defer.inlineCallbacks
+    def collapseRequests(master, builder, req1, req2):
         "any requests with the same branch can be merged"
-        return req1.source.branch == req2.source.branch
+
+        # get the buildsets for each buildrequest
+        selfBuildset , otherBuildset = yield defer.gatherResults([
+            master.data.get(('buildsets', req1['buildsetid'])),
+            master.data.get(('buildsets', req2['buildsetid']))
+            ])
+
+        if len(selfBuildset['sourcestamps']) != len(otherBuildset['sourcestamps']):
+            defer.returnValue(False)
+
+        for selfSourcestamp, i in enumerate(selfBuildset['sourcestamps']):
+            if selfSourcestamp['branch'] != otherBuildset['sourcestamps'][i]['branch']:
+                return False
+
+        return True
+
     c['collapseRequests'] = collapseRequests
 
-In many cases, the details of the :class:`SourceStamp`\s and :class:`BuildRequest`\s are important.
-In this example, only :class:`BuildRequest`\s with the same "reason" are merged; thus developers forcing builds for different reasons will see distinct builds.
-Note the use of the :func:`canBeMergedWith` method to access the source stamp compatibility algorithm.
-Note, in particular, that this function returns a Deferred as of Buildbot-0.9.0.
+In many cases, the details of the :bb:rtype:`sourcestamp` and :bb:rtype:`buildrequest` are important.
+
+In the following example, only :bb:rtype:`buildrequest` with the same "reason" are merged; thus developers forcing builds for different reasons will see distinct builds.
+
+Note the use of the :py:meth:`buildrequest.BuildRequest.canBeCollapsed` method to access the source stamp compatibility algorithm.
 
 ::
 
     @defer.inlineCallbacks
-    def collapseRequests(builder, req1, req2):
-        if (yield req1.source.canBeMergedWith(req2.source)) and req1.reason == req2.reason:
+    def collapseRequests(master, builder, req1, req2):
+        canBeCollapsed = yield buildrequest.BuildRequest.canBeCollapsed(master, req1, req2)
+        if canBeCollapsed and req1.reason == req2.reason:
            defer.returnValue(True)
         else:
            defer.returnValue(False)
     c['collapseRequests'] = collapseRequests
 
+Another common example is to prevent collapsing of requests coming from a :bb:step:`Trigger` step.
+:bb:step:`Trigger` step can indeed be used in order to implement parallel testing of the same source.
+
+Buildrequests will all have the same sourcestamp, but probably different properties, and shall not be collapsed.
+
+.. note::
+
+    In most of the cases, just setting collapseRequests=False for triggered builders will do the trick.
+
+In other cases, ``parent_buildid`` from buildset can be used::
+
+    @defer.inlineCallbacks
+    def collapseRequests(master, builder, req1, req2):
+        canBeCollapsed = yield buildrequest.BuildRequest.canBeCollapsed(master, req1, req2)
+        selfBuildset , otherBuildset = yield defer.gatherResults([
+            master.data.get(('buildsets', req1['buildsetid'])),
+            master.data.get(('buildsets', req2['buildsetid']))
+        ])
+        if canBeCollapsed and selfBuildset['parent_buildid'] != None and otherBuildset['parent_buildid'] != None:
+           defer.returnValue(True)
+        else:
+           defer.returnValue(False)
+    c['collapseRequests'] = collapseRequests
+
+
 If it's necessary to perform some extended operation to determine whether two requests can be merged, then the ``collapseRequests`` callable may return its result via Deferred.
-Note, however, that the number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
+
+.. warning::
+
+    Again, the number of invocations of the callable is proportional to the square of the request queue length, so a long-running callable may cause undesirable delays when the queue length grows.
+
 For example::
 
-    def collapseRequests(builder, req1, req2):
-        d = defer.gatherResults([
-            getMergeInfo(req1.source.revision),
-            getMergeInfo(req2.source.revision),
+    @defer.inlineCallbacks
+    def collapseRequests(master, builder, req1, req2):
+        info1, info2 = yield defer.gatherResults([
+            getMergeInfo(req1),
+            getMergeInfo(req2),
         ])
-        def process(info1, info2):
-            return info1 == info2
-        d.addCallback(process)
-        return d
+        defer.returnValue(info1 == info2)
+
     c['collapseRequests'] = collapseRequests
 
 .. _Builder-Priority-Functions:

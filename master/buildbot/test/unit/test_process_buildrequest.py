@@ -61,7 +61,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
 
     def test_collapseRequests_no_other_request(self):
 
-        def collapseRequests_fn(builder, brdict1, brdict2):
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
             # Allow all requests
             self.fail("Should never be called")
             return True
@@ -81,7 +81,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
 
     def test_collapseRequests_no_collapse(self):
 
-        def collapseRequests_fn(builder, brdict1, brdict2):
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
             # Fail all collapse attempts
             return False
 
@@ -112,7 +112,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
 
     def test_collapseRequests_collapse_all(self):
 
-        def collapseRequests_fn(builder, brdict1, brdict2):
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
             # collapse all attempts
             return True
 
@@ -143,7 +143,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
 
     def test_collapseRequests_collapse_default(self):
 
-        def collapseRequests_fn(builder, brdict1, brdict2):
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
             return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
 
         rows = [

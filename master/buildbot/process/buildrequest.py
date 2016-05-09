@@ -79,7 +79,7 @@ class BuildRequestCollapser(object):
                 if unclaim_br['buildrequestid'] == br['buildrequestid']:
                     continue
 
-                canCollapse = yield collapseRequestsFn(bldr, br, unclaim_br)
+                canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
                     collapseBRs.append(unclaim_br)
 
