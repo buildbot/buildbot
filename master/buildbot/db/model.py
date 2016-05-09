@@ -89,7 +89,7 @@ class Model(base.DBConnectorComponent):
     )
 
     # Each row in this table represents a claimed build request, where the
-    # claim is made by the object referenced by objectid.
+    # claim is made by the master referenced by masterid.
     buildrequest_claims = sautils.Table(
         'buildrequest_claims', metadata,
         sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
