@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import print_function
+
 import os
 import re
 import textwrap
@@ -68,8 +70,8 @@ class Repo(SourceBaseCommand):
         return os.path.join(self.builder.basedir, self.srcdir)
 
     def sourcedirIsUpdateable(self):
-        print os.path.join(self._fullSrcdir(), ".repo")
-        print os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
+        print(os.path.join(self._fullSrcdir(), ".repo"))
+        print(os.path.isdir(os.path.join(self._fullSrcdir(), ".repo")))
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
 
     def _repoCmd(self, command, cb=None, abandonOnFailure=True, **kwargs):
