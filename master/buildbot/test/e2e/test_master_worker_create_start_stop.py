@@ -21,18 +21,17 @@ import socket
 
 from fastjsonrpc.client import Proxy
 from fastjsonrpc.client import jsonrpc
-from txrequests import Session
-
-from buildbot.test.util import dirs
-from buildbot.test.util.decorators import skipUnlessInstalled
-from buildbot.test.util.decorators import skipUnlessPlatformIs
-
 from twisted.internet import reactor as global_reactor
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.internet import utils
 from twisted.python import log
 from twisted.trial import unittest
+from txrequests import Session
+
+from buildbot.test.util import dirs
+from buildbot.test.util.decorators import skipUnlessInstalled
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 try:
     from shutil import which
