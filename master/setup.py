@@ -451,6 +451,7 @@ else:
         'ramlfications',
         'mock',
         'shutilwhich',
+        'fastjsonrpc',
     ]
     if sys.platform != 'win32':
         test_deps += [
