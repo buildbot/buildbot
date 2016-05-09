@@ -61,3 +61,18 @@ def skipIfPythonVersionIsLess(min_version_info):
             test.skip = "requires Python >= {0}".format(min_version_info)
         return test
     return closure
+
+
+def skipUnlessInstalled(module_name, error_message=None):
+    if error_message is None:
+        error_message = (
+            "module '{0}' is not available, "
+            "install appropriate package").format(module_name)
+
+    def closure(test):
+        try:
+            __import__(module_name)
+        except ImportError:
+            test.skip = error_message
+        return test
+    return closure
