@@ -24,6 +24,7 @@ from fastjsonrpc.client import jsonrpc
 from txrequests import Session
 
 from buildbot.test.util import dirs
+from buildbot.test.util.decorators import skipUnlessInstalled
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 from twisted.internet import reactor as global_reactor
@@ -79,9 +80,11 @@ c = BuildmasterConfig = {}
 
 c['workers'] = [worker.Worker('example-worker', 'pass')]
 c['protocols'] = {'pb': {'port': 9989}}
-c['schedulers'] = [schedulers.ForceScheduler(
-                            name='force',
-                            builderNames=['runtests'])]
+c['schedulers'] = [
+    schedulers.ForceScheduler(
+        name='force',
+        builderNames=['runtests'])
+]
 
 factory = util.BuildFactory(
     [steps.ShellCommand(command=['echo', "Test echo"])])
@@ -92,9 +95,48 @@ c['builders'] = [
 ]
 
 c['buildbotURL'] = 'http://localhost:8010/'
-
 c['www'] = dict(port=8010, plugins={})
+c['db'] = {
+    'db_url' : 'sqlite:///state.sqlite',
+}
+"""
 
+WORKER_SLAVE_TEST_CONFIG = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['workers'] = [
+    # worker.Worker and buildslave.BuildSlave are synonims, there is no actual
+    # need to use worker.Worker for buildbot-worker instances and
+    # buildslave.BuildSlave for deprecated buildslave instances.
+    worker.Worker('example-worker', 'pass'),
+    buildslave.BuildSlave('example-slave', 'pass'),
+]
+c['protocols'] = {'pb': {'port': 9989}}
+c['schedulers'] = [
+    schedulers.ForceScheduler(
+        name='worker-force',
+        builderNames=['worker-builder']),
+    schedulers.ForceScheduler(
+        name='slave-force',
+        builderNames=['slave-builder']),
+]
+
+worker_factory = util.BuildFactory(
+    [steps.ShellCommand(command=['echo', "Test worker"])])
+slave_factory = util.BuildFactory(
+    [steps.ShellCommand(command=['echo', "Test slave"])])
+
+c['builders'] = [
+    util.BuilderConfig(name='worker-builder', workernames=['example-worker'],
+        factory=worker_factory),
+    util.BuilderConfig(name='slave-builder', workernames=['example-slave'],
+        factory=slave_factory),
+]
+
+c['buildbotURL'] = 'http://localhost:8010/'
+c['www'] = dict(port=8010, plugins={})
 c['db'] = {
     'db_url' : 'sqlite:///state.sqlite',
 }
@@ -129,11 +171,6 @@ def wait_for_completion(is_completed_pred,
 @skipUnlessPlatformIs('posix')
 class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
-    try:
-        import buildbot_worker  # noqa pylint: disable=unused-import
-    except ImportError:
-        skip = "buildbot-worker package is not installed"
-
     @defer.inlineCallbacks
     def setUp(self):
         self._origcwd = os.getcwd()
@@ -151,6 +188,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         # master/worker).
         self.master_dir = None
         self.workers_dirs = []
+        self.slaves_dirs = []
 
         self.logs = []
         self.success = False
@@ -185,10 +223,19 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def _force_stop(self):
         """Force stop running master/workers"""
+
         for worker_dir in self.workers_dirs:
             try:
                 yield self._run_command(
                     ['buildbot-worker', 'stop', worker_dir])
+            except Exception:
+                # Ignore errors.
+                pass
+
+        for slave_dir in self.slaves_dirs:
+            try:
+                yield self._run_command(
+                    ['buildslave', 'stop', slave_dir])
             except Exception:
                 # Ignore errors.
                 pass
@@ -239,13 +286,22 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.assertIn("buildmaster configured in", stdout)
 
     @defer.inlineCallbacks
-    def _buildbot_worker_create_worker(self, worker_dir):
+    def _buildbot_worker_create_worker(self, worker_dir, name, password):
         self.workers_dirs.append(worker_dir)
         master_addr = 'localhost:{port}'.format(port=self.master_port)
         stdout, _ = yield self._run_command([
             'buildbot-worker', 'create-worker', worker_dir, master_addr,
-            'example-worker', 'pass'])
+            name, password])
         self.assertIn("worker configured in", stdout)
+
+    @defer.inlineCallbacks
+    def _buildslave_create_slave(self, slave_dir, name, password):
+        self.slaves_dirs.append(slave_dir)
+        master_addr = 'localhost:{port}'.format(port=self.master_port)
+        stdout, _ = yield self._run_command([
+            'buildslave', 'create-slave', slave_dir, master_addr,
+            name, password])
+        self.assertIn("buildslave configured in", stdout)
 
     @defer.inlineCallbacks
     def _buildbot_start(self, master_dir):
@@ -261,7 +317,6 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def _buildbot_worker_start(self, worker_dir):
-        # Start worker.
         stdout, _ = yield self._run_command([
             'buildbot-worker', 'start', worker_dir])
 
@@ -274,6 +329,21 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         stdout, _ = yield self._run_command(
             ['buildbot-worker', 'stop', worker_dir])
         self.assertRegexpMatches(stdout, r"worker process \d+ is dead")
+
+    @defer.inlineCallbacks
+    def _buildslave_start(self, slave_dir):
+        stdout, _ = yield self._run_command([
+            'buildslave', 'start', slave_dir])
+
+        self.assertIn(
+            "The buildslave appears to have (re)started correctly",
+            stdout)
+
+    @defer.inlineCallbacks
+    def _buildslave_stop(self, slave_dir):
+        stdout, _ = yield self._run_command(
+            ['buildslave', 'stop', slave_dir])
+        self.assertRegexpMatches(stdout, r"buildslave process \d+ is dead")
 
     @defer.inlineCallbacks
     def _get(self, endpoint):
@@ -295,7 +365,20 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         proxy = Proxy(uri, version=jsonrpc.VERSION_2)
         return proxy.callRemote(method, *args, **kwargs)
 
+    def _write_master_config(self, master_dir, master_cfg):
+        """Replaces default ports in config with currently used and
+        writes config to master's master.cfg"""
+
+        # Substitute ports to listen with currently used random ports.
+        master_cfg = master_cfg.replace('9989', str(self.master_port))
+        master_cfg = master_cfg.replace('8010', str(self.ui_port))
+
+        with open(os.path.join(master_dir, 'master.cfg'), 'wt') as f:
+            f.write(master_cfg)
+
     @defer.inlineCallbacks
+    @skipUnlessInstalled('buildbot_worker',
+                         "buildbot-worker package is not installed")
     def test_master_worker_setup(self):
         """Create master and worker (with default pyflakes configuration),
         start them, stop them.
@@ -313,33 +396,64 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         # Disable www plugins (they are not installed on Travis).
         master_cfg = re.sub(r"plugins=dict\([^)]+\)", "plugins={}", master_cfg)
 
-        # Substitute ports to listen.
-        master_cfg = master_cfg.replace('9989', str(self.master_port))
-        master_cfg = master_cfg.replace('8010', str(self.ui_port))
-
-        with open(os.path.join(master_dir, 'master.cfg'), 'wt') as f:
-            f.write(master_cfg)
+        self._write_master_config(master_dir, master_cfg)
 
         # Create worker.
         worker_dir = 'worker-dir'
-        yield self._buildbot_worker_create_worker(worker_dir)
+        yield self._buildbot_worker_create_worker(
+            worker_dir, 'example-worker', 'pass')
 
-        # Start master.
+        # Start.
         yield self._buildbot_start(master_dir)
-
-        # Start worker.
         yield self._buildbot_worker_start(worker_dir)
 
-        # Stop worker.
+        # Stop
         yield self._buildbot_worker_stop(worker_dir)
-
-        # Stop master.
         yield self._buildbot_stop(master_dir)
 
         self.success = True
 
     @defer.inlineCallbacks
-    def test_shell_command(self):
+    @skipUnlessInstalled('buildslave.bot',
+                         "buildslave package is not installed")
+    def test_master_slave_setup(self):
+        """Create master and slave (with default pyflakes configuration),
+        start them, stop them.
+        """
+
+        # Create master.
+        master_dir = 'master-dir'
+        yield self._buildbot_create_master(master_dir)
+
+        # Create master.cfg based on sample file.
+        sample_config = os.path.join(master_dir, 'master.cfg.sample')
+        with open(sample_config, 'rt') as f:
+            master_cfg = f.read()
+
+        # Disable www plugins (they are not installed on Travis).
+        master_cfg = re.sub(r"plugins=dict\([^)]+\)", "plugins={}", master_cfg)
+
+        self._write_master_config(master_dir, master_cfg)
+
+        # Create slave.
+        slave_dir = 'slave-dir'
+        yield self._buildslave_create_slave(
+            slave_dir, 'example-worker', 'pass')
+
+        # Start.
+        yield self._buildbot_start(master_dir)
+        yield self._buildslave_start(slave_dir)
+
+        # Stop
+        yield self._buildslave_stop(slave_dir)
+        yield self._buildbot_stop(master_dir)
+
+        self.success = True
+
+    @defer.inlineCallbacks
+    @skipUnlessInstalled('buildbot_worker',
+                         "buildbot-worker package is not installed")
+    def test_shell_command_on_worker(self):
         """Run simple ShellCommand on worker."""
 
         # Create master.
@@ -348,17 +462,12 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         # Write master configuration.
         master_cfg = SHELL_COMMAND_TEST_CONFIG
-
-        # Substitute ports to listen.
-        master_cfg = master_cfg.replace('9989', str(self.master_port))
-        master_cfg = master_cfg.replace('8010', str(self.ui_port))
-
-        with open(os.path.join(master_dir, 'master.cfg'), 'wt') as f:
-            f.write(master_cfg)
+        self._write_master_config(master_dir, master_cfg)
 
         # Create worker.
         worker_dir = 'worker-dir'
-        yield self._buildbot_worker_create_worker(worker_dir)
+        yield self._buildbot_worker_create_worker(
+            worker_dir, 'example-worker', 'pass')
 
         # Start master/worker.
         yield self._buildbot_start(master_dir)
@@ -401,6 +510,178 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         # Stop master/worker.
         yield self._buildbot_worker_stop(worker_dir)
+        yield self._buildbot_stop(master_dir)
+
+        self.success = True
+
+    @defer.inlineCallbacks
+    @skipUnlessInstalled('buildslave.bot',
+                         "buildslave package is not installed")
+    def test_shell_command_on_slave(self):
+        """Run simple ShellCommand on worker."""
+
+        # Create master.
+        master_dir = 'master-dir'
+        yield self._buildbot_create_master(master_dir)
+
+        # Write master configuration.
+        master_cfg = SHELL_COMMAND_TEST_CONFIG
+        self._write_master_config(master_dir, master_cfg)
+
+        # Create worker.
+        worker_dir = 'worker-dir'
+        yield self._buildslave_create_slave(
+            worker_dir, 'example-worker', 'pass')
+
+        # Start master/worker.
+        yield self._buildbot_start(master_dir)
+        yield self._buildslave_start(worker_dir)
+
+        # Get builder ID.
+        # TODO: maybe add endpoint to get builder by name?
+        builders = yield self._get('builders')
+        self.assertEqual(len(builders['builders']), 1)
+        builder_id = builders['builders'][0]['builderid']
+
+        # Start force build.
+        # TODO: return result is not documented in RAML.
+        buildset_id, buildrequests_ids = yield self._call_rpc(
+            'forceschedulers/force', 'force', builderid=builder_id)
+
+        @defer.inlineCallbacks
+        def is_completed():
+            # Query buildset completion status.
+            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
+            defer.returnValue(buildsets['buildsets'][0]['complete'])
+
+        yield wait_for_completion(is_completed)
+
+        # TODO: Looks like there is no easy way to get build identifier that
+        # corresponds to buildrequest/buildset.
+        buildnumber = 1
+
+        # Get completed build info.
+        builds = yield self._get(
+            'builders/{builderid}/builds/{buildnumber}'.format(
+                builderid=builder_id, buildnumber=buildnumber))
+
+        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
+
+        log_row = yield self._get_raw(
+            'builders/{builderid}/builds/{buildnumber}/steps/0/logs/stdio/raw'.format(
+                builderid=builder_id, buildnumber=buildnumber))
+        self.assertIn("echo 'Test echo'", log_row)
+
+        # Stop master/worker.
+        yield self._buildslave_stop(worker_dir)
+        yield self._buildbot_stop(master_dir)
+
+        self.success = True
+
+    @defer.inlineCallbacks
+    @skipUnlessInstalled('buildbot_worker',
+                         "buildbot-worker package is not installed")
+    @skipUnlessInstalled('buildslave.bot',
+                         "buildslave package is not installed")
+    def test_shell_command_on_worker_and_slave(self):
+        """Test simultaneous work of old and new workers."""
+
+        # Create master.
+        master_dir = 'master-dir'
+        yield self._buildbot_create_master(master_dir)
+
+        # Write master configuration.
+        master_cfg = WORKER_SLAVE_TEST_CONFIG
+        self._write_master_config(master_dir, master_cfg)
+
+        # Create worker.
+        worker_dir = 'worker-dir'
+        yield self._buildbot_worker_create_worker(
+            worker_dir, 'example-worker', 'pass')
+
+        # Create slave.
+        slave_dir = 'slave-dir'
+        yield self._buildslave_create_slave(
+            slave_dir, 'example-slave', 'pass')
+
+        # Start master/worker.
+        yield self._buildbot_start(master_dir)
+        yield self._buildbot_worker_start(worker_dir)
+        yield self._buildslave_start(slave_dir)
+
+        # Get builder ID.
+        # TODO: maybe add endpoint to get builder by name?
+        builders = yield self._get('builders')
+        self.assertEqual(len(builders['builders']), 2)
+
+        if builders['builders'][0]['name'] == 'worker-builder':
+            worker_idx = 0
+        else:
+            worker_idx = 1
+
+        worker_builder_id = builders['builders'][worker_idx]['builderid']
+        slave_builder_id = builders['builders'][1 - worker_idx]['builderid']
+
+        # Start worker force build.
+        worker_buildset_id, worker_buildrequests_ids = yield self._call_rpc(
+            'forceschedulers/worker-force', 'force',
+            builderid=worker_builder_id)
+
+        # Start slave force build.
+        slave_buildset_id, slave_buildrequests_ids = yield self._call_rpc(
+            'forceschedulers/slave-force', 'force',
+            builderid=slave_builder_id)
+
+        @defer.inlineCallbacks
+        def is_builds_completed():
+            # Query buildset completion status.
+            worker_buildsets = yield self._get(
+                'buildsets/{0}'.format(worker_buildset_id))
+            slave_buildsets = yield self._get(
+                'buildsets/{0}'.format(slave_buildset_id))
+
+            worker_complete = worker_buildsets['buildsets'][0]['complete']
+            slave_complete = slave_buildsets['buildsets'][0]['complete']
+
+            defer.returnValue(worker_complete and slave_complete)
+
+        yield wait_for_completion(is_builds_completed)
+
+        # TODO: Looks like there is no easy way to get build identifier that
+        # corresponds to buildrequest/buildset.
+        buildnumber = 1
+
+        # Get worker completed build info.
+        worker_builds = yield self._get(
+            'builders/{builderid}/builds/{buildnumber}'.format(
+                builderid=worker_builder_id, buildnumber=buildnumber))
+
+        self.assertEqual(
+            worker_builds['builds'][0]['state_string'], 'finished')
+
+        log_row = yield self._get_raw(
+            'builders/{builderid}/builds/{buildnumber}/'
+            'steps/0/logs/stdio/raw'.format(
+                builderid=worker_builder_id, buildnumber=buildnumber))
+        self.assertIn("echo 'Test worker'", log_row)
+
+        # Get slave completed build info.
+        slave_builds = yield self._get(
+            'builders/{builderid}/builds/{buildnumber}'.format(
+                builderid=slave_builder_id, buildnumber=buildnumber))
+
+        self.assertEqual(
+            slave_builds['builds'][0]['state_string'], 'finished')
+
+        log_row = yield self._get_raw(
+            'builders/{builderid}/builds/{buildnumber}/'
+            'steps/0/logs/stdio/raw'.format(
+                builderid=slave_builder_id, buildnumber=buildnumber))
+        self.assertIn("echo 'Test slave'", log_row)
+
+        # Stop master/worker.
+        yield self._buildbot_worker_stop(worker_dir)
+        yield self._buildslave_stop(slave_dir)
         yield self._buildbot_stop(master_dir)
 
         self.success = True
