@@ -14,16 +14,19 @@
 # Copyright Buildbot Team Members
 from twisted.internet import defer
 from twisted.python import log
+from twisted.python.constants import NamedConstant
+from twisted.python.constants import Names
 
 from buildbot.worker_transition import WorkerAPICompatMixin
 
-(ATTACHING,  # worker attached, still checking hostinfo/etc
- IDLE,  # idle, available for use
- PINGING,  # build about to start, making sure it is still alive
- BUILDING,  # build is running
- LATENT,  # latent worker is not substantiated; similar to idle
- SUBSTANTIATING,
- ) = range(6)
+
+class States(Names):
+    ATTACHING = NamedConstant()  # worker attached, still checking hostinfo/etc
+    IDLE = NamedConstant()  # idle, available for use
+    PINGING = NamedConstant()  # build about to start, making sure it is still alive
+    BUILDING = NamedConstant()  # build is running
+    LATENT = NamedConstant()  # latent worker is not substantiated; similar to idle
+    SUBSTANTIATING = NamedConstant()
 
 
 class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
@@ -42,7 +45,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
             r.extend([" builder=", repr(self.builder_name)])
         if self.worker:
             r.extend([" worker=", repr(self.worker.workername)])
-        r.append(">")
+        r.extend([" state=", self.state.name, ">"])
         return ''.join(r)
 
     def setBuilder(self, b):
@@ -68,10 +71,10 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         return False
 
     def isBusy(self):
-        return self.state not in (IDLE, LATENT)
+        return self.state not in (States.IDLE, States.LATENT)
 
     def buildStarted(self):
-        self.state = BUILDING
+        self.state = States.BUILDING
         # AbstractWorker doesn't always have a buildStarted method
         # so only call it if it is available.
         try:
@@ -82,7 +85,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
             worker_buildStarted(self)
 
     def buildFinished(self):
-        self.state = IDLE
+        self.state = States.IDLE
         if self.worker:
             self.worker.buildFinished(self)
 
@@ -93,7 +96,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         @type  commands: dict: string -> string, or None
         @param commands: provides the worker's version of each RemoteCommand
         """
-        self.state = ATTACHING
+        self.state = States.ATTACHING
         self.remoteCommands = commands  # maps command name to version
         if self.worker is None:
             self.worker = worker
@@ -109,7 +112,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
 
         @d.addCallback
         def setIdle(res):
-            self.state = IDLE
+            self.state = States.IDLE
             return self
 
         return d
@@ -127,7 +130,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
                        event will be pushed.
         """
         oldstate = self.state
-        self.state = PINGING
+        self.state = States.PINGING
         newping = not self.ping_watchers
         d = defer.Deferred()
         self.ping_watchers.append(d)
@@ -143,7 +146,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
 
         @d.addCallback
         def reset_state(res):
-            if self.state == PINGING:
+            if self.state == States.PINGING:
                 self.state = oldstate
             return res
         return d
@@ -204,14 +207,14 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
     def __init__(self):
         AbstractWorkerForBuilder.__init__(self)
-        self.state = ATTACHING
+        self.state = States.ATTACHING
 
     def detached(self):
         AbstractWorkerForBuilder.detached(self)
         if self.worker:
             self.worker.removeWorkerForBuilder(self)
         self.worker = None
-        self.state = ATTACHING
+        self.state = States.ATTACHING
 
 
 class LatentWorkerForBuilder(AbstractWorkerForBuilder):
@@ -219,7 +222,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
     def __init__(self, worker, builder):
         AbstractWorkerForBuilder.__init__(self)
         self.worker = worker
-        self.state = LATENT
+        self.state = States.LATENT
         self.setBuilder(builder)
         self.worker.addWorkerForBuilder(self)
         log.msg("Latent worker %s attached to %s" % (worker.workername,
@@ -237,7 +240,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         def substantiation_cancelled(res):
             # if res is False, latent worker cancelled subtantiation
             if not res:
-                self.state = LATENT
+                self.state = States.LATENT
             return res
 
         @d.addErrback
@@ -248,7 +251,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         return d
 
     def substantiate(self, build):
-        self.state = SUBSTANTIATING
+        self.state = States.SUBSTANTIATING
         d = self.worker.substantiate(self, build)
         if not self.worker.substantiated:
             event = self.builder.builder_status.addEvent(
@@ -265,7 +268,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
                 return res
 
             def substantiation_failed(res):
-                self.state = LATENT
+                self.state = States.LATENT
                 event.text = ["substantiate", "failed"]
                 # TODO add log of traceback to event
                 event.finish()
@@ -275,11 +278,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
 
     def detached(self):
         AbstractWorkerForBuilder.detached(self)
-        self.state = LATENT
-
-    def _attachFailure(self, why, where):
-        self.state = LATENT
-        return AbstractWorkerForBuilder._attachFailure(self, why, where)
+        self.state = States.LATENT
 
     def ping(self, status=None):
         if not self.worker.substantiated:

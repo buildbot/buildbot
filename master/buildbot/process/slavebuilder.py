@@ -19,14 +19,6 @@
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder as _AbstractWorkerForBuilder
 from buildbot.process.workerforbuilder import LatentWorkerForBuilder as _LatentWorkerForBuilder
 from buildbot.process.workerforbuilder import WorkerForBuilder as _WorkerForBuilder
-# pylint: disable=unused-import
-from buildbot.process.workerforbuilder import ATTACHING  # noqa
-from buildbot.process.workerforbuilder import BUILDING  # noqa
-from buildbot.process.workerforbuilder import IDLE  # noqa
-from buildbot.process.workerforbuilder import LATENT  # noqa
-from buildbot.process.workerforbuilder import PINGING  # noqa
-from buildbot.process.workerforbuilder import SUBSTANTIATING  # noqa
-from buildbot.process.workerforbuilder import Ping  # noqa
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
