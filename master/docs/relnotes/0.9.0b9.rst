@@ -1,0 +1,106 @@
+Release Notes for Buildbot 0.9.0b9
+==================================
+
+The following are the release notes for Buildbot 0.9.0b9
+This version was released on May 10, 2016.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+Master
+------
+
+Features
+~~~~~~~~
+
+* new :bb:reporter:`GitLabStatusPush` to report builds results to GitLab.
+
+* ``buildbot stop`` now waits for complete buildmaster stop by default.
+
+* New ``--no-wait`` argument for ``buildbot stop`` which allows not to wait for complete master shutdown.
+
+* Builder page is now sorted by builder name
+
+* LogViewer page now supports ANSI color codes, and is displayed white on black.
+
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* Speed improvements for integration tests by use of SynchronousTestCase, and in-memory sqlite.
+
+
+* Buildbot now requires import to be sorted using `isort <https://readthedocs.org/projects/isort/>`_.
+  Please run ``make isort`` before creating a PR or use any available editor plugin in order to reorder your imports.
+
+Fixes
+~~~~~
+
+* OpenStackLatentWorker uses the novaclient API correctly now.
+
+* The :bb:step:`MsBuild4` and :bb:step:`MsBuild12` steps work again (:bug:`2878`).
+
+* Scheduler changes are now identified by serviceid instead of objectid (:bug:`3532`)
+
+* Make groups optional in LdapUserInfo (:bug:`3511`)
+
+* Buildbot nine do not write pickles anymore in the master directory
+
+* Fix build page to not display build urls, but rather directly the build-summary, which already contain the URL.
+
+* UI Automatically reconnect on disconnection from the websocket. (:bug:`3462`)
+
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The buildmaster now requires at least Twisted-14.0.1.
+
+* The web ui has upgrade its web components dependencies to `latest versions <https://github.com/buildbot/guanlecoja-ui/tree/master#changelog>`_.
+  This can impact web-ui plugin.
+
+* Web server does not provide /png and /redirect anymore (:bug:`3357`).
+  This functionality is used to implement build status images.
+  This should be easy to implement if you need it.
+  One could port the old image generation code, or implement a redirection to http://shields.io/.
+
+* Support of worker-side ``usePTY`` was removed from ``buildbot-worker``.
+  ``usePTY`` argument was removed from ``WorkerForBuilder`` and ``Worker`` classes.
+
+* html is no longer permitted in 'label' attributes of forcescheduler parameters.
+
+* ``LocalWorker`` now requires ``buildbot-worker`` package, instead of ``buildbot-slave``.
+
+* :ref:`Collapse-Request-Functions` now takes master as first argument.
+  The previous callable contained too few data in order to be really usable.
+  As collapseRequests has never been released outside of beta, backward compatibility with previous release has **not** been implemented.
+
+* This is the last version of buildbot nine which supports python 2.6 for the master.
+  Next version will drop python 2.6 support.
+
+Worker
+------
+
+Fixes
+~~~~~
+
+* ``buildbot-worker`` script now outputs message to terminal.
+
+* Windows helper script now called ``buildbot-worker.bat`` (was ``buildbot_worker.bat``, notice underscore), so that ``buildbot-worker`` command can be used in virtualenv both on Windows and POSIX systems.
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* ``SLAVEPASS`` environment variable is not removed in default-generated ``buildbot.tac``.
+  Environment variables are cleared in places where they are used (e.g. in Docker Latent Worker contrib scripts).
+
+* Master-part handling has been removed from ``buildbot-worker`` log watcher (:bug:`3482`).
+
+* ``WorkerDetectedError`` exception type has been removed.
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0b8..v0.9.0b9

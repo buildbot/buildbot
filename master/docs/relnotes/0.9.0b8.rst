@@ -529,28 +529,3 @@ For a more detailed description of the changes made in this version, see the git
 .. code-block:: bash
 
    git log v0.9.0b7..v0.9.0b8
-
-Older Versions
---------------
-
-Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
-Newer versions are also available here:
-
-.. toctree::
-    :maxdepth: 1
-
-    0.9.0b7
-    0.9.0b6
-    0.9.0b5
-    0.9.0b4
-    0.9.0b3
-    0.9.0b2
-    0.9.0b1
-    0.8.12
-    0.8.10
-    0.8.9
-    0.8.8
-    0.8.7
-    0.8.6
-
-Note that Buildbot-0.8.11 was never released.
