@@ -34,7 +34,7 @@ class  AuthenticateApiActionResource(ActionResource):
 
     def render(self, request):
         d = defer.maybeDeferred(lambda : self.performAction(request))
-        def redirect(token):
+        def send(token):
             response = '{%s}' % token if token else "{}"
             request.setHeader("content-type", "application/json")
             request.write(response)
@@ -42,7 +42,7 @@ class  AuthenticateApiActionResource(ActionResource):
                 request.finish()
             except RuntimeError:
                 log.msg("http client disconnected before results were sent")
-        d.addCallback(redirect)
+        d.addCallback(send)
 
         def fail(f):
             request.processingFailed(f)

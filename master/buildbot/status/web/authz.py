@@ -45,29 +45,38 @@ class ISessionHandler(Interface):
     def logoutSession(self, request, sessions):
         """Handle the user logout when using cookie or JWT token"""
 
-class BuildbotSession(object):
+class SessionHandler(object):
+
+    def getSession(self, request, sessions):
+        token = self.getToken(request)
+        session = sessions.get(token) if token else None
+        return session
+
+    def removeSessionToken(self, request, sessions):
+        token = self.getToken(request)
+        sessions.remove(token)
+
+class BuildbotSession(SessionHandler):
     implements(ISessionHandler)
 
     def __init__(self, key=None, useHttpHeader=False):
         self.key = key if key else SESSION_KEY
         self.useHttpHeader = useHttpHeader
 
-    def createSessionToken(self, userinfo, user, request, sessions):
-        cookie, s = sessions.new(user, userinfo)
-        request.addCookie(self.key, cookie, expires=s.getExpiration(),path="/")
+    def addCookie(self, cookie, request, session):
+        request.addCookie(self.key, cookie, expires=session.getExpiration(), path="/")
         request.received_cookies = {self.key: cookie}
+
+    def createSessionToken(self, userinfo, user, request, sessions):
+        cookie, session = sessions.new(user, userinfo)
+        self.addCookie(cookie, request, session)
         return cookie
 
-    def removeSessionToken(self, request, sessions):
+    def getToken(self, request):
+        cookie = None
         if self.key in request.received_cookies:
             cookie = request.received_cookies[self.key]
-            sessions.remove(cookie)
-
-    def getSession(self, request, sessions):
-        if self.key in request.received_cookies:
-            cookie = request.received_cookies[self.key]
-            return sessions.get(cookie)
-        return None
+        return cookie
 
     def validateSessionToken(self, request, sessions):
         if self.useHttpHeader:
@@ -81,7 +90,7 @@ class BuildbotSession(object):
             session.expire()
             request.addCookie(self.key, None, expires=session.getExpiration(), path="/")
 
-class JsonWebTokens(object):
+class JsonWebTokens(SessionHandler):
     implements(ISessionHandler)
 
     def __init__(self, key=None, algorithm='HS256'):
@@ -89,22 +98,24 @@ class JsonWebTokens(object):
         self.algorithm = algorithm
 
     def createSessionToken(self, userinfo, user, request, sessions):
-        pass
         token = jwt.encode(payload=userinfo, key=self.key, algorithm=self.algorithm)
-        sessions.addToken(user=user, userinfo=userinfo, token=token)
+        sessions.addToken(token=token, userinfo=userinfo)
         return token
 
-    def removeSessionToken(self, request, sessions):
-        pass
+    def getToken(self, request):
+        authh = request.getHeader(b"Authorization")
+        parts = authh.split() if authh else None
+
+        if not parts or parts[0].lower() != 'bearer' or len(parts) == 1 or len(parts) > 2:
+            return None
+
+        return parts[1]
 
     def validateSessionToken(self, request, sessions):
-        pass
-
-    def getSession(self, request, sessions):
-        pass
+        return self.getSession(request, sessions) is not None
 
     def logoutSession(self, request, sessions):
-        pass
+        self.removeSessionToken(request, sessions)
 
 class Authz(object):
     """Decide who can do what."""
@@ -283,7 +294,8 @@ class Authz(object):
     def login(self, request):
         """Login one user, and return session cookie"""
         if self.authenticated(request):
-            return defer.succeed(False)
+            token = self.sessionHandler.getToken(request=request)
+            return defer.succeed(token)
 
         user = request.args.get("username", ["<unknown>"])[0]
         passwd = request.args.get("passwd", ["<no-password>"])[0]

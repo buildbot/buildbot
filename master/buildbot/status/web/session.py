@@ -107,9 +107,9 @@ class SessionManager(object):
         cookie = generate_cookie()
         return cookie, self.addToken(cookie, infos)
 
-    def addToken(self, token, infos):
-        user = infos["userName"]
-        self.users[user] = self.sessions[token] = s = Session(user, infos)
+    def addToken(self, token, userinfo):
+        user = userinfo["userName"]
+        self.users[user] = self.sessions[token] = s = Session(user, userinfo)
         self.saveYourself()
         return s
 
