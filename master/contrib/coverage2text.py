@@ -2,10 +2,11 @@
 
 import sys
 
+from twisted.python import usage
+
 from coverage import coverage
 from coverage.results import Numbers
 from coverage.summary import SummaryReporter
-from twisted.python import usage
 
 
 # this is an adaptation of the code behind "coverage report", modified to

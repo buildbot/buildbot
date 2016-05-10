@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 
 import __builtin__
-import io
 import errno
-import mock
+import io
 import os
 import shutil
 import sys
+
+import mock
 
 from buildslave.scripts import base
 
