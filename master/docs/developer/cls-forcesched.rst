@@ -4,6 +4,10 @@
 ForceScheduler
 --------------
 
+.. warning::
+
+   This section contains information that is partially obsolete, see :bug:`3477`.
+
 The force scheduler has a symbiotic relationship with the web status, so it deserves some further description.
 
 Parameters
@@ -69,7 +73,7 @@ This section contains information to help users or developers who are interested
 
            A list of types that the parameter conforms to.
            These are used by the jinja template to create appropriate html form widget.
-           The available values are visible in :src:`master/buildbot/status/web/template/forms.html` in the ``force_build_one_scheduler`` macro.
+           The available values are visible in ``master/buildbot/status/web/template/forms.html`` in the ``force_build_one_scheduler`` macro.
 
     .. py:attribute:: default
 
