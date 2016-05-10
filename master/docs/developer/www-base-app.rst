@@ -151,7 +151,6 @@ Prerequisites
 .. note::
 
   Buildbot UI is only tested to build on node 4.x.x.
-  There are known issues with node 5.x.x and especially npm 3.x.x. (:bug:`4496`).
 
 * Install LTS release of node.js.
 
