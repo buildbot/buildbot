@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import os
-import re
 
 import mock
 from twisted.trial import unittest
@@ -31,7 +30,7 @@ def _regexp_path(name, *names):
     return os.path.join(name, *names).replace("\\", "\\\\")
 
 
-class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
+class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     """
     Test buildslave.scripts.create_slave._makeBaseDir()
@@ -39,7 +38,7 @@ class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
         # capture stdout
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
         # patch os.mkdir() to do nothing
         self.mkdir = mock.Mock()
@@ -54,8 +53,8 @@ class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
         # call _makeBaseDir()
         create_slave._makeBaseDir("dummy", False)
 
-        # check that correct message was printed to the log
-        self.assertLogged("updating existing installation")
+        # check that correct message was printed to stdout
+        self.assertStdoutEqual("updating existing installation\n")
         # check that os.mkdir was not called
         self.assertFalse(self.mkdir.called,
                          "unexpected call to os.mkdir()")
@@ -87,8 +86,8 @@ class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
 
         # check that os.mkdir() was called with correct path
         self.mkdir.assert_called_once_with("dummy")
-        # check that correct message was printed to the log
-        self.assertLogged("mkdir dummy")
+        # check that correct message was printed to stdout
+        self.assertStdoutEqual("mkdir dummy\n")
 
     def testBasedirCreatedQuiet(self):
         """
@@ -121,7 +120,7 @@ class TestMakeBaseDir(misc.LoggingMixin, unittest.TestCase):
                                 create_slave._makeBaseDir, "dummy", False)
 
 
-class TestMakeBuildbotTac(misc.LoggingMixin,
+class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
                           misc.FileIOMixin,
                           unittest.TestCase):
 
@@ -131,7 +130,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
 
     def setUp(self):
         # capture stdout
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
         # patch os.chmod() to do nothing
         self.chmod = mock.Mock()
@@ -203,12 +202,12 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
         self.assertFalse(self.fileobj.write.called,
                          "unexpected write() call")
 
-        # check output to the log
+        # check output to stdout
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertLogged(
-                "buildbot.tac already exists and is correct")
+            self.assertStdoutEqual(
+                "buildbot.tac already exists and is correct\n")
 
     def testTacFileCorrect(self):
         """
@@ -245,12 +244,12 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
         self.fileobj.write.assert_called_once_with("new-tac-contents")
         self.chmod.assert_called_once_with(tac_file_path + ".new", 0o600)
 
-        # check output to the log
+        # check output to stdout
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertLogged("not touching existing buildbot.tac",
-                              "creating buildbot.tac.new instead")
+            self.assertStdoutEqual("not touching existing buildbot.tac\n"
+                                   "creating buildbot.tac.new instead\n")
 
     def testDiffTacFile(self):
         """
@@ -284,7 +283,7 @@ class TestMakeBuildbotTac(misc.LoggingMixin,
         self.chmod.assert_called_once_with(tac_file_path, 0o600)
 
 
-class TestMakeInfoFiles(misc.LoggingMixin,
+class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
                         misc.FileIOMixin,
                         unittest.TestCase):
 
@@ -294,7 +293,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
 
     def setUp(self):
         # capture stdout
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
     def checkMkdirError(self, quiet):
         """
@@ -316,12 +315,11 @@ class TestMakeInfoFiles(misc.LoggingMixin,
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
-        # check output to the log
+        # check output to stdout
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertLogged(
-                re.escape("mkdir %s" % os.path.join("bdir", "info")))
+            self.assertStdoutEqual("mkdir %s\n" % os.path.join("bdir", "info"))
 
     def testMkdirError(self):
         """
@@ -366,13 +364,13 @@ class TestMakeInfoFiles(misc.LoggingMixin,
                                 create_slave._makeInfoFiles,
                                 "bdir", quiet)
 
-        # check output to the log
+        # check output to stdout
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertLogged(
-                re.escape("Creating %s, you need to edit it appropriately." %
-                          os.path.join("info", "admin")))
+            self.assertStdoutEqual(
+                "Creating %s, you need to edit it appropriately.\n" %
+                os.path.join("info", "admin"))
 
     def testOpenError(self):
         """
@@ -430,21 +428,20 @@ class TestMakeInfoFiles(misc.LoggingMixin,
             [mock.call("Your Name Here <admin@youraddress.invalid>\n"),
              mock.call("Please put a description of this build host here\n")])
 
-        # check output to the log
+        # check output to stdout
         if quiet:
             self.assertWasQuiet()
         else:
-            self.assertLogged(
-                re.escape("mkdir %s" % info_path),
-                re.escape("Creating %s, you need to edit it appropriately." %
-                          os.path.join("info", "admin")),
-                re.escape("Creating %s, you need to edit it appropriately." %
-                          os.path.join("info", "host")),
-                re.escape("Not creating %s - add it if you wish" %
-                          os.path.join("info", "access_ur")),
-                re.escape("Please edit the files in %s appropriately." %
-                          info_path)
-            )
+            self.assertStdoutEqual(
+                "mkdir %s\n"
+                "Creating %s, you need to edit it appropriately.\n"
+                "Creating %s, you need to edit it appropriately.\n"
+                "Not creating %s - add it if you wish\n"
+                "Please edit the files in %s appropriately.\n" %
+                (info_path, os.path.join("info", "admin"),
+                 os.path.join("info", "host"),
+                 os.path.join("info", "access_uri"),
+                 info_path))
 
     def testCreatedSuccessfully(self):
         """
@@ -472,7 +469,7 @@ class TestMakeInfoFiles(misc.LoggingMixin,
         self.assertWasQuiet()
 
 
-class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
+class TestCreateSlave(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     """
     Test buildslave.scripts.create_slave.createSlave()
@@ -503,7 +500,7 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
         # capture stdout
-        self.setUpLogging()
+        self.setUpStdoutAssertions()
 
     def setUpMakeFunctions(self, exception=None):
         """
@@ -548,9 +545,9 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
         self.assertEquals(create_slave.createSlave(self.options), 1,
                           "unexpected exit code")
 
-        # check that correct error message was printed the the log
-        self.assertLogged("err-msg",
-                          "failed to configure buildslave in bdir")
+        # check that correct error message was printed on stdout
+        self.assertStdoutEqual("err-msg\n"
+                               "failed to configure buildslave in bdir\n")
 
     def testMinArgs(self):
         """
@@ -570,8 +567,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                                       expected_tac_contents,
                                       self.options["quiet"])
 
-        # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        # check that correct info message was printed
+        self.assertStdoutEqual("buildslave configured in bdir\n")
 
     def assertTACFileContents(self, options):
         """
@@ -724,8 +721,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                                       expected_tac_contents,
                                       self.options["quiet"])
 
-        # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        # check that correct info message was printed
+        self.assertStdoutEqual("buildslave configured in bdir\n")
 
     def testWithOpts(self):
         """
@@ -751,8 +748,8 @@ class TestCreateSlave(misc.LoggingMixin, unittest.TestCase):
                                       expected_tac_contents,
                                       options["quiet"])
 
-        # check that correct info message was printed to the log
-        self.assertLogged("buildslave configured in bdir")
+        # check that correct info message was printed
+        self.assertStdoutEqual("buildslave configured in bdir\n")
 
     def testQuiet(self):
         """

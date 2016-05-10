@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import log
+from __future__ import print_function
 
 from buildslave.scripts import base
 from buildslave.scripts import start
@@ -31,8 +31,8 @@ def restart(config):
         stop.stopSlave(basedir, quiet)
     except stop.SlaveNotRunning:
         if not quiet:
-            log.msg("no old buildslave process found to stop")
+            print("no old buildslave process found to stop")
     if not quiet:
-        log.msg("now restarting buildslave process..")
+        print("now restarting buildslave process..")
 
     return start.startSlave(basedir, quiet, config['nodaemon'])

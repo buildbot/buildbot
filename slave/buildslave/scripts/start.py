@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+
 import os
 import sys
 import time
-
-from twisted.python import log
 
 from buildslave.scripts import base
 
@@ -28,7 +27,7 @@ class Follower(object):
         from twisted.internet import reactor
         from buildslave.scripts.logwatcher import LogWatcher
         self.rc = 0
-        log.msg("Following twistd.log until startup finished..")
+        print("Following twistd.log until startup finished..")
         lw = LogWatcher("twistd.log")
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
@@ -37,7 +36,7 @@ class Follower(object):
 
     def _success(self, processtype):
         from twisted.internet import reactor
-        log.msg("The %s appears to have (re)started correctly." % processtype)
+        print("The %s appears to have (re)started correctly." % processtype)
         self.rc = 0
         reactor.stop()
 
@@ -46,13 +45,13 @@ class Follower(object):
         from buildslave.scripts.logwatcher import BuildmasterTimeoutError, \
             ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
         if why.check(BuildmasterTimeoutError):
-            log.msg("""
+            print("""
 The buildslave took more than 10 seconds to start, so we were unable to
 confirm that it started correctly. Please 'tail twistd.log' and look for a
 line that says 'configuration update complete' to verify correct startup.
 """)
         elif why.check(BuildslaveTimeoutError):
-            log.msg("""
+            print("""
 The buildslave took more than 10 seconds to start and/or connect to the
 buildslave, so we were unable to confirm that it started and connected
 correctly. Please 'tail twistd.log' and look for a line that says 'message
@@ -65,21 +64,21 @@ then your buildslave might be using the wrong botname or password. Please
 correct these problems and then restart the buildslave.
 """)
         elif why.check(ReconfigError):
-            log.msg("""
+            print("""
 The buildslave appears to have encountered an error in the master.cfg config
 file during startup. It is probably running with an empty configuration right
 now. Please inspect and fix master.cfg, then restart the buildslave.
 """)
         elif why.check(BuildSlaveDetectedError):
-            log.msg("""
+            print("""
 Buildslave is starting up, not following logfile.
 """)
         else:
-            log.msg("""
+            print("""
 Unable to confirm that the buildslave started correctly. You may need to
 stop it, fix the config file, and restart.
 """)
-            log.msg(why)
+            print(why)
         self.rc = 1
         reactor.stop()
 
