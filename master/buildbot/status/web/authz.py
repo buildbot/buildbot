@@ -18,6 +18,7 @@ from twisted.internet.defer import Deferred
 from buildbot.status.web.auth import IAuth
 from buildbot.status.web.session import SessionManager, get_session_manager
 from zope.interface import Interface, implements, Attribute
+import jwt
 
 SESSION_KEY="BuildBotSession"
 
@@ -89,6 +90,9 @@ class JsonWebTokens(object):
 
     def createSessionToken(self, userinfo, user, request, sessions):
         pass
+        token = jwt.encode(payload=userinfo, key=self.key, algorithm=self.algorithm)
+        sessions.addToken(user=user, userinfo=userinfo, token=token)
+        return token
 
     def removeSessionToken(self, request, sessions):
         pass

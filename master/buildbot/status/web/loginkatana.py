@@ -1,10 +1,7 @@
-from twisted.internet import defer
 from buildbot.status.web.auth import LogoutResource
 from buildbot.status.web.base import HtmlResource, ActionResource, \
-    path_to_login, path_to_authenticate, path_to_root, path_to_authfail
+    path_to_login, path_to_authenticate
 import urllib
-from twisted.python import log
-
 
 class LoginKatanaResource(HtmlResource):
     pageTitle = "Katana - Login"
@@ -28,28 +25,23 @@ class AuthenticateActionResource(ActionResource):
         return "?authorized=True&user=%s" % username
 
     def performAction(self, request):
-       authz = self.getAuthz(request)
-       d = authz.login(request)
-       status = request.site.buildbot_service.master.status
-       root = status.getBuildbotURL()
-
-       def on_login(res):
-           if res:
-
-               url = request.args.get('referer', None)
-
-               if "authfail" in url[0] or url is None:
-                   url = root
-               else:
-                   url = urllib.unquote(url[0])
-
-               return url
-           else:
-               referer = urllib.unquote(request.args.get("referer", [root])[0])
-               return path_to_login(request, referer, True)
-
-       d.addBoth(on_login)
-       return d
+        authz = self.getAuthz(request)
+        d = authz.login(request)
+        status = request.site.buildbot_service.master.status
+        root = status.getBuildbotURL()
+        def on_login(token):
+            if token:
+                url = request.args.get('referer', None)
+                if url is None or "authfail" in url[0]:
+                    url = root
+                else:
+                    url = urllib.unquote(url[0])
+                return url
+            else:
+                referer = urllib.unquote(request.args.get("referer", [root])[0])
+                return path_to_login(request, referer, True)
+        d.addBoth(on_login)
+        return d
 
 class LogoutKatanaResource(LogoutResource):
 
