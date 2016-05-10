@@ -42,6 +42,15 @@ Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+Buildslave
+----------
+
+Fixes
+~~~~~
+
+* ``buildslave`` script now outputs messages to the terminal.
+
+
 Worker
 ------
 
