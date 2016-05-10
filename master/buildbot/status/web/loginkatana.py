@@ -2,6 +2,10 @@ from buildbot.status.web.auth import LogoutResource
 from buildbot.status.web.base import HtmlResource, ActionResource, \
     path_to_login, path_to_authenticate
 import urllib
+from twisted.internet import defer
+from twisted.web import server
+from twisted.python import log
+
 
 class LoginKatanaResource(HtmlResource):
     pageTitle = "Katana - Login"
@@ -18,6 +22,33 @@ class LoginKatanaResource(HtmlResource):
     def getChild(self, path, req):
         if path == "authenticate":
             return AuthenticateActionResource()
+        if path == "api":
+            return AuthenticateApiActionResource()
+
+class  AuthenticateApiActionResource(ActionResource):
+
+    @defer.inlineCallbacks
+    def performAction(self, request):
+        token = yield self.getAuthz(request).login(request)
+        defer.returnValue(token)
+
+    def render(self, request):
+        d = defer.maybeDeferred(lambda : self.performAction(request))
+        def redirect(token):
+            response = '{%s}' % token if token else "{}"
+            request.setHeader("content-type", "application/json")
+            request.write(response)
+            try:
+                request.finish()
+            except RuntimeError:
+                log.msg("http client disconnected before results were sent")
+        d.addCallback(redirect)
+
+        def fail(f):
+            request.processingFailed(f)
+            return None
+        d.addErrback(fail)
+        return server.NOT_DONE_YET
 
 class AuthenticateActionResource(ActionResource):
 
