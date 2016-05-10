@@ -1,6 +1,5 @@
 from twisted.internet import defer
 from buildbot.status.web.auth import LogoutResource
-from buildbot.status.web.authz import COOKIE_KEY
 from buildbot.status.web.base import HtmlResource, ActionResource, \
     path_to_login, path_to_authenticate, path_to_root, path_to_authfail
 import urllib
@@ -55,9 +54,5 @@ class AuthenticateActionResource(ActionResource):
 class LogoutKatanaResource(LogoutResource):
 
     def performAction(self, request):
-        authz = self.getAuthz(request)
-        s = authz.session(request)
-        if s is not None:
-            s.expire()
-            request.addCookie(COOKIE_KEY, None, expires=s.getExpiration(), path="/")
+        self.getAuthz(request).logoutUser(request)
         return LogoutResource.performAction(self, request)
