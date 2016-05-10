@@ -152,6 +152,8 @@ linkcheck_ignore = [
     r'^https://docs\.docker\.com/engine/installation/$',
     # Looks like server doesn't like user agent:
     r'^https://www\.microsoft\.com/en-us/download/details\.aspx\?id=17657$',
+    # Example domain.
+    r'^https?://(.+\.)?example\.org',
 ]
 linkcheck_timeout = 10
 linkcheck_retries = 3
