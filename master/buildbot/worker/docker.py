@@ -185,8 +185,7 @@ class DockerLatentWorker(AbstractLatentWorker):
             name='%s_%s' % (self.workername, id(self)),
             volumes=self.volumes,
             environment=self.createEnvironment(),
-            host_config=host_conf,
-            networking_config=self.networking_config
+            host_config=host_conf
         )
 
         if instance.get('Id') is None:
@@ -198,7 +197,7 @@ class DockerLatentWorker(AbstractLatentWorker):
         log.msg('Container created, Id: %s...' % (shortid,))
         instance['image'] = image
         self.instance = instance
-        docker_client.start(instance)
+        docker_client.start(instance, network_mode=self.networking_config)
         log.msg('Container started')
         if self.followStartupLogs:
             logs = docker_client.attach(
