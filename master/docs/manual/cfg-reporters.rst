@@ -899,3 +899,41 @@ It uses private token auth, and the token owner is required to have at least rep
     :param string baseURL: the base url of the GitLab host, up to and optionally including the first `/` of the path. Do not include /api/
     :param string verbose: Be more verbose
 
+SyslogStatusPush
+~~~~~~~~~~~~~~~~
+
+.. @cindex SyslogStatusPush
+.. py:class:: buildbot.reporters.syslogreporter.SyslogStatusPush
+
+::
+
+    from buildbot.plugins import reporters
+    import syslog
+
+    sr = reporters.SyslogStatusPush(tags="master", wantLogs=False,
+                                    identifier="qa-buildbot",
+                                    failureSeverity=syslog.LOG_EMERG)
+    c['services'].append(sr)
+
+:class:`SyslogStatusPush` publishes build status and optionally logs using
+python's `syslog` module in json format.
+
+Useful for ingesting data/metadata related to a build or buildset into a log
+aggregation service.
+
+You can filter using lists of tags or builders. If neither is defined it 
+defaults to all builds.
+
+.. py:class:: SyslogStatusPush(tags=None, builders=None, wantLogs=True, buildSetSummary=False, indentifier="buildbot", cancelledSeverity=syslog.LOG_INFO, exceptionSeverity=syslog.LOG_INFO, failureSeverity=syslog.LOG_INFO, successSeverity=syslog.LOG_INFO, warningsSeverity=syslog.LOG_INFO)
+
+    :param list tags: List of strings of tags you want to filter on. Can't be used with builders.
+    :param list builders: List of strings of builders you want to filter on. Can't be used with tags.
+    :param bool wantLogs: Flag on whether or not you want to include logs in your message.
+    :param bool buildSetSummary: Flag on whether or not you want to filter on buildset summaries.
+    :param string identifier: syslog identifier prepended to the message.
+    :param enum cancelledSeverity: A syslog severity for the build/buildset results.
+    :param enum exceptionSeverity: Same as above.
+    :param enum failureSeverity: Same as above.
+    :param enum successSeverity: Same as above.
+    :param enum warningsSeverity: Same as above.
+
