@@ -48,6 +48,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.clock_patch.start()
 
         self.setUpScheduler()
+        # Patch reactor for sched._updateWaiters debounce
+        self.master.reactor = self.clock
         self.subscription = None
 
     def tearDown(self):
@@ -61,7 +63,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             triggerable.Triggerable(name='n', builderNames=['b'], **kwargs),
             self.OBJECTID, self.SCHEDULERID,
             overrideBuildsetMethods=overrideBuildsetMethods)
-        sched._updateWaiters._reactor = self.clock
 
         return sched
 

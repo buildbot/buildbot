@@ -404,6 +404,7 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
 .. py:function:: method(wait)
 
     :param wait: time to wait before invoking, in seconds
+    :param get_reactor: A callable that takes the underlying instance and returns the reactor to use. Defaults to ``instance.master.reactor``.
 
     Returns a decorator that debounces the underlying method.
     The underlying method must take no arguments (except ``self``).

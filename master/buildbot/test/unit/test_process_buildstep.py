@@ -345,9 +345,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.patch(NewStyleStep, 'getResultSummary',
                    lambda self: defer.succeed({'step': u'CS', 'build': u'CB'}))
         step = NewStyleStep()
-        step.updateSummary._reactor = self.clock
         step.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True)
+        step.master.reactor = self.clock
         step.stepid = 13
         step.step_status = mock.Mock()
         return step

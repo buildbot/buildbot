@@ -170,6 +170,10 @@ class BuildStepMixin(object):
         self.master = fakemaster.make_master(wantData=wantData, wantDb=wantDb,
                                              wantMq=wantMq, testcase=self)
 
+        # mock out the reactor for updateSummary's debouncing
+        self.debounceClock = task.Clock()
+        self.master.reactor = self.debounceClock
+
         # set defaults
         if wantDefaultWorkdir:
             step.workdir = step._workdir or 'wkdir'
@@ -246,10 +250,6 @@ class BuildStepMixin(object):
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
-
-        # mock out the reactor for updateSummary's debouncing
-        self.debounceClock = task.Clock()
-        step.updateSummary._reactor = self.debounceClock
 
         return step
 
