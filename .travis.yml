@@ -57,7 +57,7 @@ env:
   # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
   # Configuration to run tests without installed buildbot-slave.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker_only
 
 cache:
   directories:
@@ -76,9 +76,9 @@ cache:
 matrix:
   include:
     - python: "2.6"
-      env: TWISTED=14.0.2 TESTS=worker-slave
+      env: TWISTED=14.0.2 TESTS=trial_worker
     - python: "2.6"
-      env: TWISTED=15.4.0 TESTS=worker-slave
+      env: TWISTED=15.4.0 TESTS=trial_worker
     # python 3 tests
 #    - python: "3.4"
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
@@ -109,11 +109,11 @@ install:
                   pg8000 \
 
   - |
-      [ $TESTS != worker-slave] || \
+      [ $TESTS != trial_worker] || \
       pip install -e slave \
                   -e worker \
 
-  - "[ $TESTS != trial_worker ] || pip install -e pkg -e master[tls,test] -e worker"
+  - "[ $TESTS != trial_worker_only ] || pip install -e pkg -e master[tls,test] -e worker"
 
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
@@ -156,7 +156,7 @@ script:
   - "[ $TESTS != js ] || make frontend_install_tests"
   # run tests under coverage for latest only (it's slower..)
   - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
-  - "[ $TESTS != worker-slave ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
   - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
 
   # run tests that are know to work on py3
@@ -175,7 +175,7 @@ script:
   - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
 
-  - "[ $TESTS != trial_worker ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "[ $TESTS != trial_worker_only ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
   - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
