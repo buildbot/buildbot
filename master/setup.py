@@ -465,7 +465,7 @@ else:
         ] + test_deps,
         'bundle': [
             "buildbot-www=={0}".format(bundle_version),
-            "buildbot-slave=={0}".format(bundle_version),
+            "buildbot-worker=={0}".format(bundle_version),
             "buildbot-waterfall-view=={0}".format(bundle_version),
             "buildbot-console-view=={0}".format(bundle_version),
         ],
