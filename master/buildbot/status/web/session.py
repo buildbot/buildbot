@@ -105,10 +105,13 @@ class SessionManager(object):
         
     def new(self, user, infos):
         cookie = generate_cookie()
-        user = infos["userName"]
-        self.users[user] = self.sessions[cookie] = s = Session(user, infos)
+        return cookie, self.addToken(cookie, infos)
+
+    def addToken(self, token, userinfo):
+        user = userinfo["userName"]
+        self.users[user] = self.sessions[token] = s = Session(user, userinfo)
         self.saveYourself()
-        return cookie, s
+        return s
 
     def gc(self):
         """remove old cookies"""

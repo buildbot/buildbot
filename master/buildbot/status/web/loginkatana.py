@@ -1,9 +1,9 @@
-from twisted.internet import defer
 from buildbot.status.web.auth import LogoutResource
-from buildbot.status.web.authz import COOKIE_KEY
 from buildbot.status.web.base import HtmlResource, ActionResource, \
-    path_to_login, path_to_authenticate, path_to_root, path_to_authfail
+    path_to_login, path_to_authenticate
 import urllib
+from twisted.internet import defer
+from twisted.web import server
 from twisted.python import log
 
 
@@ -22,6 +22,33 @@ class LoginKatanaResource(HtmlResource):
     def getChild(self, path, req):
         if path == "authenticate":
             return AuthenticateActionResource()
+        if path == "api":
+            return AuthenticateApiActionResource()
+
+class  AuthenticateApiActionResource(ActionResource):
+
+    @defer.inlineCallbacks
+    def performAction(self, request):
+        token = yield self.getAuthz(request).login(request)
+        defer.returnValue(token)
+
+    def render(self, request):
+        d = defer.maybeDeferred(lambda : self.performAction(request))
+        def send(token):
+            response = '{%s}' % token if token else "{}"
+            request.setHeader("content-type", "application/json")
+            request.write(response)
+            try:
+                request.finish()
+            except RuntimeError:
+                log.msg("http client disconnected before results were sent")
+        d.addCallback(send)
+
+        def fail(f):
+            request.processingFailed(f)
+            return None
+        d.addErrback(fail)
+        return server.NOT_DONE_YET
 
 class AuthenticateActionResource(ActionResource):
 
@@ -29,35 +56,26 @@ class AuthenticateActionResource(ActionResource):
         return "?authorized=True&user=%s" % username
 
     def performAction(self, request):
-       authz = self.getAuthz(request)
-       d = authz.login(request)
-       status = request.site.buildbot_service.master.status
-       root = status.getBuildbotURL()
-
-       def on_login(res):
-           if res:
-
-               url = request.args.get('referer', None)
-
-               if "authfail" in url[0] or url is None:
-                   url = root
-               else:
-                   url = urllib.unquote(url[0])
-
-               return url
-           else:
-               referer = urllib.unquote(request.args.get("referer", [root])[0])
-               return path_to_login(request, referer, True)
-
-       d.addBoth(on_login)
-       return d
+        authz = self.getAuthz(request)
+        d = authz.login(request)
+        status = request.site.buildbot_service.master.status
+        root = status.getBuildbotURL()
+        def on_login(token):
+            if token:
+                url = request.args.get('referer', None)
+                if url is None or "authfail" in url[0]:
+                    url = root
+                else:
+                    url = urllib.unquote(url[0])
+                return url
+            else:
+                referer = urllib.unquote(request.args.get("referer", [root])[0])
+                return path_to_login(request, referer, True)
+        d.addBoth(on_login)
+        return d
 
 class LogoutKatanaResource(LogoutResource):
 
     def performAction(self, request):
-        authz = self.getAuthz(request)
-        s = authz.session(request)
-        if s is not None:
-            s.expire()
-            request.addCookie(COOKIE_KEY, None, expires=s.getExpiration(), path="/")
+        self.getAuthz(request).logoutUser(request)
         return LogoutResource.performAction(self, request)
