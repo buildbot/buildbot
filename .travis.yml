@@ -87,6 +87,7 @@ matrix:
 
 # Dependencies installation commands
 install:
+  - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
   - "echo 'travis_fold:start:codecov'; pip install codecov; echo 'travis_fold:end:codecov'"
   - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
