@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 from twisted.internet import defer
 
-from buildbot.test.util.integration import RunMasterBase
 from buildbot.plugins import steps
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import SUCCESS
+from buildbot.test.util.integration import RunMasterBase
 
 
 class TestLog(RunMasterBase):
