@@ -28,8 +28,8 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial
+  - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial PARALLEL=-j2
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial PARALLEL=-j2
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
@@ -43,21 +43,21 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
 
   # Test different versions of SQLAlchemy
-  - TWISTED=15.5.0 SQLALCHEMY=0.6.0 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.6.8 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.7.0 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.7.4 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.7.8 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=0.6.0 TESTS=trial PARALLEL=-j2
+  - TWISTED=15.5.0 SQLALCHEMY=0.6.8 TESTS=trial PARALLEL=-j2
+  - TWISTED=15.5.0 SQLALCHEMY=0.7.0 TESTS=trial PARALLEL=-j2
+  - TWISTED=15.5.0 SQLALCHEMY=0.7.4 TESTS=trial PARALLEL=-j2
+  - TWISTED=15.5.0 SQLALCHEMY=0.7.8 TESTS=trial PARALLEL=-j2
+  - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial PARALLEL=-j2
 
   # add extra tests in separate jobs
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js PARALLEL=-j2
 
   # Configuration to run `python setup.py test` to check this test runner.
   # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
   # Configuration to run tests without installed buildbot-slave.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker_only
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker_only PARALLEL=-j2
 
 cache:
   directories:
@@ -159,12 +159,12 @@ before_script:
 script:
   - "[ $TESTS != js ] || make frontend_install_tests"
   # run tests under coverage for latest only (it's slower..)
-  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
-  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  - "[ $TESTS != trial ]   || trial ${PARALLEL} --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  - "[ $TESTS != trial_worker ] || trial ${PARALLEL} --reporter=text --rterrors buildslave.test buildbot_worker.test"
   - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
 
   # run tests that are know to work on py3
-  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  - "[ $TESTS != py3 ] || trial ${PARALLEL} --reporter=text --rterrors buildslave.test buildbot_worker.test"
 
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"
@@ -179,7 +179,7 @@ script:
   - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
 
-  - "[ $TESTS != trial_worker_only ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "[ $TESTS != trial_worker_only ] || trial ${PARALLEL} --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 notifications:
   email: false
