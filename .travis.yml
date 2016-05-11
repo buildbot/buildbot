@@ -54,9 +54,13 @@ cache:
 
 matrix:
   include:
-    # lint first as they're more likely to find issues
+    # lint, docs and coverage first as they're more likely to find issues
     - python: "2.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=lint
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
     # Test different versions of SQLAlchemy
     - python: "2.7"
@@ -74,11 +78,7 @@ matrix:
 
     # add extra tests in separate jobs
     - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
-    - python: "2.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=js
-    - python: "2.7"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
     # python 3 tests
 #    - python: "3.4"
