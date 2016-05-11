@@ -280,6 +280,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # flush properties in the beginning of the build
         yield self._flushProperties(None)
 
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'preparing worker')
         try:
             ready = yield workerforbuilder.prepare(self)
         except Exception:
@@ -304,6 +306,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # TODO: This can unnecessarily suspend the starting of a build, in
         # situations where the worker is live but is pushing lots of data to
         # us in a build.
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'pinging worker')
         log.msg("starting build %s.. pinging the worker %s"
                 % (self, workerforbuilder))
         try:
@@ -329,7 +333,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             self.buildFinished(["worker", "not", "building"], RETRY)
             return
 
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'acquiring locks')
         yield self.acquireLocks()
+
+        yield self.master.data.updates.setBuildStateString(self.buildid,
+                                                           u'building')
 
         # start the sequence of steps
         self.startNextStep()
