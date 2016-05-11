@@ -274,32 +274,28 @@ class GerritStatusPush(service.BuildbotService):
 
     @defer.inlineCallbacks
     def buildStarted(self, key, build):
-        if self.startCB is not None:
-            builder = yield self.master.data.get(("builders", build['builderid']))
-            build['builder'] = builder
-            if self.isBuildReported(build):
-                message = yield self.startCB(builder['name'], build, self.startArg)
-                self.sendCodeReviews(build, message)
-
-    @defer.inlineCallbacks
-    def buildFinished(self, builderName, build, result):
-        """Do the SSH gerrit verify command to the server."""
-        result = yield self.reviewCB(builderName, build, result, self.master, self.reviewArg)
-        result = _handleLegacyResult(result)
-        self.sendCodeReviews(build, result)
+        if self.startCB is None:
+            return
+        yield self.getBuildDetails(build)
+        if self.isBuildReported(build):
+            result = yield self.startCB(build['builder']['name'], build, self.startArg)
+            self.sendCodeReviews(build, result)
 
     @defer.inlineCallbacks
     def buildComplete(self, key, build):
         if self.reviewCB is None:
             return
+        yield self.getBuildDetails(build)
+        if self.isBuildReported(build):
+            result = yield self.reviewCB(build['builder']['name'], build, build['results'], self.master, self.reviewArg)
+            result = _handleLegacyResult(result)
+            self.sendCodeReviews(build, result)
+
+    @defer.inlineCallbacks
+    def getBuildDetails(self, build):
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(self.master, buildset, [build])
-        build['url'] = utils.getURLForBuild(
-            self.master, build['builder']['builderid'], build['number'])
-        if self.isBuildReported(build):
-            self.buildFinished(
-                build['builder']['name'], build, build['results'])
+        yield utils.getDetailsForBuilds(self.master, buildset, [build], wantProperties=True)
 
     def isBuildReported(self, build):
         return self.builders is None or build['builder']['name'] in self.builders
