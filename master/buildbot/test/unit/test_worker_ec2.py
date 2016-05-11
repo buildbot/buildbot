@@ -109,6 +109,20 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(bs.tags, tags)
 
     @mock_ec2
+    def test_constructor_region(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_worker",
+                                 security_name='latent_buildbot_worker',
+                                 ami=amis[0].id,
+                                 region='us-west-1'
+                                 )
+        self.assertEqual(bs.session.region_name, 'us-west-1')
+
+    @mock_ec2
     def test_fail_mixing_classic_and_vpc_ec2_settings(self):
         c = self.botoSetup()
         amis = c.get_all_images()
@@ -174,7 +188,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      )
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
-        self.assertTrue(image_id.startswith('r-'))
+        self.assertTrue(image_id.startswith('ami-'))
         self.assertTrue(start_time > 0)
         instances = [i for i in c.get_only_instances()
                      if i.state != "terminated"]
@@ -183,57 +197,114 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].tags, {})
 
     @mock_ec2
-    def test_start_instance_volumes(self):
-        c = self.botoSetup('latent_buildbot_slave')
+    def test_start_instance_volumes_deprecated(self):
+        c = self.botoSetup()
+        block_device_map_arg = {
+            "/dev/xvdb": {
+                "volume_type": "io1",
+                "iops": 10,
+                "size": 20,
+            },
+            "/dev/xvdc": {
+                "volume_type": "gp2",
+                "size": 30,
+                "delete_on_termination": False
+            }
+        }
+        block_device_map_res = [
+                {
+                    'DeviceName': "/dev/xvdb",
+                    'Ebs': {
+                        "VolumeType": "io1",
+                        "Iops": 10,
+                        "VolumeSize": 20,
+                        "DeleteOnTermination": True,
+                        }
+                    },
+                {
+                    'DeviceName': "/dev/xvdc",
+                    'Ebs': {
+                        "VolumeType": "gp2",
+                        "VolumeSize": 30,
+                        "DeleteOnTermination": False,
+                        }
+                    },
+                ]
+
         amis = c.get_all_images()
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
+                    r"Use of dict value to 'block_device_map' of EC2LatentWorker "
+                    r"constructor is deprecated. Please use a list matching the AWS API"
                 ]):
             bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
                                      secret_identifier='privatekey',
+                                     keypair_name="latent_buildbot_worker",
+                                     security_name='latent_buildbot_worker',
                                      ami=amis[0].id,
-                                     block_device_map={
-                                         "/dev/xvdb": {
-                                             "volume_type": "io1",
-                                             "iops": 10,
-                                             "size": 20,
-                                         },
-                                         "/dev/xvdc": {
-                                             "volume_type": "gp2",
-                                             "size": 30,
-                                             "delete_on_termination": False
-                                         }
-                                     }
+                                     block_device_map=block_device_map_arg
                                      )
-
         # moto does not currently map volumes properly.  below ensures
         # that my conversion code properly composes it, including
         # delete_on_termination default.
-        from boto.ec2.blockdevicemapping import BlockDeviceType
-        self.assertEqual(
-            set(['/dev/xvdb', '/dev/xvdc']), set(bs.block_device_map.keys()))
+        self.assertEqual(block_device_map_res, bs.block_device_map)
 
-        def assertBlockDeviceEqual(a, b):
-            self.assertEqual(a.volume_type, b.volume_type)
-            self.assertEqual(a.iops, b.iops)
-            self.assertEqual(a.size, b.size)
-            self.assertEqual(a.delete_on_termination, b.delete_on_termination)
+    @mock_ec2
+    def test_start_instance_volumes(self):
+        c = self.botoSetup()
+        block_device_map_arg = [
+                {
+                    'DeviceName': "/dev/xvdb",
+                    'Ebs': {
+                        "VolumeType": "io1",
+                        "Iops": 10,
+                        "VolumeSize": 20,
+                        }
+                    },
+                {
+                    'DeviceName': "/dev/xvdc",
+                    'Ebs': {
+                        "VolumeType": "gp2",
+                        "VolumeSize": 30,
+                        "DeleteOnTermination": False,
+                        }
+                    },
+                ]
+        block_device_map_res = [
+                {
+                    'DeviceName': "/dev/xvdb",
+                    'Ebs': {
+                        "VolumeType": "io1",
+                        "Iops": 10,
+                        "VolumeSize": 20,
+                        "DeleteOnTermination": True,
+                        }
+                    },
+                {
+                    'DeviceName': "/dev/xvdc",
+                    'Ebs': {
+                        "VolumeType": "gp2",
+                        "VolumeSize": 30,
+                        "DeleteOnTermination": False,
+                        }
+                    },
+                ]
 
-        assertBlockDeviceEqual(
-            BlockDeviceType(
-                volume_type='io1', iops=10, size=20, delete_on_termination=True),
-            bs.block_device_map['/dev/xvdb'])
-
-        assertBlockDeviceEqual(
-            BlockDeviceType(
-                volume_type='gp2', size=30, delete_on_termination=False),
-            bs.block_device_map['/dev/xvdc'])
+        amis = c.get_all_images()
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_worker",
+                                 security_name='latent_buildbot_worker',
+                                 ami=amis[0].id,
+                                 block_device_map=block_device_map_arg
+                                 )
+        # moto does not currently map volumes properly.  below ensures
+        # that my conversion code properly composes it, including
+        # delete_on_termination default.
+        self.assertEqual(block_device_map_res, bs.block_device_map)
 
     @mock_ec2
     def test_start_instance_attach_volume(self):

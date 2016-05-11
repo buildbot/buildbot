@@ -18,6 +18,7 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 
 Tested with Python boto 1.5c
 """
+
 import os
 import re
 import time
@@ -32,10 +33,11 @@ from buildbot.worker.base import AbstractLatentWorker
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 try:
-    import boto
-    from boto.ec2.blockdevicemapping import BlockDeviceType, BlockDeviceMapping
+    import boto3
+    import botocore
+    from botocore.client import ClientError
 except ImportError:
-    boto = None
+    boto3 = None
 
 
 PENDING = 'pending'
@@ -62,11 +64,11 @@ class EC2LatentWorker(AbstractLatentWorker):
                  placement=None, price_multiplier=1.2, tags=None, retry=1,
                  retry_price_adjustment=1, product_description='Linux/UNIX',
                  subnet_id=None, security_group_ids=None, instance_profile_name=None,
-                 block_device_map=None,
+                 block_device_map=None, session=None,
                  **kwargs):
 
-        if not boto:
-            config.error("The python module 'boto' is needed to use a "
+        if not boto3:
+            config.error("The python module 'boto3' is needed to use a "
                          "EC2LatentWorker")
 
         if keypair_name is None:
@@ -115,7 +117,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             else:
                 # verify that regex will compile
                 re.compile(valid_ami_location_regex)
-        self.valid_ami_owners = valid_ami_owners
+        self.valid_ami_owners = None
+        if valid_ami_owners:
+            self.valid_ami_owners = [str(o) for o in valid_ami_owners]
         self.valid_ami_location_regex = valid_ami_location_regex
         self.instance_type = instance_type
         self.keypair_name = keypair_name
@@ -158,23 +162,38 @@ class EC2LatentWorker(AbstractLatentWorker):
         region_found = None
 
         # Make the EC2 connection.
-        if region is not None:
-            for r in boto.ec2.regions(aws_access_key_id=identifier,
-                                      aws_secret_access_key=secret_identifier):
+        self.session = session
+        if self.session is None:
+            if region is not None:
+                for r in boto3.Session(
+                        aws_access_key_id=identifier,
+                        aws_secret_access_key=secret_identifier).get_available_regions('ec2'):
 
-                if r.name == region:
-                    region_found = r
+                    if r == region:
+                        region_found = r
 
-            if region_found is not None:
-                self.ec2_conn = boto.ec2.connect_to_region(region,
-                                                           aws_access_key_id=identifier,
-                                                           aws_secret_access_key=secret_identifier)
+                if region_found is not None:
+                    self.session = boto3.Session(
+                            region_name=region,
+                            aws_access_key_id=identifier,
+                            aws_secret_access_key=secret_identifier)
+                else:
+                    raise ValueError(
+                            'The specified region does not exist: ' + region)
+
             else:
-                raise ValueError(
-                    'The specified region does not exist: ' + region)
+                # boto2 defaulted to us-east-1 when region was unset, we
+                # mimic this here in boto3
+                region = botocore.session.get_session().get_config_variable('region')
+                if region is None:
+                    region = 'us-east-1'
+                self.session = boto3.Session(
+                        aws_access_key_id=identifier,
+                        aws_secret_access_key=secret_identifier,
+                        region_name=region
+                        )
 
-        else:
-            self.ec2_conn = boto.connect_ec2(identifier, secret_identifier)
+        self.ec2 = self.session.resource('ec2')
 
         # Make a keypair
         #
@@ -185,12 +204,11 @@ class EC2LatentWorker(AbstractLatentWorker):
         # generate it and store it on the filesystem, which is an unnecessary
         # usage requirement.
         try:
-            key_pair = self.ec2_conn.get_all_key_pairs(keypair_name)[0]
-            assert key_pair
+            self.ec2.KeyPair(self.keypair_name).load()
             # key_pair.delete() # would be used to recreate
-        except boto.exception.EC2ResponseError as e:
-            if 'InvalidKeyPair.NotFound' not in e.body:
-                if 'AuthFailure' in e.body:
+        except ClientError as e:
+            if 'InvalidKeyPair.NotFound' not in e.message:
+                if 'AuthFailure' in e.message:
                     log.msg('POSSIBLE CAUSES OF ERROR:\n'
                             '  Did you supply your AWS credentials?\n'
                             '  Did you sign up for EC2?\n'
@@ -201,18 +219,17 @@ class EC2LatentWorker(AbstractLatentWorker):
             # make one; we would always do this, and stash the result, if we
             # needed the key (for instance, to SSH to the box).  We'd then
             # use paramiko to use the key to connect.
-            self.ec2_conn.create_key_pair(keypair_name)
+            self.ec2.create_key_pair(KeyName=keypair_name)
 
         # create security group
         if security_name:
             try:
-                group = self.ec2_conn.get_all_security_groups(security_name)[0]
-                assert group
-            except boto.exception.EC2ResponseError as e:
-                if 'InvalidGroup.NotFound' in e.body:
-                    self.security_group = self.ec2_conn.create_security_group(
-                        security_name,
-                        'Authorization to access the buildbot instance.')
+                self.ec2.SecurityGroup(security_name).load()
+            except ClientError as e:
+                if 'InvalidGroup.NotFound' in e.message:
+                    self.security_group = self.ec2.create_security_group(
+                        GroupName=security_name,
+                        Description='Authorization to access the buildbot instance.')
                     # Authorize the master as necessary
                     # TODO this is where we'd open the hole to do the reverse pb
                     # connect to the buildbot
@@ -225,7 +242,7 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         # get the image
         if self.ami is not None:
-            self.image = self.ec2_conn.get_image(self.ami)
+            self.image = self.ec2.Image(self.ami)
         else:
             # verify we have access to at least one acceptable image
             discard = self.get_image()
@@ -233,45 +250,80 @@ class EC2LatentWorker(AbstractLatentWorker):
 
         # get the specified elastic IP, if any
         if elastic_ip is not None:
-            elastic_ip = self.ec2_conn.get_all_addresses([elastic_ip])[0]
+            # Using ec2.vpc_addresses.filter(PublicIps=[elastic_ip]) throws a
+            # NotImplementedError("Filtering not supported in describe_address.") in moto
+            # https://github.com/spulec/moto/blob/100ec4e7c8aa3fde87ff6981e2139768816992e4/moto/ec2/responses/elastic_ip_addresses.py#L52
+            addresses = self.ec2.meta.client.describe_addresses(PublicIps=[elastic_ip])['Addresses']
+            if not addresses:
+                raise ValueError(
+                    'Could not find EIP for IP: ' + elastic_ip)
+            allocation_id = addresses[0]['AllocationId']
+            elastic_ip = self.ec2.VpcAddress(allocation_id)
         self.elastic_ip = elastic_ip
         self.subnet_id = subnet_id
         self.security_group_ids = security_group_ids
-        self.classic_security_groups = [
-            self.security_name] if self.security_name else None
+        self.classic_security_groups = [self.security_name] if self.security_name else None
         self.instance_profile_name = instance_profile_name
         self.tags = tags
-        self.block_device_map = self.create_block_device_mapping(
-            block_device_map)
+        self.block_device_map = self.create_block_device_mapping(block_device_map) if block_device_map else None
 
     def create_block_device_mapping(self, mapping_definitions):
+        if isinstance(mapping_definitions, list):
+            for mapping_definition in mapping_definitions:
+                ebs = mapping_definition.get('Ebs')
+                if ebs:
+                    ebs.setdefault('DeleteOnTermination', True)
+            return mapping_definitions
+
+        reportDeprecatedWorkerNameUsage(
+            "Use of dict value to 'block_device_map' of EC2LatentWorker "
+            "constructor is deprecated. Please use a list matching the AWS API "
+            "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html"
+            )
+        return self._convert_deprecated_block_device_mapping(mapping_definitions)
+
+    def _convert_deprecated_block_device_mapping(self, mapping_definitions):
+        new_mapping_definitions = []
+        for dev_name, dev_config in mapping_definitions.iteritems():
+            new_dev_config = {}
+            new_dev_config['DeviceName'] = dev_name
+            if dev_config:
+                new_dev_config['Ebs'] = {}
+                new_dev_config['Ebs']['DeleteOnTermination'] = dev_config.get('delete_on_termination', True)
+                new_dev_config['Ebs']['Encrypted'] = dev_config.get('encrypted')
+                new_dev_config['Ebs']['Iops'] = dev_config.get('iops')
+                new_dev_config['Ebs']['SnapshotId'] = dev_config.get('snapshot_id')
+                new_dev_config['Ebs']['VolumeSize'] = dev_config.get('size')
+                new_dev_config['Ebs']['VolumeType'] = dev_config.get('volume_type')
+                new_dev_config['Ebs'] = self._remove_none_opts(new_dev_config['Ebs'])
+            new_mapping_definitions.append(new_dev_config)
+        return new_mapping_definitions
         if not mapping_definitions:
             return None
 
-        result = BlockDeviceMapping()
-        for device_name, device_properties in mapping_definitions.iteritems():
-            modified_device_properties = dict(device_properties)
-            # Since latent slaves are ephemeral, not leaking volumes on termination
-            # is a much safer default.
-            if 'delete_on_termination' not in modified_device_properties:
-                modified_device_properties['delete_on_termination'] = True
-            result[device_name] = BlockDeviceType(**modified_device_properties)
-        return result
+        for mapping_definition in mapping_definitions:
+            ebs = mapping_definition.get('Ebs')
+            if ebs:
+                ebs.setdefault('DeleteOnTermination', True)
+
+        return mapping_definitions
 
     def get_image(self):
         if self.image is not None:
             return self.image
+        images = self.ec2.images.all()
+        if self.valid_ami_owners:
+            images = images.filter(Owners=self.valid_ami_owners)
         if self.valid_ami_location_regex:
             level = 0
             options = []
             get_match = re.compile(self.valid_ami_location_regex).match
-            for image in self.ec2_conn.get_all_images(
-                    owners=self.valid_ami_owners):
+            for image in images:
                 # Image must be available
                 if image.state != 'available':
                     continue
                 # Image must match regex
-                match = get_match(image.location)
+                match = get_match(image.image_location)
                 if not match:
                     continue
                 # Gather sorting information
@@ -288,18 +340,17 @@ class EC2LatentWorker(AbstractLatentWorker):
                             except ValueError:
                                 level = 1
                 options.append([int_sort, alpha_sort,
-                                image.location, image.id, image])
+                                image.image_location, image.id, image])
             if level:
                 log.msg('sorting images at level %d' % level)
                 options = [candidate[level:] for candidate in options]
         else:
-            options = [(image.location, image.id, image) for image
-                       in self.ec2_conn.get_all_images(
-                           owners=self.valid_ami_owners)]
+            options = [(image.image_location, image.id, image) for image
+                       in images]
         options.sort()
         log.msg('sorted images (last is chosen): %s' %
                 (', '.join(
-                    ['%s (%s)' % (candidate[-1].id, candidate[-1].location)
+                    ['%s (%s)' % (candidate[-1].id, candidate[-1].image_location)
                      for candidate in options])))
         if not options:
             raise ValueError('no available images match constraints')
@@ -319,26 +370,38 @@ class EC2LatentWorker(AbstractLatentWorker):
         else:
             return threads.deferToThread(self._start_instance)
 
+    def _remove_none_opts(self, *args, **opts):
+        if args:
+            opts = args[0]
+        return dict((k, v) for k, v in opts.iteritems() if v is not None)
+
     def _start_instance(self):
         image = self.get_image()
-        reservation = image.run(
-            key_name=self.keypair_name, security_groups=self.classic_security_groups,
-            instance_type=self.instance_type, user_data=self.user_data,
-            placement=self.placement, subnet_id=self.subnet_id,
-            security_group_ids=self.security_group_ids,
-            instance_profile_name=self.instance_profile_name,
-            block_device_map=self.block_device_map
+        launch_opts = dict(
+            ImageId=image.id, KeyName=self.keypair_name,
+            SecurityGroups=self.classic_security_groups,
+            InstanceType=self.instance_type, UserData=self.user_data,
+            Placement=self.placement, MinCount=1, MaxCount=1,
+            SubnetId=self.subnet_id, SecurityGroupIds=self.security_group_ids,
+            IamInstanceProfile=self._remove_none_opts(
+                Name=self.instance_profile_name,
+                ),
+            BlockDeviceMappings=self.block_device_map
+            )
+        launch_opts = self._remove_none_opts(launch_opts)
+        reservations = self.ec2.create_instances(
+                **launch_opts
         )
 
-        self.instance = reservation.instances[0]
-        instance_id, image_id, start_time = self._wait_for_instance(
-            reservation)
-        if None not in [instance_id, image_id, start_time]:
+        self.instance = reservations[0]
+        instance_id, start_time = self._wait_for_instance()
+        if None not in [instance_id, image.id, start_time]:
             if len(self.tags) > 0:
-                self.ec2_conn.create_tags(instance_id, self.tags)
-            return [instance_id, image_id, start_time]
+                self.instance.create_tags(Tags=[{"Key": k, "Value": v}
+                                          for k, v in self.tags.items()])
+            return [instance_id, image.id, start_time]
         else:
-            self.failed_to_start(self.instance.id, self.instance.state)
+            self.failed_to_start(self.instance.id, self.instance.state['Name'])
 
     def stop_instance(self, fast=False):
 
@@ -354,16 +417,16 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _attach_volumes(self):
         for volume_id, device_node in self.volumes:
-            self.ec2_conn.attach_volume(
-                volume_id, self.instance.id, device_node)
+            vol = self.ec2.Volume(volume_id)
+            vol.attach_to_instance(InstanceId=self.instance.id, Device=device_node)
             log.msg('Attaching EBS volume %s to %s.' %
                     (volume_id, device_node))
 
     def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
-            self.ec2_conn.disassociate_address(self.elastic_ip.public_ip)
-        instance.update()
-        if instance.state not in (SHUTTINGDOWN, TERMINATED):
+            self.elastic_ip.association.delete()
+        instance.reload()
+        if instance.state['Name'] not in (SHUTTINGDOWN, TERMINATED):
             instance.terminate()
             log.msg('%s %s terminating instance %s' %
                     (self.__class__.__name__, self.workername, instance.id))
@@ -371,10 +434,10 @@ class EC2LatentWorker(AbstractLatentWorker):
         interval = self._poll_resolution
         if fast:
             goal = (SHUTTINGDOWN, TERMINATED)
-            instance.update()
+            instance.reload()
         else:
             goal = TERMINATED,
-        while instance.state not in goal:
+        while instance.state['Name'] not in goal:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
@@ -382,7 +445,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                     '%s %s has waited %d minutes for instance %s to end' %
                     (self.__class__.__name__, self.workername, duration // 60,
                      instance.id))
-            instance.update()
+            instance.reload()
         log.msg('%s %s instance %s %s '
                 'after about %d minutes %d seconds' %
                 (self.__class__.__name__, self.workername,
@@ -392,21 +455,20 @@ class EC2LatentWorker(AbstractLatentWorker):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime(
             '%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
-        spot_prices = self.ec2_conn.get_spot_price_history(
-            start_time=spot_history_starttime,
-            product_description=self.product_description,
-            availability_zone=self.placement)
+        spot_prices = self.ec2.meta.client.describe_spot_price_history(
+            StartTime=spot_history_starttime,
+            ProductDescriptions=[self.product_description],
+            AvailabilityZone=self.placement)
         price_sum = 0.0
         price_count = 0
-        for price in spot_prices:
-            if price.instance_type == self.instance_type:
-                price_sum += price.price
+        for price in spot_prices['SpotPriceHistory']:
+            if price['InstanceType'] == self.instance_type:
+                price_sum += float(price['SpotPrice'])
                 price_count += 1
         if price_count == 0:
             self.current_spot_price = 0.02
         else:
-            self.current_spot_price = (
-                price_sum / price_count) * self.price_multiplier
+            self.current_spot_price = (price_sum / price_count) * self.price_multiplier
         if self.current_spot_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.3f exceeds '
                     'configured maximum of %0.3f' %
@@ -421,29 +483,34 @@ class EC2LatentWorker(AbstractLatentWorker):
             else:
                 log.msg('%s %s requesting spot instance with price %0.4f' %
                         (self.__class__.__name__, self.workername, self.current_spot_price))
-        reservations = self.ec2_conn.request_spot_instances(self.current_spot_price, self.ami,
-                                                            key_name=self.keypair_name,
-                                                            security_groups=[
-                                                                self.classic_security_groups],
-                                                            instance_type=self.instance_type,
-                                                            user_data=self.user_data,
-                                                            placement=self.placement,
-                                                            subnet_id=self.subnet_id,
-                                                            security_group_ids=self.security_group_ids,
-                                                            instance_profile_name=self.instance_profile_name,
-                                                            block_device_map=self.block_device_map
-                                                            )
-        request, success = self._wait_for_request(reservations[0])
+        reservations = self.ec2.meta.client.request_spot_instances(
+                SpotPrice=str(self.current_spot_price),
+                LaunchSpecification=self._remove_none_opts(
+                    ImageId=self.ami,
+                    KeyName=self.keypair_name,
+                    SecurityGroups=self.classic_security_groups,
+                    UserData=self.user_data,
+                    InstanceType=self.instance_type,
+                    Placement=self._remove_none_opts(
+                        AvailabilityZone=self.placement,
+                        ),
+                    SubnetId=self.subnet_id,
+                    SecurityGroupIds=self.security_group_ids,
+                    BlockDeviceMappings=self.block_device_map,
+                    IamInstanceProfile=self._remove_none_opts(
+                        Name=self.instance_profile_name,
+                        )
+                    )
+                )
+        request, success = self._wait_for_request(reservations['SpotInstanceRequests'][0])
         if not success:
             return request, None, None, False
         else:
-            instance_id = request.instance_id
-            reservations = self.ec2_conn.get_all_instances(
-                instance_ids=[instance_id])
-            self.instance = reservations[0].instances[0]
-            instance_id, image_id, start_time = self._wait_for_instance(
-                self.get_image())
-            return instance_id, image_id, start_time, True
+            instance_id = request['InstanceId']
+            self.instance = self.ec2.Instance(instance_id)
+            image = self.get_image()
+            instance_id, start_time = self._wait_for_instance()
+            return instance_id, image.id, start_time, True
 
     def _request_spot_instance(self):
         if self.retry > 1:
@@ -463,67 +530,68 @@ class EC2LatentWorker(AbstractLatentWorker):
                 raise LatentWorkerFailedToSubstantiate()
         return instance_id, image_id, start_time
 
-    def _wait_for_instance(self, image):
+    def _wait_for_instance(self):
         log.msg('%s %s waiting for instance %s to start' %
                 (self.__class__.__name__, self.workername, self.instance.id))
         duration = 0
         interval = self._poll_resolution
-        while self.instance.state == PENDING:
+        while self.instance.state['Name'] == PENDING:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for instance %s' %
                         (self.__class__.__name__, self.workername, duration // 60,
                          self.instance.id))
-            self.instance.update()
+            self.instance.reload()
 
-        if self.instance.state == RUNNING:
-            self.output = self.instance.get_console_output()
+        if self.instance.state['Name'] == RUNNING:
+            self.output = self.instance.console_output().get('Output')
             minutes = duration // 60
             seconds = duration % 60
             log.msg('%s %s instance %s started on %s '
                     'in about %d minutes %d seconds (%s)' %
                     (self.__class__.__name__, self.workername,
                      self.instance.id, self.dns, minutes, seconds,
-                     self.output.output))
+                     self.output))
             if self.elastic_ip is not None:
-                self.instance.use_ip(self.elastic_ip)
+                self.elastic_ip.associate(InstanceId=self.instance.id)
             start_time = '%02d:%02d:%02d' % (
                 minutes // 60, minutes % 60, seconds)
             if len(self.volumes) > 0:
                 self._attach_volumes()
-            return self.instance.id, image.id, start_time
+            return self.instance.id, start_time
         else:
-            self.failed_to_start(self.instance.id, self.instance.state)
+            self.failed_to_start(self.instance.id, self.instance.state['Name'])
 
     def _wait_for_request(self, reservation):
         duration = 0
         interval = self._poll_resolution
-        requests = self.ec2_conn.get_all_spot_instance_requests(
-            request_ids=[reservation.id])
-        request = requests[0]
-        request_status = request.status.code
+        requests = self.ec2.meta.client.describe_spot_instance_requests(
+            SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']])
+        request = requests['SpotInstanceRequests'][0]
+        request_status = request['Status']['Code']
         while request_status in SPOT_REQUEST_PENDING_STATES:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
                 log.msg('%s %s has waited %d minutes for spot request %s' %
                         (self.__class__.__name__, self.workername, duration // 60,
-                         request.id))
-            requests = self.ec2_conn.get_all_spot_instance_requests(
-                request_ids=[request.id])
-            request = requests[0]
-            request_status = request.status.code
+                         request['SpotInstanceRequestId']))
+            requests = self.ec2.meta.client.describe_spot_instance_requests(
+                SpotInstanceRequestIds=[reservation['SpotInstanceRequestId']])
+            request = requests['SpotInstanceRequests'][0]
+            request_status = request['Status']['Code']
         if request_status == FULFILLED:
             minutes = duration // 60
             seconds = duration % 60
             log.msg('%s %s spot request %s fulfilled '
                     'in about %d minutes %d seconds' %
                     (self.__class__.__name__, self.workername,
-                     request.id, minutes, seconds))
+                     request['SpotInstanceRequestId'], minutes, seconds))
             return request, True
         elif request_status == PRICE_TOO_LOW:
-            request.cancel()
+            self.ec2.meta.client.cancel_spot_instance_requests(
+                SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
             log.msg('%s %s spot request rejected, spot price too low' %
                     (self.__class__.__name__, self.workername))
             self.current_spot_price *= self.retry_price_adjustment
@@ -531,6 +599,6 @@ class EC2LatentWorker(AbstractLatentWorker):
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.workername,
-                     request.id, request_status))
+                     request['SpotInstanceRequestId'], request_status))
             raise LatentWorkerFailedToSubstantiate(
-                request.id, request.status)
+                request['SpotInstanceRequestId'], request.status)
