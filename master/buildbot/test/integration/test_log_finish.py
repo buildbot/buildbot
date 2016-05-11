@@ -47,7 +47,7 @@ class TestLog(RunMasterBase):
 
         class MyStep(steps.ShellCommand):
             def _newLog(obj, name, type, logid, logEncoding):
-                r = super(MyStep, obj)._newLog(name, type, logid, logEncoding)
+                r = steps.ShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 return self.curr_log
 
@@ -60,8 +60,7 @@ class TestLog(RunMasterBase):
                       author="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
-                      project="none"
-                      )
+                      project="none")
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
@@ -72,7 +71,7 @@ class TestLog(RunMasterBase):
 
         class MyStep(steps.MasterShellCommand):
             def _newLog(obj, name, type, logid, logEncoding):
-                r = super(MyStep, obj)._newLog(name, type, logid, logEncoding)
+                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 return self.curr_log
 
@@ -85,8 +84,7 @@ class TestLog(RunMasterBase):
                       author="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
-                      project="none"
-                      )
+                      project="none")
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(build['results'], SUCCESS)
@@ -97,7 +95,7 @@ class TestLog(RunMasterBase):
 
         class MyStep(steps.MasterShellCommand):
             def _newLog(obj, name, type, logid, logEncoding):
-                r = super(MyStep, obj)._newLog(name, type, logid, logEncoding)
+                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 self.patch(r, "finish", lambda: defer.fail(RuntimeError('Could not finish')))
                 return self.curr_log
@@ -111,8 +109,7 @@ class TestLog(RunMasterBase):
                       author="me@foo.com",
                       comments="good stuff",
                       revision="HEAD",
-                      project="none"
-                      )
+                      project="none")
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         self.assertFalse(self.curr_log.finished)
