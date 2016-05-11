@@ -354,6 +354,8 @@ hardcoding
 Hassler
 hierachy
 highlevel
+hipchat
+Hipchat
 HLint
 hoc
 hostinfo

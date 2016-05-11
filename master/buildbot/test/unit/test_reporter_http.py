@@ -76,7 +76,7 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.createReporter()
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.sp.buildStarted(("build", 20, "new"), build)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
         # we make sure proper calls to txrequests have been made
