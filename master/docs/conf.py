@@ -154,6 +154,9 @@ linkcheck_ignore = [
     r'^https://www\.microsoft\.com/en-us/download/details\.aspx\?id=17657$',
     # Example domain.
     r'^https?://(.+\.)?example\.org',
+    # Anchor check fails on rendered user files on GitHub, since GitHub uses
+    # custom prefix for anchors in user generated content.
+    r'https://github\.com/buildbot/guanlecoja-ui/tree/master#changelog',
 ]
 linkcheck_timeout = 10
 linkcheck_retries = 3
