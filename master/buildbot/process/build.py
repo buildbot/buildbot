@@ -273,14 +273,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         try:
             self.setupBuild()  # create .steps
         except Exception:
-            # the build hasn't started yet, so log the exception as a point
-            # event instead of flunking the build.
-            # TODO: associate this failure with the build instead.
-            # this involves doing
-            # self.build_status.buildStarted() from within the exception
-            # handler
-            log.msg("Build.setupBuild failed")
-            log.err(Failure())
+            log.err(Failure(), "Build.setupBuild failed")
             self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
 
