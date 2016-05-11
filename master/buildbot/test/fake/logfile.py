@@ -82,6 +82,7 @@ class FakeLogFile(object):
     def finish(self):
         self.flushFakeLogfile()
         self.finished = True
+        return defer.succeed(None)
 
     def fakeData(self, header='', stdout='', stderr=''):
         if header:

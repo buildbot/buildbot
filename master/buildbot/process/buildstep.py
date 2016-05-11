@@ -560,10 +560,26 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         yield self.master.data.updates.finishStep(self.stepid, self.results,
                                                   hidden)
-
+        # finish unfinished logs
+        all_finished = yield self.finishUnfinishedLogs()
+        if not all_finished:
+            self.results = EXCEPTION
         self.releaseLocks()
 
         defer.returnValue(self.results)
+
+    @defer.inlineCallbacks
+    def finishUnfinishedLogs(self):
+        ok = True
+        not_finished_logs = [v for (k, v) in iteritems(self.logs)
+                             if not v.finished]
+        finish_logs = yield defer.DeferredList([v.finish() for v in not_finished_logs],
+                                               consumeErrors=True)
+        for success, res in finish_logs:
+            if not success:
+                log.err(res, "when trying to finish a log")
+                ok = False
+        defer.returnValue(ok)
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
