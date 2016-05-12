@@ -187,5 +187,10 @@ notifications:
 after_success:
   - "[ $TESTS != coverage ] || codecov"
 sudo: false
+branches:
+  # Only build main-line branches.
+  only:
+    - master
+    - eight
 git:
   depth: 300
