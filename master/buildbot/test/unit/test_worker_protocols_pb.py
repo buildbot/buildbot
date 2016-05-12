@@ -216,6 +216,28 @@ class TestConnection(unittest.TestCase):
         self.mind.callRemote.assert_has_calls(calls)
 
     @defer.inlineCallbacks
+    def test_remoteGetWorkerInfo_no_info(self):
+        # All remote commands tried in remoteGetWorkerInfo are unavailable.
+        # This should be real old worker...
+        def side_effect(*args, **kwargs):
+            return defer.fail(twisted_pb.RemoteError(
+                'twisted.spread.flavors.NoSuchMethod', None, None))
+
+        self.mind.callRemote.side_effect = side_effect
+        conn = pb.Connection(self.master, self.worker, self.mind)
+        info = yield conn.remoteGetWorkerInfo()
+
+        r = {}
+        self.assertEqual(info, r)
+        calls = [
+            mock.call('getWorkerInfo'),
+            mock.call('getSlaveInfo'),
+            mock.call('getCommands'),
+            mock.call('getVersion'),
+        ]
+        self.mind.callRemote.assert_has_calls(calls)
+
+    @defer.inlineCallbacks
     def test_remoteSetBuilderList(self):
         builders = ['builder1', 'builder2']
         self.mind.callRemote.return_value = defer.succeed(builders)
