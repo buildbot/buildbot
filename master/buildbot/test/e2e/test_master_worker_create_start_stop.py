@@ -420,7 +420,6 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             r"""
             [^\n]+ worker 'example-worker' attaching from [^\n]+
             [^\n]+ Got workerinfo from 'example-worker'
-            [^\n]+ bot attached
             """)
 
         self.assertTrue(
@@ -477,7 +476,6 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             [^\n]+ worker 'example-worker' attaching from [^\n]+
             [^\n]+ Worker.getWorkerInfo is unavailable - falling back [^\n]+
             [^\n]+ Got workerinfo from 'example-worker'
-            [^\n]+ bot attached
             """)
 
         self.assertTrue(
