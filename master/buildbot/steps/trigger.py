@@ -222,6 +222,7 @@ class Trigger(BuildStep):
             )
             # we are not in a hurry of starting all in parallel and managing
             # the deferred lists, just let the db writes be serial.
+            brids = {}
             try:
                 bsid, brids = yield idsDeferred
             except Exception as e:
