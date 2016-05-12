@@ -284,4 +284,4 @@ class Test_wrapRemoteException(unittest.TestCase):
                 raise twisted_pb.RemoteError(
                     'twisted.spread.flavors.ProtocolError', None, None)
 
-        self.assertRaises(Error, twisted_pb.RemoteError)
+        self.assertRaises(twisted_pb.RemoteError, f)
