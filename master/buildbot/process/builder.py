@@ -538,7 +538,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         return collapseRequests_fn
 
-    def _defaultCollapseRequestFn(self, master, builder, brdict1, brdict2):
+    @staticmethod
+    def _defaultCollapseRequestFn(master, builder, brdict1, brdict2):
         return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
 
 

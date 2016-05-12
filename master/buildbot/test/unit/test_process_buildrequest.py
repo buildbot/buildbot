@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process import buildrequest
+from buildbot.process.builder import Builder
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 
@@ -77,7 +78,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
             fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
                                 priority=13, submitted_at=1300305712, results=-1),
         ]
-        self.do_request_collapse(rows, [19], [])
+        return self.do_request_collapse(rows, [19], [])
 
     def test_collapseRequests_no_collapse(self):
 
@@ -108,7 +109,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
         ]
 
         self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
-        self.do_request_collapse(rows, [21], [])
+        return self.do_request_collapse(rows, [21], [])
 
     def test_collapseRequests_collapse_all(self):
 
@@ -139,8 +140,9 @@ class TestBuildRequestCollapser(unittest.TestCase):
         ]
 
         self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
-        self.do_request_collapse(rows, [21], [19, 20])
+        return self.do_request_collapse(rows, [21], [19, 20])
 
+    @defer.inlineCallbacks
     def test_collapseRequests_collapse_default(self):
 
         def collapseRequests_fn(master, builder, brdict1, brdict2):
@@ -174,9 +176,9 @@ class TestBuildRequestCollapser(unittest.TestCase):
                                 priority=13, submitted_at=1300305712, results=-1),
         ]
 
-        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
-        self.do_request_collapse(rows, [22], [])
-        self.do_request_collapse(rows, [21], [19, 20])
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [19, 20])
 
 
 class TestBuildRequest(unittest.TestCase):
