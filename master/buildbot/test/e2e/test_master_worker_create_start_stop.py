@@ -18,6 +18,7 @@ from __future__ import print_function
 import os
 import re
 import socket
+import textwrap
 
 from fastjsonrpc.client import Proxy
 from fastjsonrpc.client import jsonrpc
@@ -406,9 +407,27 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildbot_start(master_dir)
         yield self._buildbot_worker_start(worker_dir)
 
-        # Stop
+        # Stop.
         yield self._buildbot_worker_stop(worker_dir)
         yield self._buildbot_stop(master_dir)
+
+        # Check master logs.
+        with open(os.path.join(master_dir, "twistd.log"), 'rt') as f:
+            log = f.read()
+
+        # Check that worker info was received without warnings.
+        worker_connection_re = textwrap.dedent(
+            r"""
+            [^\n]+ worker 'example-worker' attaching from [^\n]+
+            [^\n]+ Got workerinfo from 'example-worker'
+            [^\n]+ bot attached
+            """)
+
+        self.assertTrue(
+            re.search(worker_connection_re, log, re.MULTILINE),
+            msg="Log doesn't match:\n{0}\nLog:\n{1}".format(
+                indent(worker_connection_re, "    "),
+                indent(log, "    ")))
 
         self.success = True
 
@@ -443,9 +462,29 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildbot_start(master_dir)
         yield self._buildslave_start(slave_dir)
 
-        # Stop
+        # Stop.
         yield self._buildslave_stop(slave_dir)
         yield self._buildbot_stop(master_dir)
+
+        # Check master logs.
+        with open(os.path.join(master_dir, "twistd.log"), 'rt') as f:
+            log = f.read()
+
+        # Check that slave info was received with message about fallback from
+        # buildbot-worker methods.
+        worker_connection_re = textwrap.dedent(
+            r"""
+            [^\n]+ worker 'example-worker' attaching from [^\n]+
+            [^\n]+ Worker.getWorkerInfo is unavailable - falling back [^\n]+
+            [^\n]+ Got workerinfo from 'example-worker'
+            [^\n]+ bot attached
+            """)
+
+        self.assertTrue(
+            re.search(worker_connection_re, log, re.MULTILINE),
+            msg="Log doesn't match:\n{0}\nLog:\n{1}".format(
+                indent(worker_connection_re, "    "),
+                indent(log, "    ")))
 
         self.success = True
 
