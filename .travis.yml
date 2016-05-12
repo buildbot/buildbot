@@ -147,8 +147,6 @@ install:
   # https://github.com/pypa/setuptools/issues/500
   - "[ $TESTS != setuppy_test ] || pip install autobahn Twisted"
 
-  - "pip list"
-
 before_script:
   # create real MySQL database for tests
   - mysql -e 'create database bbtest;'
@@ -186,6 +184,11 @@ notifications:
 
 after_success:
   - "[ $TESTS != coverage ] || codecov"
+
+after_script:
+  # List installed packages along with their versions.
+  - "pip list"
+
 sudo: false
 git:
   depth: 300
