@@ -136,8 +136,11 @@ class TestConnection(unittest.TestCase):
         conn.mind.callRemote.assert_called_with('print', message='test')
 
     @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo(self):
+    def test_remoteGetWorkerInfo_slave(self):
         def side_effect(*args, **kwargs):
+            if 'getWorkerInfo' in args:
+                return defer.fail(twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None))
             if 'getSlaveInfo' in args:
                 return defer.succeed({'info': 'test'})
             if 'getCommands' in args:
@@ -152,13 +155,48 @@ class TestConnection(unittest.TestCase):
         r = {'info': 'test', 'slave_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getSlaveInfo'), mock.call(
-            'getCommands'), mock.call('getVersion')]
+        calls = [
+            mock.call('getWorkerInfo'),
+            mock.call('getSlaveInfo'),
+            mock.call('getCommands'),
+            mock.call('getVersion')
+        ]
         self.mind.callRemote.assert_has_calls(calls)
 
     @defer.inlineCallbacks
-    def test_remoteGetWorkerInfo_getSlaveInfo_fails(self):
+    def test_remoteGetWorkerInfo_worker(self):
         def side_effect(*args, **kwargs):
+            if 'getWorkerInfo' in args:
+                return defer.succeed({
+                    'info': 'test',
+                    'slave_commands': {
+                        'y': 2, 'x': 1
+                    }
+                })
+            if 'getSlaveInfo' in args:
+                return defer.fail(twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None))
+            if 'getCommands' in args:
+                return defer.succeed({'x': 1, 'y': 2})
+            if 'getVersion' in args:
+                return defer.succeed('TheVersion')
+
+        self.mind.callRemote.side_effect = side_effect
+        conn = pb.Connection(self.master, self.worker, self.mind)
+        info = yield conn.remoteGetWorkerInfo()
+
+        r = {'info': 'test', 'slave_commands': {
+            'y': 2, 'x': 1}, 'version': 'TheVersion'}
+        self.assertEqual(info, r)
+        calls = [mock.call('getWorkerInfo'), mock.call('getVersion')]
+        self.mind.callRemote.assert_has_calls(calls)
+
+    @defer.inlineCallbacks
+    def test_remoteGetWorkerInfo_getWorkerInfo_fails(self):
+        def side_effect(*args, **kwargs):
+            if 'getWorkerInfo' in args:
+                return defer.fail(twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None))
             if 'getSlaveInfo' in args:
                 return defer.fail(twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None))

@@ -73,6 +73,14 @@ Changes for Developers
 
 * EC2 Latent Worker upgraded from ``boto2`` to ``boto3``.
 
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Master/worker protocol has been changed:
+
+  * ``getSlaveInfo`` remote method was renamed to ``getWorkerInfo``.
+
+
 Details
 -------
 
