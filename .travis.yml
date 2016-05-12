@@ -147,6 +147,8 @@ install:
   # https://github.com/pypa/setuptools/issues/500
   - "[ $TESTS != setuppy_test ] || pip install autobahn Twisted"
 
+  - "pip list"
+
 before_script:
   # create real MySQL database for tests
   - mysql -e 'create database bbtest;'
@@ -178,8 +180,6 @@ script:
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
 
   - "[ $TESTS != trial_worker_only ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
-
-  - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
 
 notifications:
   email: false
