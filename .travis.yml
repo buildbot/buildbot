@@ -89,9 +89,9 @@ matrix:
 install:
   - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
-  - "echo 'travis_fold:start:codecov'; pip install codecov; echo 'travis_fold:end:codecov'"
-  - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
-  - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY; echo 'travis_fold:end:sa'"
+  - pip install codecov
+  - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
+  - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
   # mock is preinstalled on Travis
   # Install lz4 for log compression utest
