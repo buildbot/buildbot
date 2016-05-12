@@ -417,11 +417,10 @@ class KatanaBuildChooser(BasicBuildChooser):
         # reset the checkMerges in case the breq still in the master cache
         breq.checkMerges = True
         breq.retries = 0
-        if hasattr(breq, 'brdict') and breq.brdict:
-            if self.unclaimedBrdicts and breq.brdict in self.unclaimedBrdicts:
-                self.unclaimedBrdicts.remove(breq.brdict)
-            if self.resumeBrdicts and breq.brdict in self.resumeBrdicts:
-                self.resumeBrdicts.remove(breq.brdict)
+        if self.unclaimedBrdicts and breq.brdict and breq.brdict in self.unclaimedBrdicts:
+            self.unclaimedBrdicts.remove(breq.brdict)
+        if self.resumeBrdicts and breq.brdict and breq.brdict in self.resumeBrdicts:
+            self.resumeBrdicts.remove(breq.brdict)
         self.breqCache.remove(breq.id)
 
     def removeBuildRequests(self, breqs):
@@ -448,10 +447,6 @@ class KatanaBuildChooser(BasicBuildChooser):
                               function_name="KatanaBuildChooser._getBuildRequestForBrdict")
         breq = yield self.breqCache.get(brdict['brid'], master=self.master, brdict=brdict)
         breq.brdict = brdict
-        if not hasattr(breq, 'checkMerges'):
-            breq.checkMerges = True
-        if not hasattr(breq, 'retries'):
-            breq.retries = 0
         timerLogFinished(msg="_getBuildRequestForBrdict finished", timer=timer)
         defer.returnValue(breq)
 
@@ -708,6 +703,14 @@ class KatanaBuildChooser(BasicBuildChooser):
         defer.returnValue(None)
 
     @defer.inlineCallbacks
+    def selectSlave(self, breq):
+        selected_slave = yield self._popNextSlave()
+        #  make sure slave+ is usable for the breq
+        slave = yield self._pickUpSlave(selected_slave, breq) if selected_slave else None
+        self.logSlaveSelectionStatus(breq, selected_slave, slave)
+        defer.returnValue(slave)
+
+    @defer.inlineCallbacks
     def popNextBuildToResume(self):
         nextBuild = (None, None)
 
@@ -724,12 +727,9 @@ class KatanaBuildChooser(BasicBuildChooser):
             return
 
         #  2. pick a slave
-        slave = yield self._popNextSlave()
+        slave = yield self.selectSlave(breq)
 
-        #  3. make sure slave+ is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq) if slave else None
-
-        #  4. done? otherwise we will try another build
+        #  3. done? otherwise we will try another build
         if slave:
             nextBuild = (slave, breq)
 
@@ -801,6 +801,15 @@ class KatanaBuildChooser(BasicBuildChooser):
         mergeCheckFinished()
         defer.returnValue(False)
 
+    def logSlaveSelectionStatus(self, breq, selected_slave, usable_slave):
+        if selected_slave and selected_slave.slave and not usable_slave:
+            log.msg("KatanaBuildChooser selected slave %s but is not usable for the buildrequest: %s buildername: %s" %
+                    (selected_slave.slave.slavename, breq.id, breq.buildername))
+
+        if (not selected_slave or not selected_slave.slave) and not usable_slave:
+            log.msg("KatanaBuildChooser failed to select slave for buildrequest: %s buildername: %s" %
+                    (breq.id, breq.buildername))
+
     @defer.inlineCallbacks
     def popNextBuild(self):
         nextBuild = (None, None)
@@ -818,12 +827,9 @@ class KatanaBuildChooser(BasicBuildChooser):
             return
 
         #  2. pick a slave
-        slave = yield self._popNextSlave()
+        slave = yield self.selectSlave(breq)
 
-        #  3. make sure slave+ is usable for the breq
-        slave = yield self._pickUpSlave(slave, breq) if slave else None
-
-        #  4. done? otherwise we will try another build
+        #  3. done? otherwise we will try another build
         if slave:
             nextBuild = (slave, breq)
 

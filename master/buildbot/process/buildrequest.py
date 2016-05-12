@@ -82,6 +82,9 @@ class BuildRequest(object):
     source = None
     sources = None
     submittedAt = None
+    brdict = None
+    checkMerges = True
+    retries = 0
 
     @classmethod
     def fromBrdict(cls, master, brdict):
