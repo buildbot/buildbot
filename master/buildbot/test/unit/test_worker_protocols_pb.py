@@ -160,7 +160,8 @@ class TestConnection(unittest.TestCase):
     def test_remoteGetWorkerInfo_getSlaveInfo_fails(self):
         def side_effect(*args, **kwargs):
             if 'getSlaveInfo' in args:
-                return defer.fail(twisted_pb.NoSuchMethod())
+                return defer.fail(twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None))
             if 'getCommands' in args:
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
