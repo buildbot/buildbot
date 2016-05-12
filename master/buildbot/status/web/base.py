@@ -272,10 +272,14 @@ def path_to_step(request, stepstatus, codebases = True):
     return (path_to_build(request, stepstatus.getBuild(), False) +
             "/steps/%s" % urllib.quote(stepstatus.getName(), safe='') + codebases_arg)
 
+def absolute_path_to_slave(status, slave):
+    return slave_path(status.getBuildbotURL(), slave)
+
 def path_to_slave(request, slave):
-    return (path_to_root(request) +
-            "buildslaves/" +
-            urllib.quote(slave.getName(), safe=''))
+    return slave_path(path_to_root(request), slave)
+
+def slave_path(root, slave):
+    return root + "buildslaves/" + urllib.quote(slave.getName(), safe='')
 
 def path_to_change(request, change):
     return (path_to_root(request) +

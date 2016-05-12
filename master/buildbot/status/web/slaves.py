@@ -22,8 +22,8 @@ from twisted.web.util import Redirect
 from twisted.web.resource import NoResource
 from buildbot.status.web.base import HtmlResource, \
     BuildLineMixin, ActionResource, path_to_slave, path_to_authzfail, path_to_json_slaves, \
-    path_to_json_past_slave_builds
-from buildbot.status.web.status_json import SlavesJsonResource, FilterOut, PastBuildsJsonResource, SlaveJsonResource
+    path_to_json_past_slave_builds, absolute_path_to_slave
+from buildbot.status.web.status_json import FilterOut, PastBuildsJsonResource, SlaveJsonResource
 
 
 class ShutdownActionResource(ActionResource):
@@ -39,8 +39,9 @@ class ShutdownActionResource(ActionResource):
         url = None
         if res:
             username = authz.getUsernameFull(request)
+            slave_url = absolute_path_to_slave(self.slave.master.status, self.slave)
             log.msg("Shutdown %s gracefully requested by %s" % (self.slave.name, username))
-            self.slave.master.status.slaveShutdownGraceFully(self.slave.name, username)
+            self.slave.master.status.slaveShutdownGraceFully(self.slave.name, slave_url, username)
             self.slave.setGraceful(True)
             url = path_to_slave(request, self.slave)
         else:
@@ -63,11 +64,12 @@ class PauseActionResource(ActionResource):
         url = None
         if res:
             username = authz.getUsernameFull(request)
+            slave_url = absolute_path_to_slave(self.slave.master.status, self.slave)
             if self.slave.isPaused():
-                self.slave.master.status.slaveUnpaused(self.slave.name, username)
+                self.slave.master.status.slaveUnpaused(self.slave.name, slave_url, username)
                 action = "Unpause"
             else:
-                self.slave.master.status.slavePaused(self.slave.name, username)
+                self.slave.master.status.slavePaused(self.slave.name, slave_url, username)
                 action = "Pause"
             log.msg("%s %s requested by %s" % (action, self.slave.name, username))
             self.slave.setPaused(self.state)
