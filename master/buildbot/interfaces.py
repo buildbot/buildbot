@@ -976,6 +976,15 @@ class IStatusReceiver(Interface):
     def slaveDisconnected(slaveName):
         """The slave has disconnected."""
 
+    def slavePaused(slavename, url, user):
+        """The slave has been paused."""
+
+    def slaveUnpaused(slavename, url, user):
+        """The slave has been Unpaused."""
+
+    def slaveShutdownGraceFully(slavename, url, user):
+        """The slave has been shut down gracefully."""
+
     def checkConfig(otherStatusReceivers):
         """Verify that there are no other status receivers which conflict with
         the current one.

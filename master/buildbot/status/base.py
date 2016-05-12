@@ -83,6 +83,15 @@ class StatusReceiverBase:
     def slaveDisconnected(self, slaveName):
         pass
 
+    def slavePaused(self, slavename, url, user):
+        pass
+
+    def slaveUnpaused(self, slavename, url, user):
+        pass
+
+    def slaveShutdownGraceFully(self, slavename, url, user):
+        pass
+
     def checkConfig(self, otherStatusReceivers):
         pass
 

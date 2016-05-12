@@ -242,12 +242,18 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                             new_config)
 
+    @defer.inlineCallbacks
     def stopService(self):
+        # TODO: This should be removed when the slave information is persisted
+        if self.slave_status.isPaused():
+            log.msg("Warning: slave '%s' is paused, will disconnect" % self.slave_status.name)
+            yield self.shutdown()
+
         if self.registration:
             self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
-        return service.MultiService.stopService(self)
+        yield service.MultiService.stopService(self)
 
     def findNewSlaveInstance(self, new_config):
         # TODO: called multiple times per reconfig; use 1-element cache?

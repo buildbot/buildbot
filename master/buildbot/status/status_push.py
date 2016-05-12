@@ -331,6 +331,15 @@ class StatusPush(StatusReceiverMultiService):
     def slaveDisconnected(self, slavename):
         self.push('slaveDisconnected', slavename=slavename)
 
+    def slavePaused(self, slavename, url, user):
+        self.push('slavePaused', slavename=slavename, url=url, user=user)
+
+    def slaveUnpaused(self, slavename, url, user):
+        self.push('slaveUnpaused', slavename=slavename, url=url, user=user)
+
+    def slaveShutdownGraceFully(self, slavename, url, user):
+        self.push('slaveShutdownGraceFully', slavename=slavename, url=url, user=user)
+
 
 class HttpStatusPush(StatusPush):
     """Event streamer to a HTTP server."""
@@ -652,6 +661,15 @@ class AutobahnStatusPush(StatusPush):
 
     def slaveDisconnected(self, slavename):
         self.push('slaveDisconnected', slavename=slavename)
+
+    def slavePaused(self, slavename, url, user):
+        self.push('slavePaused', slavename=slavename, url=url, user=user)
+
+    def slaveUnpaused(self, slavename, url, user):
+        self.push('slaveUnpaused', slavename=slavename, url=url, user=user)
+
+    def slaveShutdownGraceFully(self, slavename, url, user):
+        self.push('slaveShutdownGraceFully', slavename=slavename, url=url, user=user)
 
     def logStarted(self, build, step, log):
         #We don't need this event yet

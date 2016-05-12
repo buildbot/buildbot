@@ -616,6 +616,34 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         self.quiet_deferred.addCallback(check)
         return self.quiet_deferred
 
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnUnclaimedQueueFailsToSelectSlave(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True}, addRunningBuilds=True)
+        self.initialized()
+        yield self.generateNewBuilds()
+        self.brd.katanaBuildChooser._popNextSlave = lambda : defer.succeed(None)
+        self.brd.katanaBuildChooser.getSelectedSlaveFromBuildRequest = lambda breq: None
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.processedBuilds, [])
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnBuildChooserFailsToSelectSlave(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True}, addRunningBuilds=True)
+        self.initialized()
+        yield self.generateNewBuilds()
+        self.brd.katanaBuildChooser.getSelectedSlaveFromBuildRequest = lambda breq: None
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.processedBuilds, [('slave-01', [1, 2, 3, 4, 5])])
+
+    @defer.inlineCallbacks
+    def test_maybeStartOrResumeBuildsOnBuildChooserFailsToPickUpSlave(self):
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True}, addRunningBuilds=True)
+        self.initialized()
+        yield self.generateNewBuilds()
+        self.brd.katanaBuildChooser._pickUpSlave = lambda slave, breq: None
+        yield self.brd._maybeStartOrResumeBuildsOn(['bldr1'])
+        self.assertEquals(self.processedBuilds, [('slave-01', [8])])
+
 
 class TestKatanaBuildChooser(KatanaBuildRequestDistributorTestSetup, unittest.TestCase):
 
