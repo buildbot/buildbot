@@ -65,13 +65,6 @@ Fixes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* ``SLAVEPASS`` environment variable is not removed in default-generated ``buildbot.tac``.
-  Environment variables are cleared in places where they are used (e.g. in Docker Latent Worker contrib scripts).
-
-* Master-part handling has been removed from ``buildbot-worker`` log watcher (:bug:`3482`).
-
-* ``WorkerDetectedError`` exception type has been removed.
-
 * EC2 Latent Worker upgraded from ``boto2`` to ``boto3``.
 
 Details
