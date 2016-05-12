@@ -131,7 +131,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         except Exception as e:
             log.msg("Failed to communicate with worker '%s'\n"
                     "%s" % (workerName, e))
-            defer.returnValue(False)
+            defer.returnValue(Failure(e))
 
         conn.info = info
         self.connections[workerName] = conn
