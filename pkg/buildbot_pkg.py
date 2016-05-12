@@ -141,7 +141,7 @@ class my_egg_info(egg_info):
         return egg_info.run(self)
 
 
-# XXX(sa2ajj): this class exists only to address https://bitbucket.org/pypa/setuptools/issue/261
+# XXX(sa2ajj): this class exists only to address https://github.com/pypa/setuptools/issues/261
 # Once that's fixed, this class should go.
 class my_build_py(build_py):
 
