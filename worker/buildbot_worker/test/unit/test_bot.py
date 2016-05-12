@@ -285,9 +285,11 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
             Expect(['echo', 'hello'], os.path.join(
-                self.basedir, 'sb', 'workdir'))
-            + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
-            + 0,
+                self.basedir, 'sb', 'workdir')) +
+            {'hdr': 'headers'} +
+            {'stdout': 'hello\n'} +
+            {'rc': 0} +
+            0,
         )
 
         d = defer.succeed(None)
@@ -319,9 +321,9 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # except that we interrupt it)
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir'))
-            + {'hdr': 'headers'}
-            + {'wait': True}
+                self.basedir, 'sb', 'workdir')) +
+            {'hdr': 'headers'} +
+            {'wait': True}
         )
 
         d = defer.succeed(None)
@@ -364,8 +366,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to generate a failure
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir'))
-            + failure.Failure(Exception("Oops"))
+                self.basedir, 'sb', 'workdir')) +
+            failure.Failure(Exception("Oops"))
         )
         # patch the log.err, otherwise trial will think something *actually*
         # failed
