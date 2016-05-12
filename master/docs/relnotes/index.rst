@@ -45,6 +45,7 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Support for python 2.6 was dropped from the master.
 
 Buildslave
 ----------
