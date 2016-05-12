@@ -24,8 +24,9 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 try:
     from moto import mock_ec2
     assert mock_ec2
+    # Tests are using boto, but EC2LatentWorker required boto3.
     import boto
-    assert boto
+    import boto3  # noqa pylint: disable=unused-import
 except ImportError:
     boto = None
     ec2 = None
@@ -38,7 +39,7 @@ if boto is not None:
 # redefine the mock_ec2 decorator to skip the test if boto or moto
 # isn't installed
 def skip_ec2(f):
-    f.skip = "boto or moto is not installed"
+    f.skip = "boto, or boto3, or moto is not installed"
     return f
 if boto is None:
     mock_ec2 = skip_ec2
