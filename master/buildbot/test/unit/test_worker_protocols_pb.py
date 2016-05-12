@@ -256,3 +256,24 @@ class TestConnection(unittest.TestCase):
         conn.perspective_keepalive()
 
         conn.worker.messageReceivedFromWorker.assert_called_with()
+
+
+class Test_wrapRemoteException(unittest.TestCase):
+
+    def test_raises_NoSuchMethod(self):
+        def f():
+            with pb._wrapRemoteException():
+                raise twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None)
+
+        self.assertRaises(pb._NoSuchMethod, f)
+
+    def test_raises_unknown(self):
+        class Error(Exception):
+            pass
+
+        def f():
+            with pb._wrapRemoteException():
+                raise Error()
+
+        self.assertRaises(Error, f)
