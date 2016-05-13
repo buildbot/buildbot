@@ -534,7 +534,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if collapseRequests_fn is False:
             collapseRequests_fn = None
         elif collapseRequests_fn is True:
-            collapseRequests_fn = Builder._defaultCollapseRequestFn
+            collapseRequests_fn = self._defaultCollapseRequestFn
 
         return collapseRequests_fn
 
