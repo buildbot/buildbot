@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python.failure import Failure
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
