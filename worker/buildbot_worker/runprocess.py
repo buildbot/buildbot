@@ -368,12 +368,10 @@ class RunProcess(object):
         self.buflen = 0
         self.sendBuffersTimer = None
 
-        # TODO: remove this when master will have non-generic support of
-        # buildbot-worker.
-        if usePTY == "slave-config":
-            self.usePTY = False
-        else:
-            self.usePTY = usePTY
+        assert usePTY in (True, False), \
+            "Unexpected usePTY argument value: {!r}. Expected boolean.".format(
+                usePTY)
+        self.usePTY = usePTY
 
         # usePTY=True is a convenience for cleaning up all children and
         # grandchildren of a hung command. Fall back to usePTY=False on systems

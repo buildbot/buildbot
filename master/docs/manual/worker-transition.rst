@@ -309,7 +309,6 @@ anyway.
      - :py:attr:`~buildbot.process.remotecommand.RemoteCommand.worker`
 
 
-
 Plugins
 -------
 
@@ -527,6 +526,10 @@ List of database-related changes in API (fallback for old API is provided):
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
      - :py:attr:`buildbot.db.connector.DBConnector.workers`
 
+``usePTY`` changes
+------------------
+
+``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work, but discouraged).
 
 .. _Worker-Transition-Buildbot-Worker:
 

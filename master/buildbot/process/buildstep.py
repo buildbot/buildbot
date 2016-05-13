@@ -1074,7 +1074,7 @@ class ShellMixin(object):
     env = {}
     want_stdout = True
     want_stderr = True
-    usePTY = 'slave-config'
+    usePTY = None
     logfiles = {}
     lazylogfiles = {}
     timeout = 1200
@@ -1150,7 +1150,7 @@ class ShellMixin(object):
         self.command = kwargs['command']
 
         # check for the usePTY flag
-        if kwargs['usePTY'] != 'slave-config':
+        if kwargs['usePTY'] is not None:
             if self.workerVersionIsOlderThan("shell", "2.7"):
                 if stdio is not None:
                     yield stdio.addHeader(

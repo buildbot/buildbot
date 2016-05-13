@@ -49,7 +49,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
     def test_empty(self):
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="test")
             + 0
         )
@@ -61,7 +61,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(subunit.SubunitShellCommand(command='test',
                                                    failureOnNoTests=True))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="test")
             + 0
         )
@@ -72,7 +72,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
     def test_warnings(self):
         self.setupStep(subunit.SubunitShellCommand(command='test'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="test")
             + 0
         )

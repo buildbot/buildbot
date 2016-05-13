@@ -82,7 +82,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
         def __init__(self, workdir, command, env=None, want_stdout=1,
                      want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
-                     usePTY="slave-config", logEnviron=True, collectStdout=False,
+                     usePTY=None, logEnviron=True, collectStdout=False,
                      collectStderr=False, interruptSignal=None, initialStdin=None,
                      decodeRC=None,
                      stdioLogName='stdio'):
@@ -177,3 +177,31 @@ class TestWorkerTransition(unittest.TestCase):
             old = cmd.buildslave
 
         self.assertIdentical(old, w)
+
+    def test_RemoteShellCommand_usePTY(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command')
+
+        self.assertTrue(cmd.args['usePTY'] is None)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command', usePTY=True)
+
+        self.assertTrue(cmd.args['usePTY'])
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command', usePTY=False)
+
+        self.assertFalse(cmd.args['usePTY'])
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slave-config' value of 'usePTY' "
+                                "attribute is deprecated"):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command', usePTY='slave-config')
+
+        self.assertTrue(cmd.args['usePTY'] is None)

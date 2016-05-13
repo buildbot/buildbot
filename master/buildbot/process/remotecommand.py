@@ -26,6 +26,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
 from buildbot.worker_transition import WorkerAPICompatMixin
+from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 class RemoteException(Exception):
@@ -337,7 +338,7 @@ class RemoteShellCommand(RemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20 * 60, maxTime=None, sigtermTime=None,
-                 logfiles=None, usePTY="slave-config", logEnviron=True,
+                 logfiles=None, usePTY=None, logEnviron=True,
                  collectStdout=False, collectStderr=False,
                  interruptSignal=None,
                  initialStdin=None, decodeRC=None,
@@ -364,6 +365,13 @@ class RemoteShellCommand(RemoteCommand):
             # ShellCommand gets its own copy, any start() methods won't be
             # able to modify the original.
             env = env.copy()
+
+        if usePTY == 'slave-config':
+            reportDeprecatedWorkerNameUsage(
+                "'slave-config' value of 'usePTY' attribute is deprecated, "
+                "use None instead.")
+            usePTY = None
+
         args = {'workdir': workdir,
                 'env': env,
                 'want_stdout': want_stdout,
@@ -384,6 +392,15 @@ class RemoteShellCommand(RemoteCommand):
                                stdioLogName=stdioLogName)
 
     def _start(self):
+        if self.args['usePTY'] is None:
+            if self.step.workerVersionIsOlderThan("shell", "3.0"):
+                # Old worker default of usePTY is to use worker-configuration.
+                self.args['usePTY'] = "slave-config"
+            else:
+                # buildbot-worker doesn't support worker-configured usePTY,
+                # and usePTY defaults to False.
+                self.args['usePTY'] = False
+
         self.args['command'] = self.command
         if self.remote_command == "shell":
             # non-ShellCommand worker commands are responsible for doing this

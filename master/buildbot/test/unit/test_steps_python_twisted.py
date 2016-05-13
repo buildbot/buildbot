@@ -106,7 +106,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH='somepath'))
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
@@ -124,7 +123,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2', 'path3']))
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
@@ -142,7 +140,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'},
                         env=dict(PYTHONPATH=['path1', 'path2']))
             + ExpectShell.log('stdio', stdout="Ran 0 tests\n")
@@ -159,7 +156,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'})
             + ExpectShell.log('stdio', stdout="Ran 1 tests\n")
             + 0
@@ -175,7 +171,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'})
             + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
             + 0
@@ -191,7 +186,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'})
             + ExpectShell.log('stdio', stdout=failureLog)
             + 1
@@ -216,7 +210,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', 'testname'],
-                        usePTY="slave-config",
                         logfiles={'test.log': '_trial_temp/test.log'})
             + ExpectShell.log('stdio', stdout="Ran 2 tests\n")
             + 0
@@ -239,7 +232,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
                                  'testname'],
-                        usePTY="slave-config",
                         logfiles={
                             'test.0.log': '_trial_temp/0/test.log',
                             'err.0.log': '_trial_temp/0/err.log',
@@ -268,7 +260,6 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(workdir='build',
                         command=['trial', '--reporter=bwverbose', '--jobs=2',
                                  'testname'],
-                        usePTY="slave-config",
                         logfiles={
                             'test.0.log': '_trial_temp/0/test.log',
                             'err.0.log': '_trial_temp/0/err.log',
@@ -298,8 +289,7 @@ class HLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=[
-                            'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],
-                        usePTY="slave-config")
+                            'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],)
             +
             ExpectShell.log(
                 'stdio', stdout="dunno what hlint output looks like..\n")
@@ -315,8 +305,7 @@ class HLint(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             ExpectShell(workdir='build',
                         command=[
-                            'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'],
-                        usePTY="slave-config")
+                            'bin/lore', '-p', '--output', 'lint', 'foo.xhtml'])
             + ExpectShell.log('stdio', stdout="colon: meaning warning\n")
             + 0
         )

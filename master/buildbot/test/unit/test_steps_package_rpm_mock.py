@@ -45,7 +45,7 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
             Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
                                      'build/state.log']})
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT'],
                         logfiles={'build.log': 'build.log',
                                   'root.log': 'root.log',
@@ -61,7 +61,7 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
                                      'build/RESULT/root.log',
                                      'build/RESULT/state.log']})
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--resultdir', 'RESULT'],
                         logfiles={'build.log': 'RESULT/build.log',
@@ -80,7 +80,7 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
                                      'build/RESULT/root.log',
                                      'build/RESULT/state.log']})
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--resultdir', 'RESULT'],
                         logfiles={'build.log': 'RESULT/build.log',
@@ -109,7 +109,7 @@ class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
             Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
                                      'build/state.log']})
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--buildsrpm', '--spec', 'foo.spec',
                                  '--sources', '.'],
@@ -139,7 +139,7 @@ class TestMockRebuild(steps.BuildStepMixin, unittest.TestCase):
             Expect('rmdir', {'dir': ['build/build.log', 'build/root.log',
                                      'build/state.log']})
             + 0,
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['mock', '--root', 'TESTROOT',
                                  '--rebuild', 'foo.src.rpm'],
                         logfiles={'build.log': 'build.log',

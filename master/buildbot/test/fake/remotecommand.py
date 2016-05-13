@@ -87,7 +87,7 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
     def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
                  timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
-                 usePTY="slave-config", logEnviron=True, collectStdout=False,
+                 usePTY=None, logEnviron=True, collectStdout=False,
                  collectStderr=False,
                  interruptSignal=None, initialStdin=None, decodeRC=None,
                  stdioLogName='stdio'):
@@ -300,7 +300,7 @@ class ExpectShell(Expect):
     def __init__(self, workdir, command, env={},
                  want_stdout=1, want_stderr=1, initialStdin=None,
                  timeout=20 * 60, maxTime=None, logfiles={},
-                 usePTY="slave-config", logEnviron=True):
+                 usePTY=None, logEnviron=True):
         args = dict(workdir=workdir, command=command, env=env,
                     want_stdout=want_stdout, want_stderr=want_stderr,
                     initial_stdin=initialStdin,
