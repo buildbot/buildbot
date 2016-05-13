@@ -77,20 +77,22 @@ matrix:
   fast_finish: true
   include:
     # Tests of buildbot-worker and buildbot-slave on python 2.6
+    # Specify SQLALCHEMY=latest to avoid errors installing.
     - python: "2.6"
-      env: TWISTED=14.0.2 TESTS=trial_worker
+      env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
     - python: "2.6"
-      env: TWISTED=15.4.0 TESTS=trial_worker
+      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
 #    - python: "3.4"
 #      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
 # Dependencies installation commands
 install:
+  - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
-  - "echo 'travis_fold:start:codecov'; pip install codecov; echo 'travis_fold:end:codecov'"
-  - "echo 'travis_fold:start:tw'; [ $TWISTED = latest ] || pip install Twisted==$TWISTED; echo 'travis_fold:end:tw'"
-  - "echo 'travis_fold:start:sa'; [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY; echo 'travis_fold:end:sa'"
+  - pip install codecov
+  - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
+  - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
   # mock is preinstalled on Travis
   # Install lz4 for log compression utest
