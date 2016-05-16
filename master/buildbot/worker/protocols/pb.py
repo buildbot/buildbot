@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 from __future__ import absolute_import
 
+import contextlib
+
 from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -101,6 +103,22 @@ class FileWriterProxy(ReferenceableProxy):
     ImplClass = base.FileWriterImpl
 
 
+class _NoSuchMethod(Exception):
+    """Rewrapped pb.NoSuchMethod remote exception"""
+    pass
+
+
+@contextlib.contextmanager
+def _wrapRemoteException():
+    try:
+        yield
+    except pb.RemoteError as ex:
+        if ex.remoteType == 'twisted.spread.flavors.NoSuchMethod':
+            raise _NoSuchMethod(ex)
+        else:
+            raise
+
+
 class Connection(base.Connection, pb.Avatar):
     proxies = {base.FileWriterImpl: FileWriterProxy,
                base.FileReaderImpl: FileReaderProxy}
@@ -175,22 +193,27 @@ class Connection(base.Connection, pb.Avatar):
     @defer.inlineCallbacks
     def remoteGetWorkerInfo(self):
         info = {}
+
         try:
-            info = yield self.mind.callRemote('getSlaveInfo')
-        except pb.NoSuchMethod:
+            with _wrapRemoteException():
+                info = yield self.mind.callRemote('getSlaveInfo')
+        except _NoSuchMethod:
             log.msg("Worker.getSlaveInfo is unavailable - ignoring")
 
         # newer workers send all info in one command
         if "slave_commands" in info:
             defer.returnValue(info)
         try:
-            info["slave_commands"] = yield self.mind.callRemote('getCommands')
-        except pb.NoSuchMethod:
+            with _wrapRemoteException():
+                info["slave_commands"] = yield self.mind.callRemote(
+                    'getCommands')
+        except _NoSuchMethod:
             log.msg("Worker.getCommands is unavailable - ignoring")
 
         try:
-            info["version"] = yield self.mind.callRemote('getVersion')
-        except pb.NoSuchMethod:
+            with _wrapRemoteException():
+                info["version"] = yield self.mind.callRemote('getVersion')
+        except _NoSuchMethod:
             log.msg("Worker.getVersion is unavailable - ignoring")
 
         defer.returnValue(info)
@@ -216,20 +239,20 @@ class Connection(base.Connection, pb.Avatar):
         # First, try the "new" way - calling our own remote's shutdown
         # method. The method was only added in 0.8.3, so ignore NoSuchMethod
         # failures.
+        @defer.inlineCallbacks
         def new_way():
-            d = self.mind.callRemote('shutdown')
-            d.addCallback(lambda _: True)  # successful shutdown request
+            try:
+                with _wrapRemoteException():
+                    yield self.mind.callRemote('shutdown')
+                    # successful shutdown request
+                    defer.returnValue(True)
+            except _NoSuchMethod:
+                # fall through to the old way
+                defer.returnValue(False)
 
-            @d.addErrback
-            def check_nsm(f):
-                f.trap(pb.NoSuchMethod)
-                return False  # fall through to the old way
-
-            @d.addErrback
-            def check_connlost(f):
-                f.trap(pb.PBConnectionLost)
-                return True  # the worker is gone, so call it finished
-            return d
+            except pb.PBConnectionLost:
+                # the worker is gone, so call it finished
+                defer.returnValue(True)
 
         if (yield new_way()):
             return  # done!

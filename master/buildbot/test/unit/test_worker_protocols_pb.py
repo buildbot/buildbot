@@ -160,7 +160,8 @@ class TestConnection(unittest.TestCase):
     def test_remoteGetWorkerInfo_getSlaveInfo_fails(self):
         def side_effect(*args, **kwargs):
             if 'getSlaveInfo' in args:
-                return defer.fail(twisted_pb.NoSuchMethod())
+                return defer.fail(twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None))
             if 'getCommands' in args:
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
@@ -255,3 +256,32 @@ class TestConnection(unittest.TestCase):
         conn.perspective_keepalive()
 
         conn.worker.messageReceivedFromWorker.assert_called_with()
+
+
+class Test_wrapRemoteException(unittest.TestCase):
+
+    def test_raises_NoSuchMethod(self):
+        def f():
+            with pb._wrapRemoteException():
+                raise twisted_pb.RemoteError(
+                    'twisted.spread.flavors.NoSuchMethod', None, None)
+
+        self.assertRaises(pb._NoSuchMethod, f)
+
+    def test_raises_unknown(self):
+        class Error(Exception):
+            pass
+
+        def f():
+            with pb._wrapRemoteException():
+                raise Error()
+
+        self.assertRaises(Error, f)
+
+    def test_raises_RemoteError(self):
+        def f():
+            with pb._wrapRemoteException():
+                raise twisted_pb.RemoteError(
+                    'twisted.spread.flavors.ProtocolError', None, None)
+
+        self.assertRaises(twisted_pb.RemoteError, f)
