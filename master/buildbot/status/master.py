@@ -18,7 +18,6 @@ from future.moves.urllib.parse import quote as urlquote
 from future.utils import iteritems
 from future.utils import itervalues
 from twisted.internet import defer
-from twisted.persisted import styles
 from twisted.python import log
 from zope.interface import implements
 
@@ -29,7 +28,6 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.util import bbcollections
-from buildbot.util import pickle
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 
@@ -340,36 +338,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         """
         @rtype: L{BuilderStatus}
         """
-        filename = os.path.join(self.basedir, basedir, "builder")
-        log.msg("trying to load status pickle from %s" % filename)
-        builder_status = None
-        try:
-            with open(filename, "rb") as f:
-                builder_status = pickle.load(f)
-            builder_status.master = self.master
-
-            # (bug #1068) if we need to upgrade, we probably need to rewrite
-            # this pickle, too.  We determine this by looking at the list of
-            # Versioned objects that have been unpickled, and (after doUpgrade)
-            # checking to see if any of them set wasUpgraded.  The Versioneds'
-            # upgradeToVersionNN methods all set this.
-            versioneds = styles.versionedsToUpgrade
-            styles.doUpgrade()
-            if True in [hasattr(o, 'wasUpgraded') for o in itervalues(versioneds)]:
-                log.msg("re-writing upgraded builder pickle")
-                builder_status.saveYourself()
-
-        except IOError:
-            log.msg("no saved status pickle, creating a new one")
-        except Exception:
-            log.err("error while loading status pickle, creating a new one")
-        if not builder_status:
-            builder_status = builder.BuilderStatus(name, tags, self.master,
-                                                   description)
-            builder_status.addPointEvent(["builder", "created"])
-        log.msg("added builder %s with tags %r" % (name, tags))
-        # an unpickled object might not have tags set from before,
-        # so set it here to make sure
+        builder_status = builder.BuilderStatus(name, tags, self.master,
+                                               description)
         builder_status.setTags(tags)
         builder_status.description = description
         builder_status.master = self.master
@@ -378,10 +348,6 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builder_status.status = self
 
         builder_status.setBigState("offline")
-
-        for t in self.watchers:
-            self.announceNewBuilder(t, name, builder_status)
-
         return builder_status
 
     def builderRemoved(self, name):
