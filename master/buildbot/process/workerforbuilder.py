@@ -21,11 +21,12 @@ from buildbot.worker_transition import WorkerAPICompatMixin
 
 
 class States(Names):
-    ATTACHING = NamedConstant()  # worker attached, still checking hostinfo/etc
-    IDLE = NamedConstant()  # idle, available for use
-    BUILDING = NamedConstant()  # build is running
-    LATENT = NamedConstant()  # latent worker is not substantiated; similar to idle
-    SUBSTANTIATING = NamedConstant()
+    # The worker isn't attached, or is in the process of attaching.
+    DETACHED = NamedConstant()
+    # The worker is available to build: either attached, or a latent worker.
+    AVAILABLE = NamedConstant()
+    # The worker is building.
+    BUILDING = NamedConstant()
 
 
 class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
@@ -70,7 +71,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         return False
 
     def isBusy(self):
-        return self.state not in (States.IDLE, States.LATENT)
+        return self.state != States.AVAILABLE
 
     def buildStarted(self):
         self.state = States.BUILDING
@@ -84,7 +85,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
             worker_buildStarted(self)
 
     def buildFinished(self):
-        self.state = States.IDLE
+        self.state = States.AVAILABLE
         if self.worker:
             self.worker.buildFinished(self)
 
@@ -95,7 +96,6 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         @type  commands: dict: string -> string, or None
         @param commands: provides the worker's version of each RemoteCommand
         """
-        self.state = States.ATTACHING
         self.remoteCommands = commands  # maps command name to version
         if self.worker is None:
             self.worker = worker
@@ -109,14 +109,11 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         d.addCallback(lambda _:
                       self.worker.conn.remotePrint(message="attached"))
 
-        @d.addCallback
-        def setIdle(res):
-            self.state = States.IDLE
-            return self
+        d.addCallback(lambda _: self)
 
         return d
 
-    def prepare(self, builder_status, build):
+    def prepare(self, build):
         if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
         return defer.succeed(True)
@@ -199,14 +196,25 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
 
     def __init__(self):
         AbstractWorkerForBuilder.__init__(self)
-        self.state = States.ATTACHING
+        self.state = States.DETACHED
+
+    def attached(self, worker, commands):
+        d = AbstractWorkerForBuilder.attached(self, worker, commands)
+
+        @d.addCallback
+        def setAvailable(res):
+            # Only set available on non-latent workers, since latent workers
+            # only attach while a build is in progress.
+            self.state = States.AVAILABLE
+            return res
+        return d
 
     def detached(self):
         AbstractWorkerForBuilder.detached(self)
         if self.worker:
             self.worker.removeWorkerForBuilder(self)
         self.worker = None
-        self.state = States.ATTACHING
+        self.state = States.DETACHED
 
 
 class LatentWorkerForBuilder(AbstractWorkerForBuilder):
@@ -214,36 +222,22 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
     def __init__(self, worker, builder):
         AbstractWorkerForBuilder.__init__(self)
         self.worker = worker
-        self.state = States.LATENT
+        self.state = States.AVAILABLE
         self.setBuilder(builder)
         self.worker.addWorkerForBuilder(self)
         log.msg("Latent worker %s attached to %s" % (worker.workername,
                                                      self.builder_name))
 
-    def prepare(self, builder_status, build):
+    def prepare(self, build):
         # If we can't lock, then don't bother trying to substantiate
         if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
 
         log.msg("substantiating worker %s" % (self,))
         d = self.substantiate(build)
-
-        @d.addCallback
-        def substantiation_cancelled(res):
-            # if res is False, latent worker cancelled subtantiation
-            if not res:
-                self.state = States.LATENT
-            return res
-
-        @d.addErrback
-        def substantiation_failed(f):
-            builder_status.addPointEvent(['removing', 'latent',
-                                          self.worker.workername])
-            return f
         return d
 
     def substantiate(self, build):
-        self.state = States.SUBSTANTIATING
         d = self.worker.substantiate(self, build)
         if not self.worker.substantiated:
             event = self.builder.builder_status.addEvent(
@@ -260,17 +254,12 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
                 return res
 
             def substantiation_failed(res):
-                self.state = States.LATENT
                 event.text = ["substantiate", "failed"]
                 # TODO add log of traceback to event
                 event.finish()
                 return res
             d.addCallbacks(substantiated, substantiation_failed)
         return d
-
-    def detached(self):
-        AbstractWorkerForBuilder.detached(self)
-        self.state = States.LATENT
 
     def ping(self, status=None):
         if not self.worker.substantiated:

@@ -1130,7 +1130,7 @@ class TestBuildProperties(unittest.TestCase):
         workerforbuilder = Mock(name='workerforbuilder')
         workerforbuilder.worker = w
 
-        build.setupWorkerForBuilder(workerforbuilder)
+        build.workerforbuilder = workerforbuilder
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             new = build.getWorkerName()

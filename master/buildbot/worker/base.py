@@ -646,7 +646,6 @@ class AbstractLatentWorker(AbstractWorker):
                     build_wait_timeout=60 * 10,
                     **kwargs):
         AbstractWorker.checkConfig(self, name, password, **kwargs)
-        self.building = set()
         self.build_wait_timeout = build_wait_timeout
         self._substantiation_notifier = Notifier()
 
@@ -655,6 +654,12 @@ class AbstractLatentWorker(AbstractWorker):
                         **kwargs):
         self.build_wait_timeout = build_wait_timeout
         return AbstractWorker.reconfigService(self, name, password, **kwargs)
+
+    @property
+    def building(self):
+        # A LatentWorkerForBuilder will only be busy if it is building.
+        return {wfb for wfb in itervalues(self.workerforbuilders)
+                if wfb.isBusy()}
 
     def failed_to_start(self, instance_id, instance_state):
         log.msg('%s %s failed to start instance %s (%s)' %
@@ -766,14 +771,11 @@ class AbstractLatentWorker(AbstractWorker):
         return AbstractWorker.canStartBuild(self)
 
     def buildStarted(self, sb):
-        assert self.substantiated
         self._clearBuildWaitTimer()
-        self.building.add(sb.builder_name)
 
     def buildFinished(self, sb):
         AbstractWorker.buildFinished(self, sb)
 
-        self.building.remove(sb.builder_name)
         if not self.building:
             if self.build_wait_timeout == 0:
                 d = self.insubstantiate()
@@ -808,7 +810,6 @@ class AbstractLatentWorker(AbstractWorker):
             del self._shutdown_callback_handle
             self.master.reactor.removeSystemEventTrigger(handle)
         self.substantiated = False
-        self.building.clear()  # just to be sure
         yield d
         self.insubstantiating = False
         self.botmaster.maybeStartBuildsForWorker(self.name)

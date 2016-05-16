@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet.defer import Deferred
 from twisted.python import threadpool
 from twisted.python.failure import Failure
 from twisted.python.filepath import FilePath
@@ -22,63 +21,10 @@ from twisted.trial.unittest import SynchronousTestCase
 from buildbot.config import BuilderConfig
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
+from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util.integration import getMaster
-from buildbot.worker.base import AbstractLatentWorker
-
-try:
-    from buildbot_worker.bot import LocalWorker
-except ImportError:
-    LocalWorker = None
-
-
-class LatentController(object):
-
-    """
-    A controller for ``ControllableLatentWorker``.
-
-    https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
-    """
-
-    def __init__(self, name):
-        self.worker = ControllableLatentWorker(name, self)
-        self.started = False
-
-    def start_instance(self, result):
-        assert self.started
-        self.started = False
-        d, self._start_deferred = self._start_deferred, None
-        d.callback(result)
-
-    def connect_worker(self, workdir):
-        LocalWorker(self.worker.name, workdir.path, False).setServiceParent(
-            self.worker)
-
-
-class ControllableLatentWorker(AbstractLatentWorker):
-
-    """
-    A latent worker that can be contolled by tests.
-    """
-
-    def __init__(self, name, controller):
-        AbstractLatentWorker.__init__(self, name, None)
-        self._controller = controller
-
-    def checkConfig(self, name, _):
-        AbstractLatentWorker.checkConfig(self, name, None)
-
-    def reconfigService(self, name, _):
-        AbstractLatentWorker.reconfigService(self, name, None)
-
-    def start_instance(self, build):
-        self._controller.started = True
-        self._controller._start_deferred = Deferred()
-        return self._controller._start_deferred
-
-    def stop_instance(self, build):
-        return Deferred()
 
 
 class TestException(Exception):
@@ -93,6 +39,49 @@ class Tests(SynchronousTestCase):
     def setUp(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
+
+    def test_latent_workers_start_in_parallel(self):
+        """
+        If there are two latent workers configured, and two build
+        requests for them, both workers will start substantiating
+        conccurently.
+        """
+        controllers = [
+            LatentController('local1'),
+            LatentController('local2'),
+        ]
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local1", "local2"],
+                              factory=BuildFactory()),
+            ],
+            'workers': [controller.worker for controller in controllers],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
+
+        # Request two builds.
+        for i in range(2):
+            bsid, brids = self.successResultOf(
+                master.data.updates.addBuildset(
+                    waited_for=False,
+                    builderids=[builder_id],
+                    sourcestamps=[
+                        {'codebase': '',
+                         'repository': '',
+                         'branch': None,
+                         'revision': None,
+                         'project': ''},
+                    ],
+                )
+            )
+
+        # Check that both workers were requested to start.
+        self.assertEqual(controllers[0].started, True)
+        self.assertEqual(controllers[1].started, True)
 
     def test_refused_substantiations_get_requeued(self):
         """
@@ -313,6 +302,3 @@ class Tests(SynchronousTestCase):
         # that they both finished with success
         self.assertEqual([build['results']
                           for build in finished_builds], [SUCCESS] * 2)
-
-    if LocalWorker is None:
-        test_worker_multiple_substantiations_succeed.skip = "buildbot-slave package is not installed"
