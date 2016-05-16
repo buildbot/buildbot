@@ -181,13 +181,16 @@ script:
 
   - "[ $TESTS != trial_worker_only ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
-  - "echo 'travis_fold:start:piplist'; pip list; echo 'travis_fold:end:piplist'"
-
 notifications:
   email: false
 
 after_success:
   - "[ $TESTS != coverage ] || codecov"
+
+after_script:
+  # List installed packages along with their versions.
+  - "pip list"
+
 sudo: false
 branches:
   # Only build main-line branches.
