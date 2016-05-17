@@ -196,19 +196,28 @@ class Connection(base.Connection, pb.Avatar):
 
         try:
             with _wrapRemoteException():
-                info = yield self.mind.callRemote('getSlaveInfo')
+                # Try to call buildbot-worker method.
+                info = yield self.mind.callRemote('getWorkerInfo')
         except _NoSuchMethod:
-            log.msg("Worker.getSlaveInfo is unavailable - ignoring")
+            # Probably this is deprecated buildslave.
+            log.msg("Worker.getWorkerInfo is unavailable - falling back to "
+                    "deprecated buildslave API")
 
-        # newer workers send all info in one command
-        if "slave_commands" in info:
-            defer.returnValue(info)
-        try:
-            with _wrapRemoteException():
-                info["slave_commands"] = yield self.mind.callRemote(
-                    'getCommands')
-        except _NoSuchMethod:
-            log.msg("Worker.getCommands is unavailable - ignoring")
+            try:
+                with _wrapRemoteException():
+                    info = yield self.mind.callRemote('getSlaveInfo')
+            except _NoSuchMethod:
+                log.msg("Worker.getSlaveInfo is unavailable - ignoring")
+
+            # newer workers send all info in one command
+            if "slave_commands" in info:
+                defer.returnValue(info)
+            try:
+                with _wrapRemoteException():
+                    info["slave_commands"] = yield self.mind.callRemote(
+                        'getCommands')
+            except _NoSuchMethod:
+                log.msg("Worker.getCommands is unavailable - ignoring")
 
         try:
             with _wrapRemoteException():

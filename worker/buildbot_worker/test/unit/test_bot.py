@@ -73,14 +73,14 @@ class TestBot(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_getSlaveInfo(self):
+    def test_getWorkerInfo(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)
         open(os.path.join(infodir, "admin"), "w").write("testy!")
         open(os.path.join(infodir, "foo"), "w").write("bar")
         open(os.path.join(infodir, "environ"), "w").write("something else")
 
-        d = self.bot.callRemote("getSlaveInfo")
+        d = self.bot.callRemote("getWorkerInfo")
 
         def check(info):
             self.assertEqual(info, dict(
@@ -92,8 +92,8 @@ class TestBot(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_getSlaveInfo_nodir(self):
-        d = self.bot.callRemote("getSlaveInfo")
+    def test_getWorkerInfo_nodir(self):
+        d = self.bot.callRemote("getWorkerInfo")
 
         def check(info):
             self.assertEqual(set(info.keys()), set(
@@ -285,9 +285,11 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
             Expect(['echo', 'hello'], os.path.join(
-                self.basedir, 'sb', 'workdir'))
-            + {'hdr': 'headers'} + {'stdout': 'hello\n'} + {'rc': 0}
-            + 0,
+                self.basedir, 'sb', 'workdir')) +
+            {'hdr': 'headers'} +
+            {'stdout': 'hello\n'} +
+            {'rc': 0} +
+            0,
         )
 
         d = defer.succeed(None)
@@ -319,9 +321,9 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # except that we interrupt it)
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir'))
-            + {'hdr': 'headers'}
-            + {'wait': True}
+                self.basedir, 'sb', 'workdir')) +
+            {'hdr': 'headers'} +
+            {'wait': True}
         )
 
         d = defer.succeed(None)
@@ -364,8 +366,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to generate a failure
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir'))
-            + failure.Failure(Exception("Oops"))
+                self.basedir, 'sb', 'workdir')) +
+            failure.Failure(Exception("Oops"))
         )
         # patch the log.err, otherwise trial will think something *actually*
         # failed

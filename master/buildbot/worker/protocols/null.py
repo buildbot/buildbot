@@ -70,7 +70,7 @@ class Connection(base.Connection):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)
 
     def remoteGetWorkerInfo(self):
-        return defer.maybeDeferred(self.worker.bot.remote_getSlaveInfo)
+        return defer.maybeDeferred(self.worker.bot.remote_getWorkerInfo)
 
     def remoteSetBuilderList(self, builders):
         return defer.maybeDeferred(self.worker.bot.remote_setBuilderList, builders)
