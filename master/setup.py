@@ -115,62 +115,62 @@ setup_args = {
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
-        ],
+    ],
     'package_dir': {'www': '../www'},
     'packages': ["buildbot",
-              "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
-              "buildbot.changes",
-              "buildbot.buildslave",
-              "buildbot.steps",
-              "buildbot.steps.package",
-              "buildbot.steps.package.deb",
-              "buildbot.steps.package.rpm",
-              "buildbot.steps.source",
-              "buildbot.process",
-              "buildbot.process.users",
-              "buildbot.clients",
-              "buildbot.monkeypatches",
-              "buildbot.schedulers",
-              "buildbot.scripts",
-              "buildbot.db",
-              "buildbot.db.migrate.versions",
-              "buildbot.util",
-              "buildbot.test",
-              "buildbot.test.fake",
-              "buildbot.test.unit",
-              "buildbot.test.util",
-              "buildbot.test.regressions", "www"
-              ],
+                 "buildbot.status", "buildbot.status.web", "buildbot.status.web.hooks",
+                 "buildbot.changes",
+                 "buildbot.buildslave",
+                 "buildbot.steps",
+                 "buildbot.steps.package",
+                 "buildbot.steps.package.deb",
+                 "buildbot.steps.package.rpm",
+                 "buildbot.steps.source",
+                 "buildbot.process",
+                 "buildbot.process.users",
+                 "buildbot.clients",
+                 "buildbot.monkeypatches",
+                 "buildbot.schedulers",
+                 "buildbot.scripts",
+                 "buildbot.db",
+                 "buildbot.db.migrate.versions",
+                 "buildbot.util",
+                 "buildbot.test",
+                 "buildbot.test.fake",
+                 "buildbot.test.unit",
+                 "buildbot.test.util",
+                 "buildbot.test.regressions", "www"
+                 ],
     'data_files': [
-                ("buildbot", [
-                    "buildbot/buildbot.png",
-                ]),
-                ("buildbot/db/migrate", [
-                    "buildbot/db/migrate/migrate.cfg",
-                ]),
-                include("buildbot/db/migrate/versions", "*.py"),
-                ("buildbot/clients", [
-                    "buildbot/clients/debug.glade",
-                ]),
-                include("buildbot/status/web/files/", '*.png'),
-                include("www/fonts/katana_icons", '*', package_path="../www/fonts/katana_icons"),
-                include("www/fonts/leckerlione", '*', package_path="../www/fonts/leckerlione"),
-                include("www/fonts/pacifico", '*', package_path="../www/fonts/pacifico"),
-                include("www/images", '*', package_path="../www/images"),
-                include("www/prod/css", '*', package_path="../www/prod/css"),
-                include("www/prod/script", '*', package_path="../www/prod/script"),
-                ("www", ["../www/favicon.ico", "../www/robots.txt", "../www/templates_readme.txt"]),
-                include("www/templates", '*.html', package_path="../www/templates"),
-                include("www/templates", '*.xml', package_path="../www/templates"),
-                ("buildbot/scripts", [
-                    "buildbot/scripts/sample.cfg",
-                    "buildbot/scripts/buildbot_tac.tmpl",
-                ]),
-                ],
+        ("buildbot", [
+            "buildbot/buildbot.png",
+        ]),
+        ("buildbot/db/migrate", [
+            "buildbot/db/migrate/migrate.cfg",
+        ]),
+        include("buildbot/db/migrate/versions", "*.py"),
+        ("buildbot/clients", [
+            "buildbot/clients/debug.glade",
+        ]),
+        include("buildbot/status/web/files/", '*.png'),
+        include("www/fonts/katana_icons", '*', package_path="../www/fonts/katana_icons"),
+        include("www/fonts/leckerlione", '*', package_path="../www/fonts/leckerlione"),
+        include("www/fonts/pacifico", '*', package_path="../www/fonts/pacifico"),
+        include("www/images", '*', package_path="../www/images"),
+        include("www/prod/css", '*', package_path="../www/prod/css"),
+        include("www/prod/script", '*', package_path="../www/prod/script"),
+        ("www", ["../www/favicon.ico", "../www/robots.txt", "../www/templates_readme.txt"]),
+        include("www/templates", '*.html', package_path="../www/templates"),
+        include("www/templates", '*.xml', package_path="../www/templates"),
+        ("buildbot/scripts", [
+            "buildbot/scripts/sample.cfg",
+            "buildbot/scripts/buildbot_tac.tmpl",
+        ]),
+    ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
-    }
+}
 
 # set zip_safe to false to force Windows installs to always unpack eggs
 # into directories, which seems to work better --
@@ -187,26 +187,31 @@ try:
 except ImportError:
     pass
 else:
-    ## dependencies
+    # external dependencies
+    setup_args['dependency_links'] = [
+        'git+https://github.com/mcuadros/pynats@v0.1.0#egg=pynats-0.0.1',
+    ]
+    # dependencies
     setup_args['install_requires'] = [
-        'twisted >= 9.0.0',
-        'Jinja2 >= 2.1',
+        'twisted == 16.0.0',
+        'Jinja2 == 2.8',
         # sqlalchemy-0.8 betas show issues with sqlalchemy-0.7.2, so
         # stick to 0.7.9
         'sqlalchemy >= 0.6, <= 0.7.9',
         # buildbot depends on sqlalchemy internals, and these are the tested
         # versions.
-        'sqlalchemy-migrate ==0.7.2',
-        'python-dateutil==1.5',
-        'autobahn',
-        'python-ldap >= 2.4.25',
-        'mysql-python',
+        'sqlalchemy-migrate == 0.7.2',
+        'python-dateutil == 1.5',
+        'autobahn == 0.11.0',
+        'python-ldap == 2.4.25',
+        'mysql-python == 1.2.5',
         # alternative MySQL driver, that works under pypy
-        'pymysql==0.7.1',
-        'PyJWT==1.4.0'
+        'pymysql == 0.7.1',
+        'PyJWT == 1.4.0',
+        'pynats == 0.0.1'
     ]
     setup_args['tests_require'] = [
-        'mock',
+        'mock == 1.3.0',
     ]
     # Python-2.6 and up includes json
     if not py_26:
