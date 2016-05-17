@@ -95,7 +95,7 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
-                 keepstamp=False, url=None,
+                 keepstamp=False, url=None, urlText=None,
                  slavesrc=None,  # deprecated, use `workersrc` instead
                  **buildstep_kwargs):
         # Deprecated API support.
@@ -123,6 +123,12 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         self.mode = mode
         self.keepstamp = keepstamp
         self.url = url
+        self.urlText = urlText
+
+    def finished(self, results):
+        log.msg("File '%s' upload finished with results %s" % (os.path.basename(self.workersrc), str(results)))
+        self.step_status.setText(self.descriptionDone)
+        _TransferBuildStep.finished(self, results)
 
     def start(self):
         self.checkWorkerHasCommand("uploadFile")
@@ -137,10 +143,21 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         log.msg("FileUpload started, from worker %r to master %r"
                 % (source, masterdest))
 
-        self.descriptionDone = "uploading %s" % os.path.basename(source)
+        if self.description is None:
+            self.description = ['uploading %s' % (os.path.basename(source))]
+
+        if self.descriptionDone is None:
+            self.descriptionDone = self.description
+
         if self.url is not None:
-            self.addURL(
-                os.path.basename(os.path.normpath(masterdest)), self.url)
+            urlText = self.urlText
+
+            if urlText is None:
+                urlText = os.path.basename(masterdest)
+
+            self.addURL(urlText, self.url)
+
+        self.step_status.setText(self.description)
 
         # we use maxsize to limit the amount of data on both sides
         fileWriter = remotetransfer.FileWriter(
