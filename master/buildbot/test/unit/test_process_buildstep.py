@@ -531,6 +531,24 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                                 "worker is too old, does not know about foo",
                                 step.checkWorkerHasCommand, "foo")
 
+    @defer.inlineCallbacks
+    def testRunRaisesException(self):
+        step = NewStyleStep()
+        step.master = mock.Mock()
+        step.build = mock.Mock()
+        step.locks = []
+        step.renderables = []
+        step.build.render = lambda x: defer.succeed(x)
+        step.master.data.updates.addStep = lambda **kwargs: defer.succeed((0, 0, 0))
+        step.addLogWithFailure = lambda x: defer.succeed(None)
+        step.run = lambda: defer.fail(RuntimeError('got exception'))
+        res = yield step.startStep(mock.Mock())
+        self.assertFalse(step._running)
+        errors = self.flushLoggedErrors()
+        self.assertEquals(len(errors), 1)
+        self.assertEquals(errors[0].getErrorMessage(), 'got exception')
+        self.assertEquals(res, EXCEPTION)
+
 
 class TestLoggingBuildStep(unittest.TestCase):
 
