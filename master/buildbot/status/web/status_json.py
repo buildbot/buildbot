@@ -24,7 +24,8 @@ from twisted.internet import defer
 from twisted.web import html, resource, server
 
 from buildbot.status.buildrequest import BuildRequestStatus
-from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, getRequestCharset, getResultsArg
+from buildbot.status.web.base import HtmlResource, path_to_root, map_branches, getCodebasesArg, \
+    getRequestCharset, getResultsArg, getCodebases, path_to_comparison
 import json
 import time
 
@@ -426,7 +427,7 @@ class BuilderPendingBuildsJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        d = self.builder_status.getPendingBuildRequestStatuses()
+        d = self.builder_status.getPendingBuildRequestStatuses(codebases=getCodebases(request=request))
 
         def to_dict(statuses):
             return defer.gatherResults(
@@ -455,7 +456,11 @@ class BuilderJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        return self.builder_status.asDict_async()
+        builder_dict = self.builder_status.asDict_async(codebases=getCodebases(request=request),
+                                                        request=request)
+
+        return builder_dict
+
 
 
 class BuildersJsonResource(JsonResource):
@@ -840,7 +845,6 @@ class SingleProjectJsonResource(LatestRevisionResource):
 
     @defer.inlineCallbacks
     def asDict(self, request):
-        from buildbot.status.web.base import path_to_comparison
         result = {'builders': []}
 
         #Get codebases
@@ -875,41 +879,47 @@ class SingleProjectBuilderJsonResource(LatestRevisionResource):
     def __init__(self, status, builder, latest_rev=False):
         projects = status.getProjects()
         project = projects[builder.project]
-
-        LatestRevisionResource.__init__(self, status, project)
         self.builder = builder
         self.latest_rev = latest_rev
+        LatestRevisionResource.__init__(self, status, project)
 
 
     @defer.inlineCallbacks
     def builder_dict(self, builder, codebases, request, branches, base_build_dict, include_build_steps,
-                     include_build_props):
-        d = yield builder.asDict_async(codebases, request, base_build_dict, include_build_steps, include_build_props)
+                     include_build_props, include_pending_builds):
+        d = yield builder.asDict_async(codebases, request, base_build_dict,
+                                       include_build_steps,
+                                       include_build_props,
+                                       include_pending_builds)
 
         #Get latest build
         builds = yield builder.generateFinishedBuildsAsync(branches=map_branches(branches),
-                                                     codebases=codebases,
-                                                     num_builds=1, useCache=True)
+                                                           codebases=codebases,
+                                                           num_builds=1,
+                                                           useCache=True)
 
         if len(builds) > 0:
             d['latestBuild'] = builds[0].asBaseDict(request, include_artifacts=True, include_failure_url=True)
 
         defer.returnValue(d)
 
+    def getRequestArgumentValue(self, args, parameter, defaultValue):
+        if parameter in args:
+            return True if "1" in args[parameter] else False
+
+        return defaultValue
+
     @defer.inlineCallbacks
     def asDict(self, request, codebases=None, branches=None, base_build_dict=False, params=None):
-        include_build_steps = True
-        include_build_props = True
 
         # We pass params only if we are doing this directly and not from a user
         args = request.args
         if params is not None:
             args = params
 
-        if "build_steps" in args:
-            include_build_steps = True if "1" in args["build_steps"] else False
-        if "build_props" in args:
-            include_build_props = True if "1" in args["build_props"] else False
+        include_build_steps = self.getRequestArgumentValue(args=args, parameter="build_steps", defaultValue=True)
+        include_build_props = self.getRequestArgumentValue(args=args, parameter="build_props", defaultValue=True)
+        include_pending_builds = self.getRequestArgumentValue(args=args, parameter="pending_builds", defaultValue=False)
 
         if codebases is None or branches is None:
             #Get codebases
@@ -918,9 +928,8 @@ class SingleProjectBuilderJsonResource(LatestRevisionResource):
             encoding = getRequestCharset(request)
             branches = [branch.decode(encoding) for branch in request.args.get("branch", []) if branch]
 
-
         builder_dict = yield self.builder_dict(self.builder, codebases, request, branches, base_build_dict,
-                                               include_build_steps, include_build_props)
+                                               include_build_steps, include_build_props, include_pending_builds)
 
         if self.latest_rev:
             builder_dict['latestRevisions'] = yield self.getLatestRevision(codebases)

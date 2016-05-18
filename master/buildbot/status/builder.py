@@ -977,30 +977,38 @@ class BuilderStatus(styles.Versioned):
                 'project': self.project}
 
     @defer.inlineCallbacks
-    def asDict_async(self, codebases={}, request=None, base_build_dict=False, include_build_steps=True,
-               include_build_props=True):
-        """Just like L{asDict}, but with a nonzero pendingBuilds."""
-        result = self.asDict(codebases, request, base_build_dict, include_build_steps=include_build_steps,
-                             include_build_props=include_build_props)
+    def getPendingBuildRequestsCount(self, codebases={}):
         builds = self.pendingBuildCache.getPendingBuilds()
-
         #Remove builds not within this codebase
         count = 0
-        defers = []
+
         if len(codebases) > 0:
             for b in builds:
-                de = self.foundCodebasesInBuildRequest(b, codebases)
-                defers.append(de)
-
-            #Allow the defers to run async
-            for d in defers:
-                in_codebase = yield d
-                if in_codebase:
+                if (yield self.foundCodebasesInBuildRequest(b, codebases)):
                     count += 1
         else:
             count = len(builds)
 
-        result['pendingBuilds'] = count
+        defer.returnValue(count)
+
+
+    @defer.inlineCallbacks
+    def asDict_async(self, codebases={}, request=None, base_build_dict=False, include_build_steps=True,
+                     include_build_props=True, include_pending_builds=False):
+        """Just like L{asDict}, but with a nonzero pendingBuilds."""
+        result = self.asDict(codebases, request, base_build_dict, include_build_steps=include_build_steps,
+                             include_build_props=include_build_props)
+
+        if include_pending_builds:
+            # add the pending builds to the cache list filter by branches
+            # Too expensive this list per codebases
+            pendingBuilds = yield  self.getPendingBuildRequestStatuses(codebases=codebases)
+            pendingBuildsDict = [(yield b.asDict_async()) for b in pendingBuilds]
+            if pendingBuildsDict:
+                result['pendingBuilds'] = pendingBuildsDict
+        else:
+            result['pendingBuilds'] = yield self.getPendingBuildRequestsCount(codebases=codebases)
+
         defer.returnValue(result)
 
     def getMetrics(self):
@@ -1020,6 +1028,7 @@ class PendingBuildsCache():
         self.builder = builder
         self.cache = []
         self.cache_now()
+        self.pendingBuildsCache={}
         self.builder.subscribe(self)
 
     @defer.inlineCallbacks
@@ -1030,6 +1039,10 @@ class PendingBuildsCache():
 
     def getPendingBuilds(self):
         return self.cache
+
+    def getPendingBuildsCache(self, codebases={}):
+
+        return self.pendingBuildsCache
 
     def buildStarted(self, builderName, state):
         self.cache_now()
