@@ -108,3 +108,14 @@ class TestWorkerManager(unittest.TestCase):
 
         # worker *was* replaced (different class)
         self.assertIdentical(self.workers.workers['worker1'], worker_new)
+
+    @defer.inlineCallbacks
+    def test_newConnection_remoteGetWorkerInfo_failure(self):
+        class Error(RuntimeError):
+            pass
+
+        conn = mock.Mock()
+        conn.remoteGetWorkerInfo = mock.Mock(
+            return_value=defer.fail(Error()))
+        yield self.assertFailure(
+            self.workers.newConnection(conn, "worker"), Error)

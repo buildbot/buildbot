@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python.failure import Failure
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
@@ -110,9 +109,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                                        old_conn.remotePrint("master got a duplicate connection"))
                 # if we get here then old connection is still alive, and new
                 # should be rejected
-                defer.returnValue(
-                    Failure(RuntimeError("rejecting duplicate worker"))
-                )
+                raise RuntimeError("rejecting duplicate worker")
             except defer.CancelledError:
                 old_conn.loseConnection()
                 log.msg("Connected worker '%s' ping timed out after %d seconds"
@@ -131,7 +128,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         except Exception as e:
             log.msg("Failed to communicate with worker '%s'\n"
                     "%s" % (workerName, e))
-            defer.returnValue(False)
+            raise
 
         conn.info = info
         self.connections[workerName] = conn
