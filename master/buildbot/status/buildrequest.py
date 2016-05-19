@@ -27,6 +27,7 @@ class BuildRequestStatus:
         self.brid = brid
         self.status = status
         self.master = status.master
+        self.dict = {}
 
         self._buildrequest = None
         self._buildrequest_lock = defer.DeferredLock()
@@ -206,5 +207,4 @@ class BuildRequestStatus:
         result['builds'] = sorted_builds
         result['lastBuildNumber'] = sorted_builds[0]['number'] if sorted_builds and len(sorted_builds) > 0 \
                                                                   and 'number' in sorted_builds[0] else None
-
         defer.returnValue(result)
