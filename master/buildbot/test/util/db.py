@@ -232,3 +232,16 @@ class RealDatabaseMixin(object):
                         log.msg("while inserting %s - %s" % (row, row.values))
                         raise
         return self.db_pool.do(thd)
+
+
+class TestCase(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def assertFailure(self, d, excp):
+        exception = None
+        try:
+            yield d
+        except Exception as e:
+            exception = e
+        self.assertIsInstance(exception, excp)
+        self.flushLoggedErrors(excp)

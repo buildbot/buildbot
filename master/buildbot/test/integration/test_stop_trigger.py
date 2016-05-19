@@ -113,7 +113,7 @@ class TriggeringMaster(RunMasterBase):
         self.assertEquals(b['results'], CANCELLED, repr(b))
 
     @defer.inlineCallbacks
-    def runTest(self, newBuildCallback):
+    def runTest(self, newBuildCallback, flushErrors=False):
         newConsumer = yield self.master.mq.startConsuming(
             newBuildCallback,
             ('builds', None, 'new'))
@@ -125,6 +125,8 @@ class TriggeringMaster(RunMasterBase):
         builds = yield self.master.data.get(("builds",))
         for b in builds:
             self.assertBuildIsCancelled(b)
+        if flushErrors:
+            self.flushLoggedErrors()
 
     @defer.inlineCallbacks
     def testTriggerRunsForever(self):
@@ -138,7 +140,7 @@ class TriggeringMaster(RunMasterBase):
                 self.master.data.control(
                     "stop", {}, ("builds", self.higherBuild))
                 self.higherBuild = None
-        yield self.runTest(newCallback)
+        yield self.runTest(newCallback, flushErrors=True)
 
     @defer.inlineCallbacks
     def testTriggerRunsForeverAfterCmdStarted(self):
@@ -156,7 +158,7 @@ class TriggeringMaster(RunMasterBase):
                     self.higherBuild = None
                 reactor.callLater(5.0, f)
 
-        yield self.runTest(newCallback)
+        yield self.runTest(newCallback, flushErrors=True)
 
     @defer.inlineCallbacks
     def testTriggeredBuildIsNotCreated(self):

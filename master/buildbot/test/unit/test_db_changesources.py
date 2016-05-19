@@ -19,6 +19,7 @@ from buildbot.db import changesources
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
+from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 
@@ -278,7 +279,7 @@ class TestFakeDB(unittest.TestCase, Tests):
         self.insertTestData = self.db.insertTestData
 
 
-class TestRealDB(unittest.TestCase,
+class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 

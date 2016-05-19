@@ -346,6 +346,14 @@ class Tests(interfaces.InterfaceTests):
     def test_getBuildRequests_no_repository_nor_branch(self):
         return self.do_test_getBuildRequests_branch_arg(expected=[70, 80, 90])
 
+    def failWithExpFailure(self, expfailure=None):
+        def fail(f):
+            if not expfailure:
+                raise f
+            self.flushLoggedErrors(expfailure)
+            f.trap(expfailure)
+        return fail
+
     def do_test_claimBuildRequests(self, rows, now, brids, expected=None,
                                    expfailure=None, claimed_at=None):
         clock = task.Clock()
@@ -368,11 +376,7 @@ class Tests(interfaces.InterfaceTests):
                         for r in results]),
                 sorted(expected))
 
-        @d.addErrback
-        def fail(f):
-            if not expfailure:
-                raise f
-            f.trap(expfailure)
+        d.addErrback(self.failWithExpFailure(expfailure))
         return d
 
     def test_claimBuildRequests_single(self):
@@ -509,11 +513,7 @@ class Tests(interfaces.InterfaceTests):
                 sorted(expected)
             )
 
-        @d.addErrback
-        def fail(f):
-            if not expfailure:
-                raise f
-            f.trap(expfailure)
+        d.addErrback(self.failWithExpFailure(expfailure))
         return d
 
     def test_reclaimBuildRequests(self):
@@ -584,11 +584,7 @@ class Tests(interfaces.InterfaceTests):
                 for r in results
             ), sorted(expected))
 
-        @d.addErrback
-        def fail(f):
-            if not expfailure:
-                raise f
-            f.trap(expfailure)
+        d.addErrback(self.failWithExpFailure(expfailure))
         return d
 
     def test_completeBuildRequests(self):

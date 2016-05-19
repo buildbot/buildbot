@@ -45,6 +45,85 @@ class ReconnectingListener(object):
         self.retried = False
 
 
+class Strategy(object):
+    def set_up(self, u, engine):
+        pass
+
+    def should_retry(self, operational_error):
+        try:
+            text = operational_error.args[0]
+            return 'Lost connection' in text or 'database is locked' in text
+        except Exception:
+            return False
+
+
+class SqlLiteStrategy(Strategy):
+
+    def set_up(self, u, engine):
+        """Special setup for sqlite engines"""
+        def connect_listener_enable_fk(connection, record):
+            # fk must be enabled for all connections
+            if not getattr(engine, "fk_disabled", False):
+                return  # http://trac.buildbot.net/ticket/3490#ticket
+                # connection.execute('pragma foreign_keys=ON')
+
+        sa.event.listen(engine.pool, 'connect', connect_listener_enable_fk)
+        # try to enable WAL logging
+        if u.database:
+            def connect_listener(connection, record):
+                connection.execute("pragma checkpoint_fullfsync = off")
+
+            sa.event.listen(engine.pool, 'connect', connect_listener)
+
+            log.msg("setting database journal mode to 'wal'")
+            try:
+                engine.execute("pragma journal_mode = wal")
+            except Exception:
+                log.msg("failed to set journal mode - database may fail")
+
+
+class MySQLStrategy(Strategy):
+    disconnect_error_codes = (2006, 2013, 2014, 2045, 2055)
+
+    def is_disconnect(self, args):
+        if args:
+            return args[0] in self.disconnect_error_codes
+        return False
+
+    def set_up(self, u, engine):
+        """Special setup for mysql engines"""
+        # add the reconnecting PoolListener that will detect a
+        # disconnected connection and automatically start a new
+        # one.  This provides a measure of additional safety over
+        # the pool_recycle parameter, and is useful when e.g., the
+        # mysql server goes away
+        def checkout_listener(dbapi_con, con_record, con_proxy):
+            try:
+                cursor = dbapi_con.cursor()
+                cursor.execute("SELECT 1")
+            except dbapi_con.OperationalError as ex:
+                if self.is_disconnect(ex.args):
+                    # sqlalchemy will re-create the connection
+                    log.msg('connection will be removed')
+                    raise sa.exc.DisconnectionError()
+                log.msg('exception happened {}'.format(ex))
+                raise
+
+        # older versions of sqlalchemy require the listener to be specified
+        # in the kwargs, in a class instance
+        if sautils.sa_version() < (0, 7, 0):
+            class ReconnectingListener(object):
+                pass
+            rcl = ReconnectingListener()
+            rcl.checkout = checkout_listener
+            engine.pool.add_listener(rcl)
+        else:
+            sa.event.listen(engine.pool, 'checkout', checkout_listener)
+
+    def should_retry(self, ex):
+        return self.is_disconnect(ex.orig.args) or super(MySQLStrategy, self).should_retry(ex)
+
+
 def get_sqlalchemy_migrate_version():
     # sqlalchemy-migrate started including a version number in 0.7
     # Borrowed from model.py
@@ -113,28 +192,6 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         return u, kwargs, max_conns
 
-    def set_up_sqlite_engine(self, u, engine):
-        """Special setup for sqlite engines"""
-        def connect_listener_enable_fk(connection, record):
-            # fk must be enabled for all connections
-            if not getattr(engine, "fk_disabled", False):
-                return  # http://trac.buildbot.net/ticket/3490#ticket
-                # connection.execute('pragma foreign_keys=ON')
-
-        sa.event.listen(engine.pool, 'connect', connect_listener_enable_fk)
-        # try to enable WAL logging
-        if u.database:
-            def connect_listener(connection, record):
-                connection.execute("pragma checkpoint_fullfsync = off")
-
-            sa.event.listen(engine.pool, 'connect', connect_listener)
-
-            log.msg("setting database journal mode to 'wal'")
-            try:
-                engine.execute("pragma journal_mode = wal")
-            except Exception:
-                log.msg("failed to set journal mode - database may fail")
-
     def special_case_mysql(self, u, kwargs):
         """For mysql, take max_idle out of the query arguments, and
         use its value for pool_recycle.  Also, force use_unicode and
@@ -165,34 +222,6 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
 
         return u, kwargs, None
 
-    def set_up_mysql_engine(self, u, engine):
-        """Special setup for mysql engines"""
-        # add the reconnecting PoolListener that will detect a
-        # disconnected connection and automatically start a new
-        # one.  This provides a measure of additional safety over
-        # the pool_recycle parameter, and is useful when e.g., the
-        # mysql server goes away
-        def checkout_listener(dbapi_con, con_record, con_proxy):
-            try:
-                cursor = dbapi_con.cursor()
-                cursor.execute("SELECT 1")
-            except dbapi_con.OperationalError as ex:
-                if ex.args[0] in (2006, 2013, 2014, 2045, 2055):
-                    # sqlalchemy will re-create the connection
-                    raise sa.exc.DisconnectionError()
-                raise
-
-        # older versions of sqlalchemy require the listener to be specified
-        # in the kwargs, in a class instance
-        if sautils.sa_version() < (0, 7, 0):
-            class ReconnectingListener(object):
-                pass
-            rcl = ReconnectingListener()
-            rcl.checkout = checkout_listener
-            engine.pool.add_listener(rcl)
-        else:
-            sa.event.listen(engine.pool, 'checkout', checkout_listener)
-
     def check_sqlalchemy_version(self):
         version = getattr(sa, '__version__', '0')
         try:
@@ -208,6 +237,13 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             if mvt < (0, 8, 0):
                 raise RuntimeError("SQLAlchemy version %s is not supported by "
                                    "SQLAlchemy-Migrate version %d.%d.%d" % (version, mvt[0], mvt[1], mvt[2]))
+
+    def get_drivers_strategy(self, drivername):
+        if drivername.startswith('sqlite'):
+            return SqlLiteStrategy()
+        elif drivername.startswith('mysql'):
+            return MySQLStrategy()
+        return Strategy()
 
     def create(self, name_or_url, **kwargs):
         if 'basedir' not in kwargs:
@@ -231,22 +267,17 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         if max_conns is None:
             max_conns = kwargs.get(
                 'pool_size', 5) + kwargs.get('max_overflow', 10)
-
+        strategy = self.get_drivers_strategy(u.drivername)
         engine = strategies.ThreadLocalEngineStrategy.create(self,
                                                              u, **kwargs)
-
+        strategy.set_up(u, engine)
+        engine.should_retry = strategy.should_retry
         # annotate the engine with the optimal thread pool size; this is used
         # by DBConnector to configure the surrounding thread pool
         engine.optimal_thread_pool_size = max_conns
 
         # keep the basedir
         engine.buildbot_basedir = basedir
-
-        if u.drivername.startswith('sqlite'):
-            self.set_up_sqlite_engine(u, engine)
-        elif u.drivername.startswith('mysql'):
-            self.set_up_mysql_engine(u, engine)
-
         return engine
 
 BuildbotEngineStrategy()
