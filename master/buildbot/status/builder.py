@@ -401,7 +401,7 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestStatuses(self, codebases={}):
+    def fetchPendingBuildRequestStatuses(self, codebases={}):
         sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
 
         brdicts = yield self.master.db.buildrequests.getBuildRequestInQueue(buildername=self.name,
@@ -411,6 +411,16 @@ class BuilderStatus(styles.Versioned):
         result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
 
         defer.returnValue(result)
+
+    @defer.inlineCallbacks
+    def getPendingBuildRequestStatuses(self, codebases={}):
+        pendingBuilds = yield self.pendingBuildCache.getPendingBuilds(codebases=codebases)
+        defer.returnValue(pendingBuilds)
+
+    @defer.inlineCallbacks
+    def getPendingBuildRequestStatusesDicts(self, codebases={}):
+        pendingBuildsDict = yield self.pendingBuildCache.getPendingBuildsDicts(codebases=codebases)
+        defer.returnValue(pendingBuildsDict)
 
     def foundCodebasesInBuild(self, build, codebases):
         if len(codebases) > 0:
@@ -986,22 +996,6 @@ class BuilderStatus(styles.Versioned):
                 'project': self.project}
 
     @defer.inlineCallbacks
-    def getPendingBuildRequestsCount(self, codebases={}):
-        builds = self.pendingBuildCache.getPendingBuilds()
-        #Remove builds not within this codebase
-        count = 0
-
-        if len(codebases) > 0:
-            for b in builds:
-                if (yield self.foundCodebasesInBuildRequest(b, codebases)):
-                    count += 1
-        else:
-            count = len(builds)
-
-        defer.returnValue(count)
-
-
-    @defer.inlineCallbacks
     def asDict_async(self, codebases={}, request=None, base_build_dict=False, include_build_steps=True,
                      include_build_props=True, include_pending_builds=False):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
@@ -1009,12 +1003,10 @@ class BuilderStatus(styles.Versioned):
                              include_build_props=include_build_props)
 
         if include_pending_builds:
-            # add the pending builds to the cache list filter by branches
-            # Too expensive this list per codebases
-            pendingBuildsDict = yield self.pendingBuildCache.getPendingBuildsDicts(codebases=codebases)
+            pendingBuildsDict = yield self.getPendingBuildRequestStatusesDicts(codebases=codebases)
             result['pendingBuilds'] = pendingBuildsDict
         else:
-            result['pendingBuilds'] = yield self.pendingBuildCache.count(codebases=codebases)
+            result['pendingBuilds'] = yield self.pendingBuildCache.getTotal(codebases=codebases)
 
         defer.returnValue(result)
 
@@ -1042,29 +1034,35 @@ class PendingBuildsCache():
     def cache_now(self):
         self.codebasesCache = {}
         if hasattr(self.builder, "status"):
-            self.cache = yield self.builder.getPendingBuildRequestStatuses()
+            self.cache = yield self.builder.fetchPendingBuildRequestStatuses()
             defer.returnValue(self.cache)
 
     @defer.inlineCallbacks
     def getPendingBuilds(self, codebases={}):
         if not codebases:
             defer.returnValue(self.cache)
+            return
 
         key = self.builder.getCodebasesCacheKey(codebases)
 
         if not self.codebasesCache or key not in self.codebasesCache:
-            self.codebasesCache[key] = yield self.builder.getPendingBuildRequestStatuses(codebases=codebases)
+            self.codebasesCache[key] = yield self.builder.fetchPendingBuildRequestStatuses(codebases=codebases)
 
         defer.returnValue(self.codebasesCache[key])
 
     @defer.inlineCallbacks
     def getPendingBuildsDicts(self, codebases={}):
-        pendingBuilds = self.getPendingBuilds(codebases)
-        pendingBuildsDict = [(yield b.asDict_async()) if not b.dict else b.dict for b in pendingBuilds]
+        pendingBuilds = yield self.getPendingBuilds(codebases)
+        pendingBuildsDict = []
+        for b in pendingBuilds:
+            if not b.dict:
+                b.dict = yield b.asDict_async(codebases=codebases)
+            pendingBuildsDict.append(b.dict)
+
         defer.returnValue(pendingBuildsDict)
 
     @defer.inlineCallbacks
-    def count(self, codebases={}):
+    def getTotal(self, codebases={}):
         pendingBuilds = yield self.getPendingBuilds(codebases)
         defer.returnValue(len(pendingBuilds))
 

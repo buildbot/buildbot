@@ -173,7 +173,7 @@ class BuildRequestStatus:
         return result
 
     @defer.inlineCallbacks
-    def asDict_async(self, request=None):
+    def asDict_async(self, codebases={}):
         result = {}
         builder = self.status.getBuilder(self.getBuilderName())
         if not builder:
@@ -197,9 +197,9 @@ class BuildRequestStatus:
         result['builderFriendlyName'] = builder.getFriendlyName()
         result['builderURL'] = self.status.getURLForThing(builder)
 
-        if request is not None:
-            from buildbot.status.web.base import getCodebasesArg
-            result['builderURL'] += getCodebasesArg(request)
+        if codebases:
+            from buildbot.status.web.base import getCodeBasesURLParam
+            result['builderURL'] += getCodeBasesURLParam(codebases=codebases)
 
         builds = yield self.getBuilds()
         all_builds = [build.asDict() for build in builds]

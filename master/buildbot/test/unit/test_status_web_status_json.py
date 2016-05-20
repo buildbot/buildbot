@@ -501,18 +501,19 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus.getBuildProperties = lambda: Properties()
             return brstatus
 
-        def getPendingBuildRequestStatuses(codebases={}):
+        def fetchPendingBuildRequestStatuses(codebases={}):
             requests = [1, 2, 3]
             return [getBuildRequestStatus(id) for id in requests]
 
-        builder.builder_status.getPendingBuildRequestStatuses = getPendingBuildRequestStatuses
+        builder.builder_status.fetchPendingBuildRequestStatuses = fetchPendingBuildRequestStatuses
+
         pending_json = status_json.SinglePendingBuildsJsonResource(self.master_status, builder.builder_status)
         pending_dict = yield pending_json.asDict(self.request)
 
         def pendingBuildRequestDict(brid):
             return {'brid': brid, 'builderFriendlyName': 'builder-01', 'builderName': 'builder-01',
-                    'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01?' +
-                                  'katana-buildbot_branch=katana',
+                    'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01' +
+                                  '?katana-buildbot_branch=katana',
                     'builds': [],
                     'properties': [],
                     'lastBuildNumber': None,

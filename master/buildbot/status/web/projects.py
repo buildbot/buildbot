@@ -17,7 +17,8 @@ import copy
 import json
 from operator import attrgetter
 
-from buildbot.status.web.base import HtmlResource, path_to_codebases, path_to_json_builders, path_to_comparison
+from buildbot.status.web.base import HtmlResource, path_to_codebases, path_to_json_builders, path_to_comparison, \
+    getBranchNameUrlParam
 from buildbot.status.web.builder import BuildersResource
 from buildbot import util
 from twisted.internet import defer
@@ -52,11 +53,11 @@ class ProjectsResource(HtmlResource):
             for cb in value.codebases:
                 if '?' not in project_path:
                     project_path += '?'
-                for cbkey,cbvalue in cb.iteritems():
+                for cbkey, cbvalue in cb.iteritems():
                     if '=' in project_path:
                         project_path += "&"
 
-                    project_path += urllib.quote(cbkey, safe='') + "_branch"
+                    project_path += getBranchNameUrlParam(cbkey)
 
                     if 'defaultbranch' in cbvalue.keys():
                         branch =  cbvalue['defaultbranch']

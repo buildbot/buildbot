@@ -427,13 +427,7 @@ class BuilderPendingBuildsJsonResource(JsonResource):
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
-        d = self.builder_status.getPendingBuildRequestStatuses(codebases=getCodebases(request=request))
-
-        def to_dict(statuses):
-            return defer.gatherResults(
-                [b.asDict_async() for b in statuses])
-
-        d.addCallback(to_dict)
+        d = self.builder_status.getPendingBuildRequestStatusesDicts(codebases=getCodebases(request=request))
         return d
 
 
@@ -990,15 +984,8 @@ class SinglePendingBuildsJsonResource(JsonResource):
         getCodebasesArg(request=request, codebases=codebases)
 
         # Get pending request filtered + sorted
-        builds = yield self.builder.getPendingBuildRequestStatuses(codebases=codebases)
-
-        #Convert to dictionary
-        output = []
-        for b in builds:
-            d = yield b.asDict_async(request)
-            output.append(d)
-
-        defer.returnValue(output)
+        pendingBuilds = yield self.builder.getPendingBuildRequestStatusesDicts(codebases=codebases)
+        defer.returnValue(pendingBuilds)
 
 
 class SlaveBuildsJsonResource(JsonResource):

@@ -156,17 +156,27 @@ def getCodebases(request=None):
 
     return codebases
 
+
+def add_url_param(url, key, val):
+    if len(url) > 0:
+        url += "&"
+    else:
+        url += "?"
+
+    url += "%s=%s" % (key, ''.join(val))
+    return url
+
+def getBranchNameUrlParam(branch):
+    return urllib.quote(branch, safe='') + "_branch"
+
+def getCodeBasesURLParam(codebases):
+    args=''
+    for key, val in codebases.iteritems():
+        args = add_url_param(args, getBranchNameUrlParam(branch=key), val)
+    return args
+
 def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
     codebases_arg=''
-
-    def add_url_param(url, key, val):
-        if len(url) > 0:
-            url += "&"
-        else:
-            url += "?"
-
-        url += "%s=%s" % (key, ''.join(val))
-        return url
 
     if request is not None:
         for key, val in request.args.iteritems():
