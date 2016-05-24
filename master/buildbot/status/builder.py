@@ -401,18 +401,6 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.getAllSlaveNames()]
 
     @defer.inlineCallbacks
-    def fetchPendingBuildRequestStatuses(self, codebases={}):
-        sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
-
-        brdicts = yield self.master.db.buildrequests.getBuildRequestInQueue(buildername=self.name,
-                                                                            sourcestamps=sourcestamps,
-                                                                            sorted=True)
-
-        result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
-
-        defer.returnValue(result)
-
-    @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self, codebases={}):
         pendingBuilds = yield self.pendingBuildCache.getPendingBuilds(codebases=codebases)
         defer.returnValue(pendingBuilds)
@@ -1026,15 +1014,36 @@ class PendingBuildsCache():
     def __init__(self, builder):
         self.builder = builder
         self.cache = []
-        self.codebasesCache = {}
+        self.pendingBuildsCache = {}
+        self.pendingBuildsDictsCache = {}
+        self.breqsStatusCache = LRUCache(BuildRequestStatus.createBuildRequestStatus, 6000) # Cache the request status objects
         self.cache_now()
         self.builder.subscribe(self)
 
     @defer.inlineCallbacks
+    def fetchPendingBuildRequestStatuses(self, codebases={}):
+        sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
+
+        brdicts = yield self.builder.master.db.buildrequests.getBuildRequestInQueue(buildername=self.builder.name,
+                                                                            sourcestamps=sourcestamps,
+                                                                            sorted=True)
+        result = []
+        for brdict in brdicts:
+            brs = self.breqsStatusCache.get(key=brdict['brid'],
+                                            buildername=self.builder.name,
+                                            status=self.builder.status)
+
+            brs.update(brdict)
+            result.append(brs)
+
+        defer.returnValue(result)
+
+    @defer.inlineCallbacks
     def cache_now(self):
-        self.codebasesCache = {}
+        self.pendingBuildsCache = {}
+        self.pendingBuildsDictsCache = {}
         if hasattr(self.builder, "status"):
-            self.cache = yield self.builder.fetchPendingBuildRequestStatuses()
+            self.cache = yield self.fetchPendingBuildRequestStatuses()
             defer.returnValue(self.cache)
 
     @defer.inlineCallbacks
@@ -1045,21 +1054,20 @@ class PendingBuildsCache():
 
         key = self.builder.getCodebasesCacheKey(codebases)
 
-        if not self.codebasesCache or key not in self.codebasesCache:
-            self.codebasesCache[key] = yield self.builder.fetchPendingBuildRequestStatuses(codebases=codebases)
+        if not self.pendingBuildsCache or key not in self.pendingBuildsCache:
+            self.pendingBuildsCache[key] = yield self.fetchPendingBuildRequestStatuses(codebases=codebases)
 
-        defer.returnValue(self.codebasesCache[key])
+        defer.returnValue(self.pendingBuildsCache[key])
 
     @defer.inlineCallbacks
     def getPendingBuildsDicts(self, codebases={}):
-        pendingBuilds = yield self.getPendingBuilds(codebases)
-        pendingBuildsDict = []
-        for b in pendingBuilds:
-            if not b.dict:
-                b.dict = yield b.asDict_async(codebases=codebases)
-            pendingBuildsDict.append(b.dict)
+        key = self.builder.getCodebasesCacheKey(codebases)
 
-        defer.returnValue(pendingBuildsDict)
+        if not self.pendingBuildsDictsCache or key not in self.pendingBuildsDictsCache:
+            pendingBuilds = yield self.getPendingBuilds(codebases)
+            self.pendingBuildsDictsCache[key] = [(yield brs.asDict_async(codebases=codebases)) for brs in pendingBuilds]
+
+        defer.returnValue(self.pendingBuildsDictsCache[key])
 
     @defer.inlineCallbacks
     def getTotal(self, codebases={}):

@@ -505,7 +505,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             requests = [1, 2, 3]
             return [getBuildRequestStatus(id) for id in requests]
 
-        builder.builder_status.fetchPendingBuildRequestStatuses = fetchPendingBuildRequestStatuses
+        builder.builder_status.pendingBuildCache.fetchPendingBuildRequestStatuses = fetchPendingBuildRequestStatuses
 
         pending_json = status_json.SinglePendingBuildsJsonResource(self.master_status, builder.builder_status)
         pending_dict = yield pending_json.asDict(self.request)

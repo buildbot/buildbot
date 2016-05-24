@@ -27,10 +27,12 @@ class BuildRequestStatus:
         self.brid = brid
         self.status = status
         self.master = status.master
-        self.dict = {}
-
         self._buildrequest = None
         self._buildrequest_lock = defer.DeferredLock()
+
+    @classmethod
+    def createBuildRequestStatus(cls, brid, buildername, status):
+        return BuildRequestStatus(buildername, brid, status)
 
     @defer.inlineCallbacks
     def _getBuildRequest(self):
@@ -192,7 +194,6 @@ class BuildRequestStatus:
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
-        result['results'] = yield self.getResults()
 
         result['builderFriendlyName'] = builder.getFriendlyName()
         result['builderURL'] = self.status.getURLForThing(builder)
@@ -201,10 +202,18 @@ class BuildRequestStatus:
             from buildbot.status.web.base import getCodeBasesURLParam
             result['builderURL'] += getCodeBasesURLParam(codebases=codebases)
 
+        # this data changes
+        result['results'] = yield self.getResults() # is already on the object at the time we fetch
+
         builds = yield self.getBuilds()
         all_builds = [build.asDict() for build in builds]
         sorted_builds = sorted(all_builds, key=lambda build: build['number'], reverse=True)
         result['builds'] = sorted_builds
         result['lastBuildNumber'] = sorted_builds[0]['number'] if sorted_builds and len(sorted_builds) > 0 \
                                                                   and 'number' in sorted_builds[0] else None
+
         defer.returnValue(result)
+
+    def update(self, brdict):
+        if self._buildrequest and brdict and 'results' in brdict and self._buildrequest.results != brdict['results']:
+            self._buildrequest.results = brdict['results']
