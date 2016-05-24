@@ -50,6 +50,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     submitted = None
     owners = None
     buildChainID = None
+    buildRequestID = None
     currentStep = None
     text = []
     results = None
@@ -309,6 +310,9 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
 
     def setBuildChainID(self, buildChainID):
         self.buildChainID = buildChainID
+
+    def setBuildRequestID(self, buildRequestID):
+        self.buildRequestID = buildRequestID
 
     def setOwners(self, owners):
         self.owners = owners
@@ -613,6 +617,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['reason'] = self.getReason()
         result['submittedTime'] = self.submitted
         result['owners'] = self.owners
+        result['buildRequestID'] = self.buildRequestID
         result['buildChainID'] = self.buildChainID
         result['blame'] = self.getResponsibleUsers()
         result['url'] = status.getURLForThing(self)

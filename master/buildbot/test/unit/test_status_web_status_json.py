@@ -167,7 +167,9 @@ class TestBuildJsonResource(unittest.TestCase):
                                                         'url': u'https://github.com/test/repo/commit/abcdef123456789'}],
                           'results': 0, 'number': 1, 'currentStep': None,
                           'times': (1422441500, 1422441501.21),
-                          'buildChainID': None, 'owners': None, 'submittedTime': None,
+                          'buildChainID': None,
+                          'buildRequestID': None,
+                          'owners': None, 'submittedTime': None,
                           'blame': [],
                           'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
                                          '?katana-buildbot_branch=katana&_branch=b',
@@ -270,7 +272,9 @@ class TestPastBuildsJsonResource(unittest.TestCase):
                     'number': num, 'properties': [], 'reason': 'A build was forced by user@localhost',
                     'results': 0, 'results_text': 'success', 'slave': 'build-slave-01',
                     'slave_friendly_name': 'build-slave-01', 'slave_url': None,
-                    'sourceStamps': [], 'steps': [], 'buildChainID': None, 'owners': None,
+                    'sourceStamps': [], 'steps': [], 'buildChainID': None,
+                    'buildRequestID': None,
+                    'owners': None,
                      'submittedTime': None,
                     'text': [], 'times': (1422441500, 1422441501.21),
                     'url': {
@@ -393,7 +397,9 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                      'text': [],
                      'sourceStamps': [],
                      'results': 0,
-                     'number': 1, 'artifacts': None, 'blame': [], 'buildChainID': None, 'owners': None,
+                     'number': 1, 'artifacts': None, 'blame': [], 'buildChainID': None,
+                     'buildRequestID': None,
+                     'owners': None,
                      'submittedTime': None,
                      'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
                                     '?katana-buildbot_branch=katana',

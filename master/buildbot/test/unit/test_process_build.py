@@ -50,6 +50,7 @@ class FakeSource:
 
 class FakeRequest:
     def __init__(self):
+        self.id = None
         self.sources = []
         self.reason = "Because"
         self.properties = Properties()
