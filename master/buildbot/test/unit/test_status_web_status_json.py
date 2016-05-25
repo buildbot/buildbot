@@ -90,7 +90,7 @@ def mockBuilder(master, master_status, buildername, proj):
     builder.builder_status.setTags(['tag1', 'tag2'])
     builder.builder_status.status = master_status
     builder.builder_status.project = proj
-    builder.builder_status.pendingBuildCache = PendingBuildsCache(builder.builder_status)
+    builder.builder_status.pendingBuildsCache = PendingBuildsCache(builder.builder_status)
     builder.builder_status.nextBuildNumber = 1
     builder.builder_status.basedir = '/basedir'
     builder.builder_status.saveYourself = lambda skipBuilds=True: True
@@ -511,7 +511,7 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             requests = [1, 2, 3]
             return [getBuildRequestStatus(id) for id in requests]
 
-        builder.builder_status.pendingBuildCache.fetchPendingBuildRequestStatuses = fetchPendingBuildRequestStatuses
+        builder.builder_status.pendingBuildsCache.fetchPendingBuildRequestStatuses = fetchPendingBuildRequestStatuses
 
         pending_json = status_json.SinglePendingBuildsJsonResource(self.master_status, builder.builder_status)
         pending_dict = yield pending_json.asDict(self.request)

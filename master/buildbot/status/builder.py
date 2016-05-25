@@ -124,7 +124,7 @@ class BuilderStatus(styles.Versioned):
         self.reason = None
         self.unavailable_build_numbers = set()
         self.latestBuildCache = {}
-        self.pendingBuildCache = None
+        self.pendingBuildsCache = None
         self.tags = []
         self.loadingBuilds = {}
         self.cancelBuilds = {}
@@ -134,7 +134,7 @@ class BuilderStatus(styles.Versioned):
 
     def setStatus(self, status):
         self.status = status
-        self.pendingBuildCache = PendingBuildsCache(self)
+        self.pendingBuildsCache = PendingBuildsCache(self)
 
         if not hasattr(self, 'latestBuildCache'):
             self.latestBuildCache = {}
@@ -163,8 +163,8 @@ class BuilderStatus(styles.Versioned):
         del d['master']
         self.deleteKey('loadingBuilds', d)
 
-        if 'pendingBuildCache' in d:
-            del d['pendingBuildCache']
+        if 'pendingBuildsCache' in d:
+            del d['pendingBuildsCache']
 
         self.deleteKey('latestBuildCache', d)
         return d
@@ -241,8 +241,13 @@ class BuilderStatus(styles.Versioned):
 
     # build cache management
 
-    def setCacheSize(self, size):
-        self.buildCache.set_max_size(size)
+    def setCacheSize(self, caches):
+        self.buildCache.set_max_size(caches['Builds'])
+        if caches and 'BuilderBuildRequestStatus' in caches:
+            self.pendingBuildsCache.breqsStatusCache.set_max_size(caches['BuilderBuildRequestStatus'])
+
+    def setBuildRequestStatusCacheSize(self, size):
+        self.pendingBuildsCache.breqsStatusCache.set_max_size(size)
 
     def makeBuildFilename(self, number):
         return os.path.join(self.basedir, "%d" % number)
@@ -402,12 +407,12 @@ class BuilderStatus(styles.Versioned):
 
     @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self, codebases={}):
-        pendingBuilds = yield self.pendingBuildCache.getPendingBuilds(codebases=codebases)
+        pendingBuilds = yield self.pendingBuildsCache.getPendingBuilds(codebases=codebases)
         defer.returnValue(pendingBuilds)
 
     @defer.inlineCallbacks
     def getPendingBuildRequestStatusesDicts(self, codebases={}):
-        pendingBuildsDict = yield self.pendingBuildCache.getPendingBuildsDicts(codebases=codebases)
+        pendingBuildsDict = yield self.pendingBuildsCache.getPendingBuildsDicts(codebases=codebases)
         defer.returnValue(pendingBuildsDict)
 
     def foundCodebasesInBuild(self, build, codebases):
@@ -994,7 +999,7 @@ class BuilderStatus(styles.Versioned):
             pendingBuildsDict = yield self.getPendingBuildRequestStatusesDicts(codebases=codebases)
             result['pendingBuilds'] = pendingBuildsDict
         else:
-            result['pendingBuilds'] = yield self.pendingBuildCache.getTotal(codebases=codebases)
+            result['pendingBuilds'] = yield self.pendingBuildsCache.getTotal(codebases=codebases)
 
         defer.returnValue(result)
 
@@ -1016,7 +1021,7 @@ class PendingBuildsCache():
         self.cache = []
         self.pendingBuildsCache = {}
         self.pendingBuildsDictsCache = {}
-        self.breqsStatusCache = LRUCache(BuildRequestStatus.createBuildRequestStatus, 6000) # Cache the request status objects
+        self.breqsStatusCache = LRUCache(BuildRequestStatus.createBuildRequestStatus, 200) # Cache the request status objects
         self.cache_now()
         self.builder.subscribe(self)
 
