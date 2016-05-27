@@ -7,7 +7,8 @@ from buildbot.status.build import BuildStatus
 from buildbot.status.results import SUCCESS
 from buildbot.sourcestamp import SourceStamp
 from twisted.internet import defer
-
+from buildbot.status.master import Status
+from buildbot.test.fake import fakedb
 import datetime
 
 class TestBuilderStatus(unittest.TestCase):
@@ -162,3 +163,23 @@ class TestBuilderStatus(unittest.TestCase):
                                                      num_builds=1, useCache=True)
 
         self.assertEqual(self.builder_status.latestBuildCache['codebase1=branch1;codebase2=branch2;']['build'], 38)
+
+    @defer.inlineCallbacks
+    def test_requestSubmittedResetsPendingBuildsCache(self):
+        status = Status(self.master)
+        self.builder_status.setStatus(status=status)
+        self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache['codebase=branch'] = 1
+        self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesDictsCache['codebase=branch'] = {'id' : 1}
+
+        row = [
+            fakedb.BuildRequest(id=1, buildsetid=1, buildername='builder-01', priority=13, results=-1)
+        ]
+        yield self.master.db.insertTestData(row)
+        self.builder_status.pendingBuildsCache.requestSubmitted(req=Mock())
+
+        key = self.builder_status.getCodebasesCacheKey()
+        self.assertEquals(self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesDictsCache, {})
+        self.assertTrue(len(self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache[key]), 1)
+        buildRequestStatus = self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache[key][0].asDict()
+        self.assertEquals(buildRequestStatus['brid'], 1)
+
