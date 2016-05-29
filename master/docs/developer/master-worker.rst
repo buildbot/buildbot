@@ -236,7 +236,7 @@ Runs a shell command on the worker.  This command takes the following arguments:
 ``usePTY``
 
     If true, the command should be run with a PTY (POSIX only).  This
-    defaults to the value specified in the worker's ``buildbot.tac``.
+    defaults to False.
 
 ``not_really``
 
