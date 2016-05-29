@@ -645,7 +645,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         won't break generated TAC file.
         """
 
-        p = mock.patch.dict(self.options, {"basedir": r"C:\builslave dir\\"})
+        p = mock.patch.dict(self.options, {"basedir": r"C:\buildbot-worker dir\\"})
         p.start()
         try:
             self.assertTACFileContents(self.options)
