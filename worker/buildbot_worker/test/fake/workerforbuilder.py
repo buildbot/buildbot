@@ -26,7 +26,7 @@ class FakeWorkerForBuilder(object):
     """
     debug = False
 
-    def __init__(self, basedir="/slavebuilder/basedir"):
+    def __init__(self, basedir="/workerbuilder/basedir"):
         self.updates = []
         self.basedir = basedir
         self.unicode_encoding = 'utf-8'
