@@ -152,7 +152,7 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
-        r = {'info': 'test', 'slave_commands': {
+        r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
         calls = [
@@ -169,7 +169,7 @@ class TestConnection(unittest.TestCase):
             if 'getWorkerInfo' in args:
                 return defer.succeed({
                     'info': 'test',
-                    'slave_commands': {
+                    'worker_commands': {
                         'y': 2, 'x': 1
                     }
                 })
@@ -185,7 +185,7 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
-        r = {'info': 'test', 'slave_commands': {
+        r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
         calls = [mock.call('getWorkerInfo'), mock.call('getVersion')]
@@ -209,7 +209,7 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
-        r = {'slave_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
+        r = {'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
         calls = [mock.call('getSlaveInfo'), mock.call(
             'getCommands'), mock.call('getVersion')]

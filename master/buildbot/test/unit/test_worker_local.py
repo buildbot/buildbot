@@ -81,4 +81,4 @@ class TestLocalWorker(unittest.TestCase):
                                properties={'a': 'b'})
         yield sl.startService()
         info = yield sl.conn.remoteGetWorkerInfo()
-        self.assertIn("slave_commands", info)
+        self.assertIn("worker_commands", info)
