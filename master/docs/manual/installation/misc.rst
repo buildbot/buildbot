@@ -14,7 +14,7 @@ To launch them, pass the working directory to the :command:`buildbot` and :comma
     # start a master
     buildbot start [ BASEDIR ]
     # start a worker
-    buildslave start [ WORKER_BASEDIR ]
+    buildbot-worker start [ WORKER_BASEDIR ]
 
 The *BASEDIR* is option and can be omitted if the current directory contains the buildbot configuration (the :file:`buildbot.tac` file).
 
@@ -95,7 +95,7 @@ To stop a buildmaster or worker manually, use:
 
     buildbot stop [ BASEDIR ]
     # or
-    buildslave stop [ WORKER_BASEDIR ]
+    buildbot-worker stop [ WORKER_BASEDIR ]
 
 This simply looks for the :file:`twistd.pid` file and kills whatever process is identified within.
 
@@ -121,7 +121,7 @@ Workers can similarly be restarted with:
 
 .. code-block:: bash
 
-    buildslave restart [ BASEDIR ]
+    buildbot-worker restart [ BASEDIR ]
 
 There are certain configuration changes that are not handled cleanly by ``buildbot reconfig``.
 If this occurs, ``buildbot restart`` is a more robust tool to fully switch over to the new configuration.
