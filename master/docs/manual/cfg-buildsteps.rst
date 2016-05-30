@@ -266,7 +266,7 @@ Mercurial
 
 .. py:class:: buildbot.steps.source.mercurial.Mercurial
 
-The :bb:step:`Mercurial` build step performs a `Mercurial <http://selenic.com/mercurial>`_ (aka ``hg``) checkout or update.
+The :bb:step:`Mercurial` build step performs a `Mercurial <https://www.mercurial-scm.org/>`_ (aka ``hg``) checkout or update.
 
 Branches are available in two modes: ``dirname``, where the name of the branch is a suffix of the name of the repository, or ``inrepo``, which uses Hg's named-branches support.
 Make sure this setting matches your changehook, if you have that installed.
