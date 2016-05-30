@@ -6,7 +6,7 @@ Installing the code
 The Buildbot Packages
 ~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot comes in several parts: ``buildbot`` (the buildmaster), ``buildbot-slave`` (the worker), ``buildbot-www``, and several web plugins such as ``buildbot-waterfall-view``.
+Buildbot comes in several parts: ``buildbot`` (the buildmaster), ``buildbot-worker`` (the worker), ``buildbot-www``, and several web plugins such as ``buildbot-waterfall-view``.
 
 The worker and buildmaster can be installed individually or together.
 The base web (``buildbot.www``) and web plugins are required to run a master with a web interface (the common configuration).
@@ -25,7 +25,7 @@ and for the worker:
 
 .. code-block:: bash
 
-    pip install buildbot-slave
+    pip install buildbot-worker
 
 When using ``pip`` to install instead of distribution specific package manangers, e.g. via `apt-get` or `ports`, it is simpler to choose exactly which version one wants to use.
 It may however be easier to install via distribution specific package mangers but note that they may provide an earlier version than what is available via ``pip``.
@@ -39,7 +39,7 @@ If you plan to use TLS or SSL in master configuration (e.g. to fetch resources o
 Installation From Tarballs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot and Buildslave are installed using the standard Python `distutils <http://docs.python.org/library/distutils.html>`_ process.
+Buildbot master and ``buildbot-worker`` are installed using the standard Python `distutils <http://docs.python.org/library/distutils.html>`_ process.
 For either component, after unpacking the tarball, the process is:
 
 .. code-block:: bash
@@ -60,7 +60,7 @@ To test this, shift to a different directory (like :file:`/tmp`), and run:
 
     buildbot --version
     # or
-    buildslave --version
+    buildbot-worker --version
 
 If it shows you the versions of Buildbot and Twisted, the install went ok.
 If it says "no such command" or it gets an ``ImportError`` when it tries to load the libraries, then something went wrong.
@@ -100,7 +100,7 @@ Then, run the tests:
 
     PYTHONPATH=. trial buildbot.test
     # or
-    PYTHONPATH=. trial buildslave.test
+    PYTHONPATH=. trial buildbot_worker.test
 
 Nothing should fail, although a few might be skipped.
 
