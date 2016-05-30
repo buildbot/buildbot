@@ -43,11 +43,7 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
 
   # Test different versions of SQLAlchemy
-  - TWISTED=15.5.0 SQLALCHEMY=0.6.0 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.6.8 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.7.0 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.7.4 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=0.7.8 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
   - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
 
   # add extra tests in separate jobs
