@@ -247,7 +247,6 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             self.logs.append(
                 "Test failed, trying to stop possibly running services")
             yield self._force_stop()
-            os.chdir(self._origcwd)
 
             # Output ran command logs to stdout to help debugging in CI systems
             # where logs are not available (e.g. Travis).
@@ -257,6 +256,9 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             print("-" * 80)
             print("\n".join(self.logs))
             print("-" * 80)
+            self._print_all_logs()
+
+            os.chdir(self._origcwd)
 
         else:
             os.chdir(self._origcwd)
@@ -292,6 +294,24 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             except Exception:
                 # Ignore errors.
                 pass
+
+    def _print_all_logs(self):
+        """Print all started services Twistd logs"""
+
+        logs = []
+
+        if self.master_dir:
+            logs.append(os.path.join(self.master_dir, "twistd.log"))
+        for worker_dir in self.workers_dirs:
+            logs.append(os.path.join(worker_dir, "twistd.log"))
+        for slave_dir in self.slaves_dirs:
+            logs.append(os.path.join(slave_dir, "twistd.log"))
+
+        for log_path in logs:
+            if os.path.exists(log_path):
+                with open(log_path, "rt") as f:
+                    print("Log '{}':".format(log_path))
+                    print(indent(f.read(), "    "))
 
     def _log(self, msg):
         self.logs.append(msg)
