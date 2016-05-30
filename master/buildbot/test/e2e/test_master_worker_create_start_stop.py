@@ -142,6 +142,42 @@ c['db'] = {
 }
 """
 
+FILE_UPLOAD_TEST_CONFIG = """\
+from buildbot.plugins import *
+
+c = BuildmasterConfig = {}
+
+c['workers'] = [worker.Worker('example-worker', 'pass')]
+c['protocols'] = {'pb': {'port': 9989}}
+c['schedulers'] = [
+    schedulers.ForceScheduler(
+        name='force',
+        builderNames=['runtests'])
+]
+
+factory = util.BuildFactory()
+factory.addStep(
+    steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
+factory.addStep(
+    steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
+factory.addStep(
+    steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
+factory.addStep(
+    steps.FileDownload(mastersrc="master.txt", workerdest="dir/file3.txt"))
+factory.addStep(steps.DirectoryUpload(workersrc="dir", masterdest="dir"))
+
+c['builders'] = [
+    util.BuilderConfig(name='runtests', workernames=['example-worker'],
+        factory=factory),
+]
+
+c['buildbotURL'] = 'http://localhost:8010/'
+c['www'] = dict(port=8010, plugins={})
+c['db'] = {
+    'db_url' : 'sqlite:///state.sqlite',
+}
+"""
+
 
 def wait_for_completion(is_completed_pred,
                         check_interval=0.1, timeout=10, reactor=None):
@@ -162,6 +198,16 @@ def wait_for_completion(is_completed_pred,
     start_time = reactor.seconds()
     caller = task.LoopingCall(next_try)
     return caller.start(check_interval, now=True)
+
+
+def _read_dir_contents(dir):
+    contents = {}
+    for root, _, files in os.walk(dir):
+        for name in files:
+            fn = os.path.join(root, name)
+            with open(fn) as f:
+                contents[fn] = f.read()
+    return contents
 
 
 # TODO: Current implementation uses the fact that Buildbot processes are being
@@ -546,6 +592,138 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         # Stop master/worker.
         yield self._buildbot_worker_stop(worker_dir)
+        yield self._buildbot_stop(master_dir)
+
+        self.success = True
+
+    @defer.inlineCallbacks
+    @skipUnlessInstalled('buildbot_worker',
+                         "buildbot-worker package is not installed")
+    def test_file_transfer_on_worker(self):
+        """Run file transfer between master/worker."""
+
+        # Create master.
+        master_dir = 'master-dir'
+        yield self._buildbot_create_master(master_dir)
+
+        # Write master configuration.
+        master_cfg = FILE_UPLOAD_TEST_CONFIG
+        self._write_master_config(master_dir, master_cfg)
+
+        # Create worker.
+        worker_dir = 'worker-dir'
+        yield self._buildbot_worker_create_worker(
+            worker_dir, 'example-worker', 'pass')
+
+        # Start master/worker.
+        yield self._buildbot_start(master_dir)
+        yield self._buildbot_worker_start(worker_dir)
+
+        # Get builder ID.
+        # TODO: maybe add endpoint to get builder by name?
+        builders = yield self._get('builders')
+        self.assertEqual(len(builders['builders']), 1)
+        builder_id = builders['builders'][0]['builderid']
+
+        # Start force build.
+        # TODO: return result is not documented in RAML.
+        buildset_id, buildrequests_ids = yield self._call_rpc(
+            'forceschedulers/force', 'force', builderid=builder_id)
+
+        @defer.inlineCallbacks
+        def is_completed():
+            # Query buildset completion status.
+            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
+            defer.returnValue(buildsets['buildsets'][0]['complete'])
+
+        yield wait_for_completion(is_completed)
+
+        # TODO: Looks like there is no easy way to get build identifier that
+        # corresponds to buildrequest/buildset.
+        buildnumber = 1
+
+        # Get completed build info.
+        builds = yield self._get(
+            'builders/{builderid}/builds/{buildnumber}'.format(
+                builderid=builder_id, buildnumber=buildnumber))
+
+        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
+
+        master_contents = _read_dir_contents(os.path.join(master_dir, "dir"))
+        self.assertEqual(
+            master_contents,
+            {os.path.join(master_dir, 'dir', 'file1.txt'): 'filecontent',
+             os.path.join(master_dir, 'dir', 'file2.txt'): 'filecontent2',
+             os.path.join(master_dir, 'dir', 'file3.txt'): 'filecontent2'})
+
+        # Stop master/worker.
+        yield self._buildbot_worker_stop(worker_dir)
+        yield self._buildbot_stop(master_dir)
+
+        self.success = True
+
+    @defer.inlineCallbacks
+    @skipUnlessInstalled('buildslave.bot',
+                         "buildslave package is not installed")
+    def test_file_transfer_on_slave(self):
+        """Run file transfer between master/buildslave."""
+
+        # Create master.
+        master_dir = 'master-dir'
+        yield self._buildbot_create_master(master_dir)
+
+        # Write master configuration.
+        master_cfg = FILE_UPLOAD_TEST_CONFIG
+        self._write_master_config(master_dir, master_cfg)
+
+        # Create worker.
+        worker_dir = 'worker-dir'
+        yield self._buildslave_create_slave(
+            worker_dir, 'example-worker', 'pass')
+
+        # Start master/worker.
+        yield self._buildbot_start(master_dir)
+        yield self._buildslave_start(worker_dir)
+
+        # Get builder ID.
+        # TODO: maybe add endpoint to get builder by name?
+        builders = yield self._get('builders')
+        self.assertEqual(len(builders['builders']), 1)
+        builder_id = builders['builders'][0]['builderid']
+
+        # Start force build.
+        # TODO: return result is not documented in RAML.
+        buildset_id, buildrequests_ids = yield self._call_rpc(
+            'forceschedulers/force', 'force', builderid=builder_id)
+
+        @defer.inlineCallbacks
+        def is_completed():
+            # Query buildset completion status.
+            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
+            defer.returnValue(buildsets['buildsets'][0]['complete'])
+
+        yield wait_for_completion(is_completed)
+
+        # TODO: Looks like there is no easy way to get build identifier that
+        # corresponds to buildrequest/buildset.
+        buildnumber = 1
+
+        # Get completed build info.
+        builds = yield self._get(
+            'builders/{builderid}/builds/{buildnumber}'.format(
+                builderid=builder_id, buildnumber=buildnumber))
+
+        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
+
+        master_contents = _read_dir_contents(os.path.join(master_dir, "dir"))
+        self.assertEqual(
+            master_contents,
+            {os.path.join(master_dir, 'dir', 'file1.txt'): 'filecontent',
+             os.path.join(master_dir, 'dir', 'file2.txt'): 'filecontent2',
+             os.path.join(master_dir, 'dir', 'file3.txt'): 'filecontent2'})
+
+        # Stop master/worker.
+        yield self._buildslave_stop(worker_dir)
         yield self._buildbot_stop(master_dir)
 
         self.success = True
