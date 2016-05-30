@@ -165,7 +165,7 @@ A simple example:
 Raml Specs
 ~~~~~~~~~~
 
-The Data API is documented in `RAML 1.0 format <https://github.com/raml-org/raml-spec/blob/raml-10/versions/raml-10/raml-10.md>`_.
+The Data API is documented in `RAML 1.0 format <https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md>`_.
 RAML describes and documents all our data, rest, and javascript APIs in a format that can be easily manipulated by human and machines.
 
 .. toctree::
