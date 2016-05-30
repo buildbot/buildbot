@@ -550,3 +550,5 @@ List of database-related changes in API (fallback for old API is provided):
      - yes
 
 ``buildbot-worker`` doesn't support worker-side specification of ``usePTY`` (with ``--usepty`` command line switch of ``buildbot-worker create-worker``), you need to specify this option on master side.
+
+``getSlaveInfo`` remote command was renamed to ``getWorkerInfo`` in ``buildbot-worker``.
