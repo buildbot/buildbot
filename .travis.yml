@@ -113,7 +113,7 @@ install:
                   pg8000 \
 
   - |
-      [ $TESTS != trial_worker] || \
+      [ $TESTS != trial_worker ] || \
       pip install -e slave \
                   -e worker \
 
