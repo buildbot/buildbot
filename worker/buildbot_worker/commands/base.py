@@ -78,6 +78,8 @@ command_version = "3.0"
 #    * remote method getSlaveInfo() renamed to getWorkerInfo().
 #    * "slavesrc" command argument renamed to "workersrc" in uploadFile and
 #      uploadDirectory commands.
+#    * "slavedest" command argument renamed to "workerdest" in downloadFile
+#      command.
 
 
 class Command(object):

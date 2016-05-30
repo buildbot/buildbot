@@ -104,6 +104,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
   * ``slavesrc`` command argument was renamed to ``workersrc`` in ``uploadFile`` and ``uploadDirectory`` commands.
 
+  * ``slavedest`` command argument was renamed to ``workerdest`` in ``downloadFile`` command.
+
 
 Details
 -------
