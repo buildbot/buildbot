@@ -29,7 +29,7 @@ Changes for Developers
 * Speed improvements for integration tests by use of SynchronousTestCase, and in-memory sqlite.
 
 
-* Buildbot now requires import to be sorted using `isort <https://readthedocs.org/projects/isort/>`_.
+* Buildbot now requires import to be sorted using `isort <https://isort.readthedocs.io/en/stable/>`_.
   Please run ``make isort`` before creating a PR or use any available editor plugin in order to reorder your imports.
 
 Fixes
