@@ -293,12 +293,16 @@ class CompositeStepMixin():
         fileWriter = remotetransfer.StringFileWriter()
         # default arguments
         args = {
-            'slavesrc': filename,
             'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': None,
             'blocksize': 32 * 1024,
         }
+
+        if self.workerVersionIsOlderThan('uploadFile', '3.0'):
+            args['slavesrc'] = filename
+        else:
+            args['workersrc'] = filename
 
         def commandComplete(cmd):
             if cmd.didFail():
