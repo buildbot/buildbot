@@ -131,8 +131,8 @@ pygments_style = 'trac'
 # modindex_common_prefix = []
 
 intersphinx_mapping = {
-    'python': ('http://python.readthedocs.org/en/latest/', None),
-    'sqlalchemy': ('http://sqlalchemy.readthedocs.org/en/latest/', None),
+    'python': ('https://python.readthedocs.io/en/latest/', None),
+    'sqlalchemy': ('https://sqlalchemy.readthedocs.io/en/latest/', None),
 }
 
 extlinks = {
