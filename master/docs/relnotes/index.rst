@@ -102,6 +102,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
   * ``slave-config`` value of ``usePTY`` is not supported anymore.
 
+  * ``slavesrc`` command argument was renamed to ``workersrc`` in ``uploadFile`` and ``uploadDirectory`` commands.
+
 
 Details
 -------
