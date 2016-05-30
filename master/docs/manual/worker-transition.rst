@@ -527,6 +527,9 @@ List of database-related changes in API (fallback for old API is provided):
    * - :py:attr:`buildbot.db.connector.DBConnector.buildslaves`
      - :py:attr:`buildbot.db.connector.DBConnector.workers`
 
+
+.. _Worker-Transition-Buildbot-Worker:
+
 ``buildbot-worker``
 -------------------
 
