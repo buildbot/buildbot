@@ -1,5 +1,5 @@
 
-SOURCES = overview_src.svg slaves_src.svg master_src.svg status_src.svg
+SOURCES = overview_src.svg workers_src.svg master_src.svg status_src.svg
 SVGS = $(patsubst %_src.svg,%.svg,$(SOURCES))
 PNGS = $(patsubst %_src.svg,%.png,$(SOURCES))
 EPSS = $(patsubst %_src.svg,%.eps,$(SOURCES))
@@ -31,4 +31,4 @@ images-eps: $(EPSS)
 	inkscape --export-eps $@ $<
 	mogrify -trim +repage $@
 clean:
-	rm -f *.png *.eps overview.svg slaves.svg master.svg status.svg
+	rm -f *.png *.eps overview.svg workers.svg master.svg status.svg

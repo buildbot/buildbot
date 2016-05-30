@@ -82,7 +82,7 @@ To perform builds, the workers must typically obtain source code from a CVS/SVN/
 Therefore they must also be able to reach the repository.
 The buildmaster provides instructions for performing builds, but does not provide the source code itself.
 
-.. image:: _images/slaves.*
+.. image:: _images/workers.*
    :alt: Worker Connections
 
 .. _Buildmaster-Architecture:
