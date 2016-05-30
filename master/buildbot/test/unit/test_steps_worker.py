@@ -21,14 +21,24 @@ from twisted.trial import unittest
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import properties
+from buildbot.process import remotetransfer
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
+from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+
+def uploadString(string):
+    def behavior(command):
+        writer = command.args['writer']
+        writer.remote_write(string)
+        writer.remote_close()
+    return behavior
 
 
 class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
@@ -404,6 +414,44 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             + 1,
             Expect('mkdir', {'dir': 'd', 'logEnviron': False})
             + 1
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_getFileContentFromWorker(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            res = yield x.getFileContentFromWorker("file.txt")
+            self.assertEqual(res, "Hello world!")
+
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                workersrc="file.txt", workdir='wkdir',
+                blocksize=32 * 1024, maxsize=None,
+                writer=ExpectRemoteRef(remotetransfer.StringFileWriter))) +
+            Expect.behavior(uploadString("Hello world!")) +
+            0
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_getFileContentFromWorker2_16(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            res = yield x.getFileContentFromWorker("file.txt")
+            self.assertEqual(res, "Hello world!")
+
+        self.setupStep(
+            CompositeUser(testFunc),
+            worker_version={'*': '2.16'})
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                slavesrc="file.txt", workdir='wkdir',
+                blocksize=32 * 1024, maxsize=None,
+                writer=ExpectRemoteRef(remotetransfer.StringFileWriter))) +
+            Expect.behavior(uploadString("Hello world!")) +
+            0
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
