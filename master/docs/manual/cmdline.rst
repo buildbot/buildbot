@@ -4,7 +4,7 @@ Command-line Tool
 =================
 
 This section describes command-line tools available after buildbot installation.
-Since version 0.8 the one-for-all :command:`buildbot` command-line tool was divided into two parts namely :command:`buildbot` and :command:`buildslave`.
+Since version 0.8 the one-for-all :command:`buildbot` command-line tool was divided into two parts namely :command:`buildbot` and :command:`buildslave`, starting from version 0.9 :command:`buildslave` command was replaced with :command:`buildbot-worker` command.
 The last one was separated from main command-line tool to minimize dependencies required for running a worker while leaving all other functions to :command:`buildbot` tool.
 
 Every command-line tool has a list of global options and a set of commands which have their own options.
@@ -13,9 +13,9 @@ One can run these tools in the following way:
 .. code-block:: none
 
    buildbot [global options] command [command options]
-   buildslave [global options] command [command options]
+   buildbot-worker [global options] command [command options]
 
-The ``buildbot`` command is used on the master, while ``buildslave`` is used on the worker.
+The ``buildbot`` command is used on the master, while ``buildbot-worker`` is used on the worker.
 Global options are the same for both tools which perform the following actions:
 
 --help
@@ -35,7 +35,7 @@ You can get help on any command by specifying ``--help`` as a command option:
 
    buildbot @var{command} --help
 
-You can also use manual pages for :command:`buildbot` and :command:`buildslave` for quick reference on command-line options.
+You can also use manual pages for :command:`buildbot` and :command:`buildbot-worker` for quick reference on command-line options.
 
 The remainder of this section describes each buildbot command.
 See :bb:index:`cmdline` for a full list.
@@ -636,13 +636,13 @@ Note carefully that the names in the :file:`options` file usually do not match t
 worker
 ------
 
-:command:`buildslave` command-line tool is used for worker management only and does not provide any additional functionality.
+:command:`buildbot-worker` command-line tool is used for worker management only and does not provide any additional functionality.
 One can create, start, stop and restart the worker.
 
-.. bb:cmdline:: create-slave
+.. bb:cmdline:: create-worker
 
-create-slave
-~~~~~~~~~~~~
+create-worker
+~~~~~~~~~~~~~
 
 This creates a new directory and populates it with files that let it be used as a worker's base directory.
 You must provide several arguments, which are used to create the initial :file:`buildbot.tac` file.
@@ -651,9 +651,9 @@ The option `-r` option is advisable here, just like for ``create-master``.
 
 .. code-block:: none
 
-    buildslave create-slave -r {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}
+    buildbot-worker create-worker -r {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}
 
-The create-slave options are described in :ref:`Worker-Options`.
+The create-worker options are described in :ref:`Worker-Options`.
 
 .. bb:cmdline:: start (worker)
 
@@ -665,7 +665,7 @@ The daemon is launched in the background, with events logged to a file named :fi
 
 .. code-block:: none
 
-    buildslave start [--nodaemon] BASEDIR
+    buildbot-worker start [--nodaemon] BASEDIR
 
 The option `--nodaemon` option instructs Buildbot to skip daemonizing.
 The process will start in the foreground.
@@ -678,7 +678,7 @@ restart
 
 .. code-block:: none
 
-    buildslave restart [--nodaemon] BASEDIR
+    buildbot-worker restart [--nodaemon] BASEDIR
 
 This restarts a worker which is already running.
 It is equivalent to a ``stop`` followed by a ``start``.
