@@ -109,8 +109,9 @@ install:
   - "[ $TESTS != trial_worker_only ] || pip install -e pkg -e master[tls,test] -e worker"
 
   # install buildbot_www from pip in order to run the www tests
-  - "[ $TESTS != trial -a $TESTS != coverage -a $TESTS != trial_worker ] || pip install --pre buildbot_www"
-
+  - |
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != trial_worker -a $TESTS != trial_worker_only ] || \
+      pip install --pre buildbot_www
 
   # for python 3 we dont install everything yet..
   - |
