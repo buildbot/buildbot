@@ -102,7 +102,7 @@ If branches are being used, the source Step is instead configured with a ``baseU
 Each build then has a specific branch which replaces ``defaultBranch``, or just uses the default one.
 Instead of a revision number, each build can have a ``context``, which is a string that records all the patches that are present in a given tree (this is the output of ``darcs changes --context``, and is considerably less concise than, e.g. Subversion's revision number, but the patch-reordering flexibility of Darcs makes it impossible to provide a shorter useful specification).
 
-`Mercurial <http://selenic.com/mercurial>`_ is like Darcs, in that each branch is stored in a separate repository.
+`Mercurial <https://www.mercurial-scm.org/>`_ is like Darcs, in that each branch is stored in a separate repository.
 The ``repourl``, ``baseURL``, and ``defaultBranch`` arguments are all handled the same way as with Darcs.
 The *revision*, however, is the hash identifier returned by ``hg identify``.
 
