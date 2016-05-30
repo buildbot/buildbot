@@ -2,6 +2,7 @@ Master-Worker API
 =================
 
 This section describes the master-worker interface.
+It covers communication protocol of "classic" remote Worker, notice that there is other types of workers which behave a bit different, such as :ref:`Local Worker <Local-Workers>` and :ref:`Latent Workers <Latent-Workers>`.
 
 Connection
 ----------
@@ -10,16 +11,16 @@ The interface is based on Twisted's Perspective Broker, which operates over TCP
 connections.
 
 The worker connects to the master, using the parameters supplied to
-:command:`buildslave create-slave`.  It uses a reconnecting process with an
+:command:`buildbot-worker create-worker`.  It uses a reconnecting process with an
 exponential backoff, and will automatically reconnect on disconnection.
 
 Once connected, the worker authenticates with the Twisted Cred (newcred)
-mechanism, using the username and password supplied to :command:`buildslave
-create-slave`.  The *mind* is the worker bot instance (class
-:class:`buildslave.bot.Bot`).
+mechanism, using the username and password supplied to
+:command:`buildbot-worker create-worker`.
+The *mind* is the worker bot instance (class :class:`buildbot_worker.pb.BotPb`).
 
 On the master side, the realm is implemented by
-:class:`buildbot.master.Dispatcher`, which examines the username of incoming
+:class:`buildbot.pbmanager.Dispatcher`, which examines the username of incoming
 avatar requests.  There are special cases for ``change``, ``debug``, and
 ``statusClient``, which are not discussed here.  For all other usernames,
 the botmaster is consulted, and if a worker with that name is configured, its
@@ -37,21 +38,21 @@ Bot methods
 
 The worker-side Bot object has the following remote methods:
 
-:meth:`~buildslave.bot.Bot.remote_getCommands`
-    Returns a list of ``(name, version)`` for all commands the worker recognizes
+:meth:`~buildbot_worker.pb.BotPb.remote_getCommands`
+    Returns a list of ``(name, version)`` for all commands the worker recognizes.
 
-:meth:`~buildslave.bot.Bot.remote_setBuilderList`
+:meth:`~buildbot_worker.pb.BotPb.remote_setBuilderList`
     Given a list of builders and their build directories, ensures that
     those builders, and only those builders, are running.  This can be
     called after the initial connection is established, with a new
     list, to add or remove builders.
 
-    This method returns a dictionary of :class:`SlaveBuilder` objects - see below
+    This method returns a dictionary of :class:`WorkerForBuilder` objects - see below.
 
-:meth:`~buildslave.bot.Bot.remote_print`
-    Adds a message to the worker logfile
+:meth:`~buildbot_worker.pb.BotPb.remote_print`
+    Adds a message to the worker logfile.
 
-:meth:`~buildslave.bot.Bot.remote_getSlaveInfo`
+:meth:`~buildbot_worker.pb.BotPb.remote_getWorkerInfo`
     Returns the contents of the worker's :file:`info/` directory. This also
     contains the keys
 
@@ -62,26 +63,26 @@ The worker-side Bot object has the following remote methods:
     ``basedir``
         base directory where worker is running
     ``numcpus``
-        number of CPUs on the worker, either as configured or as detected (since ``buildbot-slave`` version 0.9.0)
+        number of CPUs on the worker, either as configured or as detected (since ``buildbot-worker`` version 0.9.0)
 
-:meth:`~buildslave.bot.Bot.remote_getVersion`
-    Returns the worker's version
+:meth:`~buildbot_worker.pb.BotPb.remote_getVersion`
+    Returns the worker's version.
 
 Worker methods
 ~~~~~~~~~~~~~~
 
 The master-side object has the following method:
 
-:meth:`~buildbot.worker.Worker.perspective_keepalive`
+:meth:`~buildbot.protocols.pb.Connection.perspective_keepalive`
     Does nothing - used to keep traffic flowing over the TCP connection
 
 Setup
 -----
 
-After the initial connection and trading of a mind (Bot) for an avatar
-(BuildSlave), the master calls the Bot's :meth:`setBuilderList` method to set
+After the initial connection and trading of a mind (:class:`buildbot_worker.pb.BotPb`) for an avatar
+(Worker), the master calls the Bot's :meth:`setBuilderList` method to set
 up the proper builders on the worker side.  This method returns a
-reference to each of the new worker-side :class:`~buildslave.bot.SlaveBuilder`
+reference to each of the new worker-side :class:`~buildbot_worker.pb.WorkerForBuilderPb`
 objects, described below.  Each of these is handed to the corresponding
 master-side :class:`~buildbot.process.workerforbuilder.WorkerForBuilder` object.
 
@@ -91,7 +92,7 @@ This immediately calls the remote :meth:`setMaster` method, then the
 Pinging
 -------
 
-To ping a remote SlaveBuilder, the master calls its :meth:`print` method.
+To ping a remote Worker, the master calls its :meth:`print` method.
 
 Building
 --------
@@ -102,44 +103,44 @@ passing a reference to itself as the ``stepRef`` parameter.  The
 :meth:`startCommand` method returns immediately, and the end of the command is
 signalled with a call to a method on the master-side BuildStep object.
 
-Slave Builders
---------------
+Worker For Builders
+-------------------
 
 Each worker has a set of builders which can run on it.  These are
 represented by distinct classes on the master and worker, just like the
-BuildSlave and Bot objects described above.
+Worker and Bot objects described above.
 
 On the worker side, builders are represented as instances of the
-:class:`buildslave.bot.SlaveBuilder` class.  On the master side, they are
-represented by the :class:`buildbot.process.workerforbuilder.SlaveBuilder` class.
+:class:`buildbot_worker.pb.WorkerForBuilderPb` class.  On the master side, they are
+represented by the :class:`buildbot.process.workerforbuilder.WorkerForBuilder` class.
 The identical names are a source of confusion.  The following will refer to
-these as the worker-side and master-side SlaveBuilder classes.  Each object
+these as the worker-side and master-side Worker For Builder classes.  Each object
 keeps a reference to its opposite in ``self.remote``.
 
-Slave-Side SlaveBuilder Methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Worker-Side :class:`~buildbot_worker.pb.WorkerForBuilderPb` Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:meth:`~buildslave.bot.SlaveBuilder.remote_setMaster`
-    Provides a reference to the master-side SlaveBuilder
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_setMaster`
+    Provides a reference to the master-side Worker For Builder
 
-:meth:`~buildslave.bot.SlaveBuilder.remote_print`
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_print`
     Adds a message to the worker logfile; used to check round-trip connectivity
 
-:meth:`~buildslave.bot.SlaveBuilder.remote_startBuild`
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_startBuild`
     Indicates that a build is about to start, and that any subsequent
     commands are part of that build
 
-:meth:`~buildslave.bot.SlaveBuilder.remote_startCommand`
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_startCommand`
     Invokes a command on the worker side
 
-:meth:`~buildslave.bot.SlaveBuilder.remote_interruptCommand`
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_interruptCommand`
     Interrupts the currently-running command
 
-:meth:`~buildslave.bot.SlaveBuilder.remote_shutdown`
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_shutdown`
     Shuts down the worker cleanly
 
-Master-side WorkerForBuilder Methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Master-side :class:`~buildbot.process.workerforbuilder.WorkerForBuilder` Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The master side does not have any remotely-callable methods.
 
@@ -150,9 +151,9 @@ Actual work done by the worker is represented on the master side by a
 :class:`buildbot.process.remotecommand.RemoteCommand` instance.
 
 The command instance keeps a reference to the worker-side
-:class:`buildslave.bot.SlaveBuilder`, and calls methods like
-:meth:`~buildslave.bot.SlaveBuilder.remote_startCommand` to start new commands.
-Once that method is called, the :class:`~buildslave.bot.SlaveBuilder` instance
+:class:`buildbot_worker.pb.WorkerForBuilderPb`, and calls methods like
+:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_startCommand` to start new commands.
+Once that method is called, the :class:`~buildbot_worker.pb.WorkerForBuilderPb` instance
 keeps a reference to the command, and calls the following methods on it:
 
 Master-Side RemoteCommand Methods
