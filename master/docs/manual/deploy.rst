@@ -60,7 +60,7 @@ You can use something like the following:
         -prune -o -type f -mtime +14 -exec rm {} \;
     @weekly cd BASEDIR && find twistd.log* -mtime +14 -exec rm {} \;
 
-Alternatively, you can configure a maximum number of old logs to be kept using the ``--log-count`` command line option when running ``buildslave create-slave`` or ``buildbot create-master``.
+Alternatively, you can configure a maximum number of old logs to be kept using the ``--log-count`` command line option when running ``buildbot-worker create-worker`` or ``buildbot create-master``.
 
 .. _Troubleshooting:
 
@@ -100,7 +100,7 @@ If you get impatient, just manually stop and re-start the worker.
 
 When the buildmaster is restarted, all workers will be disconnected, and will attempt to reconnect as usual.
 The reconnect time will depend upon how long the buildmaster is offline (i.e. how far up the exponential backoff curve the workers have travelled).
-Again, :samp:`buildslave restart {BASEDIR}` will speed up the process.
+Again, :samp:`buildbot-worker restart {BASEDIR}` will speed up the process.
 
 .. _Contrib-Scripts:
 
