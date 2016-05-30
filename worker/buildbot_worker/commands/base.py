@@ -75,6 +75,8 @@ command_version = "3.0"
 #    * worker-side usePTY configuration (usePTY='slave-config') support
 #      dropped,
 #    * remote method getSlaveInfo() renamed to getWorkerInfo().
+#    * "slavesrc" command argument renamed to "workersrc" in uploadFile and
+#      uploadDirectory commands.
 
 
 class Command(object):
