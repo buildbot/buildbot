@@ -806,6 +806,34 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             Expect('downloadFile', dict(
+                workerdest="hello.txt", workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
+            + Expect.behavior(downloadString(read.append))
+            + 0)
+
+        self.expectOutcome(
+            result=SUCCESS, state_string="downloading to hello.txt")
+        d = self.runStep()
+
+        @d.addCallback
+        def checkCalls(res):
+            self.assertEquals(''.join(read), "Hello World")
+        return d
+
+    def testBasicWorker2_16(self):
+        self.setupStep(
+            transfer.StringDownload("Hello World", "hello.txt"),
+            worker_version={'*': '2.16'})
+
+        self.step.worker = Mock()
+        self.step.remote = Mock()
+
+        # A place to store what gets read
+        read = []
+
+        self.expectCommands(
+            Expect('downloadFile', dict(
                 slavedest="hello.txt", workdir='wkdir',
                 blocksize=16384, maxsize=None, mode=None,
                 reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
@@ -826,7 +854,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             Expect('downloadFile', dict(
-                slavedest="hello.txt", workdir='wkdir',
+                workerdest="hello.txt", workdir='wkdir',
                 blocksize=16384, maxsize=None, mode=None,
                 reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
             + 1)
@@ -894,7 +922,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             Expect('downloadFile', dict(
-                slavedest="hello.json", workdir='wkdir',
+                workerdest="hello.json", workdir='wkdir',
                 blocksize=16384, maxsize=None, mode=None,
                 reader=ExpectRemoteRef(remotetransfer.StringFileReader))
             )
@@ -916,7 +944,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectCommands(
             Expect('downloadFile', dict(
-                slavedest="hello.json", workdir='wkdir',
+                workerdest="hello.json", workdir='wkdir',
                 blocksize=16384, maxsize=None, mode=None,
                 reader=ExpectRemoteRef(remotetransfer.StringFileReader)))
             + 1)
@@ -972,7 +1000,37 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         props = Properties()
         props.setProperty('key1', 'value1', 'test')
         s.build.getProperties.return_value = props
-        s.build.getWorkerCommandVersion.return_value = 1
+        s.build.getWorkerCommandVersion.return_value = '3.0'
+        ss = Mock()
+        ss.asDict.return_value = dict(revision="12345")
+        s.build.getAllSourceStamps.return_value = [ss]
+
+        s.worker = Mock()
+        s.remote = Mock()
+
+        s.start()
+
+        for c in s.remote.method_calls:
+            name, command, args = c
+            commandName = command[3]
+            kwargs = command[-1]
+            if commandName == 'downloadFile':
+                self.assertEquals(kwargs['workerdest'], 'props.json')
+                reader = kwargs['reader']
+                data = reader.remote_read(100)
+                self.assertEquals(
+                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                break
+        else:
+            raise ValueError("No downloadFile command found")
+
+    def testBasicWorker2_16(self):
+        s = transfer.JSONPropertiesDownload("props.json")
+        s.build = Mock()
+        props = Properties()
+        props.setProperty('key1', 'value1', 'test')
+        s.build.getProperties.return_value = props
+        s.build.getWorkerCommandVersion.return_value = '2.16'
         ss = Mock()
         ss.asDict.return_value = dict(revision="12345")
         s.build.getAllSourceStamps.return_value = [ss]

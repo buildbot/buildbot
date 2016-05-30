@@ -406,7 +406,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
-            slavedest='data',
+            workerdest='data',
             reader=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=32,
@@ -433,7 +433,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='workdir',
-            slavedest=os.path.join('subdir', 'data'),
+            workerdest=os.path.join('subdir', 'data'),
             reader=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=32,
@@ -459,7 +459,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         os.makedirs(os.path.join(self.basedir, 'dir'))
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
-            slavedest='dir',  # but that's a directory!
+            workerdest='dir',  # but that's a directory!
             reader=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=32,
@@ -483,7 +483,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
-            slavedest='data',
+            workerdest='data',
             reader=FakeRemote(self.fakemaster),
             maxsize=50,
             blocksize=32,
@@ -511,7 +511,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
-            slavedest='data',
+            workerdest='data',
             reader=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=2,

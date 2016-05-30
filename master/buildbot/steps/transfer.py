@@ -471,13 +471,17 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
         # default arguments
         args = {
-            'slavedest': workerdest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
             'workdir': self.workdir,
             'mode': self.mode,
         }
+
+        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
+            args['slavedest'] = workerdest
+        else:
+            args['workerdest'] = workerdest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runTransferCommand(cmd)
@@ -537,13 +541,17 @@ class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
         # default arguments
         args = {
-            'slavedest': workerdest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
             'workdir': self.workdir,
             'mode': self.mode,
         }
+
+        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
+            args['slavedest'] = workerdest
+        else:
+            args['workerdest'] = workerdest
 
         cmd = makeStatusRemoteCommand(self, 'downloadFile', args)
         d = self.runTransferCommand(cmd)

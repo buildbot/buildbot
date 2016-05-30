@@ -253,13 +253,18 @@ class Darcs(Source):
     def _downloadFile(self, buf, filename):
         filereader = remotetransfer.StringFileReader(buf)
         args = {
-            'slavedest': filename,
             'maxsize': None,
             'reader': filereader,
             'blocksize': 16 * 1024,
             'workdir': self.workdir,
             'mode': None
         }
+
+        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
+            args['slavedest'] = filename
+        else:
+            args['workerdest'] = filename
+
         cmd = remotecommand.RemoteCommand('downloadFile', args)
         cmd.useLog(self.stdio_log, False)
         log.msg("Downloading file: %s" % (filename))

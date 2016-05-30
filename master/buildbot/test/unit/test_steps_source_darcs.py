@@ -241,6 +241,55 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
+                                        workerdest='.buildbot-diff', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest='.buildbot-patched', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['patch', '-p1', '--remove-empty-files',
+                                 '--force', '--forward', '-i', '.buildbot-diff'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', 'changes', '--max-count=1'])
+            + ExpectShell.log('stdio',
+                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        return self.runStep()
+
+    def test_mode_incremental_patch_worker_2_16(self):
+        self.setupStep(
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='incremental'),
+            patch=(1, 'patch'),
+            worker_version={'*': '2.16'})
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('stat', dict(file='wkdir/_darcs',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', 'pull', '--all', '--verbose'])
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
@@ -329,7 +378,7 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.darcs-context', workdir='wkdir',
+                                        workerdest='.darcs-context', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='.',
