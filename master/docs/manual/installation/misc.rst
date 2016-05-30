@@ -7,7 +7,7 @@ Launching the daemons
 ---------------------
 
 Both the buildmaster and the worker run as daemon programs.
-To launch them, pass the working directory to the :command:`buildbot` and :command:`buildworker` commands, as appropriate:
+To launch them, pass the working directory to the :command:`buildbot` and :command:`buildbot-worker` commands, as appropriate:
 
 .. code-block:: bash
 
