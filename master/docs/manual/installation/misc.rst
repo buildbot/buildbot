@@ -54,19 +54,19 @@ With a little modification these scripts can be used both on Debian and RHEL-bas
 
 .. code-block:: bash
 
-    # install as /etc/default/buildslave
-    #         or /etc/sysconfig/buildslave
-    master/contrib/init-scripts/buildslave.default
+    # install as /etc/default/buildbot-worker
+    #         or /etc/sysconfig/buildbot-worker
+    worker/contrib/init-scripts/buildbot-worker.default
 
     # install as /etc/default/buildmaster
     #         or /etc/sysconfig/buildmaster
     master/contrib/init-scripts/buildmaster.default
 
-    # install as /etc/init.d/buildslave
-    slave/contrib/init-scripts/buildslave.init.sh
+    # install as /etc/init.d/buildbot-worker
+    worker/contrib/init-scripts/buildbot-worker.init.sh
 
     # install as /etc/init.d/buildmaster
-    slave/contrib/init-scripts/buildmaster.init.sh
+    master/contrib/init-scripts/buildmaster.init.sh
 
     # ... and tell sysvinit about them
     chkconfig buildmaster reset
