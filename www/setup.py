@@ -31,7 +31,8 @@ setup_args = {
     # This makes it include all files from MANIFEST.in
     # It also needs a newer version of setuptools than 17.1
     # which has a bug when dealing with MANIFEST.in
-    'include_package_data': True
+    'include_package_data': True,
+    'install_requires': ['setuptools >= 21.1.0']
 }
 
 setup(**setup_args)
