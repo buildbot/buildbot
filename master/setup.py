@@ -198,7 +198,8 @@ else:
         # alternative MySQL driver, that works under pypy
         'pymysql == 0.7.1',
         'PyJWT == 1.4.0',
-        'pynats == 0.0.1'
+        'pynats == 0.0.1',
+        'www'
     ]
     setup_args['tests_require'] = [
         'mock == 1.3.0',
