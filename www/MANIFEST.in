@@ -1,0 +1,9 @@
+include favicon.ico
+include robots.txt
+include templates_readme.txt
+recursive-include fonts *
+recursive-include images *
+recursive-include prod/css *
+recursive-include prod/script *
+recursive-include templates *.xml
+recursive-include templates *.html
