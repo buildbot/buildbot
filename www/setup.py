@@ -28,6 +28,9 @@ setup_args = {
     'long_description': "JavaScript frontend for katana",
     'package_dir': {'www': ''},
     'packages': ["www"],
+    # This makes it include all files from MANIFEST.in
+    # It also needs a newer version of setuptools than 17.1
+    # which has a bug when dealing with MANIFEST.in
     'include_package_data': True
 }
 
