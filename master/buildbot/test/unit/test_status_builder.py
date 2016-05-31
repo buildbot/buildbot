@@ -165,21 +165,88 @@ class TestBuilderStatus(unittest.TestCase):
         self.assertEqual(self.builder_status.latestBuildCache['codebase1=branch1;codebase2=branch2;']['build'], 38)
 
     @defer.inlineCallbacks
-    def test_requestSubmittedResetsPendingBuildsCache(self):
+    def setupPendingBuildCache(
+            self,
+            initialCache={},
+            initialDictsCache={}):
+
         status = Status(self.master)
         self.builder_status.setStatus(status=status)
-        self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache['codebase=branch'] = 1
-        self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesDictsCache['codebase=branch'] = {'id' : 1}
+
+        self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache = initialCache
+
+        self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesDictsCache = initialDictsCache
 
         row = [
-            fakedb.BuildRequest(id=1, buildsetid=1, buildername='builder-01', priority=13, results=-1)
+            fakedb.BuildRequest(id=2, buildsetid=2, buildername='builder-01', priority=13, results=-1)
         ]
         yield self.master.db.insertTestData(row)
+
+    def checkPendingBuildsCache(
+            self,
+            expectedDictsCache={},
+            expectedCache={},
+            key=''):
+
+        self.assertEquals(
+                self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesDictsCache,
+                expectedDictsCache)
+
+        if len(expectedCache) > 0:
+            self.assertTrue(len(self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache[key]),
+                            len(expectedCache))
+            buildRequestStatus = self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache[key][0]
+            self.assertEquals(buildRequestStatus.brid, expectedCache[key].brid)
+
+    @defer.inlineCallbacks
+    def test_requestSubmittedResetsPendingBuildsCache(self):
+        yield self.setupPendingBuildCache(
+                initialCache={'codebase=branch': Mock(brid=1)},
+                initialDictsCache={'codebase=branch': {'brid': 1}}
+        )
         self.builder_status.pendingBuildsCache.requestSubmitted(req=Mock())
+        self.checkPendingBuildsCache(expectedCache={'': Mock(brid=2)})
 
-        key = self.builder_status.getCodebasesCacheKey()
-        self.assertEquals(self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesDictsCache, {})
-        self.assertTrue(len(self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache[key]), 1)
-        buildRequestStatus = self.builder_status.pendingBuildsCache.buildRequestStatusCodebasesCache[key][0].asDict()
-        self.assertEquals(buildRequestStatus['brid'], 1)
+    @defer.inlineCallbacks
+    def test_requestCanceledResetsPendingBuildsCache(self):
+        yield self.setupPendingBuildCache(
+                initialCache={'codebase=branch': Mock(brid=1)},
+                initialDictsCache={'codebase=branch': {'brid': 1}}
+        )
+        self.builder_status.pendingBuildsCache.requestCancelled(req=Mock())
+        self.checkPendingBuildsCache(expectedCache={'': Mock(brid=2)})
 
+    @defer.inlineCallbacks
+    def test_buildStartedResetsPendingBuildsCache(self):
+        yield self.setupPendingBuildCache(
+                initialCache={'codebase=branch': Mock(brid=1)},
+                initialDictsCache={'codebase=branch': {'brid': 1}}
+        )
+        self.builder_status.pendingBuildsCache.buildStarted(builderName='builder-01', state=Mock())
+        self.checkPendingBuildsCache(expectedCache={'': Mock(brid=2)})
+
+    @defer.inlineCallbacks
+    def test_buildFinishedResetsPendingBuildsCache(self):
+        yield self.setupPendingBuildCache(
+                initialCache={'codebase=branch': Mock(brid=1)},
+                initialDictsCache={'codebase=branch': {'brid': 1}}
+        )
+        self.builder_status.pendingBuildsCache.buildFinished(
+                builderName='builder-01',
+                state=Mock(),
+                results=4,
+        )
+        self.checkPendingBuildsCache(expectedCache={'': Mock(brid=2)})
+
+    @defer.inlineCallbacks
+    def test_builderChangedStateDoesNotChangeCache(self):
+        yield self.setupPendingBuildCache(
+                initialCache={},
+                initialDictsCache={})
+
+        self.builder_status.pendingBuildsCache.builderChangedState(
+                builderName='builder-01',
+                state=Mock(),
+        )
+
+        self.checkPendingBuildsCache()
