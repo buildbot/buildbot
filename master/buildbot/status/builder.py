@@ -1017,7 +1017,7 @@ class PendingBuildsCache():
         self.builder = builder
         self.buildRequestStatusCodebasesCache = {}
         self.buildRequestStatusCodebasesDictsCache = {}
-        self.buildRequestStatusCache = LRUCache(BuildRequestStatus.createBuildRequestStatus, 200)
+        self.buildRequestStatusCache = LRUCache(BuildRequestStatus.createBuildRequestStatus, 50)
         self.cache_now()
         self.builder.subscribe(self)
 
