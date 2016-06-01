@@ -3,6 +3,12 @@
 {% block suites %}
    <div class="content container">
     {% for suite in data.suites %}
+
+        {% set additionalCommandLineArguments = '' %}
+        {% if suite.minimalCommandLine %}
+            {% set additionalCommandLineArguments = suite.minimalCommandLine|join(" ") %}
+        {% endif %}
+
         {% if suite.summary.result %}
             <div class="row">
                 <h4>Suite type: {{ suite.name }}</h4>
@@ -10,7 +16,7 @@
                     <a class="label label-default collapse" data-target="#suiteCommand{{ loop.index }}">Command to run locally</a>
 
                     <div id="suiteCommand{{ loop.index }}" class="report-command">
-                        <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }}" onclick="this.select();" readonly/>
+                        <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} {{ additionalCommandLineArguments }}" onclick="this.select();" readonly/>
                     </div>
                 {% endif %}
             </div>
@@ -69,11 +75,6 @@
                         <td class="txt-align-left">
                             <h5><strong>{{ test.name }}</strong></h5>
                             {% if data.utrPrefix %}
-
-                                {% set additionalCommandLineArguments = '' %}
-                                {% if suite.minimalCommandLine %}
-                                    {% set additionalCommandLineArguments = suite.minimalCommandLine|join(" ") %}
-                                {% endif %}
 
                                 <a class="label label-default collapse" data-target="#testCommand{{ outer_loop.index }}{{ loop.index }}">Command to run locally</a>
 
