@@ -439,7 +439,6 @@ else:
         'txrequests',
         'future',
         'pyjade',
-        'boto',
         'boto3',
         'moto',
         'txgithub',
