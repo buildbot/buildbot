@@ -116,7 +116,6 @@ setup_args = {
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
     ],
-    'package_dir': {'www': '../www'},
     'packages': ["buildbot",
                  "buildbot.status", "buildbot.status.web", "buildbot.status.web.hooks",
                  "buildbot.changes",
@@ -139,7 +138,7 @@ setup_args = {
                  "buildbot.test.fake",
                  "buildbot.test.unit",
                  "buildbot.test.util",
-                 "buildbot.test.regressions", "www"
+                 "buildbot.test.regressions"
                  ],
     'data_files': [
         ("buildbot", [
@@ -153,15 +152,6 @@ setup_args = {
             "buildbot/clients/debug.glade",
         ]),
         include("buildbot/status/web/files/", '*.png'),
-        include("www/fonts/katana_icons", '*', package_path="../www/fonts/katana_icons"),
-        include("www/fonts/leckerlione", '*', package_path="../www/fonts/leckerlione"),
-        include("www/fonts/pacifico", '*', package_path="../www/fonts/pacifico"),
-        include("www/images", '*', package_path="../www/images"),
-        include("www/prod/css", '*', package_path="../www/prod/css"),
-        include("www/prod/script", '*', package_path="../www/prod/script"),
-        ("www", ["../www/favicon.ico", "../www/robots.txt", "../www/templates_readme.txt"]),
-        include("www/templates", '*.html', package_path="../www/templates"),
-        include("www/templates", '*.xml', package_path="../www/templates"),
         ("buildbot/scripts", [
             "buildbot/scripts/sample.cfg",
             "buildbot/scripts/buildbot_tac.tmpl",
@@ -208,7 +198,8 @@ else:
         # alternative MySQL driver, that works under pypy
         'pymysql == 0.7.1',
         'PyJWT == 1.4.0',
-        'pynats == 0.0.1'
+        'pynats == 0.0.1',
+        'www'
     ]
     setup_args['tests_require'] = [
         'mock == 1.3.0',
