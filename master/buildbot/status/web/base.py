@@ -146,18 +146,37 @@ def path_to_buildqueue(request):
 def path_to_buildqueue_json(request):
     return path_to_root(request) + "json/buildqueue"
 
+def getCodebases(request=None):
+    # just return the selected codebases
+    codebases = {}
+    if request is not None:
+        for key, val in request.args.iteritems():
+            if '_branch' in key:
+                codebases[key[0:key.find('_')]] = ''.join(val)
+
+    return codebases
+
+
+def add_url_param(url, key, val):
+    if len(url) > 0:
+        url += "&"
+    else:
+        url += "?"
+
+    url += "%s=%s" % (key, ''.join(val))
+    return url
+
+def getBranchNameUrlParam(branch):
+    return urllib.quote(branch, safe='') + "_branch"
+
+def getCodeBasesURLParam(codebases):
+    args=''
+    for key, val in codebases.iteritems():
+        args = add_url_param(args, getBranchNameUrlParam(branch=key), val)
+    return args
 
 def getCodebasesArg(request=None, codebases={}, sourcestamps=None):
     codebases_arg=''
-
-    def add_url_param(url, key, val):
-        if len(url) > 0:
-            url += "&"
-        else:
-            url += "?"
-
-        url += "%s=%s" % (key, ''.join(val))
-        return url
 
     if request is not None:
         for key, val in request.args.iteritems():

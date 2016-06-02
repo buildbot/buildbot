@@ -65,7 +65,6 @@ class PastBuildsJsonResource(unittest.TestCase):
         self.assertEqual(result,
                          ["dummy"])
 
-
 def setUpProject():
     katana = {'katana-buildbot':
                   {'project': 'general',
@@ -90,7 +89,7 @@ def mockBuilder(master, master_status, buildername, proj):
     builder.builder_status.setTags(['tag1', 'tag2'])
     builder.builder_status.status = master_status
     builder.builder_status.project = proj
-    builder.builder_status.pendingBuildCache = PendingBuildsCache(builder.builder_status)
+    builder.builder_status.pendingBuildsCache = PendingBuildsCache(builder.builder_status)
     builder.builder_status.nextBuildNumber = 1
     builder.builder_status.basedir = '/basedir'
     builder.builder_status.saveYourself = lambda skipBuilds=True: True
@@ -167,7 +166,9 @@ class TestBuildJsonResource(unittest.TestCase):
                                                         'url': u'https://github.com/test/repo/commit/abcdef123456789'}],
                           'results': 0, 'number': 1, 'currentStep': None,
                           'times': (1422441500, 1422441501.21),
-                          'buildChainID': None, 'owners': None, 'submittedTime': None,
+                          'buildChainID': None,
+                          'buildRequestID': None,
+                          'owners': None, 'submittedTime': None,
                           'blame': [],
                           'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
                                          '?katana-buildbot_branch=katana&_branch=b',
@@ -270,7 +271,9 @@ class TestPastBuildsJsonResource(unittest.TestCase):
                     'number': num, 'properties': [], 'reason': 'A build was forced by user@localhost',
                     'results': 0, 'results_text': 'success', 'slave': 'build-slave-01',
                     'slave_friendly_name': 'build-slave-01', 'slave_url': None,
-                    'sourceStamps': [], 'steps': [], 'buildChainID': None, 'owners': None,
+                    'sourceStamps': [], 'steps': [], 'buildChainID': None,
+                    'buildRequestID': None,
+                    'owners': None,
                      'submittedTime': None,
                     'text': [], 'times': (1422441500, 1422441501.21),
                     'url': {
@@ -297,30 +300,63 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         self.request.prepath = ['json', 'projects', 'Katana']
         self.request.path = 'json/projects/Katana'
 
+    @defer.inlineCallbacks
+    def setupProject(self, builders):
+        self.master.botmaster.builderNames = builders.keys()
+
+        for bn, project in builders.items():
+            self.master.botmaster.builders[bn] = mockBuilder(self.master, self.master_status, bn, project)
+
+        row = [
+            fakedb.BuildRequest(id=1, buildsetid=1, buildername='builder-02', priority=20, submitted_at=1450171024),
+            fakedb.SourceStampSet(id=1),
+            fakedb.Buildset(id=1, sourcestampsetid=1),
+            fakedb.SourceStamp(id=1, revision='az', codebase='cb', sourcestampsetid=1, branch='master', repository='z')
+        ]
+        yield self.master.db.insertTestData(row)
+
+    def jsonBuilders(self, builder_name, pendingBuilds=0):
+        return {
+            'name': builder_name,
+            'tags': ['tag1', 'tag2'],
+            'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +'?katana-buildbot_branch=katana',
+            'friendly_name': builder_name, 'description': 'Describing my builder',
+            'project': 'Katana',
+            'state': 'offline',
+            'slaves': ['build-slave-01'],
+            'startSlavenames ': [],
+            'currentBuilds': [],
+            'pendingBuilds': pendingBuilds
+        }
+
+    def expectedProjectDict(self, builders, latestRevisions={}):
+        return {
+            'comparisonURL': '../../projects/Katana/comparison?builders0=katana-buildbot%3Dkatana',
+            'builders': builders,
+            'latestRevisions': latestRevisions
+        }
 
     @defer.inlineCallbacks
     def test_getBuildersByProject(self):
-        self.master.botmaster.builderNames = ["builder-01", "builder-02", "builder-03", "builder-04"]
+        builders = {
+            'builder-01': 'project-01',
+            "builder-02": 'Katana',
+            "builder-03": 'Katana',
+            "builder-04": 'Katana',
+            "builder-05": 'project-02',
+        }
 
-        self.master.botmaster.builders = {'builder-01': mockBuilder(self.master, self.master_status,
-                                                                    'builder-01', "project-01"),
-                                          'builder-02': mockBuilder(self.master, self.master_status,
-                                                                    'builder-02', "Katana"),
-                                          'builder-03': mockBuilder(self.master, self.master_status,
-                                                                    'builder-03', "Katana"),
-                                          'builder-04': mockBuilder(self.master, self.master_status,
-                                                                    'builder-04', "Katana"),
-                                          'builder-01': mockBuilder(self.master, self.master_status,
-                                                                    'builder-05', "project-02")}
+        yield self.setupProject(builders=builders)
 
         project_json = status_json.SingleProjectJsonResource(self.master_status, self.project)
 
-        def getObjectStateByKey(objects, filteredKey, storedKey):
-            lastrev = {'https://github.com/Unity-Technologies/buildbot.git': {
+        latestRevisions = {'https://github.com/Unity-Technologies/buildbot.git': {
                 'codebase': 'katana-buildbot',
                 'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
                 'branch': 'Katana', 'revision': u'0:835be7494fb4'}}
-            return lastrev
+
+        def getObjectStateByKey(objects, filteredKey, storedKey):
+            return latestRevisions
 
         project_json.status.master.db.state.getObjectStateByKey = getObjectStateByKey
 
@@ -328,29 +364,64 @@ class TestSingleProjectJsonResource(unittest.TestCase):
 
         project_dict = yield project_json.asDict(self.request)
 
-        def jsonBuilders(builder_name):
-            return {'name': builder_name, 'tags': ['tag1', 'tag2'],
-                    'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +
-                           '?katana-buildbot_branch=katana',
-                    'friendly_name': builder_name, 'description': 'Describing my builder',
-                    'project': 'Katana',
-                    'state': 'offline',
-                    'slaves': ['build-slave-01'], 'startSlavenames ': [], 'currentBuilds': [], 'pendingBuilds': 0}
-
-        expected_project_dict = {'comparisonURL': '../../projects/Katana/comparison?builders0=katana-buildbot%3Dkatana',
-                                 'builders': [
-                                     jsonBuilders('builder-02'),
-                                     jsonBuilders('builder-03'),
-                                     jsonBuilders('builder-04')],
-                                 'latestRevisions':
-                                     {'https://github.com/Unity-Technologies/buildbot.git':
-                                          {'branch': 'Katana',
-                                           'codebase': 'katana-buildbot',
-                                           'display_repository': 'https://github.com/Unity-Technologies/buildbot.git',
-                                           'revision': u'835be7494fb4'}}}
+        expected_project_dict = self.expectedProjectDict(
+                builders=[
+                    self.jsonBuilders('builder-02', pendingBuilds=1),
+                    self.jsonBuilders('builder-03'),
+                    self.jsonBuilders('builder-04')
+                ],
+                latestRevisions=latestRevisions
+        )
 
         self.assertEqual(project_dict, expected_project_dict)
 
+    @defer.inlineCallbacks
+    def test_getBuildersWithPendingBuildsByProject(self):
+        yield self.setupProject(builders={'builder-02': 'Katana'})
+        self.request.args['pending_builds'] = ['1']
+        project_json = status_json.SingleProjectJsonResource(self.master_status, self.project)
+        project_dict = yield project_json.asDict(self.request)
+
+        def getSource(url=True):
+            source = {
+                'revision': 'az',
+                'revision_short': 'az',
+                'hasPatch': False,
+                'branch': 'master',
+                'changes': [],
+                'project': 'proj',
+                'repository': 'z',
+                'codebase': 'cb',
+                'totalChanges': 0
+            }
+            if url:
+                source['url']= None
+            return source
+
+        pending = [
+            {
+                'brid': 1,
+                'source': getSource(),
+                'sources': [getSource(url=False)],
+                'properties': [],
+                'priority': 20,
+                'builderName': 'builder-02',
+                'reason': 'because',
+                'slaves': ['build-slave-01'],
+                'submittedAt': 1450171024,
+                'builderFriendlyName': 'builder-02',
+                'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-02?katana-buildbot_branch=katana',
+                'results': -1,
+                'builds': [],
+                'lastBuildNumber': None
+            }
+        ]
+
+        expected_project = self.expectedProjectDict(
+                builders=[self.jsonBuilders('builder-02', pendingBuilds=pending)]
+        )
+
+        self.assertEquals(project_dict, expected_project)
 
     @defer.inlineCallbacks
     def test_getBuildersByProjectWithLatestBuilds(self):
@@ -393,7 +464,9 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                      'text': [],
                      'sourceStamps': [],
                      'results': 0,
-                     'number': 1, 'artifacts': None, 'blame': [], 'buildChainID': None, 'owners': None,
+                     'number': 1, 'artifacts': None, 'blame': [], 'buildChainID': None,
+                     'buildRequestID': None,
+                     'owners': None,
                      'submittedTime': None,
                      'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
                                     '?katana-buildbot_branch=katana',
@@ -501,18 +574,19 @@ class TestSinglePendingBuildsJsonResource(unittest.TestCase):
             brstatus.getBuildProperties = lambda: Properties()
             return brstatus
 
-        def getPendingBuildRequestStatuses(codebases={}):
+        def fetchPendingBuildRequestStatuses(codebases={}):
             requests = [1, 2, 3]
             return [getBuildRequestStatus(id) for id in requests]
 
-        builder.builder_status.getPendingBuildRequestStatuses = getPendingBuildRequestStatuses
+        builder.builder_status.pendingBuildsCache.fetchPendingBuildRequestStatuses = fetchPendingBuildRequestStatuses
+
         pending_json = status_json.SinglePendingBuildsJsonResource(self.master_status, builder.builder_status)
         pending_dict = yield pending_json.asDict(self.request)
 
         def pendingBuildRequestDict(brid):
             return {'brid': brid, 'builderFriendlyName': 'builder-01', 'builderName': 'builder-01',
-                    'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01?' +
-                                  'katana-buildbot_branch=katana',
+                    'builderURL': 'http://localhost:8080/projects/Katana/builders/builder-01' +
+                                  '?katana-buildbot_branch=katana',
                     'builds': [],
                     'properties': [],
                     'lastBuildNumber': None,

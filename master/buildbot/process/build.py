@@ -424,6 +424,8 @@ class Build(properties.PropertiesMixin):
         if len(self.requests) > 0:
             self.build_status.setSubmitted(self.requests[0].submittedAt)
             self.setProperty("submittedTime", self.requests[0].submittedAt, "buildrequest")
+            self.build_status.setBuildRequestID(self.requests[0].id)
+            self.setProperty("buildRequestID", self.requests[0].id, "buildrequest")
             self.build_status.setBuildChainID(self.requests[0].buildChainID)
             self.setProperty("buildChainID", self.requests[0].buildChainID, "buildrequest")
 

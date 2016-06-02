@@ -107,7 +107,7 @@ class Builder(config.ReconfigurableServiceMixin,
         self.builder_status.setCategory(builder_config.category)
         self.builder_status.setSlavenames(self.config.slavenames)
         self.builder_status.setStartSlavenames(self.config.startSlavenames)
-        self.builder_status.setCacheSize(new_config.caches['Builds'])
+        self.builder_status.setCacheSize(new_config.caches)
         self.builder_status.setProject(builder_config.project)
         self.builder_status.setFriendlyName(builder_config.friendly_name)
         self.builder_status.setTags(builder_config.tags)

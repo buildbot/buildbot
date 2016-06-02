@@ -11,6 +11,7 @@ from buildbot.test.fake.fakemaster import FakeMaster
 
 class FakeRequest:
     def __init__(self):
+        self.id = None
         self.sources = []
         self.reason = "Because"
         self.properties = Properties()

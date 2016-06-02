@@ -27,9 +27,12 @@ class BuildRequestStatus:
         self.brid = brid
         self.status = status
         self.master = status.master
-
         self._buildrequest = None
         self._buildrequest_lock = defer.DeferredLock()
+
+    @classmethod
+    def createBuildRequestStatus(cls, brid, buildername, status):
+        return BuildRequestStatus(buildername, brid, status)
 
     @defer.inlineCallbacks
     def _getBuildRequest(self):
@@ -172,7 +175,7 @@ class BuildRequestStatus:
         return result
 
     @defer.inlineCallbacks
-    def asDict_async(self, request=None):
+    def asDict_async(self, codebases={}):
         result = {}
         builder = self.status.getBuilder(self.getBuilderName())
         if not builder:
@@ -191,14 +194,16 @@ class BuildRequestStatus:
         result['reason'] = yield self.getReason()
         result['slaves'] =  self.getSlaves()
         result['submittedAt'] = yield self.getSubmitTime()
-        result['results'] = yield self.getResults()
 
         result['builderFriendlyName'] = builder.getFriendlyName()
         result['builderURL'] = self.status.getURLForThing(builder)
 
-        if request is not None:
-            from buildbot.status.web.base import getCodebasesArg
-            result['builderURL'] += getCodebasesArg(request)
+        if codebases:
+            from buildbot.status.web.base import getCodeBasesURLParam
+            result['builderURL'] += getCodeBasesURLParam(codebases=codebases)
+
+        # this data changes
+        result['results'] = yield self.getResults() # is already on the object at the time we fetch
 
         builds = yield self.getBuilds()
         all_builds = [build.asDict() for build in builds]
@@ -208,3 +213,7 @@ class BuildRequestStatus:
                                                                   and 'number' in sorted_builds[0] else None
 
         defer.returnValue(result)
+
+    def update(self, brdict):
+        if self._buildrequest and brdict and 'results' in brdict and self._buildrequest.results != brdict['results']:
+            self._buildrequest.results = brdict['results']

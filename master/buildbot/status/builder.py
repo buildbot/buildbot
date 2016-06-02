@@ -37,7 +37,39 @@ from buildbot.status.results import EXCEPTION, RETRY, RESUME, Results, worst_sta
 _hush_pyflakes = [ SUCCESS, WARNINGS, FAILURE, SKIPPED,
                    EXCEPTION, RETRY, Results, worst_status ]
 
-LATEST_BUILD_FORMAT = "{0}={1};"
+CODEBASES_CACHE_KEY_FORMAT = "{0}={1};"
+
+
+def getCodebaseConfiguredBranch(codebase, key):
+    return codebase[key]['defaultbranch'] if 'defaultbranch' in codebase[key] \
+        else codebase[key]['branch'] if 'branch' in codebase[key] else ''
+
+
+def getCodebaseBranch(branch, codebases, key):
+    if key in codebases:
+        return codebases[key]
+
+    branch = branch if isinstance(branch, str) \
+        else branch[0] if (isinstance(branch, list) and len(branch) > 0) else ''
+
+    codebases[key] = branch
+
+    return branch
+
+
+def getCacheKey(project, codebases):
+    output = ""
+    if project and project.codebases:
+        project_codebases = project.codebases
+        cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+
+        for cb in cb_keys:
+            key = cb.keys()[0]
+            branch = getCodebaseConfiguredBranch(cb, key)
+            branch = getCodebaseBranch(branch, codebases, key)
+            output += CODEBASES_CACHE_KEY_FORMAT.format(key, branch)
+    return output
+
 
 class BuilderStatus(styles.Versioned):
     """I handle status information for a single process.build.Builder object.
@@ -102,7 +134,7 @@ class BuilderStatus(styles.Versioned):
 
     def setStatus(self, status):
         self.status = status
-        self.pendingBuildCache = PendingBuildsCache(self)
+        self.pendingBuildsCache = PendingBuildsCache(self)
 
         if not hasattr(self, 'latestBuildCache'):
             self.latestBuildCache = {}
@@ -131,8 +163,8 @@ class BuilderStatus(styles.Versioned):
         del d['master']
         self.deleteKey('loadingBuilds', d)
 
-        if 'pendingBuildCache' in d:
-            del d['pendingBuildCache']
+        if 'pendingBuildsCache' in d:
+            del d['pendingBuildsCache']
 
         self.deleteKey('latestBuildCache', d)
         return d
@@ -209,8 +241,10 @@ class BuilderStatus(styles.Versioned):
 
     # build cache management
 
-    def setCacheSize(self, size):
-        self.buildCache.set_max_size(size)
+    def setCacheSize(self, caches):
+        self.buildCache.set_max_size(caches['Builds'])
+        if caches and 'BuilderBuildRequestStatus' in caches:
+            self.pendingBuildsCache.buildRequestStatusCache.set_max_size(caches['BuilderBuildRequestStatus'])
 
     def makeBuildFilename(self, number):
         return os.path.join(self.basedir, "%d" % number)
@@ -370,15 +404,13 @@ class BuilderStatus(styles.Versioned):
 
     @defer.inlineCallbacks
     def getPendingBuildRequestStatuses(self, codebases={}):
-        sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
+        pendingBuilds = yield self.pendingBuildsCache.getPendingBuilds(codebases=codebases)
+        defer.returnValue(pendingBuilds)
 
-        brdicts = yield self.master.db.buildrequests.getBuildRequestInQueue(buildername=self.name,
-                                                                            sourcestamps=sourcestamps,
-                                                                            sorted=True)
-
-        result = [BuildRequestStatus(self.name, brdict['brid'], self.status) for brdict in brdicts]
-
-        defer.returnValue(result)
+    @defer.inlineCallbacks
+    def getPendingBuildRequestStatusesDicts(self, codebases={}):
+        pendingBuildsDict = yield self.pendingBuildsCache.getPendingBuildsDicts(codebases=codebases)
+        defer.returnValue(pendingBuildsDict)
 
     def foundCodebasesInBuild(self, build, codebases):
         if len(codebases) > 0:
@@ -565,7 +597,7 @@ class BuilderStatus(styles.Versioned):
         finishedBuilds = []
         branches = set(branches)
 
-        key = self.getLatestBuildKey(codebases)
+        key = self.getCodebasesCacheKey(codebases)
 
         if self.shouldUseLatestBuildCache(useCache, num_builds, key):
             build = yield self.getLatestBuildCacheAsync(key)
@@ -608,7 +640,7 @@ class BuilderStatus(styles.Versioned):
                                filter_fn=None,
                                useCache=False):
 
-        key = self.getLatestBuildKey(codebases)
+        key = self.getCodebasesCacheKey(codebases)
         if self.shouldUseLatestBuildCache(useCache, num_builds, key):
             build = self.getLatestBuildCache(key)
             if build:
@@ -865,39 +897,16 @@ class BuilderStatus(styles.Versioned):
         self.saveLatestBuild(s)
         yield threads.deferToThread(self.prune) # conserve disk
 
-    def getCodebaseBranch(self, branch, codebases, key):
-        if key in codebases:
-            return codebases[key]
-
-        branch = branch if isinstance(branch, str) \
-            else branch[0] if (isinstance(branch, list) and len(branch) > 0) else ''
-
-        codebases[key] = branch
-
-        return branch
-
-    def getCodebaseConfiguredBranch(self, cb, key):
-        return cb[key]['defaultbranch'] if 'defaultbranch' in cb[key] \
-            else cb[key]['branch'] if 'branch' in cb[key] else ''
-
-    def getLatestBuildKey(self, codebases):
-        output = ""
+    def getCodebasesCacheKey(self, codebases={}):
+        codebase_key = ""
 
         if not codebases:
-            return output
+            return codebase_key
 
         project = self.master.getProject(self.getProject())
-        if project and project.codebases:
-            project_codebases = project.codebases
-            cb_keys = sorted(project_codebases, key=lambda s: s.keys()[0])
+        codebase_key = getCacheKey(project, codebases)
 
-            for cb in cb_keys:
-                key = cb.keys()[0]
-                branch = self.getCodebaseConfiguredBranch(cb, key)
-                branch = self.getCodebaseBranch(branch, codebases, key)
-                output += LATEST_BUILD_FORMAT.format(key, branch)
-
-        return output
+        return codebase_key
 
     def updateLatestBuildCache(self, cache, k):
         def nonEmptyCacheUpdateToEmptyBuild():
@@ -933,7 +942,7 @@ class BuilderStatus(styles.Versioned):
                     codebases[s.codebase] = s.branch
 
             # We save it in the same way as we access it
-            key = self.getLatestBuildKey(codebases)
+            key = self.getCodebasesCacheKey(codebases)
 
         self.updateLatestBuildCache(cache, key)
 
@@ -978,29 +987,17 @@ class BuilderStatus(styles.Versioned):
 
     @defer.inlineCallbacks
     def asDict_async(self, codebases={}, request=None, base_build_dict=False, include_build_steps=True,
-               include_build_props=True):
+                     include_build_props=True, include_pending_builds=False):
         """Just like L{asDict}, but with a nonzero pendingBuilds."""
         result = self.asDict(codebases, request, base_build_dict, include_build_steps=include_build_steps,
                              include_build_props=include_build_props)
-        builds = self.pendingBuildCache.getPendingBuilds()
 
-        #Remove builds not within this codebase
-        count = 0
-        defers = []
-        if len(codebases) > 0:
-            for b in builds:
-                de = self.foundCodebasesInBuildRequest(b, codebases)
-                defers.append(de)
-
-            #Allow the defers to run async
-            for d in defers:
-                in_codebase = yield d
-                if in_codebase:
-                    count += 1
+        if include_pending_builds:
+            pendingBuildsDict = yield self.getPendingBuildRequestStatusesDicts(codebases=codebases)
+            result['pendingBuilds'] = pendingBuildsDict
         else:
-            count = len(builds)
+            result['pendingBuilds'] = yield self.pendingBuildsCache.getTotal(codebases=codebases)
 
-        result['pendingBuilds'] = count
         defer.returnValue(result)
 
     def getMetrics(self):
@@ -1018,18 +1015,70 @@ class PendingBuildsCache():
     """
     def __init__(self, builder):
         self.builder = builder
-        self.cache = []
+        self.buildRequestStatusCodebasesCache = {}
+        self.buildRequestStatusCodebasesDictsCache = {}
+        self.buildRequestStatusCache = LRUCache(BuildRequestStatus.createBuildRequestStatus, 50)
         self.cache_now()
         self.builder.subscribe(self)
 
     @defer.inlineCallbacks
-    def cache_now(self):
-        if hasattr(self.builder, "status"):
-            self.cache = yield self.builder.getPendingBuildRequestStatuses()
-            defer.returnValue(self.cache)
+    def fetchPendingBuildRequestStatuses(self, codebases={}):
+        sourcestamps = [{'b_codebase': key, 'b_branch': value} for key, value in codebases.iteritems()]
 
-    def getPendingBuilds(self):
-        return self.cache
+        brdicts = yield self.builder.master.db.buildrequests.getBuildRequestInQueue(
+                buildername=self.builder.name,
+                sourcestamps=sourcestamps,
+                sorted=True
+        )
+
+        result = []
+        for brdict in brdicts:
+            brs = self.buildRequestStatusCache.get(
+                    key=brdict['brid'],
+                    buildername=self.builder.name,
+                    status=self.builder.status
+            )
+
+            brs.update(brdict)
+            result.append(brs)
+
+        defer.returnValue(result)
+
+    @defer.inlineCallbacks
+    def cache_now(self):
+        self.buildRequestStatusCodebasesCache = {}
+        self.buildRequestStatusCodebasesDictsCache = {}
+        if hasattr(self.builder, "status"):
+            key = self.builder.getCodebasesCacheKey()
+            self.buildRequestStatusCodebasesCache[key] = yield self.fetchPendingBuildRequestStatuses()
+            defer.returnValue(self.buildRequestStatusCodebasesCache[key])
+
+    @defer.inlineCallbacks
+    def getPendingBuilds(self, codebases={}):
+        key = self.builder.getCodebasesCacheKey(codebases)
+
+        if not self.buildRequestStatusCodebasesCache or key not in self.buildRequestStatusCodebasesCache:
+            self.buildRequestStatusCodebasesCache[key] = \
+                yield self.fetchPendingBuildRequestStatuses(codebases=codebases)
+
+        defer.returnValue(self.buildRequestStatusCodebasesCache[key])
+
+    @defer.inlineCallbacks
+    def getPendingBuildsDicts(self, codebases={}):
+        key = self.builder.getCodebasesCacheKey(codebases)
+
+        if not self.buildRequestStatusCodebasesDictsCache or key not in self.buildRequestStatusCodebasesDictsCache:
+            pendingBuilds = yield self.getPendingBuilds(codebases)
+            self.buildRequestStatusCodebasesDictsCache[key] = [
+                (yield brs.asDict_async(codebases=codebases)) for brs in pendingBuilds
+                ]
+
+        defer.returnValue(self.buildRequestStatusCodebasesDictsCache[key])
+
+    @defer.inlineCallbacks
+    def getTotal(self, codebases={}):
+        pendingBuilds = yield self.getPendingBuilds(codebases)
+        defer.returnValue(len(pendingBuilds))
 
     def buildStarted(self, builderName, state):
         self.cache_now()

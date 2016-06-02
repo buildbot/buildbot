@@ -57,6 +57,9 @@ class FakeBuildStatus:
     def setBuildChainID(self, buildChainID):
         self.buildChainID = buildChainID
 
+    def setBuildRequestID(self, buildRequestID):
+        self.buildRequestID = buildRequestID
+
     def setOwners(self, owners):
         self.owners = owners
 
@@ -80,6 +83,7 @@ class FakeStepStatus:
 
 class FakeBuildRequest:
     def __init__(self, reason, sources, buildername):
+        self.id = None
         self.reason = reason
         self.sources = sources
         self.buildername = buildername
