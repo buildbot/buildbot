@@ -117,17 +117,17 @@ It would however be completely ok to do this on another computer - as long as th
   virtualenv --no-site-packages bb-worker
   cd bb-worker
 
-Install the ``buildslave`` command:
+Install the ``buildbot-worker`` command:
 
 .. code-block:: bash
 
-   ./bin/pip install buildbot-slave
+   ./bin/pip install buildbot-worker
 
 Now, create the worker:
 
 .. code-block:: bash
 
-  ./bin/buildslave create-slave worker localhost example-worker pass
+  ./bin/buildbot-worker create-worker worker localhost example-worker pass
 
 .. note:: If you decided to create this from another computer, you should replace ``localhost`` with the name of the computer where your master is running.
 
@@ -141,7 +141,7 @@ And finally, start the worker:
 
 .. code-block:: bash
 
-  ./bin/buildslave start worker
+  ./bin/buildbot-worker start worker
 
 Check the worker's output.
 It should end with lines like these:

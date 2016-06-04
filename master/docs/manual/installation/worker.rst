@@ -64,7 +64,7 @@ Here's a good checklist for setting up a worker:
 
   Now run the 'worker' command as follows:
 
-      :samp:`buildslave create-slave {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}`
+      :samp:`buildbot-worker create-worker {BASEDIR} {MASTERHOST}:{PORT} {WORKERNAME} {PASSWORD}`
 
   This will create the base directory and a collection of files inside, including the :file:`buildbot.tac` file that contains all the information you passed to the :command:`buildbot` command.
 
@@ -76,7 +76,7 @@ Here's a good checklist for setting up a worker:
   You should edit these to correctly describe you and your host.
 
   :file:`{BASEDIR}/info/admin` should contain your name and email address.
-  This is the ``buildslave admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
+  This is the ``worker admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
 
   :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the buildbot code which is running the worker.
 
@@ -90,15 +90,15 @@ Here's a good checklist for setting up a worker:
 Worker Options
 ~~~~~~~~~~~~~~
 
-There are a handful of options you might want to use when creating the worker with the :samp:`buildslave create-slave <options> DIR <params>` command.
-You can type ``buildslave create-slave --help`` for a summary.
-To use these, just include them on the ``buildslave create-slave`` command line, like this
+There are a handful of options you might want to use when creating the worker with the :samp:`buildbot-worker create-worker <options> DIR <params>` command.
+You can type ``buildbot-worker create-worker --help`` for a summary.
+To use these, just include them on the ``buildbot-worker create-worker`` command line, like this
 
 .. code-block:: bash
 
-    buildslave create-slave --umask=022 ~/worker buildmaster.example.org:42012 {myworkername} {mypasswd}
+    buildbot-worker create-worker --umask=022 ~/worker buildmaster.example.org:42012 {myworkername} {mypasswd}
 
-.. program:: buildslave create-slave
+.. program:: buildbot-worker create-worker
 
 .. option:: --no-logrotate
 
@@ -139,7 +139,7 @@ To use these, just include them on the ``buildslave create-slave`` command line,
 
 .. option:: --allow-shutdown
 
-    Can also be passed directly to the BuildSlave constructor in :file:`buildbot.tac`.
+    Can also be passed directly to the Worker constructor in :file:`buildbot.tac`.
     If set, it allows the worker to initiate a graceful shutdown, meaning that it will ask the master to shut down the worker when the current build, if any, is complete.
 
     Setting allow_shutdown to ``file`` will cause the worker to watch :file:`shutdown.stamp` in basedir for updates to its mtime.
@@ -163,7 +163,7 @@ Other Worker Configuration
 
     The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale settings.
 
-    If you need a different encoding, this can be changed in your worker's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the BuildSlave constructor.
+    If you need a different encoding, this can be changed in your worker's :file:`buildbot.tac` file by adding a ``unicode_encoding`` argument to the Worker constructor.
 
 .. code-block:: python
 
@@ -176,19 +176,18 @@ Other Worker Configuration
 Upgrading an Existing Worker
 ----------------------------
 
-If you have just installed a new version of Buildbot-slave, you may need to take some steps to upgrade it.
-If you are upgrading to version 0.8.2 or later, you can run
-
-.. code-block:: bash
-
-    buildslave upgrade-slave /path/to/worker/dir
-
 .. _Worker-Version-specific-Notes:
 
 Version-specific Notes
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Upgrading a Worker to Buildbot-slave-0.8.1
+During project lifetime worker has transitioned over few states:
+
+1. Before Buildbot version 0.8.1 worker were integral part of ``buildbot`` package distribution.
+2. Starting from Buildbot version 0.8.1 worker were extracted from ``buildbot`` package to ``buildbot-slave`` package.
+3. Starting from Buildbot version 0.9.0 ``buildbot-slave`` were deprecated in favor of ``buildbot-worker`` package.
+
+Upgrading a Worker to buildbot-slave 0.8.1
 ''''''''''''''''''''''''''''''''''''''''''
 
 Before Buildbot version 0.8.1, the Buildbot master and worker were part of the same distribution.
@@ -198,7 +197,7 @@ As of this release, you will need to install ``buildbot-slave`` to run a worker.
 
 Any automatic startup scripts that had run ``buildbot start`` for previous versions should be changed to run ``buildslave start`` instead.
 
-If you are running a version later than 0.8.1, then you can skip the remainder of this section: the ```upgrade-slave`` command will take care of this.
+If you are running a version later than 0.8.1, then you can skip the remainder of this section: the ``upgrade-slave`` command will take care of this.
 If you are upgrading directly to 0.8.1, read on.
 
 The existing :file:`buildbot.tac` for any workers running older versions will need to be edited or replaced.
@@ -215,4 +214,49 @@ with::
 
 After this change, the worker should start as usual.
 
+Upgrading from `0.8.1` to the latest ``0.8.*`` version of buildbot-slave
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+If you have just installed a new version of Buildbot-slave, you may need to take some steps to upgrade it.
+If you are upgrading to version 0.8.2 or later, you can run
+
+.. code-block:: bash
+
+    buildslave upgrade-slave /path/to/worker/dir
+
+Upgrading from the latest version of ``buildbot-slave`` to ``buildbot-worker``
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+If the loss of cached worker state (e.g., for Source steps in copy mode) is not problematic, the easiest solution is to simply delete the worker directory and re-run ``buildbot-worker create-worker``.
+
+If deleting the worker directory is problematic, you can change :file:`buildbot.tac` in the following way:
+
+1. Replace::
+
+       from buildslave.bot import BuildSlave
+
+   with::
+
+       from buildbot_worker.bot import Worker
+
+2. Replace::
+
+       application = service.Application('buildslave')
+
+   with::
+
+       application = service.Application('buildbot-worker')
+
+3. Replace::
+
+       s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+                      keepalive, usepty, umask=umask, maxdelay=maxdelay,
+                      numcpus=numcpus, allow_shutdown=allow_shutdown)
+
+   with::
+
+       s = Worker(buildmaster_host, port, slavename, passwd, basedir,
+                  keepalive, umask=umask, maxdelay=maxdelay,
+                  numcpus=numcpus, allow_shutdown=allow_shutdown)
+
+See :ref:`Transition to "Worker" Terminology <Worker-Transition-Buildbot-Worker>` for details of changes in version Buildbot ``0.9.0``.

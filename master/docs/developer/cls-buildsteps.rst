@@ -162,7 +162,7 @@ BuildStep
     .. py:method:: startStep(remote)
 
         :param remote: a remote reference to the worker-side
-            :class:`~buildslave.bot.SlaveBuilder` instance
+            :class:`~buildbot_worker.pb.WorkerForBuilderPb` instance
         :returns: Deferred
 
         Begin the step.

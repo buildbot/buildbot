@@ -7,14 +7,14 @@ Launching the daemons
 ---------------------
 
 Both the buildmaster and the worker run as daemon programs.
-To launch them, pass the working directory to the :command:`buildbot` and :command:`buildworker` commands, as appropriate:
+To launch them, pass the working directory to the :command:`buildbot` and :command:`buildbot-worker` commands, as appropriate:
 
 .. code-block:: bash
 
     # start a master
     buildbot start [ BASEDIR ]
     # start a worker
-    buildslave start [ WORKER_BASEDIR ]
+    buildbot-worker start [ WORKER_BASEDIR ]
 
 The *BASEDIR* is option and can be omitted if the current directory contains the buildbot configuration (the :file:`buildbot.tac` file).
 
@@ -54,19 +54,19 @@ With a little modification these scripts can be used both on Debian and RHEL-bas
 
 .. code-block:: bash
 
-    # install as /etc/default/buildslave
-    #         or /etc/sysconfig/buildslave
-    master/contrib/init-scripts/buildslave.default
+    # install as /etc/default/buildbot-worker
+    #         or /etc/sysconfig/buildbot-worker
+    worker/contrib/init-scripts/buildbot-worker.default
 
     # install as /etc/default/buildmaster
     #         or /etc/sysconfig/buildmaster
     master/contrib/init-scripts/buildmaster.default
 
-    # install as /etc/init.d/buildslave
-    slave/contrib/init-scripts/buildslave.init.sh
+    # install as /etc/init.d/buildbot-worker
+    worker/contrib/init-scripts/buildbot-worker.init.sh
 
     # install as /etc/init.d/buildmaster
-    slave/contrib/init-scripts/buildmaster.init.sh
+    master/contrib/init-scripts/buildmaster.init.sh
 
     # ... and tell sysvinit about them
     chkconfig buildmaster reset
@@ -95,7 +95,7 @@ To stop a buildmaster or worker manually, use:
 
     buildbot stop [ BASEDIR ]
     # or
-    buildslave stop [ WORKER_BASEDIR ]
+    buildbot-worker stop [ WORKER_BASEDIR ]
 
 This simply looks for the :file:`twistd.pid` file and kills whatever process is identified within.
 
@@ -121,7 +121,7 @@ Workers can similarly be restarted with:
 
 .. code-block:: bash
 
-    buildslave restart [ BASEDIR ]
+    buildbot-worker restart [ BASEDIR ]
 
 There are certain configuration changes that are not handled cleanly by ``buildbot reconfig``.
 If this occurs, ``buildbot restart`` is a more robust tool to fully switch over to the new configuration.

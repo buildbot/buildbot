@@ -1035,7 +1035,7 @@ The :bb:step:`ShellCommand` arguments are:
 
 ``workdir``
     All ShellCommands are run by default in the ``workdir``, which defaults to the :file:`build` subdirectory of the worker builder's base directory.
-    The absolute path of the workdir will thus be the worker's basedir (set as an option to ``buildslave create-slave``, :ref:`Creating-a-worker`) plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`) plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
+    The absolute path of the workdir will thus be the worker's basedir (set as an option to ``buildbot-worker create-worker``, :ref:`Creating-a-worker`) plus the builder's basedir (set in the builder's ``builddir`` key in :file:`master.cfg`) plus the workdir itself (a class-level attribute of the BuildFactory, defaults to :file:`build`).
 
     For example::
 
@@ -2142,7 +2142,7 @@ The optional ``compress`` argument can be given as ``'gz'`` or ``'bz2'`` to comp
 
 .. note::
 
-   The permissions on the copied files will be the same on the master as originally on the worker, see option `buildslave create-slave --umask` to change the default one.
+   The permissions on the copied files will be the same on the master as originally on the worker, see option ``buildbot-worker create-worker --umask`` to change the default one.
 
 .. bb:step:: MultipleFileUpload
 
@@ -2406,7 +2406,7 @@ If, for example, you use ``variables=['Tmp']``, the result will be a property na
                                       "-cp",
                                       util.Interpolate("%(prop:SOME_JAVA_LIB_HOME)s")]))
 
-Note that this step requires that the Buildslave be at least version 0.8.3.
+Note that this step requires that the worker be at least version 0.8.3.
 For previous versions, no environment variables are available (the worker environment will appear to be empty).
 
 .. index:: Properties; triggering schedulers

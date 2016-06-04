@@ -91,14 +91,14 @@ Don't forget to add your dependencies in there to get a succesfull build !
     RUN apt-get update && apt-get install -y \
        python-dev \
        python-pip
-    RUN pip install buildbot-slave
+    RUN pip install buildbot-worker
     RUN groupadd -r buildbot && useradd -r -g buildbot buildbot
     RUN mkdir /worker && chown buildbot:buildbot /worker
     # Install your build-dependencies here ...
     USER buildbot
     WORKDIR /worker
-    RUN buildslave create-slave . <master-hostname> <workername> <workerpassword>
-    ENTRYPOINT ["/usr/local/bin/buildslave"]
+    RUN buildbot-worker create-worker . <master-hostname> <workername> <workerpassword>
+    ENTRYPOINT ["/usr/local/bin/buildbot-worker"]
     CMD ["start", "--nodaemon"]
 
 On line 11, the hostname for your master instance, as well as the worker name and password is setup.
