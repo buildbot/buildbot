@@ -103,6 +103,15 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         return self.do_test_migration(45, 46, setup_thd, verify_thd)
 
     @defer.inlineCallbacks
+    def assertExpectedMessage(self, d, expected_msg):
+        exception = None
+        try:
+            yield d
+        except Exception as e:
+            exception = e
+        self.flushLoggedErrors()
+        self.assertEquals(str(exception), expected_msg)
+
     def do_invalid_test(self, table, value, expected_msg):
 
         def setup_thd(conn):
@@ -110,12 +119,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
             conn.execute(getattr(self, table).insert(), [value])
-
-        try:
-            yield self.do_test_migration(45, 46, setup_thd, None)
-            self.assertTrue(False)
-        except ValueError as e:
-            self.assertEquals(str(e), expected_msg)
+        return self.assertExpectedMessage(self.do_test_migration(45, 46, setup_thd, None),
+                                          expected_msg)
 
     def test_invalid_author_in_changes(self):
         return self.do_invalid_test('changes', dict(changeid=1,
@@ -190,14 +195,10 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                                                       branch="a",
                                                       revision="a",
                                                       category="a")])
-        try:
-            yield self.do_test_migration(45, 46, setup_thd, None)
-            self.assertTrue(False)
-        except ValueError as e:
-            self.assertEquals(str(e).split("\n"),
-                              ["",
-                               "- 'changes' table has invalid data:",
-                               "    changes.change=1 has author, branch, revision or category longer than 255",
-                               "    changes.change=2 has author, branch, revision or category longer than 255",
-                               "- 'users_state' table has invalid data:",
-                               "    users.uid=1 has identifier longer than 255"])
+        yield self.assertExpectedMessage(self.do_test_migration(45, 46, setup_thd, None),
+                                         "\n".join(["",
+                                                    "- 'changes' table has invalid data:",
+                                                    "    changes.change=1 has author, branch, revision or category longer than 255",
+                                                    "    changes.change=2 has author, branch, revision or category longer than 255",
+                                                    "- 'users_state' table has invalid data:",
+                                                    "    users.uid=1 has identifier longer than 255"]))

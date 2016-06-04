@@ -23,6 +23,7 @@ from buildbot.db import buildsets
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
+from buildbot.test.util import db
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 from buildbot.util import UTC
@@ -566,7 +567,7 @@ class TestFakeDB(unittest.TestCase, Tests):
         self.assertFailure(d, AssertionError)
 
 
-class TestRealDB(unittest.TestCase,
+class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 

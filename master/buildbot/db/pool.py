@@ -170,37 +170,31 @@ class DBThreadPool(object):
                 arg = self.engine
             else:
                 arg = self.engine.contextual_connect()
-
             try:
                 try:
                     rv = callable(arg, *args, **kwargs)
                     assert not isinstance(rv, sa.engine.ResultProxy), \
                         "do not return ResultProxy objects!"
                 except sa.exc.OperationalError as e:
-                    text = e.orig.args[0]
-                    if not isinstance(text, basestring):
+                    if not self.engine.should_retry(e):
+                        log.err(e, 'Got fatal OperationalError on DB')
                         raise
-                    if "Lost connection" in text \
-                            or "database is locked" in text:
-
-                        # see if we've retried too much
-                        elapsed = time.time() - start
-                        if elapsed > self.MAX_OPERATIONALERROR_TIME:
-                            raise
-
-                        metrics.MetricCountEvent.log(
-                            "DBThreadPool.retry-on-OperationalError")
-                        log.msg("automatically retrying query after "
-                                "OperationalError (%ss sleep)" % backoff)
-
-                        # sleep (remember, we're in a thread..)
-                        time.sleep(backoff)
-                        backoff *= self.BACKOFF_MULT
-
-                        # and re-try
-                        continue
-                    else:
+                    elapsed = time.time() - start
+                    if elapsed > self.MAX_OPERATIONALERROR_TIME:
+                        log.err(e, ('Raising due to {0} seconds delay on DB '
+                                    'query retries'.format(self.MAX_OPERATIONALERROR_TIME)))
                         raise
+
+                    metrics.MetricCountEvent.log(
+                        "DBThreadPool.retry-on-OperationalError")
+                    # sleep (remember, we're in a thread..)
+                    time.sleep(backoff)
+                    backoff *= self.BACKOFF_MULT
+                    # and re-try
+                    continue
+                except Exception as e:
+                    log.err(e, 'Got fatal Exception on DB')
+                    raise
             finally:
                 if not with_engine:
                     arg.close()

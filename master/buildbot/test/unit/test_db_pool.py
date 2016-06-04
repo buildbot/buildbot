@@ -31,6 +31,7 @@ class Basic(unittest.TestCase):
 
     def setUp(self):
         self.engine = sa.create_engine('sqlite://')
+        self.engine.should_retry = lambda _: False
         self.engine.optimal_thread_pool_size = 1
         self.pool = pool.DBThreadPool(self.engine, reactor=reactor)
 
@@ -48,18 +49,31 @@ class Basic(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
+    def expect_failure(self, d, expected_exception, expect_logged_error=False):
+        exception = None
+        try:
+            yield d
+        except Exception as e:
+            exception = e
+        errors = self.flushLoggedErrors(expected_exception)
+        if expect_logged_error:
+            self.assertEquals(len(errors), 1)
+        self.assertTrue(isinstance(exception, expected_exception))
+
     def test_do_error(self):
         def fail(conn):
             rp = conn.execute("EAT COOKIES")
             return rp.scalar()
-        d = self.pool.do(fail)
-        return self.assertFailure(d, sa.exc.OperationalError)
+
+        return self.expect_failure(self.pool.do(fail), sa.exc.OperationalError,
+                                   expect_logged_error=True)
 
     def test_do_exception(self):
         def raise_something(conn):
             raise RuntimeError("oh noes")
-        d = self.pool.do(raise_something)
-        return self.assertFailure(d, RuntimeError)
+        return self.expect_failure(self.pool.do(raise_something), RuntimeError,
+                                   expect_logged_error=True)
 
     def test_do_with_engine(self):
         def add(engine, addend1, addend2):
@@ -76,8 +90,7 @@ class Basic(unittest.TestCase):
         def fail(engine):
             rp = engine.execute("EAT COOKIES")
             return rp.scalar()
-        d = self.pool.do_with_engine(fail)
-        return self.assertFailure(d, sa.exc.OperationalError)
+        return self.expect_failure(self.pool.do_with_engine(fail), sa.exc.OperationalError)
 
     def test_persistence_across_invocations(self):
         # NOTE: this assumes that both methods are called with the same
