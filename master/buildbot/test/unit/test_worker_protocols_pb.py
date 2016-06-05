@@ -203,7 +203,8 @@ class TestConnection(unittest.TestCase):
                     'info': 'test',
                     'worker_commands': {
                         'y': 2, 'x': 1
-                    }
+                    },
+                    'version': 'TheVersion',
                 })
             if 'getSlaveInfo' in args:
                 return defer.fail(twisted_pb.RemoteError(
@@ -220,7 +221,7 @@ class TestConnection(unittest.TestCase):
         r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getWorkerInfo'), mock.call('getVersion')]
+        calls = [mock.call('getWorkerInfo')]
         self.mind.callRemote.assert_has_calls(calls)
 
     @defer.inlineCallbacks
