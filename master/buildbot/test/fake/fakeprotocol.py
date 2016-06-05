@@ -27,7 +27,7 @@ class FakeConnection(base.Connection):
 
         # users of the fake can add to this as desired
         self.info = {
-            'slave_commands': [],
+            'worker_commands': [],
             'version': '0.8.2',
             'basedir': '/sl',
             'system': 'nt',

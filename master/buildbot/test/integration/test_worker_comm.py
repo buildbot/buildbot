@@ -84,7 +84,7 @@ class FakeWorkerWorker(pb.Referenceable):
     def remote_getWorkerInfo(self):
         return {
             'info': 'here',
-            'slave_commands': {
+            'worker_commands': {
                 'x': 1,
             }
         }

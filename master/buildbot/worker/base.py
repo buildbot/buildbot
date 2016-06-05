@@ -354,7 +354,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_status.setConnected(True)
 
         self._applyWorkerInfo(conn.info)
-        self.worker_commands = conn.info.get("slave_commands", {})
+        self.worker_commands = conn.info.get("worker_commands", {})
         self.worker_environ = conn.info.get("environ", {})
         self.worker_basedir = conn.info.get("basedir", None)
         self.worker_system = conn.info.get("system", None)

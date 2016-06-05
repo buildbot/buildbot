@@ -73,6 +73,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * Master/worker protocol has been changed:
 
+  * ``slave_commands`` key in worker information was renamed to ``worker_commands``.
+
   * ``getSlaveInfo`` remote method was renamed to ``getWorkerInfo``.
 
 

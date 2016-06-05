@@ -211,10 +211,12 @@ class Connection(base.Connection, pb.Avatar):
 
             # newer workers send all info in one command
             if "slave_commands" in info:
+                assert "worker_commands" not in info
+                info["worker_commands"] = info.pop("slave_commands")
                 defer.returnValue(info)
             try:
                 with _wrapRemoteException():
-                    info["slave_commands"] = yield self.mind.callRemote(
+                    info["worker_commands"] = yield self.mind.callRemote(
                         'getCommands')
             except _NoSuchMethod:
                 log.msg("Worker.getCommands is unavailable - ignoring")

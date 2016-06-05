@@ -384,7 +384,7 @@ class TestAbstractWorker(unittest.TestCase):
             'basedir': 'TheBaseDir',
             'system': 'TheWorkerSystem',
             'version': 'version',
-            'slave_commands': COMMANDS,
+            'worker_commands': COMMANDS,
         }
         yield worker.attached(conn)
 
