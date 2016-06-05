@@ -154,9 +154,9 @@ before_script:
 # Tests running commands
 script:
   - "[ $TESTS != js ] || make frontend_install_tests"
-  # run tests under coverage for latest only (it's slower..)
   - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
   - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  # run tests under coverage for latest only (it's slower..)
   - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
 
   # run tests that are know to work on py3
