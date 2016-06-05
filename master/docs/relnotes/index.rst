@@ -106,6 +106,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
   * ``slavedest`` command argument was renamed to ``workerdest`` in ``downloadFile`` command.
 
+  * Previously deprecated ``WorkerForBuilder.remote_shutdown()`` remote command has been removed.
+
 
 Details
 -------
