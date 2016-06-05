@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 import mock
 from twisted.trial import unittest
 
@@ -152,6 +153,25 @@ class TestRunCommand(unittest.TestCase, Tests):
         self.failUnlessEqual(log.stderr, 'some stderr')
         cmd.addHeader('some header')
         self.failUnlessEqual(log.header, 'some header')
+
+    def test_RemoteShellCommand_usePTY_on_worker_2_16(self):
+        cmd = remotecommand.RemoteShellCommand('workdir', 'shell')
+
+        def workerVersion(command, oldversion=None):
+            return '2.16'
+
+        def workerVersionIsOlderThan(command, minversion):
+            return ('2', '16') > minversion.split('.')
+
+        step = mock.Mock()
+        step.workerVersionIsOlderThan = workerVersionIsOlderThan
+        step.workerVersion = workerVersion
+        conn = mock.Mock()
+        conn.remoteStartCommand = mock.Mock(return_value=None)
+
+        cmd.run(step, conn, 'builder')
+
+        self.assertEqual(cmd.args['usePTY'], 'slave-config')
 
 
 class TestFakeRunCommand(unittest.TestCase, Tests):
