@@ -35,8 +35,9 @@
          |                  |           Build 
          v                  v             v
     +---------+   |    +---------+   +---------+ 
-    |  Slave  |   |    |  Slave  |   |  Slave  |
+    | Worker  |   |    | Worker  |   | Worker  |
+    |   For   |   |    |   For   |   |   For   |
     | Builder |   |    | Builder |   | Builder |
     +---------+   |    +---------+   +---------+
                   |
-    Build Slave   |            Build Slave
+      Worker      |            Worker

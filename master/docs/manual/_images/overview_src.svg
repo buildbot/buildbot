@@ -328,16 +328,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="640"
-     inkscape:window-height="480"
+     inkscape:window-width="1325"
+     inkscape:window-height="744"
      id="namedview4"
      showgrid="false"
-     inkscape:zoom="0.31466667"
-     inkscape:cx="357.83899"
-     inkscape:cy="267.98729"
+     inkscape:zoom="0.89001174"
+     inkscape:cx="483.65759"
+     inkscape:cy="249.73884"
      inkscape:window-x="41"
      inkscape:window-y="24"
-     inkscape:window-maximized="0"
+     inkscape:window-maximized="1"
      inkscape:current-layer="g10"
      fit-margin-top="50"
      fit-margin-left="50"
@@ -736,21 +736,15 @@
              style="fill:none;stroke:#303539;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
              id="path452"
              inkscape:connector-curvature="0" /></g></g></g><text
-       transform="matrix(1,0,0,-1,239.165,248.6538)"
-       id="text454"><tspan
+       transform="scale(1,-1)"
+       id="text458"
+       x="226.77737"
+       y="-232.517"><tspan
          style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#303359;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans"
-         x="0 14.496 30.864 37.703999 49.967999"
-         y="0"
+         x="226.77737"
+         y="-232.517"
          sodipodi:role="line"
-         id="tspan456">BUILD</tspan></text>
-<text
-       transform="matrix(1,0,0,-1,238.613,224.8458)"
-       id="text458"><tspan
-         style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#303359;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans"
-         x="0 12.96 25.368 39.695999 54.959999"
-         y="0"
-         sodipodi:role="line"
-         id="tspan460">SLAVE</tspan></text>
+         id="tspan460">WORKER</tspan></text>
 <g
        id="g462"><g
          id="g464"
@@ -784,23 +778,7 @@
              d="m 0,0 c 0,-30.102 -24.4,-54.502 -54.5,-54.502 -30.1,0 -54.501,24.4 -54.501,54.502 0,30.1 24.401,54.5 54.501,54.5 C -24.4,54.5 0,30.1 0,0 z"
              style="fill:none;stroke:#303539;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
              id="path518"
-             inkscape:connector-curvature="0" /></g></g></g><text
-       transform="matrix(1,0,0,-1,491.6421,247.4858)"
-       id="text520"><tspan
-         style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#303359;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans"
-         x="0 14.496 30.864 37.703999 49.967999"
-         y="0"
-         sodipodi:role="line"
-         id="tspan522">BUILD</tspan></text>
-<text
-       transform="matrix(1,0,0,-1,491.0901,223.6778)"
-       id="text524"><tspan
-         style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#303359;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans"
-         x="0 12.96 25.368 39.695999 54.959999"
-         y="0"
-         sodipodi:role="line"
-         id="tspan526">SLAVE</tspan></text>
-<g
+             inkscape:connector-curvature="0" /></g></g></g><g
        id="g528"><g
          id="g530"
          clip-path="url(#clipPath532)"><g
@@ -872,4 +850,14 @@
          y="0"
          sodipodi:role="line"
          id="tspan582">OMMANDS</tspan></text>
+<text
+       y="-232.517"
+       x="479.59943"
+       id="text6005"
+       transform="scale(1,-1)"><tspan
+         id="tspan6007"
+         sodipodi:role="line"
+         y="-232.517"
+         x="479.59943"
+         style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#303359;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans">WORKER</tspan></text>
 </g></svg>

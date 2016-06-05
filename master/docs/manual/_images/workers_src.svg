@@ -16,7 +16,7 @@
    width="955.29999"
    height="322.70926"
    xml:space="preserve"
-   sodipodi:docname="slaves_src.svg"><metadata
+   sodipodi:docname="workers_src.svg"><metadata
      id="metadata8"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
@@ -201,9 +201,9 @@
      inkscape:window-height="744"
      id="namedview4"
      showgrid="false"
-     inkscape:zoom="0.61699346"
-     inkscape:cx="507.62002"
-     inkscape:cy="163.07358"
+     inkscape:zoom="1.2339869"
+     inkscape:cx="374.9272"
+     inkscape:cy="168.22333"
      inkscape:window-x="41"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -214,7 +214,7 @@
      fit-margin-bottom="50" /><g
      id="g10"
      inkscape:groupmode="layer"
-     inkscape:label="slaves"
+     inkscape:label="workers"
      transform="matrix(1.25,0,0,-1.25,-10.625,576.59969)"><g
        id="g12"
        transform="translate(300.5459,364.9985)"><path
@@ -379,18 +379,15 @@
              style="fill:none;stroke:#404447;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
              id="path148"
              inkscape:connector-curvature="0" /></g></g></g><text
-       transform="matrix(1,0,0,-1,343.9521,339.1538)"
-       id="text150"><tspan
+       transform="scale(1,-1)"
+       id="text150"
+       x="331.15207"
+       y="-323.37845"><tspan
          style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#404361;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans"
-         x="0 14.496 30.864 37.703999 49.967999"
-         y="0"
+         x="331.15207"
+         y="-323.37845"
          sodipodi:role="line"
-         id="tspan152">BUILD</tspan><tspan
-         style="font-size:24px;font-variant:normal;font-weight:bold;font-stretch:normal;writing-mode:lr-tb;fill:#404361;fill-opacity:1;fill-rule:nonzero;stroke:none;font-family:PT Sans"
-         x="-0.55199999 12.408 24.816 39.144001 54.408001"
-         y="23.808001"
-         sodipodi:role="line"
-         id="tspan154">SLAVE</tspan></text>
+         id="tspan154">WORKER</tspan></text>
 <g
        id="g156"><g
          id="g158"
