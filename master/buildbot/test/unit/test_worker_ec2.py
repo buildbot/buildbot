@@ -24,23 +24,23 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 try:
     from moto import mock_ec2
     assert mock_ec2
-    import boto
-    assert boto
+    import boto3
+    assert boto3
 except ImportError:
-    boto = None
+    boto3 = None
     ec2 = None
 
 
-if boto is not None:
+if boto3 is not None:
     from buildbot.worker import ec2
 
 
-# redefine the mock_ec2 decorator to skip the test if boto or moto
+# redefine the mock_ec2 decorator to skip the test if boto3 or moto
 # isn't installed
 def skip_ec2(f):
-    f.skip = "boto or moto is not installed"
+    f.skip = "boto3 or moto is not installed"
     return f
-if boto is None:
+if boto3 is None:
     mock_ec2 = skip_ec2
 
 
@@ -49,26 +49,27 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     def setUp(self):
         super(TestEC2LatentWorker, self).setUp()
-        if boto is None:
+        if boto3 is None:
             raise unittest.SkipTest("moto not found")
 
     def botoSetup(self, name='latent_buildbot_worker'):
-        c = boto.connect_ec2()
+        c = boto3.client('ec2', region_name='us-east-1')
+        r = boto3.resource('ec2', region_name='us-east-1')
         try:
-            c.create_key_pair(name)
+            r.create_key_pair(KeyName=name)
         except NotImplementedError:
             raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
                                     " in this version of moto, please update.")
-        c.create_security_group(name, 'the security group')
-        instance = c.run_instances('foo').instances[0]
-        c.create_image(instance.id, "foo", "bar")
-        c.terminate_instances([instance.id])
-        return c
+        r.create_security_group(GroupName=name, Description='the security group')
+        instance = r.create_instances(ImageId='foo', MinCount=1, MaxCount=1)[0]
+        c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
+        c.terminate_instances(InstanceIds=[instance.id])
+        return c, r
 
     @mock_ec2
     def test_constructor_minimal(self):
-        c = self.botoSetup('latent_buildbot_slave')
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
@@ -89,8 +90,8 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_constructor_tags(self):
-        c = self.botoSetup('latent_buildbot_slave')
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         tags = {'foo': 'bar'}
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
@@ -110,8 +111,8 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_constructor_region(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
@@ -124,8 +125,8 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_fail_mixing_classic_and_vpc_ec2_settings(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
 
         def create_worker():
             ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -141,14 +142,13 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_vpc_instance(self):
-        c = self.botoSetup()
+        c, r = self.botoSetup()
 
-        vpc_conn = boto.connect_vpc()
-        vpc = vpc_conn.create_vpc("192.168.0.0/24")
-        subnet = vpc_conn.create_subnet(vpc.id, "192.168.0.0/24")
-        amis = c.get_all_images()
+        vpc = r.create_vpc(CidrBlock="192.168.0.0/24")
+        subnet = r.create_subnet(VpcId=vpc.id, CidrBlock="192.168.0.0/24")
+        amis = list(r.images.all())
 
-        sg = c.create_security_group("test_sg", "test_sg", vpc.id)
+        sg = r.create_security_group(GroupName="test_sg", Description="test_sg", VpcId=vpc.id)
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
@@ -159,20 +159,21 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  )
 
         instance_id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
 
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].subnet_id, subnet.id)
-        self.assertEqual(len(instances[0].groups), 1)
-        self.assertEqual(instances[0].groups[0].id, sg.id)
+        self.assertEqual(len(instances[0].security_groups), 1)
+        self.assertEqual(instances[0].security_groups[0]['GroupId'], sg.id)
         self.assertEqual(instances[0].key_name, 'latent_buildbot_worker')
 
     @mock_ec2
     def test_start_instance(self):
-        c = self.botoSetup('latent_buildbot_slave')
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
@@ -190,15 +191,16 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('ami-'))
         self.assertTrue(start_time > 0)
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
-        self.assertEqual(instances[0].tags, {})
+        self.assertEqual(instances[0].tags, [])
 
     @mock_ec2
     def test_start_instance_volumes_deprecated(self):
-        c = self.botoSetup()
+        c, r = self.botoSetup()
         block_device_map_arg = {
             "/dev/xvdb": {
                 "volume_type": "io1",
@@ -231,7 +233,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                     },
                 ]
 
-        amis = c.get_all_images()
+        amis = list(r.images.all())
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
@@ -253,7 +255,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_instance_volumes(self):
-        c = self.botoSetup()
+        c, r = self.botoSetup()
         block_device_map_arg = [
                 {
                     'DeviceName': "/dev/xvdb",
@@ -292,7 +294,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                     },
                 ]
 
-        amis = c.get_all_images()
+        amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
@@ -308,9 +310,9 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_start_instance_attach_volume(self):
-        c = self.botoSetup()
-        vol = c.create_volume('10', 'us-east-1a')
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        vol = r.create_volume(Size=10, AvailabilityZone='us-east-1a')
+        amis = list(r.images.all())
         ami = amis[0]
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -321,16 +323,17 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  volumes=[(vol.id, "/dev/sdz")]
                                  )
         id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
         instance = instances[0]
-        self.assertEqual(
-            vol.id, instance.block_device_mapping['/dev/sdz'].volume_id)
+        sdz = [bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz'][0]
+        self.assertEqual(vol.id, sdz['Ebs']['VolumeId'])
 
     @mock_ec2
     def test_start_instance_tags(self):
-        c = self.botoSetup('latent_buildbot_slave')
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         tags = {'foo': 'bar'}
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
@@ -347,18 +350,19 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      ami=amis[0].id
                                      )
         id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
-        self.assertEqual(instances[0].tags, tags)
+        self.assertEqual(instances[0].tags, [{u'Value': 'bar', u'Key': 'foo'}])
 
     @mock_ec2
     def test_start_instance_ip(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
-        eip = c.allocate_address(domain='vpc')
-        elastic_ip = eip.public_ip
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
+        eip = c.allocate_address(Domain='vpc')
+        elastic_ip = eip['PublicIp']
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
@@ -368,21 +372,21 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  ami=amis[0].id
                                  )
         id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
-        addresses = c.get_all_addresses()
-        self.assertEqual(instances[0].id, addresses[0].instance_id)
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
+        addresses = c.describe_addresses()['Addresses']
+        self.assertEqual(instances[0].id, addresses[0]['InstanceId'])
 
     @mock_ec2
     def test_start_vpc_spot_instance(self):
-        c = self.botoSetup()
+        c, r = self.botoSetup()
 
-        vpc_conn = boto.connect_vpc()
-        vpc = vpc_conn.create_vpc("192.168.0.0/24")
-        subnet = vpc_conn.create_subnet(vpc.id, "192.168.0.0/24")
-        amis = c.get_all_images()
+        vpc = r.create_vpc(CidrBlock="192.168.0.0/24")
+        subnet = r.create_subnet(VpcId=vpc.id, CidrBlock="192.168.0.0/24")
+        amis = list(r.images.all())
 
-        sg = c.create_security_group("test_sg", "test_sg", vpc.id)
+        sg = r.create_security_group(GroupName="test_sg", Description="test_sg", VpcId=vpc.id)
 
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -395,20 +399,21 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  )
 
         instance_id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
 
         self.assertTrue(bs.spot_instance)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].subnet_id, subnet.id)
-        self.assertEqual(len(instances[0].groups), 1)
-        self.assertEqual(instances[0].groups[0].id, sg.id)
+        self.assertEqual(len(instances[0].security_groups), 1)
+        self.assertEqual(instances[0].security_groups[0]['GroupId'], sg.id)
 
     @mock_ec2
     def test_start_spot_instance(self):
-        c = self.botoSetup('latent_buildbot_slave')
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         product_description = 'Linux/Unix'
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
@@ -426,19 +431,20 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      product_description=product_description
                                      )
         instance_id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
         self.assertTrue(bs.spot_instance)
         self.assertEqual(bs.retry, 1)
         self.assertEqual(bs.product_description, product_description)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
-        self.assertEqual(instances[0].tags, {})
+        self.assertEqual(instances[0].tags, [])
 
     @mock_ec2
     def test_start_spot_instance_retry(self):
-        c = self.botoSetup('latent_buildbot_slave')
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         product_description = 'Linux/Unix'
         retry = 3
         with assertProducesWarnings(
@@ -457,8 +463,9 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      product_description=product_description
                                      )
         id, _, _ = bs._start_instance()
-        instances = [i for i in c.get_only_instances()
-                     if i.state != "terminated"]
+        instances = r.instances.filter(
+            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
+        instances = list(instances)
         self.assertTrue(bs.spot_instance)
         self.assertEqual(bs.retry, 3)
         self.assertEqual(bs.attempt, 1)
@@ -467,8 +474,8 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_ami(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         ami = amis[0]
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -483,15 +490,15 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_owners(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         ami = amis[0]
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
                                  keypair_name="latent_buildbot_worker",
                                  security_name='latent_buildbot_worker',
-                                 valid_ami_owners=[int(ami.ownerId)]
+                                 valid_ami_owners=[int(ami.owner_id)]
                                  )
         image = bs.get_image()
 
@@ -499,8 +506,8 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_location(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup('latent_buildbot_slave')
+        amis = list(r.images.all())
         ami = amis[0]
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -515,8 +522,6 @@ class TestEC2LatentWorker(unittest.TestCase):
 
     @mock_ec2
     def test_get_image_location_not_found(self):
-        self.botoSetup()
-
         def create_worker():
             ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                 identifier='publickey',
@@ -545,28 +550,29 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     def setUp(self):
         super(TestEC2LatentWorkerDefaultKeyairSecurityGroup, self).setUp()
-        if boto is None:
+        if boto3 is None:
             raise unittest.SkipTest("moto not found")
 
     def botoSetup(self):
-        c = boto.connect_ec2()
+        c = boto3.client('ec2', region_name='us-east-1')
+        r = boto3.resource('ec2', region_name='us-east-1')
         try:
-            c.create_key_pair('latent_buildbot_slave')
-            c.create_key_pair('test_keypair')
+            r.create_key_pair(KeyName='latent_buildbot_slave')
+            r.create_key_pair(KeyName='test_keypair')
         except NotImplementedError:
             raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
                                     " in this version of moto, please update.")
-        c.create_security_group('latent_buildbot_slave', 'the security group')
-        c.create_security_group('test_security_group', 'other security group')
-        instance = c.run_instances('foo').instances[0]
-        c.create_image(instance.id, "foo", "bar")
-        c.terminate_instances([instance.id])
-        return c
+        r.create_security_group(GroupName='latent_buildbot_slave', Description='the security group')
+        r.create_security_group(GroupName='test_security_group', Description='other security group')
+        instance = r.create_instances(ImageId='foo', MinCount=1, MaxCount=1)[0]
+        c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
+        c.terminate_instances(InstanceIds=[instance.id])
+        return c, r
 
     @mock_ec2
     def test_use_of_default_keypair_security_warning(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
@@ -585,8 +591,8 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     @mock_ec2
     def test_use_of_default_keypair_warning(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
@@ -604,8 +610,8 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     @mock_ec2
     def test_use_of_default_security_warning(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
         with assertProducesWarnings(
                 DeprecatedWorkerNameWarning,
                 messages_patterns=[
@@ -623,8 +629,8 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     @mock_ec2
     def test_no_default_security_warning_when_security_group_ids(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
 
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -637,8 +643,8 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
 
     @mock_ec2
     def test_use_non_default_keypair_security(self):
-        c = self.botoSetup()
-        amis = c.get_all_images()
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
         with assertNotProducesWarnings(DeprecatedWorkerNameWarning):
             bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                      identifier='publickey',
