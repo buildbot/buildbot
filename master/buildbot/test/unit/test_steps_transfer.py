@@ -732,9 +732,14 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
+        fd, self.destfile = tempfile.mkstemp()
+        os.close(fd)
+        os.unlink(self.destfile)
         return self.setUpBuildStep()
 
     def tearDown(self):
+        if os.path.exists(self.destfile):
+            os.unlink(self.destfile)
         return self.tearDownBuildStep()
 
     def test_workerdest_old_api(self):
@@ -775,6 +780,39 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
     def test_init_positional_args(self):
         self.assertRaises(TypeError, lambda: transfer.FileDownload())
         self.assertRaises(TypeError, lambda: transfer.FileDownload('srcfile'))
+
+    def testBasic(self):
+        master_file = __file__
+        self.setupStep(
+            transfer.FileDownload(
+                mastersrc=master_file, workerdest=self.destfile))
+
+        # A place to store what gets read
+        read = []
+
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                workerdest=self.destfile, workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(remotetransfer.FileReader)))
+            + Expect.behavior(downloadString(read.append))
+            + 0)
+
+        self.expectOutcome(
+            result=SUCCESS,
+            state_string="downloading to {0}".format(
+                os.path.basename(self.destfile)))
+        d = self.runStep()
+
+        @d.addCallback
+        def checkCalls(res):
+            with open(master_file, "rb") as f:
+                contents = f.read()
+            # Only first 1000 bytes trasferred in downloadString() helper
+            contents = contents[:1000]
+            self.assertEquals(''.join(read), contents)
+
+        return d
 
 
 class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
