@@ -426,6 +426,7 @@ else:
         'Jinja2 >= 2.1',
         # required for tests, but Twisted requires this anyway
         'zope.interface >= 4.1.1',
+        # python-future required for py2/3 compatibility
         'future',
         'sqlalchemy>=0.8.0',
         'sqlalchemy-migrate>=0.9',
@@ -437,10 +438,12 @@ else:
     # Unit test dependencies.
     test_deps = [
         'txrequests',
-        'future',
+        # pyjade required for custom templates tests
         'pyjade',
+        # boto3 and moto required for running EC2 tests
         'boto3',
         'moto',
+        # txgithub required to run buildbot.status.github module tests
         'txgithub',
         'ramlfications',
         'mock',
@@ -449,6 +452,7 @@ else:
         test_deps += [
             # LZ4 fails to build on Windows:
             # https://github.com/steeve/python-lz4/issues/27
+            # lz4 required for log compression tests.
             'lz4',
         ]
 
