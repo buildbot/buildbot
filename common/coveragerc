@@ -26,6 +26,7 @@ exclude_lines =
 include =
     master/*
     slave/*
+    worker/*
 
 omit =
     # omit all of our tests
