@@ -490,10 +490,3 @@ It produces two status updates:
 ``rc``
 
     0 if the ``os.listdir`` does not raise exception, otherwise 1.
-
-Source Commands
-...............
-
-The source commands (``bk``, ``cvs``, ``darcs``, ``git``, ``repo``, ``bzr``,
-``hg``, ``p4``, ``p4sync``, and ``mtn``) are deprecated.  See the docstrings in
-the source code for more information.
