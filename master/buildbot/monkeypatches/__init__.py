@@ -17,8 +17,6 @@ import sys
 
 from twisted.python import util
 
-from buildbot.util import sautils
-
 
 def onlyOnce(fn):
     'Set up FN to only run once within an interpreter instance'
@@ -34,22 +32,6 @@ def onlyOnce(fn):
 # patch module.  This will help cut down on unnecessary imports where the
 # patches are not needed, and also avoid problems with patches importing
 # private things in external libraries that no longer exist.
-
-
-@onlyOnce
-def patch_sqlalchemy2364():
-    # fix for SQLAlchemy bug 2364
-    if sautils.sa_version() < (0, 7, 5):
-        from buildbot.monkeypatches import sqlalchemy2364
-        sqlalchemy2364.patch()
-
-
-@onlyOnce
-def patch_sqlalchemy2189():
-    # fix for SQLAlchemy bug 2189
-    if sautils.sa_version() <= (0, 7, 1):
-        from buildbot.monkeypatches import sqlalchemy2189
-        sqlalchemy2189.patch()
 
 
 @onlyOnce
@@ -94,6 +76,4 @@ def patch_all(for_tests=False):
         patch_decorators()
         patch_mock_asserts()
 
-    patch_sqlalchemy2364()
-    patch_sqlalchemy2189()
     patch_python14653()
