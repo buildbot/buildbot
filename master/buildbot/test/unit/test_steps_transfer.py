@@ -814,6 +814,40 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
 
         return d
 
+    def testBasicWorker2_16(self):
+        master_file = __file__
+        self.setupStep(
+            transfer.FileDownload(
+                mastersrc=master_file, workerdest=self.destfile),
+            worker_version={'*': '2.16'})
+
+        # A place to store what gets read
+        read = []
+
+        self.expectCommands(
+            Expect('downloadFile', dict(
+                slavedest=self.destfile, workdir='wkdir',
+                blocksize=16384, maxsize=None, mode=None,
+                reader=ExpectRemoteRef(remotetransfer.FileReader)))
+            + Expect.behavior(downloadString(read.append))
+            + 0)
+
+        self.expectOutcome(
+            result=SUCCESS,
+            state_string="downloading to {0}".format(
+                os.path.basename(self.destfile)))
+        d = self.runStep()
+
+        @d.addCallback
+        def checkCalls(res):
+            with open(master_file, "rb") as f:
+                contents = f.read()
+            # Only first 1000 bytes trasferred in downloadString() helper
+            contents = contents[:1000]
+            self.assertEquals(''.join(read), contents)
+
+        return d
+
 
 class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
