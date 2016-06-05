@@ -828,11 +828,11 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
     def test_glob(self):
         @defer.inlineCallbacks
         def testFunc():
-            res = yield self.step.glob("*.pyc")
+            res = yield self.step.runGlob("*.pyc")
             self.assertEqual(res, ["one.pyc", "two.pyc"])
         self.step.testMethod = testFunc
         self.expectCommands(
-            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
             + Expect.update('files', ["one.pyc", "two.pyc"])
             + 0
         )
@@ -840,9 +840,9 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_glob_empty(self):
-        self.step.testMethod = lambda: self.step.glob("*.pyc")
+        self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expectCommands(
-            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
             + Expect.update('files', [])
             + 0
         )
@@ -850,9 +850,9 @@ class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_glob_fail(self):
-        self.step.testMethod = lambda: self.step.glob("*.pyc")
+        self.step.testMethod = lambda: self.step.runGlob("*.pyc")
         self.expectCommands(
-            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
             + 1
         )
         self.expectOutcome(result=FAILURE)

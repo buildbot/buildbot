@@ -364,7 +364,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
 
         self.setupStep(CompositeUser(testFunc))
         self.expectCommands(
-            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
             + Expect.update('files', ["one.pyc", "two.pyc"])
             + 0
         )
@@ -374,7 +374,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
     def test_glob_fail(self):
         self.setupStep(CompositeUser(lambda x: x.runGlob("*.pyc")))
         self.expectCommands(
-            Expect('glob', {'glob': '*.pyc', 'logEnviron': False})
+            Expect('glob', {'path': '*.pyc', 'logEnviron': False})
             + 1
         )
         self.expectOutcome(result=FAILURE)
