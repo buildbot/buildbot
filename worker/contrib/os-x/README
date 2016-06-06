@@ -15,7 +15,7 @@ His email message is as follows:
   Hi guys,
   	I've had these kicking around for a while and thought that maybe
   someone would like to see them.  Installing either of these two to /
-  Library/LaunchDaemons will cause the bulidbot slave or master to auto-
+  Library/LaunchDaemons will cause the Buildbot worker or master to auto-
   start as whatever user you like on launch.  This is the "right way to
   do this" going forward, startupitems are deprecated.  Please note that
   this means any tests that require a windowserver connection on os x
