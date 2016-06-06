@@ -315,8 +315,8 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         ]
         yield self.master.db.insertTestData(row)
 
-    def jsonBuilders(self, builder_name, pendingBuilds=0):
-        return {
+    def jsonBuilders(self, builder_name, pendingBuilds=0, pendingBuildRequests=None):
+        json = {
             'name': builder_name,
             'tags': ['tag1', 'tag2'],
             'url': 'http://localhost:8080/projects/Katana/builders/' + builder_name +'?katana-buildbot_branch=katana',
@@ -328,6 +328,11 @@ class TestSingleProjectJsonResource(unittest.TestCase):
             'currentBuilds': [],
             'pendingBuilds': pendingBuilds
         }
+
+        if pendingBuildRequests is not None:
+            json['pendingBuildRequests'] = pendingBuildRequests
+
+        return json
 
     def expectedProjectDict(self, builders, latestRevisions={}):
         return {
@@ -418,7 +423,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
         ]
 
         expected_project = self.expectedProjectDict(
-                builders=[self.jsonBuilders('builder-02', pendingBuilds=pending)]
+                builders=[self.jsonBuilders('builder-02', pendingBuilds=len(pending), pendingBuildRequests=pending)]
         )
 
         self.assertEquals(project_dict, expected_project)

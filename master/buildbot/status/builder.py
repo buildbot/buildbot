@@ -992,11 +992,11 @@ class BuilderStatus(styles.Versioned):
         result = self.asDict(codebases, request, base_build_dict, include_build_steps=include_build_steps,
                              include_build_props=include_build_props)
 
+        result['pendingBuilds'] = yield self.pendingBuildsCache.getTotal(codebases=codebases)
+
         if include_pending_builds:
             pendingBuildsDict = yield self.getPendingBuildRequestStatusesDicts(codebases=codebases)
-            result['pendingBuilds'] = pendingBuildsDict
-        else:
-            result['pendingBuilds'] = yield self.pendingBuildsCache.getTotal(codebases=codebases)
+            result['pendingBuildRequests'] = pendingBuildsDict
 
         defer.returnValue(result)
 
