@@ -4,8 +4,13 @@
    AWS EC2
    Workers; AWS EC2
 
+.. bb:worker:: EC2LatentWorker
+
 Amazon Web Services Elastic Compute Cloud ("AWS EC2")
 =====================================================
+
+.. @cindex EC2LatentWorker
+.. py:class:: buildbot.worker.ec2.EC2LatentWorker
 
 `EC2 <http://aws.amazon.com/ec2/>`_ is a web service that allows you to start virtual machines in an Amazon data center.
 Please see their website for details, including costs.
