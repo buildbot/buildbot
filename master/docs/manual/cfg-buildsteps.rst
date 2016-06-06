@@ -353,6 +353,7 @@ The Git step takes the following arguments:
 
 ``shallow``
    (optional): instructs git to attempt shallow clones (``--depth 1``).
+   The depth defaults to 1 and can be changed by passing an integer instead of ``True``.
    This option can be used only in full builds with clobber method.
 
 ``reference``
