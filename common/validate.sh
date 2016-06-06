@@ -1,5 +1,5 @@
 #! /bin/bash
-TEST='buildbot.test buildslave.test'
+TEST='buildbot.test buildslave.test buildbot_worker.test'
 
 # if stdout is a terminal define some colors
 # validate.sh can be run as hook from GUI git clients, such as git-gui
@@ -162,7 +162,7 @@ if ! $quick; then
 elif [ -z `command -v cctrial` ]; then
     warning "Skipping Python Tests ('pip install cctrial' for quick tests)"
 else
-    cctrial -H buildbot buildslave || not_ok "Python tests failed"
+    cctrial -H buildbot buildslave buildbot_worker || not_ok "Python tests failed"
 fi
 
 status "checking formatting"
