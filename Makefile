@@ -1,16 +1,12 @@
 # developer utilities
 
-.PHONY: docs apidocs pylint flake8
+.PHONY: docs pylint flake8
 
 PIP?=pip
 
 # build rst documentation
 docs:
 	$(MAKE) -C master/docs
-
-# create api documentation with epydoc
-apidocs:
-	$(MAKE) -C apidocs
 
 # pylint the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 pylint:
