@@ -185,6 +185,7 @@ class BBDomain(Domain):
         'chsrc': ObjType('chsrc', 'chsrc'),
         'step': ObjType('step', 'step'),
         'reporter': ObjType('reporter', 'reporter'),
+        'worker': ObjType('worker', 'worker'),
         'cmdline': ObjType('cmdline', 'cmdline'),
         'msg': ObjType('msg', 'msg'),
         'event': ObjType('event', 'event'),
@@ -217,6 +218,11 @@ class BBDomain(Domain):
                                             indextemplates=[
                                                 'single: Reporter Targets; %s',
                                                 'single: %s Reporter Target',
+                                            ]),
+        'worker': make_ref_target_directive('worker',
+                                            indextemplates=[
+                                                'single: Build Workers; %s',
+                                                'single: %s Build Worker',
                                             ]),
         'cmdline': make_ref_target_directive('cmdline',
                                              indextemplates=[
@@ -271,6 +277,7 @@ class BBDomain(Domain):
         'chsrc': XRefRole(),
         'step': XRefRole(),
         'reporter': XRefRole(),
+        'worker': XRefRole(),
         'cmdline': XRefRole(),
         'msg': XRefRole(),
         'event': XRefRole(),
@@ -289,6 +296,7 @@ class BBDomain(Domain):
         make_index("chsrc", "Change Source Index"),
         make_index("step", "Build Step Index"),
         make_index("reporter", "Reporter Target Index"),
+        make_index("worker", "Build Worker Index"),
         make_index("cmdline", "Command Line Index"),
         make_index("msg", "MQ Routing Key Index"),
         make_index("event", "Data API Event Index"),
