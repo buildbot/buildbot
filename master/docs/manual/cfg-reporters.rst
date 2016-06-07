@@ -798,24 +798,24 @@ If you want another format, don't hesitate to subclass, and modify the :py:meth:
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 
-.. bb:reporter:: GitHubStatus
+.. bb:reporter:: GithubStatusPush
 
-GitHubStatus
-~~~~~~~~~~~~
+GithubStatusPush
+~~~~~~~~~~~~~~~~
 
 
-.. @cindex GitHubStatus
-.. py:class:: buildbot.reporters.github.GitHubStatus
+.. @cindex GithubStatusPush
+.. py:class:: buildbot.reporters.github.GithubStatusPush
 
 ::
 
     from buildbot.plugins import reporters, util
 
     context = Interpolate("buildbot/%(prop:buildername)s")
-    gs = status.GitHubStatus(token='githubAPIToken',
-                             context=context,
-                             startDescription='Build started.',
-                             endDescription='Build done.')
+    gs = status.GithubStatusPush(token='githubAPIToken',
+                                 context=context,
+                                 startDescription='Build started.',
+                                 endDescription='Build done.')
     factory = util.BuildFactory()
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
@@ -824,7 +824,7 @@ GitHubStatus
     c['builders'].append(buildbot_bbtools)
     c['services'].append(gs)
 
-:class:`GitHubStatus` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
+:class:`GithubStatusPush` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
 It requires `txrequests`_ package to allow interaction with GitHub REST API.
 

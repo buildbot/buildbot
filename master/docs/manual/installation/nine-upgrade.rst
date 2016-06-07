@@ -109,7 +109,7 @@ The available reporters as of 0.9.0 are
 
 * :bb:reporter:`GerritStatusPush`
 
-* :bb:reporter:`GitHubStatus`
+* :bb:reporter:`GithubStatusPush` (replaces ``buildbot.status.github.GitHubStatus``)
 
 See the reporter index for the full, current list.
 
@@ -123,7 +123,7 @@ A few notes on changes to the configuration of these reporters:
 
 * :bb:reporter:`GerritStatusPush` callbacks slightly changed signature, and include a master reference instead of a status reference.
 
-* :bb:reporter:`GitHubStatus` now accepts a ``context`` parameter to be passed to the GitHub Status API.
+* :bb:reporter:`GithubStatusPush` now accepts a ``context`` parameter to be passed to the GitHub Status API.
 
 * :py:class:`buildbot.status.builder.Results` and the constants :py:class:`buildbot.status.results.SUCCESS` should be imported from the :py:class:`buildbot.process.results` module instead.
 
