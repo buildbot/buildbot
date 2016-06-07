@@ -5,7 +5,7 @@
 _buildbot_worker()
 {
     local buildbot_worker_subcommands="
-        create-slave upgrade-slave start stop restart"
+        create-worker start stop restart"
 
     local cur=${COMP_WORDS[COMP_CWORD]}
     local subcommand=
