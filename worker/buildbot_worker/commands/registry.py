@@ -28,17 +28,6 @@ commandRegistry = {
     "stat": "buildbot_worker.commands.fs.StatFile",
     "glob": "buildbot_worker.commands.fs.GlobPath",
     "listdir": "buildbot_worker.commands.fs.ListDir",
-
-    # Commands that are no longer supported
-    "svn": "buildbot_worker.commands.removed.Svn",
-    "bk": "buildbot_worker.commands.removed.Bk",
-    "cvs": "buildbot_worker.commands.removed.Cvs",
-    "darcs": "buildbot_worker.commands.removed.Darcs",
-    "git": "buildbot_worker.commands.removed.Git",
-    "bzr": "buildbot_worker.commands.removed.Bzr",
-    "hg": "buildbot_worker.commands.removed.Hg",
-    "p4": "buildbot_worker.commands.removed.P4",
-    "mtn": "buildbot_worker.commands.removed.Mtn",
 }
 
 
