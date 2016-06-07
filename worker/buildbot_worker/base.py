@@ -225,12 +225,6 @@ class WorkerForBuilderBase(service.Service):
             d.addErrback(self._ackFailed, "sendComplete")
             self.remoteStep = None
 
-    def remote_shutdown(self):
-        log.msg("worker shutting down on command from master")
-        log.msg(
-            "NOTE: master is using deprecated WorkerForBuilder.shutdown method")
-        reactor.stop()
-
 
 class BotBase(service.MultiService):
 

@@ -264,17 +264,6 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # little)
         return self.sb.callRemote("setMaster", mock.Mock())
 
-    def test_shutdown(self):
-        # don't *actually* shut down the reactor - that would be silly
-        stop = mock.Mock()
-        self.patch(reactor, "stop", stop)
-        d = self.sb.callRemote("shutdown")
-
-        def check(_):
-            self.assertTrue(stop.called)
-        d.addCallback(check)
-        return d
-
     def test_startBuild(self):
         return self.sb.callRemote("startBuild")
 

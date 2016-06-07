@@ -68,6 +68,9 @@ The worker-side Bot object has the following remote methods:
 :meth:`~buildbot_worker.pb.BotPb.remote_getVersion`
     Returns the worker's version.
 
+:meth:`~buildbot_worker.pb.BotPb.remote_shutdown`
+    Shuts down the worker cleanly.
+
 Worker methods
 ~~~~~~~~~~~~~~
 
@@ -135,9 +138,6 @@ Worker-Side :class:`~buildbot_worker.pb.WorkerForBuilderPb` Methods
 
 :meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_interruptCommand`
     Interrupts the currently-running command
-
-:meth:`~buildbot_worker.pb.WorkerForBuilderPb.remote_shutdown`
-    Shuts down the worker cleanly
 
 Master-side :class:`~buildbot.process.workerforbuilder.WorkerForBuilder` Methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
