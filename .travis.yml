@@ -90,14 +90,8 @@ install:
   - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
   - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
-  # mock is preinstalled on Travis
-  # Install lz4 for log compression utest
-  # Install python-future for py2/3 compatability
-  # Install pyjade for custom templates tests
   # Install MySQL-python for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
-  # Install boto and moto for running EC2 tests
-  # Install txgithub to run buildbot.status.github module tests
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
