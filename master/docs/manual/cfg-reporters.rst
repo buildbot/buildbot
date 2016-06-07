@@ -798,21 +798,21 @@ If you want another format, don't hesitate to subclass, and modify the :py:meth:
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 
-.. bb:reporter:: GithubStatusPush
+.. bb:reporter:: GitHubStatusPush
 
-GithubStatusPush
+GitHubStatusPush
 ~~~~~~~~~~~~~~~~
 
 
-.. @cindex GithubStatusPush
-.. py:class:: buildbot.reporters.github.GithubStatusPush
+.. @cindex GitHubStatusPush
+.. py:class:: buildbot.reporters.github.GitHubStatusPush
 
 ::
 
     from buildbot.plugins import reporters, util
 
     context = Interpolate("buildbot/%(prop:buildername)s")
-    gs = status.GithubStatusPush(token='githubAPIToken',
+    gs = status.GitHubStatusPush(token='githubAPIToken',
                                  context=context,
                                  startDescription='Build started.',
                                  endDescription='Build done.')
@@ -824,7 +824,7 @@ GithubStatusPush
     c['builders'].append(buildbot_bbtools)
     c['services'].append(gs)
 
-:class:`GithubStatusPush` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
+:class:`GitHubStatusPush` publishes a build status using `GitHub Status API <http://developer.github.com/v3/repos/statuses>`_.
 
 It requires `txrequests`_ package to allow interaction with GitHub REST API.
 
@@ -832,7 +832,7 @@ It is configured with at least a GitHub API token.
 
 You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
 
-.. py:class:: GithubStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False, builders=None)
+.. py:class:: GitHubStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False, builders=None)
 
     :param string token: token used for authentication.
     :param rendereable string startDescription: Custom start message (default: 'Build started.')

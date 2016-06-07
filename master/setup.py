@@ -299,7 +299,7 @@ setup_args = {
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
-            ('buildbot.reporters.github', ['GithubStatusPush']),
+            ('buildbot.reporters.github', ['GitHubStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
 
