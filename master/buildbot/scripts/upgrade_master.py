@@ -60,10 +60,10 @@ def upgradeFiles(config):
         print("upgrading basedir")
 
     webdir = os.path.join(config['basedir'], "public_html")
-    if not os.path.exists(webdir):
-        if not config['quiet']:
-            print("creating public_html")
-        os.mkdir(webdir)
+    if os.path.exists(webdir):
+        print("Notice: public_html is not used starting from Buildbot 0.9.0")
+        print("        consider using third party HTTP server for serving "
+              "static files")
 
     templdir = os.path.join(config['basedir'], "templates")
     if not os.path.exists(templdir):
@@ -73,24 +73,6 @@ def upgradeFiles(config):
 
     installFile(config, os.path.join(config['basedir'], "master.cfg.sample"),
                 util.sibpath(__file__, "sample.cfg"), overwrite=True)
-
-    # if index.html exists, use it to override the root page tempalte
-    index_html = os.path.join(webdir, "index.html")
-    root_html = os.path.join(templdir, "root.html")
-    if os.path.exists(index_html):
-        if os.path.exists(root_html):
-            print("Notice: %s now overrides %s" % (root_html, index_html))
-            print("        as the latter is not used by buildbot anymore.")
-            print("        Decide which one you want to keep.")
-        else:
-            try:
-                print("Notice: Moving %s to %s." % (index_html, root_html))
-                print("        You can (and probably want to) remove it if "
-                      "you haven't modified this file.")
-                os.renames(index_html, root_html)
-            except Exception as e:
-                print("Error moving %s to %s: %s" % (index_html, root_html,
-                                                     str(e)))
 
 
 @defer.inlineCallbacks

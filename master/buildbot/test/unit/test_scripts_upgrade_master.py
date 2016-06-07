@@ -172,30 +172,17 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_upgradeFiles(self):
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
-                'test/public_html',
                 'test/templates',
                 'test/master.cfg.sample',
         ]:
             self.assertTrue(os.path.exists(f), "%s not found" % f)
         self.assertInStdout('upgrading basedir')
 
-    def test_upgradeFiles_rename_index_html(self):
+    def test_upgradeFiles_notice_about_unused_public_html(self):
         os.mkdir('test/public_html')
         self.writeFile('test/public_html/index.html', 'INDEX')
         upgrade_master.upgradeFiles(mkconfig())
-        self.assertFalse(os.path.exists("test/public_html/index.html"))
-        self.assertEqual(self.readFile("test/templates/root.html"), 'INDEX')
-        self.assertInStdout('Moving ')
-
-    def test_upgradeFiles_index_html_collision(self):
-        os.mkdir('test/public_html')
-        self.writeFile('test/public_html/index.html', 'INDEX')
-        os.mkdir('test/templates')
-        self.writeFile('test/templates/root.html', 'ROOT')
-        upgrade_master.upgradeFiles(mkconfig())
-        self.assertTrue(os.path.exists("test/public_html/index.html"))
-        self.assertEqual(self.readFile("test/templates/root.html"), 'ROOT')
-        self.assertInStdout('Decide')
+        self.assertInStdout('public_html is not used')
 
     @defer.inlineCallbacks
     def test_upgradeDatabase(self):

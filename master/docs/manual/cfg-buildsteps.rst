@@ -1871,7 +1871,7 @@ You might also want to add option `--pdf` to generate a PDF file instead of a la
 
 The API docs are generated in-place in the build tree (under the workdir, in the subdirectory controlled by the option `-o` argument).
 To make them useful, you will probably have to copy them to somewhere they can be read.
-A command like ``rsync -ad apiref/ dev.example.com:~public_html/current-apiref/`` might be useful.
+For example if you have server with configured nginx web server, you can place generated docs to it's public folder with command like ``rsync -ad apiref/ dev.example.com:~/usr/share/nginx/www/current-apiref/``.
 You might instead want to bundle them into a tarball and publish it in the same place where the generated install tarball is placed.
 
 ::
@@ -2061,9 +2061,10 @@ There are a pair of steps named :bb:step:`FileUpload` and :bb:step:`FileDownload
 :bb:step:`FileUpload` moves a file *up to* the master, while :bb:step:`FileDownload` moves a file *down from* the master.
 
 As an example, let's assume that there is a step which produces an HTML file within the source tree that contains some sort of generated project documentation.
-We want to move this file to the buildmaster, into a :file:`~/public_html` directory, so it can be visible to developers.
+And let's assume that we run nginx web server on buildmaster host for serving static files.
+We want to move this file to the buildmaster, into a :file:`/usr/share/nginx/www/` directory, so it can be visible to developers.
 This file will wind up in the worker-side working directory under the name :file:`docs/reference.html`.
-We want to put it into the master-side :file:`~/public_html/ref.html`, and add a link to the HTML status to the uploaded file.
+We want to put it into the master-side :file:`/usr/share/nginx/www/ref.html`, and add a link to the HTML status to the uploaded file.
 
 ::
 
@@ -2071,7 +2072,7 @@ We want to put it into the master-side :file:`~/public_html/ref.html`, and add a
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
     f.addStep(steps.FileUpload(workersrc="docs/reference.html",
-                               masterdest="/home/bb/public_html/ref.html",
+                               masterdest="/usr/share/nginx/www/ref.html",
                                url="http://somesite/~buildbot/ref.html"))
 
 The ``masterdest=`` argument will be passed to :meth:`os.path.expanduser`, so things like ``~`` will be expanded properly.
@@ -2125,14 +2126,15 @@ To transfer complete directories from the worker to the master, there is a :clas
 It works like :bb:step:`FileUpload`, just for directories.
 However it does not support the ``maxsize``, ``blocksize`` and ``mode`` arguments.
 As an example, let's assume an generated project documentation, which consists of many files (like the output of :command:`doxygen` or :command:`epydoc`).
-We want to move the entire documentation to the buildmaster, into a :file:`~/public_html/docs` directory, and add a link to the uploaded documentation on the HTML status page.
+And let's assume that we run nginx web server on buildmaster host for serving static files.
+We want to move the entire documentation to the buildmaster, into a :file:`/usr/share/nginx/www/docs` directory, and add a link to the uploaded documentation on the HTML status page.
 On the worker-side the directory can be found under :file:`docs`::
 
     from buildbot.plugins import steps
 
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
     f.addStep(steps.DirectoryUpload(workersrc="docs",
-                                    masterdest="~/public_html/docs",
+                                    masterdest="/usr/share/nginx/www/docs",
                                     url="~buildbot/docs"))
 
 The :bb:step:`DirectoryUpload` step will create all necessary directories and transfers empty directories, too.
@@ -2161,7 +2163,7 @@ This parameter should either be a list, or something that can be rendered as a l
     f.addStep(steps.ShellCommand(command=["make", "test"]))
     f.addStep(steps.ShellCommand(command=["make", "docs"]))
     f.addStep(steps.MultipleFileUpload(workersrcs=["docs", "test-results.html"],
-                                       masterdest="~/public_html",
+                                       masterdest="/usr/share/nginx/www/",
                                        url="~buildbot"))
 
 The ``url=`` parameter, can be used to specify a link to be displayed in the HTML status of the step.

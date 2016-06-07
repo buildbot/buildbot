@@ -52,11 +52,11 @@ Each build and log are recorded in a separate file, arranged hierarchically unde
 To prevent these files from growing without bound, you should periodically delete old build logs.
 A simple cron job to delete anything older than, say, two weeks should do the job.
 The only trick is to leave the :file:`buildbot.tac` and other support files alone, for which :command:`find`'s ``-mindepth`` argument helps skip everything in the top directory.
-You can use something like the following:
+You can use something like the following (assuming builds are stored in :file:`./builds/` directory):
 
 .. code-block:: none
 
-    @weekly cd BASEDIR && find . -mindepth 2 i-path './public_html/*' \
+    @weekly cd BASEDIR && find . -mindepth 2 i-path './builds/*' \
         -prune -o -type f -mtime +14 -exec rm {} \;
     @weekly cd BASEDIR && find twistd.log* -mtime +14 -exec rm {} \;
 
