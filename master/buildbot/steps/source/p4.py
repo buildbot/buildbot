@@ -125,6 +125,15 @@ class P4(Source):
                 raise WorkerTooOldError("p4 is not installed on worker")
             return 0
 
+        # Try to obfuscate the password when used as an argument to commands.
+        if self.p4passwd is not None:
+            if not self.workerVersionIsOlderThan('shell', '2.16'):
+                self.p4passwd_arg = ('obfuscated', self.p4passwd, 'XXXXXX')
+            else:
+                self.p4passwd_arg = self.p4passwd
+                log.msg("Worker does not understand obfuscation; "
+                        "p4 password will be logged")
+
         if self.use_tickets and self.p4passwd:
             d.addCallback(self._acquireTicket)
 
@@ -210,8 +219,7 @@ class P4(Source):
         if self.p4user:
             command.extend(['-u', self.p4user])
         if not self.use_tickets and self.p4passwd:
-            # Need to find out if there's a way to obfuscate this
-            command.extend(['-P', self.p4passwd])
+            command.extend(['-P', self.p4passwd_arg])
         if self.p4client:
             command.extend(['-c', self.p4client])
 
@@ -221,7 +229,15 @@ class P4(Source):
 
         command.extend(doCommand)
 
-        command = [c.encode('utf-8') for c in command]
+        def encodeArg(arg):
+            if isinstance(arg, basestring):
+                return arg.encode('utf-8')
+            elif isinstance(arg, tuple):
+                # If a tuple, then the second element is the argument that will
+                # be used when executing the command.
+                return (arg[0], arg[1].encode('utf-8'), arg[2])
+
+        command = [encodeArg(c) for c in command]
         return command
 
     def _dovccmd(self, command, collectStdout=False, initialStdin=None):
