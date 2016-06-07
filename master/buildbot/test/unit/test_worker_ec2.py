@@ -501,6 +501,28 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertRaises(ValueError, create_worker)
 
+    @mock_ec2
+    def test_fail_multiplier_and_max_are_none(self):
+        '''
+        price_multiplier and max_spot_price may not be None at the same time.
+        '''
+        c, r = self.botoSetup()
+        amis = list(r.images.all())
+
+        def create_worker():
+            ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                identifier='publickey',
+                                secret_identifier='privatekey',
+                                keypair_name="latent_buildbot_worker",
+                                security_name='latent_buildbot_worker',
+                                ami=amis[0].id,
+                                region='us-west-1',
+                                spot_instance=True,
+                                price_multiplier=None,
+                                max_spot_price=None
+                                )
+        self.assertRaises(ValueError, create_worker)
+
 
 class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
     ec2_connection = None

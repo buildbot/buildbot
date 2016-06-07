@@ -338,3 +338,9 @@ Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`
 
 This example would attempt to create a m1.large spot instance in the us-west-2b region costing no more than $0.09/hour.
 The spot prices for 'Linux/UNIX' spot instances in that region over the last 24 hours will be averaged and multiplied by the ``price_multiplier`` parameter, then a spot request will be sent to Amazon with the above details.
+If the multiple exceeds the ``max_spot_price``, the bid price will be the ``max_spot_price``.
+
+Either ``max_spot_price`` or ``price_multiplier``, but not both, may be None.
+If ``price_multiplier`` is None, then no historical price information is retrieved; the bid price is simply the specified ``max_spot_price``.
+If the ``max_spot_price`` is None, then the multiple of the historical average spot prices is used as the bid price with no limit.
+

@@ -117,6 +117,9 @@ class EC2LatentWorker(AbstractLatentWorker):
             else:
                 # verify that regex will compile
                 re.compile(valid_ami_location_regex)
+        if spot_instance and price_multiplier is None and max_spot_price is None:
+            raise ValueError('You must provide either one, or both, of '
+                             'price_multiplier or max_spot_price')
         self.valid_ami_owners = None
         if valid_ami_owners:
             self.valid_ami_owners = [str(o) for o in valid_ami_owners]
@@ -469,13 +472,13 @@ class EC2LatentWorker(AbstractLatentWorker):
         return bid_price
 
     def _request_spot_instance(self):
-        bid_price = self._bid_price_from_spot_price_history()
-        if bid_price > self.max_spot_price:
-            log.msg('%s %s calculated spot price %0.3f exceeds '
-                    'configured maximum of %0.3f' %
-                    (self.__class__.__name__, self.workername,
-                     bid_price, self.max_spot_price))
-            raise LatentWorkerFailedToSubstantiate()
+        if self.price_multiplier is None:
+            bid_price = self.max_spot_price
+        else:
+            bid_price = self._bid_price_from_spot_price_history()
+            if self.max_spot_price is not None \
+               and bid_price > self.max_spot_price:
+                bid_price = self.max_spot_price
         log.msg('%s %s requesting spot instance with price %0.4f' %
                 (self.__class__.__name__, self.workername, bid_price))
         reservations = self.ec2.meta.client.request_spot_instances(
