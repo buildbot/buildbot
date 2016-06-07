@@ -10,7 +10,7 @@ Common Requirements
 
 At a bare minimum, you'll need the following for both the buildmaster and a worker:
 
-Python: http://www.python.org
+Python: https://www.python.org
 
   Both Buildbot master and Buildbot worker require Python-2.6, although Python-2.7 is recommended.
 

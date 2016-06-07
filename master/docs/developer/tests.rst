@@ -181,7 +181,7 @@ Note that some of these methods return Deferreds, which should be handled proper
 Fakes
 -----
 
-Buildbot provides a number of pre-defined fake implementations of internal interfaces, in :src:`master/buildbot/fake`.
+Buildbot provides a number of pre-defined fake implementations of internal interfaces, in :src:`master/buildbot/test/fake`.
 These are designed to be used in unit tests to limit the scope of the test.
 For example, the fake DB API eliminates the need to create a real database when testing code that uses the DB API, and isolates bugs in the system under test from bugs in the real DB implementation.
 

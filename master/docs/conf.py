@@ -138,8 +138,29 @@ intersphinx_mapping = {
 extlinks = {
     'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
     'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
-    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None)
+    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None),
 }
+
+# Sphinx' link checker.
+linkcheck_ignore = [
+    # Local URLs:
+    r'^http://localhost.*',
+    # Available only to logged-in users:
+    r'^https://github\.com/settings/applications$',
+    # Sites which uses SSL that Python 2 can't handle:
+    r'^https://opensource\.org/licenses/gpl-2.0\.php$',
+    r'^https://docs\.docker\.com/engine/installation/$',
+    # Looks like server doesn't like user agent:
+    r'^https://www\.microsoft\.com/en-us/download/details\.aspx\?id=17657$',
+    # Example domain.
+    r'^https?://(.+\.)?example\.org',
+    # Anchor check fails on rendered user files on GitHub, since GitHub uses
+    # custom prefix for anchors in user generated content.
+    r'https://github\.com/buildbot/guanlecoja-ui/tree/master#changelog',
+]
+linkcheck_timeout = 10
+linkcheck_retries = 3
+linkcheck_workers = 20
 
 # -- Options for HTML output ---------------------------------------------
 

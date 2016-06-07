@@ -22,7 +22,7 @@ Features:
 * track builds in progress, provide estimated completion time
 * flexible configuration by subclassing generic build process classes
 * debug tools to force a new build, submit fake :class:`Change`\s, query worker status
-* released under the `GPL <http://opensource.org/licenses/gpl-2.0.php>`_
+* released under the `GPL <https://opensource.org/licenses/gpl-2.0.php>`_
 
 .. _History-and-Philosophy:
 

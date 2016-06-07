@@ -16,7 +16,7 @@ This convention is not followed everywhere, but we are slowly migrating document
 Symbol Names
 ------------
 
-Buildbot follows `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_ regarding the formatting of symbol names.
+Buildbot follows `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ regarding the formatting of symbol names.
 Because Buildbot uses Twisted so heavily, and Twisted uses interCaps, this is not very consistently applied throughout the codebase.
 
 The single exception to PEP8 is in naming of functions and methods.

@@ -192,7 +192,7 @@ Adding Resource Types
 You'll need to use both plural and singular forms of the resource type; in this example, we'll use 'pub' and 'pubs'.
 You can also follow an existing file, like :src:`master/buildbot/data/changes.py`, to see when to use which form.
 
-In :src:`master/buildbot/data/pubs.py`, create a subclass of :py:class:`ResourceType`::
+In ``master/buildbot/data/pubs.py``, create a subclass of :py:class:`ResourceType`::
 
     from buildbot.data import base
 
@@ -412,7 +412,7 @@ Returning to the pub example::
 Update methods should be documented in :src:`master/docs/developer/data.rst`.
 They should be thoroughly tested with unit tests.
 They should have a fake implentation in :src:`master/buildbot/test/fake/fakedata.py`.
-That fake implementation should be tested to match the real implementation in :src:`master/buildbot/test/interfaces/test_data_connector.py`.
+That fake implementation should be tested to match the real implementation in :src:`master/buildbot/test/unit/test_data_connector.py`.
 
 .. _Adding-Fields-to-Resource-Types:
 

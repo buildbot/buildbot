@@ -164,6 +164,8 @@ script:
   - "[ $TESTS != docs ] || make docs"
   # Run spell checker on documentation
   - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-W spelling"
+  # Runs Sphinx' external link checker
+  - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-q linkcheck"
 
   - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"

@@ -76,7 +76,7 @@ Features
 
 * The :bb:step:`SVN` step now obfuscates the password in status logs, fixing :bug:`2468`.
 
-* :bb:step:`SVN` source step and ShellCommand now support password obfuscation. (:bug:`2468` and :bug:`1478`).
+* :bb:step:`SVN` source step and ShellCommand now support password obfuscation. (:bug:`2468` and :bug:`1748`).
 
 * :bb:step:`CVS` source step now checks for "sticky dates" from a previous checkout before updating an existing source directory.
 

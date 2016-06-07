@@ -836,7 +836,7 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 
 ``owner``
     The owner of the Bitbucket repository.
-    All Bitbucket Urls are of the form https://bitbucket.org/owner/slug/.
+    All Bitbucket Urls are of the form ``https://bitbucket.org/owner/slug/``.
 
 ``slug``
     The name of the Bitbucket repository.
@@ -920,7 +920,7 @@ GerritChangeSource
 
 .. py:class:: buildbot.changes.gerritchangesource.GerritChangeSource
 
-The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH interface and uses its event source mechanism, `gerrit stream-events <http://gerrit.googlecode.com/svn/documentation/2.2.1/cmd-stream-events.html>`_.
+The :bb:chsrc:`GerritChangeSource` class connects to a Gerrit server by its SSH interface and uses its event source mechanism, `gerrit stream-events <https://gerrit-documentation.storage.googleapis.com/Documentation/2.2.1/cmd-stream-events.html>`_.
 
 The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
 
