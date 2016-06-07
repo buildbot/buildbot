@@ -18,9 +18,9 @@
 
 from buildbot.changes.base import PollingChangeSource
 
-
 def getChanges(req, options=None):
-    change_svc = req.site.master.change_svc
+    master = req.site.resource.children['change_hook'].master
+    change_svc = master.change_svc
     poll_all = "poller" not in req.args
 
     allow_all = True
@@ -28,9 +28,7 @@ def getChanges(req, options=None):
     if isinstance(options, dict) and "allowed" in options:
         allow_all = False
         allowed = options["allowed"]
-
     pollers = []
-
     for source in change_svc:
         if not isinstance(source, PollingChangeSource):
             continue
