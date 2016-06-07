@@ -60,7 +60,8 @@ class OpenStackLatentWorker(AbstractLatentWorker):
 
         if not client or not nce:
             config.error("The python module 'novaclient' is needed  "
-                         "to use a OpenStackLatentWorker")
+                         "to use a OpenStackLatentWorker. "
+                         "Please install 'python-novaclient' package.")
 
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
