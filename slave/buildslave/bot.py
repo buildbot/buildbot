@@ -54,6 +54,11 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when the step is started
     remoteStep = None
 
+    # .prevStep is a ref to the previous BuildStep object, and is set
+    # when a step if finished. This is to be able to notify the master
+    # if it missed a completedStep during an interrupt.
+    prevStep = None
+
     def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
@@ -151,6 +156,11 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             # TODO: just log it, a race could result in their interrupting a
             # command that wasn't actually running
             log.msg(" .. but none was running")
+            # Tell the master that the previous step is
+            # completed as well.
+            d = self.prevStep.callRemote("complete", None)
+            d.addCallback(self.ackComplete)
+            d.addErrback(self._ackFailed, "sendComplete")
             return
         self.command.doInterrupt()
 
@@ -221,6 +231,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             d = self.remoteStep.callRemote("complete", failure)
             d.addCallback(self.ackComplete)
             d.addErrback(self._ackFailed, "sendComplete")
+            self.prevStep = self.remoteStep
             self.remoteStep = None
 
 
