@@ -176,7 +176,7 @@ RemoteCommand
 
         Add data to a logfile other than ``stdio``.
 
-.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY="slave-config", logEnviron=True, collectStdio=False)
+.. py:class:: RemoteShellCommand(workdir, command, env=None, want_stdout=True, want_stderr=True, timeout=20*60, maxTime=None, sigtermTime=None, logfiles={}, usePTY=None, logEnviron=True, collectStdio=False)
 
     :param workdir: directory in which command should be executed, relative to the builder's basedir.
     :param command: shell command to run
@@ -189,7 +189,7 @@ RemoteCommand
                         If None, SIGTERM will not be fired.
     :param env: A dictionary of environment variables to augment or replace the existing environment on the worker.
     :param logfiles: Additional logfiles to request from the worker.
-    :param usePTY: True to use a PTY, false to not use a PTY; the default value uses the default configured on the worker.
+    :param usePTY: True to use a PTY, false to not use a PTY; the default value is False.
     :param logEnviron: If false, do not log the environment on the worker.
     :param collectStdout: If True, collect the command's stdout.
 

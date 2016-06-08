@@ -98,7 +98,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def __init__(self, workdir=None,
                  command=None,
-                 usePTY="slave-config",
+                 usePTY=None,
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -236,7 +236,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
         kwargs['command'] = flatten(self.command, (list, tuple))
 
         # check for the usePTY flag
-        if 'usePTY' in kwargs and kwargs['usePTY'] != 'slave-config':
+        if 'usePTY' in kwargs and kwargs['usePTY'] is not None:
             if self.workerVersionIsOlderThan("svn", "2.7"):
                 warnings.append(
                     "NOTE: worker does not allow master to override usePTY\n")

@@ -50,6 +50,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * Support for python 2.6 was dropped from the master.
 
+* ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
+
 Buildslave
 ----------
 
@@ -77,11 +79,15 @@ Changes for Developers
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Worker commands version bumped to 3.0.
+
 * Master/worker protocol has been changed:
 
   * ``slave_commands`` key in worker information was renamed to ``worker_commands``.
 
   * ``getSlaveInfo`` remote method was renamed to ``getWorkerInfo``.
+
+  * ``slave-config`` value of ``usePTY`` is not supported anymore.
 
 
 Details

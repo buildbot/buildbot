@@ -37,10 +37,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             maxq.MaxQ(testdir='x'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command="run_maxq.py x")
-            + ExpectShell.log('stdio', stdout='no failures\n')
-            + 0
+            ExpectShell(workdir='wkdir', command="run_maxq.py x") +
+            ExpectShell.log('stdio', stdout='no failures\n') +
+            0
         )
         self.expectOutcome(result=SUCCESS, state_string='success')
         return self.runStep()
@@ -49,10 +48,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             maxq.MaxQ(testdir='x'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command="run_maxq.py x")
-            + ExpectShell.log('stdio', stdout='no failures\n')
-            + 2
+            ExpectShell(workdir='wkdir', command="run_maxq.py x") +
+            ExpectShell.log('stdio', stdout='no failures\n') +
+            2
         )
         self.expectOutcome(result=FAILURE,
                            state_string='1 maxq failures')
@@ -62,10 +60,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             maxq.MaxQ(testdir='x'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
-                        command="run_maxq.py x")
-            + ExpectShell.log('stdio', stdout='\nTEST FAILURE: foo\n' * 10)
-            + 2
+            ExpectShell(workdir='wkdir', command="run_maxq.py x") +
+            ExpectShell.log('stdio', stdout='\nTEST FAILURE: foo\n' * 10) +
+            2
         )
         self.expectOutcome(result=FAILURE,
                            state_string='10 maxq failures')

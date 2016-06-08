@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 import mock
 from twisted.trial import unittest
 
@@ -82,7 +83,7 @@ class Tests(interfaces.InterfaceTests):
         @self.assertArgSpecMatches(self.remoteShellCommandClass.__init__)
         def __init__(self, workdir, command, env=None, want_stdout=1,
                      want_stderr=1, timeout=20 * 60, maxTime=None, sigtermTime=None, logfiles=None,
-                     usePTY="slave-config", logEnviron=True, collectStdout=False,
+                     usePTY=None, logEnviron=True, collectStdout=False,
                      collectStderr=False, interruptSignal=None, initialStdin=None,
                      decodeRC=None,
                      stdioLogName='stdio'):
@@ -153,6 +154,25 @@ class TestRunCommand(unittest.TestCase, Tests):
         cmd.addHeader('some header')
         self.failUnlessEqual(log.header, 'some header')
 
+    def test_RemoteShellCommand_usePTY_on_worker_2_16(self):
+        cmd = remotecommand.RemoteShellCommand('workdir', 'shell')
+
+        def workerVersion(command, oldversion=None):
+            return '2.16'
+
+        def workerVersionIsOlderThan(command, minversion):
+            return ('2', '16') > minversion.split('.')
+
+        step = mock.Mock()
+        step.workerVersionIsOlderThan = workerVersionIsOlderThan
+        step.workerVersion = workerVersion
+        conn = mock.Mock()
+        conn.remoteStartCommand = mock.Mock(return_value=None)
+
+        cmd.run(step, conn, 'builder')
+
+        self.assertEqual(cmd.args['usePTY'], 'slave-config')
+
 
 class TestFakeRunCommand(unittest.TestCase, Tests):
 
@@ -177,3 +197,31 @@ class TestWorkerTransition(unittest.TestCase):
             old = cmd.buildslave
 
         self.assertIdentical(old, w)
+
+    def test_RemoteShellCommand_usePTY(self):
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command')
+
+        self.assertTrue(cmd.args['usePTY'] is None)
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command', usePTY=True)
+
+        self.assertTrue(cmd.args['usePTY'])
+
+        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command', usePTY=False)
+
+        self.assertFalse(cmd.args['usePTY'])
+
+        with assertProducesWarning(
+                DeprecatedWorkerNameWarning,
+                message_pattern="'slave-config' value of 'usePTY' "
+                                "attribute is deprecated"):
+            cmd = remotecommand.RemoteShellCommand(
+                'workdir', 'command', usePTY='slave-config')
+
+        self.assertTrue(cmd.args['usePTY'] is None)

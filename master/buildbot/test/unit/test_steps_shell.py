@@ -61,8 +61,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         step = shell.ShellCommand(workdir='build', command="echo hello",
                                   want_stdout=0, logEnviron=False)
         self.assertEqual(step.remote_kwargs, dict(want_stdout=0,
-                                                  logEnviron=False, workdir='build',
-                                                  usePTY='slave-config'))
+                                                  logEnviron=False,
+                                                  workdir='build',
+                                                  usePTY=None))
 
     def test_constructor_args_validity(self):
         # this checks that an exception is raised for invalid arguments
@@ -167,8 +168,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.setupStep(
             shell.ShellCommand(workdir='build', command="echo hello"))
         self.expectCommands(
-            ExpectShell(workdir='build', command='echo hello',
-                        usePTY="slave-config")
+            ExpectShell(workdir='build', command='echo hello')
             + 0
         )
         self.expectOutcome(result=SUCCESS, state_string="'echo hello'")
@@ -180,8 +180,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                                command=['trial', '-b', '-B', 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                        command=['trial', '-b', '-B', 'buildbot.test'],
-                        usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'])
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -198,8 +197,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                                descriptionSuffix=properties.FlattenList(['suff', ['ix']])))
         self.expectCommands(
             ExpectShell(workdir='build',
-                        command=['trial', '-b', '-B', 'buildbot.test'],
-                        usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'])
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -212,8 +210,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                                command=['trial', ['-b', '-B'], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                        command=['trial', '-b', '-B', 'buildbot.test'],
-                        usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'])
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -226,8 +223,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                                command=[['trial', ['-b', ['-B']]], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                        command=['trial', '-b', '-B', 'buildbot.test'],
-                        usePTY="slave-config")
+                        command=['trial', '-b', '-B', 'buildbot.test'])
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -240,8 +236,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
                                command=['trial', [], '-b', [], 'buildbot.test']))
         self.expectCommands(
             ExpectShell(workdir='build',
-                        command=['trial', '-b', 'buildbot.test'],
-                        usePTY="slave-config")
+                        command=['trial', '-b', 'buildbot.test'])
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -254,7 +249,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             worker_env=dict(DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                        usePTY="slave-config",
                         env=dict(DEF='HERE'))
             + 0
         )
@@ -268,7 +262,6 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             worker_env=dict(ABC='XXX', DEF='HERE'))
         self.expectCommands(
             ExpectShell(workdir='build', command='echo hello',
-                        usePTY="slave-config",
                         env=dict(ABC='123', DEF='HERE'))
             + 0
         )
@@ -304,8 +297,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
             shell.ShellCommand(workdir='build', command="echo hello",
                                decodeRC={1: WARNINGS}))
         self.expectCommands(
-            ExpectShell(workdir='build', command='echo hello',
-                        usePTY="slave-config")
+            ExpectShell(workdir='build', command='echo hello')
             + rc
         )
         self.expectOutcome(
@@ -336,7 +328,7 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
     def test_run_success(self):
         self.setupStep(shell.TreeSize())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
             + ExpectShell.log('stdio', stdout='9292    .\n')
             + 0
@@ -349,7 +341,7 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
     def test_run_misparsed(self):
         self.setupStep(shell.TreeSize())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
             + ExpectShell.log('stdio', stdio='abcdef\n')
             + 0
@@ -361,7 +353,7 @@ class TreeSize(steps.BuildStepMixin, unittest.TestCase):
     def test_run_failed(self):
         self.setupStep(shell.TreeSize())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['du', '-s', '-k', '.'])
             + ExpectShell.log('stdio', stderr='abcdef\n')
             + 1
@@ -387,7 +379,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(property="res", command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
             + 0
@@ -402,7 +394,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(property="res", command="cmd", workdir=properties.Interpolate('wkdir')))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
             + 0
@@ -417,7 +409,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(shell.SetPropertyFromCommand(property="res", command="cmd",
                                                     strip=False))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout='\n\nabcdef\n')
             + 0
@@ -432,7 +424,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(property="res", command="blarg"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="blarg")
             + ExpectShell.log('stdio', stderr='cannot blarg: File not found')
             + 1
@@ -450,7 +442,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout='start', stderr='START')
             + ExpectShell.log('stdio', stdout='end')
@@ -471,7 +463,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + 3
         )
@@ -488,7 +480,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + 3
         )
@@ -503,7 +495,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(
             shell.SetPropertyFromCommand(extract_fn=extract_fn, command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + 0
         )
@@ -543,7 +535,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
     def test_new_version_success(self):
         self.setupStep(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
@@ -561,7 +553,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(shell.PerlModuleTest(command="cmd",
                                             warningPattern='^OHNOES'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
@@ -583,7 +575,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
     def test_new_version_failed(self):
         self.setupStep(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     foo.pl .. 1/4"""))
@@ -610,7 +602,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
     def test_old_version_success(self):
         self.setupStep(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
@@ -625,7 +617,7 @@ class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
     def test_old_version_failed(self):
         self.setupStep(shell.PerlModuleTest(command="cmd"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command="cmd")
             + ExpectShell.log('stdio', stdout=textwrap.dedent("""\
                     This junk ignored
@@ -679,7 +671,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         self.setupStep(shell.WarningCountingShellCommand(workdir='w',
                                                          command=['make']))
         self.expectCommands(
-            ExpectShell(workdir='w', usePTY='slave-config',
+            ExpectShell(workdir='w',
                         command=["make"])
             + ExpectShell.log('stdio', stdout='blarg success!')
             + 0
@@ -691,7 +683,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
     def test_default_pattern(self):
         self.setupStep(shell.WarningCountingShellCommand(command=['make']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=["make"])
             + ExpectShell.log('stdio',
                               stdout='normal: foo\nwarning: blarg!\n'
@@ -708,7 +700,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         self.setupStep(shell.WarningCountingShellCommand(command=['make'],
                                                          warningPattern=r"scary:.*"))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=["make"])
             + ExpectShell.log('stdio',
                               stdout='scary: foo\nwarning: bar\nscary: bar')
@@ -723,7 +715,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         self.setupStep(shell.WarningCountingShellCommand(command=['make'],
                                                          maxWarnCount=9))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=["make"])
             + ExpectShell.log('stdio', stdout='warning: noo!\n' * 10)
             + 0
@@ -735,7 +727,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
     def test_fail_with_warnings(self):
         self.setupStep(shell.WarningCountingShellCommand(command=['make']))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=["make"])
             + ExpectShell.log('stdio', stdout='warning: I might fail')
             + 3
@@ -767,7 +759,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             + Expect.behavior(upload_behavior),
 
             # and then run the command
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=["make"])
             + ExpectShell.log('stdio', stdout=stdout)
             + 0

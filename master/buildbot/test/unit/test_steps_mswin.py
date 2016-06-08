@@ -50,9 +50,8 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
             ExpectShell(
                 workdir='wkdir',
                 command=command,
-                usePTY="slave-config"
-            )
-            + expected_code
+            ) +
+            expected_code
         )
         state_string = "'robocopy %s ...'" % source
         if expected_res != SUCCESS:

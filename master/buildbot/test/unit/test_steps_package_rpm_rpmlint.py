@@ -31,7 +31,7 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
     def test_success(self):
         self.setupStep(rpmlint.RpmLint())
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['rpmlint', '-i', '.'])
             + 0)
         self.expectOutcome(
@@ -41,7 +41,7 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
     def test_fileloc_success(self):
         self.setupStep(rpmlint.RpmLint(fileloc='RESULT'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['rpmlint', '-i', 'RESULT'])
             + 0)
         self.expectOutcome(result=SUCCESS)
@@ -50,7 +50,7 @@ class TestRpmLint(steps.BuildStepMixin, unittest.TestCase):
     def test_config_success(self):
         self.setupStep(rpmlint.RpmLint(config='foo.cfg'))
         self.expectCommands(
-            ExpectShell(workdir='wkdir', usePTY='slave-config',
+            ExpectShell(workdir='wkdir',
                         command=['rpmlint', '-i', '-f', 'foo.cfg', '.'])
             + 0)
         self.expectOutcome(result=SUCCESS)
