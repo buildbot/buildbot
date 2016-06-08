@@ -270,8 +270,10 @@ class Model(base.DBConnectorComponent):
         'configured_workers', metadata,
         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
         sa.Column('buildermasterid', sa.Integer,
-                  sa.ForeignKey('builder_masters.id'), nullable=False),
-        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                  sa.ForeignKey('builder_masters.id', ondelete='CASCADE'),
+                  nullable=False),
+        sa.Column('workerid', sa.Integer,
+                  sa.ForeignKey('workers.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -507,9 +509,11 @@ class Model(base.DBConnectorComponent):
     builder_masters = sautils.Table(
         'builder_masters', metadata,
         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
                   nullable=False),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
