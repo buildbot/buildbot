@@ -225,7 +225,7 @@ Bzr
 
 Mercurial
     NotifyExtension
-        http://mercurial.selenic.com/wiki/NotifyExtension
+        https://www.mercurial-scm.org/wiki/NotifyExtension
 
 Git
     post-receive-email
