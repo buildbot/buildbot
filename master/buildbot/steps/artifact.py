@@ -98,7 +98,7 @@ class CheckArtifactExists(ShellCommandResumeBuild):
     descriptionDone="Searching complete."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None,
-                 artifactServerURL=None, stopBuild=True, resumeBuild=None, **kwargs):
+                 artifactServerURL=None, artifactServerPort=None, stopBuild=True, resumeBuild=None, **kwargs):
         self.master = None
         self.build_sourcestamps = []
         if not isinstance(artifact, list):
@@ -108,6 +108,7 @@ class CheckArtifactExists(ShellCommandResumeBuild):
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
         self.artifactServerURL = artifactServerURL
+        self.artifactServerPort = artifactServerPort
         self.artifactBuildrequest = None
         self.artifactPath = None
         self.artifactURL = None
@@ -198,7 +199,10 @@ class CheckArtifactExists(ShellCommandResumeBuild):
                         a = a[:index] + "/*"
                 search_artifact += "; ls %s" % a
 
-            command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir,
+            command = ["ssh", self.artifactServer]
+            if self.artifactServerPort:
+                command += ["-p %s" % self.artifactServerPort]
+            command += ["cd %s;" % self.artifactServerDir,
                        "if [ -d %s ]; then echo 'Exists'; else echo 'Not found!!'; fi;" % self.artifactPath,
                        "cd %s" % self.artifactPath, search_artifact, "; ls"]
             # ssh to the server to check if it artifact is there
@@ -219,10 +223,12 @@ class CreateArtifactDirectory(ShellCommand):
     description="Creating the artifact directory on the remote artifacts server..."
     descriptionDone="Remote artifact directory created."
 
-    def __init__(self,  artifactDirectory=None, artifactServer=None, artifactServerDir=None,  **kwargs):
+    def __init__(self,  artifactDirectory=None, artifactServer=None, artifactServerDir=None, artifactServerPort=None,
+                **kwargs):
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
+        self.artifactServerPort = artifactServerPort
         ShellCommand.__init__(self, **kwargs)
 
     def start(self):
@@ -233,7 +239,10 @@ class CreateArtifactDirectory(ShellCommand):
             artifactPath += "/%s" % self.artifactDirectory
 
 
-        command = ["ssh", self.artifactServer, "cd %s;" % self.artifactServerDir, "mkdir -p ",
+        command = ["ssh", self.artifactServer]
+        if self.artifactServerPort:
+            command += ["-p %s" % self.artifactServerPort]
+        command += ["cd %s;" % self.artifactServerDir, "mkdir -p ",
                     artifactPath]
 
         self.setCommand(command)
@@ -262,9 +271,13 @@ def retryCommandWindowsOSPwShell(command):
     return 'powershell.exe -C for ($i=1; $i -le  5; $i++) { '+ command \
            +'; if ($?) { exit 0 } else { sleep 5} } exit -1'
 
-def rsyncWithRetry(step, origin, destination):
+def rsyncWithRetry(step, origin, destination, port=None):
 
     rsync_command = "rsync -var --progress --partial '%s' '%s'" % (origin, destination)
+    if port:
+        rsync_command += " --rsh='ssh -p %s'" % port
+    print "command: %s" % rsync_command
+    print "command: %s" % origin
     if _isWindowsSlave(step):
         if step.usePowerShell:
             return retryCommandWindowsOSPwShell(rsync_command)
@@ -282,13 +295,14 @@ class UploadArtifact(ShellCommand):
     descriptionDone="Artifact(s) uploaded."
 
     def __init__(self, artifact=None, artifactDirectory=None, artifactServer=None, artifactServerDir=None,
-                 artifactServerURL=None, usePowerShell=True, **kwargs):
+                 artifactServerURL=None, artifactServerPort=None, usePowerShell=True, **kwargs):
         self.artifact=artifact
         self.artifactURL = None
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
         self.artifactServerURL = artifactServerURL
+        self.artifactServerPort = artifactServerPort
         self.usePowerShell = usePowerShell
         ShellCommand.__init__(self, **kwargs)
 
@@ -312,7 +326,7 @@ class UploadArtifact(ShellCommand):
 
         remotelocation = getRemoteLocation(self.artifactServer, self.artifactServerDir, artifactPath, self.artifact)
 
-        command = rsyncWithRetry(self, self.artifact, remotelocation)
+        command = rsyncWithRetry(self, self.artifact, remotelocation, self.artifactServerPort)
 
         self.artifactURL = self.artifactServerURL + "/" + artifactPath + "/" + self.artifact
         self.setCommand(command)
@@ -330,12 +344,13 @@ class DownloadArtifact(ShellCommand):
     descriptionDone="Artifact(s) downloaded."
 
     def __init__(self, artifactBuilderName=None, artifact=None, artifactDirectory=None, artifactDestination=None,
-                 artifactServer=None, artifactServerDir=None, usePowerShell=True, **kwargs):
+                 artifactServer=None, artifactServerDir=None, artifactServerPort=None, usePowerShell=True, **kwargs):
         self.artifactBuilderName = artifactBuilderName
         self.artifact = artifact
         self.artifactDirectory = artifactDirectory
         self.artifactServer = artifactServer
         self.artifactServerDir = artifactServerDir
+        self.artifactServerPort = artifactServerPort
         self.artifactDestination = artifactDestination or artifact
         self.master = None
         self.usePowerShell = usePowerShell
@@ -361,7 +376,7 @@ class DownloadArtifact(ShellCommand):
 
         remotelocation = getRemoteLocation(self.artifactServer, self.artifactServerDir, artifactPath, self.artifact)
 
-        command = rsyncWithRetry(self, remotelocation, self.artifactDestination)
+        command = rsyncWithRetry(self, remotelocation, self.artifactDestination, self.artifactServerPort)
 
         self.setCommand(command)
         ShellCommand.start(self)
