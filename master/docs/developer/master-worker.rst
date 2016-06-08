@@ -39,8 +39,7 @@ Bot methods
 The worker-side Bot object has the following remote methods:
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getCommands`
-    Returns a dictionary ``Dict[name, version]`` for all commands the worker recognizes.
-    This dictionary maps command name to it's version.
+    Returns a dictionary for all commands the worker recognizes: the key of the dictionary is command name and command version is the value.
 
 :meth:`~buildbot_worker.pb.BotPb.remote_setBuilderList`
     Given a list of builders and their build directories, ensures that
