@@ -103,7 +103,7 @@ class Git(Source):
                          can solve long fetches getting killed due to
                          lack of output, but requires Git 1.7.2+.
 
-        @type  shallow: boolean
+        @type  shallow: boolean or integer
         @param shallow: Use a shallow or clone, if possible
 
         @type  retryFetch: boolean
@@ -450,7 +450,7 @@ class Git(Source):
             else:
                 command += ['--branch', self.branch]
         if shallowClone:
-            command += ['--depth', '1']
+            command += ['--depth', str(int(shallowClone))]
         if self.reference:
             command += ['--reference', self.reference]
         if self.origin:

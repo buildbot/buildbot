@@ -30,6 +30,8 @@ Features
 
 * The :bb:step:`P4` step now obfuscates the password in status logs.
 
+* Added support for specifying the depth of a shallow clone in :bb:step:`Git`.
+
 Fixes
 ~~~~~
 
