@@ -442,6 +442,38 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(instances[0].tags, [])
 
     @mock_ec2
+    def test_start_spot_instance_tags(self):
+        c = self.botoSetup()
+        amis = c.get_all_images()
+        tags = {'foo': 'bar'}
+        product_description = 'Linux/Unix'
+        with assertProducesWarnings(
+                DeprecatedWorkerNameWarning,
+                messages_patterns=[
+                    r"Use of default value of 'keypair_name' of "
+                    r"EC2LatentWorker constructor is deprecated",
+                    r"Use of default value of 'security_name' of "
+                    r"EC2LatentWorker constructor is deprecated"
+                ]):
+            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                     identifier='publickey',
+                                     secret_identifier='privatekey',
+                                     ami=amis[0].id, spot_instance=True,
+                                     tags=tags,
+                                     max_spot_price=1.5,
+                                     product_description=product_description
+                                     )
+        instance_id, _, _ = bs._start_instance()
+        instances = [i for i in c.get_only_instances()
+                     if i.state != "terminated"]
+        self.assertTrue(bs.spot_instance)
+        self.assertEqual(bs.retry, 1)
+        self.assertEqual(bs.product_description, product_description)
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].id, instance_id)
+        self.assertEqual(instances[0].tags, {'foo': 'bar'})
+
+    @mock_ec2
     def test_start_spot_instance_retry(self):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
