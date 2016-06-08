@@ -39,7 +39,7 @@ Bot methods
 The worker-side Bot object has the following remote methods:
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getCommands`
-    Returns a list of ``(name, version)`` for all commands the worker recognizes.
+    Returns a dictionary for all commands the worker recognizes: the key of the dictionary is command name and command version is the value.
 
 :meth:`~buildbot_worker.pb.BotPb.remote_setBuilderList`
     Given a list of builders and their build directories, ensures that
@@ -53,17 +53,21 @@ The worker-side Bot object has the following remote methods:
     Adds a message to the worker logfile.
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getWorkerInfo`
-    Returns the contents of the worker's :file:`info/` directory. This also
-    contains the keys
+    Returns dictionary with the contents of the worker's :file:`info/` directory (i.e. file name is used as key and file contents as the value).
+    This dictionary also contains the keys
 
     ``environ``
         copy of the workers environment
     ``system``
-        OS the worker is running (extracted from Python's os.name)
+        OS the worker is running (extracted from Python's ``os.name``)
     ``basedir``
         base directory where worker is running
     ``numcpus``
         number of CPUs on the worker, either as configured or as detected (since ``buildbot-worker`` version 0.9.0)
+    ``version``
+        worker's version (same as the result of :meth:`~buildbot_worker.pb.BotPb.remote_getVersion` call)
+    ``worker_commands``
+        worker supported commands (same as the result of :meth:`~buildbot_worker.pb.BotPb.remote_getCommands` call)
 
 :meth:`~buildbot_worker.pb.BotPb.remote_getVersion`
     Returns the worker's version.
