@@ -167,7 +167,7 @@ class TestBuildJsonResource(unittest.TestCase):
                           'results': 0, 'number': 1, 'currentStep': None,
                           'times': (1422441500, 1422441501.21),
                           'buildChainID': None,
-                          'buildRequestsIds': None,
+                          'brids': None,
                           'owners': None, 'submittedTime': None,
                           'blame': [],
                           'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
@@ -272,7 +272,7 @@ class TestPastBuildsJsonResource(unittest.TestCase):
                     'results': 0, 'results_text': 'success', 'slave': 'build-slave-01',
                     'slave_friendly_name': 'build-slave-01', 'slave_url': None,
                     'sourceStamps': [], 'steps': [], 'buildChainID': None,
-                    'buildRequestsIds': None,
+                    'brids': None,
                     'owners': None,
                      'submittedTime': None,
                     'text': [], 'times': (1422441500, 1422441501.21),
@@ -470,7 +470,7 @@ class TestSingleProjectJsonResource(unittest.TestCase):
                      'sourceStamps': [],
                      'results': 0,
                      'number': 1, 'artifacts': None, 'blame': [], 'buildChainID': None,
-                     'buildRequestsIds': None,
+                     'brids': None,
                      'owners': None,
                      'submittedTime': None,
                      'builder_url': 'http://localhost:8080/projects/Katana/builders/builder-01' +
