@@ -29,6 +29,31 @@ define(["jquery", "realtimePages", "rtGlobal"], function ($, rt, rtGlobal) {
             rt.getInstantJSON();
             expect($("#instant-json").length).toEqual(0);
         });
+
+        it("elements order doesn't define realtime functions call order(preserve the order of real time functions call)", function () {
+            var callsLog = []
+            var realtimeFunctionsList = {
+                example: function () {
+                    return callsLog.push("example");
+                },
+                codebases: function () {
+                    return callsLog.push("codebases");
+                },
+                builder0: function () {
+                    return callsLog.push("builder0");
+                },
+                builder1: function () {
+                    return callsLog.push("builder1");
+                }
+            },
+            realtimeDataList = {data: {"cmd": "krtJSONData", "data": {"url": "http://test.com", "data": {"builder0":["builder0"], "builder1":["builder1"], "codebases":["codebases"], "example": ["example"]}}}};
+
+            rt.setReloadCooldown(5000);
+
+            rt.initRealtime(realtimeFunctionsList);
+            rt.updateRealTimeData(realtimeDataList.data.data.data, true);
+            expect(Object.keys(realtimeFunctionsList)).toEqual(callsLog);
+        });
     });
 
     describe("A websocket", function () {
