@@ -336,6 +336,8 @@ class Builder(config.ReconfigurableServiceMixin,
 
     @defer.inlineCallbacks
     def maybeUpdateMergedBuilds(self, brid, buildnumber, brids):
+        build_status = yield self.builder_status.deferToThread(buildnumber)
+        build_status.updateBuildRequestIDs(brids)
         buildnumbers = yield self.master.db.builds.getBuildNumbersForRequests(brids=brids)
         buildnumbers = [num for num in buildnumbers if num != buildnumber]
 
@@ -578,7 +580,6 @@ class Builder(config.ReconfigurableServiceMixin,
         mergedbrids = brids if mergedbrids is None else mergedbrids
 
         # TODO: we should probably do better error handle
-
         d.addCallback(lambda _: self.master.db.builds.finishedMergedBuilds(mergedbrids, build.build_status.number))
         d.addErrback(log.err, 'while marking builds as finished (ignored)')
         d.addCallback(lambda _: self.master.db.buildrequests.maybeUpdateMergedBrids(mergedbrids))

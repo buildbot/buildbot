@@ -57,8 +57,8 @@ class FakeBuildStatus:
     def setBuildChainID(self, buildChainID):
         self.buildChainID = buildChainID
 
-    def setBuildRequestID(self, buildRequestID):
-        self.buildRequestID = buildRequestID
+    def setBuildRequestIDs(self, brids):
+        self.brids = brids
 
     def setOwners(self, owners):
         self.owners = owners
