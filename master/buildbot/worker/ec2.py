@@ -61,8 +61,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                  keypair_name=None,
                  security_name=None,
                  spot_instance=False, max_spot_price=1.6, volumes=None,
-                 placement=None, price_multiplier=1.2, tags=None, retry=1,
-                 retry_price_adjustment=1, product_description='Linux/UNIX',
+                 placement=None, price_multiplier=1.2, tags=None,
+                 product_description='Linux/UNIX',
                  subnet_id=None, security_group_ids=None, instance_profile_name=None,
                  block_device_map=None, session=None,
                  **kwargs):
@@ -129,9 +129,6 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.max_spot_price = max_spot_price
         self.volumes = volumes
         self.price_multiplier = price_multiplier
-        self.retry_price_adjustment = retry_price_adjustment
-        self.retry = retry
-        self.attempt = 1
         self.product_description = product_description
 
         if None not in [placement, region]:
@@ -451,7 +448,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 (self.__class__.__name__, self.workername,
                  instance.id, goal, duration // 60, duration % 60))
 
-    def _submit_request(self):
+    def _request_spot_instance(self):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime(
             '%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
@@ -466,25 +463,19 @@ class EC2LatentWorker(AbstractLatentWorker):
                 price_sum += float(price['SpotPrice'])
                 price_count += 1
         if price_count == 0:
-            self.current_spot_price = 0.02
+            bid_price = 0.02
         else:
-            self.current_spot_price = (price_sum / price_count) * self.price_multiplier
-        if self.current_spot_price > self.max_spot_price:
+            bid_price = (price_sum / price_count) * self.price_multiplier
+        if bid_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.3f exceeds '
                     'configured maximum of %0.3f' %
                     (self.__class__.__name__, self.workername,
-                     self.current_spot_price, self.max_spot_price))
+                     bid_price, self.max_spot_price))
             raise LatentWorkerFailedToSubstantiate()
-        else:
-            if self.retry > 1:
-                log.msg('%s %s requesting spot instance with price %0.4f, attempt %d of %d' %
-                        (self.__class__.__name__, self.workername, self.current_spot_price, self.attempt,
-                         self.retry))
-            else:
-                log.msg('%s %s requesting spot instance with price %0.4f' %
-                        (self.__class__.__name__, self.workername, self.current_spot_price))
+        log.msg('%s %s requesting spot instance with price %0.4f' %
+                (self.__class__.__name__, self.workername, bid_price))
         reservations = self.ec2.meta.client.request_spot_instances(
-                SpotPrice=str(self.current_spot_price),
+                SpotPrice=str(bid_price),
                 LaunchSpecification=self._remove_none_opts(
                     ImageId=self.ami,
                     KeyName=self.keypair_name,
@@ -504,31 +495,12 @@ class EC2LatentWorker(AbstractLatentWorker):
                 )
         request, success = self._wait_for_request(reservations['SpotInstanceRequests'][0])
         if not success:
-            return request, None, None, False
-        else:
-            instance_id = request['InstanceId']
-            self.instance = self.ec2.Instance(instance_id)
-            image = self.get_image()
-            instance_id, start_time = self._wait_for_instance()
-            return instance_id, image.id, start_time, True
-
-    def _request_spot_instance(self):
-        if self.retry > 1:
-            for attempt in range(1, self.retry + 1):
-                self.attempt = attempt
-                instance_id, image_id, start_time, success = self._submit_request()
-                if success:
-                    break
-                if attempt >= self.retry:
-                    self.attempt = 0
-                    log.msg('%s %s failed to substantiate after %d requests' %
-                            (self.__class__.__name__, self.workername, self.retry))
-                    raise LatentWorkerFailedToSubstantiate()
-        else:
-            instance_id, image_id, start_time, success = self._submit_request()
-            if not success:
-                raise LatentWorkerFailedToSubstantiate()
-        return instance_id, image_id, start_time
+            raise LatentWorkerFailedToSubstantiate()
+        instance_id = request['InstanceId']
+        self.instance = self.ec2.Instance(instance_id)
+        image = self.get_image()
+        instance_id, start_time = self._wait_for_instance()
+        return instance_id, image.id, start_time
 
     def _wait_for_instance(self):
         log.msg('%s %s waiting for instance %s to start' %
@@ -594,8 +566,8 @@ class EC2LatentWorker(AbstractLatentWorker):
                 SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
             log.msg('%s %s spot request rejected, spot price too low' %
                     (self.__class__.__name__, self.workername))
-            self.current_spot_price *= self.retry_price_adjustment
-            return request, False
+            raise LatentWorkerFailedToSubstantiate(
+                request['SpotInstanceRequestId'], request.status)
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.workername,

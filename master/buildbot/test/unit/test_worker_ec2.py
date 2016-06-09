@@ -435,42 +435,10 @@ class TestEC2LatentWorker(unittest.TestCase):
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
         self.assertTrue(bs.spot_instance)
-        self.assertEqual(bs.retry, 1)
         self.assertEqual(bs.product_description, product_description)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].tags, [])
-
-    @mock_ec2
-    def test_start_spot_instance_retry(self):
-        c, r = self.botoSetup('latent_buildbot_slave')
-        amis = list(r.images.all())
-        product_description = 'Linux/Unix'
-        retry = 3
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id, retry=retry,
-                                     spot_instance=True, max_spot_price=1.5,
-                                     product_description=product_description
-                                     )
-        id, _, _ = bs._start_instance()
-        instances = r.instances.filter(
-            Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
-        instances = list(instances)
-        self.assertTrue(bs.spot_instance)
-        self.assertEqual(bs.retry, 3)
-        self.assertEqual(bs.attempt, 1)
-        self.assertEqual(len(instances), 1)
-        self.assertEqual(instances[0].id, id)
 
     @mock_ec2
     def test_get_image_ami(self):
@@ -532,17 +500,6 @@ class TestEC2LatentWorker(unittest.TestCase):
                                 )
 
         self.assertRaises(ValueError, create_worker)
-
-    @mock_ec2
-    def test_start_spot_instance_retry_low_price(self):
-        '''
-        This test should attempt to start an instance that will be rejected with
-        price-too-low. At this point, the ec2 worker code should increment
-        bs.attempt and multiply the price by bs.retry_price_adjustment. This
-        should continue for bs.retry iterations or until the spot request is
-        accepted.
-        '''
-        raise unittest.SkipTest("Requires un-released functionality in moto.")
 
 
 class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
