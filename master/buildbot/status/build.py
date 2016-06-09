@@ -50,7 +50,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     submitted = None
     owners = None
     buildChainID = None
-    buildRequestsIds = None
+    brids = None
     currentStep = None
     text = []
     results = None
@@ -311,13 +311,13 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def setBuildChainID(self, buildChainID):
         self.buildChainID = buildChainID
 
-    def setBuildRequestsIDs(self, buildRequestsIds):
-        self.buildRequestsIds = buildRequestsIds
+    def setBuildRequestIDs(self, brids):
+        self.brids = brids
 
-    def updatebuildRequests(self, brids):
+    def updateBuildRequestIDs(self, brids):
         for brid in brids:
-            if brid not in self.buildRequestsIds:
-                self.buildRequestsIds.append(brid)
+            if brid not in self.brids:
+                self.brids.append(brid)
 
     def setOwners(self, owners):
         self.owners = owners
@@ -622,7 +622,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         result['reason'] = self.getReason()
         result['submittedTime'] = self.submitted
         result['owners'] = self.owners
-        result['buildRequestsIds'] = self.buildRequestsIds
+        result['brids'] = self.brids
         result['buildChainID'] = self.buildChainID
         result['blame'] = self.getResponsibleUsers()
         result['url'] = status.getURLForThing(self)
