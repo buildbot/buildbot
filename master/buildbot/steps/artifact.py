@@ -276,8 +276,6 @@ def rsyncWithRetry(step, origin, destination, port=None):
     rsync_command = "rsync -var --progress --partial '%s' '%s'" % (origin, destination)
     if port:
         rsync_command += " --rsh='ssh -p %s'" % port
-    print "command: %s" % rsync_command
-    print "command: %s" % origin
     if _isWindowsSlave(step):
         if step.usePowerShell:
             return retryCommandWindowsOSPwShell(rsync_command)
