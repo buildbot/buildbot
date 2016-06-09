@@ -139,13 +139,24 @@ define(function (require) {
         },
         updateRealTimeData: function (json, instantJSON) {
             if (instantJSON === true) {
+                var realTimeFuncData = {}
                 $.each(json, function (name, jObj) {
                     var data = jObj.data;
                     if (typeof data === "string") {
                         data = JSON.parse(data);
                         realtimeURLs[name] = jObj.url;
                     }
+                    
+                    if (realTimeFunctions.hasOwnProperty(name)) {
+                        realTimeFuncData[name] = data;
+                        return true;
+                    }
                     realtimePages.updateSingleRealTimeData(name, data);
+                });
+
+                // Real time functions should be called preserving their order in the list, should not depend on instantJson elements order
+                $.each(Object.keys(realTimeFunctions), function(i, name){
+                    realtimePages.updateSingleRealTimeData(name, realTimeFuncData[name]);
                 });
             } else {
                 var name = realtimePages.getRealtimeNameFromURL(json.url);
