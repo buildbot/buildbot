@@ -84,11 +84,18 @@ class SqlLiteStrategy(Strategy):
 
 class MySQLStrategy(Strategy):
     disconnect_error_codes = (2006, 2013, 2014, 2045, 2055)
+    deadlock_error_codes = (1213,)
+
+    def in_error_codes(self, args, error_codes):
+        if args:
+            return args[0] in error_codes
+        return False
 
     def is_disconnect(self, args):
-        if args:
-            return args[0] in self.disconnect_error_codes
-        return False
+        return self.in_error_codes(args, self.disconnect_error_codes)
+
+    def is_deadlock(self, args):
+        return self.in_error_codes(args, self.deadlock_error_codes)
 
     def set_up(self, u, engine):
         """Special setup for mysql engines"""
@@ -121,7 +128,9 @@ class MySQLStrategy(Strategy):
             sa.event.listen(engine.pool, 'checkout', checkout_listener)
 
     def should_retry(self, ex):
-        return self.is_disconnect(ex.orig.args) or super(MySQLStrategy, self).should_retry(ex)
+        return any([self.is_disconnect(ex.orig.args),
+                    self.is_deadlock(ex.orig.args),
+                    super(MySQLStrategy, self).should_retry(ex)])
 
 
 def get_sqlalchemy_migrate_version():
