@@ -337,7 +337,7 @@ class Builder(config.ReconfigurableServiceMixin,
     @defer.inlineCallbacks
     def maybeUpdateMergedBuilds(self, brid, buildnumber, brids):
         build_status = yield self.builder_status.deferToThread(buildnumber)
-        build_status.updatebuildRequestIDs(brids)
+        build_status.updateBuildRequestIDs(brids)
         buildnumbers = yield self.master.db.builds.getBuildNumbersForRequests(brids=brids)
         buildnumbers = [num for num in buildnumbers if num != buildnumber]
 
