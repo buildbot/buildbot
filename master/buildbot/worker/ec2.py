@@ -448,7 +448,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 (self.__class__.__name__, self.workername,
                  instance.id, goal, duration // 60, duration % 60))
 
-    def _request_spot_instance(self):
+    def _bid_price_from_spot_price_history(self):
         timestamp_yesterday = time.gmtime(int(time.time() - 86400))
         spot_history_starttime = time.strftime(
             '%Y-%m-%dT%H:%M:%SZ', timestamp_yesterday)
@@ -466,6 +466,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             bid_price = 0.02
         else:
             bid_price = (price_sum / price_count) * self.price_multiplier
+        return bid_price
+
+    def _request_spot_instance(self):
+        bid_price = self._bid_price_from_spot_price_history()
         if bid_price > self.max_spot_price:
             log.msg('%s %s calculated spot price %0.3f exceeds '
                     'configured maximum of %0.3f' %
