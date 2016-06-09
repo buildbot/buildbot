@@ -314,7 +314,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def setBuildRequestIDs(self, brids):
         self.brids = brids
 
-    def updatebuildRequestIDs(self, brids):
+    def updateBuildRequestIDs(self, brids):
         for brid in brids:
             if brid not in self.brids:
                 self.brids.append(brid)

@@ -426,7 +426,7 @@ class Build(properties.PropertiesMixin):
             self.setProperty("submittedTime", self.requests[0].submittedAt, "buildrequest")
             brids = [req.id for req in self.requests]
             self.build_status.setBuildRequestIDs(brids)
-            self.setProperty("buildRequestsIDs", brids, "buildrequest")
+            self.setProperty("brids", brids, "buildrequest")
             self.build_status.setBuildChainID(self.requests[0].buildChainID)
             self.setProperty("buildChainID", self.requests[0].buildChainID, "buildrequest")
 
