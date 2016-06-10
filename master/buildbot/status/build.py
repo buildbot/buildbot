@@ -50,7 +50,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     submitted = None
     owners = None
     buildChainID = None
-    brids = None
+    brids = []
     currentStep = None
     text = []
     results = None
@@ -315,6 +315,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         self.brids = brids
 
     def updateBuildRequestIDs(self, brids):
+        self.brids = [] if self.brids is None else self.brids
         for brid in brids:
             if brid not in self.brids:
                 self.brids.append(brid)
