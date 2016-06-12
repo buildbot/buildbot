@@ -434,6 +434,40 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             }
     }
 
+To run with Apache2, you'll need `mod_proxy_wstunnel <https://httpd.apache.org/docs/2.4/mod/mod_proxy_wstunnel.html>`_ in addition to `mod_proxy_http <https://httpd.apache.org/docs/2.4/mod/mod_proxy_http.html>`_. Serving HTTPS (`mod_ssl <https://httpd.apache.org/docs/2.4/mod/mod_ssl.html>`_) is advised to prevent issues with enterprise proxies (see :ref:`SSE`), even if you don't need the encryption itself.
+
+Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), directly at the top of the domain.
+
+.. code-block:: none
+
+
+    <VirtualHost *:443>
+        ServerName buildbot.example
+        ServerAdmin webmaster@buildbot.example
+
+        <Location /ws>
+          ProxyPass ws://localhost:8020/ws
+          ProxyPassReverse ws://localhost:8020/ws
+        </Location>
+
+        ProxyPass /ws !
+        ProxyPass / http://localhost:8020/
+        ProxyPassReverse / http://localhost:8020/
+
+        SetEnvIf X-Url-Scheme https HTTPS=1
+        ProxyPreserveHost On
+
+        SSLEngine on
+        SSLCertificateFile /path/to/cert.pem
+        SSLCertificateKeyFile /path/to/cert.key
+
+        # check Apache2 documentation for current safe SSL settings
+        # This is actually the Debian 8 default at the time of this writing:
+        SSLProtocol all -SSLv3
+
+    </VirtualHost>
+
+
 .. _Web-Authorization:
 
 Authorization rules

@@ -173,6 +173,8 @@ Client will receive events as websocket frames encoded in json with following fo
 
    {"k":key,"m":message}
 
+.. _SSE:
+
 Server Sent Events
 ~~~~~~~~~~~~~~~~~~
 
