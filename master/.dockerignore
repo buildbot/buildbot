@@ -1,0 +1,4 @@
+*.pyc
+./build
+_build
+node_modules

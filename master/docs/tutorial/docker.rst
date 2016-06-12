@@ -16,10 +16,6 @@ First Buildbot run with Docker
     If that fails, look for help with your Docker install.
     On the other hand, if that succeeds, then you may have better luck getting help from members of the Buildbot community.
 
-.. warning::
-
-    The instruction in this document are based on an *old* Dockerfile, not complying with the state-of-the-art best practices (all components in one container, access via ssh, ...).
-    While this approach provides an easy way to get first-hand experience with Buildbot, this is not the recommended way to deploy Buildbot in production.
 
 Docker_ is a tool that makes building and deploying custom environments a breeze.
 It uses lightweight linux containers (LXC) and performs quickly, making it a great instrument for the testing community.
@@ -35,6 +31,7 @@ Current Docker dependencies
   For example, Standard Ubuntu, Debian and Arch systems.
 * Packages: lxc, iptables, ca-certificates, and bzip2 packages.
 * Local clock on time or slightly in the future for proper SSL communication.
+* This tutorial uses docker-compose to run a master, a worker, and a postgresql database server
 
 Installation
 ------------
@@ -51,14 +48,12 @@ Building and running Buildbot
 
 .. code-block:: bash
 
-  # Download Buildbot Dockerfile.
-  wget https://raw.github.com/buildbot/buildbot/master/master/contrib/Dockerfile
+  # Download Buildbot docker-compose.yml.
+  wget https://raw.github.com/buildbot/buildbot/master/master/contrib/docker/docker-compose.yml
+  wget https://raw.github.com/buildbot/buildbot/master/master/contrib/docker/db.env
 
   # Build the Buildbot container (it will take a few minutes to download packages)
-  docker build -t buildbot - < Dockerfile
-
-  # Run buildbot
-  CONTAINER_ID=$(docker run -d -p 8010:8010 -p 22 buildbot)
+  docker-compose up
 
 
 You should now be able to go to http://localhost:8010 and see a web page similar to:
@@ -72,15 +67,37 @@ Click on the `Waterfall Display link <http://localhost:8010/waterfall>`_ and you
    :alt: empty waterfall.
 
 
-Playing with your Buildbot container
-------------------------------------
+Overview of the docker-compose configuration
+--------------------------------------------
+
+This docker-compose configuration is made as a basis for what you would put in production
+
+- Separated containers for each component
+- A solid database backend with postgresql
+- A buildbot master that exposes its configuration to the docker host
+- A buildbot worker that can be cloned in order to add additional power
+- Containers are linked together so that the only port exposed to external is the web server
+- The default master container is based on Alpine linux for minimal footprint
+- The default worker container is based on more widely known Ubuntu distribution, as this is the container you want to customize.
+
+Playing with your Buildbot containers
+-------------------------------------
 
 If you've come this far, you have a Buildbot environment that you can freely experiment with.
-You can access your container using ssh, the password is ``admin``:
+The container is storing all its valuable information in /var/lib/buildbot and /var/lib/buildbot_db
+
+You can access your buildbot configuration in /var/lib/buildbot
 
 .. code-block:: bash
 
-  ssh -p $(docker port $CONTAINER_ID 22 | cut -d: -f 2) admin@localhost
+  vi /var/lib/buildbot/master.cfg
+
+Customize your Worker container
+-------------------------------
+It is advised to customize you worker container in order to suit your project's build dependencies and need.
+An example DockerFile is available in the contrib directory of buildbot:
+
+https://github.com/buildbot/buildbot/blob/master/master/contrib/docker/pythonnode_worker/Dockerfile
 
 
 You've got a taste now, but you're probably curious for more.

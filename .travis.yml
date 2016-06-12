@@ -1,6 +1,5 @@
 # Travis CI configuration file
 # http://about.travis-ci.org/docs/
-
 addons:
   postgresql: "9.4"
   apt_packages:
