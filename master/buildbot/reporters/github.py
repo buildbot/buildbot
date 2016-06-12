@@ -30,8 +30,8 @@ from buildbot.reporters import http
 HOSTED_BASE_URL = 'https://api.github.com'
 
 
-class GithubStatusPush(http.HttpStatusPushBase):
-    name = "GithubStatusPush"
+class GitHubStatusPush(http.HttpStatusPushBase):
+    name = "GitHubStatusPush"
     neededDetails = dict(wantProperties=True)
 
     @defer.inlineCallbacks

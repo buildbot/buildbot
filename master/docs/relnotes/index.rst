@@ -57,6 +57,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
 
+* ``GithubStatusPush`` reporter was renamed to :bb:reporter:`GitHubStatusPush`.
+
 Buildslave
 ----------
 

@@ -20,12 +20,12 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.github import GithubStatusPush
+from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGithubStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     # project must be in the form <owner>/<project>
     TEST_PROJECT = u'buildbot/buildbot'
 
@@ -36,7 +36,7 @@ class TestGithubStatusPush(unittest.TestCase, ReporterTestMixin):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-        self.sp = sp = GithubStatusPush('token')
+        self.sp = sp = GitHubStatusPush('token')
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
         yield sp.startService()
