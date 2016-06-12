@@ -27,6 +27,7 @@ ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
 class TestHgPoller(gpo.GetProcessOutputMixin,
                    changesource.ChangeSourceMixin,
                    unittest.TestCase):
+    usetimestamps = True
 
     def setUp(self):
         # To test that environment variables get propagated to subprocesses
@@ -43,6 +44,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         def create_poller(_):
             self.poller = hgpoller.HgPoller(self.remote_repo,
+                                            usetimestamps=self.usetimestamps,
                                             workdir='/some/dir')
             self.poller.setServiceParent(self.master)
             self.poller._isRepositoryReady = _isRepositoryReady
@@ -122,7 +124,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['revision'], '4423cdb')
             self.assertEqual(change['author'],
                              'Bob Test <bobtest@example.org>')
-            self.assertEqual(change['when_timestamp'], 1273258100),
+            if self.usetimestamps:
+                self.assertEqual(change['when_timestamp'], 1273258100)
+            else:
+                self.assertEqual(change['when_timestamp'], None)
             self.assertEqual(
                 change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
             self.assertEqual(change['src'], 'hg')
@@ -193,3 +198,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['revision'], u'784bd')
             self.assertEqual(change['comments'], u'Comment for rev 5')
         d.addCallback(check_changes)
+
+
+class HgPollerNoTimestamp(TestHgPoller):
+    """ Test HgPoller() without parsing revision commit timestamp """
+
+    usetimestamps=False
