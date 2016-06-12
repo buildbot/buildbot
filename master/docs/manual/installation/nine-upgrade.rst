@@ -152,6 +152,12 @@ The following fields are identifiers:
 * builder name (20-character)
 * step name (50-character)
 
+Serving static files
+--------------------
+
+Since version 0.9.0 Buildbot doesn't use and don't serve master's ``public_html`` directory.
+You need to use third-party HTTP server for serving static files.
+
 Transition to "worker" terminology
 ----------------------------------
 

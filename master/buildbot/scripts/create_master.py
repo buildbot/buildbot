@@ -77,18 +77,6 @@ def makeSampleConfig(config):
     os.chmod(target, 0o600)
 
 
-def makePublicHtml(config):
-    webdir = os.path.join(config['basedir'], "public_html")
-    if os.path.exists(webdir):
-        if not config['quiet']:
-            print("public_html/ already exists: not replacing")
-        return
-    else:
-        os.mkdir(webdir)
-    if not config['quiet']:
-        print("populating public_html/")
-
-
 @defer.inlineCallbacks
 def createDB(config, _noMonkey=False):
     # apply the db monkeypatches (and others - no harm)
@@ -114,7 +102,6 @@ def createMaster(config):
     makeBasedir(config)
     makeTAC(config)
     makeSampleConfig(config)
-    makePublicHtml(config)
     yield createDB(config)
 
     if not config['quiet']:

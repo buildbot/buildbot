@@ -12,7 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import os
 
 import mock
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
@@ -46,9 +45,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         self.svc.setServiceParent(self.master)
 
     def makeConfig(self, **kwargs):
-        pwd = os.getcwd()
-        w = dict(
-            port=None, public_html=pwd, auth=auth.NoAuth(), logfileName='l')
+        w = dict(port=None, auth=auth.NoAuth(), logfileName='l')
         w.update(kwargs)
         new_config = mock.Mock()
         new_config.www = w

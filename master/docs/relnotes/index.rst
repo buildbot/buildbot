@@ -52,6 +52,9 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * Support for python 2.6 was dropped from the master.
 
+* ``public_html`` directory is not created anymore in ``buildbot create-master`` (it's not used for some time already).
+  Documentation was updated with suggestions to use third party web server for serving static file.
+
 * ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
 
 Buildslave
