@@ -203,4 +203,4 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 class HgPollerNoTimestamp(TestHgPoller):
     """ Test HgPoller() without parsing revision commit timestamp """
 
-    usetimestamps=False
+    usetimestamps = False
