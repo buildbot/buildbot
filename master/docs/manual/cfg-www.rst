@@ -568,7 +568,7 @@ Simple config which allows admin people to run everything:
       allowRules=[
         util.StopBuildEndpointMatcher(role="admins"),
         util.ForceBuildEndpointMatcher(role="admins"),
-        util.RebuildBuildEndpointMatcher(role="admins)
+        util.RebuildBuildEndpointMatcher(role="admins")
       ],
       roleMatchers=[
         util.RolesFromEmails(admins=["my@email.com"])
