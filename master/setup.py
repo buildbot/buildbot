@@ -482,7 +482,7 @@ else:
             'idna >= 0.6',
         ],
         'docs': [
-            'sphinx',
+            'sphinx==1.4.3',
             'sphinxcontrib-blockdiag',
             'sphinxcontrib-spelling',
             'pyenchant',

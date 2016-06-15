@@ -284,7 +284,7 @@ class HgPoller(base.PollingChangeSource):
                 revision=unicode(node),
                 files=files,
                 comments=comments,
-                when_timestamp=int(timestamp),
+                when_timestamp=int(timestamp) if timestamp else None,
                 branch=ascii2unicode(self.branch),
                 category=ascii2unicode(self.category),
                 project=ascii2unicode(self.project),
