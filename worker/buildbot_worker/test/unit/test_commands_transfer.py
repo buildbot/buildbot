@@ -132,7 +132,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=1000,
             blocksize=64,
@@ -155,7 +155,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=64,
@@ -177,7 +177,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
     def test_missing(self):
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data-nosuch',
+            workersrc='data-nosuch',
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=64,
@@ -203,7 +203,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=1000,
             blocksize=64,
@@ -227,7 +227,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=100,
             blocksize=2,
@@ -262,7 +262,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=1000,
             blocksize=64,
@@ -309,7 +309,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=512,
@@ -357,7 +357,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         self.make_command(transfer.WorkerDirectoryUploadCommand, dict(
             workdir='workdir',
-            slavesrc='data',
+            workersrc='data',
             writer=FakeRemote(self.fakemaster),
             maxsize=None,
             blocksize=512,

@@ -754,7 +754,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         self.expectCommands(
             # step will first get the remote suppressions file
             Expect('uploadFile', dict(blocksize=32768, maxsize=None,
-                                      slavesrc='supps', workdir='wkdir',
+                                      workersrc='supps', workdir='wkdir',
                                       writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
             + Expect.behavior(upload_behavior),
 

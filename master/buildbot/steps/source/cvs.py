@@ -302,8 +302,16 @@ class CVS(Source):
             'blocksize': 32 * 1024,
         }
 
+        def uploadFileArgs(source):
+            full_args = dict(args)
+            if self.workerVersionIsOlderThan('uploadFile', '3.0'):
+                full_args['slavesrc'] = source
+            else:
+                full_args['workersrc'] = source
+            return full_args
+
         cmd = remotecommand.RemoteCommand('uploadFile',
-                                          dict(slavesrc='Root', **args),
+                                          uploadFileArgs('Root'),
                                           ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
@@ -321,7 +329,7 @@ class CVS(Source):
 
         myFileWriter.buffer = ""
         cmd = remotecommand.RemoteCommand('uploadFile',
-                                          dict(slavesrc='Repository', **args),
+                                          uploadFileArgs('Repository'),
                                           ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:
@@ -335,7 +343,7 @@ class CVS(Source):
         # we can't update (unless we remove those tags with cvs update -A)
         myFileWriter.buffer = ""
         cmd = buildstep.RemoteCommand('uploadFile',
-                                      dict(slavesrc='Entries', **args),
+                                      uploadFileArgs('Entries'),
                                       ignore_updates=True)
         yield self.runCommand(cmd)
         if cmd.rc is not None and cmd.rc != 0:

@@ -149,13 +149,17 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         # default arguments
         args = {
-            'slavesrc': source,
             'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'keepstamp': self.keepstamp,
         }
+
+        if self.workerVersionIsOlderThan('uploadFile', '3.0'):
+            args['slavesrc'] = source
+        else:
+            args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         d = self.runTransferCommand(cmd, fileWriter)
@@ -223,13 +227,17 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         # default arguments
         args = {
-            'slavesrc': source,
             'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'compress': self.compress
         }
+
+        if self.workerVersionIsOlderThan('uploadDirectory', '3.0'):
+            args['slavesrc'] = source
+        else:
+            args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         d = self.runTransferCommand(cmd, dirWriter)
@@ -282,13 +290,17 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
             masterdest, self.maxsize, self.mode)
 
         args = {
-            'slavesrc': source,
             'workdir': self.workdir,
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'keepstamp': self.keepstamp,
         }
+
+        if self.workerVersionIsOlderThan('uploadFile', '3.0'):
+            args['slavesrc'] = source
+        else:
+            args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadFile', args)
         return self.runTransferCommand(cmd, fileWriter)
@@ -298,13 +310,17 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
             masterdest, self.maxsize, self.compress, 0o600)
 
         args = {
-            'slavesrc': source,
             'workdir': self.workdir,
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
             'compress': self.compress
         }
+
+        if self.workerVersionIsOlderThan('uploadDirectory', '3.0'):
+            args['slavesrc'] = source
+        else:
+            args['workersrc'] = source
 
         cmd = makeStatusRemoteCommand(self, 'uploadDirectory', args)
         return self.runTransferCommand(cmd, dirWriter)
