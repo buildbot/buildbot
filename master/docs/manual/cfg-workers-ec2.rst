@@ -338,32 +338,9 @@ Additionally, you may want to specify ``max_spot_price`` and ``price_multiplier`
 
 This example would attempt to create a m1.large spot instance in the us-west-2b region costing no more than $0.09/hour.
 The spot prices for 'Linux/UNIX' spot instances in that region over the last 24 hours will be averaged and multiplied by the ``price_multiplier`` parameter, then a spot request will be sent to Amazon with the above details.
+If the multiple exceeds the ``max_spot_price``, the bid price will be the ``max_spot_price``.
 
-When a spot request fails
--------------------------
+Either ``max_spot_price`` or ``price_multiplier``, but not both, may be None.
+If ``price_multiplier`` is None, then no historical price information is retrieved; the bid price is simply the specified ``max_spot_price``.
+If the ``max_spot_price`` is None, then the multiple of the historical average spot prices is used as the bid price with no limit.
 
-In some cases Amazon may reject a spot request because the spot price, determined by taking the 24-hour average of that availability zone's spot prices for the given product description, is lower than the current price.
-The optional parameters ``retry`` and ``retry_price_adjustment`` allow for resubmitting the spot request with an adjusted price.
-If the spot request continues to fail, and the number of attempts exceeds the value of the ``retry`` parameter, an error message will be logged.
-
-::
-
-    from buildbot.plugins import worker
-    c['workers'] = [
-        worker.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                               'ami-12345', region='us-west-2',
-                               identifier='publickey',
-                               secret_identifier='privatekey',
-                               elastic_ip='208.77.188.166',
-                               keypair_name='latent_buildbot_worker',
-                               security_name='latent_buildbot_worker',
-                               placement='b', spot_instance=True,
-                               max_spot_price=0.09,
-                               price_multiplier=1.15,
-                               retry=3,
-                               retry_price_adjustment=1.1)
-    ]
-
-In this example, a spot request will be sent with a bid price of 15% above the 24-hour average.
-If the request fails with the status **price-too-low**, the request will be resubmitted up to twice, each time with a 10% increase in the bid price.
-If the request succeeds, the worker will substantiate as normal and run any pending builds.
