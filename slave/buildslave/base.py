@@ -209,8 +209,15 @@ class SlaveBuilderBase(service.Service):
             log.err(failure)
             # failure, if present, is a failure.Failure. To send it across
             # the wire, we must turn it into a pb.CopyableFailure.
-            failure = pb.CopyableFailure(failure)
-            failure.unsafeTracebacks = True
+            if isinstance(failure, pb.CopiedFailure):
+                # copiedFailures from other remotes don't construct normally
+                # into CopyableFailure. This won't fully send the traceback,
+                # but is better than failing and hanging the command.
+                failure = pb.CopyableFailure(failure.value, failure.type,
+                                             failure.getTracebackObject())
+            else:
+                failure = pb.CopyableFailure(failure)
+                failure.unsafeTracebacks = True
         else:
             # failure is None
             log.msg("SlaveBuilder.commandComplete", self.command)
