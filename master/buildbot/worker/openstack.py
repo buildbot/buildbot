@@ -53,7 +53,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  image=None,
                  meta=None,
                  # Have a nova_args parameter to allow passing things directly
-                 # to novaclient v1.1.
+                 # to novaclient.
                  nova_args=None,
                  client_version='1.1',
                  **kwargs):
@@ -69,11 +69,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         AbstractLatentWorker.__init__(self, name, password, **kwargs)
 
         self.flavor = flavor
-        self.os_username = os_username
-        self.os_password = os_password
-        self.os_tenant_name = os_tenant_name
-        self.os_auth_url = os_auth_url
         self.client_version = client_version
+        self.novaclient = client.Client(client_version, os_username,
+                                        os_password, os_tenant_name,
+                                        os_auth_url)
 
         if block_devices is not None:
             self.block_devices = [
@@ -128,16 +127,13 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         return threads.deferToThread(self._start_instance)
 
     def _start_instance(self):
-        # Authenticate to OpenStack.
-        os_client = client.Client(self.client_version, self.os_username, self.os_password,
-                                  self.os_tenant_name, self.os_auth_url)
-        image_uuid = self._getImage(os_client, self.image)
+        image_uuid = self._getImage(self.novaclient, self.image)
         boot_args = [self.workername, image_uuid, self.flavor]
         boot_kwargs = dict(
             meta=self.meta,
             block_device_mapping_v2=self.block_devices,
             **self.nova_args)
-        instance = os_client.servers.create(*boot_args, **boot_kwargs)
+        instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
                 (self.__class__.__name__, self.workername, instance.id,
@@ -153,7 +149,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                         (self.__class__.__name__, self.workername, duration // 60,
                          instance.id))
             try:
-                inst = os_client.servers.get(instance.id)
+                inst = self.novaclient.servers.get(instance.id)
             except nce.NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.workername,
@@ -183,14 +179,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self._stop_instance(instance, fast)
 
     def _stop_instance(self, instance, fast):
-        # Authenticate to OpenStack. This is needed since it seems the update
-        # method doesn't do a whole lot of updating right now.
-        os_client = client.Client(self.client_version, self.os_username, self.os_password,
-                                  self.os_tenant_name, self.os_auth_url)
         # When the update method does work, replace the lines like below with
         # instance.update().
         try:
-            inst = os_client.servers.get(instance.id)
+            inst = self.novaclient.servers.get(instance.id)
         except nce.NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('%s %s instance %s (%s) already terminated' %

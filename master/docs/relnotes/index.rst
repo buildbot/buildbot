@@ -32,6 +32,8 @@ Features
 
 * Added support for specifying the depth of a shallow clone in :bb:step:`Git`.
 
+* :bb:worker:`OpenStackLatentWorker` now uses a single novaclient instance to not require re-authentication when starting or stopping instances.
+
 Fixes
 ~~~~~
 

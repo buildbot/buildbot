@@ -4,8 +4,13 @@
    libvirt
    Workers; libvirt
 
+.. bb:worker:: LibVirtWorker
+
 Libvirt
 =======
+
+.. @cindex LibVirtWorker
+.. py:class:: buildbot.worker.libvirt.LibVirtWorker
 
 `libvirt <http://www.libvirt.org/>`_ is a virtualization API for interacting with the virtualization capabilities of recent versions of Linux and other OSes.
 It is LGPL and comes with a stable C API, and Python bindings.

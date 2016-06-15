@@ -55,10 +55,7 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual(bs.flavor, 1)
         self.assertEqual(bs.image, 'image-uuid')
         self.assertEqual(bs.block_devices, None)
-        self.assertEqual(bs.os_username, 'user')
-        self.assertEqual(bs.os_password, 'pass')
-        self.assertEqual(bs.os_tenant_name, 'tenant')
-        self.assertEqual(bs.os_auth_url, 'auth')
+        self.assertIsInstance(bs.novaclient, novaclient.Client)
 
     def test_constructor_block_devices_default(self):
         block_devices = [{'uuid': 'uuid', 'volume_size': 10}]

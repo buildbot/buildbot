@@ -1,7 +1,12 @@
 .. -*- rst -*-
 
+.. bb:worker:: OpenStackLatentWorker
+
 OpenStack
 =========
+
+.. @cindex OpenStackLatentWorker
+.. py:class:: buildbot.worker.openstack.OpenStackLatentWorker
 
 `OpenStack <http://openstack.org/>`_ is a series of interconnected components that facilitates managing compute, storage, and network resources in a data center.
 It is available under the Apache License and has a REST interface along with a Python client.

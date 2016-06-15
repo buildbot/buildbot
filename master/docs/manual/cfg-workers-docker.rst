@@ -2,8 +2,13 @@
     Docker
     Workers; Docker
 
+.. bb:worker:: DockerLatentWorker
+
 Docker latent worker
 ====================
+
+.. @cindex DockerLatentWorker
+.. py:class:: buildbot.worker.docker.DockerLatentWorker
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
 Using the Docker latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
