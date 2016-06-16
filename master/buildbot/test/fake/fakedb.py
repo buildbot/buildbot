@@ -713,7 +713,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
 
     def setChangeSourceMaster(self, changesourceid, masterid):
         current_masterid = self.changesource_masters.get(changesourceid)
-        if current_masterid and masterid is not None:
+        if current_masterid and masterid is not None and current_masterid != masterid:
             return defer.fail(changesources.ChangeSourceAlreadyClaimedError())
         self.changesource_masters[changesourceid] = masterid
         return defer.succeed(None)
@@ -1039,7 +1039,7 @@ class FakeSchedulersComponent(FakeDBComponent):
 
     def setSchedulerMaster(self, schedulerid, masterid):
         current_masterid = self.scheduler_masters.get(schedulerid)
-        if current_masterid and masterid is not None:
+        if current_masterid and masterid is not None and current_masterid != masterid:
             return defer.fail(schedulers.SchedulerAlreadyClaimedError())
         self.scheduler_masters[schedulerid] = masterid
         return defer.succeed(None)
