@@ -363,8 +363,11 @@ setup_args = {
                 'DbConfig']),
             ('buildbot.www.authz', [
                 'Authz', 'fnmatchStrMatcher', 'reStrMatcher']),
+            ('buildbot.www.authz.roles', [
+                'RolesFromEmails', 'RolesFromGroups', 'RolesFromOwner']),
             ('buildbot.www.authz.endpointmatchers', [
-                'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher']),
+                'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
+                'RebuildBuildEndpointMatcher']),
         ])
     ])
 }
