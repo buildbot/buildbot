@@ -37,6 +37,7 @@ Fixes
 
 * :bb:reporter:`GerritStatusPush` now includes build properties in the ``startCB`` and ``reviewCB`` functions. ``startCB`` now must return a dictionary.
 * Fix TypeError exception with :py:class:`~buildbot.changes.HgPoller` if ``usetimestamps=False`` is used (:bug:`3562`)
+* Fix recovery upon master unclean kill or crash (:bug:`3564`)
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
