@@ -90,6 +90,8 @@ class CachedURL():
 class BroadcastServerProtocol(WebSocketServerProtocol):
     def __init__(self):
         self.peerstr = ""
+        WebSocketServerProtocol.__init__(self)
+
 
     def onOpen(self):
         self.factory.register(self)
@@ -110,7 +112,7 @@ class BroadcastServerFactory(WebSocketServerFactory):
     """
 
     def __init__(self, url, debug=False, debugCodePaths=False):
-        WebSocketServerFactory.__init__(self, url, debug=debug, debugCodePaths=debugCodePaths)
+        WebSocketServerFactory.__init__(self, url)
         self.urlCacheDict = {}
         self.clients = []
         self.clients_urls = {}
@@ -334,11 +336,10 @@ if __name__ == '__main__':
                             debugCodePaths=debug)
 
     factory.protocol = BroadcastServerProtocol
-    factory.setProtocolOptions(allowHixie76=True)
+    factory.setProtocolOptions()
     listenWS(factory)
 
     webdir = File(".")
     sweb = Site(webdir)
-    reactor.listenTCP(8080, factory)
-    reactor.run()
+    reactor.run()    
     logging.info("Starting autobahn server on port {0}".format(PORT))
