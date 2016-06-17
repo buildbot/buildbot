@@ -170,11 +170,11 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             conn.execute(self.db.model.logchunks.insert(),
                          dict(logid=logid, first_line=chunk_first_line,
                               last_line=last_line, content=chunk,
-                              compressed=compressed_id))
+                              compressed=compressed_id)).close()
             chunk_first_line = last_line + 1
 
         conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
-                     num_lines=last_line + 1)
+                     num_lines=last_line + 1).close()
         return first_line, last_line
 
     def thdAppendLog(self, conn, logid, content):
@@ -196,10 +196,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                                            first_line=row[0])
 
     def appendLog(self, logid, content):
-        def thd(conn):
+        def thdappendLog(conn):
             return self.thdAppendLog(conn, logid, content)
 
-        return self.db.pool.do(thd)
+        return self.db.pool.do(thdappendLog)
 
     def _splitBigChunk(self, content, logid):
         """
@@ -242,7 +242,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     @defer.inlineCallbacks
     def compressLog(self, logid):
-        def thd(conn):
+        def thdcompressLog(conn):
             # get the set of chunks
             tbl = self.db.model.logchunks
             q = sa.select([tbl.c.first_line, tbl.c.last_line, sa.func.length(tbl.c.content),
@@ -258,7 +258,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     uncompressed_length += row.length_1
                 totlength += row.length_1
                 numchunks += 1
-
+            rows.close()
             # do nothing if its not worth.
             # if uncompressed_length < 200 and numchunks < 4:
             #    return
@@ -271,6 +271,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for row in rows:
                 wholelog += self.COMPRESSION_BYID[row.compressed][
                     "read"](row.content).decode('utf-8') + "\n"
+            rows.close()
 
             if len(wholelog) == 0:
                 return 0
@@ -278,9 +279,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             transaction = conn.begin()
             d = tbl.delete()
             d = d.where(tbl.c.logid == logid)
-            conn.execute(d)
+            conn.execute(d).close()
             conn.execute(self.db.model.logs.update(whereclause=(self.db.model.logs.c.id == logid)),
-                         num_lines=0)
+                         num_lines=0).close()
             self.thdAppendLog(conn, logid, wholelog)
             transaction.commit()
             q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
@@ -288,7 +289,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             newsize = conn.execute(q).fetchone()[0]
             return len(wholelog) - newsize
 
-        saved = yield self.db.pool.do(thd)
+        saved = yield self.db.pool.do(thdcompressLog)
         defer.returnValue(saved)
 
     def _logdictFromRow(self, row):
