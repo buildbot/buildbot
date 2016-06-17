@@ -47,11 +47,6 @@ Examples::
 
 SQLite requires no special configuration.
 
-If Buildbot produces "database is locked" exceptions, try adding ``serialize_access=1`` to the DB URL as a workaround::
-
-    c['db_url'] = "sqlite:///state.sqlite?serialize_access=1"
-
-and please file a bug at http://trac.buildbot.net.
 
 .. index:: MySQL
 

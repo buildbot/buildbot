@@ -46,6 +46,7 @@ class ReconnectingListener(object):
 
 
 class Strategy(object):
+
     def set_up(self, u, engine):
         pass
 
@@ -163,7 +164,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         """For sqlite, percent-substitute %(basedir)s and use a full
         path to the basedir.  If using a memory database, force the
         pool size to be 1."""
-        max_conns = None
+        max_conns = 1
 
         # when given a database path, stick the basedir in there
         if u.database:
@@ -189,15 +190,9 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
             # Silence that warning.
             kwargs.setdefault('connect_args', {})['check_same_thread'] = False
 
-        # in-memory databases need exactly one connection
-        if not u.database:
-            kwargs['pool_size'] = 1
-            max_conns = 1
-
-        # allow serializing access to the db
+        # ignore serializing access to the db
         if 'serialize_access' in u.query:
             u.query.pop('serialize_access')
-            max_conns = 1
 
         return u, kwargs, max_conns
 
