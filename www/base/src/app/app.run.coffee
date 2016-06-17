@@ -47,7 +47,7 @@ class ReconnectingListener extends Run
             # if browser does not support visibility api, this will just always poll
             if $window.document.hidden
                 return
-            $http.get($window.document.location).then ->
+            $http.get($window.document.location.href).then ->
                 # send event to connectionstatus directive
                 $rootScope.$broadcast("mq.restored_connection")
 
