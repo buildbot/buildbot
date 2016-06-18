@@ -69,6 +69,9 @@ def getMaster(case, reactor, config_dict):
     master.db.setup = lambda: None
 
     yield master.startService()
+    # and shutdown the db threadpool, as is normally done at reactor stop
+    case.addCleanup(master.db.pool.shutdown)
+    case.addCleanup(master.stopService)
 
     defer.returnValue(master)
 
@@ -106,9 +109,6 @@ class RunMasterBase(unittest.TestCase):
         self.master = m
         self.failIf(stop.called,
                     "startService tried to stop the reactor; check logs")
-        # and shutdown the db threadpool, as is normally done at reactor stop
-        self.addCleanup(m.db.pool.shutdown)
-        self.addCleanup(m.stopService)
 
         if not startWorker:
             return

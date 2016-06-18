@@ -40,6 +40,10 @@ class Tests(SynchronousTestCase):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
 
+    def getMaster(self, config_dict):
+        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        return master
+
     def test_latent_workers_start_in_parallel(self):
         """
         If there are two latent workers configured, and two build
@@ -60,7 +64,7 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        master = self.getMaster(config_dict)
         builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
 
         # Request two builds.
@@ -100,8 +104,7 @@ class Tests(SynchronousTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.successResultOf(
-            getMaster(self, self.reactor, config_dict))
+        master = self.getMaster(config_dict)
         builder_id = self.successResultOf(
             master.data.updates.findBuilderId('testy'))
 
@@ -151,8 +154,7 @@ class Tests(SynchronousTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.successResultOf(
-            getMaster(self, self.reactor, config_dict))
+        master = self.getMaster(config_dict)
         builder_id = self.successResultOf(
             master.data.updates.findBuilderId('testy'))
 
@@ -205,8 +207,7 @@ class Tests(SynchronousTestCase):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.successResultOf(
-            getMaster(self, self.reactor, config_dict))
+        master = self.getMaster(config_dict)
         builder_id = self.successResultOf(
             master.data.updates.findBuilderId('testy'))
 
@@ -264,8 +265,7 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.successResultOf(
-            getMaster(self, self.reactor, config_dict))
+        master = self.getMaster(config_dict)
         builder_ids = [
             self.successResultOf(master.data.updates.findBuilderId('testy-1')),
             self.successResultOf(master.data.updates.findBuilderId('testy-2')),
