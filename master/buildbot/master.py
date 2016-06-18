@@ -297,8 +297,11 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             yield self.reconfigServiceWithBuildbotConfig(self.config)
 
             # Mark the master as active now that mq is running
-            # Note that TimerService first run is without delay
-            self.masterHeartbeatService.setServiceParent(self)
+            yield self.data.updates.masterActive(name=self.name,
+                                                 masterid=self.masterid)
+
+            # Start the heartbeat timer
+            yield self.masterHeartbeatService.setServiceParent(self)
 
             startup_succeed = True
         except Exception:

@@ -172,6 +172,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             # XXX temporary
             self.patch(master, 'Status', lambda master: mock.Mock())
 
+            master.BuildMaster.masterHeartbeatService = mock.Mock()
             self.reactor = self.make_reactor()
             self.master = master.BuildMaster(
                 self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
