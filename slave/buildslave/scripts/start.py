@@ -16,6 +16,7 @@
 
 import os, sys, time
 from buildslave.scripts import base
+import psutil
 
 class Follower:
     def follow(self):
@@ -77,10 +78,31 @@ stop it, fix the config file, and restart.
         self.rc = 1
         reactor.stop()
 
+def checkPIDFile(basedir):
+    pidfile = os.path.join(basedir, 'twistd.pid')
+    if os.path.isfile(pidfile):
+        try:
+            with open(pidfile, "r") as f:
+                pid = int(f.read().strip())
+                if psutil.pid_exists(pid):
+                    print "Warning: buildslave is already running"
+                    return False
+                else:
+                    print "Removing twistd.pid, pid {} is not running".format(pid)
+                    os.unlink(pidfile)
+
+        except Exception as ex:
+            print "An exception has occurred while checking twistd.pid"
+            print ex
+            return False
+    return True
 
 def startCommand(config):
     basedir = config['basedir']
     if not base.isBuildslaveDir(basedir):
+        return 1
+
+    if not checkPIDFile(basedir):
         return 1
 
     return startSlave(basedir, config['quiet'], config['nodaemon'])

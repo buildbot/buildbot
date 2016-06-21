@@ -199,7 +199,8 @@ else:
         'pymysql == 0.7.1',
         'PyJWT == 1.4.0',
         'pynats == 0.0.1',
-        'www'
+        'www',
+        'psutil == 4.3.0',
     ]
     setup_args['tests_require'] = [
         'mock == 1.3.0',
