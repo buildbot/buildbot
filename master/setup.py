@@ -464,7 +464,6 @@ else:
     setup_args['extras_require'] = {
         'test': [
             'setuptools_trial',
-            'pep8',
             'isort',
             'pylint==1.1.0',
             'pyflakes',
