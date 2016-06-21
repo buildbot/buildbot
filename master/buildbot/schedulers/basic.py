@@ -92,10 +92,9 @@ class BaseBasicScheduler(base.BaseScheduler):
     @defer.inlineCallbacks
     def activate(self):
         yield base.BaseScheduler.activate(self)
-        # even if we aren't called via _activityPoll(), at this point we
-        # need to ensure the service id is set correctly
-        if self.serviceid is None:
-            self.serviceid = yield self._getServiceId()
+
+        if not self.enabled:
+            return
 
         yield self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
                                          change_filter=self.change_filter,
@@ -116,6 +115,9 @@ class BaseBasicScheduler(base.BaseScheduler):
     def deactivate(self):
         # the base deactivate will unsubscribe from new changes
         yield base.BaseScheduler.deactivate(self)
+
+        if not self.enabled:
+            return
 
         @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers():

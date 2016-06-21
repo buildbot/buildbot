@@ -44,6 +44,11 @@ class SchedulerManager(unittest.TestCase):
             return defer.succeed(rv)
         self.master.db.state.getObjectId = getObjectId
 
+        def getScheduler(sched_id):
+            return defer.succeed(dict(enabled=True))
+
+        self.master.db.schedulers.getScheduler = getScheduler
+
         self.new_config = mock.Mock()
 
         self.sm = manager.SchedulerManager()

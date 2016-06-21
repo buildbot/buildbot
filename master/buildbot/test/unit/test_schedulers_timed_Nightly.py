@@ -136,6 +136,44 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
             name='test', builderNames=['test'], branch='default', month='1')
         self.assertEqual(sched.month, "1")
 
+    @defer.inlineCallbacks
+    def test_enabled_callback(self):
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default')
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+
+    @defer.inlineCallbacks
+    def test_disabled_activate(self):
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default')
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.activate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_deactivate(self):
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default')
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.deactivate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_start_build(self):
+        sched = self.makeScheduler(
+            name='test', builderNames=['test'], branch='default')
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.startBuild()
+        self.assertEqual(r, None)
+
     # end-to-end tests: let's see the scheduler in action
 
     @defer.inlineCallbacks

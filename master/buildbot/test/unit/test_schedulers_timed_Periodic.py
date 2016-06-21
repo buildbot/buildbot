@@ -189,3 +189,41 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.getNextBuildTime(20)
         d.addCallback(lambda t: self.assertEqual(t, 33))
         return d
+
+    @defer.inlineCallbacks
+    def test_enabled_callback(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   periodicBuildTimer=13)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+
+    @defer.inlineCallbacks
+    def test_disabled_activate(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   periodicBuildTimer=13)
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.activate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_deactivate(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   periodicBuildTimer=13)
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.deactivate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_start_build(self):
+        sched = self.makeScheduler(name='test', builderNames=['test'],
+                                   periodicBuildTimer=13)
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.startBuild()
+        self.assertEqual(r, None)

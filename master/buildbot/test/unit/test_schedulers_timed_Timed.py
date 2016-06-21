@@ -48,7 +48,6 @@ class Timed(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.attachScheduler(self.Subclass(**kwargs), self.OBJECTID)
         self.clock = sched._reactor = task.Clock()
         return sched
-
     # tests
 
     # note that most of the heavy-lifting for testing this class is handled by

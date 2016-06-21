@@ -34,7 +34,23 @@ from buildbot.test.util import dirs
 from buildbot.test.util import scheduler
 
 
-class TryBase(unittest.TestCase):
+class TryBase(scheduler.SchedulerMixin, unittest.TestCase):
+    OBJECTID = 26
+    SCHEDULERID = 6
+
+    def setUp(self):
+        self.setUpScheduler()
+
+    def tearDown(self):
+        self.tearDownScheduler()
+
+    def makeScheduler(self, **kwargs):
+        sched = self.attachScheduler(trysched.Try_Userpass(**kwargs),
+                                     self.OBJECTID, self.SCHEDULERID)
+        # Try will return a remote version of master.status, so give it
+        # something to return
+        sched.master.status = mock.Mock()
+        return sched
 
     def test_filterBuilderList_ok(self):
         sched = trysched.TryBase(
@@ -50,6 +66,35 @@ class TryBase(unittest.TestCase):
         sched = trysched.TryBase(
             name='tsched', builderNames=['a', 'b'], properties={})
         self.assertEqual(sched.filterBuilderList([]), ['a', 'b'])
+
+    @defer.inlineCallbacks
+    def test_enabled_callback(self):
+        sched = self.makeScheduler(name='tsched', builderNames=['a'],
+                                   port='tcp:9999', userpass=[('fred', 'derf')])
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+
+    @defer.inlineCallbacks
+    def test_disabled_activate(self):
+        sched = self.makeScheduler(name='tsched', builderNames=['a'],
+                                   port='tcp:9999', userpass=[('fred', 'derf')])
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.activate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_deactivate(self):
+        sched = self.makeScheduler(name='tsched', builderNames=['a'],
+                                   port='tcp:9999', userpass=[('fred', 'derf')])
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.deactivate()
+        self.assertEqual(r, None)
 
 
 class JobdirService(dirs.DirsMixin, unittest.TestCase):

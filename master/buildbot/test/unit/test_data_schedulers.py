@@ -101,6 +101,11 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(scheduler, None)
         return d
 
+    @defer.inlineCallbacks
+    def test_action_enable(self):
+        r = yield self.callControl("enable", {'enabled': False}, ('schedulers', 13))
+        self.assertEqual(r, None)
+
 
 class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -160,6 +165,42 @@ class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
         self.master = fakemaster.make_master(wantMq=True, wantDb=True,
                                              wantData=True, testcase=self)
         self.rtype = schedulers.Scheduler(self.master)
+
+    def test_signature_schedulerEnable(self):
+        @self.assertArgSpecMatches(
+            self.master.data.updates.schedulerEnable,
+            self.rtype.schedulerEnable)
+        def schedulerEnable(self, schedulerid, v):
+            pass
+
+    @defer.inlineCallbacks
+    def test_schedulerEnable(self):
+        SOMETIME = 1348971992
+        yield self.master.db.insertTestData([
+            fakedb.Master(id=22, active=0, last_active=SOMETIME),
+            fakedb.Scheduler(id=13, name='some:scheduler'),
+            fakedb.SchedulerMaster(schedulerid=13, masterid=22),
+        ])
+        yield self.rtype.schedulerEnable(13, False)
+        self.master.mq.assertProductions(
+            [(('schedulers', '13', 'updated'),
+              {'enabled': False,
+               'master': {'active': False,
+                          'last_active': fakedb._mkdt(SOMETIME),
+                          'masterid': 22,
+                          'name': u'some:master'},
+               'name': u'some:scheduler',
+               'schedulerid': 13})])
+        yield self.rtype.schedulerEnable(13, True)
+        self.master.mq.assertProductions(
+            [(('schedulers', '13', 'updated'),
+              {'enabled': True,
+               'master': {'active': False,
+                          'last_active': fakedb._mkdt(SOMETIME),
+                          'masterid': 22,
+                          'name': u'some:master'},
+               'name': u'some:scheduler',
+               'schedulerid': 13})])
 
     def test_signature_findSchedulerId(self):
         @self.assertArgSpecMatches(
