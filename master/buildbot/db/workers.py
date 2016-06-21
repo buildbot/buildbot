@@ -56,8 +56,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
+            res = conn.execute(q)
             buildermasterids = [row['buildermasterid']
-                                for row in conn.execute(q)]
+                                for row in res]
+            res.close()
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
         return self.db.pool.do(thd)

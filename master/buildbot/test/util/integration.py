@@ -17,10 +17,10 @@ from __future__ import print_function
 import StringIO
 import sys
 
-import mock
 from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import threadpool
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
@@ -31,6 +31,9 @@ from buildbot.master import BuildMaster
 from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
+from buildbot.test.fake.reactor import NonThreadPool
+from buildbot.test.fake.reactor import TestReactor
+from buildbot.test.util.db import RealDatabaseMixin
 
 try:
     from buildbot_worker.bot import Worker
@@ -55,11 +58,21 @@ def getMaster(case, reactor, config_dict):
     """
     basedir = FilePath(case.mktemp())
     basedir.createDirectory()
+
+    assert 'db_url' not in config_dict
+
+    # prepare the database for the test
+    realdb = RealDatabaseMixin()
+    yield realdb.setUpRealDatabase(table_names=RealDatabaseMixin.ALL_TABLES)
+    config_dict['db_url'] = realdb.db_url
+
     master = BuildMaster(
         basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
-    if 'db_url' not in config_dict:
-        config_dict['db_url'] = 'sqlite://'
+    def stopReactor():
+        raise RuntimeError(
+            "master could not be started and wanted to stop the reactor!")
+    master.stopReactor = stopReactor
 
     # TODO: Allow BuildMaster to transparently upgrade the database, at least
     # for tests.
@@ -73,7 +86,7 @@ def getMaster(case, reactor, config_dict):
     defer.returnValue(master)
 
 
-class RunMasterBase(unittest.TestCase):
+class _RunMasterBase(unittest.TestCase):
     proto = "null"
 
     if Worker is None:
@@ -87,11 +100,6 @@ class RunMasterBase(unittest.TestCase):
         @type config_dict: dict
         @param configFunc: The BuildmasterConfig dictionary.
         """
-        # mock reactor.stop (which trial *really* doesn't
-        # like test code to call!)
-        stop = mock.create_autospec(reactor.stop)
-        self.patch(reactor, 'stop', stop)
-
         if startWorker:
             if self.proto == 'pb':
                 proto = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
@@ -102,10 +110,8 @@ class RunMasterBase(unittest.TestCase):
             config_dict['workers'] = [workerclass("local1", "localpw")]
             config_dict['protocols'] = proto
 
-        m = yield getMaster(self, reactor, config_dict)
+        m = yield getMaster(self, self.reactor, config_dict)
         self.master = m
-        self.failIf(stop.called,
-                    "startService tried to stop the reactor; check logs")
         # and shutdown the db threadpool, as is normally done at reactor stop
         self.addCleanup(m.db.pool.shutdown)
         self.addCleanup(m.stopService)
@@ -236,3 +242,15 @@ class RunMasterBase(unittest.TestCase):
         else:
             print(log['contents']['content'], file=out)
         print(" " * 8 + "********************************", file=out)
+
+
+class RunMasterBase(_RunMasterBase, unittest.TestCase):
+
+    reactor = reactor
+
+
+class SyncRunMasterBase(_RunMasterBase, unittest.SynchronousTestCase):
+
+    def setUp(self):
+        self.patch(threadpool, 'ThreadPool', NonThreadPool)
+        self.reactor = TestReactor()
