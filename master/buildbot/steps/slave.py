@@ -17,12 +17,25 @@
 # It should never be imported by Buildbot.
 
 
-# pylint: disable=wildcard-import
-# pylint: disable=unused-wildcard-import
-from buildbot.steps.worker import *  # noqa
+from buildbot.steps.worker import CompositeStepMixin
+from buildbot.steps.worker import CopyDirectory
+from buildbot.steps.worker import FileExists
+from buildbot.steps.worker import MakeDirectory
+from buildbot.steps.worker import RemoveDirectory
+from buildbot.steps.worker import SetPropertiesFromEnv
+from buildbot.steps.worker import WorkerBuildStep
 # pylint: disable=unused-import
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
+
+__all__ = [
+    'CompositeStepMixin',
+    'CopyDirectory',
+    'FileExists',
+    'MakeDirectory',
+    'RemoveDirectory',
+    'SetPropertiesFromEnv',
+]
 
 reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
