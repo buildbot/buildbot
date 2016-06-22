@@ -21,7 +21,6 @@ from twisted.python import log
 from twisted.python import util
 
 from buildbot.db import base
-from buildbot.db.migrate_utils import should_import_changes
 from buildbot.db.migrate_utils import test_unicode
 from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
@@ -850,11 +849,6 @@ class Model(base.DBConnectorComponent):
                 # and, finally, upgrade using migrate
                 upgrade(engine)
 
-            # if we detect a pre-db installation, we run the migration engine
-            # to convert pickles
-            elif should_import_changes(engine):
-                version_control(engine)
-                upgrade(engine)
             # otherwise, this db is new, so we dont bother using the migration engine
             # and just create the tables, and put the version directly to
             # latest
@@ -868,6 +862,5 @@ class Model(base.DBConnectorComponent):
 
                 version_control(engine, repo.latest)
 
-        # import the prerequisite classes for pickles
         check_sqlalchemy_migrate_version()
         return self.db.pool.do_with_engine(thd)

@@ -76,11 +76,6 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.scheduler import Try_Userpass
         assert Try_Userpass
 
-    def test_changes_changes_ChangeMaster(self):
-        # this class is handled by buildbot.util.pickle
-        self.assertIn(('buildbot.changes.changes', 'ChangeMaster'),
-                      pickle.substituteClasses)
-
     def test_changes_changes_Change(self):
         # this must exist to open old changes pickles
         from buildbot.changes.changes import Change

@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 
-import os
-
 import sqlalchemy as sa
 
 from buildbot.util import sautils
@@ -49,9 +47,3 @@ def test_unicode(migrate_engine):
 
     # drop the test table
     test_unicode.drop()
-
-
-def should_import_changes(migrate_engine):
-    basedir = migrate_engine.buildbot_basedir
-    changes_pickle = os.path.join(basedir, "changes.pck")
-    return os.path.exists(changes_pickle)

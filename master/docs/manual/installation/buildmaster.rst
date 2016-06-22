@@ -127,10 +127,6 @@ Buildbot-0.8.0 introduces a database backend, which is SQLite by default.
 The ``upgrade-master`` command will automatically create and populate this database with the changes the buildmaster has seen.
 Note that, as of this release, build history is *not* contained in the database, and is thus not migrated.
 
-The upgrade process renames the Changes pickle (``$basedir/changes.pck``) to ``changes.pck.old`` once the upgrade is complete.
-To reverse the upgrade, simply downgrade Buildbot and move this file back to its original name.
-You may also wish to delete the state database (``state.sqlite``).
-
 
 Upgrading into a non-SQLite database
 ''''''''''''''''''''''''''''''''''''
@@ -152,23 +148,3 @@ This will extract the DB url from your configuration file.
     buildbot upgrade-master
 
 See :ref:`Database-Specification` for more options to specify a database.
-
-Change Encoding Issues
-######################
-
-The upgrade process assumes that strings in your Changes pickle are encoded in UTF-8 (or plain ASCII).
-If this is not the case, and if there are non-UTF-8 characters in the pickle, the upgrade will fail with a suitable error message.
-If this occurs, you have two options.
-If the change history is not important to your purpose, you can simply delete :file:`changes.pck`.
-
-If you would like to keep the change history, then you will need to figure out which encoding is in use, and use :file:`contrib/fix_changes_pickle_encoding.py` (:ref:`Contrib-Scripts`) to rewrite the changes pickle into Unicode before upgrading the master.
-A typical invocation (with Mac-Roman encoding) might look like:
-
-.. code-block:: bash
-
-    $ python $buildbot/contrib/fix_changes_pickle_encoding.py changes.pck macroman
-    decoding bytestrings in changes.pck using macroman
-    converted 11392 strings
-    backing up changes.pck to changes.pck.old
-
-If your Changes pickle uses multiple encodings, you're on your own, but the script in :file:`contrib/` may provide a good starting point for the fix.
