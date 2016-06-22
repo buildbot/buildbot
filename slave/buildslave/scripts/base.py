@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import psutil
 
 def isBuildslaveDir(dir):
     def print_error(error_message):
@@ -32,3 +33,31 @@ def isBuildslaveDir(dir):
         return False
 
     return True
+
+def printMessage(message, quiet):
+    if not quiet:
+        print message
+
+def isBuildSlaveRunning(basedir, quiet):
+    pidfile = os.path.join(basedir, 'twistd.pid')
+
+    if os.path.isfile(pidfile):
+        try:
+            with open(pidfile, "r") as f:
+                pid = int(f.read().strip())
+                if psutil.pid_exists(pid) and any('buildslave' in argument.lower()
+                                                  for argument in psutil.Process(pid).cmdline()):
+                    printMessage(message="buildslave is running", quiet=quiet)
+                    return True
+
+                printMessage(
+                        message="Removing twistd.pid, file has pid {} but buildslave is not running".format(pid),
+                        quiet=quiet)
+                os.unlink(pidfile)
+
+        except Exception as ex:
+            print "An exception has occurred while checking twistd.pid"
+            print ex
+            raise
+
+    return False

@@ -19,6 +19,7 @@ import os
 import copy
 import stat
 from twisted.python import usage, runtime
+import psutil
 
 def isBuildmasterDir(dir):
     def print_error(error_message):
@@ -37,6 +38,35 @@ def isBuildmasterDir(dir):
         return False
 
     return True
+
+def printMessage(message, quiet):
+    if not quiet:
+        print message
+
+def isBuildBotRunning(basedir, quiet):
+    pidfile = os.path.join(basedir, 'twistd.pid')
+
+    if os.path.isfile(pidfile):
+        try:
+            with open(pidfile, "r") as f:
+                pid = int(f.read().strip())
+                if psutil.pid_exists(pid) and any('buildbot' in argument.lower()
+                                                  for argument in psutil.Process(pid).cmdline()):
+                    printMessage(message="buildbot is running", quiet=quiet)
+                    return True
+
+                printMessage(
+                        message="Removing twistd.pid, file has pid {} but buildbot is not running".format(pid),
+                        quiet=quiet)
+                os.unlink(pidfile)
+
+        except Exception as ex:
+            print "An exception has occurred while checking twistd.pid"
+            print ex
+            raise
+
+    return False
+
 
 def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
     configFile = os.path.abspath(os.path.join(basedir, defaultName))

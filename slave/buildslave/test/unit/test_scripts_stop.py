@@ -21,6 +21,7 @@ import signal
 from twisted.trial import unittest
 from buildslave.scripts import stop
 from buildslave.test.util import misc
+from buildslave.scripts import base
 
 
 class TestStopSlave(misc.FileIOMixin,
@@ -36,6 +37,7 @@ class TestStopSlave(misc.FileIOMixin,
 
         # patch os.chdir() to do nothing
         self.patch(os, "chdir", mock.Mock())
+        base.isBuildSlaveRunning = lambda basedir, quiet: True
 
     def test_no_pid_file(self):
         """

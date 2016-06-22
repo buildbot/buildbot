@@ -120,6 +120,7 @@ except ImportError:
 else:
     setup_args['install_requires'] = [
         'twisted >= 8.0.0',
+        'psutil == 4.3.0',
     ]
     setup_args['tests_require'] = [
         'mock',

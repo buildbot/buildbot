@@ -21,6 +21,8 @@ import signal
 from twisted.trial import unittest
 from buildbot.scripts import stop
 from buildbot.test.util import dirs, misc, compat
+import psutil
+import mock
 
 def mkconfig(**kwargs):
     config = dict(quiet=False, clean=False, basedir=os.path.abspath('basedir'))
@@ -38,12 +40,14 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    def do_test_stop(self, config, kill_sequence, is_running=True, **kwargs):
+    def do_test_stop(self, config, kill_sequence, is_running=True, cmdline=['buildbot'], **kwargs):
         with open(os.path.join('basedir', 'buildbot.tac'), 'wt') as f:
             f.write("Application('buildmaster')")
         if is_running:
             with open("basedir/twistd.pid", 'wt') as f:
                 f.write('1234')
+        self.patch_psutil(is_running, cmdline)
+
         def sleep(t):
             what, exp_t = kill_sequence.pop(0)
             self.assertEqual((what, exp_t), ('sleep', t))
@@ -59,6 +63,13 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         rv = stop.stop(config, **kwargs)
         self.assertEqual(kill_sequence, [])
         return rv
+
+    def patch_psutil(self, is_running, cmdline=['buildbot']):
+        self.patch(psutil, 'pid_exists', lambda pid: is_running)
+        process = mock.Mock()
+        process.return_value = process
+        process.cmdline.return_value = cmdline if is_running else []
+        self.patch(psutil, 'Process', process)
 
     @compat.skipUnlessPlatformIs('posix')
     def test_stop_not_running(self):
@@ -84,8 +95,9 @@ class TestStop(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     @compat.skipUnlessPlatformIs('posix')
     def test_stop_dead_but_pidfile_remains_wait(self):
-        rv = self.do_test_stop(mkconfig(),
-                [ (signal.SIGTERM, OSError(3, 'No such process')) ],
+        rv = self.do_test_stop(
+                mkconfig(),
+                [(signal.SIGTERM, OSError(3, 'No such process'))],
                 wait=True)
         self.assertEqual(rv, 0)
         self.assertFalse(os.path.exists(os.path.join('basedir', 'twistd.pid')))

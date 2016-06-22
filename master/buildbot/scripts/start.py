@@ -109,6 +109,9 @@ def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         return 1
 
+    if base.isBuildBotRunning(config['basedir'], config['quiet']):
+        return 1
+
     if config['nodaemon']:
         launchNoDaemon(config)
         return 0
