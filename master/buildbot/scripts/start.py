@@ -21,7 +21,6 @@ from twisted.python.runtime import platformType
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import ReconfigError
-import psutil
 
 class Follower:
     def follow(self, basedir):
@@ -106,30 +105,11 @@ def launch(config):
     # ProcessProtocol just ignores all output
     reactor.spawnProcess(protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
 
-def checkPIDFile(basedir):
-    pidfile = os.path.join(basedir, 'twistd.pid')
-    if os.path.isfile(pidfile):
-        try:
-            with open(pidfile, "r") as f:
-                pid = int(f.read().strip())
-                if psutil.pid_exists(pid):
-                    print "Warning: buildbot is already running"
-                    return False
-                else:
-                    print "Removing twistd.pid, pid {} is not running".format(pid)
-                    os.unlink(pidfile)
-
-        except Exception as ex:
-            print "An exception has occurred while checking twistd.pid"
-            print ex
-            return False
-    return True
-
 def start(config):
     if not base.isBuildmasterDir(config['basedir']):
         return 1
 
-    if not checkPIDFile(config['basedir']):
+    if base.isBuildBotRunning(config['basedir'], config['quiet']):
         return 1
 
     if config['nodaemon']:
