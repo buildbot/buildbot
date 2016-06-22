@@ -49,7 +49,8 @@ def stopSlave(basedir, quiet, signame="TERM"):
     signum = getattr(signal, "SIG" + signame)
     timer = 0
     try:
-        os.kill(pid, signum)
+        if base.isBuildSlaveRunning(basedir, quiet):
+            os.kill(pid, signum)
     except OSError, e:
         if e.errno != 3:
             raise

@@ -77,10 +77,12 @@ stop it, fix the config file, and restart.
         self.rc = 1
         reactor.stop()
 
-
 def startCommand(config):
     basedir = config['basedir']
     if not base.isBuildslaveDir(basedir):
+        return 1
+
+    if base.isBuildSlaveRunning(basedir, config['quiet']):
         return 1
 
     return startSlave(basedir, config['quiet'], config['nodaemon'])
