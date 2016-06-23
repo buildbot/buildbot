@@ -30,7 +30,7 @@ def getPreviousBuild(master, build):
     n = build['number'] - 1
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
-        if prev['results'] != RETRY:
+        if prev and prev['results'] != RETRY:
             defer.returnValue(prev)
         n -= 1
     defer.returnValue(None)
@@ -163,7 +163,7 @@ def getResponsibleUsersForBuild(master, buildid):
 
     # add owner from properties
     if 'owner' in properties:
-        blamelist.add(properties['owner'][0])
+        blamelist.update(properties['owner'][0])
 
     blamelist = list(blamelist)
     blamelist.sort()
