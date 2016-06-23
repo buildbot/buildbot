@@ -169,6 +169,14 @@ class Tests(interfaces.InterfaceTests):
         self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
         return d
 
+    def test_setSchedulerMaster_inactive_but_linked_to_this_master(self):
+        d = self.insertTestData([
+            self.scheduler25, self.master14, self.scheduler25master,
+        ])
+        d.addCallback(lambda _:
+                      self.db.schedulers.setSchedulerMaster(25, 14))
+        return d
+
     def test_setSchedulerMaster_active(self):
         d = self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,

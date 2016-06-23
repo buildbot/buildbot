@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet.defer import Deferred
+from twisted.internet.defer import succeed
 from twisted.trial.unittest import SkipTest
 
 from buildbot.worker.base import AbstractLatentWorker
@@ -25,6 +26,7 @@ except ImportError:
 
 
 class LatentController(object):
+
     """
     A controller for ``ControllableLatentWorker``.
 
@@ -59,6 +61,7 @@ class LatentController(object):
 
 
 class ControllableLatentWorker(AbstractLatentWorker):
+
     """
     A latent worker that can be contolled by tests.
     """
@@ -82,3 +85,6 @@ class ControllableLatentWorker(AbstractLatentWorker):
         self._controller.stopped = True
         self._controller._stop_deferred = Deferred()
         return self._controller._stop_deferred
+
+    def _soft_disconnect(self):
+        return succeed(True)

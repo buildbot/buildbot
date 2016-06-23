@@ -199,8 +199,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 yield self.data.updates.masterActive(name=self.name,
                                                      masterid=self.masterid)
             # force housekeeping once a day
-            yield self.data.updates.expireMasters((self.masterHouskeepingTimer % (24 * 60)) == 0)
             self.masterHouskeepingTimer += 1
+            yield self.data.updates.expireMasters(
+                forceHouseKeeping=(self.masterHouskeepingTimer % (24 * 60)) == 0)
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
         # we do setServiceParent only when the master is configured
         # master should advertise itself only at that time
@@ -287,14 +288,20 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             # call the parent method
             yield service.AsyncMultiService.startService(self)
 
+            # We make sure the housekeeping is done before configuring in order to cleanup
+            # any remaining claimed schedulers or change sources from zombie masters
+            yield self.data.updates.expireMasters(forceHouseKeeping=True)
+
             # give all services a chance to load the new configuration, rather
             # than the base configuration
             yield self.reconfigServiceWithBuildbotConfig(self.config)
 
-            # mark the master as active now that mq is running
-            yield self.data.updates.masterActive(
-                name=self.name,
-                masterid=self.masterid)
+            # Mark the master as active now that mq is running
+            yield self.data.updates.masterActive(name=self.name,
+                                                 masterid=self.masterid)
+
+            # Start the heartbeat timer
+            yield self.masterHeartbeatService.setServiceParent(self)
 
             startup_succeed = True
         except Exception:
@@ -354,11 +361,6 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                 self.reconfig_requested = False
                 self.reconfig()
             return res
-
-        @d.addCallback
-        def advertiseItself(res):
-            if self.masterHeartbeatService.parent is None:
-                self.masterHeartbeatService.setServiceParent(self)
 
         d.addErrback(log.err, 'while reconfiguring')
 

@@ -21,8 +21,8 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 class TestLog(RunMasterBase):
-
     # master configuration
+
     def masterConfig(self, step):
         c = {}
         from buildbot.config import BuilderConfig
@@ -46,6 +46,7 @@ class TestLog(RunMasterBase):
     def test_shellcommand(self):
 
         class MyStep(steps.ShellCommand):
+
             def _newLog(obj, name, type, logid, logEncoding):
                 r = steps.ShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
@@ -70,6 +71,7 @@ class TestLog(RunMasterBase):
     def test_mastershellcommand(self):
 
         class MyStep(steps.MasterShellCommand):
+
             def _newLog(obj, name, type, logid, logEncoding):
                 r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
@@ -94,6 +96,7 @@ class TestLog(RunMasterBase):
     def test_mastershellcommand_issue(self):
 
         class MyStep(steps.MasterShellCommand):
+
             def _newLog(obj, name, type, logid, logEncoding):
                 r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
                 self.curr_log = r
