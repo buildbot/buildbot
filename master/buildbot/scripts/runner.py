@@ -81,11 +81,6 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     will create index.html.new). You can then look at the new version and
     decide how to merge its contents into your modified file.
 
-    When upgrading from a pre-0.8.0 release (which did not use a database),
-    this command will create the given database and migrate data from the old
-    pickle files into it, then move the pickle files out of the way (e.g. to
-    changes.pck.old).
-
     When upgrading the database, this command uses the database specified in
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
