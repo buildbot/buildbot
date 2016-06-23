@@ -24,6 +24,7 @@ from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.db import connector
+from buildbot.db.model import EightUpgradeError
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import querylog
@@ -178,11 +179,15 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 self.fail("\n" + str(diff))
         return d
 
+    def gotError(e):
+        return e
+
     def do_test_upgrade(self, pre_callbacks=[]):
         d = defer.succeed(None)
         for cb in pre_callbacks:
             d.addCallback(cb)
         d.addCallback(lambda _: self.db.model.upgrade())
+        d.addErrback(self.gotError)
         d.addCallback(lambda _: self.db.pool.do(self.verify_thd))
         d.addCallback(lambda _: self.assertModelMatches())
         return d
@@ -196,3 +201,25 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
         d = self.db.model.upgrade()
         d.addCallback(lambda r: self.assertModelMatches())
         return d
+
+
+class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v087p1.tgz"
+
+    def gotError(self, e):
+        self.flushLoggedErrors(EightUpgradeError)
+
+    def verify_thd(self, conn):
+        "partially verify the contents of the db - run in a thread"
+        r = conn.execute("select version from migrate_version limit 1")
+        version = r.scalar()
+        self.assertEqual(version, 22)
+
+    def assertModelMatches(self):
+        pass
+
+    def test_upgrade(self):
+        # we no longer need a builder pickle since the builder can be
+        # re-created without one
+        return self.do_test_upgrade()
