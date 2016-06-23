@@ -191,6 +191,7 @@ class DBThreadPool(object):
                     time.sleep(backoff)
                     backoff *= self.BACKOFF_MULT
                     # and re-try
+                    log.err(e, 'retrying {} after sql error {}'.format(callable, e))
                     continue
                 except Exception as e:
                     log.err(e, 'Got fatal Exception on DB')

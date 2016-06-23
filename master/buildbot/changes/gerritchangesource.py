@@ -234,8 +234,7 @@ class GerritChangeSource(base.ChangeSource):
         self.process = None
 
         # if the service is stopped, don't try to restart the process
-        if not self.wantProcess:
-            log.msg("service is not running; not reconnecting")
+        if not self.wantProcess or reactor._stopped:
             return
 
         now = util.now()

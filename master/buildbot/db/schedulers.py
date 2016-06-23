@@ -44,7 +44,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     conn.execute(ins_q,
                                  schedulerid=schedulerid,
                                  changeid=changeid,
-                                 important=imp_int)
+                                 important=imp_int).close()
                 except (sqlalchemy.exc.ProgrammingError,
                         sqlalchemy.exc.IntegrityError):
                     transaction.rollback()
@@ -52,7 +52,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                     # insert failed, so try an update
                     conn.execute(upd_q,
                                  wc_changeid=changeid,
-                                 important=imp_int)
+                                 important=imp_int).close()
 
                 transaction.commit()
         return self.db.pool.do(thd)
@@ -64,7 +64,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if less_than is not None:
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
             q = sch_ch_tbl.delete(whereclause=wc)
-            conn.execute(q)
+            conn.execute(q).close()
         return self.db.pool.do(thd)
 
     def getChangeClassifications(self, schedulerid, branch=-1,
@@ -122,14 +122,14 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             if masterid is None:
                 q = sch_mst_tbl.delete(
                     whereclause=(sch_mst_tbl.c.schedulerid == schedulerid))
-                conn.execute(q)
+                conn.execute(q).close()
                 return
 
             # try a blind insert..
             try:
                 q = sch_mst_tbl.insert()
                 conn.execute(q,
-                             dict(schedulerid=schedulerid, masterid=masterid))
+                             dict(schedulerid=schedulerid, masterid=masterid)).close()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 # someone already owns this scheduler.
                 raise SchedulerAlreadyClaimedError

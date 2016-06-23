@@ -53,16 +53,16 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             q = builders_tbl.update(
                 whereclause=(builders_tbl.c.id == builderid))
-            conn.execute(q, description=description)
+            conn.execute(q, description=description).close()
             # remove previous builders_tags
             conn.execute(builders_tags_tbl.delete(
-                whereclause=((builders_tags_tbl.c.builderid == builderid))))
+                whereclause=((builders_tags_tbl.c.builderid == builderid)))).close()
 
             # add tag ids
             if tagsids:
                 conn.execute(builders_tags_tbl.insert(),
                              [dict(builderid=builderid, tagid=tagid)
-                              for tagid in tagsids])
+                              for tagid in tagsids]).close()
 
             transaction.commit()
 

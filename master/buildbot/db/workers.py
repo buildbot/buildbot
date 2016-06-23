@@ -42,7 +42,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         for batch in self.doBatch(buildermasterids, 100):
             q = cfg_tbl.delete()
             q = q.where(cfg_tbl.c.buildermasterid.in_(batch))
-            conn.execute(q)
+            conn.execute(q).close()
 
     def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
@@ -56,8 +56,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
+            res = conn.execute(q)
             buildermasterids = [row['buildermasterid']
-                                for row in conn.execute(q)]
+                                for row in res]
+            res.close()
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
         return self.db.pool.do(thd)
@@ -74,7 +76,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = sa.select([bm_tbl.c.id], from_obj=[bm_tbl])
                 q = q.where(bm_tbl.c.masterid == masterid)
                 q = q.where(bm_tbl.c.builderid.in_(builderids))
-                buildermasterids = set([row['id'] for row in conn.execute(q)])
+                res = conn.execute(q)
+                buildermasterids = set([row['id'] for row in res])
+                res.close()
             else:
                 buildermasterids = set([])
 
@@ -84,8 +88,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 [cfg_tbl.c.buildermasterid], from_obj=[j], distinct=True)
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
+            res = conn.execute(q)
             oldbuildermasterids = set(
-                [row['buildermasterid'] for row in conn.execute(q)])
+                [row['buildermasterid'] for row in res])
+            res.close()
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
             toinsertbuildermasterids = buildermasterids - oldbuildermasterids
@@ -98,7 +104,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = cfg_tbl.insert()
                 conn.execute(q,
                              [{'workerid': workerid, 'buildermasterid': buildermasterid}
-                              for buildermasterid in toinsertbuildermasterids])
+                              for buildermasterid in toinsertbuildermasterids]).close()
 
             transaction.commit()
 

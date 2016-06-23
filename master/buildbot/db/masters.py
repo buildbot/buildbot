@@ -48,6 +48,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(sa.select([tbl.c.active],
                                        whereclause=whereclause))
             rows = r.fetchall()
+            r.close()
             if not rows:
                 return False  # can't change a row that doesn't exist..
             was_active = bool(rows[0].active)
