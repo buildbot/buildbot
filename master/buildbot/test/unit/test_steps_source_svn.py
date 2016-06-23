@@ -1321,6 +1321,79 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
+                                        workerdest='.buildbot-diff', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest='.buildbot-patched', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['patch', '-p1', '--remove-empty-files',
+                                 '--force', '--forward', '-i', '.buildbot-diff'])
+            + 0,
+            Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
+                                 logEnviron=True))
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['svn', 'info', '--xml'])
+            + ExpectShell.log('stdio',
+                              stdout=self.svn_info_stdout_xml)
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty('got_revision', '100', 'SVN')
+        return self.runStep()
+
+    def test_mode_full_export_patch_worker_2_16(self):
+        self.setupStep(
+            svn.SVN(repourl='http://svn.local/app/trunk',
+                    mode='full', method='export'),
+            patch=(1, 'patch'),
+            worker_version={'*': '2.16'})
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['svn', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['svn',
+                                 'status', '--xml',
+                                 '--non-interactive', '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                              stdout=self.svn_st_xml)
+            + 0,
+            Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
+                                      'wkdir/svn_external_path/unversioned_file2'],
+                                 logEnviron=True))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            Expect('stat', dict(file='source/.svn',
+                                logEnviron=True))
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['svn', 'info', '--xml',
+                                 '--non-interactive',
+                                 '--no-auth-cache'])
+            + ExpectShell.log('stdio',
+                              stdout="""<?xml version="1.0"?><url>http://svn.local/app/trunk</url>""")
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['svn', 'update', '--non-interactive',
+                                 '--no-auth-cache'])
+            + 0,
+            ExpectShell(workdir='',
+                        command=['svn', 'export', 'source', 'wkdir'])
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,

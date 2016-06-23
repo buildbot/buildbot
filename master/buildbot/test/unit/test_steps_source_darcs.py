@@ -241,13 +241,13 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-diff', workdir='wkdir',
+                                        workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
-                                        slavedest='.buildbot-patched', workdir='wkdir',
+                                        workerdest='.buildbot-patched', workdir='wkdir',
                                         mode=None))
             + 0,
             ExpectShell(workdir='wkdir',
@@ -316,6 +316,44 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             darcs.Darcs(repourl='http://localhost/darcs',
                         mode='full', method='clobber'),
             dict(revision='abcdef01'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', '--version'])
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest='.darcs-context', workdir='wkdir',
+                                        mode=None))
+            + 0,
+            ExpectShell(workdir='.',
+                        command=['darcs', 'get', '--verbose', '--lazy',
+                                 '--repo-name', 'wkdir', '--context',
+                                 '.darcs-context', 'http://localhost/darcs'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['darcs', 'changes', '--max-count=1'])
+            + ExpectShell.log('stdio',
+                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'Tue Aug 20 09:18:41 IST 2013 abc@gmail.com', 'Darcs')
+        return self.runStep()
+
+    def test_mode_full_clobber_revision_worker_2_16(self):
+        self.setupStep(
+            darcs.Darcs(repourl='http://localhost/darcs',
+                        mode='full', method='clobber'),
+            dict(revision='abcdef01'),
+            worker_version={'*': '2.16'})
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['darcs', '--version'])
