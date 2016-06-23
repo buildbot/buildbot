@@ -203,6 +203,16 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
         return d
 
 
+class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
+
+    source_tarball = "v090b4.tgz"
+
+    def test_upgrade(self):
+        return self.do_test_upgrade()
+
+    def verify_thd(self, conn):
+        pass
+        
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
 
     source_tarball = "v087p1.tgz"
@@ -220,6 +230,4 @@ class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
         pass
 
     def test_upgrade(self):
-        # we no longer need a builder pickle since the builder can be
-        # re-created without one
         return self.do_test_upgrade()
