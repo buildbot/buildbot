@@ -1,7 +1,9 @@
-# This example docker file show how to customize the base worker docker image
-# to add build dependencies to build the python+nodejs buildbot_travis package
+# buildbot/buildbot-worker-python-node
 
-FROM        worker
+# This example docker file show how to customize the base worker docker image
+# to add build dependencies to build the python+nodejs buildbot_www package
+
+FROM        buildbot/buildbot-worker
 MAINTAINER  Buildbot maintainers
 
 # Install required npm packages

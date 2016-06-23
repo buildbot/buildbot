@@ -1,0 +1,38 @@
+postgres:
+    env_file: db.env
+    image: "postgres:9.4"
+    volumes:
+        - /var/lib/buildbot_db:/var/lib/postgresql/data
+    expose:
+        - 5432
+
+buildbot:
+# switch between local build and dockerhub image
+#    build: ../../Dockerfile
+#    build: ../../Dockerfile.ubuntu
+    image: "buildbot/buildbot-master"
+    env_file: db.env
+    ports:
+        - "8010:8010"
+    # for external non-docker workers, uncomment the following line
+#        - "9989:9989"
+    expose:
+        - 9989
+    links:
+        - postgres
+    volumes:
+        - /var/lib/buildbot/:/var/lib/buildbot/
+
+worker:
+    # switch between local build and dockerhub image
+#    build: ../../../worker/Dockerfile
+    image: "buildbot/buildbot-worker"
+    environment:
+        BUILDMASTER: buildbot
+        BUILDMASTER_PORT: 9989
+        WORKERNAME: example-worker
+        WORKERPASS: pass
+        WORKER_ENVIRONMENT_BLACKLIST: DOCKER_BUILDBOT* BUILDBOT_ENV_* BUILDBOT_1*
+
+    links:
+        - buildbot
