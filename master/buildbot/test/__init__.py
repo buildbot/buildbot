@@ -13,17 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
+import warnings
+
 from distutils.version import LooseVersion
 
-# apply the same patches the buildmaster does when it starts
 from buildbot import monkeypatches
+
+# apply the same patches the buildmaster does when it starts
 monkeypatches.patch_all(for_tests=True)
 
 # enable deprecation warnings
-import warnings
 warnings.filterwarnings('always', category=DeprecationWarning)
 
-import sys
 if sys.version_info[:2] < (3, 2):
     # Setup logging unhandled messages to stderr.
     # Since Python 3.2 similar functionality implemented through
@@ -65,9 +67,9 @@ if LooseVersion(mock.__version__) < LooseVersion("0.8"):
 # were emitted.
 # Without explicit load of deprecated modules it's hard to predict when
 # they will be imported and when warning should be catched.
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning
+from buildbot.test.util.warnings import assertProducesWarning  # noqa
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning  # noqa
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning  # noqa
 
 with assertProducesWarning(
         DeprecatedWorkerModuleWarning,

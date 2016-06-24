@@ -17,8 +17,6 @@
 # included in the coverage because none of the tests import
 # them; this results in a more accurate total coverage percent.
 
-modules = []  # for the benefit of pyflakes
-
 from buildbot import worker
 from buildbot.changes import p4poller
 from buildbot.changes import svnpoller
@@ -43,6 +41,7 @@ from buildbot.steps.package.rpm import rpmlint
 from buildbot.steps.package.rpm import rpmspec
 from buildbot.util import eventual
 
+modules = []  # for the benefit of pyflakes
 modules.extend([worker])
 modules.extend([p4poller, svnpoller])
 modules.extend([base, sendchange, tryclient])

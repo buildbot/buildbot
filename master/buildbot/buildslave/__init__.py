@@ -16,16 +16,15 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from buildbot.worker import AbstractLatentWorker as _AbstractLatentWorker
+from buildbot.worker import AbstractWorker as _AbstractWorker
+from buildbot.worker import Worker as _Worker
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
 
 reportDeprecatedWorkerModuleUsage(
     "'{old}' module is deprecated, use "
     "'buildbot.worker' module instead".format(old=__name__))
-
-from buildbot.worker import AbstractLatentWorker as _AbstractLatentWorker
-from buildbot.worker import AbstractWorker as _AbstractWorker
-from buildbot.worker import Worker as _Worker
 
 deprecatedWorkerModuleAttribute(locals(), _AbstractWorker,
                                 compat_name="AbstractBuildSlave",
