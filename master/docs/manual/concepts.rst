@@ -611,6 +611,37 @@ multiple *source steps* - one for each codebase
 Multimaster
 -----------
 
+.. blockdiag::
+
+    blockdiag multimaster {
+       Worker1 -> LoadBalancer -> Master1 -> db
+       Worker2 -> LoadBalancer -> Master2 -> db
+       User1 -> LoadBalancerUI -> MasterUI1 -> db
+       User2 -> LoadBalancerUI -> MasterUI2 -> db
+       Master1 -> crossbar.io
+       Master2 -> crossbar.io
+       MasterUI1 -> crossbar.io
+       MasterUI2 -> crossbar.io
+
+       group {
+          label = "workers";
+          Worker1; Worker2;
+       }
+       group {
+          label = "masters";
+
+          Master1; Master2; MasterUI1; MasterUI2
+       }
+       group {
+          label = "io backends";
+          db; crossbar.io;
+       }
+       group {
+          label = "ui users";
+          User1; User2;
+       }
+    }
+
 Buildbot supports interconnection of several masters.
 This has to be done through a multi-master enabled message queue backend.
 As of now the only one supported is wamp and crossbar.io.
