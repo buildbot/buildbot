@@ -216,6 +216,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         self.site.sessionFactory = BuildbotSession
 
+        # Make sure site.master is set. It is required for poller change_hook
+        self.site.master = self.master
         # convert this to a tuple so it can't be appended anymore (in
         # case some dynamically created resources try to get reconfigs)
         self.reconfigurableResources = tuple(self.reconfigurableResources)
