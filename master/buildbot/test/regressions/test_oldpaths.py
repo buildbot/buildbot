@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 from twisted.trial import unittest
 
-from buildbot.util import pickle
-
 
 def deprecatedImport(fn):
     def wrapper(self):
@@ -76,11 +74,6 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.scheduler import Try_Userpass
         assert Try_Userpass
 
-    def test_changes_changes_Change(self):
-        # this must exist to open old changes pickles
-        from buildbot.changes.changes import Change
-        assert Change
-
     def test_schedulers_filter_ChangeFilter(self):
         # this was the location of ChangeFilter until 0.8.4
         from buildbot.schedulers.filter import ChangeFilter
@@ -93,11 +86,6 @@ class OldImportPaths(unittest.TestCase):
     def test_buildrequest_BuildRequest(self):
         from buildbot.buildrequest import BuildRequest
         assert BuildRequest
-
-    def test_sourcestamp_SourceStamp(self):
-        # this class is handled by buildbot.util.pickle
-        self.assertIn(('buildbot.sourcestamp', 'SourceStamp'),
-                      pickle.substituteClasses)
 
     def test_process_subunitlogobserver_SubunitShellCommand(self):
         from buildbot.process.subunitlogobserver import SubunitShellCommand
