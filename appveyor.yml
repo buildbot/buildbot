@@ -23,14 +23,13 @@ install:
   
   - "%PYTHON%\\python.exe -m pip install -e pkg"
   - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
-  - "%PYTHON%\\python.exe -m pip install -e slave"
   - "%PYTHON%\\python.exe -m pip install -e worker"
   - "%PYTHON%\\python.exe -m pip list"
 
 build: false
 
 test_script:
-  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.

@@ -1,7 +1,7 @@
 Buildbot's Test Suite
 =====================
 
-Buildbot's master tests are under ``buildbot.test``, ``buildbot-worker`` package tests are under ``buildbot_worker.test``, and ``buildbot-slave`` package tests are under ``buildslave.test``.
+Buildbot's master tests are under ``buildbot.test``, ``buildbot-worker`` package tests are under ``buildbot_worker.test``.
 Tests for the workers are similar to the master, although in some cases helpful functionality on the master is not re-implemented on the worker.
 
 Suites

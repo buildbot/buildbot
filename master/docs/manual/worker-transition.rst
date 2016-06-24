@@ -536,10 +536,10 @@ List of database-related changes in API (fallback for old API is provided):
 ``buildbot-worker``
 -------------------
 
-``buildbot-slave`` package has been deprecated in favor of ``buildbot-worker`` package.
+``buildbot-slave`` package has been renamed to ``buildbot-worker``.
 
 ``buildbot-worker`` has backward incompatible changes and requires buildmaster >= 0.9.0b8.
-``buildbot-slave`` will work with both 0.8.x and 0.9.x versions of buildmaster, so there is no need to upgrade currently deployed buildbot-slaves during switch from 0.8.x to 0.9.x.
+``buildbot-slave`` from 0.8.x will work with both 0.8.x and 0.9.x versions of buildmaster, so there is no need to upgrade currently deployed buildbot-slaves during switch from 0.8.x to 0.9.x.
 
 .. list-table:: Master/worker compatibility table
    :header-rows: 1

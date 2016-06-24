@@ -21,7 +21,7 @@ function unittests()
 {
     status run the whole test suite as a double check
     find . -name \*.pyc -exec rm {} \;
-    trial --reporter=text buildslave buildbot_worker buildbot
+    trial --reporter=text buildbot_worker buildbot
     if [[ $? != 0 ]]
     then
         echo "Oups.. the tests are failing, better resolve them now before the big autopep8 work"
