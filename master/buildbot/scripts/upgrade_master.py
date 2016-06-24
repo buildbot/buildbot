@@ -65,12 +65,6 @@ def upgradeFiles(config):
         print("        consider using third party HTTP server for serving "
               "static files")
 
-    templdir = os.path.join(config['basedir'], "templates")
-    if not os.path.exists(templdir):
-        if not config['quiet']:
-            print("creating templates")
-        os.mkdir(templdir)
-
     installFile(config, os.path.join(config['basedir'], "master.cfg.sample"),
                 util.sibpath(__file__, "sample.cfg"), overwrite=True)
 
