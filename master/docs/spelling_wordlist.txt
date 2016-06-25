@@ -30,6 +30,11 @@ arguent
 argv
 ascii
 Async
+asymetrics
+Asymetric
+Asymetric
+asymetric
+Async
 Atlassian
 attricutes
 attrs
@@ -393,6 +398,7 @@ internet
 ini
 intialization
 intialized
+io
 ip
 IProperties
 iptables
@@ -496,6 +502,7 @@ multi
 Multi
 multiline
 Multimaster
+multimaster
 munge
 mutualisation
 mv
@@ -766,6 +773,9 @@ SVN
 svnmailer
 svnurl
 symlinks
+symetric
+Symetric
+symetrics
 synchronisation
 synchronise
 Synchronise
