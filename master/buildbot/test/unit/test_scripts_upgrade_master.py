@@ -172,7 +172,6 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_upgradeFiles(self):
         upgrade_master.upgradeFiles(mkconfig())
         for f in [
-                'test/templates',
                 'test/master.cfg.sample',
         ]:
             self.assertTrue(os.path.exists(f), "%s not found" % f)
