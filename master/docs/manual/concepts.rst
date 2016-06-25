@@ -614,18 +614,29 @@ Multimaster
 .. blockdiag::
 
     blockdiag multimaster {
-       Worker1 -> LoadBalancer -> Master1 -> db
-       Worker2 -> LoadBalancer -> Master2 -> db
-       User1 -> LoadBalancerUI -> MasterUI1 -> db
-       User2 -> LoadBalancerUI -> MasterUI2 -> db
+       Worker1 -> LoadBalancer -> Master1 -> database
+       Worker2 -> LoadBalancer
+       Worker2 [shape = "dots"];
+       WorkerN -> LoadBalancer -> Master2 -> database
+       User1 -> LoadBalancerUI -> MasterUI1 -> database
+       User2 -> LoadBalancerUI -> MasterUI2 -> database
        Master1 -> crossbar.io
        Master2 -> crossbar.io
        MasterUI1 -> crossbar.io
        MasterUI2 -> crossbar.io
-
+       database [shape = "flowchart.database", stacked];
+       LoadBalancerUI [shape = ellipse];
+       LoadBalancer [shape = ellipse];
+       crossbar.io [shape = mail];
+       User1 [shape = actor];
+       User2 [shape = actor];
+       default_shape = roundedbox;
+       default_node_color = lightblue;
+       default_linecolor = blue;
+       default_textcolor = red;
        group {
           label = "workers";
-          Worker1; Worker2;
+          Worker1; Worker2; WorkerN
        }
        group {
           label = "masters";
@@ -634,7 +645,7 @@ Multimaster
        }
        group {
           label = "io backends";
-          db; crossbar.io;
+          database; crossbar.io;
        }
        group {
           label = "ui users";
