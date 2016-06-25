@@ -14,9 +14,7 @@
 # Copyright Buildbot Team Members
 import itertools
 import os
-import re
 
-from future.utils import itervalues
 from twisted.persisted import styles
 from twisted.python import log
 from zope.interface import implements
@@ -36,7 +34,6 @@ from buildbot.process.results import worst_status
 from buildbot.status.build import BuildStatus
 from buildbot.status.buildrequest import BuildRequestStatus
 from buildbot.status.event import Event
-from buildbot.util import pickle
 from buildbot.util.lru import LRUCache
 
 _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
@@ -88,94 +85,12 @@ class BuilderStatus(styles.Versioned):
         self.watchers = []
         self.buildCache = LRUCache(self.cacheMiss)
 
-    # persistence
-
-    def __getstate__(self):
-        # when saving, don't record transient stuff like what builds are
-        # currently running, because they won't be there when we start back
-        # up. Nor do we save self.watchers, nor anything that gets set by our
-        # parent like .basedir and .status
-        d = styles.Versioned.__getstate__(self)
-        d['watchers'] = []
-        del d['buildCache']
-        for b in self.currentBuilds:
-            b.saveYourself()
-            # TODO: push a 'hey, build was interrupted' event
-        del d['currentBuilds']
-        d.pop('pendingBuilds', None)
-        del d['currentBigState']
-        del d['basedir']
-        del d['status']
-        del d['nextBuildNumber']
-        del d['master']
-        return d
-
-    def __setstate__(self, d):
-        # when loading, re-initialize the transient stuff. Remember that
-        # upgradeToVersion1 and such will be called after this finishes.
-        styles.Versioned.__setstate__(self, d)
-        self.buildCache = LRUCache(self.cacheMiss)
-        self.currentBuilds = []
-        self.watchers = []
-        self.workernames = []
-        # self.basedir must be filled in by our parent
-        # self.status must be filled in by our parent
-        # self.master must be filled in by our parent
-
-    def upgradeToVersion1(self):
-        if hasattr(self, 'slavename'):
-            self.workernames = [self.slavename]
-            del self.slavename
-        if hasattr(self, 'nextBuildNumber'):
-            del self.nextBuildNumber  # determineNextBuildNumber chooses this
-        self.wasUpgraded = True
-
-    def upgradeToVersion2(self):
-        if hasattr(self, 'category'):
-            self.tags = self.category and [self.category] or None
-            del self.category
-        self.wasUpgraded = True
-
-    def saveYourself(self):
-        return
-
     # build cache management
     def setCacheSize(self, size):
         self.buildCache.set_max_size(size)
 
-    def makeBuildFilename(self, number):
-        return os.path.join(self.basedir, "%d" % number)
-
     def getBuildByNumber(self, number):
         return self.buildCache.get(number)
-
-    def loadBuildFromFile(self, number):
-        filename = self.makeBuildFilename(number)
-        try:
-            log.msg("Loading builder %s's build %d from on-disk pickle"
-                    % (self.name, number))
-            with open(filename, "rb") as f:
-                build = pickle.load(f)
-            build.setProcessObjects(self, self.master)
-
-            # (bug #1068) if we need to upgrade, we probably need to rewrite
-            # this pickle, too.  We determine this by looking at the list of
-            # Versioned objects that have been unpickled, and (after doUpgrade)
-            # checking to see if any of them set wasUpgraded.  The Versioneds'
-            # upgradeToVersionNN methods all set this.
-            versioneds = styles.versionedsToUpgrade
-            styles.doUpgrade()
-            if True in [hasattr(o, 'wasUpgraded') for o in itervalues(versioneds)]:
-                log.msg("re-writing upgraded build pickle")
-                build.saveYourself()
-
-            # check that logfiles exist
-            build.checkLogfiles()
-            return build
-        except IOError:
-            raise IndexError("no such build %d" % number)
-        except EOFError:
-            raise IndexError("corrupted build pickle %d" % number)
 
     def cacheMiss(self, number, **kwargs):
         # If kwargs['val'] exists, this is a new value being added to
@@ -188,68 +103,13 @@ class BuilderStatus(styles.Versioned):
             if b.number == number:
                 return b
 
-        # then fall back to loading it from disk
-        return self.loadBuildFromFile(number)
+        # Otherwise it is in the database and thus inaccesible.
+        return None
 
     def prune(self, events_only=False):
         # begin by pruning our own events
         eventHorizon = self.master.config.eventHorizon
         self.events = self.events[-eventHorizon:]
-
-        if events_only:
-            return
-
-        # get the horizons straight
-        buildHorizon = self.master.config.buildHorizon
-        if buildHorizon is not None:
-            earliest_build = self.nextBuildNumber - buildHorizon
-        else:
-            earliest_build = 0
-
-        logHorizon = self.master.config.logHorizon
-        if logHorizon is not None:
-            earliest_log = self.nextBuildNumber - logHorizon
-        else:
-            earliest_log = 0
-
-        if earliest_log < earliest_build:
-            earliest_log = earliest_build
-
-        if earliest_build == 0:
-            return
-
-        # skim the directory and delete anything that shouldn't be there
-        # anymore
-        build_re = re.compile(r"^([0-9]+)$")
-        build_log_re = re.compile(r"^([0-9]+)-.*$")
-        # if the directory doesn't exist, bail out here
-        if not os.path.exists(self.basedir):
-            return
-
-        for filename in os.listdir(self.basedir):
-            num = None
-            mo = build_re.match(filename)
-            is_logfile = False
-            if mo:
-                num = int(mo.group(1))
-            else:
-                mo = build_log_re.match(filename)
-                if mo:
-                    num = int(mo.group(1))
-                    is_logfile = True
-
-            if num is None:
-                continue
-            if num in self.buildCache.cache:
-                continue
-
-            if (is_logfile and num < earliest_log) or num < earliest_build:
-                pathname = os.path.join(self.basedir, filename)
-                log.msg("pruning '%s'" % pathname)
-                try:
-                    os.unlink(pathname)
-                except OSError:
-                    pass
 
     # IBuilderStatus methods
     def getName(self):
@@ -549,7 +409,6 @@ class BuilderStatus(styles.Versioned):
 
     def _buildFinished(self, s):
         assert s in self.currentBuilds
-        s.saveYourself()
         self.currentBuilds.remove(s)
 
         name = self.getName()
@@ -561,8 +420,6 @@ class BuilderStatus(styles.Versioned):
                 log.msg(
                     "Exception caught notifying %r of buildFinished event" % w)
                 log.err()
-
-        self.prune()  # conserve disk
 
     def asDict(self):
         # Collect build numbers.

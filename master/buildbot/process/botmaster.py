@@ -231,7 +231,6 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             self.buildrequest_consumer_unclaimed = None
         for b in itervalues(self.builders):
             b.builder_status.addPointEvent(["master", "shutdown"])
-            b.builder_status.saveYourself()
         return service.AsyncMultiService.stopService(self)
 
     def getLockByID(self, lockid):

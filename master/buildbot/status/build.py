@@ -12,22 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import re
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.persisted import styles
 from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot import util
 
 
-class BuildStatus(styles.Versioned):
+class BuildStatus():
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
-
-    persistenceVersion = 4
-    persistenceForgets = ('wasUpgraded', )
 
     sources = None
     reason = None
@@ -268,102 +263,6 @@ class BuildStatus(styles.Versioned):
     def pruneSteps(self):
         # this build is very old: remove the build steps too
         self.steps = []
-
-    # persistence stuff
-
-    def generateLogfileName(self, stepname, logname):
-        """Return a filename (relative to the Builder's base directory) where
-        the logfile's contents can be stored uniquely.
-
-        The base filename is made by combining our build number, the Step's
-        name, and the log's name, then removing unsuitable characters. The
-        filename is then made unique by appending _0, _1, etc, until it does
-        not collide with any other logfile.
-
-        These files are kept in the Builder's basedir (rather than a
-        per-Build subdirectory) because that makes cleanup easier: cron and
-        find will help get rid of the old logs, but the empty directories are
-        more of a hassle to remove."""
-
-        starting_filename = "%d-log-%s-%s" % (self.number, stepname, logname)
-        starting_filename = re.sub(r'[^\w\.\-]', '_', starting_filename)
-        # now make it unique
-        unique_counter = 0
-        filename = starting_filename
-        while filename in [l.filename
-                           for step in self.steps
-                           for l in step.getLogs()
-                           if l.filename]:
-            filename = "%s_%d" % (starting_filename, unique_counter)
-            unique_counter += 1
-        return filename
-
-    def __getstate__(self):
-        d = styles.Versioned.__getstate__(self)
-        # for now, a serialized Build is always "finished". We will never
-        # save unfinished builds.
-        if not self.finished:
-            d['finished'] = util.now()
-            # TODO: push an "interrupted" step so it is clear that the build
-            # was interrupted. The builder will have a 'shutdown' event, but
-            # someone looking at just this build will be confused as to why
-            # the last log is truncated.
-        for k in ['builder', 'watchers', 'updates', 'finishedWatchers',
-                  'master']:
-            if k in d:
-                del d[k]
-        return d
-
-    def __setstate__(self, d):
-        styles.Versioned.__setstate__(self, d)
-        self.watchers = []
-        self.updates = {}
-        self.finishedWatchers = []
-
-    def setProcessObjects(self, builder, master):
-        self.builder = builder
-        self.master = master
-        for step in self.steps:
-            step.setProcessObjects(self, master)
-
-    def upgradeToVersion1(self):
-        if hasattr(self, "sourceStamp"):
-            # the old .sourceStamp attribute wasn't actually very useful
-            maxChangeNumber, patch = self.sourceStamp
-            changes = getattr(self, 'changes', [])
-            # the old SourceStamp class is gone, so use the one that is
-            # provided for backward compatibility
-            from buildbot.util.pickle import SourceStamp
-            source = SourceStamp(branch=None,
-                                 revision=None,
-                                 patch=patch,
-                                 changes=changes)
-            self.source = source
-            self.changes = source.changes
-            del self.sourceStamp
-        self.wasUpgraded = True
-
-    def upgradeToVersion2(self):
-        self.wasUpgraded = True
-
-    def upgradeToVersion3(self):
-        self.wasUpgraded = True
-
-    def upgradeToVersion4(self):
-        # buildstatus contains list of sourcestamps, convert single to list
-        if hasattr(self, "source"):
-            self.sources = [self.source]
-            del self.source
-        self.wasUpgraded = True
-
-    def checkLogfiles(self):
-        # check that all logfiles exist, and remove references to any that
-        # have been deleted (e.g., by purge())
-        for s in self.steps:
-            s.checkLogfiles()
-
-    def saveYourself(self):
-        return
 
     def asDict(self):
         result = {}
