@@ -8,6 +8,11 @@ PIP?=pip
 docs:
 	$(MAKE) -C master/docs
 
+# check rst documentation
+docschecks:
+	$(MAKE) -C master/docs SPHINXOPTS=-W spelling
+	$(MAKE) -C master/docs SPHINXOPTS=-q linkcheck
+
 # pylint the whole sourcecode (validate.sh will do that as well, but only process the modified files)
 pylint:
 	$(MAKE) -C master pylint; master_res=$$?; \
