@@ -823,6 +823,9 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             s.checkConfig(self.status)
 
     def check_horizons(self):
+        if self.logHorizon is not None or self.buildHorizon is not None:
+            log.msg("NOTE: `buildHorizon` and `logHorizon` are currently ignored "
+                    "(see http://trac.buildbot.net/ticket/3572)")
         if self.logHorizon is not None and self.buildHorizon is not None:
             if self.logHorizon > self.buildHorizon:
                 error("logHorizon must be less than or equal to buildHorizon")
