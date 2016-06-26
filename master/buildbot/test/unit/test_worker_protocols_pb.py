@@ -153,10 +153,9 @@ class TestConnection(unittest.TestCase):
         info = yield conn.remoteGetWorkerInfo()
 
         r = {'info': 'test', 'worker_commands': {
-            'y': 2, 'x': 1}, 'version': 'TheVersion'}
+            'y': 2, 'x': 1}, 'version': 'deprecated:TheVersion'}
         self.assertEqual(info, r)
         calls = [
-            mock.call('getWorkerInfo'),
             mock.call('getSlaveInfo'),
             mock.call('getCommands'),
             mock.call('getVersion')
@@ -187,10 +186,9 @@ class TestConnection(unittest.TestCase):
         info = yield conn.remoteGetWorkerInfo()
 
         r = {'info': 'test', 'worker_commands': {
-            'y': 2, 'x': 1}, 'version': 'TheVersion'}
+            'y': 2, 'x': 1}, 'version': 'deprecated:TheVersion'}
         self.assertEqual(info, r)
         calls = [
-            mock.call('getWorkerInfo'),
             mock.call('getSlaveInfo'),
         ]
         self.mind.callRemote.assert_has_calls(calls)
@@ -207,8 +205,7 @@ class TestConnection(unittest.TestCase):
                     'version': 'TheVersion',
                 })
             if 'getSlaveInfo' in args:
-                return defer.fail(twisted_pb.RemoteError(
-                    'twisted.spread.flavors.NoSuchMethod', None, None))
+                return defer.succeed(None)
             if 'getCommands' in args:
                 return defer.succeed({'x': 1, 'y': 2})
             if 'getVersion' in args:
@@ -221,7 +218,8 @@ class TestConnection(unittest.TestCase):
         r = {'info': 'test', 'worker_commands': {
             'y': 2, 'x': 1}, 'version': 'TheVersion'}
         self.assertEqual(info, r)
-        calls = [mock.call('getWorkerInfo')]
+        calls = [mock.call('getSlaveInfo'),
+                 mock.call('getWorkerInfo')]
         self.mind.callRemote.assert_has_calls(calls)
 
     @defer.inlineCallbacks
@@ -242,7 +240,7 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
-        r = {'worker_commands': {'y': 2, 'x': 1}, 'version': 'TheVersion'}
+        r = {'worker_commands': {'y': 2, 'x': 1}, 'version': 'deprecated:TheVersion'}
         self.assertEqual(info, r)
         calls = [mock.call('getSlaveInfo'), mock.call(
             'getCommands'), mock.call('getVersion')]
@@ -260,10 +258,9 @@ class TestConnection(unittest.TestCase):
         conn = pb.Connection(self.master, self.worker, self.mind)
         info = yield conn.remoteGetWorkerInfo()
 
-        r = {}
+        r = {'version': 'deprecated:unknown version'}
         self.assertEqual(info, r)
         calls = [
-            mock.call('getWorkerInfo'),
             mock.call('getSlaveInfo'),
             mock.call('getCommands'),
             mock.call('getVersion'),

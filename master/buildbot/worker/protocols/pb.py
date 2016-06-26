@@ -191,7 +191,49 @@ class Connection(base.Connection, pb.Avatar):
         return self.mind.callRemote('print', message=message)
 
     @defer.inlineCallbacks
+    def remoteGetWorkerInfoLegacy(self):
+        info = {}
+        try:
+            with _wrapRemoteException():
+                info = yield self.mind.callRemote('getSlaveInfo')
+                if info is None:
+                    defer.returnValue(None)
+        except _NoSuchMethod:
+            # this is a really old worker
+            log.msg("Worker.getSlaveInfo is unavailable - ignoring")
+
+        # newer workers send all info in one command
+        if "slave_commands" in info:
+            assert "worker_commands" not in info
+            info["worker_commands"] = info.pop("slave_commands")
+            defer.returnValue(info)
+
+        # Old version buildslave - need to retrieve list of supported
+        # commands and version using separate requests.
+        try:
+            with _wrapRemoteException():
+                info["worker_commands"] = yield self.mind.callRemote(
+                    'getCommands')
+        except _NoSuchMethod:
+            log.msg("Worker.getCommands is unavailable - ignoring")
+
+        try:
+            with _wrapRemoteException():
+                info["version"] = yield self.mind.callRemote('getVersion')
+        except _NoSuchMethod:
+            log.msg("Worker.getVersion is unavailable - ignoring")
+
+        defer.returnValue(info)
+
+    @defer.inlineCallbacks
     def remoteGetWorkerInfo(self):
+        # we need to first try the legacy command in order
+        # to avoid legacy workers to output a stack trace in the logs
+        info = yield self.remoteGetWorkerInfoLegacy()
+        if info is not None:
+            # instead of logging, we mark the version as deprecated in the workerinfo
+            info["version"] = "deprecated:" + info.get("version", "unknown version")
+            defer.returnValue(info)
         try:
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
@@ -200,38 +242,7 @@ class Connection(base.Connection, pb.Avatar):
         except _NoSuchMethod:
             info = {}
 
-            # Probably this is deprecated buildslave.
-            log.msg("Worker.getWorkerInfo is unavailable - falling back to "
-                    "deprecated buildslave API")
-
-            try:
-                with _wrapRemoteException():
-                    info = yield self.mind.callRemote('getSlaveInfo')
-            except _NoSuchMethod:
-                log.msg("Worker.getSlaveInfo is unavailable - ignoring")
-
-            # newer workers send all info in one command
-            if "slave_commands" in info:
-                assert "worker_commands" not in info
-                info["worker_commands"] = info.pop("slave_commands")
-                defer.returnValue(info)
-
-            # Old version buildslave - need to retrieve list of supported
-            # commands and version using separate requests.
-            try:
-                with _wrapRemoteException():
-                    info["worker_commands"] = yield self.mind.callRemote(
-                        'getCommands')
-            except _NoSuchMethod:
-                log.msg("Worker.getCommands is unavailable - ignoring")
-
-            try:
-                with _wrapRemoteException():
-                    info["version"] = yield self.mind.callRemote('getVersion')
-            except _NoSuchMethod:
-                log.msg("Worker.getVersion is unavailable - ignoring")
-
-            defer.returnValue(info)
+        defer.returnValue(info)
 
     def remoteSetBuilderList(self, builders):
         d = self.mind.callRemote('setBuilderList', builders)

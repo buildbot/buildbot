@@ -26,6 +26,9 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=docs
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
+  # add js tests in separate job. Start it early because it is quite long
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js
+
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
@@ -44,9 +47,6 @@ env:
   # Test different versions of SQLAlchemy
   - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
   - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
-
-  # add extra tests in separate jobs
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js
 
   # Configuration to run `python setup.py test` to check this test runner.
   # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test

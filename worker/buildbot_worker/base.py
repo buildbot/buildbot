@@ -296,6 +296,12 @@ class BotBase(service.MultiService):
     def remote_print(self, message):
         log.msg("message from master:", message)
 
+    def remote_getSlaveInfo(self):
+        """This command provides legacy compatibility with older workers
+        """
+        # I am not a slave. I am a worker. So I return None
+        return None
+
     def remote_getWorkerInfo(self):
         """This command retrieves data from the files in WORKERDIR/info/* and
         sends the contents to the buildmaster. These are used to describe
@@ -330,7 +336,7 @@ class BotBase(service.MultiService):
         log.msg("worker shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
-        # resilinet to workers dropping their connections, so there is no harm
+        # resilient to workers dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 

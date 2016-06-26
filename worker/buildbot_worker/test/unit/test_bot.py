@@ -73,6 +73,14 @@ class TestBot(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_getSlaveInfo(self):
+        d = self.bot.callRemote("getSlaveInfo")
+
+        def check(info):
+            self.assertEqual(info, None)
+        d.addCallback(check)
+        return d
+
     def test_getWorkerInfo(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)

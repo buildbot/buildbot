@@ -81,6 +81,9 @@ class FakeWorkerWorker(pb.Referenceable):
     def remote_print(self, message):
         log.msg("WORKER-SIDE: remote_print(%r)" % (message,))
 
+    def remote_getSlaveInfo(self):
+        return None
+
     def remote_getWorkerInfo(self):
         return {
             'info': 'here',
