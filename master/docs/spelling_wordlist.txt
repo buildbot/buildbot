@@ -227,6 +227,7 @@ dateutil
 Dateutil
 de
 deafault
+Debian
 debounce
 debounced
 debouncer
@@ -803,6 +804,7 @@ Tuples
 twistd
 Twistd
 txgithub
+Ubuntu
 ues
 ui
 uid
