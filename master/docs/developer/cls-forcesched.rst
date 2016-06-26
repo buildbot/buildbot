@@ -4,11 +4,7 @@
 ForceScheduler
 --------------
 
-.. warning::
-
-   This section contains information that is partially obsolete, see :bug:`3477`.
-
-The force scheduler has a symbiotic relationship with the web status, so it deserves some further description.
+The force scheduler has a symbiotic relationship with the web application, so it deserves some further description.
 
 Parameters
 ~~~~~~~~~~
@@ -71,9 +67,15 @@ This section contains information to help users or developers who are interested
 
     .. py:attribute:: type
 
-           A list of types that the parameter conforms to.
-           These are used by the jinja template to create appropriate html form widget.
-           The available values are visible in ``master/buildbot/status/web/template/forms.html`` in the ``force_build_one_scheduler`` macro.
+           A string identifying the type that the parameter conforms to.
+           It is used by the angular application to find which angular directive to use for showing the form widget.
+           The available values are visible in ``www/base/src/app/common/directives/forcefields/forcefields.directive.coffee``.
+
+           Examples of how to create a custom parameter widgets are available in the buildbot source code in directories:
+
+           * ``www/codeparameter``
+
+           * ``www/nestedexample``
 
     .. py:attribute:: default
 
