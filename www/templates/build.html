@@ -361,7 +361,12 @@
             </div>
             <div class="divider"></div>
             <div>
-                <a class="small-head" href={{ build_url+"?debug=true" }}>Show hidden steps</a>
+                <a class="small-head"
+                {% if request.args %}
+                href={{ request.uri+"&debug=true" }}
+                {% else %}
+                href={{ request.uri+"?debug=true" }}
+                {% endif %}>Show hidden steps</a>
             </div>
             {% if result_css == "failure" %}
             <div>
