@@ -359,6 +359,17 @@
             <div id="artifacts-js">
                 No artifacts
             </div>
+            <div class="divider"></div>
+            <div>
+                <a class="small-head" href={{ build_url+"?debug=true" }}>Show hidden steps</a>
+            </div>
+            {% if result_css == "failure" %}
+            <div>
+                <a class="small-head" target="_blank" href="https://q.unity3d.com/questions/244/how-do-i-connect-to-a-build-machine.html">
+                    Build Failure? Only Happens on Katana?
+                </a>
+            </div>
+            {% endif %}
             <div class="more-info-box more-info-box-js">
                 <a class="close-btn" href="#"> </a>
 
@@ -380,16 +391,6 @@
 
             </ol>
 
-            <div>
-                <a class="small-head" href={{ build_url+"?debug=true" }}>Show hidden steps</a>
-            </div>
-            {% if result_css == "failure" %}
-            <div>
-                <a class="small-head" target="_blank" href="https://q.unity3d.com/questions/244/how-do-i-connect-to-a-build-machine.html">
-                    Build Failure? Only Happens on Katana?
-                </a>
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
