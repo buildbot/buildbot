@@ -198,6 +198,9 @@ class Connection(base.Connection, pb.Avatar):
                 info = yield self.mind.callRemote('getWorkerInfo')
             defer.returnValue(info)
         except _NoSuchMethod:
+            yield self.remotePrint(
+                "buildbot-slave detected, failing back to deprecated buildslave API. "
+                "(Ignoring missing getWorkerInfo method.)")
             info = {}
 
             # Probably this is deprecated buildslave.
