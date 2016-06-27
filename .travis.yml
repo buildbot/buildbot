@@ -51,9 +51,6 @@ env:
   # Configuration to run `python setup.py test` to check this test runner.
   # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
-  # Configuration to run tests without installed buildbot-slave.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker_only
-
 cache:
   directories:
     - $HOME/.cache/pip
@@ -71,7 +68,7 @@ cache:
 matrix:
   fast_finish: true
   include:
-    # Tests of buildbot-worker and buildbot-slave on python 2.6
+    # Tests of buildbot-worker on python 2.6
     # Specify SQLALCHEMY=latest to avoid errors installing.
     - python: "2.6"
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
@@ -95,7 +92,6 @@ install:
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
                   -e master[tls,test] \
-                  -e slave \
                   -e worker \
                   MySQL-python \
                   psycopg2 \
@@ -103,10 +99,7 @@ install:
 
   - |
       [ $TESTS != trial_worker ] || \
-      pip install -e slave \
-                  -e worker \
-
-  - "[ $TESTS != trial_worker_only ] || pip install -e pkg -e master[tls,test] -e worker"
+      pip install -e worker
 
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
@@ -115,8 +108,7 @@ install:
   # for python 3 we dont install everything yet..
   - |
       [ $TESTS != py3 ] || \
-      pip install -e slave \
-                  -e worker \
+      pip install -e worker \
                   future
 
   # Run additional tests only in latest configuration
@@ -147,13 +139,13 @@ before_script:
 # Tests running commands
 script:
   - "[ $TESTS != js ] || make frontend_install_tests"
-  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
-  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildbot_worker.test"
   # run tests under coverage for latest only (it's slower..)
-  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
   # run tests that are know to work on py3
-  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildbot_worker.test"
 
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"
@@ -167,10 +159,7 @@ script:
   - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-q linkcheck"
 
   - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
-  - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
-
-  - "[ $TESTS != trial_worker_only ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 notifications:
   email: false

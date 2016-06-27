@@ -185,7 +185,7 @@ During project lifetime worker has transitioned over few states:
 
 1. Before Buildbot version 0.8.1 worker were integral part of ``buildbot`` package distribution.
 2. Starting from Buildbot version 0.8.1 worker were extracted from ``buildbot`` package to ``buildbot-slave`` package.
-3. Starting from Buildbot version 0.9.0 ``buildbot-slave`` were deprecated in favor of ``buildbot-worker`` package.
+3. Starting from Buildbot version 0.9.0 the ``buildbot-slave`` package was renamed to ``buildbot-worker``.
 
 Upgrading a Worker to buildbot-slave 0.8.1
 ''''''''''''''''''''''''''''''''''''''''''

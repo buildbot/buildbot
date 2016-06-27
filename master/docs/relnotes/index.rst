@@ -68,10 +68,10 @@ Deprecations, Removals, and Non-Compatible Changes
 Buildslave
 ----------
 
-Fixes
-~~~~~
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ``buildslave`` script now outputs messages to the terminal.
+* The ``buildbot-slave`` package has finished being renamed to ``buildbot-worker``.
 
 
 Worker
