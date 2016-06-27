@@ -361,12 +361,8 @@
             </div>
             <div class="divider"></div>
             <div>
-                <a class="small-head"
-                {% if request.args %}
-                href={{ request.uri+"&debug=true" }}
-                {% else %}
-                href={{ request.uri+"?debug=true" }}
-                {% endif %}>Show hidden steps</a>
+                {% set query_symbol = "&" if request.args else "?" %}
+                <a class="small-head" href={{ request.uri+query_symbol+"debug=true" }}>Show hidden steps</a>
             </div>
             {% if result_css == "failure" %}
             <div>
