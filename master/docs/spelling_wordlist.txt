@@ -30,10 +30,7 @@ arguent
 argv
 ascii
 Async
-asymetrics
-Asymetric
-Asymetric
-asymetric
+asymmetrics
 Async
 Atlassian
 attricutes
@@ -774,9 +771,7 @@ SVN
 svnmailer
 svnurl
 symlinks
-symetric
-Symetric
-symetrics
+symmetrics
 synchronisation
 synchronise
 Synchronise
