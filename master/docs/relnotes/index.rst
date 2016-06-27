@@ -102,6 +102,12 @@ Deprecations, Removals, and Non-Compatible Changes
 
   * ``slave-config`` value of ``usePTY`` is not supported anymore.
 
+  * ``slavesrc`` command argument was renamed to ``workersrc`` in ``uploadFile`` and ``uploadDirectory`` commands.
+
+  * ``slavedest`` command argument was renamed to ``workerdest`` in ``downloadFile`` command.
+
+  * Previously deprecated ``WorkerForBuilder.remote_shutdown()`` remote command has been removed.
+
 
 Details
 -------
