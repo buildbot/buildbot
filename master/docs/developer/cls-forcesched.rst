@@ -4,11 +4,7 @@
 ForceScheduler
 --------------
 
-.. warning::
-
-   This section contains information that is partially obsolete, see :bug:`3477`.
-
-The force scheduler has a symbiotic relationship with the web status, so it deserves some further description.
+The force scheduler has a symbiotic relationship with the web application, so it deserves some further description.
 
 Parameters
 ~~~~~~~~~~
@@ -20,8 +16,8 @@ This section contains information to help users or developers who are interested
 
 .. py:class:: BaseParameter(name, label, regex, **kwargs)
 
-   This is the base implementation for most parameters, it will check validity, ensure the arg is present if the :py:attr:`~IParameter.required` attribute is set, and implement the default value.
-   It will finally call :py:meth:`~IParameter.updateFromKwargs` to process the string(s) from the HTTP POST.
+   This is the base implementation for most parameters, it will check validity, ensure the arg is present if the :py:attr:`~BaseParameter.required` attribute is set, and implement the default value.
+   It will finally call :py:meth:`~BaseParameter.updateFromKwargs` to process the string(s) from the HTTP POST.
 
    The :py:class:`BaseParameter` constructor converts all keyword arguments into instance attributes, so it is generally not necessary for subclasses to implement a constructor.
 
@@ -71,9 +67,15 @@ This section contains information to help users or developers who are interested
 
     .. py:attribute:: type
 
-           A list of types that the parameter conforms to.
-           These are used by the jinja template to create appropriate html form widget.
-           The available values are visible in ``master/buildbot/status/web/template/forms.html`` in the ``force_build_one_scheduler`` macro.
+           A string identifying the type that the parameter conforms to.
+           It is used by the angular application to find which angular directive to use for showing the form widget.
+           The available values are visible in :src:`www/base/src/app/common/directives/forcefields/forcefields.directive.coffee`.
+
+           Examples of how to create a custom parameter widgets are available in the buildbot source code in directories:
+
+           * :src:`www/codeparameter`
+
+           * :src:`www/nestedexample`
 
     .. py:attribute:: default
 
@@ -106,15 +108,18 @@ Nested Parameters
 ~~~~~~~~~~~~~~~~~
 
 The :py:class:`NestedParameter` class is a container for parameters.
-The motivating purpose for this feature is the multiple-codebase configuration, which needs to provide the user with a form to control the branch (et al) for each codebase independently.
+The original motivating purpose for this feature is the multiple-codebase configuration, which needs to provide the user with a form to control the branch (et al) for each codebase independently.
 Each branch parameter is a string field with name 'branch' and these must be disambiguated.
+
+In Buildbot nine, this concept has been extended to allow grouping different parameters into UI containers.
+Details of the available layouts is described in :ref:`NestedParameter <ForceScheduler-Parameters>`.
 
 Each of the child parameters mixes in the parent's name to create the fully qualified ``fullName``.
 This allows, for example, each of the 'branch' fields to have a unique name in the POST request.
 The `NestedParameter` handles adding this extra bit to the name to each of the children.
 When the `kwarg` dictionary is posted back, this class also converts the flat POST dictionary into a richer structure that represents the nested structure.
 
-As illustration, if the nested parameter has the name 'foo', and has children 'bar1' and 'bar2', then the POST will have entries like "foo-bar1" and "foo-bar2".
+As illustration, if the nested parameter has the name 'foo', and has children 'bar1' and 'bar2', then the POST will have entries like "foo.bar1" and "foo.bar2".
 The nested parameter will translate this into a dictionary in the 'kwargs' structure, resulting in something like::
 
     kwargs = {
