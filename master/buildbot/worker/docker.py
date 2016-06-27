@@ -59,7 +59,7 @@ class DockerLatentWorker(AbstractLatentWorker):
 
     def __init__(self, name, password, docker_host, image=None, command=None,
                  volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                 masterFQDN=None, hostconfig=None, networking_config='bridge', **kwargs):
+                 masterFQDN=None, hostconfig=None, **kwargs):
 
         if not client:
             config.error("The python module 'docker-py>=1.4' is needed to use a"
@@ -70,7 +70,6 @@ class DockerLatentWorker(AbstractLatentWorker):
 
         self.volumes = volumes or []
         self.binds = {}
-        self.networking_config = networking_config
         self.followStartupLogs = followStartupLogs
 
         # Following block is only for checking config errors,
@@ -185,8 +184,7 @@ class DockerLatentWorker(AbstractLatentWorker):
             name='%s_%s' % (self.workername, id(self)),
             volumes=self.volumes,
             environment=self.createEnvironment(),
-            host_config=host_conf,
-            networking_config=self.networking_config
+            host_config=host_conf
         )
 
         if instance.get('Id') is None:
