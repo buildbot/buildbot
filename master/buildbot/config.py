@@ -123,7 +123,7 @@ class MasterConfig(object):
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
-        "autobahn_push", "lastBuildCacheDays", "requireLogin", "globalFactory"
+        "autobahn_push", "lastBuildCacheDays", "requireLogin", "globalFactory", "slave_debug_url"
     ])
 
     @classmethod
@@ -259,6 +259,7 @@ class MasterConfig(object):
         copy_str_param('titleURL', alt_key='projectURL')
 
         copy_str_param('buildbotURL')
+        copy_str_param('slave_debug_url')
 
         # Make sure that buildbotURL ends with a forward slash
         if not self.buildbotURL.endswith('/'):
