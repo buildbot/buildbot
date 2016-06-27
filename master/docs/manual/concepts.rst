@@ -631,24 +631,24 @@ Multimaster
        User1 [shape = actor];
        User2 [shape = actor];
        default_shape = roundedbox;
-       default_node_color = lightblue;
-       default_linecolor = blue;
-       default_textcolor = red;
+       default_node_color = "#33b5e5";
+       default_group_color = "#428bca";
+       default_linecolor = "#0099CC";
+       default_textcolor = "#e1f5fe";
        group {
-          label = "workers";
+          shape = line;
           Worker1; Worker2; WorkerN
        }
        group {
-          label = "masters";
-
+          shape = line;
           Master1; Master2; MasterUI1; MasterUI2
        }
        group {
-          label = "io backends";
+          shape = line;
           database; crossbar.io;
        }
        group {
-          label = "ui users";
+          shape = line;
           User1; User2;
        }
     }
@@ -659,15 +659,15 @@ As of now the only one supported is wamp and crossbar.io.
 see :ref:`wamp <MQ-Specification>`
 
 There are then several strategy for introducing multimaster in your buildbot infra.
-A simple way to say it is by adding the concept of symetrics and asymetrics multimaster (like there is SMP and AMP for multi core CPUs)
+A simple way to say it is by adding the concept of symmetrics and asymmetrics multimaster (like there is SMP and AMP for multi core CPUs)
 
 Symetric multimaster is when each master share the exact same configuration. They run the same builders, same schedulers, same everything, the only difference is that workers are connected evenly between the masters (by any means (e.g. DNS load balancing, etc)) Symetric multimaster is good to use to scale buildbot horizontally.
 
-Asymetric multimaster is when each master have different configuration. Each master may have a specific responsibility (e.g schedulers, set of builder, UI). This was more how you did in 0.8, also because of its own technical limitations. A nice feature of asymetric multimaster is that you can have the UI only handled by some masters.
+Asymmetric multimaster is when each master have different configuration. Each master may have a specific responsibility (e.g schedulers, set of builder, UI). This was more how you did in 0.8, also because of its own technical limitations. A nice feature of asymmetric multimaster is that you can have the UI only handled by some masters.
 
 Separating the UI from the controlling will greatly help in the performance of the UI, because badly written BuildSteps?? can stall the reactor for several seconds.
 
-The fanciest configuration would probably be a symetric configuration for everything but the UI.
+The fanciest configuration would probably be a symmetric configuration for everything but the UI.
 You would scale the number of UI master according to your number of UI users, and scale the number of engine masters to the number of workers.
 
 Depending on your workload and size of master host, it is probably a good idea to start thinking of multimaster starting from a hundred workers connected.
