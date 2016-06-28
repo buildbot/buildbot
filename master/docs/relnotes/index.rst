@@ -43,6 +43,8 @@ Fixes
 
 * sqlite access is serialized in order to improve stability (:bug:`3565`)
 
+* Docker latent worker has been fixed (:bug:`3571`)
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
