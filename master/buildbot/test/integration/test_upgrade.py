@@ -212,7 +212,8 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
 
     def verify_thd(self, conn):
         pass
-        
+
+
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
 
     source_tarball = "v087p1.tgz"
