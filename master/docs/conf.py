@@ -87,6 +87,10 @@ else:
 # The full version, including alpha/beta/rc tags.
 release = version
 
+# blocksiag/seqdiag
+blockdiag_html_image_format = 'svg'
+blocdiag_transparency = True
+
 # add a loud note for anyone looking at the latest docs
 if release == 'latest':
     rst_prolog = textwrap.dedent("""\

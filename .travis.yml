@@ -158,8 +158,8 @@ script:
   - "[ $TESTS != docs ] || make docs"
   # Run spell checker on documentation
   - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-W spelling"
-  # Runs Sphinx' external link checker
-  - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-q linkcheck"
+  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
+  - "[ $TESTS != docs -o ${TRAVIS_PULL_REQUEST} != false ] || make -C master/docs SPHINXOPTS=-q linkcheck"
 
   - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
