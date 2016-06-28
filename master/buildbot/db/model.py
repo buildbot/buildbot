@@ -36,7 +36,7 @@ class EightUpgradeError(Exception):
     def __init__(self):
         message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x
         This is not supported. Please start from a clean database
-        http://docs.buildbot.net/latest/manual/installation/nine-upgrade.htm"""
+        http://docs.buildbot.net/latest/manual/installation/nine-upgrade.html"""
         # Call the base class constructor with the parameters it needs
         super(EightUpgradeError, self).__init__(message)
 
