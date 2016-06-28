@@ -190,6 +190,15 @@ You can configure the order the scripts are loaded using configuration:
 In this example, we are loading scripts.js last. This is useful when testing libraries, where scripts.js does not contain the necessary (e.g angular.js) dependencies.
 In that case, we rather include the dependencies in tests.js, and thus need to run it first in the karma environment.
 
+### Bower dependencies
+
+guanlecoja allows you to define your bower dependencies directly into the guanlecoja/config.coffee file.
+It will automatically download latest version, and embed the dependencies into your script.js file.
+
+guanlecoja will create BOWERDEPS global variable that contains the list of packages that have been included in your project as long as metadata of which version, and what is the homepage of the package.
+
+Note that the BOWERDEPS variable is shared between all modules that use guanlecoja as build system, this will contain deps of deps.
+
 ### Developement server
 
 For standalone UI, development server is given as a simple helper.
@@ -241,6 +250,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.7.0: upgrade gulp-bower-deps. This gives you BOWERDEPS global variable
 * 0.6.2: fix and upgrade phantomjs to 2.1.1. This will help on the stability of the builds.
 * 0.6.1: Support sass include PATH to be implicitly set as includePath. fix problem with impossibility to create a task after karma
 * 0.5.5: update dependencies for npm 3
