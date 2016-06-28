@@ -15,6 +15,7 @@
 from UserList import UserList
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.data import resultspec
 from buildbot.process.properties import renderer
@@ -163,7 +164,17 @@ def getResponsibleUsersForBuild(master, buildid):
 
     # add owner from properties
     if 'owner' in properties:
-        blamelist.update(properties['owner'][0])
+        owner = properties['owner'][0]
+        if isinstance(owner, basestring):
+            blamelist.add(owner)
+        else:
+            blamelist.update(owner)
+            log.msg("Warning: owner property is a list for buildid {}. ".format(buildid))
+            log.msg("Please report a bug: changes: {}. properties: {}".format(changes, properties))
+
+    # add owner from properties
+    if 'owners' in properties:
+        blamelist.update(properties['owners'][0])
 
     blamelist = list(blamelist)
     blamelist.sort()
