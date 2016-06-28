@@ -32,6 +32,15 @@ except ImportError:
     ControlledSchema = None
 
 
+class EightUpgradeError(Exception):
+    def __init__(self):
+        message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x
+        This is not supported. Please start from a clean database
+        http://docs.buildbot.net/latest/manual/installation/nine-upgrade.html"""
+        # Call the base class constructor with the parameters it needs
+        super(EightUpgradeError, self).__init__(message)
+
+
 class Model(base.DBConnectorComponent):
     #
     # schema
@@ -828,30 +837,17 @@ class Model(base.DBConnectorComponent):
             # if the migrate_version table exists, we can just let migrate
             # take care of this process.
             if table_exists(engine, 'migrate_version'):
+                r = engine.execute("select version from migrate_version limit 1")
+                old_version = r.scalar()
+                if old_version < 40:
+                    raise EightUpgradeError()
                 upgrade(engine)
 
             # if the version table exists, then we can version_control things
             # at that version, drop the version table, and let migrate take
             # care of the rest.
             elif table_exists(engine, 'version'):
-                # get the existing version
-                r = engine.execute("select version from version limit 1")
-                old_version = r.scalar()
-
-                # set up migrate at the same version
-                version_control(engine, old_version)
-
-                # drop the no-longer-required version table, using a dummy
-                # metadata entry
-                table = sautils.Table('version', self.metadata,
-                                      sa.Column('x', sa.Integer))
-                table.drop(bind=engine)
-
-                # clear the dummy metadata entry
-                self.metadata.remove(table)
-
-                # and, finally, upgrade using migrate
-                upgrade(engine)
+                raise EightUpgradeError()
 
             # otherwise, this db is new, so we dont bother using the migration engine
             # and just create the tables, and put the version directly to
