@@ -634,6 +634,7 @@ class BuildersResource(HtmlResource):
         base_builders_url = path_to_root(req) + "builders/"
         for bn in builders:
             bld = {'link': base_builders_url + urllib.quote(bn, safe=''),
+                   'tags': status.getBuilder(bn).tags,
                    'name': bn}
             bs.append(bld)
 

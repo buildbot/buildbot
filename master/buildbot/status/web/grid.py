@@ -90,6 +90,7 @@ class GridStatusMixin(object):
 
         cxt = {'url': path_to_builder(request, builder),
                'name': builder.getName(),
+               'tags': builder.tags,
                'state': state,
                'n_pending': n_pending}
 
