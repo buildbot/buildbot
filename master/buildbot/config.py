@@ -88,6 +88,7 @@ class MasterConfig(object):
         self.requireLogin = True
         self.autobahn_push = "false"
         self.lastBuildCacheDays = 30
+        self.slave_debug_url = None
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -259,7 +260,6 @@ class MasterConfig(object):
         copy_str_param('titleURL', alt_key='projectURL')
 
         copy_str_param('buildbotURL')
-        copy_str_param('slave_debug_url')
 
         # Make sure that buildbotURL ends with a forward slash
         if not self.buildbotURL.endswith('/'):
@@ -329,6 +329,9 @@ class MasterConfig(object):
 
         if 'autobahn_push' in config_dict:
             self.autobahn_push = "true" if config_dict["autobahn_push"] else "false"
+
+        if 'slave_debug_url' in config_dict:
+            self.slave_debug_url = config_dict["slave_debug_url"]
 
         copy_str_param('debugPassword')
 
