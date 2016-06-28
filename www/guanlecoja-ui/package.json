@@ -6,6 +6,6 @@
     },
     "devDependencies": {
         "guanlecoja": "latest",
-        "shelljs": "latest"
+        "shelljs": "0.5.1"
     }
 }
