@@ -9,11 +9,8 @@ gulp = require("gulp")
 require("shelljs/global")
 
 gulp.task "publish", ['default'], ->
-    r = git "diff", "--no-ext-diff", "--quiet", "--exit-code"
-    if r.code > 0
-        git "status"
-        echo "Please commit your changes before publish!"
-        return
+    rm "-rf", "guanlecoja-ui"
+    exec "git clone git@github.com:buildbot/guanlecoja-ui.git"
     bower_json =
         name: "guanlecoja-ui"
         version: "1.6.1"
@@ -21,16 +18,16 @@ gulp.task "publish", ['default'], ->
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
         dependencies: {}
-
-    git "checkout", "gh-pages"
-    cp "-rf", "static/*", "."
-    JSON.stringify(bower_json).to("bower.json")
-    git "add", "."
-    git "commit", "-m", bower_json.version
-    git "tag", bower_json.version
-    git "push", "buildbot", "gh-pages"
-    git "push", "buildbot", bower_json.version
-    git "checkout", "master"
+    cd "guanlecoja-ui"
+    exec("git reset --hard origin/gh-pages")
+    cp "-rf", "../static/*", "."
+    cp "-rf", "../README.md", "."
+    JSON.stringify(bower_json, null, "  ").to("bower.json")
+    exec("git add .")
+    exec("git commit -m " + bower_json.version)
+    exec("git tag " + bower_json.version)
+    exec("git push origin HEAD:gh-pages")
+    exec("git push origin " + bower_json.version)
 
 gulp.task "readme", ->
     gulp.src("Readme.md").pipe gulp.dest(config.dir.build)
