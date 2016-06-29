@@ -142,9 +142,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                     sorted([ tuple(i) for i in infos])
                 ), (
                     [
-                        (1L, u'soap', None, None),
-                        (2L, u'lye', None, None),
-                        (3L, u'marla', u'marla', u'cancer'),
+                        (1L, u'soap', None, None, None, None),
+                        (2L, u'lye', None, None, None, None),
+                        (3L, u'marla', u'marla', u'cancer', None, None),
                     ], [
                         (1L, u'IPv9', u'0578cc6.8db024'),
                         (2L, u'git', u'Tyler Durden <tyler@mayhem.net>'),
