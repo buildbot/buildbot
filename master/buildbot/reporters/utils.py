@@ -15,6 +15,7 @@
 from UserList import UserList
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.data import resultspec
 from buildbot.process.properties import renderer
@@ -30,7 +31,7 @@ def getPreviousBuild(master, build):
     n = build['number'] - 1
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
-        if prev['results'] != RETRY:
+        if prev and prev['results'] != RETRY:
             defer.returnValue(prev)
         n -= 1
     defer.returnValue(None)
@@ -163,7 +164,17 @@ def getResponsibleUsersForBuild(master, buildid):
 
     # add owner from properties
     if 'owner' in properties:
-        blamelist.add(properties['owner'][0])
+        owner = properties['owner'][0]
+        if isinstance(owner, basestring):
+            blamelist.add(owner)
+        else:
+            blamelist.update(owner)
+            log.msg("Warning: owner property is a list for buildid {}. ".format(buildid))
+            log.msg("Please report a bug: changes: {}. properties: {}".format(changes, properties))
+
+    # add owner from properties
+    if 'owners' in properties:
+        blamelist.update(properties['owners'][0])
 
     blamelist = list(blamelist)
     blamelist.sort()
