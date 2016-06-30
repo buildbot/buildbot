@@ -33,52 +33,53 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             self.check_length(tbl_info.c.attr_type, attr_type)
             self.check_length(tbl_info.c.attr_data, attr_data)
 
-            # try to find the user
-            q1 = sa.select([ tbl_info.c.uid ],
-                           whereclause=and_(tbl_info.c.attr_type == attr_type,
-                                            tbl_info.c.attr_data == attr_data))
-            r1 = conn.execute(q1).fetchall()
+            # try to find the user from the attributes
+            info_query = sa.select([tbl_info.c.uid],
+                                   whereclause=and_(tbl_info.c.attr_type == attr_type,
+                                                    tbl_info.c.attr_data == attr_data))
+            info_data = conn.execute(info_query).fetchall()
 
-            q2 = sa.select([ tbl.c.uid, tbl.c.fullname, tbl.c.mail ],
-                           whereclause=and_(tbl.c.identifier == identifier))
-            r2 = conn.execute(q2).fetchall()
+            # try to find the user from the users table
+            user_query = sa.select([tbl.c.uid, tbl.c.fullname, tbl.c.mail],
+                                   whereclause=and_(tbl.c.identifier == identifier))
+            user_data = conn.execute(user_query).fetchall()
 
             # Check if we need to update the name or the mail
-
-            if r2:
+            if user_data:
                 update_dict = {}
-                if fullname and r2[0].fullname != fullname:
+                if fullname and user_data[0].fullname != fullname:
                     update_dict['fullname'] = fullname
-                if mail and r2[0].mail != mail:
+                if mail and user_data[0].mail != mail:
                     update_dict['mail'] = mail
 
                 if update_dict:
                     transaction = conn.begin()
                     try:
-                        conn.execute(tbl.update(whereclause=(tbl.c.uid == r2[0].uid)),
+                        conn.execute(tbl.update(whereclause=(tbl.c.uid == user_data[0].uid)),
                                      update_dict)
-                        transaction.commit()
                     except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                         transaction.rollback()
                         raise
+                    transaction.commit()
 
-            if r1:
-                return r1[0].uid
+            # If we have the attributes
+            if info_data:
+                return info_data[0].uid
 
             # same user may exists in other repository example hg/git
-
-            if r2:
+            # we insert the attributes
+            if user_data:
                 transaction = conn.begin()
                 try:
                     conn.execute(tbl_info.insert(),
-                                 dict(uid=r2[0].uid, attr_type=attr_type,
+                                 dict(uid=user_data[0].uid, attr_type=attr_type,
                                       attr_data=attr_data))
                     transaction.commit()
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     transaction.rollback()
                     raise
 
-                return r2[0].uid
+                return user_data[0].uid
 
             _race_hook and _race_hook(conn)
 
@@ -87,15 +88,13 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # time from the perspective of other masters.
             transaction = conn.begin()
             try:
-                print fullname
-                print mail
                 r = conn.execute(tbl.insert(), dict(identifier=identifier,
                                                     fullname=fullname, mail=mail))
                 uid = r.inserted_primary_key[0]
 
                 conn.execute(tbl_info.insert(),
-                        dict(uid=uid, attr_type=attr_type,
-                             attr_data=attr_data))
+                             dict(uid=uid, attr_type=attr_type,
+                                  attr_data=attr_data))
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
