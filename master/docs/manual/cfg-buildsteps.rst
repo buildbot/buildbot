@@ -2443,6 +2443,10 @@ Hyperlinks are added to the build detail web pages for each triggered build.
 
         It is possible, but not advisable, to create a cycle where a build continually triggers itself, because the schedulers are specified by name.
 
+``unimportantSchedulerNames``
+    When ``waitForFinish`` is ``True``, all schedulers in this list will not cause the trigger step to fail. unimportantSchedulerNames must be a subset of schedulerNames
+    If ``waitForFinish`` is ``False``, unimportantSchedulerNames will simply be ignored.
+        
 ``waitForFinish``
     If ``True``, the step will not finish until all of the builds from the triggered schedulers have finished.
 
@@ -2479,13 +2483,14 @@ Dynamic Trigger
 +++++++++++++++
 
 Sometimes it is desirable to select which scheduler to trigger, and which properties to set dynamically, at the time of the build.
-For this purpose, Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, and ``set_properties``.
+For this purpose, Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, ``set_properties`` and optionally ``unimportant``.
 
 .. py:method:: getSchedulersAndProperties()
 
-    :returns: list of tuples (schedulerName, propertiesDict) optionally via deferred
+    :returns: list of dictionaries containing the keys 'sched_name', 'props_to_set' and 'unimportant' optionally via deferred
 
-    This methods returns a list of tuples describing what scheduler to trigger, with which properties.
+    This method returns a list of dictionaries describing what scheduler to trigger, with which properties and if the scheduler is unimportant.
+    Old style list of tuples is still supported, in which case unimportant is considered ``False``.
     The properties should already be rendered (ie, concrete value, not objects wrapped by ``Interpolate`` or
     ``Property``). Since this function happens at build-time, the property values are available from the
     step and can be used to decide what schedulers or properties to use.
