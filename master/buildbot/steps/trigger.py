@@ -50,9 +50,19 @@ class Trigger(BuildStep):
                  copy_properties=None, parent_relationship="Triggered from", **kwargs):
         if schedulerNames is None:
             schedulerNames = []
+        self.schedulerNames = []
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
+                
+        self.schedulerNames_to_critical_dict = {}
+                
+        types = [type(sched) for sched in schedulerNames]
+        if len(set(types)) != 1:
+            config.error(
+                "You can either specify all scheduler names or all tuples of the form (schedulername, True/False)")
+        sched_type = type(schedulerNames[0]) or str
+        
         if (sourceStamp or sourceStamps) and (updateSourceStamp is not None):
             config.error(
                 "You can't specify both sourceStamps and updateSourceStamp")
@@ -63,7 +73,23 @@ class Trigger(BuildStep):
             config.error(
                 "You can't specify both alwaysUseLatest and updateSourceStamp"
             )
-        self.schedulerNames = schedulerNames
+        self.schedulerNames_to_unimportant_dict = dict()
+        if sched_type is str:
+            # If schedulerNames is simply a  list of strings
+            self.schedulerNames = schedulerNames
+            for sch in self.schedulerNames:
+                # any schedulder is critical
+                self.schedulerNames_to_critical_dict[sch] = True
+        else:
+            # If schedulerNames is a list of tuples
+            for sch_tuple in schedulerNames:
+
+                sched_name = sch_tuple[0]
+                print 'sched_name %s' %str(sched_name)
+                self.schedulerNames.append(sched_name)
+                is_important = sch_tuple[1]
+                self.schedulerNames_to_critical_dict[sched_name] = is_important
+
         self.sourceStamps = sourceStamps or []
         if sourceStamp:
             self.sourceStamps.append(sourceStamp)
@@ -127,9 +153,10 @@ class Trigger(BuildStep):
         return sch
 
     # This customization enpoint allows users to dynamically select which
-    # scheduler and properties to trigger
+    # scheduler and properties to trigger and if a failure of the kicked scheduler 
+    # should fail the the trigger step itself
     def getSchedulersAndProperties(self):
-        return [(sched, self.set_properties) for sched in self.schedulerNames]
+        return [(sched, self.set_properties, self.schedulerNames_to_critical_dict[sched]) for sched in self.schedulerNames]
 
     def prepareSourcestampListForTrigger(self):
         if self.sourceStamps:
@@ -167,14 +194,19 @@ class Trigger(BuildStep):
         return all_got_revisions
 
     @defer.inlineCallbacks
-    def worstStatus(self, overall_results, rclist):
+    def worstStatus(self, overall_results, rclist, brids_to_ignore):
         for was_cb, results in rclist:
             if isinstance(results, tuple):
-                results, _ = results
+                results, brids_dict = results
 
             if not was_cb:
                 yield self.addLogWithFailure(results)
                 results = EXCEPTION
+
+            # continue if this brid has to be ignored
+            if len(set(brids_to_ignore) & set(brids_dict.values())) != 0:
+                continue
+
             overall_results = worst_status(overall_results, results)
         defer.returnValue(overall_results)
 
@@ -202,9 +234,10 @@ class Trigger(BuildStep):
         # post process the schedulernames, and raw properties
         # we do this out of the loop, as this can result in errors
         schedulers_and_props = [(
-            self.getSchedulerByName(sch),
-            self.createTriggerProperties(props_to_set))
-            for sch, props_to_set in schedulers_and_props]
+            sch,
+            self.createTriggerProperties(props_to_set),
+            critical)
+            for sch, props_to_set, critical in schedulers_and_props]
 
         ss_for_trigger = self.prepareSourcestampListForTrigger()
 
@@ -213,7 +246,10 @@ class Trigger(BuildStep):
         results = SUCCESS
         self.running = True
 
-        for sch, props_to_set in schedulers_and_props:
+        brids_to_ignore = []
+        for sched_name, props_to_set, critical in schedulers_and_props:
+
+            sch = self.getSchedulerByName(sched_name)
             idsDeferred, resultsDeferred = sch.trigger(
                 waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
                 set_props=props_to_set,
@@ -229,12 +265,18 @@ class Trigger(BuildStep):
                 yield self.addLogWithException(e)
                 results = EXCEPTION
 
+            # If it is not critical it will not affect results
+            if not critical:
+                brids_to_ignore.extend(itervalues(brids))
+
             self.brids.extend(itervalues(brids))
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from
                 # the beginning
                 url = self.master.status.getURLForBuildrequest(brid)
                 yield self.addURL("%s #%d" % (sch.name, brid), url)
+            # if critical:
+                # dl.append(resultsDeferred)
             dl.append(resultsDeferred)
             triggeredNames.append(sch.name)
             if self.ended:
@@ -247,7 +289,7 @@ class Trigger(BuildStep):
             if self.ended:
                 defer.returnValue(CANCELLED)
             yield self.addBuildUrls(rclist)
-            results = yield self.worstStatus(results, rclist)
+            results = yield self.worstStatus(results, rclist, brids_to_ignore)
         else:
             # do something to handle errors
             for d in dl:
