@@ -265,7 +265,7 @@ class GerritStatusPush(service.BuildbotService):
 
         self._buildStartedConsumer = yield startConsuming(
             self.buildStarted,
-            ('builds', None, 'started'))
+            ('builds', None, 'new'))
 
     def stopService(self):
         self._buildsetCompleteConsumer.stopConsuming()
