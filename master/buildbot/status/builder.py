@@ -101,12 +101,12 @@ class BuilderStatus(styles.Versioned):
     unavailable_build_numbers = set()
     status = None
 
-    def __init__(self, buildername, category, master, friendly_name=None, description=None):
+    def __init__(self, buildername, category, master, friendly_name=None, description=None, project=None):
         self.name = buildername
         self.category = category
         self.description = description
         self.master = master
-        self.project = None
+        self.project = project
         self.friendly_name = friendly_name
 
         self.slavenames = []

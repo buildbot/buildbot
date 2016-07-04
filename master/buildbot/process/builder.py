@@ -99,7 +99,8 @@ class Builder(config.ReconfigurableServiceMixin,
                     builder_config.name,
                     builder_config.builddir,
                     builder_config.category, builder_config.friendly_name,
-                    builder_config.description)
+                    builder_config.description,
+                    project=builder_config.project)
 
         self.config = builder_config
 
