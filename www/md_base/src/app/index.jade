@@ -33,3 +33,12 @@ html(ng-app="app", ng-controller="appController as app")
       | {% endfor %}
       script
         | angular.module("app").constant("config", {{configjson|safe}})
+      | {% if custom_templates %}
+      script
+         |angular.module('app').run(function($templateCache) {
+         | {% for template_name, content in custom_templates.iteritems() %}
+         |   $templateCache.push("{{ template_name }}", {{ content }});
+         | {% endfor %}
+         |});
+      | {% endif %}
+
