@@ -353,7 +353,7 @@ setup_args = {
                 ('repo.DownloadsFromProperties',
                  'RepoDownloadsFromProperties')]),
             ('buildbot.steps.shellsequence', ['ShellArg']),
-            ('buildbot.www.avatar', ['AvatarGravatar']),
+            ('buildbot.www.avatar', ['AvatarGravatar', 'AvatarGitHub']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth']),
             ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),

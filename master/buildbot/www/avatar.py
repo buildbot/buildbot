@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 import hashlib
+import json
+import urllib
 
 from future.moves.urllib.parse import urlencode
 from future.moves.urllib.parse import urljoin
@@ -27,6 +29,29 @@ class AvatarBase(config.ConfiguredMixin):
 
     def getUserAvatar(self, email, size, defaultAvatarUrl):
         raise NotImplementedError()
+
+
+class AvatarGitHub(AvatarBase):
+    name = "github"
+    cache = {}
+
+    def getUserAvatar(self, email, size, defaultAvatarUrl):
+        url = self.cache.get(email)
+        if url:
+            raise resource.Redirect(url)
+
+        # https://developer.github.com/v3/search/#search-users
+        url = 'https://api.github.com/search/users?'
+        url += urllib.urlencode({'q': email, 'in': 'email', 'type': 'user'})
+        try:
+            res = json.loads(urllib.urlopen(url).read())
+            github_url = res['items'][0]['avatar_url']
+        except:
+            # Redirect to the default image if *something* fails
+            raise resource.Redirect(str(defaultAvatarUrl))
+        github_url += '&' + urllib.urlencode({'s': str(size)})
+        self.cache[email] = str(github_url)
+        raise resource.Redirect(str(github_url))
 
 
 class AvatarGravatar(AvatarBase):
