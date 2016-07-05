@@ -23,6 +23,7 @@ from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
 
+FAKE_CHANGEID1 = 20
 
 class CommonStuffMixin(object):
 
@@ -100,7 +101,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         sched = self.makeScheduler(self.Subclass, treeStableTimer=None, change_filter=cf,
                                    fileIsImportant=fII)
 
-        self.db.schedulers.fakeClassifications(self.OBJECTID, {20: True})
+        self.db.schedulers.fakeClassifications(self.OBJECTID, {FAKE_CHANGEID1: True})
 
         d = sched.startService(_returnDeferred=True)
 
@@ -122,34 +123,109 @@ class BaseBasicScheduler(CommonStuffMixin,
         sched = self.makeScheduler(Subclass, onlyImportant=True)
         self.failUnlessEqual(Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
 
-    def test_startService_treeStableTimer(self):
+    def setupTimerTest(self, check, **kwargs):
+        # Create:
+        #   - oustanding important change
         cf = mock.Mock()
-        sched = self.makeScheduler(self.Subclass, treeStableTimer=10, change_filter=cf)
+        sched = self.makeScheduler(self.Subclass, change_filter=cf, **kwargs)
 
-        self.db.schedulers.fakeClassifications(self.OBJECTID, {20: True})
+        self.db.schedulers.fakeClassifications(self.OBJECTID, {FAKE_CHANGEID1: True})
         self.master.db.insertTestData([
-            fakedb.Change(changeid=20),
+            fakedb.Change(changeid=FAKE_CHANGEID1),
             fakedb.SchedulerChange(objectid=self.OBJECTID,
-                                   changeid=20, important=1)
+                                   changeid=FAKE_CHANGEID1, important=1)
         ])
 
         d = sched.startService(_returnDeferred=True)
+        d.addCallback(lambda _: check(sched, cf))
+        d.addCallback(lambda _: sched.stopService())
 
+        return d
+
+    def test_startService_treeStableTimer(self):
         # check that the scheduler has started to consume changes, and no
         # classifications have been flushed.  Furthermore, the existing
         # classification should have been acted on, so the timer should be
         # running
-        def check(_):
+        TIMER_SECS = 10
+        def check(sched, cf):
             self.assertConsumingChanges(fileIsImportant=None, change_filter=cf,
                                         onlyImportant=False)
-            self.db.schedulers.assertClassifications(self.OBJECTID, {20: True})
+            self.db.schedulers.assertClassifications(self.OBJECTID, {FAKE_CHANGEID1: True})
             self.assertTrue(sched.timer_started)
-            self.assertEqual(sched.getPendingBuildTimes(), [10])
-            self.clock.advance(10)
+            self.assertEqual(sched.getPendingBuildTimes(), [TIMER_SECS])
+            self.clock.advance(TIMER_SECS)
             self.assertEqual(sched.getPendingBuildTimes(), [])
-        d.addCallback(check)
-        d.addCallback(lambda _: sched.stopService())
-        return d
+
+        return self.setupTimerTest(check=check,
+                                   treeStableTimer=TIMER_SECS)
+
+    def test_startService_coolDownTimer(self):
+        # On start, it should immediately trigger, but then future changes will block.
+        TIMER_SECS = 20
+        FAKE_CHANGE1 = 13
+        FAKE_CHANGE2 = 33
+
+        @defer.inlineCallbacks
+        def check(sched, cf):
+            self.assertConsumingChanges(fileIsImportant=None, change_filter=cf,
+                                        onlyImportant=False)
+            self.db.schedulers.assertClassifications(self.OBJECTID, {})
+            self.assertTrue(sched.timer_started)
+            self.assertEqual(sched.getPendingBuildTimes(), [])
+
+            # Add a new change, it should pend.
+            yield sched.gotChange(self.makeFakeChange(branch='master', number=FAKE_CHANGE1), True)
+            self.db.schedulers.assertClassifications(self.OBJECTID, {FAKE_CHANGE1: True})
+            self.assertEqual(sched.getPendingBuildTimes(), [TIMER_SECS])
+
+            self.clock.advance(TIMER_SECS)
+            self.assertEqual(sched.getPendingBuildTimes(), [])
+
+            # Add a new change, it should pend.
+            yield sched.gotChange(self.makeFakeChange(branch='master', number=FAKE_CHANGE2), True)
+            self.db.schedulers.assertClassifications(self.OBJECTID, {FAKE_CHANGE2: True})
+            self.assertEqual(sched.getPendingBuildTimes(), [TIMER_SECS*2])
+
+        return self.setupTimerTest(check=check,
+                                   coolDownTimer=TIMER_SECS,
+                                   treeStableTimer=None)
+
+    def test_startService_coolDownTimer_and_treeStableTimer(self):
+        TIMER_INTERVAL = 5
+        STABLE_TIMER_SECS = 10
+        COOLDOWN_TIMER_SECS = 60
+        FAKE_CHANGE1 = 13
+        FAKE_CHANGE2 = 33
+
+        @defer.inlineCallbacks
+        def check(sched, cf):
+            self.assertConsumingChanges(fileIsImportant=None, change_filter=cf,
+                                        onlyImportant=False)
+            self.db.schedulers.assertClassifications(self.OBJECTID, {FAKE_CHANGEID1: True})
+            self.assertTrue(sched.timer_started)
+            self.assertEqual(sched.getPendingBuildTimes(), [STABLE_TIMER_SECS])
+
+            self.clock.advance(TIMER_INTERVAL) # Total: 5
+
+            # Add a new change, it should reset the tree-stable timer.
+            yield sched.gotChange(self.makeFakeChange(branch='master', number=FAKE_CHANGE1), True)
+            self.db.schedulers.assertClassifications(self.OBJECTID, {FAKE_CHANGE1: True, FAKE_CHANGEID1: True})
+            self.assertEqual(sched.getPendingBuildTimes(), [STABLE_TIMER_SECS+TIMER_INTERVAL])
+
+            self.clock.advance(TIMER_INTERVAL) # Total: 10
+            self.clock.advance(TIMER_INTERVAL) # Total: 15
+            # Cooldown timer is active, but no builds are pending yet.
+            self.assertEqual(sched.getPendingBuildTimes(), [])
+
+            yield sched.gotChange(self.makeFakeChange(branch='master', number=FAKE_CHANGE2), True)
+            self.db.schedulers.assertClassifications(self.OBJECTID, {FAKE_CHANGE2: True})
+            # Fires when the tree-stable finally finished plus the cooldown.
+            self.assertEqual(sched.getPendingBuildTimes(), [COOLDOWN_TIMER_SECS+3*TIMER_INTERVAL])
+
+        return self.setupTimerTest(check=check,
+                                   coolDownTimer=COOLDOWN_TIMER_SECS,
+                                   treeStableTimer=STABLE_TIMER_SECS)
 
     def test_gotChange_no_treeStableTimer_unimportant(self):
         sched = self.makeScheduler(self.Subclass, treeStableTimer=None, branch='master')

@@ -521,6 +521,9 @@ class FakeSchedulersComponent(FakeDBComponent):
                                  project=-1, codebase=-1):
         classifications = self.classifications.setdefault(objectid, {})
 
+        # Make a copy so each call gets a private version of this.
+        classifications = dict(classifications)
+
         sentinel = dict(branch=object(), repository=object(),
                         project=object(), codebase=object())
 
