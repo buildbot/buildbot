@@ -327,6 +327,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def unsubscribe(self, target):
         self.watchers.remove(target)
+        for name in self.botmaster.builderNames:
+            self.getBuilder(name).unsubscribe(target)
 
     # methods called by upstream objects
     def announceNewBuilder(self, target, name, builder_status):
