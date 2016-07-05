@@ -32,6 +32,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             self.check_length(tbl.c.identifier, identifier)
             self.check_length(tbl_info.c.attr_type, attr_type)
             self.check_length(tbl_info.c.attr_data, attr_data)
+            if fullname:
+                self.check_length(tbl.c.fullname, fullname)
+            if mail:
+                self.check_length(tbl.c.mail, mail)
 
             # try to find the user from the attributes
             info_query = sa.select([tbl_info.c.uid],
