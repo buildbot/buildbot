@@ -1626,7 +1626,9 @@ StashStatusPush
 
     ss = StashStatusPush('https://stash.example.com:8080/',
                          'stash_username',
-                         'secret_password')
+                         'secret_password',
+                         key_format='%(builderName)s-%(branch)s',
+                         name_format='%(builderName)s-%(branch)s-%(buildNumber)s')
 
     c['status'].append(ss)
 
@@ -1639,13 +1641,18 @@ Specifically, it follows the `Updating build status for commits <https://develop
 
 It uses the standard Python Twisted Agent to make REST requests to the stash server.
 It uses HTTP Basic AUTH.
-As a result, we recommend you use https in your base_url rather than http.
+As a result, we recommend you either connect over a secured network or use https in your base_url rather than http.
 If you use https, it requires `pyOpenSSL`.
 
-Configuration requires exactly 3 parameters:
+Configuration requires 3 parameters:
 `base_url` is the base url of the stash host, up to and optionally including the first / of the path.
 `user` is the stash user to post as
 `password` is the stash user's password
+There are also two optional parameters:
+`key_format` is a python format string used to define the aggregation key for builds in stash.
+It defaults to `%(builderName)s` for backwards compatability.
+`name_format` is a python format string used to define the human-readable build name in stash.
+It defaults to `None` which does not include a name parameter in the REST request.
 
 .. [#] Apparently this is the same way http://buildd.debian.org displays build status
 
