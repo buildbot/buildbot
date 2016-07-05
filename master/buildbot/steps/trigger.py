@@ -213,9 +213,14 @@ class Trigger(BuildStep):
         results = SUCCESS
         self.running = True
 
+        if isinstance(self.waitForFinish, bool):
+            waitForFinish = self.waitForFinish
+        else:
+            waitForFinish = yield self.waitForFinish(self)
+
         for sch, props_to_set in schedulers_and_props:
             idsDeferred, resultsDeferred = sch.trigger(
-                waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
+                waited_for=waitForFinish, sourcestamps=ss_for_trigger,
                 set_props=props_to_set,
                 parent_buildid=self.build.buildid,
                 parent_relationship=self.parent_relationship
@@ -241,7 +246,7 @@ class Trigger(BuildStep):
                 defer.returnValue(CANCELLED)
         self.triggeredNames = triggeredNames
 
-        if self.waitForFinish:
+        if waitForFinish:
             rclist = yield defer.DeferredList(dl, consumeErrors=1)
             # we were interrupted, don't bother update status
             if self.ended:
