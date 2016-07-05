@@ -25,6 +25,27 @@ The :file:`post_build_request.py` script in :file:`master/contrib` allows for th
 Run :command:`post_build_request.py --help` for more information.
 The ``base`` dialect must be enabled for this to work.
 
+Mercurial hook
+++++++++++++++
+
+The Mercurial hook uses the base dialect:
+
+.. code-block:: python
+
+    c['www'] = dict(
+        ...,
+        change_hook_dialects={'base': True},
+    )
+
+Once this is configured on your buildmaster add the following hook on your server-side Mercurial repository's ``hgrc``:
+
+.. code-block:: ini
+
+    [hooks]
+    changegroup.buildbot = python:/path/to/hgbuildbot.py:hook
+
+You'll find ``hgbuildbot.py``, and its inline documentation, in the ``contrib`` directory of Buildbot's repository.
+
 GitHub hook
 +++++++++++
 

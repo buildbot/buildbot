@@ -67,10 +67,11 @@ def getChanges(request, options=None):
     revlink = firstOrNothing(args.get('revlink'))
     repository = firstOrNothing(args.get('repository'))
     project = firstOrNothing(args.get('project'))
+    codebase = firstOrNothing(args.get('codebase'))
 
     chdict = dict(author=author, files=files, comments=comments,
                   revision=revision, when=when,
                   branch=branch, category=category, revlink=revlink,
                   properties=properties, repository=repository,
-                  project=project)
+                  project=project, codebase=codebase)
     return ([chdict], None)
