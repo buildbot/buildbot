@@ -23,6 +23,12 @@ Features
 
 * :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
 
+* The 'buildbot try --wait' command now appends [build %d] when showing
+  results, so wrappers can hyperlink to the build in question.
+
+* The new :bb:src:`master/contrib/gitlab_buildbot.py` script lets you
+  trigger try builds via the gitlab merge request webhook.
+
 Fixes
 ~~~~~
 
