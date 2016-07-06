@@ -13,6 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
+import os
 
 from twisted.trial import unittest
 
@@ -53,8 +54,17 @@ class TestEC2LatentWorker(unittest.TestCase):
             raise unittest.SkipTest("moto not found")
 
     def botoSetup(self, name='latent_buildbot_worker'):
-        c = boto3.client('ec2', region_name='us-east-1')
-        r = boto3.resource('ec2', region_name='us-east-1')
+        # the proxy system is also not properly mocked, so we need to delete envionment variables
+        for env in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY']:
+            if env in os.environ:
+                del os.environ[env]
+        # create key pair is not correcly mocked and need to have fake aws creds configured
+        kw = dict(region_name='us-east-1',
+                  aws_access_key_id='ACCESS_KEY',
+                  aws_secret_access_key='SECRET_KEY',
+                  aws_session_token='SESSION_TOKEN')
+        c = boto3.client('ec2', **kw)
+        r = boto3.resource('ec2', **kw)
         try:
             r.create_key_pair(KeyName=name)
         except NotImplementedError:
