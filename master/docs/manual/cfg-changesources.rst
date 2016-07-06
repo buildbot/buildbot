@@ -45,8 +45,7 @@ Darcs
  * :bb:chsrc:`Change Hooks` in WebStatus
 
 Mercurial
- * :bb:chsrc:`PBChangeSource` (listening for connections from :file:`contrib/hgbuildbot.py` run in an ``changegroup`` hook)
- * :bb:chsrc:`Change Hooks` in WebStatus
+ * :bb:chsrc:`Change Hooks` in WebStatus (including :file:`contrib/hgbuildbot.py`, configurable in a ``changegroup`` hook)
  * `BitBucket change hook <BitBucket hook>`_ (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
  * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
  * :bb:chsrc:`GoogleCodeAtomPoller` (polling the commit feed for a GoogleCode Git repository)

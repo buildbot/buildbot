@@ -13,6 +13,7 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2007 Frederic Leroy <fredo@starox.org>
+# Portions Copyright 2016 Louis Opter <kalessin@kalessin.fr>
 #
 #
 # Documentation
@@ -20,11 +21,12 @@
 #
 # Mercurial "changegroup" hook that notifies Buildbot when a number of
 # changsets is brought into the repository from elsewhere.
-#                                                                              
-# Your Buildmaster needs to define a PBChangeSource.  You should at least set  
-# a strong password for it.  Changing the username or port is optional.        
-# See the docs for more details:                                               
-# http://docs.buildbot.net/latest/manual/cfg-changesources.html#pbchangesource 
+#
+# Your Buildmaster needs to define a base ChangeHook, you should configure it
+# behind a reverse proxy that does TLS and authentication for you and/or keep
+# it behind a firewall. See the docs for more details:
+#
+# http://docs.buildbot.net/latest/manual/cfg-wwwhooks.html
 #
 # Copy this file to ".hg/hgbuildbot.py" in the repository that should notify
 # Buildbot.
@@ -37,15 +39,14 @@
 #
 #     [hgbuildbot]
 #     venv = /home/buildbot/.virtualenvs/builtbot/lib/python2.7/site-packages
-#     master = localhost:9987
-#     passwd = aA8(-adf8j3-_3uX
+#     master = http://localhost:8020/change_hook/base
 #
 #
 # Available parmeters
 # -------------------
 #
 # venv
-#   The hook needs the Python package "buildbot".  You can optionally point to
+#   The hook needs the Python package "requests".  You can optionally point to
 #   virtualenv if it is not installed globally:
 #
 #   Optional; default: None
@@ -55,25 +56,25 @@
 #       venv = /path/to/venv/lib/pythonX.Y/site-packages
 #
 # master
-#   Host and port of the Buildmaster(s) to notify.
+#   URLs of the Buildmaster(s) to notify.
 #   Can be a single entry or a comma-separated list.
 #
 #   Mandatory.
 #
 #   Examples:
 #
-#       master = localhost:9989
-#       master = bm1.example.org:9989,bm2.example.org:9989
+#       master = localhost:8020/change_hook/base
+#       master = bm1.example.org:8020/change_hook/base,bm2.example.org:8020/change_hook/base
 #
 # user
-#   User for connecting to the Buildmaster.
+#   User for connecting to the Buildmaster. (Basic auth will be used).
 #
-#   Optional; default: change
+#   Optional.
 #
 # passwd
 #   Password for connecting to the Buildmaster.
 #
-#   Optional; default: changepw
+#   Optional.
 #
 # branchtype
 #   The branchmodel you use: "inrepo" for named branches (managed by
@@ -139,9 +140,11 @@
 # This would strip everything until (and including) the 4th "/" in the repo's
 # path leaving only "myrepo" left.  This would then be append to the base URL.
 
+import json
 import os
 import os.path
-import sys
+import requests
+
 
 from mercurial.encoding import fromlocal
 from mercurial.node import hex
@@ -165,11 +168,17 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     if venv is not None:
         if not os.path.isdir(venv):
             ui.write('* Virtualenv "%s" does not exist.\n' % venv)
-        sys.path.insert(0, venv)
+        else:
+            activate_this = os.path.join(venv, "bin/activate_this.py")
+            execfile(activate_this, dict(__file__=activate_this))
 
     # - auth
-    username = ui.config('hgbuildbot', 'user', 'change')
-    password = ui.config('hgbuildbot', 'passwd', 'changepw')
+    username = ui.config('hgbuildbot', 'user')
+    password = ui.config('hgbuildbot', 'passwd')
+    if username is not None and password is not None:
+        auth = requests.auth.HTTPBasicAuth(username, password)
+    else:
+        auth = None
 
     # - branch
     branchtype = ui.config('hgbuildbot', 'branchtype', 'inrepo')
@@ -186,10 +195,6 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     project = ui.config('hgbuildbot', 'project', '')
     codebase = ui.config('hgbuildbot', 'codebase', '')
 
-    # Only import this after the (optional) venv has been added to sys.path:
-    from buildbot.clients import sendchange
-    from twisted.internet import defer, reactor
-
     # Process changesets
     if branch is None and branchtype == 'dirname':
         branch = os.path.basename(repo.root)
@@ -201,55 +206,52 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     start = repo[node].rev()
     end = len(repo)
 
-    for master in masters:
-        s = sendchange.Sender(master, auth=(username, password))
-        d = defer.Deferred()
-        reactor.callLater(0, d.callback, None)
+    for rev in range(start, end):
+        # send changeset
+        node = repo.changelog.node(rev)
+        log = repo.changelog.read(node)
+        manifest, user, (time, timezone), files, desc, extra = log
+        parents = [p for p in repo.changelog.parents(node) if p != nullid]
 
-        for rev in range(start, end):
-            # send changeset
-            node = repo.changelog.node(rev)
-            log = repo.changelog.read(node)
-            manifest, user, (time, timezone), files, desc, extra = log
-            parents = [p for p in repo.changelog.parents(node) if p != nullid]
+        if branchtype == 'inrepo':
+            branch = extra['branch']
+        if branch:
+            branch = fromlocal(branch)
 
-            if branchtype == 'inrepo':
-                branch = extra['branch']
-            if branch:
-                branch = fromlocal(branch)
+        is_merge = len(parents) > 1
+        # merges don't always contain files, but at least one file is
+        # required by buildbot
+        if is_merge and not files:
+            files = ["merge"]
+        properties = {'is_merge': is_merge}
 
-            is_merge = len(parents) > 1
-            # merges don't always contain files, but at least one file is
-            # required by buildbot
-            if is_merge and not files:
-                files = ["merge"]
-            properties = {'is_merge': is_merge}
-
-            change = {
-                # 'master': master,
-                'branch': branch,
-                'revision': hex(node),
-                'comments': fromlocal(desc),
-                'files': files,
-                'username': fromlocal(user),
-                'category': category,
-                'time': time,
-                'properties': properties,
-                'repository': repository,
-                'project': project,
-                'codebase': codebase,
-            }
-            d.addCallback(send_cs, s, change)
-
-    def _printSuccess(res):
-        ui.status(s.getSuccessString(res) + '\n')
-
-    def _printFailure(why):
-        ui.warn(s.getFailureString(why) + '\n')
-
-    d.addCallbacks(_printSuccess, _printFailure)
-    d.addBoth(lambda _: reactor.stop())
-    reactor.run()
+        change = {
+            # 'master': master,
+            'branch': branch,
+            'revision': hex(node),
+            'comments': fromlocal(desc),
+            'files': json.dumps(files),
+            'author': fromlocal(user),
+            'category': category,
+            'when': time,
+            'properties': json.dumps(properties),
+            'repository': repository,
+            'project': project,
+            'codebase': codebase,
+        }
+        for master in masters:
+            response = requests.post(
+                master,
+                auth=auth,
+                params=change,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            if not response.ok:
+                ui.warn("couldn't notify buildbot about {}: {} {}".format(
+                    hex(node)[:12], response.status_code, response.reason
+                ))
+            else:
+                ui.status("notified buildbot about {}".format(hex(node)[:12]))
 
 
 def strip(path, count):
@@ -258,21 +260,3 @@ def strip(path, count):
     path = '/'.join(path.split(os.sep))
     # and strip the *count* first slash
     return path.split('/', count)[-1]
-
-
-def send_cs(res, sender, change):                 
-    """Send a changeset *change* via *sender*.""" 
-    return sender.send(                           
-        change['branch'],                         
-        change['revision'],                       
-        change['comments'],                       
-        change['files'],                          
-        who=change['username'],                   
-        category=change['category'],              
-        when=change['time'],                      
-        properties=change['properties'],          
-        repository=change['repository'],          
-        vc='hg',                                  
-        project=change['project'],                
-        # revlink='',                             
-        codebase=change['codebase'])              
