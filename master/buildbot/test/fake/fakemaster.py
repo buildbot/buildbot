@@ -56,7 +56,7 @@ class FakeStatus(object):
         pass
 
 
-    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None):
+    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None, project=None):
         return FakeBuilderStatus(self.master)
 
     def build_started(self, brid, buildername, build_status):
