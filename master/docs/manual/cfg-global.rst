@@ -71,7 +71,7 @@ If you see errors such as ``_mysql_exceptions.OperationalError: (2006, 'MySQL se
 
 Buildbot requires ``use_unique=True`` and ``charset=utf8``, and will add them automatically, so they do not need to be specified in ``db_url``.
 
-MySQL defaults to the MyISAM storage engine, but this can be overridden with the ``storage_engine`` URL argument.
+MySQL defaults to the MyISAM storage engine, but this can be overridden with the ``default_storage_engine`` URL argument.
 
 Note that, because of InnoDB's extremely short key length limitations, it cannot be used to run Buildbot.
 See http://bugs.mysql.com/bug.php?id=4541 for more information.

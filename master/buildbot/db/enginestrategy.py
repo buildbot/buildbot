@@ -109,9 +109,9 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         kwargs['pool_recycle'] = int(u.query.pop('max_idle', 3600))
 
         # default to the InnoDB storage engine
-        storage_engine = u.query.pop('storage_engine', 'InnoDB')
+        storage_engine = u.query.pop('default_storage_engine', 'InnoDB')
         kwargs['connect_args'] = {
-            'init_command' : 'SET storage_engine=%s' % storage_engine,
+            'init_command' : 'SET default_storage_engine=%s' % storage_engine,
         }
 
         if 'use_unicode' in u.query:
