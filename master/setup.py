@@ -409,7 +409,8 @@ if sys.version_info[:2] == (2, 6):
     txaio_ver = "== 2.2.2"
 
 else:
-    twisted_ver = ">= 14.0.1"
+    # twisted 16.3.0 breaks buildbot websockets
+    twisted_ver = ">= 14.0.1, < 16.3.0"
     autobahn_ver = ">= 0.10.2"
     txaio_ver = ">= 2.2.2"
 
