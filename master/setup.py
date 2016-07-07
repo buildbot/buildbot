@@ -466,6 +466,7 @@ else:
             'setuptools_trial',
             'isort',
             'pylint==1.1.0',
+            'astroid==1.3.8',
             'pyflakes',
         ] + test_deps,
         'bundle': [
