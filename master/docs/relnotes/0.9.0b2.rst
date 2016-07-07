@@ -68,7 +68,7 @@ Features
 Fixes
 ~~~~~
 
-* Fix a two race conditions in the integration tests
+* Fix two race conditions in the integration tests
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

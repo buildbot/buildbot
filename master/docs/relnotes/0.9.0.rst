@@ -1,0 +1,651 @@
+Release Notes for Buildbot ``0.9.0``
+========================================
+
+.. warning::
+
+    The following are temporary release notes for unreleased version of buildbot.
+
+The following are the release notes for Buildbot ``0.9.0``.
+
+This is a concatenation of important changes done between 0.8.12 and 0.9.0.
+This does not contain details of the bug fixes related to the nine beta and rc period.
+This document was written during the very long period of nine development.
+It might contain some incoherencies, *please* help us and report them on irc or trac.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+Master
+------
+
+This version represents a refactoring of Buildbot into a consistent, well-defined application composed of loosely coupled components.
+The components are linked by a common database backend and a messaging system.
+This allows components to be distributed across multiple build masters.
+It also allows the rendering of complex web status views to be performed in the browser, rather than on the buildmasters.
+
+The branch looks forward to committing to long-term API compatibility, but does not reach that goal.
+The Buildbot-0.9.x series of releases will give the new APIs time to "settle in" before we commit to them.
+Commitment will wait for Buildbot-1.0.0 (as per http://semver.org).
+Once Buildbot reaches version 1.0.0, upgrades will become much easier for users.
+
+To encourage contributions from a wider field of developers, the web application is designed to look like a normal AngularJS application.
+Developers familiar with AngularJS, but not with Python, should be able to start hacking on the web application quickly.
+The web application is "pluggable", so users who develop their own status displays can package those separately from Buildbot itself.
+
+Other goals:
+
+ * An approachable HTTP REST API, with real time event features used by the web application but available for any other purpose.
+ * A high degree of coverage by reliable, easily-modified tests.
+ * "Interlocking" tests to guarantee compatibility.
+   For example, the real and fake DB implementations must both pass the same suite of tests.
+   Then no unseen difference between the fake and real implementations can mask errors that will occur in production.
+
+Requirements
+~~~~~~~~~~~~
+
+The ``buildbot`` package requires Python 2.7 -- Python 2.5 and 2.6 are no longer supported.
+The ``buildbot-slave`` package requires Python 2.6 or higher -- Python 2.4 and 2.5 are no longer supported.
+
+No additional software or systems, aside from some minor Python packages, are required.
+
+But the devil is in the details:
+
+ * If you want to do web *development*, or *build* the ``buildbot-www`` package, you'll need Node.
+   It's an Angular app, and that's how such apps are developed.
+   We've taken pains to not make either a requirement for users - you can simply 'pip install' ``buildbot-www`` and be on your way.
+   This is the case even if you're hacking on the Python side of Buildbot.
+ * For a single master, nothing else is required.
+
+Note for distro package maintainers: The npm dependency hell
+.............................................................
+
+In order to *build* the ``buildbot-www`` package, you'll need Node.
+
+Node has a very specific package manager named npm, which has the interesting property of allowing different version of package to co-exist in the same environment.
+The node ecosystem also has the habit of creating packages for a few line of code.
+
+Buildbot UI uses the node ecosystem to build its javascript UI.
+
+The buildsystem that we use is called `guanlecoja`_, which is just an integration of various javascript build tools.
+
+Through npm dependency hell, guanlecoja is depending on *625* npm packages/versions.
+We do not advise you to try and package all those npm *build* dependencies.
+They are *not* required in order to *run* buildbot.
+
+We do release pre-built packages in the form of the `wheel`_ format on pypi.
+Those wheels contain the full python source code, and prebuilt javascript source code.
+
+Depending on distro maintainers feedback, we *could* also release source tarballs with prebuilt javascript, but those would be pypi packages with different names, e.g. ``buildbot_www_prebuilt.0.9.0.tar.gz``.
+
+Another option would be to package a `guanlecoja`_ that would embed all its dependencies inside one package.
+
+.. _guanlecoja: https://www.npmjs.com/package/guanlecoja
+.. _wheel: http://pythonwheels.com/
+
+Detailed requirements
+.....................
+
+see :ref:`Requirements`
+
+Features
+~~~~~~~~
+
+Buildbot-0.9.0 introduces the :ref:`Data_API`, a consistent and scalable method for accessing and updating the state of the Buildbot system.
+This API replaces the existing, ill-defined Status API, which has been removed.
+Buildbot-0.9.0 introduces new :ref:`WWW` Interface using websocket for realtime updates.
+Buildbot code that interacted with the Status API (a substantial portion!) has been rewritten to use the Data API.
+Individual features and improvements to the Data API are not described on this page.
+
+* Buildbot now supports plugins.
+  They allow Buildbot to be extended by using components distributed independently from the main code.
+  They also provide for a unified way to access all components.
+  When previously the following construction was used::
+
+      from buildbot.kind.other.bits import ComponentClass
+
+      ... ComponentClass ...
+
+  the following construction achieves the same result::
+
+      from buildbot.plugins import kind
+
+      ... kind.ComponentClass ...
+
+  Kinds of components that are available this way are described in :doc:`../manual/plugins`.
+
+  .. note::
+
+     While the components can be still directly imported as ``buildbot.kind.other.bits``, this might not be the case after Buildbot v1.0 is released.
+
+* Both the P4 source step and P4 change source support ticket-based authentication.
+
+* OpenStack latent slaves now support block devices as a bootable volume.
+
+* Add new :bb:step:`Cppcheck` step.
+
+* Add a new :doc:`Docker latent Workers </manual/cfg-workers-docker>`.
+
+* Add a new configuration for creating custom services in out-of-tree CI systems or plugins. See :py:class:`buildbot.util.service.BuildbotService`
+
+* Add ``try_ssh`` configuration file setting and ``--ssh`` command line option for the try tool to specify the command to use for connecting to the build master.
+
+* GitHub change hook now supports application/json format.
+
+* Add support for dynamically adding steps during a build. See :ref:`DynamicBuildFactories`.
+
+* :bb:chsrc:`GitPoller` now supports detecting new branches
+
+* :bb:step:`Git` supports an "origin" option to give a name to the remote repo.
+
+* Mercurial hook was updated and modernized.
+  It is no longer necessary to fork.
+  One can now extend PYTHONPATH via the hook configuration.
+  Among others, it permits to use a buildbot virtualenv instead of installing buildbot in all the system.
+  Added documentation inside the hook.
+  Misc. clean-up and reorganization in order to make the code a bit more readable.
+
+* UI templates can now be customizable.
+  You can provide html or jade overrides to the www plugins, to customize the UI
+
+* The irc command ``hello`` now returns 'Hello' in a random language if invoked more than once.
+
+* :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
+
+* :bb:reporter:`GerritStatusPush` now accepts a ``builders`` parameter.
+
+* `StatusPush` callback now receives build results (success/failure/etc) with the ``buildFinished`` event.
+
+* There's a new renderable type, :ref:`Transform`.
+
+* :class:`GitPoller` now has a ``buildPushesWithNoCommits`` option to allow the rebuild of already known commits on new branches.
+
+* Add GitLab authentication plugin for web UI.
+  See :class:`buildbot.www.oauth2.GitLabAuth`.
+
+* :bb:step:`CMake` build step is added.
+  It provides a convenience interface to `CMake <https://cmake.org/cmake/help/latest/>`_ build system.
+
+* MySQL InnoDB tables are now supported.
+
+* :class:`~buildbot.reporters.http.HttpStatusPush` has been ported to reporter API.
+
+* :class:`~buildbot.reporters.stash.StashStatusPush` has been ported to reporter API.
+
+* ``GithubStatusPush`` has been ported to reporter API.
+
+* `summaryCB` of :bb:reporter:`GerritStatusPush` now gets not only pre-processed information but the actual build as well.
+
+* EC2LatentWorker supports VPCs, instance profiles, and advanced volume mounts.
+
+* new steps for Visual Studio 2015 (VS2015, VC14, and MsBuild14).
+
+* The :bb:step:`P4` step now obfuscates the password in status logs.
+
+* Added support for specifying the depth of a shallow clone in :bb:step:`Git`.
+
+* :bb:worker:`OpenStackLatentWorker` now uses a single novaclient instance to not require re-authentication when starting or stopping instances.
+
+* Buildbot UI introduces branch new Authentication, and Authorizations framework.
+
+    Please look at their respective guide in :ref:`WWW`
+
+* ``buildbot stop`` now waits for complete buildmaster stop by default.
+
+* New ``--no-wait`` argument for ``buildbot stop`` which allows not to wait for complete master shutdown.
+
+* New ``LocalWorker`` worker to run a worker in the master process, requires ``buildbot-worker`` package installed.
+
+* :bb:reporter:`GerritStatusPush` now includes build properties in the ``startCB`` and ``reviewCB`` functions. ``startCB`` now must return a dictionary.
+
+Reporters
+~~~~~~~~~
+
+Status plugins have been moved into the ``reporters`` namespace.
+Their API has slightly to changed in order to adapt to the new data API.
+See respective documentation for details.
+
+* :class:`~buildbot.status.status_gerrit.GerritStatusPush` renamed to :class:`~buildbot.reporters.gerrit.GerritStatusPush`
+
+* :class:`~buildbot.status.mail.MailNotifier` renamed to :class:`~buildbot.reporters.mail.MailNotifier`
+
+* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a :class:`~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
+
+* :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
+
+* :class:`~buildbot.reporters.gerrit.Gerrit` supports specifying an SSH identity file explicitly.
+
+* Added StashStatusPush status hook for Atlassian Stash
+
+* :bb:reporter:`MailNotifier` no longer forces SSL 3.0 when ``useTls`` is true.
+
+* :bb:reporter:`GerritStatusPush` callbacks slightly changed signature, and include a master reference instead of a status reference.
+
+* new :bb:reporter:`GitLabStatusPush` to report builds results to GitLab.
+
+* new :bb:reporter:`HipchatStatusPush` to report build results to Hipchat.
+
+
+Fixes
+~~~~~
+
+* Buildbot is now compatible with SQLAlchemy 0.8 and higher, using the newly-released SQLAlchemy-Migrate.
+
+* The version check for SQLAlchemy-Migrate was fixed to accept more version string formats.
+
+* The :bb:step:`HTTPStep` step's requeset parameters are now renderable.
+
+* With Git(), force the updating submodules to ensure local changes by the
+  build are overwitten. This both ensures more consistent builds and avoids
+  errors when updating submodules.
+
+* Buildbot is now compatible with Gerrit v2.6 and higher.
+
+  To make this happen, the return result of ``reviewCB`` and ``summaryCB``
+  callback has changed from
+
+  .. code-block:: python
+
+     (message, verified, review)
+
+  to
+
+  .. code-block:: python
+
+     {'message': message,
+      'labels': {'label-name': value,
+                ...
+                }
+     }
+
+  The implications are:
+
+  * there are some differences in behaviour: only those labels that were
+    provided will be updated
+  * Gerrit server must be able to provide a version, if it can't the
+    :bb:reporter:`GerritStatusPush` will not work
+
+  .. note::
+
+     If you have an old style ``reviewCB`` and/or ``summaryCB`` implemented,
+     these will still work, however there could be more labels updated than
+     anticipated.
+
+  More detailed information is available in :bb:reporter:`GerritStatusPush`
+  section.
+
+* :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
+
+* The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+* :bb:chsrc:`PBChangeSource`'s git hook :file:`contrib/git_buildbot.py` now supports git tags
+
+  A pushed git tag generates a change event with the ``branch`` property equal to the tag name.
+  To schedule builds based on buildbot tags, one could use something like this:
+
+  .. code-block:: python
+
+     c['schedulers'].append(
+        SingleBranchScheduler(name='tags',
+           change_filter=filter.ChangeFilter(
+              branch_re='v[0-9]+\.[0-9]+\.[0-9]+(?:-pre|rc[0-9]+|p[0-9]+)?')
+           treeStableTimer=None,
+           builderNames=['tag_build']))
+
+* Missing "name" and "email" properties received from Gerrit are now handled properly
+
+* Fixed bug which made it impossible to specify the project when using the
+  BitBucket dialect.
+
+* The :bb:step:`PyLint` step has been updated to understand newer output.
+
+* Fixed SVN master-side source step: if a SVN operation fails, the repository end up in a situation when a manual intervention is required.
+  Now if SVN reports such a situation during initial check, the checkout will be clobbered.
+
+* The build properties are now stored in the database in the ``build_properties`` table.
+
+* The list of changes in the build page now displays all the changes since the last sucessful build.
+
+* GitHub change hook now correctly responds to ping events.
+* ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable
+
+* When no arguments are used ``buildbot checkconfig`` now uses :file:`buildbot.tac` to locate the master config file.
+
+* `buildbot.util.flatten` now correctly flattens arbitrarily nested lists.
+  `buildbot.util.flattened_iterator` provides an iterable over the collection which may be more efficient for extremely large lists.
+
+* The :bb:step:`PyFlakes` and :bb:step:`PyLint` steps no longer parse output in Buildbot log headers (:bug:`3337`).
+
+* :bb:chsrc:`GerritChangeSource` is now less verbose by default, and has a ``debug`` option to enable the logs.
+
+* :bb:chsrc:`P4Source` no longer relies on the perforce server time to poll for new changes.
+
+* The commit message for a change from :bb:chsrc:`P4Source` now matches what the user typed in.
+
+* Fix incompatibility with MySQL-5.7 (:bug:`3421`)
+
+* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be catched by travis)
+
+* Made :class:`Interpolate` safe for deepcopy or serialization/deserialization
+
+* sqlite access is serialized in order to improve stability (:bug:`3565`)
+
+
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Seamless upgrading between buildbot 0.8.12 and buildbot 0.9.0 is not supported.
+  Users should start from a clean install but can reuse their config according to the :ref:`Upgrading to Nine` guide.
+
+* `BonsaiPoller` is removed.
+
+* ``buildbot.ec2buildslave`` is removed; use ``buildbot.buildslave.ec2`` instead.
+
+* ``buildbot.libvirtbuildslave`` is removed; use ``buildbot.buildslave.libvirt`` instead.
+
+* `buildbot.util.flatten` falttens lists and tuples by default (previously only lists).
+  Additionally, flattening something that isn't the type to flatten has different behaviour.
+  Previously, it would return the original value.
+  Instead, it now returns an array with the original value as the sole element.
+
+* ``buildbot.tac`` does not support ``print`` statements anymore. Such files should now use ``print``
+  as a function instead (see https://docs.python.org/3.0/whatsnew/3.0.html#print-is-a-function
+  for more details). Note that this applies to both python2.x and python3.x runtimes.
+
+* Deprecated ``workdir`` property has been removed, ``builddir`` property should be used instead.
+
+* To support MySQL InnoDB, the size of six VARCHAR(256) columns ``changes.(author, branch, category, name); object_state.name; user.identifier`` was reduced to VARCHAR(255).
+
+* :class:`~buildbot.status.status_push.StatusPush` has been removed from buildbot.
+    Please use the much simpler :class:`~buildbot.reporters.http.HttpStatusPush` instead.
+
+* Worker changes described in below worker section will probably impact a buildbot developer who uses undocumented '*slave*' API.
+  Undocumented APIs have been replaced without failover, so any custom code that uses it shall be updated with new undocumented API.
+
+* Web server does not provide /png and /redirect anymore (:bug:`3357`).
+  This functionality is used to implement build status images.
+  This should be easy to implement if you need it.
+  One could port the old image generation code, or implement a redirection to http://shields.io/.
+
+* Support of worker-side ``usePTY`` was removed from ``buildbot-worker``.
+  ``usePTY`` argument was removed from ``WorkerForBuilder`` and ``Worker`` classes.
+
+* html is no longer permitted in 'label' attributes of forcescheduler parameters.
+
+* ``public_html`` directory is not created anymore in ``buildbot create-master`` (it's not used for some time already).
+  Documentation was updated with suggestions to use third party web server for serving static file.
+
+* ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
+
+WebStatus
+.........
+
+The old, clunky WebStatus has been removed.
+You will like the new interface!
+RIP WebStatus, you were a good friend.
+
+remove it and replace it with :bb:cfg:`www configuration <www>`.
+
+Requirements
+............
+
+* Support for python 2.6 was dropped from the master.
+
+* Buildbot's tests now require at least Mock-0.8.0.
+
+* SQLAlchemy-Migrate-0.6.1 is no longer supported.
+
+* Builder names are now restricted to unicode strings or ASCII bytestrings.
+  Encoded bytestrings are not accepted.
+
+Steps
+.....
+
+* New-style steps are now the norm, and support for old-style steps is deprecated.
+  Upgrade your steps to new-style now, as support for old-style steps will be dropped after Buildbot-0.9.0.
+  See :ref:`New-Style-Build-Steps` for details.
+
+  * Status strings for old-style steps could be supplied through a wide variety of conflicting means (``describe``, ``description``, ``descriptionDone``, ``descriptionSuffix``, ``getText``, and ``setText``, to name just a few).
+    While all attempts have been made to maintain compatibility, you may find that the status strings for old-style steps have changed in this version.
+    To fix steps that call ``setText``, try setting the ``descriptionDone`` attribute directly, instead -- or just rewrite the step in the new style.
+
+* Old-style *source* steps (imported directly from ``buildbot.steps.source``) are no longer supported on the master.
+
+* The monotone source step got an overhaul and can now better manage
+  its database (initialize and/or migrate it, if needed). In the
+  spirit of monotone, buildbot now always keeps the database around,
+  as it's an append-only database.
+
+Changes and Removals
+....................
+
+* Buildslave names must now be 50-character :ref:`identifier <type-identifier>`.
+  Note that this disallows some common characters in bulidslave names, including spaces, ``/``, and ``.``.
+
+* Builders now have "tags" instead of a category.
+  Builders can have multiple tags, allowing more flexible builder displays.
+
+* :bb:sched:`ForceScheduler` has the following changes:
+
+  - The default configuration no longer contains four ``AnyPropertyParameter`` instances.
+  - Configuring ``codebases`` is now mandatory, and the deprecated ``branch``,  ``repository``, ``project``, ``revision`` are not supported anymore in :bb:sched:`ForceScheduler`
+  - :py:meth:`buildbot.schedulers.forcesched.BaseParameter.updateFromKwargs` now takes a ``collector`` parameter used to collect all validation errors
+
+* :bb:sched:`Periodic`, :bb:sched:`Nightly` and :bb:sched:`NightlyTriggerable` have the following changes:
+
+  - The :bb:sched:`Periodic` and :bb:sched:`Nightly` schedulers can now consume changes and use ``onlyIfChanged`` and ``createAbsoluteTimestamps``.
+  - All "timed" schedulers now handle ``codebases`` the same way. Configuring ``codebases`` is strongly recommended.
+    Using the ``branch`` parameter is discouraged.
+
+* Logs are now stored as Unicode strings, and thus must be decoded properly from the bytestrings provided by shell commands.
+  By default this encoding is assumed to be UTF-8, but the :bb:cfg:`logEncoding` parameter can be used to select an alternative.
+  Steps and individual logfiles can also override the global default.
+
+* The PB status service uses classes which have now been removed, and anyway is redundant to the REST API, so it has been removed.
+  It has taken the following with it:
+
+  * ``buildbot statuslog``
+  * ``buildbot statusgui`` (the GTK client)
+  * ``buildbot debugclient``
+
+  The ``PBListener`` status listener is now deprecated and does nothing.
+  Accordingly, there is no external access to status objects via Perspective Broker, aside from some compatibility code for the try scheduler.
+
+  The ``debugPassword`` configuration option is no longer needed and is thus deprecated.
+
+* The undocumented and un-tested ``TinderboxMailNotifier``, designed to send emails suitable for the abandoned and insecure Tinderbox tool, has been removed.
+
+* Buildslave info is no longer available via :ref:`Interpolate` and the ``SetSlaveInfo`` buildstep has been removed.
+
+* The undocumented ``path`` parameter of the :bb:step:`MasterShellCommand` buildstep has been renamed ``workdir`` for better consistency with the other steps.
+
+* The name and source of a Property have to be unicode or ascii string.
+
+* Property values must be serializable in JSON.
+
+* :bb:reporter:`IRC` has the following changes:
+
+  - categories parameter is deprecated and removed. It should be replaced with tags=[cat]
+  - noticeOnChannel parameter is deprecated and removed.
+
+* workdir behavior has been unified:
+
+  - ``workdir`` attribute of steps is now a property in :py:class:`~buildbot.process.buildstep.BuildStep`, and choose the workdir given following priority:
+
+        * workdir of the step, if defined
+
+        * workdir of the builder (itself defaults to 'build')
+
+    - setDefaultWorkdir() has been deprecated, but is now behaving the same for all the steps: Setting self.workdir if not already set
+
+* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overriden to support dynamic triggering.
+
+* ```master.cfg`` is now parsed from a thread. Previously it was run in the main thread, and thus slowing down the master in case of big config, or network access done to generate the config.
+
+* :bb:chsrc:`SVNPoller`'s svnurl parameter has been changed to repourl.
+
+* Providing Latent AWS EC2 credentails by the :file:`.ec2/aws_id` file is deprecated:
+  Use the standard :file:`.aws/credentials` file, instead.
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* Botmaster no longer service parent for workers. Service parent functionality has been transferred to WorkerManager.
+  It should be noted Botmaster no longer has a ``slaves`` field as it was moved to WorkerManager.
+
+* The sourcestamp DB connector now returns a ``patchid`` field.
+
+* Buildbot no longer polls the database for jobs.
+  The ``db_poll_interval`` configuration parameter and the :bb:cfg:`db` key of the same name are deprecated and will be ignored.
+
+* The interface for adding changes has changed.
+  The new method is ``master.data.updates.addChange`` (implemented by :py:meth:`~buildbot.data.changes.ChangeResourceType.addChange`), although the old interface (``master.addChange``) will remain in place for a few versions.
+  The new method:
+
+  * returns a change ID, not a Change instance;
+
+  * takes its ``when_timestamp`` argument as epoch time (UNIX time), not a datetime instance; and
+
+  * does not accept the deprecated parameters ``who``, ``isdir``, ``is_dir``, and ``when``.
+
+  * requires that all strings be unicode, not bytestrings.
+
+  Please adjust any custom change sources accordingly.
+
+* A new build status, CANCELLED, has been added.
+  It is used when a step or build is deliberately cancelled by a user.
+
+* This upgrade will delete all rows from the ``buildrequest_claims`` table.
+  If you are using this table for analytical purposes outside of Buildbot, please back up its contents before the upgrade, and restore it afterward, translating object IDs to scheduler IDs if necessary.
+  This translation would be very slow and is not required for most users, so it is not done automatically.
+
+* All of the schedulers DB API methods now accept a schedulerid, rather than an objectid.
+  If you have custom code using these methods, check your code and make the necessary adjustments.
+
+* The ``addBuildsetForSourceStamp`` method has become ``addBuildsetForSourceStamps``, and its signature has changed.
+  The ``addBuildsetForSourceStampSetDetails`` method has become ``addBuildsetForSourceStampsWithDefaults``, and its signature has changed.
+  The ``addBuildsetForSourceStampDetails`` method has been removed.
+  The ``addBuildsetForLatest`` method has been removed.
+  It is equivalent to ``addBuildsetForSourceStampDetails`` with ``sourcestamps=None``.
+  These methods are not yet documented, and their interface is not stable.
+  Consult the source code for details on the changes.
+
+* The ``preStartConsumingChanges`` and ``startTimedSchedulerService`` hooks have been removed.
+
+* The triggerable schedulers ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
+
+* The :py:class:`~buildbot.sourcestamp.SourceStamp` class is no longer used.
+  It remains in the codebase to support loading data from pickles on upgrade, but should not be used in running code.
+
+* The :py:class:`~buildbot.process.buildrequest.BuildRequest` class no longer has full ``source`` or ``sources`` attributes.
+  Use the data API to get this information (which is associated with the buildset, not the build request) instead.
+
+* The undocumented ``BuilderControl`` method ``submitBuildRequest`` has been removed.
+
+* The debug client no longer supports requesting builds (the ``requestBuild`` method has been removed).
+  If you have been using this method in production, consider instead creating a new change source, using the :bb:sched:`ForceScheduler`, or using one of the try schedulers.
+
+* The ``buildbot.misc.SerializedInvocation`` class has been removed; use :py:func:`buildbot.util.debounce.method` instead.
+
+* The ``progress`` attributes of both :py:class:`buildbot.process.buildstep.BuildStep` and :py:class:`buildbot.process.build.Build` have been removed.
+  Subclasses should only be accessing the progress-tracking mechanics via the :py:meth:`buildbot.process.buildstep.BuildStep.setProgress` method.
+
+* The :py:class:`~buildbot.config.BuilderConfig` ``nextSlave`` keyword argument takes a callable.
+  This callable now receives :py:class:`~buildbot.process.buildrequest.BuildRequest` instance in its signature as 3rd parameter.
+  **For retro-compatibility, all callable taking only 2 parameters will still work**.
+
+* properties object is now directly present in build, and not in build_status.
+  This should not change much unless you try to access your properties via step.build.build_status.
+  Remember that with PropertiesMixin, you can access properties via getProperties on the steps, and on the builds objects.
+
+Slaves/Workers
+--------------
+
+Transition to "worker" terminology
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Since version 0.9.0 of Buildbot "slave"-based terminology is deprecated in favor of "worker"-based terminology.
+
+For details about public API changes see :ref:`Transition-to-worker-terminology`, and :ref:`0.9.0b8` release notes.
+
+* The ``buildbot-slave`` package has been renamed to ``buildbot-worker``.
+
+* Buildbot now requires import to be sorted using `isort <https://isort.readthedocs.io/en/stable/>`_.
+  Please run ``make isort`` before creating a PR or use any available editor plugin in order to reorder your imports.
+
+Requirements
+~~~~~~~~~~~~
+
+* ``buildbot-worker`` requires Python 2.6
+
+Features
+~~~~~~~~
+
+* The Buildbot worker now includes the number of CPUs in the information it supplies to the master on connection.
+  This value is autodetected, but can be overridden with the ``--numcpus`` argument to ``buildslave create-worker``.
+
+* The :class:`DockerLatentWorker` image attribute is now renderable (can take properties in account).
+
+* The :class:`DockerLatentWorker` sets environment variables describing how to connect to the master.
+  Example dockerfiles can be found in ``master/contrib/docker``.
+
+* :class:`DockerLatentWorker` now has a ``hostconfig`` parameter that can be used to setup host configuration when creating a new container.
+
+* :class:`DockerLatentWorker` now has a ``networking_config`` parameter that can be used to setup container networks.
+
+* The :class:`DockerLatentWorker` ``volumes`` attribute is now renderable.
+
+
+Fixes
+~~~~~
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+* EC2 Latent Worker upgraded from ``boto2`` to ``boto3``.
+
+
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* buildmaster and worker no longer supports old-style source steps.
+
+* On Windows, if a :bb:step:`ShellCommand` step in which ``command`` was specified as a list is executed, and a
+  list element is a string consisting of a single pipe character, it no longer creates a pipeline.
+  Instead, the pipe character is passed verbatim as an argument to the program, like any other string.
+  This makes command handling consistent between Windows and Unix-like systems.
+  To have a pipeline, specify ``command`` as a string.
+
+* Support for python 2.6 was dropped from the master.
+
+* ``public_html`` directory is not created anymore in ``buildbot create-master`` (it's not used for some time already).
+  Documentation was updated with suggestions to use third party web server for serving static file.
+
+* ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
+
+* ``GithubStatusPush`` reporter was renamed to :bb:reporter:`GitHubStatusPush`.
+
+* Worker commands version bumped to 3.0.
+
+* Master/worker protocol has been changed:
+
+  * ``slave_commands`` key in worker information was renamed to ``worker_commands``.
+
+  * ``getSlaveInfo`` remote method was renamed to ``getWorkerInfo``.
+
+  * ``slave-config`` value of ``usePTY`` is not supported anymore.
+
+  * ``slavesrc`` command argument was renamed to ``workersrc`` in ``uploadFile`` and ``uploadDirectory`` commands.
+
+  * ``slavedest`` command argument was renamed to ``workerdest`` in ``downloadFile`` command.
+
+  * Previously deprecated ``WorkerForBuilder.remote_shutdown()`` remote command has been removed.
+
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0b9..v0.9.0rc1
+
+Note that Buildbot-0.8.11 was never released.

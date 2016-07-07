@@ -25,25 +25,8 @@ Master
 Features
 ~~~~~~~~
 
-* new :bb:reporter:`HipchatStatusPush` to report build results to Hipchat.
-* new steps for Visual Studio 2015 (VS2015, VC14, and MsBuild14).
-
-* The :bb:step:`P4` step now obfuscates the password in status logs.
-
-* Added support for specifying the depth of a shallow clone in :bb:step:`Git`.
-
-* :bb:worker:`OpenStackLatentWorker` now uses a single novaclient instance to not require re-authentication when starting or stopping instances.
-
 Fixes
 ~~~~~
-
-* :bb:reporter:`GerritStatusPush` now includes build properties in the ``startCB`` and ``reviewCB`` functions. ``startCB`` now must return a dictionary.
-* Fix TypeError exception with :py:class:`~buildbot.changes.HgPoller` if ``usetimestamps=False`` is used (:bug:`3562`)
-* Fix recovery upon master unclean kill or crash (:bug:`3564`)
-
-* sqlite access is serialized in order to improve stability (:bug:`3565`)
-
-* Docker latent worker has been fixed (:bug:`3571`)
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -58,22 +41,12 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Support for python 2.6 was dropped from the master.
-
-* ``public_html`` directory is not created anymore in ``buildbot create-master`` (it's not used for some time already).
-  Documentation was updated with suggestions to use third party web server for serving static file.
-
-* ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
-
-* ``GithubStatusPush`` reporter was renamed to :bb:reporter:`GitHubStatusPush`.
 
 Buildslave
 ----------
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* The ``buildbot-slave`` package has finished being renamed to ``buildbot-worker``.
 
 
 Worker
@@ -82,33 +55,11 @@ Worker
 Fixes
 ~~~~~
 
-* ``runGlob()`` uses the correct remote protocol for both :py:class:`~buildbot.process.buildstep.CommandMixin` and :py:class:`~buildbot.steps.worker.ComposititeStepMixin`.
-
-* Rename ``glob()`` to ``runGlob()`` in :py:class:`~buildbot.process.buildstep.CommandMixin`
-
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
-* EC2 Latent Worker upgraded from ``boto2`` to ``boto3``.
-
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* Worker commands version bumped to 3.0.
-
-* Master/worker protocol has been changed:
-
-  * ``slave_commands`` key in worker information was renamed to ``worker_commands``.
-
-  * ``getSlaveInfo`` remote method was renamed to ``getWorkerInfo``.
-
-  * ``slave-config`` value of ``usePTY`` is not supported anymore.
-
-  * ``slavesrc`` command argument was renamed to ``workersrc`` in ``uploadFile`` and ``uploadDirectory`` commands.
-
-  * ``slavedest`` command argument was renamed to ``workerdest`` in ``downloadFile`` command.
-
-  * Previously deprecated ``WorkerForBuilder.remote_shutdown()`` remote command has been removed.
 
 
 Details
@@ -118,7 +69,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0b9..master
+   git log v0.9.0rc1..master
 
 Older Versions
 --------------
@@ -129,6 +80,8 @@ Newer versions are also available here:
 .. toctree::
     :maxdepth: 1
 
+    0.9.0
+    0.9.0rc1
     0.9.0b9
     0.9.0b8
     0.9.0b7
