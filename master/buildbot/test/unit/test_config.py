@@ -46,7 +46,6 @@ global_defaults = dict(
     titleURL='http://buildbot.net',
     buildbotURL='http://localhost:8080/',
     changeHorizon=None,
-    eventHorizon=50,
     logHorizon=None,
     buildHorizon=None,
     logCompressionLimit=4096,
@@ -460,7 +459,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
     def test_load_global_eventHorizon(self):
-        self.do_test_load_global(dict(eventHorizon=10), eventHorizon=10)
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"`eventHorizon` is deprecated and will be removed in a future version."):
+            self.do_test_load_global(dict(eventHorizon=10))
 
     def test_load_global_logHorizon(self):
         self.do_test_load_global(dict(logHorizon=10), logHorizon=10)

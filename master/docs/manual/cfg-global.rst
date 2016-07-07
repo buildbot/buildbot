@@ -273,7 +273,6 @@ Data Lifetime
 
 .. bb:cfg:: changeHorizon
 .. bb:cfg:: buildHorizon
-.. bb:cfg:: eventHorizon
 .. bb:cfg:: logHorizon
 
 Horizons
@@ -283,7 +282,6 @@ Horizons
 
     c['changeHorizon'] = 200
     c['buildHorizon'] = 100
-    c['eventHorizon'] = 50
     c['logHorizon'] = 40
     c['buildCacheSize'] = 15
 
@@ -295,7 +293,6 @@ One place these changes are displayed is on the waterfall page.
 This parameter defaults to 0, which means keep all changes indefinitely.
 
 The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept on disk.
-The :bb:cfg:`eventHorizon` specifies the minimum number of events to keep--events mostly describe connections and disconnections of workers, and are seldom helpful to developers.
 The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
 Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 

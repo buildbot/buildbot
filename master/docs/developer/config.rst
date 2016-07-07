@@ -50,10 +50,6 @@ described in :ref:`developer-Reconfiguration`.
 
         The current change horizon, from :bb:cfg:`changeHorizon`.
 
-    .. py:attribute:: eventHorizon
-
-        The current event horizon, from :bb:cfg:`eventHorizon`.
-
     .. py:attribute:: logHorizon
 
         The current log horizon, from :bb:cfg:`logHorizon`.
