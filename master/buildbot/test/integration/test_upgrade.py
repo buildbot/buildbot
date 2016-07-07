@@ -20,6 +20,7 @@ import tarfile
 import migrate
 import migrate.versioning.api
 from sqlalchemy.engine import reflection
+from sqlalchemy.exc import DatabaseError
 from twisted.internet import defer
 from twisted.python import util
 from twisted.trial import unittest
@@ -181,9 +182,10 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
         return d
 
     def gotError(self, e):
-        e.trap(sqlite3.DatabaseError)
+        e.trap(sqlite3.DatabaseError, DatabaseError)
         if "file is encrypted or is not a database" in str(e):
             self.flushLoggedErrors(sqlite3.DatabaseError)
+            self.flushLoggedErrors(DatabaseError)
             raise unittest.SkipTest(
                 "sqlite dump not readable on this machine %s"
                 % str(e))
@@ -223,6 +225,12 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
     def test_gotError(self):
         def upgrade():
             return defer.fail(sqlite3.DatabaseError('file is encrypted or is not a database'))
+        self.db.model.upgrade = upgrade
+        self.failureResultOf(self.do_test_upgrade(), unittest.SkipTest)
+
+    def test_gotError2(self):
+        def upgrade():
+            return defer.fail(DatabaseError('file is encrypted or is not a database', None, None))
         self.db.model.upgrade = upgrade
         self.failureResultOf(self.do_test_upgrade(), unittest.SkipTest)
 
