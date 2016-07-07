@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import os
 import shutil
+import sqlite3
 import tarfile
 
 import migrate
@@ -179,7 +180,13 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 self.fail("\n" + str(diff))
         return d
 
-    def gotError(e):
+    def gotError(self, e):
+        e.trap(sqlite3.DatabaseError)
+        if "file is encrypted or is not a database" in str(e):
+            self.flushLoggedErrors(sqlite3.DatabaseError)
+            raise unittest.SkipTest(
+                "sqlite dump not readable on this machine %s"
+                % str(e))
         return e
 
     def do_test_upgrade(self, pre_callbacks=[]):
