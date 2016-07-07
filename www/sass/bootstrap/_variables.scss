@@ -17,12 +17,12 @@ $gray:                   lighten(#000, 33.5%) !default; // #555
 $gray-light:             lighten(#000, 60%) !default;   // #999
 $gray-lighter:           lighten(#000, 93.5%) !default; // #eee
 $grey1:				    #ccc;
-$brand-primary:         #3B7d78 !default;
+$brand-primary:         #274972 !default;
 $brand-success:         #5cb85c !default;
 $brand-info:            #5bc0de !default;
 $brand-warning:         #f0ad4e !default;
 $brand-danger:          #d9534f !default;
-$brand-katana:          #386b6d !default;
+$brand-katana:          #3f6083 !default;
 
 //== Scaffolding
 //
@@ -769,8 +769,8 @@ $breadcrumb-active-color:       $gray-light !default;
 //** Textual separator for between breadcrumb elements
 $breadcrumb-separator:          "/" !default;
 
-$breadcrumb-background-top:  #869e9c !default;
-$breadcrumb-background-bottom:  #b9c9ca !default;
+$breadcrumb-background-top:   #99a1b0 !default;
+$breadcrumb-background-bottom:  #bcc3c9 !default;
 
 //== Carousel
 //
