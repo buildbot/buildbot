@@ -220,6 +220,13 @@ class UpgradeTestV090b4(UpgradeTestMixin, unittest.TestCase):
     def verify_thd(self, conn):
         pass
 
+    def test_gotError(self):
+        def upgrade():
+            raise sqlite3.DatabaseError('file is encrypted or is not a database')
+
+        self.db.model.upgrade = upgrade
+        self.failureResultOf(self.do_test_upgrade(), unittest.SkipTest)
+
 
 class UpgradeTestV087p1(UpgradeTestMixin, unittest.TestCase):
 
