@@ -67,6 +67,8 @@ class MasterConfig(object):
         self.titleURL = 'http://buildbot.net'
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
+        self.cleanUpPeriod = None
+        self.buildRequestsDays = None
         self.eventHorizon = 50
         self.logHorizon = None
         self.buildHorizon = None
@@ -123,8 +125,10 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
-        "autobahn_push", "lastBuildCacheDays", "requireLogin", "globalFactory", "slave_debug_url"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer",
+        "analytics_code", "gzip", "autobahn_push", "lastBuildCacheDays",
+        "requireLogin", "globalFactory", "slave_debug_url",
+        "cleanUpPeriod", "buildRequestsDays"
     ])
 
     @classmethod
@@ -268,7 +272,9 @@ class MasterConfig(object):
         copy_str_param('realTimeServer')
         copy_str_param('analytics_code')
 
+        copy_int_param('cleanUpPeriod')
         copy_int_param('changeHorizon')
+        copy_int_param('buildRequestsDays')
         copy_int_param('eventHorizon')
         copy_int_param('logHorizon')
         copy_int_param('buildHorizon')
