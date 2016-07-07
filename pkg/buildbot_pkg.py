@@ -141,21 +141,10 @@ class my_egg_info(egg_info):
         return egg_info.run(self)
 
 
-# XXX(sa2ajj): this class exists only to address https://github.com/pypa/setuptools/issues/261
-# Once that's fixed, this class should go.
-class my_build_py(build_py):
-
-    def find_data_files(self, package, src_dir):
-        tempo = build_py.find_data_files(self, package, src_dir)
-
-        return [x for x in tempo if os.path.isfile(x)]
-
-
 def setup_www_plugin(**kw):
     package = kw['packages'][0]
     if 'version' not in kw:
         kw['version'] = getVersion(os.path.join(package, "__init__.py"))
     setup(cmdclass=dict(build=my_build,
-                        egg_info=my_egg_info,
-                        build_py=my_build_py),
+                        egg_info=my_egg_info),
           **kw)
