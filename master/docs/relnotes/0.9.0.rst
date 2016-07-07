@@ -9,6 +9,8 @@ The following are the release notes for Buildbot ``0.9.0``.
 
 This is a concatenation of important changes done between 0.8.12 and 0.9.0.
 This does not contain details of the bug fixes related to the nine beta and rc period.
+This document was written during the very long period of nine development.
+It might contain some incoherences, *please* help us and report them on irc or trac.
 
 See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
@@ -40,8 +42,8 @@ Other goals:
 Requirements
 ~~~~~~~~~~~~
 
-The ``buildbot`` package requires Python 2.6 or higher -- Python 2.5 is no longer supported.
-The ``buildbot-slave`` package requires Python 2.5 or higher -- Python 2.4 is no longer supported.
+The ``buildbot`` package requires Python 2.7 -- Python 2.5 and 2.6 are no longer supported.
+The ``buildbot-slave`` package requires Python 2.6 or higher -- Python 2.4 and 2.5 are no longer supported.
 
 No additional software or systems, aside from some minor Python packages, are required.
 
@@ -53,12 +55,36 @@ But the devil is in the details:
    This is the case even if you're hacking on the Python side of Buildbot.
  * For a single master, nothing else is required.
 
-Minor Python Packages
+Note for distro package maintainers: The npm dependency hell
+.............................................................
+
+In order to *build* the ``buildbot-www`` package, you'll need Node.
+
+Node has a very specific package manager named npm, which has the interesting property of allowing different version of package to co-exist in the same environment.
+The node ecosystem also has the habit of creating packages for a few line of code.
+
+Buildbot UI uses the node ecosystem to build its javascript UI.
+
+The buildsystem that we use is called `guanlecoja`_, which is just an integration of various javascript build tools.
+
+Through npm dependency hell, guanlecoja is depending on *625* npm packages/versions.
+We do not advise you to try and package all those npm *build* dependencies.
+They are *not* required in order to *run* buildbot.
+
+We do release pre-built packages in the form of the `wheel`_ format on pypi.
+Those wheels contain the full python source code, and prebuilt javascript source code.
+
+Depending on distro maintainers feedback, we *could* also release source tarballs with prebuilt javascript, but those would be pypi packages with different names, e.g. ``buildbot_www_prebuilt.0.9.0.tar.gz``.
+
+Another option would be to package a `guanlecoja`_ that would embed all its dependencies inside one package.
+
+.. _guanlecoja: https://www.npmjs.com/package/guanlecoja
+.. _wheel: http://pythonwheels.com/
+
+Detailed requirements
 .....................
 
-* Buildbot requires at least Twisted-11.0.0.
-
-* Buildbot works python-dateutil >= 1.5
+see :ref:`Requirements`
 
 Features
 ~~~~~~~~
