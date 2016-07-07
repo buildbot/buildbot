@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 from migrate.changeset.constraint import ForeignKeyConstraint
+
 from buildbot.util import sautils
 
 
@@ -38,5 +39,6 @@ def upgrade(migrate_engine):
                ForeignKeyConstraint([configured_workers.c.workerid],
                                     [workers.c.id], ondelete='CASCADE'),
                ):
-        fk.drop()
+        if migrate_engine.dialect.name != 'sqlite':
+            fk.drop()
         fk.create()
