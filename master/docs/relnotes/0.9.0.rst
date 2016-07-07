@@ -10,7 +10,7 @@ The following are the release notes for Buildbot ``0.9.0``.
 This is a concatenation of important changes done between 0.8.12 and 0.9.0.
 This does not contain details of the bug fixes related to the nine beta and rc period.
 This document was written during the very long period of nine development.
-It might contain some incoherences, *please* help us and report them on irc or trac.
+It might contain some incoherencies, *please* help us and report them on irc or trac.
 
 See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
