@@ -448,6 +448,7 @@ class ContextMixin(AccessorMixin):
         locale_enc = locale.getdefaultlocale()[1]
         authz = self.getAuthz(request)
         authenticated = authz.authenticated(request)
+        custom_css = os.path.join(request.site.buildbot_service.public_html, rootpath, 'prod/css/custom.css')
 
         if locale_enc is not None:
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
@@ -456,6 +457,7 @@ class ContextMixin(AccessorMixin):
         return dict(title_url = status.getTitleURL(),
                     title = status.getTitle(),
                     stylesheet = rootpath + 'default.css',
+                    custom_styles = os.path.isfile(custom_css),
                     path_to_root = rootpath,
                     version = version,
                     realTimeServer = self.getRealTimeServer(request),
