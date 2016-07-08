@@ -7,6 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="/prod/css/default.css" type="text/css"/>
+    {% if custom_styles %}
+        <link rel="stylesheet" href="/prod/css/custom.css?cachebust={{version}}" type="text/css" />
+    {% endif %}
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
     <script type="text/javascript">
         var require = {

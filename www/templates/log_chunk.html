@@ -2,6 +2,9 @@
 <html>
 <head>
 <link rel="stylesheet" href="/prod/css/default.css" type="text/css" />
+{% if custom_styles %}
+    <link rel="stylesheet" href="/prod/css/custom.css?cachebust={{version}}" type="text/css" />
+{% endif %}
 
 <script type="text/javascript">
     var require = {
