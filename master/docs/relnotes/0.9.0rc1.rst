@@ -21,6 +21,8 @@ Features
 
 * :bb:worker:`OpenStackLatentWorker` now uses a single novaclient instance to not require re-authentication when starting or stopping instances.
 
+* The ``dist`` parameter in :bb:step:`RpmBuild` is now renderable.
+
 Fixes
 ~~~~~
 

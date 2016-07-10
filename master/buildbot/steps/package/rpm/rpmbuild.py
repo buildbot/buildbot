@@ -28,6 +28,7 @@ class RpmBuild(ShellCommand):
     RpmBuild build step.
     """
 
+    renderables = ['dist']
     name = "rpmbuilder"
     haltOnFailure = 1
     flunkOnFailure = 1
@@ -42,7 +43,7 @@ class RpmBuild(ShellCommand):
                  sourcedir='`pwd`',
                  specdir='`pwd`',
                  srcrpmdir='`pwd`',
-                 dist='.el5',
+                 dist='.el6',
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
@@ -71,12 +72,16 @@ class RpmBuild(ShellCommand):
         @param vcsRevision: Use vcs version number as revision number.
         """
         ShellCommand.__init__(self, **kwargs)
-        self.rpmbuild = (
+
+        self.dist = dist
+
+        self.base_rpmbuild = (
             'rpmbuild --define "_topdir %s" --define "_builddir %s"'
             ' --define "_rpmdir %s" --define "_sourcedir %s"'
             ' --define "_specdir %s" --define "_srcrpmdir %s"'
-            ' --define "dist %s"' % (topdir, builddir, rpmdir, sourcedir,
-                                     specdir, srcrpmdir, dist))
+            % (topdir, builddir, rpmdir, sourcedir, specdir,
+               srcrpmdir))
+
         self.specfile = specfile
         self.autoRelease = autoRelease
         self.vcsRevision = vcsRevision
@@ -88,6 +93,10 @@ class RpmBuild(ShellCommand):
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
     def start(self):
+
+        rpm_extras_dict = {}
+        rpm_extras_dict['dist'] = self.dist
+
         if self.autoRelease:
             relfile = '%s.release' % (
                 os.path.basename(self.specfile).split('.')[0])
@@ -96,7 +105,7 @@ class RpmBuild(ShellCommand):
                     rel = int(rfile.readline().strip())
             except (IOError, TypeError, ValueError):
                 rel = 0
-            self.rpmbuild = self.rpmbuild + ' --define "_release %s"' % rel
+            rpm_extras_dict['_release'] = rel
             with open(relfile, 'w') as rfile:
                 rfile.write(str(rel + 1))
 
@@ -104,10 +113,16 @@ class RpmBuild(ShellCommand):
             revision = self.getProperty('got_revision')
             # only do this in the case where there's a single codebase
             if revision and not isinstance(revision, dict):
-                self.rpmbuild = (self.rpmbuild + ' --define "_revision %s"' %
-                                 revision)
+                rpm_extras_dict['_revision'] = revision
 
-        self.rpmbuild = self.rpmbuild + ' -ba %s' % self.specfile
+        self.rpmbuild = self.base_rpmbuild
+
+        # The unit tests expect a certain order, so we sort the dict to keep
+        # format the same every time
+        for k, v in sorted(rpm_extras_dict.iteritems()):
+            self.rpmbuild = '{0} --define "{1} {2}"'.format(self.rpmbuild, k, v)
+
+        self.rpmbuild = '{0} -ba {1}'.format(self.rpmbuild, self.specfile)
 
         self.command = self.rpmbuild
 
