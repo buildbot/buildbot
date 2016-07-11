@@ -72,17 +72,20 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     def test_doCleanup_unconfigured(self):
         self.db.changes.pruneChanges = mock.Mock(
                         return_value=defer.succeed(None))
-        self.db._doCleanup()
+        self.db._doCleanup(pruneBuildRequests=False)
         self.assertFalse(self.db.changes.pruneChanges.called)
 
     def test_doCleanup_configured(self):
         self.db.changes.pruneChanges = mock.Mock(
                         return_value=defer.succeed(None))
+        self.db.buildrequests.pruneBuildRequests = mock.Mock(
+                        return_value=defer.succeed(None))
         d = self.startService()
         @d.addCallback
         def check(_):
-            self.db._doCleanup()
+            self.db._doCleanup(pruneBuildRequests=True)
             self.assertTrue(self.db.changes.pruneChanges.called)
+            self.assertTrue(self.db.buildrequests.pruneBuildRequests.called)
         return d
 
     def test_setup_check_version_bad(self):

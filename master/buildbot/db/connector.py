@@ -77,9 +77,10 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         cleanUpPeriod = self.master.config.cleanUpPeriod
 
         if cleanUpPeriod and cleanUpPeriod > 0:
+            pruneBuildRequests = self.pool.engine.dialect.name == 'mysql'
             self.cleanup_timer = internet.TimerService(
                     cleanUpPeriod,
-                    self._doCleanup)
+                    self._doCleanup, pruneBuildRequests)
 
             self.cleanup_timer.setServiceParent(self)
 
@@ -116,17 +117,18 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                                             new_config)
 
-
-    def _doCleanup(self):
+    @defer.inlineCallbacks
+    def _doCleanup(self, pruneBuildRequests):
         """
         Perform any periodic database cleanup tasks.
 
-        @returns: Deferred
         """
         # pass on this if we're not configured yet
         if not self.configured_url:
             return
 
-        d = self.changes.pruneChanges(self.master.config.changeHorizon)
-        d.addErrback(log.err, 'while pruning changes')
-        return d
+        log.msg("Running db clean up jobs")
+        yield self.changes.pruneChanges(self.master.config.changeHorizon)
+
+        if pruneBuildRequests:
+            yield self.buildrequests.pruneBuildRequests(self.master.config.buildRequestsDays)
