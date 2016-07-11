@@ -599,7 +599,8 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
-        self.botmaster.maybeStartBuildsForSlave(self.slavename)
+        if self.botmaster:
+            self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def canStartBuild(self):
         """
