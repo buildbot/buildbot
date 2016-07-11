@@ -6,32 +6,34 @@ Definition
 
 Buildbot needs to send and/or execute commands requiring credentials.
 
-The goal is to store credentials to be use by Buildbot and then sent to the worker to be executed.
+The goal is to store credentials used by Buildbot commands.
 
-Those informations are stored in the Buildbot database.
+Credential could not be stored in ``buildbot.config`` or ``master.config`` because the configuration is available in a source control management.
 
-Credentials have to be stored in a database and not in Buildbot configuration because it is avaliable in source configuration.
+Credential are stored in the Buildbot database.
+
+Credentials once stored are obfuscated.
 
 Credential case: SSH Key
 ------------------------
 
-An ssh command needed a key. This key is usually stored in a ``ssh text file`` (like id_rsa) in the :envvar:`HOME` directory.
-The ssh password entry is done with a name, a value and a path where the file is stored.
+A key used to send a ssh command is usually stored in a ``ssh text file`` (like id_rsa) in the :envvar:`HOME` directory.
+
+The ssh key registering is done with 3 entities: a name (ssh key name), a value (ssh_key value) and a path (where the file is stored).
 
 Credential case: Password
 -------------------------
 
 A password could be use in a command by Buildbot.
-The password is stored with a ``name``, and a ``value``. No path is inserted.
+The password is stored with 2 entities: a ``name``, and a ``value``. No path is inserted.
 
-Adding new credentials
-----------------------
+How to add, delete or modify new credentials
+--------------------------------------------
 
-A data API is avaliable to create, delete and modify new credentials.
+A data API is available to create, delete and modify new credentials.
 
-During creation the data API modifies the 3 entities:
-``NAME`` and ``VALUE`` (mandatory), ``PATH`` (not mandatory, as it is not used in
-the password case).
+The data API modifies the 3 entities:
+``NAME`` and ``VALUE`` (mandatory), ``PATH`` (not mandatory, as it is not used in the password case).
 
 A data API function helps to register any new credential in the database.
 
@@ -54,32 +56,37 @@ A data API allows users to delete credentials
         buildbot delete-creds http://localhost:8020 --file ~/.ssh/id_rsa --destination '$HOME/.ssh/id_rsa' --name ssh_user
         buildbot delete-creds http://localhost:8020  --name userpassword --value mypassword
 
-Credentials UI
---------------
+Registering credentials through a Buildbot UI
+---------------------------------------------
 
-An UI plugin helps to enter, modify and delete the credentials.
+A Buildbot UI plugin helps to enter, modify and delete the credentials.
 
-Anywhere those credentials are needed, there is a drop down list of the appropriate available credentials, and you just select the appropriate one.
+Anywhere those credentials are needed, there is a drop down list of the appropriate available credential names, and you just select the appropriate one.
 
 When it's time to change the password, you just change it once or delete it.
 
-Credentials table database
---------------------------
+Credentials table database description
+--------------------------------------
 
-Credentials is stored in the Buildbot database, in a specific table ``credentials``.
+Credentials are stored in the Buildbot database, in a specific table ``credentials``.
 The table contains 3 columns  ``NAME``, ``VALUE``, ``PATH``.
 
-+------+-------+------+
-| NAME | VALUE | PATH |
-+------+-------+------+
+e.g:
 
-DB Credentials function
------------------------
+  +--------------------+-------+----------------+
+  | NAME (PRIMARY KEY) | VALUE |     PATH       |
+  +--------------------+-------+----------------+
+  |   key_user1        | XXXXX | $HOME/buildbot |
+  +--------------------+-------+----------------+
+  |   pass_user1       | XXXXX |                |
+  +--------------------+-------+----------------+
 
-A DB API function helps to populate the credentials in a master build step. credentials is avaliable during all the build and removed at the the end.
+How to use credentials stored in the database
+---------------------------------------------
 
-Using credentials
------------------
+Credentials are stored in the database and have to be use during a build.
+
+A DB API function helps to populate the credentials in a master build step.
 
 Credentials are interpolated in the build like properties are but in a first step, and then deleted at the end of the build.
 
