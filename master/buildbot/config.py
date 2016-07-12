@@ -70,9 +70,17 @@ def error(error, always_raise=False):
         raise ConfigErrors([error])
 
 
+class ConfigWarning(Warning):
+    """
+    Warning for deprecated configuration options.
+    """
+
+
 def warnDeprecated(version, msg):
-    # for now just log the deprecation
-    log.msg("NOTE: [%s and later] %s" % (version, msg))
+    warnings.warn(
+        "[%s and later] %s" % (version, msg),
+        category=ConfigWarning,
+    )
 
 
 def loadConfigDict(basedir, configFileName):
@@ -173,7 +181,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.titleURL = 'http://buildbot.net'
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
-        self.eventHorizon = 50
         self.logHorizon = None
         self.buildHorizon = None
         self.logCompressionLimit = 4 * 1024
@@ -227,7 +234,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
     _known_config_keys = set([
         "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
         "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
-        'db', "db_poll_interval", "db_url", "eventHorizon",
+        'db', "db_poll_interval", "db_url",
         "logCompressionLimit", "logCompressionMethod", "logEncoding",
         "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
         "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
@@ -337,9 +344,14 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         copy_str_param('buildbotURL')
 
         copy_int_param('changeHorizon')
-        copy_int_param('eventHorizon')
         copy_int_param('logHorizon')
         copy_int_param('buildHorizon')
+
+        if 'eventHorizon' in config_dict:
+            warnDeprecated(
+                '0.9.0',
+                '`eventHorizon` is deprecated and will be removed in a future version.',
+            )
 
         copy_int_param('logCompressionLimit')
 
@@ -579,9 +591,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
-                warnings.warn("Absolute path '%s' for builder may cause "
-                              "mayhem.  Perhaps you meant to specify workerbuilddir "
-                              "instead.")
+                warnings.warn(
+                    "Absolute path '%s' for builder may cause "
+                    "mayhem.  Perhaps you meant to specify workerbuilddir "
+                    "instead.",
+                    category=ConfigWarning,
+                )
 
         self.builders = builders
 
@@ -851,6 +866,14 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             return
         if self.workers:
             error("workers are configured, but c['protocols'] not")
+
+    @property
+    def eventHorizon(self):
+        warnings.warn(
+            "`eventHorizon` is deprecated and will be removed in a future version.",
+            category=DeprecationWarning,
+        )
+        return 0
 
 
 class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):

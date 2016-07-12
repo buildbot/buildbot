@@ -273,7 +273,6 @@ Data Lifetime
 
 .. bb:cfg:: changeHorizon
 .. bb:cfg:: buildHorizon
-.. bb:cfg:: eventHorizon
 .. bb:cfg:: logHorizon
 
 Horizons
@@ -283,19 +282,17 @@ Horizons
 
     c['changeHorizon'] = 200
     c['buildHorizon'] = 100
-    c['eventHorizon'] = 50
     c['logHorizon'] = 40
     c['buildCacheSize'] = 15
 
-Buildbot stores historical information on disk in the form of "Pickle" files and compressed logfiles.
+Buildbot stores historical information in its database.
 In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
 
 The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of.
 One place these changes are displayed is on the waterfall page.
 This parameter defaults to 0, which means keep all changes indefinitely.
 
-The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept on disk.
-The :bb:cfg:`eventHorizon` specifies the minimum number of events to keep--events mostly describe connections and disconnections of workers, and are seldom helpful to developers.
+The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept.
 The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
 Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 
@@ -321,7 +318,7 @@ Caches
     }
 
 The :bb:cfg:`caches` configuration key contains the configuration for Buildbot's in-memory caches.
-These caches keep frequently-used objects in memory to avoid unnecessary trips to the database or to pickle files.
+These caches keep frequently-used objects in memory to avoid unnecessary trips to the database.
 Caches are divided by object type, and each has a configurable maximum size.
 
 The default size for each cache is 1, except where noted below.

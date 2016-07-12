@@ -205,8 +205,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 break
         else:
             sb = workerforbuilder.LatentWorkerForBuilder(worker, self)
-            self.builder_status.addPointEvent(
-                ['added', 'latent', worker.workername])
             self.workers.append(sb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
     deprecatedWorkerClassMethod(locals(), addLatentWorker)
@@ -248,7 +246,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return d
 
     def _attached(self, sb):
-        self.builder_status.addPointEvent(['connect', sb.worker.workername])
         self.attaching_workers.remove(sb)
         self.workers.append(sb)
 
@@ -261,9 +258,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # TODO: remove from self.workers (except that detached() should get
         #       run first, right?)
         log.err(why, 'worker failed to attach')
-        self.builder_status.addPointEvent(['failed', 'connect',
-                                           worker.workername])
-        # TODO: add an HTMLLogFile of the exception
 
     def detached(self, worker):
         """This is called when the connection to the bot is lost."""
@@ -283,7 +277,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if wfb in self.workers:
             self.workers.remove(wfb)
 
-        self.builder_status.addPointEvent(['disconnect', worker.workername])
         # inform the WorkerForBuilder that their worker went away
         wfb.detached()
         self.updateBigStatus()
@@ -493,7 +486,6 @@ class BuilderControl:
 
     def ping(self):
         if not self.original.workers:
-            self.original.builder_status.addPointEvent(["ping", "no worker"])
             return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
         for w in self.original.workers:

@@ -129,13 +129,6 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         d = defer.Deferred()
         self.ping_watchers.append(d)
         if newping:
-            if status:
-                event = status.addEvent(["pinging"])
-                d2 = defer.Deferred()
-                d2.addCallback(self._pong_status, event)
-                self.ping_watchers.insert(0, d2)
-                # I think it will make the tests run smoother if the status
-                # is updated before the ping completes
             Ping().ping(self.worker.conn).addCallback(self._pong)
 
         return d
@@ -144,13 +137,6 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         watchers, self.ping_watchers = self.ping_watchers, []
         for d in watchers:
             d.callback(res)
-
-    def _pong_status(self, res, event):
-        if res:
-            event.text = ["ping", "success"]
-        else:
-            event.text = ["ping", "failed"]
-        event.finish()
 
     def detached(self):
         log.msg("Worker %s detached from %s" % (self.worker.workername,
@@ -238,32 +224,9 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         return d
 
     def substantiate(self, build):
-        d = self.worker.substantiate(self, build)
-        if not self.worker.substantiated:
-            event = self.builder.builder_status.addEvent(
-                ["substantiating"])
-
-            def substantiated(res):
-                msg = ["substantiate", "success"]
-                if isinstance(res, basestring):
-                    msg.append(res)
-                elif isinstance(res, (tuple, list)):
-                    msg.extend(res)
-                event.text = msg
-                event.finish()
-                return res
-
-            def substantiation_failed(res):
-                event.text = ["substantiate", "failed"]
-                # TODO add log of traceback to event
-                event.finish()
-                return res
-            d.addCallbacks(substantiated, substantiation_failed)
-        return d
+        return self.worker.substantiate(self, build)
 
     def ping(self, status=None):
         if not self.worker.substantiated:
-            if status:
-                status.addEvent(["ping", "latent"]).finish()
             return defer.succeed(True)
         return AbstractWorkerForBuilder.ping(self, status)

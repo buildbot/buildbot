@@ -147,9 +147,6 @@ class FakeBuilderStatus(object):
     def buildStarted(self, builderStatus):
         pass
 
-    def addPointEvent(self, text):
-        pass
-
 
 class FakeLogRotation(object):
     rotateLength = 42
