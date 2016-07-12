@@ -46,7 +46,6 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
 
     # Period, in seconds, of the cleanup task.  This master will perform
     # periodic cleanup actions on this schedule.
-    CLEANUP_PERIOD = 3600
 
     def __init__(self, master, basedir):
         service.MultiService.__init__(self)
@@ -61,6 +60,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         # set up components
         self._engine = None # set up in reconfigService
         self.pool = None # set up in reconfigService
+        self.cleanup_timer = None
         self.model = model.Model(self)
         self.changes = changes.ChangesConnectorComponent(self)
         self.schedulers = schedulers.SchedulersConnectorComponent(self)
@@ -73,10 +73,16 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self.users = users.UsersConnectorComponent(self)
         self.mastersconfig = mastersconfig.MastersConfigConnectorComponent(self)
 
-        self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD,
-                self._doCleanup)
-        self.cleanup_timer.setServiceParent(self)
+    def setUpCleanUp(self):
+        cleanUpPeriod = self.master.config.cleanUpPeriod
 
+        if cleanUpPeriod and cleanUpPeriod > 0:
+            pruneBuildRequests = self.pool.engine.dialect.name == 'mysql'
+            self.cleanup_timer = internet.TimerService(
+                    cleanUpPeriod,
+                    self._doCleanup, pruneBuildRequests)
+
+            self.cleanup_timer.setServiceParent(self)
 
     def setup(self, check_version=True, verbose=True):
         db_url = self.configured_url = self.master.config.db['db_url']
@@ -87,6 +93,7 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         self._engine = enginestrategy.create_engine(db_url,
                                 basedir=self.basedir)
         self.pool = pool.DBThreadPool(self._engine, verbose=verbose)
+        self.setUpCleanUp()
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
@@ -110,17 +117,18 @@ class DBConnector(config.ReconfigurableServiceMixin, service.MultiService):
         return config.ReconfigurableServiceMixin.reconfigService(self,
                                                             new_config)
 
-
-    def _doCleanup(self):
+    @defer.inlineCallbacks
+    def _doCleanup(self, pruneBuildRequests):
         """
         Perform any periodic database cleanup tasks.
 
-        @returns: Deferred
         """
         # pass on this if we're not configured yet
         if not self.configured_url:
             return
 
-        d = self.changes.pruneChanges(self.master.config.changeHorizon)
-        d.addErrback(log.err, 'while pruning changes')
-        return d
+        log.msg("Running db clean up jobs")
+        yield self.changes.pruneChanges(self.master.config.changeHorizon)
+
+        if pruneBuildRequests:
+            yield self.buildrequests.pruneBuildRequests(self.master.config.buildRequestsDays)

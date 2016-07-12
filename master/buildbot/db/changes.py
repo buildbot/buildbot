@@ -22,6 +22,8 @@ import sqlalchemy as sa
 from twisted.internet import defer, reactor
 from buildbot.db import base
 from buildbot.util import epoch2datetime, datetime2epoch
+from twisted.python import log
+from twisted.python.failure import Failure
 
 class ChDict(dict):
     pass
@@ -191,18 +193,32 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                           order_by=[sa.desc(changes_tbl.c.changeid)],
                           offset=changeHorizon)
             res = conn.execute(q)
-            ids_to_delete = [ r.changeid for r in res ]
+            ids_to_delete = [r.changeid for r in res]
 
-            # and delete from all relevant tables, in dependency order
-            for table_name in ('scheduler_changes', 'sourcestamp_changes',
-                               'change_files', 'change_properties', 'changes',
-                               'change_users'):
-                remaining = ids_to_delete[:]
-                while remaining:
-                    batch, remaining = remaining[:100], remaining[100:]
-                    table = self.db.model.metadata.tables[table_name]
-                    conn.execute(
-                        table.delete(table.c.changeid.in_(batch)))
+            if not ids_to_delete:
+                return
+
+            log.msg("Prune %d changes" % len(ids_to_delete))
+            transaction = conn.begin()
+            try:
+
+                # and delete from all relevant tables, in dependency order
+                for table_name in ('scheduler_changes', 'sourcestamp_changes',
+                                   'change_files', 'change_properties', 'changes',
+                                   'change_users'):
+                    remaining = ids_to_delete[:]
+                    while remaining:
+                        batch, remaining = remaining[:100], remaining[100:]
+                        table = self.db.model.metadata.tables[table_name]
+                        conn.execute(
+                            table.delete(table.c.changeid.in_(batch)))
+            except Exception:
+                transaction.rollback()
+                log.msg(Failure(), "Could not pruneChanges")
+                return
+
+            transaction.commit()
+
         return self.db.pool.do(thd)
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
