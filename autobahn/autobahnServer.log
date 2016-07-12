@@ -1,0 +1,863 @@
+06/29/2016 11:47:49 AM INFO: registered client 
+06/29/2016 11:47:50 AM INFO: unregistered client 
+06/29/2016 11:48:16 AM INFO: registered client 
+06/29/2016 11:48:20 AM INFO: unregistered client 
+06/29/2016 11:48:36 AM INFO: registered client 
+06/29/2016 11:48:52 AM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 11:48:54 AM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 11:49:09 AM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 11:49:09 AM INFO: unregistered client 
+06/29/2016 11:49:40 AM INFO: registered client 
+06/29/2016 11:50:39 AM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 11:50:43 AM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:05:59 PM INFO: registered client 
+06/29/2016 12:06:02 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:06:03 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:13:37 PM INFO: registered client 
+06/29/2016 12:13:39 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:13:40 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:14:17 PM INFO: registered client 
+06/29/2016 12:14:17 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:59293
+06/29/2016 12:14:17 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:24:16 PM INFO: unregistered client 
+06/29/2016 12:24:16 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:24:17 PM INFO: registered client 
+06/29/2016 12:24:17 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61013
+06/29/2016 12:24:17 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:24:19 PM INFO: unregistered client 
+06/29/2016 12:24:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:24:20 PM INFO: registered client 
+06/29/2016 12:24:20 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61016
+06/29/2016 12:24:20 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:24:21 PM INFO: unregistered client 
+06/29/2016 12:24:21 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:24:21 PM INFO: registered client 
+06/29/2016 12:24:21 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61018
+06/29/2016 12:24:21 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:24:23 PM INFO: unregistered client 
+06/29/2016 12:24:23 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:24:23 PM INFO: registered client 
+06/29/2016 12:24:23 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61020
+06/29/2016 12:24:23 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:24:27 PM INFO: unregistered client 
+06/29/2016 12:24:27 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:24:28 PM INFO: registered client 
+06/29/2016 12:24:28 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61024
+06/29/2016 12:24:28 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:24:28 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Android/?android-jni-bridge_branch=master&krait-signal-handler_branch=master for tcp4:10.0.2.2:61024
+06/29/2016 12:24:28 PM INFO: URL http://10.45.6.182:8001/json/projects/Android/?android-jni-bridge_branch=master&krait-signal-handler_branch=master is waiting for push data with these filters {u'buildStarted': {u'project': u'Android', u'sources': {u'android-jni-bridge': u'master', u'krait-signal-handler': u'master'}}, u'buildFinished': {u'project': u'Android', u'sources': {u'android-jni-bridge': u'master', u'krait-signal-handler': u'master'}}, u'requestSubmitted': {u'project': u'Android', u'sources': {u'android-jni-bridge': u'master', u'krait-signal-handler': u'master'}}, u'requestCancelled': {u'project': u'Android', u'sources': {u'android-jni-bridge': u'master', u'krait-signal-handler': u'master'}}, u'stepStarted': {u'project': u'Android', u'sources': {u'android-jni-bridge': u'master', u'krait-signal-handler': u'master'}}, u'stepFinished': {u'project': u'Android', u'sources': {u'android-jni-bridge': u'master', u'krait-signal-handler': u'master'}}}
+06/29/2016 12:24:35 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:24:35 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:24:35 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:24:35 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Android/?android-jni-bridge_branch=master&krait-signal-handler_branch=master Changed, informing 1 client(s)
+06/29/2016 12:24:36 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:24:40 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:30:08 PM INFO: unregistered client 
+06/29/2016 12:30:08 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:08 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Android/?android-jni-bridge_branch=master&krait-signal-handler_branch=master
+06/29/2016 12:30:09 PM INFO: registered client 
+06/29/2016 12:30:09 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61121
+06/29/2016 12:30:09 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:11 PM INFO: unregistered client 
+06/29/2016 12:30:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:11 PM INFO: registered client 
+06/29/2016 12:30:11 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61124
+06/29/2016 12:30:11 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:13 PM INFO: unregistered client 
+06/29/2016 12:30:13 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:14 PM INFO: registered client 
+06/29/2016 12:30:14 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61126
+06/29/2016 12:30:14 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:14 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61126
+06/29/2016 12:30:14 PM INFO: URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'stepStarted': {}, u'stepFinished': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:15 PM INFO: unregistered client 
+06/29/2016 12:30:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:30:16 PM INFO: registered client 
+06/29/2016 12:30:16 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61128
+06/29/2016 12:30:16 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:16 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/lba05?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61128
+06/29/2016 12:30:16 PM INFO: URL http://10.45.6.182:8001/json/slaves/lba05?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'slave': u'lba05'}, u'buildFinished': {u'slave': u'lba05'}, u'stepStarted': {u'slave': u'lba05'}, u'stepFinished': {u'slave': u'lba05'}}
+06/29/2016 12:30:16 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/lba05/builds/<15 for tcp4:10.0.2.2:61128
+06/29/2016 12:30:16 PM INFO: URL http://10.45.6.182:8001/json/slaves/lba05/builds/<15 is waiting for push data with these filters {u'buildStarted': {u'slave': u'lba05'}, u'buildFinished': {u'slave': u'lba05'}}
+06/29/2016 12:30:18 PM INFO: unregistered client 
+06/29/2016 12:30:18 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:18 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/lba05?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:30:18 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/lba05/builds/<15
+06/29/2016 12:30:19 PM INFO: registered client 
+06/29/2016 12:30:19 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61130
+06/29/2016 12:30:19 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:19 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61130
+06/29/2016 12:30:19 PM INFO: URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'stepStarted': {}, u'stepFinished': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:23 PM INFO: unregistered client 
+06/29/2016 12:30:23 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:23 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:30:23 PM INFO: registered client 
+06/29/2016 12:30:23 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61132
+06/29/2016 12:30:23 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:23 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/lba05?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61132
+06/29/2016 12:30:23 PM INFO: URL http://10.45.6.182:8001/json/slaves/lba05?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'slave': u'lba05'}, u'buildFinished': {u'slave': u'lba05'}, u'stepStarted': {u'slave': u'lba05'}, u'stepFinished': {u'slave': u'lba05'}}
+06/29/2016 12:30:23 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/lba05/builds/<15 for tcp4:10.0.2.2:61132
+06/29/2016 12:30:23 PM INFO: URL http://10.45.6.182:8001/json/slaves/lba05/builds/<15 is waiting for push data with these filters {u'buildStarted': {u'slave': u'lba05'}, u'buildFinished': {u'slave': u'lba05'}}
+06/29/2016 12:30:24 PM INFO: unregistered client 
+06/29/2016 12:30:24 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:24 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/lba05?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:30:24 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/lba05/builds/<15
+06/29/2016 12:30:25 PM INFO: registered client 
+06/29/2016 12:30:25 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61134
+06/29/2016 12:30:25 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:25 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61134
+06/29/2016 12:30:25 PM INFO: URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'stepStarted': {}, u'stepFinished': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:25 PM INFO: unregistered client 
+06/29/2016 12:30:25 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:30:25 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:30:26 PM INFO: registered client 
+06/29/2016 12:30:26 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61136
+06/29/2016 12:30:26 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:30:49 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:30:49 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:30:49 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:31:08 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:31:08 PM INFO: unregistered client 
+06/29/2016 12:31:08 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:31:08 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:31:08 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:31:09 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:31:10 PM INFO: registered client 
+06/29/2016 12:31:10 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61579
+06/29/2016 12:31:10 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:31:10 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/?unity_branch=trunk for tcp4:10.0.2.2:61579
+06/29/2016 12:31:10 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'buildFinished': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'requestSubmitted': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'requestCancelled': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'stepStarted': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'stepFinished': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}}
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, stepStarted, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:31:10 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:31:10 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:31:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:31:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:31:15 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, requestSubmitted, 
+06/29/2016 12:31:15 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:32:26 PM INFO: unregistered client 
+06/29/2016 12:32:26 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:32:26 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/?unity_branch=trunk
+06/29/2016 12:32:27 PM INFO: registered client 
+06/29/2016 12:32:27 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61586
+06/29/2016 12:32:27 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:32:27 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-ABuildVerification?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:61586
+06/29/2016 12:32:27 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-ABuildVerification?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}}
+06/29/2016 12:32:27 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-ABuildVerification?unity_branch=trunk for tcp4:10.0.2.2:61586
+06/29/2016 12:32:27 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-ABuildVerification?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}}
+06/29/2016 12:32:27 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:61586
+06/29/2016 12:32:27 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}}
+06/29/2016 12:32:27 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61586
+06/29/2016 12:32:27 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}}
+06/29/2016 12:32:27 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/startslaves?filter=1 for tcp4:10.0.2.2:61586
+06/29/2016 12:32:27 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-ABuildVerification'}}
+06/29/2016 12:32:28 PM INFO: unregistered client 
+06/29/2016 12:32:28 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:32:28 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-ABuildVerification?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:32:28 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-ABuildVerification?unity_branch=trunk
+06/29/2016 12:32:28 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:32:28 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:32:28 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-ABuildVerification/startslaves?filter=1
+06/29/2016 12:32:29 PM INFO: registered client 
+06/29/2016 12:32:29 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61588
+06/29/2016 12:32:29 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:32:29 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/?unity_branch=trunk for tcp4:10.0.2.2:61588
+06/29/2016 12:32:29 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'buildFinished': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'requestSubmitted': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'requestCancelled': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'stepStarted': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}, u'stepFinished': {u'project': u'Unity', u'sources': {u'unity': u'trunk'}}}
+06/29/2016 12:32:40 PM INFO: unregistered client 
+06/29/2016 12:32:40 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:32:40 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/?unity_branch=trunk
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:32:41 PM INFO: registered client 
+06/29/2016 12:32:41 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61591
+06/29/2016 12:32:41 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:32:41 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:61591
+06/29/2016 12:32:41 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:32:41 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:61591
+06/29/2016 12:32:41 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:32:41 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:61591
+06/29/2016 12:32:41 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:32:41 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61591
+06/29/2016 12:32:41 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:32:41 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:61591
+06/29/2016 12:32:41 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:32:41 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:32:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:32:41 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:32:41 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:32:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:32:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:32:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:32:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:32:42 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:32:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, buildFinished, 
+06/29/2016 12:32:42 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:32:42 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:32:47 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:32:47 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:32:47 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:33:15 PM INFO: unregistered client 
+06/29/2016 12:33:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:33:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:33:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:33:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:33:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:33:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:33:16 PM INFO: registered client 
+06/29/2016 12:33:16 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61638
+06/29/2016 12:33:16 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:33:16 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:61638
+06/29/2016 12:33:16 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:33:16 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:61638
+06/29/2016 12:33:16 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:33:16 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:61638
+06/29/2016 12:33:16 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:33:16 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61638
+06/29/2016 12:33:16 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:33:16 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:61638
+06/29/2016 12:33:16 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:33:20 PM INFO: unregistered client 
+06/29/2016 12:33:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:33:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:33:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:33:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:33:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:33:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:33:21 PM INFO: registered client 
+06/29/2016 12:33:21 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61640
+06/29/2016 12:33:21 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:33:21 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=1 for tcp4:10.0.2.2:61640
+06/29/2016 12:33:21 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=1 is waiting for push data with these filters {u'buildStarted': {u'number': 1}, u'buildFinished': {u'number': 1}, u'stepStarted': {u'number': 1}, u'stepFinished': {u'number': 1}}
+06/29/2016 12:33:23 PM INFO: unregistered client 
+06/29/2016 12:33:23 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:33:23 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=1
+06/29/2016 12:33:23 PM INFO: registered client 
+06/29/2016 12:34:18 PM INFO: unregistered client 
+06/29/2016 12:34:19 PM INFO: registered client 
+06/29/2016 12:34:19 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61652
+06/29/2016 12:34:19 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:34:19 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:61652
+06/29/2016 12:34:19 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:34:19 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:61652
+06/29/2016 12:34:19 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:34:19 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:61652
+06/29/2016 12:34:19 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:34:19 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:61652
+06/29/2016 12:34:19 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:34:19 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:61652
+06/29/2016 12:34:19 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:34:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:34:29 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:34:29 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:34:29 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:34:30 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:34:30 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:34:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:34:30 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:34:31 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, buildFinished, 
+06/29/2016 12:34:35 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:34:35 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:34:35 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:34:35 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:37:02 PM INFO: unregistered client 
+06/29/2016 12:37:02 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:37:02 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:37:02 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:37:02 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:37:02 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:37:02 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:37:03 PM INFO: registered client 
+06/29/2016 12:37:03 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:61688
+06/29/2016 12:37:03 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:37:03 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=2 for tcp4:10.0.2.2:61688
+06/29/2016 12:37:03 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=2 is waiting for push data with these filters {u'buildStarted': {u'number': 2}, u'buildFinished': {u'number': 2}, u'stepStarted': {u'number': 2}, u'stepFinished': {u'number': 2}}
+06/29/2016 12:37:37 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:37:37 PM INFO: unregistered client 
+06/29/2016 12:37:37 PM INFO: unregistered client 
+06/29/2016 12:37:37 PM INFO: unregistered client 
+06/29/2016 12:38:16 PM INFO: registered client 
+06/29/2016 12:38:16 PM INFO: unregistered client 
+06/29/2016 12:38:29 PM INFO: registered client 
+06/29/2016 12:38:43 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:38:58 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:38:58 PM INFO: unregistered client 
+06/29/2016 12:39:40 PM INFO: unregistered client 
+06/29/2016 12:39:40 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:39:40 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=2
+06/29/2016 12:40:16 PM INFO: registered client 
+06/29/2016 12:41:25 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, shutdown, 
+06/29/2016 12:41:25 PM INFO: unregistered client 
+06/29/2016 12:42:47 PM INFO: registered client 
+06/29/2016 12:43:03 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:43:17 PM INFO: registered client 
+06/29/2016 12:43:17 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:62772
+06/29/2016 12:43:17 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:43:23 PM INFO: registered client 
+06/29/2016 12:43:23 PM INFO: Added tcp4:10.0.2.2:62779 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:43:23 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:43:23 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:62779
+06/29/2016 12:43:23 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:43:23 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:62779
+06/29/2016 12:43:23 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:43:23 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:62779
+06/29/2016 12:43:23 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:43:23 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:62779
+06/29/2016 12:43:23 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:43:23 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:62779
+06/29/2016 12:43:23 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:43:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:43:42 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:43:42 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:43:59 PM INFO: unregistered client 
+06/29/2016 12:43:59 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:43:59 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:43:59 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:43:59 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:43:59 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:43:59 PM INFO: registered client 
+06/29/2016 12:43:59 PM INFO: Added tcp4:10.0.2.2:62788 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:43:59 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:43:59 PM INFO: Created new url http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:62788
+06/29/2016 12:43:59 PM INFO: URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'stepStarted': {}, u'stepFinished': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:44:37 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:44:37 PM INFO: JSON at http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:44:37 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:44:38 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, stepStarted, stepFinished, stepStarted, 
+06/29/2016 12:44:39 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, 
+06/29/2016 12:44:42 PM INFO: JSON at http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:44:42 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:45:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:45:20 PM INFO: JSON at http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:45:20 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:45:47 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:45:47 PM INFO: JSON at http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:45:47 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:45:56 PM INFO: unregistered client 
+06/29/2016 12:45:56 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/slaves/?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:45:57 PM INFO: registered client 
+06/29/2016 12:45:57 PM INFO: Added tcp4:10.0.2.2:63801 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:45:57 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:45:57 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:63801
+06/29/2016 12:45:57 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:57 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:63801
+06/29/2016 12:45:57 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:57 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:63801
+06/29/2016 12:45:57 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:57 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:63801
+06/29/2016 12:45:57 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:57 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:63801
+06/29/2016 12:45:57 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:57 PM INFO: unregistered client 
+06/29/2016 12:45:57 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:45:57 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:45:57 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:45:57 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:45:57 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:45:58 PM INFO: registered client 
+06/29/2016 12:45:58 PM INFO: Added tcp4:10.0.2.2:63803 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:45:58 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:45:58 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=2 for tcp4:10.0.2.2:63803
+06/29/2016 12:45:58 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=2 is waiting for push data with these filters {u'buildStarted': {u'number': 2}, u'buildFinished': {u'number': 2}, u'stepStarted': {u'number': 2}, u'stepFinished': {u'number': 2}}
+06/29/2016 12:45:58 PM INFO: unregistered client 
+06/29/2016 12:45:58 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=2
+06/29/2016 12:45:59 PM INFO: registered client 
+06/29/2016 12:45:59 PM INFO: Added tcp4:10.0.2.2:63805 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:45:59 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:45:59 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:63805
+06/29/2016 12:45:59 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:59 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:63805
+06/29/2016 12:45:59 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:59 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:63805
+06/29/2016 12:45:59 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:59 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:63805
+06/29/2016 12:45:59 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:45:59 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:63805
+06/29/2016 12:45:59 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:46:12 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, buildFinished, 
+06/29/2016 12:46:12 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:46:12 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:46:12 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:46:12 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:46:12 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:46:12 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:46:16 PM INFO: unregistered client 
+06/29/2016 12:46:16 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:46:16 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:46:16 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:46:16 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:46:16 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:46:17 PM INFO: registered client 
+06/29/2016 12:46:17 PM INFO: Added tcp4:10.0.2.2:63814 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:46:17 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:46:17 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=4 for tcp4:10.0.2.2:63814
+06/29/2016 12:46:17 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=4 is waiting for push data with these filters {u'buildStarted': {u'number': 4}, u'buildFinished': {u'number': 4}, u'stepStarted': {u'number': 4}, u'stepFinished': {u'number': 4}}
+06/29/2016 12:46:19 PM INFO: unregistered client 
+06/29/2016 12:46:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=4
+06/29/2016 12:46:20 PM INFO: registered client 
+06/29/2016 12:48:06 PM INFO: unregistered client 
+06/29/2016 12:48:07 PM INFO: registered client 
+06/29/2016 12:48:07 PM INFO: Added tcp4:10.0.2.2:65367 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:48:07 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:48:07 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:65367
+06/29/2016 12:48:07 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:48:07 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:65367
+06/29/2016 12:48:07 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:48:07 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:65367
+06/29/2016 12:48:07 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:48:07 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:65367
+06/29/2016 12:48:07 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:48:07 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:65367
+06/29/2016 12:48:07 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:48:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, buildFinished, 
+06/29/2016 12:48:18 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:48:18 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:48:18 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:48:18 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:48:18 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:48:18 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:48:22 PM INFO: unregistered client 
+06/29/2016 12:48:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:48:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:48:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:48:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:48:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:48:23 PM INFO: registered client 
+06/29/2016 12:48:23 PM INFO: Added tcp4:10.0.2.2:65400 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:48:23 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:48:23 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=5 for tcp4:10.0.2.2:65400
+06/29/2016 12:48:23 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=5 is waiting for push data with these filters {u'buildStarted': {u'number': 5}, u'buildFinished': {u'number': 5}, u'stepStarted': {u'number': 5}, u'stepFinished': {u'number': 5}}
+06/29/2016 12:48:26 PM INFO: unregistered client 
+06/29/2016 12:48:26 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=5
+06/29/2016 12:48:27 PM INFO: registered client 
+06/29/2016 12:52:00 PM INFO: registered client 
+06/29/2016 12:52:01 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:52:02 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:52:12 PM INFO: unregistered client 
+06/29/2016 12:52:12 PM INFO: registered client 
+06/29/2016 12:52:13 PM INFO: Added tcp4:10.0.2.2:50398 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:52:13 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:52:13 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:50398
+06/29/2016 12:52:13 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:52:13 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:50398
+06/29/2016 12:52:13 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:52:13 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:50398
+06/29/2016 12:52:13 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:52:13 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:50398
+06/29/2016 12:52:13 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:52:13 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:50398
+06/29/2016 12:52:13 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:52:17 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:52:17 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:52:17 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:52:17 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:52:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:52:17 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:52:17 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 Changed, informing 1 client(s)
+06/29/2016 12:52:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, buildFinished, 
+06/29/2016 12:52:19 PM INFO: unregistered client 
+06/29/2016 12:52:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:52:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:52:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:52:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:52:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:52:20 PM INFO: registered client 
+06/29/2016 12:52:20 PM INFO: Added tcp4:10.0.2.2:50407 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:52:20 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:52:20 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=6 for tcp4:10.0.2.2:50407
+06/29/2016 12:52:20 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=6 is waiting for push data with these filters {u'buildStarted': {u'number': 6}, u'buildFinished': {u'number': 6}, u'stepStarted': {u'number': 6}, u'stepFinished': {u'number': 6}}
+06/29/2016 12:52:21 PM INFO: unregistered client 
+06/29/2016 12:52:21 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=6
+06/29/2016 12:52:22 PM INFO: registered client 
+06/29/2016 12:52:22 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:52:39 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:52:39 PM INFO: unregistered client 
+06/29/2016 12:52:40 PM INFO: unregistered client 
+06/29/2016 12:52:50 PM INFO: registered client 
+06/29/2016 12:52:50 PM INFO: unregistered client 
+06/29/2016 12:53:06 PM INFO: registered client 
+06/29/2016 12:53:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:53:37 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:53:37 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:53:56 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:53:56 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:54:09 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:54:09 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:54:15 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveDisconnected, 
+06/29/2016 12:54:15 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:54:37 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveConnected, 
+06/29/2016 12:54:37 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:54:50 PM INFO: unregistered client 
+06/29/2016 12:54:51 PM INFO: registered client 
+06/29/2016 12:54:51 PM INFO: Added tcp4:10.0.2.2:52707 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:54:51 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:54:51 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:52707
+06/29/2016 12:54:51 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:54:51 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:52707
+06/29/2016 12:54:51 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:54:51 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:52707
+06/29/2016 12:54:51 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:54:51 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:52707
+06/29/2016 12:54:51 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:54:51 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:52707
+06/29/2016 12:54:51 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:55:02 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, 
+06/29/2016 12:55:02 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:55:02 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:55:02 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:55:02 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:55:02 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:55:06 PM INFO: unregistered client 
+06/29/2016 12:55:06 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:55:06 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:55:06 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:55:06 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:55:06 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:55:07 PM INFO: registered client 
+06/29/2016 12:55:07 PM INFO: Added tcp4:10.0.2.2:52721 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:55:07 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:55:07 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 for tcp4:10.0.2.2:52721
+06/29/2016 12:55:07 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 is waiting for push data with these filters {u'buildStarted': {u'number': 7}, u'buildFinished': {u'number': 7}, u'stepStarted': {u'number': 7}, u'stepFinished': {u'number': 7}}
+06/29/2016 12:55:08 PM INFO: unregistered client 
+06/29/2016 12:55:08 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7
+06/29/2016 12:55:09 PM INFO: registered client 
+06/29/2016 12:55:13 PM INFO: unregistered client 
+06/29/2016 12:55:14 PM INFO: registered client 
+06/29/2016 12:55:14 PM INFO: Added tcp4:10.0.2.2:52727 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:55:14 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:55:14 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 for tcp4:10.0.2.2:52727
+06/29/2016 12:55:14 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 is waiting for push data with these filters {u'buildStarted': {u'number': 7}, u'buildFinished': {u'number': 7}, u'stepStarted': {u'number': 7}, u'stepFinished': {u'number': 7}}
+06/29/2016 12:55:15 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, 
+06/29/2016 12:55:15 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:55:15 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 Changed, informing 1 client(s)
+06/29/2016 12:55:16 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, 
+06/29/2016 12:55:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, buildFinished, 
+06/29/2016 12:55:20 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 Changed, informing 1 client(s)
+06/29/2016 12:55:20 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 2 client(s)
+06/29/2016 12:55:20 PM INFO: unregistered client 
+06/29/2016 12:55:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7
+06/29/2016 12:55:21 PM INFO: registered client 
+06/29/2016 12:55:21 PM INFO: Added tcp4:10.0.2.2:52736 to url http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:55:21 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:55:21 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 for tcp4:10.0.2.2:52736
+06/29/2016 12:55:21 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7 is waiting for push data with these filters {u'buildStarted': {u'number': 7}, u'buildFinished': {u'number': 7}, u'stepStarted': {u'number': 7}, u'stepFinished': {u'number': 7}}
+06/29/2016 12:55:35 PM INFO: unregistered client 
+06/29/2016 12:57:01 PM INFO: registered client 
+06/29/2016 12:57:03 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 12:57:04 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 12:57:11 PM INFO: unregistered client 
+06/29/2016 12:57:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:57:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=7
+06/29/2016 12:57:12 PM INFO: registered client 
+06/29/2016 12:57:12 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53176
+06/29/2016 12:57:12 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:57:12 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:53176
+06/29/2016 12:57:12 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:12 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:53176
+06/29/2016 12:57:12 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:53176
+06/29/2016 12:57:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:53176
+06/29/2016 12:57:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:53176
+06/29/2016 12:57:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:19 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:57:19 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:57:19 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 12:57:19 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:57:19 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:19 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 12:57:19 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:19 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:19 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 12:57:19 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 12:57:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, 
+06/29/2016 12:57:20 PM INFO: unregistered client 
+06/29/2016 12:57:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:57:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:57:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:57:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:57:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:57:20 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:57:21 PM INFO: registered client 
+06/29/2016 12:57:21 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53185
+06/29/2016 12:57:21 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:57:21 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:53185
+06/29/2016 12:57:21 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:21 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:53185
+06/29/2016 12:57:21 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:21 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:53185
+06/29/2016 12:57:21 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:21 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:53185
+06/29/2016 12:57:21 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:21 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:53185
+06/29/2016 12:57:21 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 12:57:22 PM INFO: unregistered client 
+06/29/2016 12:57:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:57:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 12:57:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 12:57:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 12:57:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 12:57:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 12:57:23 PM INFO: registered client 
+06/29/2016 12:57:23 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53187
+06/29/2016 12:57:23 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:57:23 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 for tcp4:10.0.2.2:53187
+06/29/2016 12:57:23 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 is waiting for push data with these filters {u'buildStarted': {u'number': 8}, u'buildFinished': {u'number': 8}, u'stepStarted': {u'number': 8}, u'stepFinished': {u'number': 8}}
+06/29/2016 12:57:24 PM INFO: unregistered client 
+06/29/2016 12:57:24 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:57:24 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8
+06/29/2016 12:57:25 PM INFO: registered client 
+06/29/2016 12:57:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:57:29 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:30 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, 
+06/29/2016 12:57:40 PM INFO: unregistered client 
+06/29/2016 12:57:41 PM INFO: registered client 
+06/29/2016 12:57:41 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53193
+06/29/2016 12:57:41 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:57:41 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 for tcp4:10.0.2.2:53193
+06/29/2016 12:57:41 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 is waiting for push data with these filters {u'buildStarted': {u'number': 8}, u'buildFinished': {u'number': 8}, u'stepStarted': {u'number': 8}, u'stepFinished': {u'number': 8}}
+06/29/2016 12:57:44 PM INFO: unregistered client 
+06/29/2016 12:57:44 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:57:44 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8
+06/29/2016 12:57:44 PM INFO: registered client 
+06/29/2016 12:57:47 PM INFO: unregistered client 
+06/29/2016 12:57:48 PM INFO: registered client 
+06/29/2016 12:57:48 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53197
+06/29/2016 12:57:48 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:57:48 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 for tcp4:10.0.2.2:53197
+06/29/2016 12:57:48 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 is waiting for push data with these filters {u'buildStarted': {u'number': 8}, u'buildFinished': {u'number': 8}, u'stepStarted': {u'number': 8}, u'stepFinished': {u'number': 8}}
+06/29/2016 12:57:51 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:51 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 12:57:51 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 12:57:51 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 12:57:51 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 Changed, informing 1 client(s)
+06/29/2016 12:57:51 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 12:57:51 PM INFO: unregistered client 
+06/29/2016 12:57:51 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 12:57:51 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8
+06/29/2016 12:57:52 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, 
+06/29/2016 12:57:52 PM INFO: registered client 
+06/29/2016 12:57:52 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53203
+06/29/2016 12:57:52 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 12:57:52 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 for tcp4:10.0.2.2:53203
+06/29/2016 12:57:52 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 is waiting for push data with these filters {u'buildStarted': {u'number': 8}, u'buildFinished': {u'number': 8}, u'stepStarted': {u'number': 8}, u'stepFinished': {u'number': 8}}
+06/29/2016 01:10:19 PM INFO: unregistered client 
+06/29/2016 01:10:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 01:10:19 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8
+06/29/2016 01:12:58 PM INFO: registered client 
+06/29/2016 01:12:59 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events shutdown, 
+06/29/2016 01:13:00 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events start, 
+06/29/2016 01:21:12 PM INFO: registered client 
+06/29/2016 01:21:12 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53619
+06/29/2016 01:21:12 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 01:21:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 for tcp4:10.0.2.2:53619
+06/29/2016 01:21:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8 is waiting for push data with these filters {u'buildStarted': {u'number': 8}, u'buildFinished': {u'number': 8}, u'stepStarted': {u'number': 8}, u'stepFinished': {u'number': 8}}
+06/29/2016 01:21:22 PM INFO: unregistered client 
+06/29/2016 01:21:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 01:21:22 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=8
+06/29/2016 01:21:23 PM INFO: registered client 
+06/29/2016 01:24:03 PM INFO: unregistered client 
+06/29/2016 01:24:05 PM INFO: registered client 
+06/29/2016 01:24:05 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53667
+06/29/2016 01:24:05 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 01:24:05 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:53667
+06/29/2016 01:24:05 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:05 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:53667
+06/29/2016 01:24:05 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:05 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:53667
+06/29/2016 01:24:05 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:05 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:53667
+06/29/2016 01:24:05 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:05 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:53667
+06/29/2016 01:24:05 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:11 PM INFO: unregistered client 
+06/29/2016 01:24:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 01:24:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 01:24:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 01:24:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 01:24:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 01:24:11 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 01:24:12 PM INFO: registered client 
+06/29/2016 01:24:12 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53672
+06/29/2016 01:24:12 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 01:24:12 PM INFO: Created new url http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 for tcp4:10.0.2.2:53672
+06/29/2016 01:24:12 PM INFO: URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:12 PM INFO: Created new url http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk for tcp4:10.0.2.2:53672
+06/29/2016 01:24:12 PM INFO: URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestSubmitted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'requestCancelled': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 for tcp4:10.0.2.2:53672
+06/29/2016 01:24:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0 is waiting for push data with these filters {u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 for tcp4:10.0.2.2:53672
+06/29/2016 01:24:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:12 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 for tcp4:10.0.2.2:53672
+06/29/2016 01:24:12 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 is waiting for push data with these filters {u'buildStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'buildFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepStarted': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'stepFinished': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveConnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}, u'slaveDisconnected': {u'project': u'Unity', u'builderName': u'proj0-Build LinuxStandaloneSupport'}}
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:13 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:13 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1 Changed, informing 1 client(s)
+06/29/2016 01:24:13 PM INFO: JSON at http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1 Changed, informing 1 client(s)
+06/29/2016 01:24:13 PM INFO: JSON at http://10.45.6.182:8001/json/globalstatus Changed, informing 1 client(s)
+06/29/2016 01:24:13 PM INFO: JSON at http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk Changed, informing 1 client(s)
+06/29/2016 01:24:13 PM INFO: JSON at http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0 Changed, informing 1 client(s)
+06/29/2016 01:24:14 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, 
+06/29/2016 01:24:15 PM INFO: unregistered client 
+06/29/2016 01:24:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 01:24:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/projects/Unity/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk&build_steps=0&build_props=0&filter=0
+06/29/2016 01:24:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/pending/proj0-Build%20LinuxStandaloneSupport?unity_branch=trunk
+06/29/2016 01:24:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/<15?unity_branch=trunk&steps=0
+06/29/2016 01:24:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/slaves?build_steps=0&build_props=0&builders=0&filter=1
+06/29/2016 01:24:15 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/startslaves?filter=1
+06/29/2016 01:24:15 PM INFO: registered client 
+06/29/2016 01:24:15 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53680
+06/29/2016 01:24:15 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 01:24:15 PM INFO: Created new url http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=9 for tcp4:10.0.2.2:53680
+06/29/2016 01:24:15 PM INFO: URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=9 is waiting for push data with these filters {u'buildStarted': {u'number': 9}, u'buildFinished': {u'number': 9}, u'stepStarted': {u'number': 9}, u'stepFinished': {u'number': 9}}
+06/29/2016 01:24:17 PM INFO: unregistered client 
+06/29/2016 01:24:17 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 01:24:17 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/builders/proj0-Build%20LinuxStandaloneSupport/builds/?select=9
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 01:24:17 PM INFO: registered client 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:17 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:24:18 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, stepFinished, stepStarted, 
+06/29/2016 01:25:03 PM INFO: unregistered client 
+06/29/2016 01:28:12 PM INFO: registered client 
+06/29/2016 01:28:12 PM INFO: Created new url http://10.45.6.182:8001/json/globalstatus for tcp4:10.0.2.2:53744
+06/29/2016 01:28:12 PM INFO: URL http://10.45.6.182:8001/json/globalstatus is waiting for push data with these filters {u'buildStarted': {}, u'buildFinished': {}, u'requestSubmitted': {}, u'requestCancelled': {}, u'slaveConnected': {}, u'slaveDisconnected': {}}
+06/29/2016 01:28:13 PM INFO: unregistered client 
+06/29/2016 01:28:13 PM INFO: Removed stale cached URL http://10.45.6.182:8001/json/globalstatus
+06/29/2016 01:58:40 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:58:40 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:58:40 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 01:58:40 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 01:58:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, 
+06/29/2016 02:40:36 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 02:40:36 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 02:40:36 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 02:40:36 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 02:40:37 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, 
+06/29/2016 02:43:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveDisconnected, 
+06/29/2016 02:43:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 02:43:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 02:43:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveDisconnected, 
+06/29/2016 02:43:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 02:43:11 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events slaveDisconnected, stepFinished, buildFinished, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildStarted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 03:11:20 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 03:11:21 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events requestSubmitted, buildStarted, stepStarted, stepFinished, stepStarted, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepStarted, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, 
+06/29/2016 03:11:41 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events buildFinished, 
+06/29/2016 03:11:42 PM INFO: Data pushed from server http://10.45.6.182:8001/ with events stepFinished, stepStarted, stepFinished, buildFinished, 
