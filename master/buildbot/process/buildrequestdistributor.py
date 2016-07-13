@@ -1119,7 +1119,7 @@ class KatanaBuildRequestDistributor(service.Service):
         @param new_builders: names of new builders that should be given the
         opportunity to check for new requests.
         """
-        if not self.running:
+        if not self.running or not self.master.config.builders:
             return
 
         d = self._maybeStartOrResumeBuildsOn(new_builders)
@@ -1145,8 +1145,6 @@ class KatanaBuildRequestDistributor(service.Service):
         self.check_new_builds = True
         self.check_resume_builds = True
         self.katanaBuildChooser.initializeBuildRequestQueue()
-
-
 
     @defer.inlineCallbacks
     def _selectNextBuildRequest(self, queue, asyncFunc):
