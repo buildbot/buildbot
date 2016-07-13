@@ -65,6 +65,9 @@ class FakeWorkerRegistration(object):
         self.unregistered = False
         self.worker = worker
 
+    def getPBPort(self):
+        return 1234
+
     def unregister(self):
         assert not self.unregistered, "called twice"
         self.unregistered = True
