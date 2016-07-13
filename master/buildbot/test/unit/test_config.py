@@ -1029,6 +1029,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda : config.BuilderConfig(
                 factory=self.factory, slavenames=['a'], project="default"))
 
+    def test_nonstring_name(self):
+        self.assertRaisesConfigError(
+            "builder's name is required",
+            lambda: config.BuilderConfig(name=1000,
+                factory=self.factory, slavenames=['a'], project="default"))
+
     def test_reserved_name(self):
         self.assertRaisesConfigError(
             "builder names must not start with an underscore: '_a'",

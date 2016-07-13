@@ -686,7 +686,7 @@ class ProjectConfig:
 
         errors = ConfigErrors([])
 
-        if not name or type(name) not in (str, unicode):
+        if not name or not isinstance(name, basestring):
             error("project's name is required")
             name = '<unknown>'
         self.name = name
@@ -705,7 +705,7 @@ class BuilderConfig:
             canStartBuild=None, excludeGlobalFactory=False):
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, unicode):
+        if not name or not isinstance(name, basestring):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
