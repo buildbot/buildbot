@@ -124,6 +124,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.shuttingDown = False
 
     def slaveInBuilder(self, slavename, builder):
+        if not builder or not builder.config:
+            return False
         return (slavename in builder.config.slavenames) or \
                (builder.config.startSlavenames and slavename in builder.config.startSlavenames)
 
