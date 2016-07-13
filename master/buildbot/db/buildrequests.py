@@ -1157,8 +1157,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 prune_period_epoch = datetime2epoch(datetime(prune_period.year, prune_period.month, prune_period.day))
 
                 transaction = conn.begin()
+
                 stmt_brids = sa.select([buildrequests_tbl.c.id])\
-                    .where(buildrequests_tbl.c.submitted_at <= prune_period_epoch).limit(100)
+                    .where(buildrequests_tbl.c.submitted_at <= prune_period_epoch).limit(100000)
 
                 res = conn.execute(stmt_brids)
                 brids = [r.id for r in res]
@@ -1168,31 +1169,36 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 log.msg("Prune %d buildrequests" % len(brids))
 
-                stmt_bsids = sa.select(
-                        [buildsets_tbl.c.id],
-                        from_obj=buildsets_tbl.join(
-                                buildrequests_tbl, buildsets_tbl.c.id == buildrequests_tbl.c.buildsetid))\
-                    .where(buildrequests_tbl.c.id.in_(brids))\
-                    .group_by(buildsets_tbl.c.id)
+                iterator = iter(brids)
+                batch = list(itertools.islice(iterator, 100))
 
-                res = conn.execute(stmt_bsids)
-                bsids = [r.id for r in res]
+                while len(batch) > 0:
+                    stmt_bsids = sa.select(
+                            [buildsets_tbl.c.id],
+                            from_obj=buildsets_tbl.join(
+                                    buildrequests_tbl, buildsets_tbl.c.id == buildrequests_tbl.c.buildsetid))\
+                        .where(buildrequests_tbl.c.id.in_(batch))\
+                        .group_by(buildsets_tbl.c.id)
 
-                stmt_ssids = sa.select(
-                        [sourcestampsets_tbl.c.id],
-                        from_obj=sourcestampsets_tbl.join(
-                                buildsets_tbl,
-                                buildsets_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id))\
-                    .where(buildrequests_tbl.c.id.in_(bsids))\
-                    .group_by(sourcestampsets_tbl.c.id)
+                    res = conn.execute(stmt_bsids)
+                    bsids = [r.id for r in res]
 
-                res = conn.execute(stmt_ssids)
-                ssids = [r.id for r in res]
+                    stmt_ssids = sa.select(
+                            [sourcestampsets_tbl.c.id],
+                            from_obj=sourcestampsets_tbl.join(
+                                    buildsets_tbl,
+                                    buildsets_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id))\
+                        .where(buildrequests_tbl.c.id.in_(bsids))\
+                        .group_by(sourcestampsets_tbl.c.id)
 
-                # Cascade delete to related tables
-                conn.execute(sourcestampsets_tbl.delete((sourcestampsets_tbl.c.id.in_(ssids))))
-                conn.execute(buildsets_tbl.delete((buildsets_tbl.c.id.in_(bsids))))
-                conn.execute(buildrequests_tbl.delete((buildrequests_tbl.c.id.in_(brids))))
+                    res = conn.execute(stmt_ssids)
+                    ssids = [r.id for r in res]
+
+                    # Cascade delete to related tables
+                    conn.execute(sourcestampsets_tbl.delete((sourcestampsets_tbl.c.id.in_(ssids))))
+                    conn.execute(buildsets_tbl.delete((buildsets_tbl.c.id.in_(bsids))))
+                    conn.execute(buildrequests_tbl.delete((buildrequests_tbl.c.id.in_(batch))))
+                    batch = list(itertools.islice(iterator, 100))
 
             except Exception:
                 transaction.rollback()
