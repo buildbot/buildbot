@@ -17,7 +17,6 @@ import time
 from email.message import Message
 from email.utils import formatdate
 
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
@@ -36,6 +35,7 @@ from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
+from future.utils import itervalues
 
 
 class AbstractWorker(service.BuildbotService, object):
@@ -640,7 +640,6 @@ class AbstractLatentWorker(AbstractWorker):
     substantiation_build = None
     insubstantiating = False
     build_wait_timer = None
-    _shutdown_callback_handle = None
 
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
@@ -690,18 +689,18 @@ class AbstractLatentWorker(AbstractWorker):
                     self.missing_timeout,
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_build = build
+            # if substantiate fails synchronously we need to have the deferred ready to be notified
+            d = self._substantiation_notifier.wait()
             if self.conn is None:
-                d = self._substantiate(build)  # start up instance
-                d.addErrback(log.err, "while substantiating")
+                self._substantiate(build)
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
+            return d
         return self._substantiation_notifier.wait()
 
     def _substantiate(self, build):
         # register event trigger
         d = self.start_instance(build)
-        self._shutdown_callback_handle = self.master.reactor.addSystemEventTrigger(
-            'before', 'shutdown', self._soft_disconnect, fast=True)
 
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
@@ -714,12 +713,9 @@ class AbstractLatentWorker(AbstractWorker):
         def clean_up(failure):
             if self.missing_timer is not None:
                 self.missing_timer.cancel()
-                self._substantiation_failed(failure)
-            if self._shutdown_callback_handle is not None:
-                handle = self._shutdown_callback_handle
-                del self._shutdown_callback_handle
-                self.master.reactor.removeSystemEventTrigger(handle)
-            return failure
+            self._substantiation_failed(failure)
+            # swallow the failure as it is given to notified
+            return None
         d.addCallbacks(start_instance_result, clean_up)
         return d
 
@@ -740,7 +736,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     def _substantiation_failed(self, failure):
         self.missing_timer = None
-        if self._substantiation_notifier:
+        if self.substantiation_build:
             self.substantiation_build = None
             self._substantiation_notifier.notify(failure)
         d = self.insubstantiate()
@@ -805,10 +801,6 @@ class AbstractLatentWorker(AbstractWorker):
         self.insubstantiating = True
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
-        if self._shutdown_callback_handle is not None:
-            handle = self._shutdown_callback_handle
-            del self._shutdown_callback_handle
-            self.master.reactor.removeSystemEventTrigger(handle)
         self.substantiated = False
         yield d
         self.insubstantiating = False
@@ -826,7 +818,9 @@ class AbstractLatentWorker(AbstractWorker):
             self.missing_timer.cancel()
             self.missing_timer = None
 
-        if self._substantiation_notifier:
+        # if master is stopping, we will never achieve consistent state, as workermanager
+        # wont accept new connection
+        if self._substantiation_notifier and self.master.running:
             log.msg("Weird: Got request to stop before started. Allowing "
                     "worker to start cleanly to avoid inconsistent state")
             yield self._substantiation_notifier.wait()
@@ -849,12 +843,12 @@ class AbstractLatentWorker(AbstractWorker):
         # without a restart (or maybe a sighup)
         self.botmaster.workerLost(self)
 
+    @defer.inlineCallbacks
     def stopService(self):
-        res = defer.maybeDeferred(AbstractWorker.stopService, self)
-        if self.conn is not None:
-            d = self._soft_disconnect()
-            res = defer.DeferredList([res, d])
-        return res
+        if self.conn is not None or self._substantiation_notifier:
+            yield self._soft_disconnect()
+        res = yield AbstractWorker.stopService(self)
+        defer.returnValue(res)
 
     def updateWorker(self):
         """Called to add or remove builders after the worker has connected.
