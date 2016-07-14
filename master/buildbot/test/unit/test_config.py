@@ -1179,6 +1179,13 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               project="default",
                               friendly_name="b")
 
+    def test_nonstring_friendly_name(self):
+        def test_no_name(self):
+            self.assertRaisesConfigError(
+                "builder's friendly name must be a valid string",
+                lambda: config.BuilderConfig(
+                    factory=self.factory, slavenames=['s1'], project="default", friendly_name=1000))
+
     def test_getConfigDict(self):
         ns = lambda : 'ns'
         nb = lambda : 'nb'

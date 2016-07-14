@@ -712,7 +712,11 @@ class BuilderConfig:
             error("builder names must not start with an underscore: '%s'" % name)
         self.name = name
 
+        # friendly_name is not required
         if friendly_name is None:
+            self.friendly_name = name
+        elif not isinstance(friendly_name, basestring):
+            error("builder's friendly name must be a valid string" % friendly_name)
             self.friendly_name = name
         else:
             self.friendly_name = friendly_name
