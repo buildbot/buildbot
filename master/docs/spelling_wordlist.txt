@@ -327,7 +327,6 @@ funtions
 garantee
 ge
 gedit
-gerrit
 Gerrit
 getChoices
 getfqdn

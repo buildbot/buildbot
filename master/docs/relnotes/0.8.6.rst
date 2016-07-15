@@ -77,7 +77,7 @@ Deprecations, Removals, and Non-Compatible Changes
   parameter and call its :py:meth:`~buildbot.config.ConfigErrors.addError`
   method to indicate errors.
 
-* The gerrit status callback now gets an additional parameter (the master
+* The Gerrit status callback now gets an additional parameter (the master
   status).  If you use this callback, you will need to adjust its
   implementation.
 
