@@ -1022,6 +1022,10 @@ An example:
 
 This class will populate the property list of the triggered build with the info received from Gerrit server in JSON format.
 
+.. warning::
+
+   If you selected :class:`GerritChangeSource`, you **must** use :bb:step:`Gerrit` source step: the ``branch`` property of the change will be :samp:`{target_branch}/{change_id}` and such a ref cannot be resolved, so the :bb:step:`Git` source step would fail.
+
 .. index:: Properties; from GerritChangeSource
 
 In case of ``patchset-created`` event, these properties will be:
