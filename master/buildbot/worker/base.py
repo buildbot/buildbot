@@ -17,6 +17,7 @@ import time
 from email.message import Message
 from email.utils import formatdate
 
+from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
@@ -35,7 +36,6 @@ from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
-from future.utils import itervalues
 
 
 class AbstractWorker(service.BuildbotService, object):
