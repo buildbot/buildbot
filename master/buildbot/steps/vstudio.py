@@ -354,25 +354,22 @@ class VCExpress9(VC8):
         self.setCommand(command)
         return VisualStudio.start(self)
 
+
 # Add first support for VC9 (Same as VC8, with a different installdir)
-
-
 class VC9(VC8):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9.0'
 
 VS2008 = VC9
 
+
 # VC10 doesn't look like it needs extra stuff.
-
-
 class VC10(VC9):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
 
 VS2010 = VC10
 
+
 # VC11 doesn't look like it needs extra stuff.
-
-
 class VC11(VC10):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 11.0'
 
@@ -384,6 +381,13 @@ class VC12(VC11):
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 12.0'
 
 VS2013 = VC12
+
+
+# VC14 doesn't look like it needs extra stuff.
+class VC14(VC12):
+    default_installdir = 'C:\\Program Files (x86)\\Microsoft Visual Studio 14.0'
+
+VS2015 = VC14
 
 
 class MsBuild4(VisualStudio):
@@ -430,3 +434,7 @@ MsBuild = MsBuild4
 
 class MsBuild12(MsBuild4):
     vcenv_bat = r"${VS120COMNTOOLS}..\..\VC\vcvarsall.bat"
+
+
+class MsBuild14(MsBuild4):
+    vcenv_bat = r"${VS140COMNTOOLS}..\..\VC\vcvarsall.bat"
