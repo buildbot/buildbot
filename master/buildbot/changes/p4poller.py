@@ -22,7 +22,7 @@ import exceptions
 import os
 import re
 
-import dateutil
+import dateutil.tz
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
