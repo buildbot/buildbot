@@ -85,6 +85,7 @@ class FakeBuilderStatus(object):
         self.lastBuildStatus = None
         self._tags = None
         self.name = buildername
+        self.status = mock.Mock()
 
     def setDescription(self, description):
         self._description = description
