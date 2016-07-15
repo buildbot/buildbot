@@ -42,7 +42,6 @@ class FakeBot(object):
         return defer.succeed(None)
 
     def loseConnection(self):
-        print "looseConnection"
         self.n()
 
 
@@ -125,7 +124,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         worker = self.makeWorker(image="buggy")
         d = worker.substantiate(None, FakeBuild())
         self.reactor.pump([.1])
-        r = self.failureResultOf(d)
+        self.failureResultOf(d)
         self.assertIsNotNone(worker.client)
         self.assertEqual(worker.instance, None)
         # teardown makes sure all containers are cleaned up

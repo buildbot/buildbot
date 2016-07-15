@@ -20,7 +20,9 @@ class Client(object):
     def __init__(self, config):
         self.config = config
         self.containers = {}
-        #assert Client.instance is None
+        # there should be only one Client instance during tests
+        # if this is not the case then tests are leaking between each other
+        assert Client.instance is None
         Client.instance = self
 
     def start(self, container):

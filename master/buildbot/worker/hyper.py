@@ -82,13 +82,10 @@ class HyperLatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def stopService(self):
-        print "stopping service", self.client
         # stopService will call stop_instance if the worker was up.
         yield AbstractLatentWorker.stopService(self)
-        print "stopped service", self.client
         # we cleanup our thread and session (or reactor.stop will hang)
         if self.client is not None:
-            print "closing client"
             self.client.close()
             self.client = None
         if self.threadPool is not None:
@@ -153,7 +150,6 @@ class HyperLatentWorker(AbstractLatentWorker):
 
     def _thd_stop_instance(self, instance, fast):
         log.msg('Stopping container %s...' % instance['Id'][:6])
-        print "stopping"
         self.client.stop(instance['Id'])
         if not fast:
             self.client.wait(instance['Id'])

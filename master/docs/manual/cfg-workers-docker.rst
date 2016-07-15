@@ -276,11 +276,11 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
 
 ``hyper_accesskey``
     (mandatory)
-    Accesskey to use as part of the creds to access hyper.
+    Access key to use as part of the creds to access hyper.
 
 ``hyper_secretkey``
     (mandatory)
-    Secretkey to use as part of the creds to access hyper.
+    Secret key to use as part of the creds to access hyper.
 
 ``hyper_size``
     (mandatory)
