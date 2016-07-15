@@ -1012,7 +1012,7 @@ It adds the StringParameter arguments, this type allows:
 This class could be subclassed in order to have more customization e.g.
 
 * developer could send a list of Git branches to pull from
-* developer could send a list of gerrit changes to cherry-pick,
+* developer could send a list of Gerrit changes to cherry-pick,
 * developer could send a shell script to amend the build.
 
 Beware of security issues anyway.

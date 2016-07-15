@@ -19,13 +19,17 @@ import textwrap
 
 import pkg_resources
 
-from buildbot.util.raml import RamlSpec
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-here = os.path.abspath('.')
-sys.path.append(here)
+sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from buildbot.util.raml import RamlSpec
+except ImportError:
+    sys.path.insert(2, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    os.pardir))
+    from buildbot.util.raml import RamlSpec
 
 # -- General configuration -----------------------------------------------
 try:
