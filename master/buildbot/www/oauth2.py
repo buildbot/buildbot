@@ -15,9 +15,11 @@
 from posixpath import join
 
 import requests
+
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.internet import threads
 
@@ -51,7 +53,6 @@ class OAuth2LoginResource(auth.LoginResource):
                 details.update(infos)
             request.getSession().user_info = details
             state = request.args.get("state", [""])[0]
-            print repr(state)
             if state:
                 for redirect in parse_qs(state).get('redirect', []):
                     raise resource.Redirect(self.auth.homeUri + "#" + redirect)
