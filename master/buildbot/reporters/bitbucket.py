@@ -55,18 +55,18 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                     'url': build['url']
                     }
             owner, repo = self.get_owner_and_repo(sourcestamp['repository'])
-            if repo is not None and owner is not None:
-                token = ''
-                oauth_request = yield self.session.post(self.oauth_url, auth=self.auth,
-                                                       data={'grant_type': 'client_credentials'})
-                if oauth_request.status_code == 200:
-                    token = json.loads(oauth_request.content)['access_token']
-                self.session.headers.update({'Authorization': 'Bearer ' + token})
-                bitbucket_uri = '/'.join([self.base_url, owner, repo, 'commit', sha, 'statuses', 'build'])
-                response = yield self.session.post(bitbucket_uri, json=body)
-                if response.status_code != 201:
-                    log.msg("%s: unable to upload Bitbucket status: %s" %
-                            (response.status_code, response.content))
+            token = ''
+            oauth_request = yield self.session.post(self.oauth_url, auth=self.auth,
+                                                   data={'grant_type': 'client_credentials'})
+            if oauth_request.status_code == 200:
+                token = json.loads(oauth_request.content)['access_token']
+            self.session.headers.update({'Authorization': 'Bearer ' + token})
+            print "HERE"
+            bitbucket_uri = '/'.join([self.base_url, owner, repo, 'commit', sha, 'statuses', 'build'])
+            response = yield self.session.post(bitbucket_uri, json=body)
+            if response.status_code != 201:
+                log.msg("%s: unable to upload Bitbucket status: %s" %
+                        (response.status_code, response.content))
             else:
                 log.msg("Unable to determine owner or repository name: (owner: %s, repo: %s)" %
                         (str(owner), str(repo)))
@@ -79,8 +79,8 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                     https://bitbucket.com/OWNER/REPONAME.git
         :return: owner, repo: The owner of the repository and the repository name
         """
-        owner = None
-        repo = None
+        owner = 'repo'
+        repo = 'repo'
         if repourl.startswith('git@'):
             tail = repourl.split(':')[-1]
             owner = tail.split('/')[-2]

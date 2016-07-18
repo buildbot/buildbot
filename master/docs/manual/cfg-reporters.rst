@@ -884,7 +884,6 @@ As a result, we recommend you use https in your base_url rather than http.
 BitbucketStatusPush
 ~~~~~~~~~~~~~~~~~~~
 
-.. @cindex BitbucketStatusPush
 .. py:class:: buildbot.reporters.bitbucket.BitbucketStatusPush
 
 ::
@@ -899,11 +898,12 @@ It tracks the last build for each builderName for each commit built.
 
 It requires `txrequests`_ package to allow interaction with the Bitbucket REST and OAuth APIs.
 
-It uses OAuth 2.x to authenticate with Bitbucket. To enable this, you need to go to your
-Bitbucket Settings -> OAuth page. Click "Add consumer". Give the new consumer a name, eg 'buildbot',
-and put in any URL as the callback (this is needed for Oauth 2.x but is not used by this reporter,
-eg 'https://localhost:8010/callback'). Give the consumer Repositories:Write access. After creating the consumer,
-you will then be able to see the OAuth key and secret.
+It uses OAuth 2.x to authenticate with Bitbucket.
+To enable this, you need to go to your Bitbucket Settings -> OAuth page.
+Click "Add consumer".
+Give the new consumer a name, eg 'buildbot', and put in any URL as the callback (this is needed for Oauth 2.x but is not used by this reporter, eg 'https://localhost:8010/callback').
+Give the consumer Repositories:Write access.
+After creating the consumer, you will then be able to see the OAuth key and secret.
 
 .. py:class:: BitbucketStatusPush(oauth_key, oauth_secret, base_url='https://api.bitbucket.org/2.0/repositories', oauth_url='https://bitbucket.org/site/oauth2/access_token', builders=None)
 

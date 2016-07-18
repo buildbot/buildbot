@@ -23,6 +23,8 @@ Features
 
 * The ``dist`` parameter in :bb:step:`RpmBuild` is now renderable.
 
+* new :bb:reporter:`BitbucketStatusPush` to report build results to a Bitbucket Cloud repository.
+
 Fixes
 ~~~~~
 
