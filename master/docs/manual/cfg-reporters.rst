@@ -899,9 +899,9 @@ It tracks the last build for each builderName for each commit built.
 
 It requires `txrequests`_ package to allow interaction with the Bitbucket REST and OAuth APIs.
 
-It uses OAUTH 2.x to authenticate with Bitbucket. To enable this, you need to go to your
+It uses OAuth 2.x to authenticate with Bitbucket. To enable this, you need to go to your
 Bitbucket Settings -> OAuth page. Click "Add consumer". Give the new consumer a name, eg 'buildbot',
-and put in any URL as the callback (this is needed for Oauth2 but is not used by this reporter,
+and put in any URL as the callback (this is needed for Oauth 2.x but is not used by this reporter,
 eg 'https://localhost:8010/callback'). Give the consumer Repositories:Write access. After creating the consumer,
 you will then be able to see the OAuth key and secret.
 
@@ -1067,3 +1067,6 @@ Here's a complete example:
                 result['notify'] = (build['results'] != 0)
             return result
 
+.. spelling::
+
+    OAuth

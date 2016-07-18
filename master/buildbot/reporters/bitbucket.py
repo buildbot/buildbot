@@ -60,7 +60,7 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                 oauth_request = yield self.session.post(self.oauth_url, auth=self.auth,
                                                        data={'grant_type': 'client_credentials'})
                 if oauth_request.status_code == 200:
-                    token =  json.loads(oauth_request.content)['access_token']
+                    token = json.loads(oauth_request.content)['access_token']
                 self.session.headers.update({'Authorization': 'Bearer ' + token})
                 bitbucket_uri = '/'.join([self.base_url, owner, repo, 'commit', sha, 'statuses', 'build'])
                 response = yield self.session.post(bitbucket_uri, json=body)
@@ -91,4 +91,3 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
         if repo is not None and repo.endswith('.git'):
             repo = repo[:-4]
         return owner, repo
-
