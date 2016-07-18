@@ -879,7 +879,7 @@ As a result, we recommend you use https in your base_url rather than http.
     :param string password: the stash user's password
     :param list builders: only send update for specified builders
 
-.. bb:reporter::BitbucketStatusPush
+.. bb:reporter:: BitbucketStatusPush
 
 BitbucketStatusPush
 ~~~~~~~~~~~~~~~~~~~
