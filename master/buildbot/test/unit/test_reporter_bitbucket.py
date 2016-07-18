@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from mock import Mock
 from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -67,15 +68,15 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
                  data={'grant_type': 'client_credentials'}),
             call(u'https://api.bitbucket.org/2.0/repositories/repo/repo/commit/d34db33fd43db33f/statuses/build',
                  json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0', 'name': u'Builder0'}),
+                       'state': 'INPROGRESS', 'key': u'Builder0', 'name': u'Builder0'}),
             call('https://bitbucket.org/site/oauth2/access_token', auth=('key', 'secret'),
-                  data={'grant_type': 'client_credentials'}),
+                 data={'grant_type': 'client_credentials'}),
             call(u'https://api.bitbucket.org/2.0/repositories/repo/repo/commit/d34db33fd43db33f/statuses/build',
-                  json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'SUCCESSFUL', 'key': u'Builder0', 'name': u'Builder0'}),
+                 json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                       'state': 'SUCCESSFUL', 'key': u'Builder0', 'name': u'Builder0'}),
             call('https://bitbucket.org/site/oauth2/access_token', auth=('key', 'secret'),
-                  data={'grant_type': 'client_credentials'}),
+                 data={'grant_type': 'client_credentials'}),
             call(u'https://api.bitbucket.org/2.0/repositories/repo/repo/commit/d34db33fd43db33f/statuses/build',
-                  json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'FAILED', 'key': u'Builder0', 'name': u'Builder0'})
+                 json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                       'state': 'FAILED', 'key': u'Builder0', 'name': u'Builder0'})
         ])
