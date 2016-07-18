@@ -61,7 +61,6 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
             if oauth_request.status_code == 200:
                 token = json.loads(oauth_request.content)['access_token']
             self.session.headers.update({'Authorization': 'Bearer ' + token})
-            print "HERE"
             bitbucket_uri = '/'.join([self.base_url, owner, repo, 'commit', sha, 'statuses', 'build'])
             response = yield self.session.post(bitbucket_uri, json=body)
             if response.status_code != 201:
@@ -75,8 +74,9 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
         """
         Takes a git repository URL from Bitbucket and tries to determine the owner and repository name
         :param repourl: Bitbucket git repo in the form of
-                    git@bitbucket.com/OWNER/REPONAME.git
+                    git@bitbucket.com:OWNER/REPONAME.git
                     https://bitbucket.com/OWNER/REPONAME.git
+                    ssh://git@bitbucket.com/OWNER/REPONAME.git
         :return: owner, repo: The owner of the repository and the repository name
         """
         owner = 'repo'
@@ -85,7 +85,7 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
             tail = repourl.split(':')[-1]
             owner = tail.split('/')[-2]
             repo = tail.split('/')[-1]
-        elif repourl.startswith('http'):
+        elif repourl.startswith('http') or repourl.startswith('ssh://git@'):
             repo = repourl.split('/')[-1]
             owner = repourl.split('/')[-2]
         if repo is not None and repo.endswith('.git'):
