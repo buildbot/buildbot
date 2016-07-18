@@ -18,6 +18,7 @@ The next section, :doc:`customization`, describes this approach, with frequent r
     cfg-schedulers
     cfg-workers
     cfg-builders
+    cfg-credentials
     cfg-buildfactories
     cfg-properties
     cfg-buildsteps
