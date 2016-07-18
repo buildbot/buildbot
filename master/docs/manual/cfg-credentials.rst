@@ -10,8 +10,7 @@ Buildbot provides a common framework for steps to use credentials.
 The framewework provides a way to configure the credentials outside of the master.cfg.
 As the master.cfg is usually stored in a SCM like git, those credentials would be available to anybody.
 For this reason, the credentials are stored in a Vault instance. Vault have to be installed to use this feauture.
-For more informations about Vault, please visit: Vault_.
-.. _Vault: https://www.vaultproject.io/
+For more informations about Vault, please visit: _`Vault`: https://www.vaultproject.io/
 Credentials are never visible to the normal user via logs, and thus are transmitted to the workers using the :class:`Obfuscated`
 
 Several use cases are addressed by this framework:
@@ -42,13 +41,18 @@ How to add, delete or modify new credentials
 A data API is available to create, delete and modify new credentials.
 The data API modifies the 2 entities: ``name`` and ``value`` (mandatory)
 A data API function helps to register and/or modify any new credential in the database.
-    .. code-block:: bash
-        buildbot set-creds http://localhost:8020  --name ssh_user  --value rsa_key
-        buildbot set-creds http://localhost:8020  --name userpassword --value mypassword
+
+.. code-block:: bash
+
+    buildbot set-creds http://localhost:8020  --name ssh_user  --value rsa_key
+    buildbot set-creds http://localhost:8020  --name userpassword --value mypassword
+
 A data API allows users to delete credentials
-    .. code-block:: bash
-        buildbot delete-creds http://localhost:8020  --name ssh_user
-        buildbot delete-creds http://localhost:8020  --name userpassword
+
+.. code-block:: bash
+
+    buildbot delete-creds http://localhost:8020  --name ssh_user
+    buildbot delete-creds http://localhost:8020  --name userpassword
 
 Registering credentials through a Buildbot UI
 ---------------------------------------------
@@ -67,7 +71,8 @@ The class PopulateCreds take two kwargs arguments, ssh_keys and passwords.
 When ssh_keys argument is not empty, a file ``id_rsa_credential_name`` is created for each ssh key needed in the :envvar:`HOME` directory.
 Credentials values are obfuscated in the steps logs.
 
-    .. code-block:: python
+.. code-block:: python
+
         # e.g in abuild:
         f1.addStep(PopulateCreds(ssh_keys=['ssh_user'], passwords=['userpassword'])
         f1.addStep(ShellCommand(Interpolate("wget -u user -p %{creds:userpassword}s %{prop:urltofetch}s")))
