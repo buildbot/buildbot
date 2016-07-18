@@ -692,7 +692,7 @@ class ProjectConfig:
 
         errors = ConfigErrors([])
 
-        if not name or type(name) not in (str, unicode):
+        if not name or not isinstance(name, basestring):
             error("project's name is required")
             name = '<unknown>'
         self.name = name
@@ -711,14 +711,18 @@ class BuilderConfig:
             canStartBuild=None, excludeGlobalFactory=False):
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, unicode):
+        if not name or not isinstance(name, basestring):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
             error("builder names must not start with an underscore: '%s'" % name)
         self.name = name
 
+        # friendly_name is not required
         if friendly_name is None:
+            self.friendly_name = name
+        elif not isinstance(friendly_name, basestring):
+            error("builder's friendly name must be a valid string" % friendly_name)
             self.friendly_name = name
         else:
             self.friendly_name = friendly_name
