@@ -124,10 +124,12 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             image_uuid = image
         return image_uuid
 
+    @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        return threads.deferToThread(self._start_instance)
+        res = yield threads.deferToThread(self._start_instance)
+        defer.returnValue(res)
 
     def _start_instance(self):
         image_uuid = self._getImage(self.novaclient, self.image)

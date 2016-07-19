@@ -97,7 +97,7 @@ class TestOpenStackWorker(unittest.TestCase):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        self.assertRaises(ValueError, bs.start_instance, None)
+        self.assertFailure(bs.start_instance(None), ValueError)
 
     def test_start_instance_fail_to_find(self):
         bs = openstack.OpenStackLatentWorker(
