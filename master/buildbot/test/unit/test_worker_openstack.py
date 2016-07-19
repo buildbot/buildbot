@@ -81,20 +81,24 @@ class TestOpenStackWorker(unittest.TestCase):
                           openstack.OpenStackLatentWorker, 'bot', 'pass',
                           flavor=1, **self.os_auth)
 
+    @defer.inlineCallbacks
     def test_getImage_string(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
-        self.assertEqual('image-uuid', bs._getImage(None, bs.image))
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual('image-uuid', image_uuid)
 
+    @defer.inlineCallbacks
     def test_getImage_callable(self):
         def image_callable(images):
             return images[0]
 
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
                                              image=image_callable, **self.os_auth)
-        os_client = novaclient.Client('1.1', 'user', 'pass', 'tenant', 'auth')
+        os_client = bs.novaclient
         os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
-        self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual('uuid1', image_uuid)
 
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentWorker(

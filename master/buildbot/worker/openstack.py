@@ -114,25 +114,26 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         client_block_device['volume_size'] = block_device['volume_size']
         return client_block_device
 
-    @staticmethod
-    def _getImage(os_client, image):
+    @defer.inlineCallbacks
+    def _getImage(self, build):
         # If image is a callable, then pass it the list of images. The
         # function should return the image's UUID to use.
+        image = self.image
         if callable(image):
-            image_uuid = image(os_client.images.list())
+            image_uuid = image(self.novaclient.images.list())
         else:
-            image_uuid = image
-        return image_uuid
+            image_uuid = yield build.render(image)
+        defer.returnValue(image_uuid)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        res = yield threads.deferToThread(self._start_instance)
+        image = yield self._getImage(build)
+        res = yield threads.deferToThread(self._start_instance, image)
         defer.returnValue(res)
 
-    def _start_instance(self):
-        image_uuid = self._getImage(self.novaclient, self.image)
+    def _start_instance(self, image_uuid):
         boot_args = [self.workername, image_uuid, self.flavor]
         boot_kwargs = dict(
             meta=self.meta,
