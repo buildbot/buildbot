@@ -27,6 +27,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 
 class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
+    TEST_REPO = u'https://example.org/user/repo'
 
     @defer.inlineCallbacks
     def setUp(self):
