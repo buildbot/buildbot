@@ -99,37 +99,41 @@ class TestOpenStackWorker(unittest.TestCase):
         bs.instance = mock.Mock()
         self.assertFailure(bs.start_instance(None), ValueError)
 
+    @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
-        self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
-                          bs._start_instance)
+        yield self.assertFailure(bs.start_instance(None),
+                                 interfaces.LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_start_instance_fail_to_start(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
-        self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
-                          bs._start_instance)
+        yield self.assertFailure(bs.start_instance(None),
+                                 interfaces.LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_start_instance_success(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = bs._start_instance()
+        uuid, image_uuid, time_waiting = yield bs.start_instance(None)
         self.assertTrue(uuid)
         self.assertEqual(image_uuid, 'image-uuid')
         self.assertTrue(time_waiting)
 
+    @defer.inlineCallbacks
     def test_start_instance_check_meta(self):
         meta_arg = {'some_key': 'some-value'}
         bs = openstack.OpenStackLatentWorker('bot', 'pass', meta=meta_arg,
                                              **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = bs._start_instance()
+        uuid, image_uuid, time_waiting = yield bs.start_instance(None)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
 
