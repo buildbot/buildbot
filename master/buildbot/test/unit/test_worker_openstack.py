@@ -21,6 +21,7 @@ from twisted.trial import unittest
 import buildbot.test.fake.openstack as novaclient
 from buildbot import config
 from buildbot import interfaces
+from buildbot.process.properties import Properties
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
@@ -40,6 +41,8 @@ class TestOpenStackWorker(unittest.TestCase):
     def setUp(self):
         self.patch(openstack, "nce", novaclient)
         self.patch(openstack, "client", novaclient)
+        self.build = Properties(
+            image='bcdcbfb7-d5de-44d9-8768-2591c2ee09ed')
 
     def test_constructor_nonova(self):
         self.patch(openstack, "nce", None)
@@ -97,7 +100,7 @@ class TestOpenStackWorker(unittest.TestCase):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        self.assertFailure(bs.start_instance(None), ValueError)
+        self.assertFailure(bs.start_instance(self.build), ValueError)
 
     @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
@@ -105,7 +108,7 @@ class TestOpenStackWorker(unittest.TestCase):
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
-        yield self.assertFailure(bs.start_instance(None),
+        yield self.assertFailure(bs.start_instance(self.build),
                                  interfaces.LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -114,7 +117,7 @@ class TestOpenStackWorker(unittest.TestCase):
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
-        yield self.assertFailure(bs.start_instance(None),
+        yield self.assertFailure(bs.start_instance(self.build),
                                  interfaces.LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -122,7 +125,7 @@ class TestOpenStackWorker(unittest.TestCase):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(None)
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertTrue(uuid)
         self.assertEqual(image_uuid, 'image-uuid')
         self.assertTrue(time_waiting)
@@ -133,7 +136,7 @@ class TestOpenStackWorker(unittest.TestCase):
         bs = openstack.OpenStackLatentWorker('bot', 'pass', meta=meta_arg,
                                              **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = yield bs.start_instance(None)
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
 
