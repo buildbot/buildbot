@@ -167,7 +167,7 @@ To do this, enter the following lines in a Python prompt where docker-py is inst
 
 It is now time to add the new worker to the master configuration under :bb:cfg:`workers`.
 
-The following example will add a Docker latent worker for docker running at the following adress: ``tcp://localhost:2375``, the worker name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_worker``::
+The following example will add a Docker latent worker for docker running at the following address: ``tcp://localhost:2375``, the worker name will be ``docker``, its password: ``password``, and the base image name will be ``my_project_worker``::
 
     from buildbot.plugins import worker
     c['workers'] = [
@@ -180,7 +180,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 
 ``docker_host``
     (mandatory)
-    This is the adress the master will use to connect with a running Docker instance.
+    This is the address the master will use to connect with a running Docker instance.
 
 ``image``
     (optional if ``dockerfile`` is given)
@@ -236,3 +236,56 @@ Each string specify a volume in the following format: :samp:`{volumename}:{bindn
 The volume name has to be appended with ``:ro`` if the volume should be mounted *read-only*.
 
 .. note:: This is the same format as when specifying volumes on the command line for docker's own ``-v`` option.
+
+Hyper latent worker
+===================
+
+Hyper_ is a CaaS solution for hosting docker container in the cloud, billed to the second.
+It forms a very cost efficient solution to run your CI in the cloud.
+
+Buildbot supports using Hyper_ to host your latent workers.
+
+.. @cindex HyperLatentWorker
+.. py:class:: buildbot.worker.hyper.HyperLatentWorker
+
+Using the Hyper latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
+See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
+
+.. _Hyper: https://hyper.sh
+
+
+In addition to the arguments available for any :ref:`Latent-Workers`, :class:`HyperLatentWorker` will accept the following extra ones:
+
+``hyper_host``
+    (mandatory)
+    This is the address the hyper infra endpoint will use to start docker containers.
+
+``image``
+    (mandatory)
+    This is the name of the image that will be started by the build master. It should start a worker.
+    This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
+    Images are by default pulled from the public DockerHub_ docker registry.
+    You can consult the hyper documentation to know how to configure a custom registry.
+    HyperLatentWorker does not support starting a worker built from a Dockerfile.
+
+``masterFQDN``
+    (optional, defaults to socket.getfqdn())
+    Address of the master the worker should connect to. Use if you master machine does not have proper fqdn.
+    This value is passed to the docker image via environment variable ``BUILDMASTER``
+
+``hyper_accesskey``
+    (mandatory)
+    Access key to use as part of the creds to access hyper.
+
+``hyper_secretkey``
+    (mandatory)
+    Secret key to use as part of the creds to access hyper.
+
+``hyper_size``
+    (mandatory)
+    Size of the container to use as per HyperPricing_
+
+.. _Hyper: https://hyper.sh
+.. _HyperPricing: https://hyper.sh/pricing.html
+.. _DockerHub: https://hub.docker.com/
