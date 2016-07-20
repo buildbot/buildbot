@@ -36,48 +36,64 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-        self.sp = sp = BitbucketStatusPush("key", "secret")
-        sp.sessionFactory = Mock(return_value=Mock())
-        yield sp.setServiceParent(self.master)
-        yield sp.startService()
+        self.bsp = bsp = BitbucketStatusPush('key', 'secret')
+        bsp.sessionFactory = Mock(return_value=Mock())
+        yield bsp.setServiceParent(self.master)
+        yield bsp.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.sp.stopService()
-        self.assertEqual(self.sp.session.close.call_count, 1)
+        yield self.bsp.stopService()
+        self.assertEqual(self.bsp.session.close.call_count, 1)
         config._errors = None
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
-        build = yield self.master.data.get(("builds", 20))
+        build = yield self.master.data.get(('builds', 20))
         defer.returnValue(build)
 
     @defer.inlineCallbacks
     def test_basic(self):
         build = yield self.setupBuildResults(SUCCESS)
+
         build['complete'] = False
-        self.sp.buildStarted(("build", 20, "started"), build)
+        self.bsp.buildStarted(('build', 20, 'started'), build)
+
         build['complete'] = True
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.bsp.buildFinished(('build', 20, 'finished'), build)
+
         build['results'] = FAILURE
-        self.sp.buildFinished(("build", 20, "finished"), build)
+        self.bsp.buildFinished(('build', 20, 'finished'), build)
+
         # we make sure proper calls to txrequests have been made
         self.assertEqual(
-            self.sp.session.post.mock_calls, [
-            call('https://bitbucket.org/site/oauth2/access_token', auth=('key', 'secret'),
-                 data={'grant_type': 'client_credentials'}),
-            call(u'https://api.bitbucket.org/2.0/repositories/repo/repo/commit/d34db33fd43db33f/statuses/build',
-                 json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                       'state': 'INPROGRESS', 'key': u'Builder0', 'name': u'Builder0'}),
-            call('https://bitbucket.org/site/oauth2/access_token', auth=('key', 'secret'),
-                 data={'grant_type': 'client_credentials'}),
-            call(u'https://api.bitbucket.org/2.0/repositories/repo/repo/commit/d34db33fd43db33f/statuses/build',
-                 json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                       'state': 'SUCCESSFUL', 'key': u'Builder0', 'name': u'Builder0'}),
-            call('https://bitbucket.org/site/oauth2/access_token', auth=('key', 'secret'),
-                 data={'grant_type': 'client_credentials'}),
-            call(u'https://api.bitbucket.org/2.0/repositories/repo/repo/commit/d34db33fd43db33f/statuses/build',
-                 json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                       'state': 'FAILED', 'key': u'Builder0', 'name': u'Builder0'})
-        ])
+            self.bsp.session.post.mock_calls, [
+                call('https://bitbucket.org/site/oauth2/access_token',
+                     auth=('key', 'secret'),
+                     data={'grant_type': 'client_credentials'}),
+                call(u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
+                     json={
+                         'url': 'http://localhost:8080/#builders/79/builds/0',
+                         'state': 'INPROGRESS',
+                         'key': u'Builder0',
+                         'name': u'Builder0'}),
+                call('https://bitbucket.org/site/oauth2/access_token',
+                     auth=('key', 'secret'),
+                     data={'grant_type': 'client_credentials'}),
+                call(u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
+                     json={
+                         'url': 'http://localhost:8080/#builders/79/builds/0',
+                         'state': 'SUCCESSFUL',
+                         'key': u'Builder0',
+                         'name': u'Builder0'}),
+                call('https://bitbucket.org/site/oauth2/access_token',
+                     auth=('key', 'secret'),
+                     data={'grant_type': 'client_credentials'}),
+                call(u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
+                     json={
+                         'url': 'http://localhost:8080/#builders/79/builds/0',
+                         'state': 'FAILED',
+                         'key': u'Builder0',
+                         'name': u'Builder0'})
+            ])
