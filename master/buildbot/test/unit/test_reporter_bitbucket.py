@@ -97,3 +97,19 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
                          'key': u'Builder0',
                          'name': u'Builder0'})
             ])
+
+
+class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
+    def parse(self, repourl):
+        return tuple(BitbucketStatusPush.get_owner_and_repo(repourl))
+
+    def test_parse_no_scheme(self):
+        self.assertEqual(('user', 'repo'), self.parse('git@bitbucket.com:user/repo.git'))
+        self.assertEqual(('user', 'repo'), self.parse('git@bitbucket.com:user/repo'))
+
+    def test_parse_with_scheme(self):
+        self.assertEqual(('user', 'repo'), self.parse('https://bitbucket.com/user/repo.git'))
+        self.assertEqual(('user', 'repo'), self.parse('https://bitbucket.com/user/repo'))
+
+        self.assertEqual(('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo.git'))
+        self.assertEqual(('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo'))

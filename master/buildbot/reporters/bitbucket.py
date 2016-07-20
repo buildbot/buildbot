@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+from urlparse import urlparse
 
 from twisted.internet import defer
 from twisted.python import log
@@ -100,15 +101,19 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                     ssh://git@bitbucket.com/OWNER/REPONAME.git
         :return: owner, repo: The owner of the repository and the repository name
         """
-        owner = 'repo'
-        repo = 'repo'
-        if repourl.startswith('git@'):
-            tail = repourl.split(':')[-1]
-            owner = tail.split('/')[-2]
-            repo = tail.split('/')[-1]
-        elif repourl.startswith('http') or repourl.startswith('ssh://git@'):
-            repo = repourl.split('/')[-1]
-            owner = repourl.split('/')[-2]
-        if repo is not None and repo.endswith('.git'):
-            repo = repo[:-4]
-        return owner, repo
+        parsed = urlparse(repourl)
+
+        if parsed.scheme:
+            path = parsed.path[1:]
+        else:
+            # we assume git@host:owner/repo.git here
+            path = parsed.path.split(':', 1)[-1]
+
+        if path.endswith('.git'):
+            path = path[:-4]
+
+        parts = path.split('/')
+
+        assert len(parts) == 2, 'OWNER/REPONAME is expected'
+
+        return parts
