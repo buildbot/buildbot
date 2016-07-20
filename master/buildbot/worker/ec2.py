@@ -543,6 +543,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             self.instance.reload()
 
         if self.instance.state['Name'] == RUNNING:
+            self.properties.setProperty("instance", self.instance.id, "Worker")
             self.output = self.instance.console_output().get('Output')
             minutes = duration // 60
             seconds = duration % 60
