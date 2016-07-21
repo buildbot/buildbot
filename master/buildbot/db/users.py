@@ -50,10 +50,12 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
             # Check if we need to update the name or the mail
             if user_data:
+                old_name = user_data[0].fullname
+                old_mail = user_data[0].mail
                 update_dict = {}
-                if fullname and user_data[0].fullname.encode('utf-8') != fullname:
+                if fullname and (old_name is None or old_name.encode('utf-8') != fullname):
                     update_dict['fullname'] = fullname.decode('utf-8')
-                if mail and user_data[0].mail.encode('utf-8') != mail:
+                if mail and (old_mail is None or old_mail.encode('utf-8') != mail):
                     update_dict['mail'] = mail.decode('utf-8')
 
                 if update_dict:
