@@ -24,7 +24,7 @@ class UsDict(dict):
 class UsersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/database.rst
 
-    def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
+    def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None, fullname=None, mail=None):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.users
             tbl_info = self.db.model.users_info
@@ -32,33 +32,60 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             self.check_length(tbl.c.identifier, identifier)
             self.check_length(tbl_info.c.attr_type, attr_type)
             self.check_length(tbl_info.c.attr_data, attr_data)
+            if fullname:
+                self.check_length(tbl.c.fullname, fullname)
+            if mail:
+                self.check_length(tbl.c.mail, mail)
 
-            # try to find the user
-            q = sa.select([ tbl_info.c.uid ],
-                        whereclause=and_(tbl_info.c.attr_type == attr_type,
-                                tbl_info.c.attr_data == attr_data))
-            rows = conn.execute(q).fetchall()
+            # try to find the user from the attributes
+            info_query = sa.select([tbl_info.c.uid],
+                                   whereclause=and_(tbl_info.c.attr_type == attr_type,
+                                                    tbl_info.c.attr_data == attr_data))
+            info_data = conn.execute(info_query).fetchall()
 
-            if rows:
-                return rows[0].uid
+            # try to find the user from the users table
+            user_query = sa.select([tbl.c.uid, tbl.c.fullname, tbl.c.mail],
+                                   whereclause=and_(tbl.c.identifier == identifier))
+            user_data = conn.execute(user_query).fetchall()
+
+            # Check if we need to update the name or the mail
+            if user_data:
+                old_name = user_data[0].fullname
+                old_mail = user_data[0].mail
+                update_dict = {}
+                if fullname and (old_name is None or old_name.encode('utf-8') != fullname):
+                    update_dict['fullname'] = fullname.decode('utf-8')
+                if mail and (old_mail is None or old_mail.encode('utf-8') != mail):
+                    update_dict['mail'] = mail.decode('utf-8')
+
+                if update_dict:
+                    transaction = conn.begin()
+                    try:
+                        conn.execute(tbl.update(whereclause=(tbl.c.uid == user_data[0].uid)),
+                                     update_dict)
+                    except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
+                        transaction.rollback()
+                        raise
+                    transaction.commit()
+
+            # If we have the attributes
+            if info_data:
+                return info_data[0].uid
 
             # same user may exists in other repository example hg/git
-            q = sa.select([ tbl.c.uid ],
-                          whereclause=and_(tbl.c.identifier == identifier))
-            rows = conn.execute(q).fetchall()
-
-            if rows:
+            # we insert the attributes
+            if user_data:
                 transaction = conn.begin()
                 try:
                     conn.execute(tbl_info.insert(),
-                                 dict(uid=rows[0].uid, attr_type=attr_type,
+                                 dict(uid=user_data[0].uid, attr_type=attr_type,
                                       attr_data=attr_data))
                     transaction.commit()
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                     transaction.rollback()
                     raise
 
-                return rows[0].uid
+                return user_data[0].uid
 
             _race_hook and _race_hook(conn)
 
@@ -67,12 +94,13 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # time from the perspective of other masters.
             transaction = conn.begin()
             try:
-                r = conn.execute(tbl.insert(), dict(identifier=identifier))
+                r = conn.execute(tbl.insert(), dict(identifier=identifier,
+                                                    fullname=fullname, mail=mail))
                 uid = r.inserted_primary_key[0]
 
                 conn.execute(tbl_info.insert(),
-                        dict(uid=uid, attr_type=attr_type,
-                             attr_data=attr_data))
+                             dict(uid=uid, attr_type=attr_type,
+                                  attr_data=attr_data))
 
                 transaction.commit()
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
