@@ -91,12 +91,17 @@ class TestOpenStackWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_getImage_callable(self):
         def image_callable(images):
-            return images[0]
+            filtered = filter(lambda i: i.id == 'uuid1', images)
+            return filtered[0].id
 
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
                                              image=image_callable, **self.os_auth)
         os_client = bs.novaclient
-        os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
+        os_client.images._add_items([
+            novaclient.Image('uuid1', 'name1', 1),
+            novaclient.Image('uuid2', 'name2', 1),
+            novaclient.Image('uuid3', 'name3', 1),
+            ])
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual('uuid1', image_uuid)
 
