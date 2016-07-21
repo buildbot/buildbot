@@ -51,10 +51,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             # Check if we need to update the name or the mail
             if user_data:
                 update_dict = {}
-                if fullname and user_data[0].fullname != fullname:
-                    update_dict['fullname'] = fullname
-                if mail and user_data[0].mail != mail:
-                    update_dict['mail'] = mail
+                if fullname and user_data[0].fullname.encode('utf-8') != fullname:
+                    update_dict['fullname'] = fullname.decode('utf-8')
+                if mail and user_data[0].mail.encode('utf-8') != mail:
+                    update_dict['mail'] = mail.decode('utf-8')
 
                 if update_dict:
                     transaction = conn.begin()
