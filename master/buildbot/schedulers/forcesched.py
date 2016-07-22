@@ -20,14 +20,15 @@ import email.utils as email_utils
 
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot import config 
+from buildbot import config
+from buildbot.util import ComparableMixin
 
 class ValidationError(ValueError):
     pass
 
 DefaultField = object()  # sentinel object to signal default behavior
 
-class BaseParameter(object):
+class BaseParameter(ComparableMixin):
     """
     BaseParameter provides a base implementation for property customization
     """
@@ -41,6 +42,8 @@ class BaseParameter(object):
     regex = None
     debug=True
     hide = False
+
+    compare_attrs = ('name', 'label', 'type', 'default', 'required', 'multiple', 'regex', 'debug', 'hide')
 
     @property
     def fullName(self):
