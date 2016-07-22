@@ -87,9 +87,6 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
             if response.status_code != 201:
                 log.msg("%s: unable to upload Bitbucket status: %s" %
                         (response.status_code, response.content))
-            else:
-                log.msg("Unable to determine owner or repository name: (owner: %s, repo: %s)" %
-                        (str(owner), str(repo)))
 
     @staticmethod
     def get_owner_and_repo(repourl):
