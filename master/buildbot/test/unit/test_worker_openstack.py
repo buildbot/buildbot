@@ -73,6 +73,51 @@ class TestOpenStackWorker(unittest.TestCase):
                                              'destination_type': 'volume', 'device_name': 'vda',
                                              'source_type': 'image', 'volume_size': 10, 'uuid': 'uuid'}])
 
+    @defer.inlineCallbacks
+    def test_constructor_block_devices_get_sizes(self):
+        block_devices = [
+            {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image']},
+            {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image'], 'volume_size': 4},
+            {'source_type': 'volume', 'uuid': novaclient.TEST_UUIDS['volume']},
+            {'source_type': 'snapshot', 'uuid': novaclient.TEST_UUIDS['snapshot']},
+        ]
+
+        def check_volume_sizes(_images, block_devices):
+            self.assertEqual(len(block_devices), 4)
+            self.assertEqual(block_devices[0]['volume_size'], 1)
+            self.assertIsInstance(block_devices[0]['volume_size'], int,
+                                  "Volume size is an integer.")
+            self.assertEqual(block_devices[1]['volume_size'], 4)
+            self.assertEqual(block_devices[2]['volume_size'], 4)
+            self.assertEqual(block_devices[3]['volume_size'], 2)
+
+        lw = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                             block_devices=block_devices,
+                                             **self.os_auth)
+        self.assertEqual(lw.image, None)
+        self.assertEqual(lw.block_devices, [{'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'image', 'volume_size': None,
+                                             'uuid': novaclient.TEST_UUIDS['image']},
+                                            {'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'image', 'volume_size': 4,
+                                             'uuid': novaclient.TEST_UUIDS['image']},
+                                            {'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'volume', 'volume_size': None,
+                                             'uuid': novaclient.TEST_UUIDS['volume']},
+                                            {'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'snapshot', 'volume_size': None,
+                                             'uuid': novaclient.TEST_UUIDS['snapshot']}])
+        self.patch(lw, "_start_instance", check_volume_sizes)
+        yield lw.start_instance(self.build)
+
     def test_constructor_no_image(self):
         """
         Must have one of image or block_devices specified.
