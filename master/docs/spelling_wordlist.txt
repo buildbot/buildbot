@@ -538,6 +538,7 @@ npm
 nullability
 oauth
 oAuth
+OAuth
 objectid
 objtained
 occured

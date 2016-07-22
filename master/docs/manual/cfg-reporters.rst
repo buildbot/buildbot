@@ -1066,7 +1066,3 @@ Here's a complete example:
                 result['color'] = 'green' if build['results'] == 0 else 'red'
                 result['notify'] = (build['results'] != 0)
             return result
-
-.. spelling::
-
-    OAuth
