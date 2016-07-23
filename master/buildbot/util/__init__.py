@@ -119,13 +119,13 @@ class ComparableMixin:
                 [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
-    def isSameModule(self, them):
+    def isSameClassAndModule(self, them):
         is_same_module = type(self).__module__ == type(them).__module__ \
                          and self.__class__.__name__ == them.__class__.__name__
         return is_same_module
 
     def __cmp__(self, them):
-        if not self.isSameModule(them):
+        if not self.isSameClassAndModule(them):
             return -1
 
         compare_attrs = []

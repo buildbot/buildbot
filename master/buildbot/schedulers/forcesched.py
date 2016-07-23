@@ -28,7 +28,7 @@ class ValidationError(ValueError):
 
 DefaultField = object()  # sentinel object to signal default behavior
 
-class BaseParameter(ComparableMixin):
+class BaseParameter(object, ComparableMixin):
     """
     BaseParameter provides a base implementation for property customization
     """
@@ -303,6 +303,8 @@ class NestedParameter(BaseParameter):
     """
     type = ['nested']
     fields = None
+
+    compare_attrs = ('fields',)
     
     def __init__(self, name, fields, **kwargs):
         BaseParameter.__init__(self, fields=fields, name=name, **kwargs)
@@ -451,9 +453,7 @@ class ForceScheduler(base.BaseScheduler):
     ForceScheduler implements the backend for a UI to allow customization of
     builds. For example, a web form be populated to trigger a build.
     """
-    compare_attrs = ( 'name', 'builderNames',
-                     'reason', 'username',
-                     'forcedProperties' )
+    compare_attrs = ('reason', 'username', 'branch','forcedProperties')
 
     def __init__(self, name, builderNames,
             username=UserNameParameter(),
