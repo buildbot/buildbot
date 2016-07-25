@@ -120,10 +120,9 @@ class SchedulerManager(unittest.TestCase):
 
         self.new_config.schedulers = {}
 
+        self.assertEqual(sch1.running, True)
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
-
-        self.assertIdentical(sch1.parent, None)
-        self.assertIdentical(sch1.master, None)
+        self.assertEqual(sch1.running, False)
 
     @defer.inlineCallbacks
     def test_reconfigService_class_name_change(self):

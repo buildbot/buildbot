@@ -400,6 +400,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 # (this is related to the fact that self.master is found by recursively looking at self.parent
                 # for a master)
                 yield child.stopService()
+                # it has already called, so do not call it again
+                child.stopService = lambda: None
                 yield child.disownServiceParent()
                 # HACK: we still keep a reference to the master for some cleanup tasks which are not waited by
                 # to stopService (like the complex worker disconnection mechanism)

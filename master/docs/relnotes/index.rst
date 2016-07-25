@@ -26,6 +26,8 @@ Master
   Hyper_ is a CaaS solution for hosting docker container in the cloud, billed to the second.
   It forms a very cost efficient solution to run your CI in the cloud.
 
+.. _Hyper: https://hyper.sh
+
 Features
 ~~~~~~~~
 
