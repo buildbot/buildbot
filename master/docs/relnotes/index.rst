@@ -22,6 +22,10 @@ See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 Master
 ------
 
+* Add support for hyper.sh via :class:`HyperLatentWorker`
+  Hyper_ is a CaaS solution for hosting docker container in the cloud, billed to the second.
+  It forms a very cost efficient solution to run your CI in the cloud.
+
 Features
 ~~~~~~~~
 
