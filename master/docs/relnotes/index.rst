@@ -25,8 +25,12 @@ Master
 Features
 ~~~~~~~~
 
+* add a UI button to allow to cancel the whole queue for a builder
+
 Fixes
 ~~~~~
+
+* fix the UI to allow to cancel a buildrequest (:bug:`3582`)
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
