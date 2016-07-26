@@ -143,8 +143,8 @@
 import json
 import os
 import os.path
-import requests
 
+import requests
 
 from mercurial.encoding import fromlocal
 from mercurial.node import hex

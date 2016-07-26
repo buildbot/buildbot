@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 from mock import Mock
 from mock import call
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -72,44 +71,54 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
                 call('https://bitbucket.org/site/oauth2/access_token',
                      auth=('key', 'secret'),
                      data={'grant_type': 'client_credentials'}),
-                call(u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
-                     json={
-                         'url': 'http://localhost:8080/#builders/79/builds/0',
-                         'state': 'INPROGRESS',
-                         'key': u'Builder0',
-                         'name': u'Builder0'}),
+                call(
+                    u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
+                    json={
+                        'url': 'http://localhost:8080/#builders/79/builds/0',
+                        'state': 'INPROGRESS',
+                        'key': u'Builder0',
+                        'name': u'Builder0'}),
                 call('https://bitbucket.org/site/oauth2/access_token',
                      auth=('key', 'secret'),
                      data={'grant_type': 'client_credentials'}),
-                call(u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
-                     json={
-                         'url': 'http://localhost:8080/#builders/79/builds/0',
-                         'state': 'SUCCESSFUL',
-                         'key': u'Builder0',
-                         'name': u'Builder0'}),
+                call(
+                    u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
+                    json={
+                        'url': 'http://localhost:8080/#builders/79/builds/0',
+                        'state': 'SUCCESSFUL',
+                        'key': u'Builder0',
+                        'name': u'Builder0'}),
                 call('https://bitbucket.org/site/oauth2/access_token',
                      auth=('key', 'secret'),
                      data={'grant_type': 'client_credentials'}),
-                call(u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
-                     json={
-                         'url': 'http://localhost:8080/#builders/79/builds/0',
-                         'state': 'FAILED',
-                         'key': u'Builder0',
-                         'name': u'Builder0'})
+                call(
+                    u'https://api.bitbucket.org/2.0/repositories/user/repo/commit/d34db33fd43db33f/statuses/build',
+                    json={
+                        'url': 'http://localhost:8080/#builders/79/builds/0',
+                        'state': 'FAILED',
+                        'key': u'Builder0',
+                        'name': u'Builder0'})
             ])
 
 
 class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
+
     def parse(self, repourl):
         return tuple(BitbucketStatusPush.get_owner_and_repo(repourl))
 
     def test_parse_no_scheme(self):
-        self.assertEqual(('user', 'repo'), self.parse('git@bitbucket.com:user/repo.git'))
-        self.assertEqual(('user', 'repo'), self.parse('git@bitbucket.com:user/repo'))
+        self.assertEqual(
+            ('user', 'repo'), self.parse('git@bitbucket.com:user/repo.git'))
+        self.assertEqual(
+            ('user', 'repo'), self.parse('git@bitbucket.com:user/repo'))
 
     def test_parse_with_scheme(self):
-        self.assertEqual(('user', 'repo'), self.parse('https://bitbucket.com/user/repo.git'))
-        self.assertEqual(('user', 'repo'), self.parse('https://bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'https://bitbucket.com/user/repo.git'))
+        self.assertEqual(
+            ('user', 'repo'), self.parse('https://bitbucket.com/user/repo'))
 
-        self.assertEqual(('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo.git'))
-        self.assertEqual(('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo'))
+        self.assertEqual(('user', 'repo'), self.parse(
+            'ssh://git@bitbucket.com/user/repo.git'))
+        self.assertEqual(
+            ('user', 'repo'), self.parse('ssh://git@bitbucket.com/user/repo'))

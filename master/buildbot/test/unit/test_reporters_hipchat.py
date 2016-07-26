@@ -16,6 +16,7 @@ from mock import Mock
 from mock import call
 from twisted.internet import defer
 from twisted.trial import unittest
+
 from buildbot import config
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.hipchat import HipChatStatusPush
@@ -28,7 +29,8 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
     def setUp(self):
         # ignore config error if txrequests is not installed
         config._errors = Mock()
-        self.master = fakemaster.make_master(testcase=self, wantData=True, wantDb=True, wantMq=True)
+        self.master = fakemaster.make_master(
+            testcase=self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -63,20 +65,23 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_builderRoomMapTypeCheck(self):
         yield self.createReporter(builder_room_map=2)
-        config._errors.addError.assert_any_call('builder_room_map must be a dict')
+        config._errors.addError.assert_any_call(
+            'builder_room_map must be a dict')
 
     @defer.inlineCallbacks
     def test_builderUserMapTypeCheck(self):
         yield self.createReporter(builder_user_map=2)
-        config._errors.addError.assert_any_call('builder_user_map must be a dict')
+        config._errors.addError.assert_any_call(
+            'builder_user_map must be a dict')
 
     @defer.inlineCallbacks
     def test_build_started(self):
         yield self.createReporter(builder_user_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
         self.sp.buildStarted(('build', 20, 'new'), build)
-        expected = [call('https://api.hipchat.com/v2/user/123/message?auth_token=abc',
-                         {'message': 'Buildbot started build Builder0 here: http://localhost:8080/#builders/79/builds/0'})]
+        expected = [call(
+            'https://api.hipchat.com/v2/user/123/message?auth_token=abc',
+                    {'message': 'Buildbot started build Builder0 here: http://localhost:8080/#builders/79/builds/0'})]
         self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
@@ -84,9 +89,10 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.createReporter(builder_room_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
         self.sp.buildFinished(('build', 20, 'finished'), build)
-        expected = [call('https://api.hipchat.com/v2/room/123/notification?auth_token=abc',
-                         {'message': 'Buildbot finished build Builder0 with result success '
-                                     'here: http://localhost:8080/#builders/79/builds/0'})]
+        expected = [call(
+            'https://api.hipchat.com/v2/room/123/notification?auth_token=abc',
+                    {'message': 'Buildbot finished build Builder0 with result success '
+                     'here: http://localhost:8080/#builders/79/builds/0'})]
         self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
@@ -96,10 +102,11 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.getExtraParams.return_value = {'format': 'html'}
         build = yield self.setupBuildResults()
         self.sp.buildFinished(('build', 20, 'finished'), build)
-        expected = [call('https://api.hipchat.com/v2/room/123/notification?auth_token=abc',
-                         {'message': 'Buildbot finished build Builder0 with result success '
-                                     'here: http://localhost:8080/#builders/79/builds/0',
-                          'format': 'html'})]
+        expected = [call(
+            'https://api.hipchat.com/v2/room/123/notification?auth_token=abc',
+                    {'message': 'Buildbot finished build Builder0 with result success '
+                     'here: http://localhost:8080/#builders/79/builds/0',
+                     'format': 'html'})]
         self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
@@ -127,7 +134,8 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData.update({'id_or_email': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
         self.sp.send({}, 'test')
-        expected = [call('%s/v2/user/123/message?auth_token=%s' % (endpoint, token), message)]
+        expected = [
+            call('%s/v2/user/123/message?auth_token=%s' % (endpoint, token), message)]
         self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
@@ -141,7 +149,8 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData.update({'room_id_or_name': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
         self.sp.send({}, 'test')
-        expected = [call('%s/v2/room/123/notification?auth_token=%s' % (endpoint, token), message)]
+        expected = [
+            call('%s/v2/room/123/notification?auth_token=%s' % (endpoint, token), message)]
         self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
@@ -155,8 +164,9 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData.update({'room_id_or_name': '123', 'id_or_email': '456'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
         self.sp.send({}, 'test')
-        expected = [call('%s/v2/user/456/message?auth_token=%s' % (endpoint, token), message),
-                    call('%s/v2/room/123/notification?auth_token=%s' % (endpoint, token), message)]
+        expected = [call(
+            '%s/v2/user/456/message?auth_token=%s' % (endpoint, token), message),
+            call('%s/v2/room/123/notification?auth_token=%s' % (endpoint, token), message)]
         self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
@@ -170,5 +180,6 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData.update({'id_or_email': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
         self.sp.send({}, 'test')
-        expected = [call('%s/v2/user/123/message?auth_token=%s' % (endpoint, token), message)]
+        expected = [
+            call('%s/v2/user/123/message?auth_token=%s' % (endpoint, token), message)]
         self.assertEqual(self.sp.session.post.mock_calls, expected)

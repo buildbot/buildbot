@@ -15,11 +15,9 @@
 from posixpath import join
 
 import requests
-
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
-
 from twisted.internet import defer
 from twisted.internet import threads
 

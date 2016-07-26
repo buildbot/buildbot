@@ -51,7 +51,7 @@ rmpyc:
 	find . \( -name '*.pyc' -o -name '*.pyo' \) -exec rm -v {} \;
 
 isort:
-	isort -rc .
+	isort -rc worker master
 	git diff --name-only --stat "HEAD" | grep '.py$$' | xargs autopep8 -i
 	git commit -a -m "isort+autopep8 run"
 
