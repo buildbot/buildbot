@@ -302,6 +302,7 @@ setup_args = {
             ('buildbot.reporters.http', ['HttpStatusPush']),
             ('buildbot.reporters.github', ['GitHubStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
+            ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
 
         ]),

@@ -23,6 +23,7 @@ from buildbot.test.fake import fakedb
 class ReporterTestMixin(object):
 
     TEST_PROJECT = u'testProject'
+    TEST_REPO = u'https://example.org/repo'
     TEST_REVISION = u'd34db33fd43db33f'
     TEST_CHANGE_ID = u'I5bdc2e500d00607af53f0fa4df661aada17f81fc'
     TEST_BUILDER_NAME = u'Builder0'
@@ -45,9 +46,12 @@ class ReporterTestMixin(object):
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
-            fakedb.SourceStamp(id=234, project=self.TEST_PROJECT, revision=self.TEST_REVISION),
+            fakedb.SourceStamp(id=234,
+                               project=self.TEST_PROJECT,
+                               revision=self.TEST_REVISION,
+                               repository=self.TEST_REPO),
             fakedb.Change(changeid=13, branch=u'master', revision=u'9283', author='me@foo',
-                          repository=u'https://...', codebase=u'cbgerrit',
+                          repository=self.TEST_REPO, codebase=u'cbgerrit',
                           project=u'world-domination', sourcestampid=234),
         ])
         for i, results in enumerate(buildResults):
