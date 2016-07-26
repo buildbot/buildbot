@@ -25,6 +25,8 @@ Master
 Features
 ~~~~~~~~
 
+* The :bb:step:`Trigger` step now supports ``unimportantSchedulerNames``
+
 Fixes
 ~~~~~
 

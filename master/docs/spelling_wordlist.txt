@@ -691,6 +691,8 @@ sautils
 sched
 schedulerid
 schedulerName
+schedulerNames
+unimportantSchedulerNames
 schemas
 scp
 searcheable

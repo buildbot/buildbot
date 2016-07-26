@@ -112,10 +112,12 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         self.scheduler_a = a = FakeTriggerable(name='a')
         self.scheduler_b = b = FakeTriggerable(name='b')
-        m.scheduler_manager.namedServices = dict(a=a, b=b)
+        self.scheduler_c = c = FakeTriggerable(name='c')
+        m.scheduler_manager.namedServices = dict(a=a, b=b, c=c)
 
         a.brids = {77: 11}
         b.brids = {78: 22}
+        c.brids = {79: 33, 80: 44}
 
         make_fake_br = lambda brid, builderid: fakedb.BuildRequest(
             id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
@@ -127,14 +129,21 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         m.db.insertTestData([
             fakedb.Builder(id=77, name='A'),
             fakedb.Builder(id=78, name='B'),
+            fakedb.Builder(id=79, name='C1'),
+            fakedb.Builder(id=80, name='C2'),
             fakedb.Master(id=9),
             fakedb.Buildset(id=2022),
             fakedb.Buildset(id=2011),
+            fakedb.Buildset(id=2033),
             fakedb.Worker(id=13, name="some:worker"),
             make_fake_br(11, 77),
             make_fake_br(22, 78),
+            fakedb.BuildRequest(id=33, buildsetid=2033, builderid=79),
+            fakedb.BuildRequest(id=44, buildsetid=2033, builderid=80),
             make_fake_build(11),
             make_fake_build(22),
+            make_fake_build(33),
+            make_fake_build(44),
         ])
 
         def getAllSourceStamps():
@@ -148,6 +157,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.exp_add_sourcestamp = None
         self.exp_a_trigger = None
         self.exp_b_trigger = None
+        self.exp_c_trigger = None
         self.exp_added_urls = []
 
     def runStep(self):
@@ -188,13 +198,16 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         return d
 
-    def expectTriggeredWith(self, a=None, b=None):
+    def expectTriggeredWith(self, a=None, b=None, c=None):
         self.exp_a_trigger = a
         if a is not None:
             self.expectTriggeredLinks('a_br')
         self.exp_b_trigger = b
         if b is not None:
             self.expectTriggeredLinks('b_br')
+        self.exp_c_trigger = c
+        if c is not None:
+            self.expectTriggeredLinks('c_br')
 
     def expectAddedSourceStamp(self, **kwargs):
         self.exp_add_sourcestamp = kwargs
@@ -206,6 +219,11 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         if 'b_br' in args:
             self.exp_added_urls.append(
                 ('b #22', 'baseurl/#buildrequests/22'))
+        if 'c_br' in args:
+            self.exp_added_urls.append(
+                ('c #33', 'baseurl/#buildrequests/33'))
+            self.exp_added_urls.append(
+                ('c #44', 'baseurl/#buildrequests/44'))
         if 'a' in args:
             self.exp_added_urls.append(
                 ('success: A #4011', 'baseurl/#builders/77/builds/4011'))
@@ -220,6 +238,10 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_no_schedulerNames(self):
         self.assertRaises(config.ConfigErrors, lambda:
                           trigger.Trigger())
+
+    def test_unimportantSchedulerNames_not_in_schedulerNames(self):
+        self.assertRaises(config.ConfigErrors, lambda:
+                          trigger.Trigger(schedulerNames=['a'], unimportantsShedulerNames=['b']))
 
     def test_sourceStamp_and_updateSourceStamp(self):
         self.assertRaises(config.ConfigErrors, lambda:
@@ -542,3 +564,31 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.step.interrupt(failure.Failure(RuntimeError('oh noes')))
 
         return d
+
+    def test_getSchedulersAndProperties_back_comp(self):
+        class DynamicTrigger(trigger.Trigger):
+            def getSchedulersAndProperties(self):
+                return [("a", {}, False), ("b", {}, True)]
+
+        self.setupStep(DynamicTrigger(schedulerNames=['a', 'b']))
+        self.scheduler_a.result = SUCCESS
+        self.scheduler_b.result = FAILURE
+        self.expectOutcome(result=SUCCESS, state_string='triggered a, b')
+        self.expectTriggeredWith(a=(False, [], {}), b=(False, [], {}))
+        return self.runStep()
+
+    def test_unimportantsShedulerNames(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'], unimportantSchedulerNames=['b']))
+        self.scheduler_a.result = SUCCESS
+        self.scheduler_b.result = FAILURE
+        self.expectOutcome(result=SUCCESS, state_string='triggered a, b')
+        self.expectTriggeredWith(a=(False, [], {}), b=(False, [], {}))
+        return self.runStep()
+
+    def test_unimportantsShedulerNames_with_more_brids_for_bsid(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['a', 'c'], unimportantSchedulerNames=['c']))
+        self.scheduler_a.result = SUCCESS
+        self.scheduler_c.result = FAILURE
+        self.expectOutcome(result=SUCCESS, state_string='triggered a, c')
+        self.expectTriggeredWith(a=(False, [], {}), c=(False, [], {}))
+        return self.runStep()
