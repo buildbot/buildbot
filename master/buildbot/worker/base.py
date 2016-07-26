@@ -349,7 +349,6 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
         self._old_builder_list = None  # clear builder list before proceed
-        self.worker_status.addPauseWatcher(self._pauseChanged)
 
         self.worker_status.setConnected(True)
 
@@ -383,7 +382,6 @@ class AbstractWorker(service.BuildbotService, object):
         log.msg("bot attached")
         self.messageReceivedFromWorker()
         self.stopMissingTimer()
-        self.master.status.workerConnected(self.name)
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
 
@@ -398,10 +396,8 @@ class AbstractWorker(service.BuildbotService, object):
         self.conn = None
         self._old_builder_list = []
         self.worker_status.removeGracefulWatcher(self._gracefulChanged)
-        self.worker_status.removePauseWatcher(self._pauseChanged)
         self.worker_status.setConnected(False)
         log.msg("Worker.detached(%s)" % (self.name,))
-        self.master.status.workerDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.workerDisconnected(
             workerid=self.workerid,
@@ -564,12 +560,6 @@ class AbstractWorker(service.BuildbotService, object):
             return
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down worker')
-
-    def _pauseChanged(self, paused):
-        if paused is True:
-            self.botmaster.master.status.workerPaused(self.name)
-        else:
-            self.botmaster.master.status.workerUnpaused(self.name)
 
     def pause(self):
         """Stop running new builds on the worker."""

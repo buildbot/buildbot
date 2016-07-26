@@ -75,10 +75,10 @@ class TestWorkerManager(unittest.TestCase):
 
         self.new_config.workers = []
 
+        self.assertEqual(worker.running, True)
         yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
-        self.assertIdentical(worker.parent, None)
-        self.assertIdentical(worker.master, None)
+        self.assertEqual(worker.running, False)
 
     @defer.inlineCallbacks
     def test_reconfigServiceWorkers_reconfig(self):
