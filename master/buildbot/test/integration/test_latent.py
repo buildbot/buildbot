@@ -41,8 +41,11 @@ class Tests(SynchronousTestCase):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
 
+    def tearDown(self):
+        self.assertFalse(self.master.running, "master is still running!")
+
     def getMaster(self, config_dict):
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        self.master = master = self.successResultOf(getMaster(self, self.reactor, config_dict))
         return master
 
     def createBuildrequest(self, master, builder_ids):
@@ -90,6 +93,9 @@ class Tests(SynchronousTestCase):
         # Check that both workers were requested to start.
         self.assertEqual(controllers[0].started, True)
         self.assertEqual(controllers[1].started, True)
+        for controller in controllers:
+            controller.start_instance(True)
+            controller.auto_stop(True)
 
     def test_refused_substantiations_get_requeued(self):
         """
@@ -128,6 +134,7 @@ class Tests(SynchronousTestCase):
             set(brids),
             set([req['buildrequestid'] for req in unclaimed_build_requests]),
         )
+        controller.auto_stop(True)
 
     def test_failed_substantiations_get_requeued(self):
         """
@@ -169,6 +176,7 @@ class Tests(SynchronousTestCase):
             set(brids),
             set([req['buildrequestid'] for req in unclaimed_build_requests]),
         )
+        controller.auto_stop(True)
 
     def test_worker_accepts_builds_after_failure(self):
         """
@@ -210,6 +218,7 @@ class Tests(SynchronousTestCase):
         # a new instance was requested, which indicates that the worker
         # accepted the build.
         self.assertEqual(controller.started, True)
+        controller.auto_stop(True)
 
     def test_worker_multiple_substantiations_succeed(self):
         """
@@ -256,6 +265,7 @@ class Tests(SynchronousTestCase):
         # that they both finished with success
         self.assertEqual([build['results']
                           for build in finished_builds], [SUCCESS] * 2)
+        controller.auto_stop(True)
 
     def test_stalled_substantiation_then_timeout_get_requeued(self):
         """
@@ -295,6 +305,7 @@ class Tests(SynchronousTestCase):
             set(brids),
             set([req['buildrequestid'] for req in unclaimed_build_requests]),
         )
+        controller.auto_stop(True)
 
     def test_failed_sendBuilderList_get_requeued(self):
         """
@@ -356,3 +367,4 @@ class Tests(SynchronousTestCase):
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn(os.path.join("integration", "test_latent.py"), logs_by_name[i])
+        controller.auto_stop(True)

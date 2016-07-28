@@ -271,7 +271,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
             if hasattr(signal, "SIGUSR1"):
                 def sigusr1(*args):
-                    self.reactor.callLater(0, self.botmaster.cleanShutdown)
+                    eventually(self.botmaster.cleanShutdown)
                 signal.signal(signal.SIGUSR1, sigusr1)
 
             # get the masterid so other services can use it in
@@ -323,6 +323,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             yield self.data.updates.masterStopped(
                 name=self.name, masterid=self.masterid)
         if self.running:
+            yield self.botmaster.cleanShutdown(quickMode=True, stopReactor=False)
             yield service.AsyncMultiService.stopService(self)
 
         log.msg("BuildMaster is stopped")

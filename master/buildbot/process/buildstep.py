@@ -795,7 +795,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addLogWithFailure(self, why, logprefix=""):
         # helper for showing exceptions to the users
-        print why.getTraceback()
         try:
             yield self.addCompleteLog(logprefix + "err.text", why.getTraceback())
             yield self.addHTMLLog(logprefix + "err.html", formatFailure(why))

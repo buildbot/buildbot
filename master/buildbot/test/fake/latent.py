@@ -39,12 +39,16 @@ class LatentController(object):
         self.worker = ControllableLatentWorker(name, self, **kwargs)
         self.started = False
         self.stopped = False
+        self.auto_stop_flag = False
 
     def start_instance(self, result):
         assert self.started
         self.started = False
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
+
+    def auto_stop(self, result):
+        self.auto_stop_flag = result
 
     def stop_instance(self, result):
         assert self.stopped
@@ -90,6 +94,8 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def stop_instance(self, build):
         self._controller.stopped = True
+        if self._controller.auto_stop_flag:
+            return succeed(True)
         self._controller._stop_deferred = Deferred()
         return self._controller._stop_deferred
 

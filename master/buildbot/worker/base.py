@@ -806,6 +806,9 @@ class AbstractLatentWorker(AbstractWorker):
         self.substantiated = False
         yield d
         self.insubstantiating = False
+        if self._substantiation_notifier:
+            # notify waiters that substanciation was cancelled
+            self._substantiation_notifier.notify(failure.Failure(Exception("cancelled")))
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks

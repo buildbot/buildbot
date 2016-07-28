@@ -254,7 +254,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 buildrequestid=brid,
                 workerid=worker.workerid)
 
-        self.stopBuildConsumer = yield self.master.mq.startConsuming(self.stopBuild,
+        self.stopBuildConsumer = yield self.master.mq.startConsuming(self.controlStopBuild,
                                                                      ("control", "builds",
                                                                       str(self.buildid),
                                                                       "stop"))
@@ -523,7 +523,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 lock.stopWaitingUntilAvailable(self, access, d)
                 d.callback(None)
 
-    def stopBuild(self, reason="<no reason given>", cbParams=None):
+    def controlStopBuild(self, key, params):
+        return self.stopBuild(**params)
+
+    def stopBuild(self, reason="<no reason given>", results=CANCELLED):
         # the idea here is to let the user cancel a build because, e.g.,
         # they realized they committed a bug and they don't want to waste
         # the time building something that they know will fail. Another
@@ -531,7 +534,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # build as failed quickly rather than waiting for the worker's
         # timeout to kill it on its own.
 
-        log.msg(" %s: stopping build: %s %s" % (self, reason, cbParams))
+        log.msg(" %s: stopping build: %s %d" % (self, reason, results))
         if self.finished:
             return
         # TODO: include 'reason' in this point event
@@ -539,7 +542,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if self.currentStep:
             self.currentStep.interrupt(reason)
 
-        self.results = CANCELLED
+        self.results = results
 
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -631,6 +634,11 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def getUrl(self):
         builder_id = yield self.builder.getBuilderId()
         defer.returnValue(getURLForBuild(self.master, builder_id, self.number))
+
+    def waitUntilFinished(self):
+        return self.master.mq.waitUntilEvent(
+            ('builds', str(self.buildid), 'finished'),
+            lambda: self.finished)
 
     # IBuildControl
 

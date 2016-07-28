@@ -115,6 +115,10 @@ types:
                                         type: string
                                         required: false
                                         description: The reason why the build was stopped
+                                    results:
+                                        type: integer
+                                        required: false
+                                        description: optionally results value override (default CANCELLED)
                 /actions/rebuild:
                     post:
                         description: |
