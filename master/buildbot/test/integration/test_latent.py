@@ -44,6 +44,21 @@ class Tests(SynchronousTestCase):
         master = self.successResultOf(getMaster(self, self.reactor, config_dict))
         return master
 
+    def createBuildrequest(self, master, builder_ids):
+        return self.successResultOf(
+            master.data.updates.addBuildset(
+                waited_for=False,
+                builderids=builder_ids,
+                sourcestamps=[
+                    {'codebase': '',
+                     'repository': '',
+                     'branch': None,
+                     'revision': None,
+                     'project': ''},
+                ],
+            )
+        )
+
     def test_latent_workers_start_in_parallel(self):
         """
         If there are two latent workers configured, and two build
@@ -69,19 +84,7 @@ class Tests(SynchronousTestCase):
 
         # Request two builds.
         for i in range(2):
-            bsid, brids = self.successResultOf(
-                master.data.updates.addBuildset(
-                    waited_for=False,
-                    builderids=[builder_id],
-                    sourcestamps=[
-                        {'codebase': '',
-                         'repository': '',
-                         'branch': None,
-                         'revision': None,
-                         'project': ''},
-                    ],
-                )
-            )
+            self.createBuildrequest(master, [builder_id])
 
         # Check that both workers were requested to start.
         self.assertEqual(controllers[0].started, True)
@@ -109,19 +112,7 @@ class Tests(SynchronousTestCase):
             master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
-        bsid, brids = self.successResultOf(
-            master.data.updates.addBuildset(
-                waited_for=False,
-                builderids=[builder_id],
-                sourcestamps=[
-                    {'codebase': '',
-                     'repository': '',
-                     'branch': None,
-                     'revision': None,
-                     'project': ''},
-                ],
-            )
-        )
+        bsid, brids = self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
@@ -159,19 +150,7 @@ class Tests(SynchronousTestCase):
             master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
-        bsid, brids = self.successResultOf(
-            master.data.updates.addBuildset(
-                waited_for=False,
-                builderids=[builder_id],
-                sourcestamps=[
-                    {'codebase': '',
-                     'repository': '',
-                     'branch': None,
-                     'revision': None,
-                     'project': ''},
-                ],
-            )
-        )
+        bsid, brids = self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
@@ -212,19 +191,7 @@ class Tests(SynchronousTestCase):
             master.data.updates.findBuilderId('testy'))
 
         # Trigger a buildrequest
-        bsid, brids = self.successResultOf(
-            master.data.updates.addBuildset(
-                waited_for=False,
-                builderids=[builder_id],
-                sourcestamps=[
-                    {'codebase': '',
-                     'repository': '',
-                     'branch': None,
-                     'revision': None,
-                     'project': ''},
-                ],
-            )
-        )
+        bsid, brids = self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
@@ -277,19 +244,7 @@ class Tests(SynchronousTestCase):
             ('builds', None, 'finished')))
 
         # Trigger a buildrequest
-        bsid, brids = self.successResultOf(
-            master.data.updates.addBuildset(
-                waited_for=False,
-                builderids=builder_ids,
-                sourcestamps=[
-                    {'codebase': '',
-                     'repository': '',
-                     'branch': None,
-                     'revision': None,
-                     'project': ''},
-                ],
-            )
-        )
+        bsid, brids = self.createBuildrequest(master, builder_ids)
 
         # The worker fails to substantiate.
         controller.start_instance(True)
@@ -302,3 +257,42 @@ class Tests(SynchronousTestCase):
         # that they both finished with success
         self.assertEqual([build['results']
                           for build in finished_builds], [SUCCESS] * 2)
+
+    def test_stalled_substantiation_then_timeout_get_requeued(self):
+        """
+        If a latent worker substantiate, but not connect, and then be unsubstanciated,
+        the build request becomes unclaimed.
+        """
+        controller = LatentController('local')
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = self.getMaster(config_dict)
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
+
+        # Trigger a buildrequest
+        bsid, brids = self.createBuildrequest(master, [builder_id])
+
+        unclaimed_build_requests = []
+        self.successResultOf(master.mq.startConsuming(
+            lambda key, request: unclaimed_build_requests.append(request),
+            ('buildrequests', None, 'unclaimed')))
+
+        # We never start the worker, rather timeout it.
+        master.reactor.advance(controller.worker.missing_timeout)
+
+        # When the substantiation fails, the buildrequest becomes unclaimed.
+        self.assertEqual(
+            set(brids),
+            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+        )

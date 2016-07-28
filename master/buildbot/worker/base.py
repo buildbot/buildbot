@@ -419,7 +419,6 @@ class AbstractWorker(service.BuildbotService, object):
         when we wind up with two connections for the same worker, in which
         case we disconnect the older connection.
         """
-
         if self.conn is None:
             return defer.succeed(None)
         log.msg("disconnecting old worker %s now" % (self.name,))
@@ -728,7 +727,7 @@ class AbstractLatentWorker(AbstractWorker):
         self.missing_timer = None
         if self.substantiation_build:
             self.substantiation_build = None
-            self._substantiation_notifier.notify(failure)
+            self._substantiation_notifier.notify(False)
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
         # notify people, but only if we're still in the config
@@ -877,7 +876,7 @@ class AbstractLatentWorker(AbstractWorker):
             # them
             if self._substantiation_notifier:
                 self.substantiation_build = None
-                self._substantiation_notifier.notify(why)
+                self._substantiation_notifier.notify(False)
             if self.missing_timer:
                 self.missing_timer.cancel()
                 self.missing_timer = None
