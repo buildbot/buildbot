@@ -810,6 +810,9 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):
+        if self.building:
+            # wait until build finished
+            return
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if self.build_wait_timeout < 0:
