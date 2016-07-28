@@ -158,7 +158,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_constructor_no_reason(self):
         sched = self.makeScheduler()
         self.assertEqual(
-            sched.reason, "The Triggerable scheduler named 'n' triggered this build")
+            sched.reason, None)  # default reason is dynamic
 
     def test_constructor_explicit_reason(self):
         sched = self.makeScheduler(reason="Because I said so")
@@ -329,6 +329,27 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'properties': {'scheduler': ('n', 'Scheduler')},
                 'reason': "The Triggerable scheduler named 'n' triggered "
                           "this build",
+                'sourcestamps': [],
+                'waited_for': True}),
+        ])
+
+    @defer.inlineCallbacks
+    def test_trigger_with_reason(self):
+        # Test triggering with a reason, and make sure the buildset's reason is updated accordingly
+        # (and not the default)
+        waited_for = True
+        sched = self.makeScheduler(overrideBuildsetMethods=True)
+        set_props = properties.Properties()
+        set_props.setProperty('reason', 'test1', 'test')
+        idsDeferred, d = sched.trigger(
+            waited_for, sourcestamps=[], set_props=set_props)
+        yield idsDeferred
+
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampsWithDefaults', {
+                'builderNames': None,
+                'properties': {'scheduler': ('n', 'Scheduler'), 'reason': ('test1', 'test')},
+                'reason': "test1",
                 'sourcestamps': [],
                 'waited_for': True}),
         ])
