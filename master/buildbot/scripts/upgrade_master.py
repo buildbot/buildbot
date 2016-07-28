@@ -37,10 +37,8 @@ def checkBasedir(config):
     if runtime.platformType != 'win32': # no pids on win32
         if not config['quiet']:
             print "checking for running master"
-        pidfile = os.path.join(config['basedir'], 'twistd.pid')
-        if os.path.exists(pidfile):
-            print "'%s' exists - is this master still running?" % (pidfile,)
-            return False
+        # isBuildBotRunning will clean up the .pid file if the build isn't running
+        return not base.isBuildBotRunning(config['basedir'], config['quiet'])
 
     return True
 
