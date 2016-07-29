@@ -19,6 +19,7 @@ from email.utils import formatdate
 
 from future.utils import itervalues
 from twisted.internet import defer
+from twisted.python import failure
 from twisted.python import log
 from twisted.python.reflect import namedModule
 from zope.interface import implements
@@ -443,19 +444,31 @@ class AbstractWorker(service.BuildbotService, object):
 
         return d
 
+    @defer.inlineCallbacks
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForWorker(self.name)
+
         blist = [(b.name, b.config.workerbuilddir) for b in our_builders]
+
         if blist == self._old_builder_list:
-            return defer.succeed(None)
+            return
 
-        d = self.conn.remoteSetBuilderList(builders=blist)
+        slist = yield self.conn.remoteSetBuilderList(builders=blist)
 
-        @d.addCallback
-        def sentBuilderList(ign):
-            self._old_builder_list = blist
-            return ign
-        return d
+        self._old_builder_list = blist
+
+        # Nothing has changed, so don't need to re-attach to everything
+        if not slist:
+            return
+
+        dl = []
+        for name in slist:
+            # use get() since we might have changed our mind since then
+            b = self.botmaster.builders.get(name)
+            if b:
+                d1 = b.attached(self, self.worker_commands)
+                dl.append(d1)
+        yield defer.DeferredList(dl)
 
     def shutdownRequested(self):
         log.msg("worker %s wants to shut down" % (self.name,))
@@ -575,34 +588,18 @@ class AbstractWorker(service.BuildbotService, object):
 
 class Worker(AbstractWorker):
 
-    def sendBuilderList(self):
-        d = AbstractWorker.sendBuilderList(self)
-
-        def _sent(slist):
-            # Nothing has changed, so don't need to re-attach to everything
-            if not slist:
-                return
-            dl = []
-            for name in slist:
-                # use get() since we might have changed our mind since then
-                b = self.botmaster.builders.get(name)
-                if b:
-                    d1 = b.attached(self, self.worker_commands)
-                    dl.append(d1)
-            return defer.DeferredList(dl)
-
-        def _set_failed(why):
-            log.msg("Worker.sendBuilderList (%s) failed" % self)
-            log.err(why)
-            # TODO: hang up on them?, without setBuilderList we can't use
-            # them
-        d.addCallbacks(_sent, _set_failed)
-        return d
-
     def detached(self):
         AbstractWorker.detached(self)
         self.botmaster.workerLost(self)
         self.startMissingTimer()
+
+    @defer.inlineCallbacks
+    def attached(self, bot):
+        try:
+            yield AbstractWorker.attached(self, bot)
+        except Exception as e:
+            log.err(e, "worker %s cannot attach" % (self.name,))
+            return
 
     def buildFinished(self, sb):
         """This is called when a build on this worker is finished."""
@@ -694,9 +691,9 @@ class AbstractLatentWorker(AbstractWorker):
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
             if not result:
-                log.msg(
-                    "Worker '%s' does not want to substantiate at this time" % (self.name,))
-                self._substantiation_notifier.notify(False)
+                msg = "Worker does not want to substantiate at this time"
+                self._substantiation_notifier.notify(LatentWorkerFailedToSubstantiate(self.name, msg))
+                return None
             return result
 
         def clean_up(failure):
@@ -708,14 +705,30 @@ class AbstractLatentWorker(AbstractWorker):
         d.addCallbacks(start_instance_result, clean_up)
         return d
 
+    @defer.inlineCallbacks
     def attached(self, bot):
         if not self._substantiation_notifier and self.build_wait_timeout >= 0:
             msg = 'Worker %s received connection while not trying to ' \
                 'substantiate.  Disconnecting.' % (self.name,)
             log.msg(msg)
             self._disconnect(bot)
-            return defer.fail(RuntimeError(msg))
-        return AbstractWorker.attached(self, bot)
+            raise RuntimeError(msg)
+
+        try:
+            yield AbstractWorker.attached(self, bot)
+        except Exception:
+            self._substantiation_failed(failure.Failure())
+            return
+        log.msg(r"Worker %s substantiated \o/" % (self.name,))
+
+        self.substantiated = True
+        if not self._substantiation_notifier:
+            log.msg("No substantiation deferred for %s" % (self.name,))
+        else:
+            log.msg(
+                "Firing %s substantiation deferred with success" % (self.name,))
+            self.substantiation_build = None
+            self._substantiation_notifier.notify(True)
 
     def detached(self):
         AbstractWorker.detached(self)
@@ -727,7 +740,7 @@ class AbstractLatentWorker(AbstractWorker):
         self.missing_timer = None
         if self.substantiation_build:
             self.substantiation_build = None
-            self._substantiation_notifier.notify(False)
+            self._substantiation_notifier.notify(failure)
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
         # notify people, but only if we're still in the config
@@ -850,53 +863,3 @@ class AbstractLatentWorker(AbstractWorker):
             if b.name not in self.workerforbuilders:
                 b.addLatentWorker(self)
         return AbstractWorker.updateWorker(self)
-
-    def sendBuilderList(self):
-        d = AbstractWorker.sendBuilderList(self)
-
-        def _sent(slist):
-            if not slist:
-                return
-            dl = []
-            for name in slist:
-                # use get() since we might have changed our mind since then.
-                # we're checking on the builder in addition to the
-                # workers out of a bit of paranoia.
-                b = self.botmaster.builders.get(name)
-                sb = self.workerforbuilders.get(name)
-                if b and sb:
-                    d1 = sb.attached(self, self.worker_commands)
-                    dl.append(d1)
-            return defer.DeferredList(dl)
-
-        def _set_failed(why):
-            log.msg("Worker.sendBuilderList (%s) failed" % self)
-            log.err(why)
-            # TODO: hang up on them?, without setBuilderList we can't use
-            # them
-            if self._substantiation_notifier:
-                self.substantiation_build = None
-                self._substantiation_notifier.notify(False)
-            if self.missing_timer:
-                self.missing_timer.cancel()
-                self.missing_timer = None
-            # TODO: maybe log?  send an email?
-            return why
-        d.addCallbacks(_sent, _set_failed)
-
-        @d.addCallback
-        def _substantiated(res):
-            log.msg(r"Worker %s substantiated \o/" % (self.name,))
-            self.substantiated = True
-            if not self._substantiation_notifier:
-                log.msg("No substantiation deferred for %s" % (self.name,))
-            else:
-                log.msg(
-                    "Firing %s substantiation deferred with success" % (self.name,))
-                self.substantiation_build = None
-                self._substantiation_notifier.notify(True)
-            # note that the missing_timer is already handled within
-            # ``attached``
-            if not self.building:
-                self._setBuildWaitTimer()
-        return d

@@ -123,7 +123,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
     def test_start_worker_but_error(self):
         worker = self.makeWorker(image="buggy")
         d = worker.substantiate(None, FakeBuild())
-        self.reactor.pump([.1])
+        self.reactor.advance(.1)
         self.failureResultOf(d)
         self.assertIsNotNone(worker.client)
         self.assertEqual(worker.instance, None)

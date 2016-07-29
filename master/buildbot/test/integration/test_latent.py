@@ -15,7 +15,6 @@
 
 from twisted.python import threadpool
 from twisted.python.failure import Failure
-from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SynchronousTestCase
 
 from buildbot.config import BuilderConfig
@@ -246,12 +245,10 @@ class Tests(SynchronousTestCase):
         # Trigger a buildrequest
         bsid, brids = self.createBuildrequest(master, builder_ids)
 
-        # The worker fails to substantiate.
+        # The worker succeeds to substantiate.
         controller.start_instance(True)
 
-        local_workdir = FilePath(self.mktemp())
-        local_workdir.createDirectory()
-        controller.connect_worker(local_workdir)
+        controller.connect_worker(self)
 
         # We check that there were two builds that finished, and
         # that they both finished with success
@@ -296,3 +293,64 @@ class Tests(SynchronousTestCase):
             set(brids),
             set([req['buildrequestid'] for req in unclaimed_build_requests]),
         )
+
+    def test_failed_sendBuilderList_get_requeued(self):
+        """
+        sendBuilderList can fail due to missing permissions on the workdir,
+        the build request becomes unclaimed
+        """
+        controller = LatentController('local')
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = self.getMaster(config_dict)
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
+
+        # Trigger a buildrequest
+        bsid, brids = self.createBuildrequest(master, [builder_id])
+
+        unclaimed_build_requests = []
+        self.successResultOf(master.mq.startConsuming(
+            lambda key, request: unclaimed_build_requests.append(request),
+            ('buildrequests', None, 'unclaimed')))
+        logs = []
+        self.successResultOf(master.mq.startConsuming(
+            lambda key, log: logs.append(log),
+            ('logs', None, 'new')))
+
+        # The worker succeed to substantiate
+        def remote_setBuilderList(self, dirs):
+            raise TestException("can't create dir")
+        controller.patchBot(self, 'remote_setBuilderList', remote_setBuilderList)
+        controller.start_instance(True)
+        controller.connect_worker(self)
+
+        # Flush the errors logged by the failure.
+        self.flushLoggedErrors(TestException)
+
+        # When the substantiation fails, the buildrequest becomes unclaimed.
+        self.assertEqual(
+            set(brids),
+            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+        )
+        # should get 2 logs (html and txt) with proper information in there
+        self.assertEqual(len(logs), 2)
+        logs_by_name = {}
+        for log in logs:
+            fulllog = self.successResultOf(master.data.get(("logs", str(log['logid']), "raw")))
+            logs_by_name[fulllog['filename']] = fulllog['raw']
+
+        for i in ["err_text", "err_html"]:
+            self.assertIn("can't create dir", logs_by_name[i])
+            # make sure stacktrace is present in html
+            self.assertIn("test/integration/test_latent.py", logs_by_name[i])

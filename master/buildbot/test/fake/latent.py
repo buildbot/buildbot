@@ -15,12 +15,14 @@
 
 from twisted.internet.defer import Deferred
 from twisted.internet.defer import succeed
+from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
 from buildbot.worker.base import AbstractLatentWorker
 
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker
+    from buildbot_worker.base import BotBase
 except ImportError:
     RemoteWorker = None
 
@@ -50,14 +52,19 @@ class LatentController(object):
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
 
-    def connect_worker(self, workdir):
+    def connect_worker(self, case):
         if RemoteWorker is None:
             raise SkipTest("buildbot-worker package is not installed")
+        workdir = FilePath(case.mktemp())
+        workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
         self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self, workdir):
         return self.remote_worker.disownServiceParent()
+
+    def patchBot(self, case, remoteMethod, patch):
+        case.patch(BotBase, remoteMethod, patch)
 
 
 class ControllableLatentWorker(AbstractLatentWorker):
