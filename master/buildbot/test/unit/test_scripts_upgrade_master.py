@@ -140,14 +140,6 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertFalse(rv)
         self.assertInStdout('invalid buildmaster directory')
 
-    @compat.skipUnlessPlatformIs('posix')
-    def test_checkBasedir_active_pidfile(self):
-        self.activeBasedir()
-        open(os.path.join('test', 'twistd.pid'), 'w').close()
-        rv = upgrade_master.checkBasedir(mkconfig())
-        self.assertFalse(rv)
-        self.assertInStdout('still running')
-
     def test_loadConfig(self):
         @classmethod
         def loadConfig(cls, basedir, filename):
