@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 from twisted.python import threadpool
 from twisted.python.failure import Failure
 from twisted.trial.unittest import SynchronousTestCase
@@ -353,4 +355,4 @@ class Tests(SynchronousTestCase):
         for i in ["err_text", "err_html"]:
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
-            self.assertIn("test/integration/test_latent.py", logs_by_name[i])
+            self.assertIn(os.path.join("integration", "test_latent.py"), logs_by_name[i])
