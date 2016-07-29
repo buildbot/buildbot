@@ -12,22 +12,21 @@
                 a(ui-sref="build({builder:buildsummary.builder.builderid, build:buildsummary.build.number})")
                   | {{buildsummary.builder.name}}/{{buildsummary.build.number}}#{' '}
                 span(ng-if="buildsummary.reason") | {{buildsummary.reason}}
-            .flex-grow-1
-                .pull-right
-                    span(ng-show="buildsummary.build.complete")
-                        | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
-                    span(ng-show="!buildsummary.build.complete")
-                        | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
-                    span
-                      | #{' '}{{buildsummary.build.state_string}}#{' '}
-                    .label(ng-class="results2class(buildsummary.build)")
-                      | {{results2text(buildsummary.build)}}
-                    span(ng-if="buildsummary.parentbuild")
-                        | #{' '}
-                        a.label(ng-class="results2class(buildsummary.parentbuild)",
-                        ui-sref="build({builder:buildsummary.parentbuilder.builderid, build:buildsummary.parentbuild.number})")
-                              | {{buildsummary.parentrelationship}}:
-                              | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
+            .flex-grow-1.text-right
+                span(ng-show="buildsummary.build.complete")
+                    | {{(buildsummary.build.complete_at - buildsummary.build.started_at)| durationformat:'LLL' }}
+                span(ng-show="!buildsummary.build.complete")
+                    | {{(buildsummary.now - buildsummary.build.started_at)| durationformat:'LLL' }}
+                span
+                  | #{' '}{{buildsummary.build.state_string}}#{' '}
+                .label(ng-class="results2class(buildsummary.build)")
+                  | {{results2text(buildsummary.build)}}
+                span(ng-if="buildsummary.parentbuild")
+                    | #{' '}
+                    a.label(ng-class="results2class(buildsummary.parentbuild)",
+                    ui-sref="build({builder:buildsummary.parentbuilder.builderid, build:buildsummary.parentbuild.number})")
+                          | {{buildsummary.parentrelationship}}:
+                          | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
     ul.list-group.no-select
       li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)"
                          ng-repeat="step in buildsummary.steps | orderBy: ['stepid']")
