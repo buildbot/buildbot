@@ -67,6 +67,8 @@ class MasterConfig(object):
         self.titleURL = 'http://buildbot.net'
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
+        self.cleanUpPeriod = None
+        self.buildRequestsDays = None
         self.eventHorizon = 50
         self.logHorizon = None
         self.buildHorizon = None
@@ -88,6 +90,7 @@ class MasterConfig(object):
         self.requireLogin = True
         self.autobahn_push = "false"
         self.lastBuildCacheDays = 30
+        self.slave_debug_url = None
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -122,8 +125,10 @@ class MasterConfig(object):
         "logMaxSize", "logMaxTailSize", "manhole", "mergeRequests", "metrics",
         "multiMaster", "prioritizeBuilders", "projects", "projectName", "projectURL",
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
-        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer", "analytics_code", "gzip",
-        "autobahn_push", "lastBuildCacheDays", "requireLogin", "globalFactory"
+        "status", "title", "titleURL", "user_managers", "validation", "realTimeServer",
+        "analytics_code", "gzip", "autobahn_push", "lastBuildCacheDays",
+        "requireLogin", "globalFactory", "slave_debug_url",
+        "cleanUpPeriod", "buildRequestsDays"
     ])
 
     @classmethod
@@ -267,7 +272,9 @@ class MasterConfig(object):
         copy_str_param('realTimeServer')
         copy_str_param('analytics_code')
 
+        copy_int_param('cleanUpPeriod')
         copy_int_param('changeHorizon')
+        copy_int_param('buildRequestsDays')
         copy_int_param('eventHorizon')
         copy_int_param('logHorizon')
         copy_int_param('buildHorizon')
@@ -328,6 +335,9 @@ class MasterConfig(object):
 
         if 'autobahn_push' in config_dict:
             self.autobahn_push = "true" if config_dict["autobahn_push"] else "false"
+
+        if 'slave_debug_url' in config_dict:
+            self.slave_debug_url = config_dict["slave_debug_url"]
 
         copy_str_param('debugPassword')
 
@@ -682,7 +692,7 @@ class ProjectConfig:
 
         errors = ConfigErrors([])
 
-        if not name or type(name) not in (str, unicode):
+        if not name or not isinstance(name, basestring):
             error("project's name is required")
             name = '<unknown>'
         self.name = name
@@ -701,14 +711,18 @@ class BuilderConfig:
             canStartBuild=None, excludeGlobalFactory=False):
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, unicode):
+        if not name or not isinstance(name, basestring):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
             error("builder names must not start with an underscore: '%s'" % name)
         self.name = name
 
+        # friendly_name is not required
         if friendly_name is None:
+            self.friendly_name = name
+        elif not isinstance(friendly_name, basestring):
+            error("builder's friendly name must be a valid string" % friendly_name)
             self.friendly_name = name
         else:
             self.friendly_name = friendly_name

@@ -448,7 +448,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         if t:
             builder_status.subscribe(t)
 
-    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None):
+    def builderAdded(self, name, basedir, category=None, friendly_name=None, description=None, project=None):
         """
         @rtype: L{BuilderStatus}
         """
@@ -484,7 +484,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
             log.err()
         if not builder_status:
             builder_status = builder.BuilderStatus(name, category, self.master, friendly_name,
-                                                   description)
+                                                   description, project=project)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,

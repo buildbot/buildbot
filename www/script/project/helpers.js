@@ -10,7 +10,6 @@ define(function (require) {
         URI = require('libs/uri/URI');
 
     require('project/moment-extend');
-    require('jquery-cookie');
 
     var helpers,
         css_class_enum = {},
@@ -617,9 +616,9 @@ define(function (require) {
             return;
           }
           var historyElement = element;
-          var historyList = $.cookie('exthistorylist');            
-          var ext_history_list = historyList? JSON.parse($.cookie('exthistorylist')) : [];        
-          
+          var historyList = localStorage.getItem('exthistorylist');
+          var ext_history_list = historyList? JSON.parse(historyList) : [];
+
           if (location.pathname === '/') {
             if (ext_history_list.length) {
               $(historyElement)[0].innerHTML = "<h3 class='builders-list-header'>Recent projects:</h3><ul id='ext-history-list' class='builders-list'></ul>";
@@ -658,8 +657,8 @@ define(function (require) {
               }
               
               ext_history_list.splice(0, 0, {proj: proj, codebases:this.codebasesFromURL({}), url: url, time: time});
-              var cookie = JSON.stringify(ext_history_list);
-              $.cookie('exthistorylist', cookie, {expires: 10000000000, path: "/"});
+              var historyJson = JSON.stringify(ext_history_list);
+              localStorage.setItem('exthistorylist', historyJson);
             }
           }              
         },

@@ -359,8 +359,20 @@
             <div id="artifacts-js">
                 No artifacts
             </div>
-
-
+            <div class="divider"></div>
+            {% if not request.args.get("debug") %}
+            <div>
+                {% set query_symbol = "&" if request.args else "?" %}
+                <a class="small-head" href={{ request.uri+query_symbol+"debug=true" }}>Show hidden steps</a>
+            </div>
+            {% endif %}
+            {% if result_css is defined and result_css == "failure" and slave_debug_url %}
+            <div>
+                <a class="small-head" target="_blank" href={{ slave_debug_url }}>
+                    Build Failure? Only Happens on Katana?
+                </a>
+            </div>
+            {% endif %}
             <div class="more-info-box more-info-box-js">
                 <a class="close-btn" href="#"> </a>
 
@@ -381,6 +393,7 @@
             <ol id="stepList" class="step-list">
 
             </ol>
+
         </div>
     </div>
 </div>

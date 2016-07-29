@@ -18,7 +18,7 @@ import sqlalchemy as sa
 from sqlalchemy import or_
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 from twisted.python import log
 from buildbot.db import base
 from buildbot.util import json
@@ -1137,6 +1137,77 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         d.addCallback(log_nonzero_count)
         return d
+
+    def pruneBuildRequests(self, buildRequestsDays):
+        if not buildRequestsDays:
+            return defer.succeed(None)
+
+        def thd(conn):
+            if self.db.pool.engine.dialect.name != 'mysql':
+                # sqlite doesnt have integrity constraints, we should check if this approach works on postgre
+                log.msg("pruneBuildRequests is not yet supported for %s" % self.db.pool.engine.dialect.name)
+                return
+
+            try:
+                buildrequests_tbl = self.db.model.buildrequests
+                buildsets_tbl = self.db.model.buildsets
+                sourcestampsets_tbl = self.db.model.sourcestampsets
+
+                prune_period = datetime.now().date() - timedelta(buildRequestsDays)
+                prune_period_epoch = datetime2epoch(datetime(prune_period.year, prune_period.month, prune_period.day))
+
+                transaction = conn.begin()
+
+                stmt_brids = sa.select([buildrequests_tbl.c.id])\
+                    .where(buildrequests_tbl.c.submitted_at <= prune_period_epoch).limit(100000)
+
+                res = conn.execute(stmt_brids)
+                brids = [r.id for r in res]
+
+                if not brids:
+                    return
+
+                log.msg("Prune %d buildrequests" % len(brids))
+
+                iterator = iter(brids)
+                batch = list(itertools.islice(iterator, 100))
+
+                while len(batch) > 0:
+                    stmt_bsids = sa.select(
+                            [buildsets_tbl.c.id],
+                            from_obj=buildsets_tbl.join(
+                                    buildrequests_tbl, buildsets_tbl.c.id == buildrequests_tbl.c.buildsetid))\
+                        .where(buildrequests_tbl.c.id.in_(batch))\
+                        .group_by(buildsets_tbl.c.id)
+
+                    res = conn.execute(stmt_bsids)
+                    bsids = [r.id for r in res]
+
+                    stmt_ssids = sa.select(
+                            [sourcestampsets_tbl.c.id],
+                            from_obj=sourcestampsets_tbl.join(
+                                    buildsets_tbl,
+                                    buildsets_tbl.c.sourcestampsetid == sourcestampsets_tbl.c.id))\
+                        .where(buildrequests_tbl.c.id.in_(bsids))\
+                        .group_by(sourcestampsets_tbl.c.id)
+
+                    res = conn.execute(stmt_ssids)
+                    ssids = [r.id for r in res]
+
+                    # Cascade delete to related tables
+                    conn.execute(sourcestampsets_tbl.delete((sourcestampsets_tbl.c.id.in_(ssids))))
+                    conn.execute(buildsets_tbl.delete((buildsets_tbl.c.id.in_(bsids))))
+                    conn.execute(buildrequests_tbl.delete((buildrequests_tbl.c.id.in_(batch))))
+                    batch = list(itertools.islice(iterator, 100))
+
+            except Exception:
+                transaction.rollback()
+                log.msg(Failure(), "Could not pruneBuildRequests")
+                return
+
+            transaction.commit()
+
+        return self.db.pool.do(thd)
 
     def _brdictFromRow(self, row, master_objectid):
         claimed = mine = False

@@ -442,12 +442,20 @@ class AccessorMixin(object):
 
 
 class ContextMixin(AccessorMixin):
+    custom_css_file = None
+    custom_css = None
+
     def getContext(self, request):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
         locale_enc = locale.getdefaultlocale()[1]
         authz = self.getAuthz(request)
         authenticated = authz.authenticated(request)
+
+        self.custom_css_file = os.path.join(request.site.buildbot_service.public_html, 'prod/css/custom.css')
+        self.custom_css = os.path.isfile(self.custom_css_file) \
+            if self.custom_css is None or request.site.buildbot_service.public_html not in self.custom_css_file \
+            else self.custom_css
 
         if locale_enc is not None:
             locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
@@ -456,6 +464,7 @@ class ContextMixin(AccessorMixin):
         return dict(title_url = status.getTitleURL(),
                     title = status.getTitle(),
                     stylesheet = rootpath + 'default.css',
+                    custom_styles = self.custom_css,
                     path_to_root = rootpath,
                     version = version,
                     realTimeServer = self.getRealTimeServer(request),

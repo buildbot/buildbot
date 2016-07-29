@@ -45,3 +45,5 @@ www/script/coverage/
 www/prod/script/build.txt
 www/generated/
 www/coverage/
+autobahnServer.log
+www/prod/css/custom.css

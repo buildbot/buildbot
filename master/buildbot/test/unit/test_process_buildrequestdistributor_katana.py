@@ -292,6 +292,15 @@ class TestKatanaBuildRequestDistributorMaybeStartBuildsOn(KatanaBuildRequestDist
         yield self.tearDownComponents()
         yield self.stopKatanaBuildRequestDistributor()
 
+    @defer.inlineCallbacks
+    def test_maybeStartBuildsOnShouldBeSkipped(self):
+        self.brd.master.config.builders = []
+        yield self.generateResumeBuilds()
+        yield self.brd.maybeStartBuildsOn(['bldr1', 'bldr2'])
+
+        self.checkBRDCleanedUp()
+        self.assertEquals(self.processedBuilds, [])
+
     def test_maybeStartBuildsOnCheckNewBuilds(self):
 
         self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': False, 'slave-02': True},

@@ -1029,6 +1029,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda : config.BuilderConfig(
                 factory=self.factory, slavenames=['a'], project="default"))
 
+    def test_nonstring_name(self):
+        self.assertRaisesConfigError(
+            "builder's name is required",
+            lambda: config.BuilderConfig(name=1000,
+                factory=self.factory, slavenames=['a'], project="default"))
+
     def test_reserved_name(self):
         self.assertRaisesConfigError(
             "builder names must not start with an underscore: '_a'",
@@ -1172,6 +1178,13 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               slavenames=['s1'],
                               project="default",
                               friendly_name="b")
+
+    def test_nonstring_friendly_name(self):
+        def test_no_name(self):
+            self.assertRaisesConfigError(
+                "builder's friendly name must be a valid string",
+                lambda: config.BuilderConfig(
+                    factory=self.factory, slavenames=['s1'], project="default", friendly_name=1000))
 
     def test_getConfigDict(self):
         ns = lambda : 'ns'

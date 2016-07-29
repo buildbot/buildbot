@@ -47,7 +47,7 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         yield self.tearDownRealDatabase()
 
     @defer.inlineCallbacks
-    def startService(self, check_version=False):
+    def startService(self, check_version=False, cleanUp=False):
         self.master.config.db['db_url'] = self.db_url
         yield self.db.setup(check_version=check_version)
         self.db.startService()
@@ -57,25 +57,35 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     # tests
 
     def test_doCleanup_service(self):
+        self.master.config.cleanUpPeriod = 3600
         d = self.startService()
         @d.addCallback
         def check(_):
             self.assertTrue(self.db.cleanup_timer.running)
 
+    def test_doCleanup_unconfigured_cleanUpPeriod(self):
+        d = self.startService()
+        @d.addCallback
+        def check(_):
+            self.assertTrue(self.db.cleanup_timer is None)
+
     def test_doCleanup_unconfigured(self):
         self.db.changes.pruneChanges = mock.Mock(
                         return_value=defer.succeed(None))
-        self.db._doCleanup()
+        self.db._doCleanup(pruneBuildRequests=False)
         self.assertFalse(self.db.changes.pruneChanges.called)
 
     def test_doCleanup_configured(self):
         self.db.changes.pruneChanges = mock.Mock(
                         return_value=defer.succeed(None))
+        self.db.buildrequests.pruneBuildRequests = mock.Mock(
+                        return_value=defer.succeed(None))
         d = self.startService()
         @d.addCallback
         def check(_):
-            self.db._doCleanup()
+            self.db._doCleanup(pruneBuildRequests=True)
             self.assertTrue(self.db.changes.pruneChanges.called)
+            self.assertTrue(self.db.buildrequests.pruneBuildRequests.called)
         return d
 
     def test_setup_check_version_bad(self):
