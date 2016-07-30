@@ -49,6 +49,11 @@ class Tests(interfaces.InterfaceTests):
         def stopConsuming(self):
             pass
 
+    def test_signature_waitUntilEvent(self):
+        @self.assertArgSpecMatches(self.mq.waitUntilEvent)
+        def waitUntilEvent(self, filter, check_callback):
+            pass
+
 
 class RealTests(tuplematching.TupleMatchingMixin, Tests):
 
@@ -113,6 +118,16 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
         qref.stopConsuming()
 
         self.assertTrue(cb.called)
+
+    @defer.inlineCallbacks
+    def test_waitUntilEvent_check_false(self):
+        d = self.mq.waitUntilEvent(('abc',), lambda: False)
+        self.assertEqual(d.called, False)
+        self.mq.produce(('abc',), dict(x=1))
+        self.assertEqual(d.called, True)
+        res = yield d
+        self.assertEqual(res, (('abc',), dict(x=1)))
+    timeout = 3  # those tests should not run long
 
 
 class TestFakeMQ(unittest.TestCase, Tests):

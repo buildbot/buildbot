@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 from twisted.internet import defer
 
+from buildbot.mq import base
 from buildbot.test.util import validation
 from buildbot.util import service
 from buildbot.util import tuplematch
 
 
-class FakeMQConnector(service.AsyncMultiService):
+class FakeMQConnector(service.AsyncMultiService, base.MQBase):
 
     # a fake connector that doesn't actually bridge messages from production to
     # consumption, and thus doesn't do any topic handling or persistence

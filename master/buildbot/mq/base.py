@@ -22,6 +22,19 @@ from buildbot.util import service
 class MQBase(service.AsyncService):
     name = 'mq-implementation'
 
+    @defer.inlineCallbacks
+    def waitUntilEvent(self, filter, check_callback):
+        d = defer.Deferred()
+        buildCompleteConsumer = yield self.startConsuming(
+            lambda key, value: d.callback((key, value)),
+            filter)
+        check = yield check_callback()
+        # we only wait if the check callback return true
+        if not check:
+            res = yield d
+        yield buildCompleteConsumer.stopConsuming
+        defer.returnValue(res)
+
 
 class QueueRef(object):
 

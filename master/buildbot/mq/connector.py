@@ -56,6 +56,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         # copy the methods onto this object for ease of access
         self.produce = self.impl.produce
         self.startConsuming = self.impl.startConsuming
+        self.waitUntilEvent = self.impl.waitUntilEvent
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks
