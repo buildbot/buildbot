@@ -92,11 +92,11 @@ The parameters are:
 
 :guilabel:`Payload URL`
     This URL should point to ``/change_hook/github`` relative to the root of the web status.
-    For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
+    For example, if the base URL is ``http://builds.example.com/buildbot``, then point GitHub to ``http://builds.example.com/buildbot/change_hook/github``.
     To specify a project associated to the repository, append ``?project=name`` to the URL.
 
 :guilabel:`Content Type`
-    Specify ``application/x-www-form-urlencoded``.  JSON is not currently not supported.
+    Specify ``application/x-www-form-urlencoded`` or ``application/json``.
 
 :guilabel:`Secret`
     Any value.
