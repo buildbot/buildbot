@@ -77,7 +77,7 @@ class Builder(base.ResourceType):
 
     class EntityType(types.Entity):
         builderid = types.Integer()
-        name = types.Identifier(20)
+        name = types.Identifier(50)
         masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
         tags = types.List(of=types.String())
