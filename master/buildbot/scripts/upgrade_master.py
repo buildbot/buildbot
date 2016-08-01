@@ -38,7 +38,8 @@ def checkBasedir(config):
         if not config['quiet']:
             print "checking for running master"
         # isBuildBotRunning will clean up the .pid file if the build isn't running
-        return not base.isBuildBotRunning(config['basedir'], config['quiet'])
+        if base.isBuildBotRunning(config['basedir'], config['quiet']):
+            return False
 
     return True
 
