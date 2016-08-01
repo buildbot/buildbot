@@ -96,9 +96,9 @@ class ForceScheduler(base.ResourceType):
     keyFields = []
 
     class EntityType(types.Entity):
-        name = types.Identifier(20)
+        name = types.Identifier(50)
         button_name = types.String()
         label = types.String()
-        builder_names = types.List(of=types.Identifier(20))
+        builder_names = types.List(of=types.Identifier(50))
         all_fields = types.List(of=types.JsonObject())
     entityType = EntityType(name)
