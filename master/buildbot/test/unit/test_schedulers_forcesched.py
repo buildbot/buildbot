@@ -49,6 +49,22 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
 
     # tests
 
+    def test_compare_equals(self):
+        def makeForceScheduler():
+            return ForceScheduler(
+                    name="force",
+                    builderNames=["runtests", "runtests2", "runtests1"],
+                    codebases=[CodebaseParameter(
+                            '',
+                            branch=StringParameter(name="branch", label="Branch", default='master'),
+                            repository=FixedParameter(name="repository", default='repo'))],
+                    properties=[
+                        BooleanParameter(name="force_rebuild", label="Force Rebuild", default=True),
+                        BooleanParameter(name="force_chain_rebuild", label="Force Chain Rebuild", default=False)]
+            )
+
+        self.assertEquals(makeForceScheduler(), makeForceScheduler())
+
     def test_compare_branch(self):
         self.assertNotEqual(
                 ForceScheduler(name="testched", builderNames=[]),
