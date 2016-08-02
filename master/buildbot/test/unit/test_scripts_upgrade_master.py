@@ -21,9 +21,9 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.scripts import upgrade_master
 from buildbot import config as config_module
-from buildbot.scripts import base as base_module
 from buildbot.db import connector, model
 from buildbot.test.util import dirs, misc, compat
+from buildbot.scripts import base as base_module
 
 def mkconfig(**kwargs):
     config = dict(quiet=False, replace=False, basedir='test')
@@ -144,9 +144,11 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
     @compat.skipUnlessPlatformIs('posix')
     def test_checkBasedir_buildbotrunning(self):
         self.activeBasedir()
-        def isBuildBotRunning(basedir, quiet):
-            return True
-        self.patch(base_module, 'isBuildBotRunning', isBuildBotRunning)
+        with open(os.path.join('test', 'twistd.pid'), 'w') as f:
+            f.write("123456")
+        def isPidBuildbot(pid):
+            return pid == 123456
+        self.patch(base_module, 'isPidBuildbot', isPidBuildbot)
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
 

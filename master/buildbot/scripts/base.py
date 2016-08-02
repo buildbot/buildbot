@@ -51,8 +51,7 @@ def isBuildBotRunning(basedir, quiet):
             with open(pidfile, "r") as f:
                 pid = int(f.read().strip())
 
-            if psutil.pid_exists(pid) and any('buildbot' in argument.lower()
-                                              for argument in psutil.Process(pid).cmdline()):
+            if isPidBuildbot(pid):
                 printMessage(message="buildbot is running", quiet=quiet)
                 return True
 
@@ -69,6 +68,11 @@ def isBuildBotRunning(basedir, quiet):
             raise
 
     return False
+
+
+def isPidBuildbot(pid):
+    return psutil.pid_exists(pid) \
+           and any('buildbot' in argument.lower() for argument in psutil.Process(pid).cmdline())
 
 
 def getConfigFileWithFallback(basedir, defaultName='master.cfg'):
