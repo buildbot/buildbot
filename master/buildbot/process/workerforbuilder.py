@@ -225,7 +225,7 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         return d
 
     def attached(self, worker, commands):
-        self.state = States.BUILDING
+        self.state = States.AVAILABLE
         return AbstractWorkerForBuilder.attached(self, worker, commands)
 
     def substantiate(self, build):
