@@ -18,7 +18,7 @@ from buildbot.schedulers import triggerable
 from buildbot.process import properties
 from buildbot.test.util import scheduler
 
-class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
+class TestTriggerableScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     OBJECTID = 33
 
@@ -37,6 +37,82 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         return sched
 
     # tests
+
+    def defaultCodebase(self):
+        return {'pyflakes':
+            {
+                'repository': 'git://github.com/buildbot/pyflakes.git',
+                'display_repository': 'git://github.com/buildbot/pyflakes.git',
+                'display_name': 'pyflakes',
+                'branch': 'master',
+                'project': 'general'
+            }
+        }
+
+    def test_compare_equals(self):
+        codebase = self.defaultCodebase()
+
+        self.assertEquals(
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=codebase,
+                        builderNames=["runtests"]),
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=codebase,
+                        builderNames=["runtests"]),
+        )
+
+    def test_compare_different_codebases(self):
+        codebase = self.defaultCodebase()
+
+        codebase_buildbot = {'buildbot':
+            {
+                'repository': 'git://github.com/buildbot/buildbot.git',
+                'display_repository': 'git://github.com/buildbot/buildbot.git',
+                'display_name': 'buildbot',
+                'branch': 'master',
+                'project': 'general'
+            }
+        }
+        self.assertNotEquals(
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=codebase,
+                        builderNames=["runtests"]),
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=codebase_buildbot,
+                        builderNames=["runtests"]),
+        )
+
+    def test_compare_different_name(self):
+        codebase = self.defaultCodebase()
+
+        self.assertNotEquals(
+                triggerable.Triggerable(
+                        name="runtests-Dependencies-1",
+                        codebases=codebase,
+                        builderNames=["runtests"]),
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=codebase,
+                        builderNames=["runtests"]),
+        )
+
+    def test_compare_different_builders(self):
+        repository = self.defaultCodebase()
+
+        self.assertNotEquals(
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=repository,
+                        builderNames=["runtests"]),
+                triggerable.Triggerable(
+                        name="runtests-Dependencies",
+                        codebases=repository,
+                        builderNames=["runtests-1"]),
+        )
 
     # NOTE: these tests take advantage of the fact that all of the fake
     # scheduler operations are synchronous, and thus do not return a Deferred.
