@@ -21,6 +21,7 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.scripts import upgrade_master
 from buildbot import config as config_module
+from buildbot.scripts import base as base_module
 from buildbot.db import connector, model
 from buildbot.test.util import dirs, misc, compat
 
@@ -139,6 +140,15 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         rv = upgrade_master.checkBasedir(mkconfig(basedir='doesntexist'))
         self.assertFalse(rv)
         self.assertInStdout('invalid buildmaster directory')
+
+    @compat.skipUnlessPlatformIs('posix')
+    def test_checkBasedir_buildbotrunning(self):
+        self.activeBasedir()
+        def isBuildBotRunning(basedir, quiet):
+            return True
+        self.patch(base_module, 'isBuildBotRunning', isBuildBotRunning)
+        rv = upgrade_master.checkBasedir(mkconfig())
+        self.assertFalse(rv)
 
     def test_loadConfig(self):
         @classmethod
