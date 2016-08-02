@@ -31,4 +31,4 @@ RUN \
 
 WORKDIR /var/lib/buildbot
 VOLUME /var/lib/buildbot
-CMD ["/usr/src/buildbot/docker/master/start_buildbot.sh"]
+CMD ["/usr/src/buildbot/contrib/docker/master/start_buildbot.sh"]
