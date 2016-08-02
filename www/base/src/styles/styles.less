@@ -118,3 +118,38 @@
 li.unstyled{
   list-style: none;
 }
+.no-margin{
+  margin: 0px !important;
+}
+
+/* flex row will make the row grow automatically given the size of the content
+   This will make sure all the inside div will fill all content.
+   This is useful when you want to create a row with one left and one right
+   the level of grow give the importance of the div. The more it has grow the more it will win
+   space when fighting against the other divs
+   You can use it with following jade code:
+   .flex-row
+      .flex-grow-1  left content
+      .flex-grow-1
+          .pull-right right content
+
+*/
+.flex-row {
+  display: flex;
+  flex-flow: row;
+
+  /* Then we define how is distributed the remaining space */
+  justify-content: space-around;
+    .flex-grow-1 {
+        flex-grow: 1
+    }
+    .flex-grow-2 {
+        flex-grow: 2
+    }
+    .flex-grow-3 {
+        flex-grow: 3
+    }
+    .flex-grow-4 {
+        flex-grow: 4
+    }
+}

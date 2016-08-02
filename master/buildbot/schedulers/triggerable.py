@@ -32,8 +32,6 @@ class Triggerable(base.BaseScheduler):
         base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
-        if reason is None:
-            reason = u"The Triggerable scheduler named '%s' triggered this build" % name
         self.reason = reason
 
     def trigger(self, waited_for, sourcestamps=None, set_props=None,
@@ -46,14 +44,20 @@ class Triggerable(base.BaseScheduler):
         # potentially overridden by anything from the triggering build
         props = Properties()
         props.updateFromProperties(self.properties)
+
+        reason = self.reason
         if set_props:
             props.updateFromProperties(set_props)
+            reason = set_props.getProperty('reason')
+
+        if reason is None:
+            reason = u"The Triggerable scheduler named '%s' triggered this build" % self.name
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of
         # this process.
         idsDeferred = self.addBuildsetForSourceStampsWithDefaults(
-            self.reason,
+            reason,
             sourcestamps, waited_for,
             properties=props,
             parent_buildid=parent_buildid,
