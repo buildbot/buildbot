@@ -37,7 +37,7 @@ require.config({
         "buildLog": "project/buildLog",
         "buildLogiFrame": "project/buildLog-iFrame",
         "login": "project/login",
-        "precompiled.handlebars": "../generated/precompiled.handlebars"
+        "precompiled.handlebars": "../generated/precompiled.handlebars",
     },
     shim: {
         "overscroll": {
