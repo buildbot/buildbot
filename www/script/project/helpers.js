@@ -610,14 +610,63 @@ define(function (require) {
         settings: function getSettings() {
             return settings;
         },
-        
+        isLocalStorageQuotaExceeded: function (e) {
+          var quotaExceeded = false;
+          if (e) {
+            if (e.code) {
+              switch (e.code) {
+                case 22:
+                  quotaExceeded = true;
+                  break;
+                case 1014:
+                  // Firefox
+                  if (e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    quotaExceeded = true;
+                  }
+                break;
+              }
+            } else if (e.number === -2147024882) {
+              // Internet Explorer 8
+              quotaExceeded = true;
+            }
+          }
+            return quotaExceeded;
+        },
+        getBuildersHistoryList: function (key) {
+          var localStorage;
+          try {
+              localStorage = window.localStorage;
+          } catch(e) {
+              // Exception during access local storage
+          }
+
+          if(!localStorage) {
+            return [];
+          }
+            
+          var historyList = localStorage.getItem(key);
+
+          return historyList ? JSON.parse(historyList) : [];
+        },
+        updateBuildersHistoryList: function (key, data) {
+          var historyJson = JSON.stringify(data);
+          try {
+            localStorage.setItem(key, historyJson);
+          } catch (e) {
+            if(helpers.isLocalStorageQuotaExceeded(e)) {
+              // Local storage is full, history item is going to be removed completely
+              localStorage.removeItem(key);
+            }
+          }
+        },
         history: function (element) {
           if(!element){
             return;
           }
+
           var historyElement = element;
-          var historyList = localStorage.getItem('exthistorylist');
-          var ext_history_list = historyList? JSON.parse(historyList) : [];
+          var historyItemLocalStorageKey = 'exthistorylist';
+          var ext_history_list = helpers.getBuildersHistoryList(historyItemLocalStorageKey);
 
           if (location.pathname === '/') {
             if (ext_history_list.length) {
@@ -626,10 +675,10 @@ define(function (require) {
               for (var i = 0; i < ext_history_list.length; i++) {
                 var el = ext_history_list[i];
                 var codebasesHtml = $("<div class='row branch-list'/>");
-                $.each(el.codebases, function(i, val) {
-                    if(val) {
-                        $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>" + i.slice(0, -"_branch".length) + ": </strong>" + val + "</span></div>").appendTo(codebasesHtml);
-                    }
+                $.each(el.codebases, function (i, val) {
+                  if (val) {
+                    $("<div class='branch-list-item'><div class='branch-icon'/> <span><strong>" + i.slice(0, -"_branch".length) + ": </strong>" + val + "</span></div>").appendTo(codebasesHtml);
+                  }
                 });
                 
                 var html = "<div class='row'><div class='col-md-8'><a class='builder-link' href='" + el.url + "'>" + unescape(el.proj) + "</a></div><div class='col-md-4'><span class='last-run'>"+ moment(el.time).fromNow()+"</span></div></div>";
@@ -657,8 +706,7 @@ define(function (require) {
               }
               
               ext_history_list.splice(0, 0, {proj: proj, codebases:this.codebasesFromURL({}), url: url, time: time});
-              var historyJson = JSON.stringify(ext_history_list);
-              localStorage.setItem('exthistorylist', historyJson);
+              helpers.updateBuildersHistoryList(historyItemLocalStorageKey, ext_history_list);
             }
           }              
         },
