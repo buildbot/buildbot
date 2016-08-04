@@ -151,6 +151,7 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.patch(base_module, 'isPidBuildbot', isPidBuildbot)
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
+        self.assertInStdout('buildbot is running')
 
     def test_loadConfig(self):
         @classmethod
