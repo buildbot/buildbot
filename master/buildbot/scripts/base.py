@@ -50,15 +50,17 @@ def isBuildBotRunning(basedir, quiet):
         try:
             with open(pidfile, "r") as f:
                 pid = int(f.read().strip())
-                if psutil.pid_exists(pid) and any('buildbot' in argument.lower()
-                                                  for argument in psutil.Process(pid).cmdline()):
-                    printMessage(message="buildbot is running", quiet=quiet)
-                    return True
 
-                printMessage(
-                        message="Removing twistd.pid, file has pid {} but buildbot is not running".format(pid),
-                        quiet=quiet)
-                os.unlink(pidfile)
+            if isPidBuildbot(pid):
+                printMessage(message="buildbot is running", quiet=quiet)
+                return True
+
+            # If twistd.pid exists but Buildbot isn't running, then it must have been a previous Buildbot that
+            # unexpectedly shut down (eg: power cut). Thus, there's no reason to keep that twistd.pid around.
+            printMessage(
+                    message="Removing twistd.pid, file has pid {} but buildbot is not running".format(pid),
+                    quiet=quiet)
+            os.unlink(pidfile)
 
         except Exception as ex:
             print "An exception has occurred while checking twistd.pid"
@@ -66,6 +68,11 @@ def isBuildBotRunning(basedir, quiet):
             raise
 
     return False
+
+
+def isPidBuildbot(pid):
+    return psutil.pid_exists(pid) \
+           and any('buildbot' in argument.lower() for argument in psutil.Process(pid).cmdline())
 
 
 def getConfigFileWithFallback(basedir, defaultName='master.cfg'):

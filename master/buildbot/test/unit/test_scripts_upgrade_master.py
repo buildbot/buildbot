@@ -23,6 +23,7 @@ from buildbot.scripts import upgrade_master
 from buildbot import config as config_module
 from buildbot.db import connector, model
 from buildbot.test.util import dirs, misc, compat
+from buildbot.scripts import base as base_module
 
 def mkconfig(**kwargs):
     config = dict(quiet=False, replace=False, basedir='test')
@@ -141,12 +142,16 @@ class TestUpgradeMasterFunctions(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertInStdout('invalid buildmaster directory')
 
     @compat.skipUnlessPlatformIs('posix')
-    def test_checkBasedir_active_pidfile(self):
+    def test_checkBasedir_buildbotrunning(self):
         self.activeBasedir()
-        open(os.path.join('test', 'twistd.pid'), 'w').close()
+        with open(os.path.join('test', 'twistd.pid'), 'w') as f:
+            f.write("123456")
+        def isPidBuildbot(pid):
+            return pid == 123456
+        self.patch(base_module, 'isPidBuildbot', isPidBuildbot)
         rv = upgrade_master.checkBasedir(mkconfig())
         self.assertFalse(rv)
-        self.assertInStdout('still running')
+        self.assertInStdout('buildbot is running')
 
     def test_loadConfig(self):
         @classmethod
