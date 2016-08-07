@@ -12,7 +12,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import email.utils as email_utils
 import re
 import traceback
 
@@ -23,6 +22,7 @@ from twisted.python.reflect import accumulateClassList
 
 from buildbot import config
 from buildbot.process.properties import Properties
+from buildbot.reporters.mail import VALID_EMAIL_ADDR
 from buildbot.schedulers import base
 from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
@@ -264,8 +264,8 @@ class UserNameParameter(StringParameter):
         if not s and not self.required:
             return s
         if self.need_email:
-            e = email_utils.parseaddr(s)
-            if e[0] == '' or e[1] == '':
+            res = VALID_EMAIL_ADDR.search(s)
+            if res is None:
                 raise ValidationError("%s: please fill in email address in the "
                                       "form 'User <email@email.com>'" % (self.name,))
         return s
@@ -768,9 +768,9 @@ class ForceScheduler(base.BaseScheduler):
         collector = ValidationErrorCollector()
         reason = yield collector.collectValidationErrors(self.reason.fullName,
                                                          self.reason.getFromKwargs, kwargs)
-        if owner is None:
-            owner = yield collector.collectValidationErrors(self.owner.fullName,
-                                                            self.owner.getFromKwargs, kwargs)
+        if owner is None or owner == "anonymous":
+            owner = yield collector.collectValidationErrors(self.username.fullName,
+                                                            self.username.getFromKwargs, kwargs)
 
         properties, changeids, sourcestamps = yield self.gatherPropertiesAndChanges(
             collector, **kwargs)
