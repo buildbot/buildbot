@@ -84,7 +84,7 @@ class Resource(resource.Resource):
         def failHttpError(f):
             f.trap(Error)
             e = f.value
-            writeError(e.message, errcode=e.status)
+            writeError(e.message, errcode=int(e.status))
 
         @d.addErrback
         def fail(f):

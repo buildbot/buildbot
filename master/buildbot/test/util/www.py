@@ -78,6 +78,8 @@ class FakeRequest(object):
             self.deferred.callback(self.written)
 
     def setResponseCode(self, code):
+        # twisted > 16 started to assert this
+        assert isinstance(code, (int, long))
         self.responseCode = code
 
     def setHeader(self, hdr, value):
