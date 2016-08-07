@@ -426,7 +426,11 @@ class V2RootResource(resource.Resource):
                 log.msg("HTTP error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', 'text/plain; charset=utf-8')
-            request.write(json.dumps(dict(error=msg)))
+            if request.method == 'POST':
+                # jsonRPC callers want the error message in error.message
+                request.write(json.dumps(dict(error=dict(message=msg))))
+            else:
+                request.write(json.dumps(dict(error=msg)))
             request.finish()
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
 

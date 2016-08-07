@@ -170,6 +170,12 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
         self.assertNotOk('invalid origin')
 
     @defer.inlineCallbacks
+    def test_cors_origin_mismatch_post(self):
+        yield self.render_resource(self.rsrc, '/', method='POST', origin='h://bad')
+        self.assertRequest(content=json.dumps({'error': {'message': 'invalid origin'}}),
+                           responseCode=400)
+
+    @defer.inlineCallbacks
     def test_cors_origin_preflight_match_GET(self):
         yield self.render_resource(self.rsrc, '/',
                                    method='OPTIONS', origin='h://good',
