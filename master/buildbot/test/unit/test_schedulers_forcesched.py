@@ -441,26 +441,25 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
                               '"fullName": "username", "type": "username", "size": 30}')
 
-    def test_UserNameParameterErrorTestIsInvalidMail(self):
-        self.do_ParameterTest(value="test",
-                              expect=CollectedValidationError,
-                              expectKind=Exception,
-                              klass=UserNameParameter(debug=False),
-                              name="username", label="Your name:")
+    def test_UserNameParameterIsValidMail(self):
+        email = "test@buildbot.net"
+        self.do_ParameterTest(value=email, expect=email,
+                              klass=UserNameParameter(),
+                              name="username", label="Your name:",
+                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
+                              '"name": "username", "default": "", "required": false, '
+                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
+                              '"fullName": "username", "type": "username", "size": 30}')
 
-    def test_UserNameParameterErrorTestAtBuildbotInvalidMail(self):
-        self.do_ParameterTest(value="test@buildbot.net",
-                              expect=CollectedValidationError,
-                              expectKind=Exception,
-                              klass=UserNameParameter(debug=False),
-                              name="username", label="Your name:")
-
-    def test_UserNameParameterErrorTestAtBuildbotBisInvalidMail(self):
-        self.do_ParameterTest(value="<test@buildbot.net>",
-                              expect=CollectedValidationError,
-                              expectKind=Exception,
-                              klass=UserNameParameter(debug=False),
-                              name="username", label="Your name:")
+    def test_UserNameParameterIsValidMailBis(self):
+        email = "<test@buildbot.net>"
+        self.do_ParameterTest(value=email, expect=email,
+                              klass=UserNameParameter(),
+                              name="username", label="Your name:",
+                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
+                              '"name": "username", "default": "", "required": false, '
+                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
+                              '"fullName": "username", "type": "username", "size": 30}')
 
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',
