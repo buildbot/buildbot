@@ -991,6 +991,11 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             if bad_tags:
                 error(
                     "builder '%s': tags list contains something that is not a string" % (name,))
+
+            if len(tags) != len(set(tags)):
+                dupes = " ".join(set([x for x in tags if tags.count(x) > 1]))
+                error(
+                    "builder '%s': tags list contains duplicate tags: %s" % (name, dupes))
         else:
             tags = []
 
