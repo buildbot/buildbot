@@ -409,6 +409,12 @@ else:
         setup_args['install_requires'] = None
         setup_args['tests_require'] = None
 
+    setup_args['extras_require'] = {
+        'docs': [
+            'sphinx >= 1.4.4'
+        ]
+    }
+
 setup(**setup_args)
 
 # Local Variables:

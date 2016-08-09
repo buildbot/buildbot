@@ -66,7 +66,7 @@ class BBRefTargetDirective(Directive):
             else:
                 indextype = 'single'
                 indexentry = tpl % (fullname,)
-            entries.append((indextype, indexentry, targetname, targetname))
+            entries.append((indextype, indexentry, targetname, targetname, None))
 
         if entries:
             inode = addnodes.index(entries=entries)
