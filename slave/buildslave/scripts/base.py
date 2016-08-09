@@ -53,6 +53,7 @@ def isBuildSlaveRunning(basedir, quiet):
                 printMessage(
                         message="Removing twistd.pid, file has pid {} but buildslave is not running".format(pid),
                         quiet=quiet)
+                f.close()
                 os.unlink(pidfile)
 
         except Exception as ex:
