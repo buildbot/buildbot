@@ -21,6 +21,7 @@ import shutil
 import __builtin__
 import cStringIO
 from buildslave.scripts import base
+from mock import mock_open
 
 
 def nl(s):
@@ -93,6 +94,10 @@ class FileIOMixin:
         # patch open() to return mocked object
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(__builtin__, "open", self.open)
+
+    def setUpOpenContextManager(self, file_contents="dummy-contents"):
+        self.fileobj = mock_open(read_data=file_contents)
+        self.patch(__builtin__, "open", self.fileobj)
 
     def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg",
                        filename="dummy-file"):
