@@ -111,8 +111,22 @@ def startSlave(basedir, quiet, nodaemon):
 
     # we probably can't do this os.fork under windows
     from twisted.python.runtime import platformType
+
     if platformType == "win32":
-        return launch(nodaemon)
+        pidfile = os.path.join(basedir, 'twistd.pid')
+        # Make sure the twistd.pid file actually exists
+        if not os.path.exists(pidfile):
+            with open(pidfile, "w") as f:
+                f.write("{}".format(os.getpid()))
+
+        launch(nodaemon)
+
+        # When Buildbot is closing (which is now), delete the PID
+
+        if os.path.exists(pidfile):
+            os.remove(pidfile)
+
+        return
 
     # fork a child to launch the daemon, while the parent process tails the
     # logfile
