@@ -611,11 +611,11 @@ It can watch a single branch or multiple branches.
 
 ``svnuser``
     An optional string parameter.
-    If set, the :option:`--user` argument will be added to all :command:`svn` commands.
+    If set, the `--user` argument will be added to all :command:`svn` commands.
     Use this if you have to authenticate to the svn server before you can do :command:`svn info` or :command:`svn log` commands.
 
 ``svnpasswd``
-    Like ``svnuser``, this will cause a :option:`--password` argument to be passed to all :command:`svn` commands.
+    Like ``svnuser``, this will cause a `--password` argument to be passed to all :command:`svn` commands.
 
 ``pollInterval``
     How often to poll, in seconds.

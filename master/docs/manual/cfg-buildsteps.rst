@@ -744,13 +744,13 @@ If you specify ``p4viewspec`` and any of ``p4base``, ``p4branch``, and/or ``p4ex
     This string lets you change that.
 
 ``p4port``
-    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot (repository), used as the :option:`-p` argument for all p4 commands.
+    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot (repository), used as the `-p` argument for all p4 commands.
 
 ``p4user``
-    (optional): the Perforce user, used as the :option:`-u` argument to all p4 commands.
+    (optional): the Perforce user, used as the `-u` argument to all p4 commands.
 
 ``p4passwd``
-    (optional): the Perforce password, used as the :option:`-p` argument to all p4 commands.
+    (optional): the Perforce password, used as the `-p` argument to all p4 commands.
 
 ``p4client``
     (optional): The name of the client to use.
@@ -1128,7 +1128,7 @@ It takes the following arguments:
     The `cvsmodule` for the Buildbot source code is ``buildbot``.
 
 ``branch``
-    a string which will be used in a :option:`-r` argument.
+    a string which will be used in a `-r` argument.
     This is most useful for specifying a branch to work on.
     Defaults to ``HEAD``.
 
@@ -1146,7 +1146,7 @@ It takes the following arguments:
     ``extra_options`` is used for both.
 
 ``checkoutDelay``
-    if set, the number of seconds to put between the timestamp of the last known Change and the value used for the :option:`-D` option.
+    if set, the number of seconds to put between the timestamp of the last known Change and the value used for the `-D` option.
     Defaults to half of the parent :class:`Build`\'s ``treeStableTimer``.
 
 .. bb:step:: SVN (Slave-Side)
@@ -1182,10 +1182,10 @@ Alternatively, if you are building from multiple branches, then you should prefe
     It is possible to mix to have a mix of ``SVN`` steps that use either the ``svnurl`` or  ``baseURL`` arguments but not both at the same time.
 
 ``username``
-    (optional): if specified, this will be passed to the :command:`svn` binary with a :option:`--username` option.
+    (optional): if specified, this will be passed to the :command:`svn` binary with a `--username` option.
 
 ``password``
-    (optional): if specified, this will be passed to the ``svn`` binary with a :option:`--password` option.
+    (optional): if specified, this will be passed to the ``svn`` binary with a `--password` option.
     The password itself will be suitably obfuscated in the logs.
 
 ``extra_args``
@@ -1312,13 +1312,13 @@ The :bb:step:`P4 (Slave-Side)` build step creates a `Perforce <http://www.perfor
     Typically ``trunk``.
 
 ``p4port``
-    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot (repository), used as the :option:`-p` argument for all p4 commands.
+    (optional): the :samp:`{host}:{port}` string describing how to get to the P4 Depot (repository), used as the `-p` argument for all p4 commands.
 
 ``p4user``
-    (optional): the Perforce user, used as the :option:`-u` argument to all p4 commands.
+    (optional): the Perforce user, used as the `-u` argument to all p4 commands.
 
 ``p4passwd``
-    (optional): the Perforce password, used as the :option:`-p` argument to all p4 commands.
+    (optional): the Perforce password, used as the `-p` argument to all p4 commands.
 
 ``p4extra_views``
     (optional): a list of ``(depotpath, clientpath)`` tuples containing extra views to be mapped into the client specification.
@@ -1985,10 +1985,10 @@ The :bb:step:`MTR` step's arguments are:
     Defaults to 16.
 
 ``parallel``
-    Value of :option:`--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
+    Value of `--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
     Defaults to 4.
     This is used to determine the number of server error log files to download from the slave.
-    Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using :option:`--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
+    Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using `--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
 
 ``dbpool``
     An instance of :class:`twisted.enterprise.adbapi.ConnectionPool`, or ``None``.
@@ -2139,9 +2139,9 @@ The :bb:step:`BuildEPYDoc` step will run :command:`epydoc` to produce this API d
 You must supply the command line to be used.
 The default is ``make epydocs``, which assumes that your project has a :file:`Makefile` with an `epydocs` target.
 You might wish to use something like :samp:`epydoc -o apiref source/{PKGNAME}` instead.
-You might also want to add :option:`--pdf` to generate a PDF file instead of a large tree of HTML files.
+You might also want to add `--pdf` to generate a PDF file instead of a large tree of HTML files.
 
-The API docs are generated in-place in the build tree (under the workdir, in the subdirectory controlled by the :option:`-o` argument).
+The API docs are generated in-place in the build tree (under the workdir, in the subdirectory controlled by the `-o` argument).
 To make them useful, you will probably have to copy them to somewhere they can be read.
 A command like ``rsync -ad apiref/ dev.example.com:~public_html/current-apiref/`` might be useful.
 You might instead want to bundle them into a tarball and publish it in the same place where the generated install tarball is placed.
@@ -2416,7 +2416,7 @@ The optional ``compress`` argument can be given as ``'gz'`` or ``'bz2'`` to comp
 
 .. note::
 
-   The permissions on the copied files will be the same on the master as originally on the slave, see :option:`buildslave create-slave --umask` to change the default one.
+   The permissions on the copied files will be the same on the master as originally on the slave, see `buildslave create-slave --umask` to change the default one.
 
 .. bb:step:: MultipleFileUpload
 
