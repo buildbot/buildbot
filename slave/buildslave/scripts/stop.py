@@ -16,6 +16,7 @@
 import os
 import time
 from buildslave.scripts import base
+from twisted.python.runtime import platformType
 
 
 class SlaveNotRunning(Exception):
@@ -39,18 +40,21 @@ def stopSlave(basedir, quiet, signame="TERM"):
     """
     import signal
 
-    os.chdir(basedir)
+    pidfile = os.path.join(basedir, 'twistd.pid')
     try:
-        f = open("twistd.pid", "rt")
+        with open(pidfile, "rt") as f:
+            pid = int(f.read().strip())
     except:
         raise SlaveNotRunning()
 
-    pid = int(f.read().strip())
     signum = getattr(signal, "SIG" + signame)
     timer = 0
     try:
         if base.isBuildSlaveRunning(basedir, quiet):
             os.kill(pid, signum)
+            if platformType == "win32":
+                os.unlink(pidfile)
+
     except OSError, e:
         if e.errno != 3:
             raise
