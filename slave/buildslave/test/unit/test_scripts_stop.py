@@ -35,8 +35,7 @@ class TestStopSlave(misc.FileIOMixin,
     def setUp(self):
         self.setUpStdoutAssertions()
 
-        # patch os.chdir() to do nothing
-        self.patch(os, "chdir", mock.Mock())
+        os.path.join = lambda basedir, pidfile: pidfile
         base.isBuildSlaveRunning = lambda basedir, quiet: True
 
     def test_no_pid_file(self):
@@ -63,7 +62,7 @@ class TestStopSlave(misc.FileIOMixin,
                 raise OSError(errno.ESRCH, "dummy")
 
         # patch open() to return a pid file
-        self.setUpOpen(str(self.PID))
+        self.setUpOpenContextManager(str(self.PID))
 
         # patch os.kill to emulate successful kill
         mocked_kill = mock.Mock(side_effect=emulated_kill)
