@@ -49,7 +49,7 @@ class JSONTestResource(HtmlResource):
         cxt['basename'] = basename
         cxt['splitext'] = splitext
         cxt['selectedproject'] = project
-        cxt['removeTestFilter'] = lambda s : removeTestFilter(s)
+        cxt['removeTestFilter'] = removeTestFilter
 
         try:
 
@@ -97,4 +97,6 @@ class JSONTestResource(HtmlResource):
         return template.render(**cxt)
 
 def removeTestFilter(s):
+    if (s is None):
+        return s
     return re.sub('[-]{1,2}testfilter=.*\s', '', s)
