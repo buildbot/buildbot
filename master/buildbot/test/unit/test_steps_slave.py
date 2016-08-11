@@ -228,6 +228,16 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
                 status_text=["Deleted"])
         return self.runStep()
 
+    def test_description(self):
+        self.setupStep(slave.RemoveDirectory(dir="d", descriptionDone="Custom"))
+        self.expectCommands(
+            Expect('rmdir', { 'dir' : 'd' })
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS,
+                status_text=["Custom"])
+        return self.runStep()
+
 class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
