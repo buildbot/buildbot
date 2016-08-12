@@ -1,7 +1,8 @@
 .modal-content
-    .modal-header
-        h4 {{sch.label}}
     .modal-body
+        // put the header in the body in order to correctly display error popup
+        h4 {{sch.label}}
+        hr
         div.form-horizontal
             .alert.alert-danger(ng-show="error") {{error}}
             forcefield(field="rootfield" ng-if="rootfield")
