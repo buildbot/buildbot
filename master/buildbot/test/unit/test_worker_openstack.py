@@ -119,6 +119,18 @@ class TestOpenStackWorker(unittest.TestCase):
         self.patch(lw, "_start_instance", check_volume_sizes)
         yield lw.start_instance(self.build)
 
+    @defer.inlineCallbacks
+    def test_constructor_block_devices_missing(self):
+        block_devices = [
+            {'source_type': 'image', 'uuid': '9fb2e6e8-110d-4388-8c23-0fcbd1e2fcc1'},
+        ]
+
+        lw = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                             block_devices=block_devices,
+                                             **self.os_auth)
+        yield self.assertFailure(lw.start_instance(self.build),
+                                 novaclient.NotFound)
+
     def test_constructor_no_image(self):
         """
         Must have one of image or block_devices specified.
