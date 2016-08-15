@@ -52,7 +52,7 @@ def stopSlave(basedir, quiet, signame="TERM"):
     try:
         if base.isBuildSlaveRunning(basedir, quiet):
             os.kill(pid, signum)
-            if platformType == "win32":
+            if platformType == "win32" and os.path.exists(pidfile):
                 os.unlink(pidfile)
 
     except OSError, e:
