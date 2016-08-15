@@ -21,6 +21,7 @@ from twisted.trial import unittest
 import buildbot.test.fake.openstack as novaclient
 from buildbot import config
 from buildbot import interfaces
+from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
@@ -42,7 +43,7 @@ class TestOpenStackWorker(unittest.TestCase):
         self.patch(openstack, "nce", novaclient)
         self.patch(openstack, "client", novaclient)
         self.build = Properties(
-            image='bcdcbfb7-d5de-44d9-8768-2591c2ee09ed')
+            image=novaclient.TEST_UUIDS['image'])
 
     def test_constructor_nonova(self):
         self.patch(openstack, "nce", None)
@@ -149,6 +150,14 @@ class TestOpenStackWorker(unittest.TestCase):
             ])
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual('uuid1', image_uuid)
+
+    @defer.inlineCallbacks
+    def test_getImage_renderable(self):
+        bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                             image=Interpolate('%(prop:image)s'),
+                                             **self.os_auth)
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentWorker(
