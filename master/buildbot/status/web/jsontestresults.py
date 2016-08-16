@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import json
+import re
 from twisted.python import log
 from os.path import join, basename, splitext
 from buildbot.status.web.base import HtmlResource, path_to_builder, path_to_builders, path_to_codebases, path_to_build
@@ -48,6 +49,7 @@ class JSONTestResource(HtmlResource):
         cxt['basename'] = basename
         cxt['splitext'] = splitext
         cxt['selectedproject'] = project
+        cxt['removeTestFilter'] = removeTestFilter
 
         try:
 
@@ -93,3 +95,8 @@ class JSONTestResource(HtmlResource):
 
         template = req.site.buildbot_service.templates.get_template("jsontestresults.html")
         return template.render(**cxt)
+
+def removeTestFilter(s):
+    if (s is None):
+        return s
+    return re.sub('[-]{1,2}testfilter=.*\s', '', s)

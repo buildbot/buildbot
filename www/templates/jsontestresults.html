@@ -11,7 +11,14 @@
 
         {% if suite.summary.result %}
             <div class="row">
-                <h4>Suite type: {{ suite.name }}</h4>
+                <h4>Suite type: {{ suite.name }}
+                     {% if suite.description %}
+                        {{ suite.description }}
+                     {% endif %}
+                </h4>
+                {% if suite.details %}
+                    <h4>{{ suite.details }}</h4>
+                {% endif %}
                 {% if data.utrPrefix %}
                     <a class="label label-default collapse" data-target="#suiteCommand{{ loop.index }}">Command to run locally</a>
 
@@ -79,7 +86,7 @@
                                 <a class="label label-default collapse" data-target="#testCommand{{ outer_loop.index }}{{ loop.index }}">Command to run locally</a>
 
                                 <div id="testCommand{{ outer_loop.index }}{{ loop.index }}" class="report-command">
-                                    <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} {{ additionalCommandLineArguments }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
+                                    <input class="report-command-text" type="text" value="{{ data.utrPrefix }} --suite={{ suite.name }} {{ removeTestFilter (additionalCommandLineArguments) }} --testfilter={{ test.name }}" onclick="this.select();" readonly/>
                                 </div>
                             {% endif %}
 
