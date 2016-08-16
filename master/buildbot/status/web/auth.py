@@ -234,7 +234,7 @@ class LDAPAuth(AuthBase):
         try:
             import ldap
             l = ldap.initialize(self.server)
-            attr = [self.uid, "mail", "displayName"]
+            attr = [self.uid, "mail"]
 
             try:
                 if self.bind_user is None and self.bind_password is None:
@@ -246,24 +246,25 @@ class LDAPAuth(AuthBase):
                                          filterstr=self.filter.replace("{user}", user), attrlist=attr)
                 l.unbind()
 
-                username = user
-                email = None
                 fullname = user
+                email = None
                 if len(ldap_result) > 0 and len(ldap_result[0]) > 1:
                     ldap_dict = ldap_result[0][1]
                     if self.uid in ldap_dict.keys():
-                        username = ldap_dict[self.uid][0]
+                        fullname = ldap_dict[self.uid][0]
                         email = ldap_dict['mail'][0]
-                        fullname = ldap_dict['displayName'][0]
 
-                d = defer.maybeDeferred(self.master.db.users.findUserByAttr, username, "ldap", username, fullname=fullname, mail=email)
+                if email is not None:
+                    ident = "{0} <{1}>".format(fullname, email)
+                    d = defer.maybeDeferred(self.master.db.users.findUserByAttr, ident, "ldap", ident)
 
-                def result(uid):
-                    return dict(uid=uid, userName=user, fullName=fullname, email=email, groups=[ user ])
+                    def result(uid):
+                        return dict(uid=uid, userName=user, fullName=fullname, email=email, groups=[ user ])
 
-                d.addBoth(result)
-                return d
+                    d.addBoth(result)
+                    return d
 
+                return False
             except Exception, e:
                 log.msg('Error while getting user info: %r' % e)
                 return False
@@ -316,8 +317,8 @@ class AuthFailResource(HtmlResource):
     pageTitle = "Authentication Failed"
 
     def content(self, request, cxt):
-        templates = request.site.buildbot_service.templates
-        template = templates.get_template("authfail.html")
+        templates =request.site.buildbot_service.templates
+        template = templates.get_template("authfail.html") 
         return template.render(**cxt)
 
 class AuthzFailResource(HtmlResource):

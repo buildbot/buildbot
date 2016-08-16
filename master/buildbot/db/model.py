@@ -346,17 +346,13 @@ class Model(base.DBConnectorComponent):
         sa.Column("uid", sa.Integer, primary_key=True),
 
         # identifier (nickname) for this user; used for display
-        sa.Column("identifier", sa.String(255), nullable=False, unique=True),
+        sa.Column("identifier", sa.String(255), nullable=False),
 
         # username portion of user credentials for authentication
         sa.Column("bb_username", sa.String(128)),
 
         # password portion of user credentials for authentication
         sa.Column("bb_password", sa.String(128)),
-
-        sa.Column("fullname", sa.String(255)),
-
-        sa.Column("mail", sa.String(255))
     )
 
     # This table stores information identifying a user that's related to a
@@ -437,7 +433,7 @@ class Model(base.DBConnectorComponent):
     # expected on this platform
 
     implied_indexes = [
-        ('change_users',
+        ('change_users', 
             dict(unique=False, column_names=['uid'], name='uid')),
         ('sourcestamps',
             dict(unique=False, column_names=['patchid'], name='patchid')),
