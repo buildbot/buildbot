@@ -170,7 +170,16 @@ class RemoveDirectory(SlaveBuildStep):
     haltOnFailure = True
     flunkOnFailure = True
 
-    def __init__(self, dir, **kwargs):
+    def __init__(self, dir, description=None, descriptionDone=None, **kwargs):
+        if description:
+            self.description = description
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
+
         buildstep.BuildStep.__init__(self, **kwargs)
         self.dir = dir
 
