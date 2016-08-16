@@ -305,8 +305,6 @@ class User(Row):
         identifier = 'soap',
         bb_username = None,
         bb_password = None,
-        fullname = None,
-        mail = None,
     )
 
     id_column = 'uid'

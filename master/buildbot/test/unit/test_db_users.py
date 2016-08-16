@@ -142,9 +142,9 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                     sorted([ tuple(i) for i in infos])
                 ), (
                     [
-                        (1L, u'soap', None, None, None, None),
-                        (2L, u'lye', None, None, None, None),
-                        (3L, u'marla', u'marla', u'cancer', None, None),
+                        (1L, u'soap', None, None),
+                        (2L, u'lye', None, None),
+                        (3L, u'marla', u'marla', u'cancer'),
                     ], [
                         (1L, u'IPv9', u'0578cc6.8db024'),
                         (2L, u'git', u'Tyler Durden <tyler@mayhem.net>'),
@@ -469,56 +469,4 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
         def check(res):
             self.assertEqual(res, 1)
         d.addCallback(check)
-        return d
-
-    def test_updateUser_fullname_mail(self):
-        d = self.db.users.findUserByAttr(identifier='christian',
-                                         attr_type='ldap',
-                                         attr_data='christian')
-
-        def check_user(uid):
-            self.assertEqual(uid, 1)
-
-            def thd(conn):
-                users_tbl = self.db.model.users
-                users = conn.execute(users_tbl.select()).fetchall()
-                self.assertEqual(users[0], (1, u'christian', None, None, None, None))
-            return self.db.pool.do(thd)
-        d.addCallback(check_user)
-
-        d.addCallback(lambda _: self.db.users.findUserByAttr(identifier='christian',
-                                                             attr_type='ldap',
-                                                             attr_data='christian',
-                                                             fullname='Christian Hansen',
-                                                             mail='christian@mail.com'))
-
-        def check_user2(uid):
-            self.assertEqual(uid, 1)
-
-            def thd(conn):
-                users_tbl = self.db.model.users
-                users = conn.execute(users_tbl.select()).fetchall()
-                self.assertEqual(
-                    users[0],
-                    (1, u'christian', None, None, 'Christian Hansen', 'christian@mail.com'))
-            return self.db.pool.do(thd)
-        d.addCallback(check_user2)
-
-        d.addCallback(lambda _: self.db.users.findUserByAttr(identifier='christian',
-                                                             attr_type='ldap',
-                                                             attr_data='christian',
-                                                             fullname='Christian Hansen',
-                                                             mail='christian@mail.dk'))
-
-        def check_user3(uid):
-            self.assertEqual(uid, 1)
-
-            def thd(conn):
-                users_tbl = self.db.model.users
-                users = conn.execute(users_tbl.select()).fetchall()
-                self.assertEqual(
-                    users[0],
-                    (1, u'christian', None, None, 'Christian Hansen', 'christian@mail.dk'))
-            return self.db.pool.do(thd)
-        d.addCallback(check_user3)
         return d
