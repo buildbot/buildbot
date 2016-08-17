@@ -1323,6 +1323,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda: config.BuilderConfig(tags=['abc', 13],
                                          name='a', workernames=['a'], factory=self.factory))
 
+    def test_tags_no_tag_dupes(self):
+        self.assertRaisesConfigError(
+            "builder 'a': tags list contains duplicate tags: abc",
+            lambda: config.BuilderConfig(tags=['abc', 'bca', 'abc'],
+                                         name='a', workernames=['a'], factory=self.factory))
+
     def test_tags_no_categories_too(self):
         self.assertRaisesConfigError(
             "categories are deprecated and replaced by tags; you should only specify tags",
