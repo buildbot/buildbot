@@ -35,6 +35,8 @@ Features
 
 * add a UI button to allow to cancel the whole queue for a builder
 
+* Buildbot log viewer now support 256 colors ANSI codes
+
 Fixes
 ~~~~~
 
