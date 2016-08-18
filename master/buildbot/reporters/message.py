@@ -134,4 +134,4 @@ class MessageFormatter(object):
                    sourcestamps=self.messageSourceStamps(ss_list)
                    )
         contents = tpl.render(cxt)
-        return {'body': contents, 'type': 'plain'}
+        return {'body': contents, 'type': self.template_type}
