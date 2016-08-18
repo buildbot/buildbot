@@ -86,14 +86,14 @@ class TestDockerLatentWorker(unittest.TestCase):
         bs = self.ConcreteWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
                                  volumes=[Interpolate('/data:/buildslave/%(kw:builder)s/build', builder=Property('builder'))])
         id, name = yield bs.start_instance(self.build)
-        self.assertEqual(bs.volumes, ['/data:/buildslave/docker_worker/build'])
+        self.assertEqual(bs.volumes, ['/buildslave/docker_worker/build'])
 
     @defer.inlineCallbacks
     def test_volume_no_suffix(self):
         bs = self.ConcreteWorker(
             'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
         yield bs.start_instance(self.build)
-        self.assertEqual(bs.volumes, ['/src/webapp:/opt/webapp'])
+        self.assertEqual(bs.volumes, ['/opt/webapp'])
         self.assertEqual(
             bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
 
@@ -104,7 +104,7 @@ class TestDockerLatentWorker(unittest.TestCase):
                                           '~:/backup:rw'])
         yield bs.start_instance(self.build)
         self.assertEqual(
-            bs.volumes, ['/src/webapp:/opt/webapp:ro', '~:/backup:rw'])
+            bs.volumes, ['/opt/webapp', '/backup'])
         self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
                                     '~': {'bind': '/backup', 'ro': False}})
 

@@ -80,7 +80,7 @@ class DockerLatentWorker(AbstractLatentWorker):
                 if not isinstance(volume_string, str):
                     continue
                 try:
-                    volume, bind = volume_string.split(":", 1)
+                    bind, volume = volume_string.split(":", 1)
                 except ValueError:
                     config.error("Invalid volume definition for docker "
                                  "%s. Skipping..." % volume_string)
@@ -110,18 +110,19 @@ class DockerLatentWorker(AbstractLatentWorker):
         self.volumes = []
         for volume_string in (volumes or []):
             try:
-                volume, bind = volume_string.split(":", 1)
+                bind, volume = volume_string.split(":", 1)
             except ValueError:
                 config.error("Invalid volume definition for docker "
                              "%s. Skipping..." % volume_string)
                 continue
-            self.volumes.append(volume_string)
 
             ro = False
-            if bind.endswith(':ro') or bind.endswith(':rw'):
-                ro = bind[-2:] == 'ro'
-                bind = bind[:-3]
-            self.binds[volume] = {'bind': bind, 'ro': ro}
+            if volume.endswith(':ro') or volume.endswith(':rw'):
+                ro = volume[-2:] == 'ro'
+                volume = volume[:-3]
+
+            self.volumes.append(volume)
+            self.binds[bind] = {'bind': volume, 'ro': ro}
 
     def createEnvironment(self):
         result = {
