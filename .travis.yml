@@ -180,5 +180,6 @@ branches:
   only:
     - master
     - eight
+    - buildbot-0.9.0
 git:
   depth: 300
