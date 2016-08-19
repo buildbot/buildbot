@@ -71,8 +71,9 @@ describe 'ansicode service', ->
 
     it 'should provide correct color cube generator', ->
         ret = ansicodesService.generateStyle()
-        expect(ret).toContain('pre.log .ansibg-241 { background-color: #606060; }')
-        expect(ret).toContain('pre.log .ansifg-209 { color: #ff875f; }')
+        expect(ret).toContain('pre.log .ansibg-232 { background-color: #090909; }')
+        expect(ret).toContain('pre.log .ansibg-241 { background-color: #626262; }')
+        expect(ret).toContain('pre.log .ansifg-209 { color: #f96; }')
 
 
     it 'should inject generated style only once', ->
