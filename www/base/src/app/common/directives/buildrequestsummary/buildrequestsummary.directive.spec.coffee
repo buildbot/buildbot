@@ -26,8 +26,10 @@ describe 'buildrequest summary controller', ->
     beforeEach(inject(injected))
 
     it 'should get the buildrequest', ->
-        buildrequests = [{buildrequestid: 1}]
+        buildrequests = [{buildrequestid: 1, builderid: 2, buildsetid: 3}]
         dataService.expect('buildrequests/1', buildrequests)
+        dataService.expect('buildsets/3', buildrequests)
+        dataService.expect('builders/2', buildrequests)
         expect(dataService.get).not.toHaveBeenCalled()
         controller = createController()
         $timeout.flush()
@@ -35,8 +37,10 @@ describe 'buildrequest summary controller', ->
         expect($scope.buildrequest.buildrequestid).toBe(1)
 
     it 'should query for builds again if first query returns 0', ->
-        buildrequests = [{buildrequestid: 1}]
+        buildrequests = [{buildrequestid: 1, builderid: 2, buildsetid: 3}]
         dataService.expect('buildrequests/1', buildrequests)
+        dataService.expect('buildsets/3', buildrequests)
+        dataService.expect('builders/2', buildrequests)
         builds = []
 
         controller = createController()

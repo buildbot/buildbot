@@ -85,5 +85,6 @@ class Logviewer extends Directive
                 self.controller($scope)
             ]
             link: (scope, elm, attr) ->
+                ansicodesService.injectStyle()
                 scope.logviewer.link(scope, elm, attr)
         }

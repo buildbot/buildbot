@@ -40,21 +40,36 @@ class ansicodesService extends Factory('common')
                     ansi_entry = '\x1b[' + ansi_entry
                 return [ansi_entry, classes]
 
+            ansiSgrToCss: (ansi_classes, css_classes) ->
+                if ansi_classes.length == 0
+                    return css_classes
+
+                fgbg = {'38': 'fg', '48': 'bg'}
+                if fgbg.hasOwnProperty(ansi_classes[0])
+                    if ansi_classes.length != 3
+                        return {}
+                    if ansi_classes[1] == '5'
+                        css_classes = { } # (simplification) alway reset color
+                        css_classes[fgbg[ansi_classes[0]] + '-' + ansi_classes[2]] = true
+                else
+                    for i in ansi_classes
+                        if i == '39' # color reset code
+                            css_classes = {}
+                        else
+                            css_classes[i] = true
+                return css_classes
+
             splitAnsiLine: (line) ->
                 html_entries = []
                 first_entry = true
                 i = 0
-                current_classes = {}
+                css_classes = {}
                 for ansi_entry in line.split(/\x1b\[/)
                     css_class = ""
                     if not first_entry
                         [ansi_entry, ansi_classes] = @parseAnsiSgr(ansi_entry)
-                        for i in ansi_classes
-                            if i == '39' # color reset code
-                                current_classes = {}
-                            else
-                                current_classes[i] = true
-                        css_class = ("ansi" + i for i,v of current_classes).join(' ')
+                        css_classes = @ansiSgrToCss(ansi_classes, css_classes)
+                        css_class = ("ansi" + i for i,v of css_classes).join(' ')
                     if ansi_entry.length > 0
                         html_entries.push(class:css_class, text:_.escape(ansi_entry))
                     first_entry = false
@@ -66,4 +81,39 @@ class ansicodesService extends Factory('common')
                 for entry in entries
                     html += "<span class='#{entry.class}'>#{entry.text}</span>"
                 return html
+
+            injectStyle: ->
+                node = document.getElementById("ansicolors")
+                if node
+                    return
+                node = document.createElement('style')
+                node.id = "ansicolors"
+                node.innerHTML = @generateStyle()
+                document.body.appendChild(node)
+
+            generateStyle: ->
+                ret = ""
+                # first there are the standard 16 colors
+                colors = [
+                    '000','800','080','880','008','808','088','ccc',
+                    '888','f00','0f0','ff0','00f','f0f','0ff','fff'
+                ]
+                # 6x6x6 color cube encoded in 3 digits hex form
+                # note the non-linearity is based on this table
+                # http://www.calmar.ws/vim/256-xterm-24bit-rgb-color-chart.html
+                clr = ['0', '6', '9', 'a', 'd', 'f']
+                for red in [0..5]
+                    for green in [0..5]
+                        for blue in [0..5]
+                            colors.push(clr[red] + clr[green] + clr[blue])
+                # greyscale ramp encoded in 6 digits hex form
+                for i in [1..24]
+                    c = Math.floor(i*256/26).toString(16)
+                    if c.length == 1
+                        c = "0" + c
+                    colors.push(c + c + c)
+                for color, i in colors
+                    ret += "pre.log .ansifg-#{i} { color: ##{color}; }\n"
+                    ret += "pre.log .ansibg-#{i} { background-color: ##{color}; }\n"
+                return ret
         }
