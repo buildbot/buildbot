@@ -23,6 +23,18 @@ description: |
     These are specified as query parameters via the REST interface, or as arguments to the :py:meth:`~buildbot.data.connector.DataConnector.get` method in Python.
     The result will begin with line ``offset`` (so the resulting ``firstline`` will be equal to the given ``offset``), and will contain up to ``limit`` lines.
 
+    Following example will get the first 100 lines of a log::
+
+        from buildbot.data import resultspec
+        first_100_lines = yield self.master.data.get(("logs", log['logid'], "contents"),
+            resultSpec=resultspec.ResultSpec(limit=100))
+
+    Following example will get the last 100 lines of a log::
+
+        from buildbot.data import resultspec
+        last_100_lines = yield self.master.data.get(("logs", log['logid'], "contents"),
+            resultSpec=resultspec.ResultSpec(offset=log['num_lines']-100))
+
     .. note::
 
         There is no event for a new chunk. Instead, the log resource is updated when new chunks are added, with the new number of lines.
