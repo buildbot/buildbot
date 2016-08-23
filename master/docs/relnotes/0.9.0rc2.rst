@@ -25,10 +25,10 @@ Fixes
 * fix DockerLatent integration of volumes mounting
 * misc doc fixes
 * fix buildbot not booting when builder tags contains duplicates
-* forcesched: fix owner parameter when no authentication is used
+* ``forcesched``: fix owner parameter when no authentication is used
 * REST: fix problem with twisted 16 error reporting
 * CORS: format errors according to API type
-* Dockerfiles fix and upgrade ubuntu to 16.04
+* Dockerfiles fix and upgrade Ubuntu to 16.04
 * Fixes #3430 Increased size of builder identifier from 20 to 50 (brings it in line to size of steps and workers in same module).
 * Fix missing VS2015 entry_points
 * removed the restriction on twisted < 16.3.0 now that autobahn 0.16.0 fixed the issue
