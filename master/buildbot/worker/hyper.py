@@ -38,14 +38,14 @@ except ImportError:
 class HyperLatentWorker(AbstractLatentWorker):
     """hyper.sh is a docker CaaS company"""
     instance = None
-    ALLOWED_SIZES = ['xxs', 'xs', 's', 'm', 'l', 'xl', 'xxl', 'xxl']
+    ALLOWED_SIZES = ['s1', 's2', 's3', 's4', 'm1', 'm2', 'm3', 'l1', 'l2', 'l3']
     threadPool = None
     client = None
     reactor = global_reactor
     client_args = None
 
     def checkConfig(self, name, password, hyper_host,
-                    hyper_accesskey, hyper_secretkey, image, hyper_size="xs", masterFQDN=None, **kwargs):
+                    hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
 
         # Set build_wait_timeout to 0s if not explicitely set: Starting a
         # container is almost immediate, we can affort doing so for each build.
