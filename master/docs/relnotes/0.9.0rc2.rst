@@ -47,13 +47,6 @@ Deprecations, Removals, and Non-Compatible Changes
 * remove repo from worker code (obsoleted by repo master source step)
 
 
-Buildslave
-----------
-
-Deprecations, Removals, and Non-Compatible Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 Worker
 ------
 

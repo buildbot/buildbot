@@ -37,17 +37,8 @@ Features
 Fixes
 ~~~~~
 
-
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-Buildslave
-----------
-
-Deprecations, Removals, and Non-Compatible Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 Worker
 ------
