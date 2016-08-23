@@ -95,7 +95,9 @@ module.exports =  (gulp) ->
     catch_errors = (s) ->
         s.on "error", (e) ->
             error = gutil.colors.bold.red
-            if e.fileName?
+            if e.filename?
+                gutil.log(error("#{e.plugin}:#{e.name}: #{e.filename} +#{e.location.first_line}"))
+            else if e.fileName?
                 gutil.log(error("#{e.plugin}:#{e.name}: #{e.fileName} +#{e.lineNumber}"))
             else
                 gutil.log(error("#{e.plugin}:#{e.name}"))

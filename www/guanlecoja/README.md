@@ -250,6 +250,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.7.2: upgrade gulp-if: fixes issue with node6
 * 0.7.0: upgrade gulp-bower-deps. This gives you BOWERDEPS global variable
 * 0.6.2: fix and upgrade phantomjs to 2.1.1. This will help on the stability of the builds.
 * 0.6.1: Support sass include PATH to be implicitly set as includePath. fix problem with impossibility to create a task after karma
