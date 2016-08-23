@@ -102,7 +102,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
             if not self.branch or branch in self.branch:
                 current = yield self._getCurrentRev(nr)
 
-                if not current or current != revision:
+                # compare _short_ hashes to check if the PR has been updated
+                if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
                     page = yield client.getPage(str(pr['links']['self']['href']))
                     pr_json = json.loads(page, encoding=self.encoding)
