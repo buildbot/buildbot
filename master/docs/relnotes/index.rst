@@ -25,12 +25,8 @@ Master
 Features
 ~~~~~~~~
 
-* add a UI button to allow to cancel the whole queue for a builder
-
 Fixes
 ~~~~~
-
-* fix the UI to allow to cancel a buildrequest (:bug:`3582`)
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -73,7 +69,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0rc1..master
+   git log v0.9.0rc2..master
 
 Older Versions
 --------------
@@ -85,6 +81,7 @@ Newer versions are also available here:
     :maxdepth: 1
 
     0.9.0
+    0.9.0rc2
     0.9.0rc1
     0.9.0b9
     0.9.0b8
