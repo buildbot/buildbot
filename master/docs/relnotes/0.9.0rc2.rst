@@ -3,6 +3,7 @@ Release Notes for Buildbot ``0.9.0rc2``
 
 
 The following are the release notes for Buildbot ``0.9.0rc2``.
+This version was released on August 23, 2016.
 
 See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 
@@ -30,6 +31,7 @@ Fixes
 * Dockerfiles fix and upgrade ubuntu to 16.04
 * Fixes #3430 Increased size of builder identifier from 20 to 50 (brings it in line to size of steps and workers in same module).
 * Fix missing VS2015 entry_points
+* removed the restriction on twisted < 16.3.0 now that autobahn 0.16.0 fixed the issue
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
