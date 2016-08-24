@@ -283,7 +283,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
     Secret key to use as part of the creds to access hyper.
 
 ``hyper_size``
-    (mandatory)
+    (optional, defaults to ``s3``)
     Size of the container to use as per HyperPricing_
 
 .. _Hyper: https://hyper.sh
