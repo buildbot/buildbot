@@ -274,6 +274,18 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
     Address of the master the worker should connect to. Use if you master machine does not have proper fqdn.
     This value is passed to the docker image via environment variable ``BUILDMASTER``
 
+    If the value contains a colon (``:``), then BUILDMASTER and BUILDMASTER_PORT environment variables will be passed, following scheme: ``masterFQDN="$BUILDMASTER:$BUILDMASTER_PORT"``
+
+    This feature is useful for testing behind a proxy using ``ngrok`` command like: ``ngrok tcp 9989``
+    ``ngrok`` config can the be retrieved with following snippet:
+
+.. code-block:: python
+
+    import requests, urlparse
+    r = requests.get("http://localhost:4040/api/tunnels/command_line").json()
+    masterFQDN = urlparse.urlparse(r['public_url']).netloc
+
+
 ``hyper_accesskey``
     (mandatory)
     Access key to use as part of the creds to access hyper.

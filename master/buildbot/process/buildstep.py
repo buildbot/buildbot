@@ -775,7 +775,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
-        log.msg("addCompleteLog(%s)" % name)
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u't')
         l = self._newLog(name, u't', logid)
@@ -785,7 +784,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
-        log.msg("addHTMLLog(%s)" % name)
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u'h')
         l = self._newLog(name, u'h', logid)
@@ -795,7 +793,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addLogWithFailure(self, why, logprefix=""):
         # helper for showing exceptions to the users
-        print why.getTraceback()
         try:
             yield self.addCompleteLog(logprefix + "err.text", why.getTraceback())
             yield self.addHTMLLog(logprefix + "err.html", formatFailure(why))

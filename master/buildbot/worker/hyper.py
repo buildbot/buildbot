@@ -63,7 +63,7 @@ class HyperLatentWorker(AbstractLatentWorker):
             config.error("Size is not valid %s vs %r".format(hyper_size, self.ALLOWED_SIZES))
 
     def reconfigService(self, name, password, hyper_host,
-                        hyper_accesskey, hyper_secretkey, image, hyper_size="xs", masterFQDN=None, **kwargs):
+                        hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
 
         AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
         self.size = hyper_size
@@ -100,6 +100,8 @@ class HyperLatentWorker(AbstractLatentWorker):
         }
         if self.registration is not None:
             result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
+        if ":" in self.masterFQDN:
+            result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
 
     @defer.inlineCallbacks
@@ -122,8 +124,11 @@ class HyperLatentWorker(AbstractLatentWorker):
     def _thd_start_instance(self, image):
         instance = self.client.create_container(
             image,
-            name=('%s%s' % (self.workername, id(self))).replace("_", "-"),
             environment=self.createEnvironment(),
+            labels={
+                'sh_hyper_instancetype': self.size
+            },
+            name=('%s%s' % (self.workername, id(self))).replace("_", "-")
         )
 
         if instance.get('Id') is None:

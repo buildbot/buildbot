@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.internet import defer
+
 from buildbot.util import service
 
 
@@ -24,6 +26,7 @@ class FakeBotMaster(service.AsyncMultiService):
         self.locks = {}
         self.builders = {}
         self.buildsStartedForWorkers = []
+        self.delayShutdown = False
 
     def getLockByID(self, lockid):
         if lockid not in self.locks:
@@ -45,3 +48,9 @@ class FakeBotMaster(service.AsyncMultiService):
 
     def workerLost(self, bot):
         pass
+
+    def cleanShutdown(self, quickMode=False, stopReactor=True):
+        self.shuttingDown = True
+        if self.delayShutdown:
+            self.shutdownDeferred = defer.Deferred()
+            return self.shutdownDeferred

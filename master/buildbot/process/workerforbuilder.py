@@ -219,9 +219,17 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
 
+        self.state = States.DETACHED
         log.msg("substantiating worker %s" % (self,))
         d = self.substantiate(build)
         return d
+
+    def attached(self, worker, commands):
+        # When a latent worker is attached, it is actually because it prepared for a build
+        # thus building and not available like for normal worker
+        if self.state == States.DETACHED:
+            self.state = States.BUILDING
+        return AbstractWorkerForBuilder.attached(self, worker, commands)
 
     def substantiate(self, build):
         return self.worker.substantiate(self, build)

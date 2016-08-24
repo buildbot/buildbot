@@ -82,10 +82,10 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
                 self.failed(failure.Failure(RuntimeError('oh noes')))
             else:
                 self.finished(results.SUCCESS)
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
-            self.failed(failure.Failure(e))
+            self.failed(failure.Failure())
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):

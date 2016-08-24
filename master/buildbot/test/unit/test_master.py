@@ -31,6 +31,7 @@ from buildbot.interfaces import IConfigLoader
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
+from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
 
@@ -176,6 +177,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.reactor = self.make_reactor()
             self.master = master.BuildMaster(
                 self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
+            self.master.botmaster = FakeBotMaster()
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.db.setServiceParent(self.master)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self)
@@ -238,22 +240,37 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.assertLogged("BuildMaster startup failed")
         return d
 
+    @defer.inlineCallbacks
     def test_startup_ok(self):
-        d = self.master.startService()
+        yield self.master.startService()
 
-        @d.addCallback
-        def check_started(_):
-            self.assertTrue(self.master.data.updates.thisMasterActive)
-        d.addCallback(lambda _: self.master.stopService())
+        self.assertTrue(self.master.data.updates.thisMasterActive)
+        d = self.master.stopService()
+        self.assertTrue(d.called)
+        self.failIf(self.reactor.stop.called)
+        self.assertLogged("BuildMaster is running")
 
-        @d.addCallback
-        def check(_):
-            self.failIf(self.reactor.stop.called)
-            self.assertLogged("BuildMaster is running")
+        # check started/stopped messages
+        self.assertFalse(self.master.data.updates.thisMasterActive)
 
-            # check started/stopped messages
-            self.assertFalse(self.master.data.updates.thisMasterActive)
-        return d
+    @defer.inlineCallbacks
+    def test_startup_ok_waitforshutdown(self):
+        yield self.master.startService()
+
+        self.assertTrue(self.master.data.updates.thisMasterActive)
+        # use fakebotmaster shutdown delaying
+        self.master.botmaster.delayShutdown = True
+        d = self.master.stopService()
+
+        self.assertFalse(d.called)
+        self.master.botmaster.shutdownDeferred.callback(None)
+        self.assertTrue(d.called)
+
+        self.failIf(self.reactor.stop.called)
+        self.assertLogged("BuildMaster is running")
+
+        # check started/stopped messages
+        self.assertFalse(self.master.data.updates.thisMasterActive)
 
     @defer.inlineCallbacks
     def test_reconfig(self):

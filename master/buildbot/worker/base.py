@@ -466,9 +466,12 @@ class AbstractWorker(service.BuildbotService, object):
             # use get() since we might have changed our mind since then
             b = self.botmaster.builders.get(name)
             if b:
-                d1 = b.attached(self, self.worker_commands)
+                d1 = self.attachBuilder(b)
                 dl.append(d1)
         yield defer.DeferredList(dl)
+
+    def attachBuilder(self, builder):
+        return builder.attached(self, self.worker_commands)
 
     def shutdownRequested(self):
         log.msg("worker %s wants to shut down" % (self.name,))
@@ -730,6 +733,10 @@ class AbstractLatentWorker(AbstractWorker):
             self.substantiation_build = None
             self._substantiation_notifier.notify(True)
 
+    def attachBuilder(self, builder):
+        sb = self.workerforbuilders.get(builder.name)
+        return sb.attached(self, self.worker_commands)
+
     def detached(self):
         AbstractWorker.detached(self)
         if self._substantiation_notifier:
@@ -806,10 +813,16 @@ class AbstractLatentWorker(AbstractWorker):
         self.substantiated = False
         yield d
         self.insubstantiating = False
+        if self._substantiation_notifier:
+            # notify waiters that substantiation was cancelled
+            self._substantiation_notifier.notify(failure.Failure(Exception("cancelled")))
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks
     def _soft_disconnect(self, fast=False):
+        if self.building:
+            # wait until build finished
+            return
         # a negative build_wait_timeout means the worker should never be shut
         # down, so just disconnect.
         if self.build_wait_timeout < 0:

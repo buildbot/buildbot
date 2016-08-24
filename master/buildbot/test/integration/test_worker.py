@@ -22,6 +22,7 @@ from buildbot.config import BuilderConfig
 from buildbot.interfaces import IBuildStepFactory
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
+from buildbot.process.results import CANCELLED
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
@@ -56,12 +57,18 @@ class ControllableStep(BuildStep):
         BuildStep.__init__(self, **kwargs)
         self._step_deferred = step_deferred
 
+    def interrupt(self, reason):
+        self._step_deferred.callback(CANCELLED)
+
 
 class Tests(SynchronousTestCase):
 
     def setUp(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
+
+    def tearDown(self):
+        self.assertFalse(self.master.running, "master is still running!")
 
     def test_latent_max_builds(self):
         """
@@ -88,7 +95,7 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        self.master = master = self.successResultOf(getMaster(self, self.reactor, config_dict))
         builder_ids = [
             self.successResultOf(master.data.updates.findBuilderId('testy-1')),
             self.successResultOf(master.data.updates.findBuilderId('testy-2')),
@@ -120,6 +127,7 @@ class Tests(SynchronousTestCase):
         controller.connect_worker(self)
 
         self.assertEqual(len(started_builds), 1)
+        controller.auto_stop(True)
 
     def test_local_worker_max_builds(self):
         """
@@ -142,7 +150,7 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        self.master = master = self.successResultOf(getMaster(self, self.reactor, config_dict))
         builder_ids = [
             self.successResultOf(master.data.updates.findBuilderId('testy-1')),
             self.successResultOf(master.data.updates.findBuilderId('testy-2')),

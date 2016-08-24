@@ -134,7 +134,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     for id in brids])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 transaction.rollback()
-                raise AlreadyClaimedError
+                raise AlreadyClaimedError()
 
             transaction.commit()
 
@@ -163,7 +163,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 # went wrong
                 if res.rowcount != len(batch):
                     transaction.rollback()
-                    raise AlreadyClaimedError
+                    raise AlreadyClaimedError()
 
             transaction.commit()
         return self.db.pool.do(thd)
