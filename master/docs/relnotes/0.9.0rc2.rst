@@ -1,0 +1,72 @@
+Release Notes for Buildbot ``0.9.0rc2``
+========================================
+
+
+The following are the release notes for Buildbot ``0.9.0rc2``.
+This version was released on August 23, 2016.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+
+Master
+------
+
+Features
+~~~~~~~~
+
+* add a UI button to allow to cancel the whole queue for a builder
+
+Fixes
+~~~~~
+
+* fix the UI to allow to cancel a buildrequest (:bug:`3582`)
+* Fix BitbucketPullrequestPoller change detection
+* Fix customization for template_type in email reporter
+* fix DockerLatent integration of volumes mounting
+* misc doc fixes
+* fix buildbot not booting when builder tags contains duplicates
+* ``forcesched``: fix owner parameter when no authentication is used
+* REST: fix problem with twisted 16 error reporting
+* CORS: format errors according to API type
+* Dockerfiles fix and upgrade Ubuntu to 16.04
+* Fixes #3430 Increased size of builder identifier from 20 to 50 (brings it in line to size of steps and workers in same module).
+* Fix missing VS2015 entry_points
+* removed the restriction on twisted < 16.3.0 now that autobahn 0.16.0 fixed the issue
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+Features
+~~~~~~~~
+
+Fixes
+~~~~~
+
+
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* remove repo from worker code (obsoleted by repo master source step)
+
+
+Worker
+------
+
+Fixes
+~~~~~
+
+Changes for Developers
+~~~~~~~~~~~~~~~~~~~~~~
+
+Deprecations, Removals, and Non-Compatible Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0rc1..v0.9.0rc2

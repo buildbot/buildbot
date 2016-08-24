@@ -9,7 +9,8 @@ do
     cd ${pkg}
     rm -rf MANIFEST dist
     python setup.py sdist
+    # wheels must be build separatly in order to properly omit tests
+    python setup.py bdist_wheel
   )
   cp ${pkg}/dist/* dist/
-  pip wheel ${pkg} -w dist
 done

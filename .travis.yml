@@ -28,6 +28,7 @@ env:
 
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js
+  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes
 
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
@@ -163,6 +164,9 @@ script:
 
   - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
+
+  - "[ $TESTS != smokes ] || ./common/maketarballs.sh"
+#  - "[ $TESTS != smokes ] || ./common/smokedist.sh"
 
 notifications:
   email: false
