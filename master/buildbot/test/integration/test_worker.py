@@ -15,7 +15,6 @@
 
 from twisted.internet.defer import Deferred
 from twisted.python import threadpool
-from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SynchronousTestCase
 from zope.interface import implementer
 
@@ -118,9 +117,7 @@ class Tests(SynchronousTestCase):
         # The worker fails to substantiate.
         controller.start_instance(True)
 
-        local_workdir = FilePath(self.mktemp())
-        local_workdir.createDirectory()
-        controller.connect_worker(local_workdir)
+        controller.connect_worker(self)
 
         self.assertEqual(len(started_builds), 1)
 

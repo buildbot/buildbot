@@ -18,11 +18,13 @@ from functools import reduce
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components
+from twisted.python import failure
 from twisted.python import log
 from twisted.python.failure import Failure
 from zope.interface import implements
 
 from buildbot import interfaces
+from buildbot.process import buildstep
 from buildbot.process import metrics
 from buildbot.process import properties
 from buildbot.process.results import CANCELLED
@@ -273,7 +275,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         try:
             self.setupBuild()  # create .steps
         except Exception:
-            log.err(Failure(), "Build.setupBuild failed")
+            yield self.buildPreparationFailure(Failure(), "worker_prepare")
             self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
 
@@ -283,18 +285,14 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'preparing worker')
         try:
-            ready = yield workerforbuilder.prepare(self)
+            ready_or_failure = yield workerforbuilder.prepare(self)
         except Exception:
-            log.err(Failure(), 'while preparing workerforbuilder:')
-            self.buildFinished(["worker", "not", "available"], RETRY)
-            return
+            ready_or_failure = Failure()
 
         # If prepare returns True then it is ready and we start a build
-        # If it returns false then we don't start a new build.
-        if not ready:
-            log.msg("worker %s can't build %s after all; retrying the "
-                    "build" % (self, workerforbuilder))
-            self.stopped = True
+        # If it returns failure then we don't start a new build.
+        if ready_or_failure is not True:
+            yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
             self.buildFinished(["worker", "not", "available"], RETRY)
             return
 
@@ -311,13 +309,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         log.msg("starting build %s.. pinging the worker %s"
                 % (self, workerforbuilder))
         try:
-            ping_success = yield workerforbuilder.ping()
+            ping_success_or_failure = yield workerforbuilder.ping()
         except Exception:
-            log.err(Failure(), 'while pinging worker before build:')
-            ping_success = False
+            ping_success_or_failure = Failure()
 
-        if not ping_success:
-            log.msg("worker ping failed; retrying the build")
+        if ping_success_or_failure is not True:
+            print "ping", ping_success_or_failure
+            yield self.buildPreparationFailure(ping_success_or_failure, "worker_ping")
             self.buildFinished(["worker", "not", "pinged"], RETRY)
             return
 
@@ -342,6 +340,15 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         # start the sequence of steps
         self.startNextStep()
+
+    @defer.inlineCallbacks
+    def buildPreparationFailure(self, why, state_string):
+        step = buildstep.BuildStep(name=state_string)
+        step.setBuild(self)
+        yield step.addStep()
+        if isinstance(why, failure.Failure):
+            yield step.addLogWithFailure(why)
+        yield self.master.data.updates.finishStep(step.stepid, EXCEPTION, False)
 
     @staticmethod
     def canStartWithWorkerForBuilder(lockList, workerforbuilder):

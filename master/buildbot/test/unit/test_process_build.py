@@ -184,6 +184,8 @@ class TestBuild(unittest.TestCase):
 
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
+        self.workerforbuilder.prepare = lambda _: True
+        self.workerforbuilder.ping = lambda: True
 
         self.build.setBuilder(self.builder)
 
@@ -375,6 +377,8 @@ class TestBuild(unittest.TestCase):
 
         eWorker.worker = self.worker
         cWorker.worker = self.worker
+        eWorker.prepare = cWorker.prepare = lambda _: True
+        eWorker.ping = cWorker.ping = lambda: True
 
         l = WorkerLock('lock', 2)
         claimLog = []

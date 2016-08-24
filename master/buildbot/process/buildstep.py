@@ -449,9 +449,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     realUpdateSummary = updateSummary
 
     @defer.inlineCallbacks
-    def startStep(self, remote):
-        self.remote = remote
-
+    def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
@@ -459,6 +457,11 @@ class BuildStep(results.ResultComputingConfigMixin,
             name=util.ascii2unicode(self.name))
         yield self.master.data.updates.startStep(self.stepid)
 
+    @defer.inlineCallbacks
+    def startStep(self, remote):
+        self.remote = remote
+
+        yield self.addStep()
         self.locks = yield self.build.render(self.locks)
 
         # convert all locks into their real form
@@ -792,6 +795,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addLogWithFailure(self, why, logprefix=""):
         # helper for showing exceptions to the users
+        print why.getTraceback()
         try:
             yield self.addCompleteLog(logprefix + "err.text", why.getTraceback())
             yield self.addHTMLLog(logprefix + "err.html", formatFailure(why))
