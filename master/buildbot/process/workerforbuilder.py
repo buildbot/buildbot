@@ -225,7 +225,10 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         return d
 
     def attached(self, worker, commands):
-        self.state = States.AVAILABLE
+        # When a latent worker is attached, it is actually because it prepared for a build
+        # thus building and not available like for normal worker
+        if self.state == States.DETACHED:
+            self.state = States.BUILDING
         return AbstractWorkerForBuilder.attached(self, worker, commands)
 
     def substantiate(self, build):
