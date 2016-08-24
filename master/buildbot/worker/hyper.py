@@ -100,6 +100,8 @@ class HyperLatentWorker(AbstractLatentWorker):
         }
         if self.registration is not None:
             result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
+        if ":" in self.masterFQDN:
+            result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
 
     @defer.inlineCallbacks

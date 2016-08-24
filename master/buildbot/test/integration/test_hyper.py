@@ -25,9 +25,12 @@ from buildbot.worker.hyper import HyperLatentWorker
 
 
 # This integration test creates a master and hyper worker environment,
-# it requires hyper creds to be configured locally with 'hyper config'
-# masterFQDN environment can be used in order to define your internet visible address
+# It requires hyper creds to be configured locally with 'hyper config'
 
+# masterFQDN environment can be used in order to define your internet visible address
+# you can use ngrok tcp 9989
+# and then, according to ngrok choice of port something like:
+# export masterFQDN=0.tcp.ngrok.io:17994
 class HyperMaster(RunMasterBase):
 
     def setUp(self):
@@ -91,13 +94,16 @@ def masterConfig():
         hyperconfig = json.load(open(hyperconfig))
     hyperhost, hyperconfig = hyperconfig['clouds'].items()[0]
     masterFQDN = os.environ.get('masterFQDN')
-    # FIXME: tardyp/buildbot-worker has workaround bug for hyper's init which disable SIGCHILD signal
-    # http://trac.buildbot.net/ticket/3592
     c['workers'] = [
         HyperLatentWorker('hyper1', 'passwd', hyperhost, hyperconfig['accesskey'],
-            hyperconfig['secretkey'], 'tardyp/buildbot-worker',
+            hyperconfig['secretkey'], 'buildbot/buildbot-worker:master',
             masterFQDN=masterFQDN)
     ]
-    c['protocols'] = {"pb": {"port": "tcp:0"}}
+    # if the masterFQDN is forced (proxy case), then we use 9989 default port
+    # else, we try to find a free port
+    if masterFQDN is not None:
+        c['protocols'] = {"pb": {"port": "tcp:9989"}}
+    else:
+        c['protocols'] = {"pb": {"port": "tcp:0"}}
 
     return c
