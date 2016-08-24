@@ -276,8 +276,8 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
 
     If the value contains a colon (``:``), then BUILDMASTER and BUILDMASTER_PORT environment variables will be passed, following scheme: ``masterFQDN="$BUILDMASTER:$BUILDMASTER_PORT"``
 
-    This feature is useful for testing behind a proxy using ngrok command like: ``ngrok tcp 9989``
-    ngrok config can the be retrieved with following snippet:
+    This feature is useful for testing behind a proxy using ``ngrok`` command like: ``ngrok tcp 9989``
+    ``ngrok`` config can the be retrieved with following snippet:
 
 .. code-block:: python
 
