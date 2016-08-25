@@ -48,7 +48,7 @@ try:
         paths.append("".join([t.data for t in p.childNodes]))
     # print "PATHS"
     # print paths
-except xml.parsers.expat.ExpatError, e:
+except xml.parsers.expat.ExpatError as e:
     print "FAILED TO PARSE 'svn log' XML:"
     print str(e)
     print "----"

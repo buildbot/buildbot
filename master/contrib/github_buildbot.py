@@ -130,7 +130,7 @@ class GitHubBuildBot(resource.Resource):
             self.send_changes(changes, request)
             return server.NOT_DONE_YET
 
-        except Exception, e:
+        except Exception as e:
             logging.exception(e)
             request.setResponseCode(INTERNAL_SERVER_ERROR)
             return json.dumps({"error": e.message})

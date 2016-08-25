@@ -84,7 +84,7 @@ def getChangesFromCommand(cmd, count):
     out = commands.getoutput(cmd)
     try:
         doc = minidom.parseString(out)
-    except xml.parsers.expat.ExpatError, e:
+    except xml.parsers.expat.ExpatError as e:
         print "failed to parse XML"
         print str(e)
         print "purported XML is:"

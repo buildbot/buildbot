@@ -12,7 +12,7 @@ class BuildBotSystem(object):
             scheme, loc, _, _, _ = urlparse.urlsplit(url, scheme='http')
             url = '%s://%s/xmlrpc' % (scheme, loc)
             self.server = xmlrpclib.ServerProxy(url)
-        except Exception, e:
+        except Exception as e:
             raise ValueError('Invalid BuildBot XML-RPC server %s: %s' % (url, e))
 
     def getAllBuildsInInterval(self, start, stop):
@@ -23,7 +23,7 @@ class BuildBotSystem(object):
         for i in range(1, 5 + 1):
             try:
                 builds.append(Build(self.server.getBuild(name, -i)))
-            except Exception, e:
+            except Exception as e:
                 self.env.log.debug('Cannot fetch build-info: %s' % (e))
                 break
         return Builder(name, builds, [])

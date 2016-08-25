@@ -246,7 +246,7 @@ class ChangeSender:
         opts = Options()
         try:
             opts.parseOptions()
-        except usage.error, ue:
+        except usage.error as ue:
             print opts
             print "%s: %s" % (sys.argv[0], ue)
             sys.exit()
