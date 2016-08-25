@@ -18,15 +18,6 @@
 
 from __future__ import print_function
 
-'''
-# set up PYTHONPATH to contain Twisted/buildbot perhaps, if not already
-# installed site-wide
-. ~/.environment
-
-/path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
---bbserver localhost --bbport 9989 --username myuser --auth passwd
-'''
-
 import commands
 import os
 import re
@@ -38,6 +29,17 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import usage
 from twisted.spread import pb
+
+'''
+# set up PYTHONPATH to contain Twisted/buildbot perhaps, if not already
+# installed site-wide
+. ~/.environment
+
+/path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
+--bbserver localhost --bbport 9989 --username myuser --auth passwd
+'''
+
+
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in

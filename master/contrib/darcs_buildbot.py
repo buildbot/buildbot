@@ -18,6 +18,7 @@
 # "python2.3-xml" package under debian).
 
 from __future__ import print_function
+
 import commands
 import os
 import sys

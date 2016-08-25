@@ -14,6 +14,17 @@
 
 from __future__ import print_function
 
+import optparse
+import os
+import re
+import smtplib
+import socket
+import sys
+import textwrap
+import time
+from cStringIO import StringIO
+from email.Utils import formataddr
+
 """
     -t
     --testing
@@ -28,16 +39,6 @@ The rest of the command line arguments are:
 """
 __version__ = '$Revision: 1.3 $'
 
-import optparse
-import os
-import re
-import smtplib
-import socket
-import sys
-import textwrap
-import time
-from cStringIO import StringIO
-from email.Utils import formataddr
 
 try:
     import pwd

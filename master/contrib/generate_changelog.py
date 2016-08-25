@@ -12,6 +12,9 @@
 
 from __future__ import print_function
 
+import os
+import sys
+
 """
 Generates changelog information using git.
 """
@@ -19,8 +22,6 @@ Generates changelog information using git.
 __docformat__ = 'restructuredtext'
 
 
-import os
-import sys
 
 
 def print_err(msg):

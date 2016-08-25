@@ -17,6 +17,7 @@
 # Portions Copyright 2013 OpenGamma Inc. and the OpenGamma group of companies
 
 from __future__ import print_function
+
 import getpass
 import httplib
 import optparse

@@ -2,6 +2,9 @@
 
 from __future__ import print_function
 
+import sys
+import urllib
+
 """check_buildbot.py -H hostname -p httpport [options]
 
 nagios check for buildbot.
@@ -15,8 +18,6 @@ try:
 except ImportError:
     import json
 
-import sys
-import urllib
 
 OK, WARNING, CRITICAL, UNKNOWN = range(4)
 STATUS_TEXT = ["OK", "Warning", "Critical", "Unknown"]

@@ -2,8 +2,6 @@
 
 from __future__ import print_function
 
-"""Based on the fakechanges.py contrib script"""
-
 import os.path
 import time
 
@@ -12,6 +10,10 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
+
+"""Based on the fakechanges.py contrib script"""
+
+
 
 
 class ViewCvsPoller:

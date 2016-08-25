@@ -31,12 +31,6 @@
 
 from __future__ import print_function
 
-"""Queries buildbot through the json interface.
-"""
-
-__author__ = 'maruel@chromium.org'
-__version__ = '1.2'
-
 import code
 import datetime
 import functools
@@ -47,6 +41,13 @@ import sys
 import time
 import urllib
 import urllib2
+
+"""Queries buildbot through the json interface.
+"""
+
+__author__ = 'maruel@chromium.org'
+__version__ = '1.2'
+
 
 try:
     from natsort import natsorted

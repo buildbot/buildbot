@@ -9,11 +9,6 @@
 
 from __future__ import print_function
 
-'''
-/path/to/bk_buildbot.py --repository "$REPOS" --revision "$REV" --branch \
-"<branch>" --bbserver localhost --bbport 9989
-'''
-
 import commands
 import sys
 
@@ -21,6 +16,13 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import usage
 from twisted.spread import pb
+
+'''
+/path/to/bk_buildbot.py --repository "$REPOS" --revision "$REV" --branch \
+"<branch>" --bbserver localhost --bbport 9989
+'''
+
+
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
