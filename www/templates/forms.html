@@ -115,6 +115,11 @@
         <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
       </span>
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+    {% elif 'Smart Select' in f.label%}
+       <span class="label">{{f.label}}</span>
+        <span title="Enables Smart Tests Selection. Read more at: http://tinyurl.com/h32rusw. For now this applicable to 'Test IntegrationTests - Windows64Editor' builder only. For the rest it will be ignored." class="tooltip question-icon">
+      </span>
+       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
     {% elif 'textarea' in f.type %}
        <span class="label">{{f.label}}</span>
        <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.fullName]}}</textarea>
