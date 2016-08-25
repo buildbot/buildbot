@@ -128,7 +128,7 @@ class ChangeSender:
                 print "You must supply a branch with -b or --branch."
                 sys.exit(1)
 
-        except usage.error, ue:
+        except usage.error as ue:
             print opts
             print "%s: %s" % (sys.argv[0], ue)
             sys.exit()

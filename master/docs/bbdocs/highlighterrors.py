@@ -70,7 +70,7 @@ def patched_unhighlighted(self, source):
 def patched_highlight_block(self, *args, **kwargs):
     try:
         return orig_highlight_block(self, *args, **kwargs)
-    except UnhighlightedError, ex:
+    except UnhighlightedError as ex:
         msg = ex.args[0]
         if 'warn' in kwargs:
             kwargs['warn'](msg)

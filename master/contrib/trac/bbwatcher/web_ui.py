@@ -48,7 +48,7 @@ class TracBuildBotWatcher(Component):
     def get_timeline_events(self, req, start, stop, filters):
         try:
             master = BuildBotSystem(self.buildbot_url)
-        except Exception, e:
+        except Exception as e:
             print 'Error hitting BuildBot', e
             return
         # This was a comprehension: the loop is clearer
@@ -73,7 +73,7 @@ class TracBuildBotWatcher(Component):
         m = self.BUILDER_RE.match(req.path_info)
         try:
             builder = m.group(1) or None
-        except Exception, e:
+        except Exception as e:
             builder = None
         master = BuildBotSystem(self.buildbot_url)
         if builder is None:
@@ -91,7 +91,7 @@ class TracBuildBotWatcher(Component):
             try:
                 master = BuildBotSystem(self.buildbot_url)
                 data = {'builder': master.getBuilder(builder)}
-            except Exception, e:
+            except Exception as e:
                 print 'Error fetching builder stats', e
             data['context'] = Context.from_request(req, ('buildbot', builder))
             return 'bbw_builder.html', data, 'text/html'

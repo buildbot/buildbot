@@ -314,7 +314,7 @@ class BBService(win32serviceutil.ServiceFramework):
                                   event,
                                   (self._svc_name_,
                                    " (%s)" % self._svc_display_name_))
-        except win32api.error, details:
+        except win32api.error as details:
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
             try:
@@ -326,7 +326,7 @@ class BBService(win32serviceutil.ServiceFramework):
     def _dolog(self, func, msg):
         try:
             func(msg)
-        except win32api.error, details:
+        except win32api.error as details:
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
             try:
@@ -400,7 +400,7 @@ class BBService(win32serviceutil.ServiceFramework):
         while True:
             try:
                 ec, data = win32file.ReadFile(handle, CHILDCAPTURE_BLOCK_SIZE)
-            except pywintypes.error, err:
+            except pywintypes.error as err:
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.
                 if err[0] != winerror.ERROR_BROKEN_PIPE:
@@ -471,7 +471,7 @@ def CustomInstall(opts):
     import pythoncom
     try:
         RegisterWithFirewall(sys.executable, "BuildBot")
-    except pythoncom.com_error, why:
+    except pythoncom.com_error as why:
         print "FAILED to register with the Windows firewall"
         print why
 
