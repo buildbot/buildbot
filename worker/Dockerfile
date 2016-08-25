@@ -13,6 +13,9 @@ COPY docker/buildbot.tac /buildbot/buildbot.tac
 # that everything is rebuilt
 ENV         security_updates_as_of 2016-08-23
 
+# This will make apt-get install without question
+ENV         DEBIAN_FRONTEND noninteractive
+
 # Install security updates and required packages
 RUN         apt-get update && \
             apt-get -y upgrade && \
