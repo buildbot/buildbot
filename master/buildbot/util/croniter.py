@@ -94,7 +94,7 @@ class croniter(object):
                         raise ValueError(
                             "[%s] is not acceptable" % expr_format)
 
-                    for j in xrange(int(low), int(high) + 1):
+                    for j in range(int(low), int(high) + 1):
                         if j % int(step) == 0:
                             e_list.append(j)
                 else:

@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import lrange
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -26,7 +27,7 @@ class TestResults(unittest.TestCase):
             self.assertEqual(results.Results[i], r)
 
     def test_worst_status(self):
-        res = range(len(results.Results))
+        res = lrange(len(results.Results))
         res.sort(
             cmp=lambda a, b: 1 if (results.worst_status(a, b) == a) else -1)
         self.assertEqual(res, [

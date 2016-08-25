@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import lrange
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -299,7 +300,7 @@ class RealTests(Tests):
         yield self.insertTestData(self.backgroundData)
 
         # add new builds at *just* the wrong time, repeatedly
-        numbers = range(1, 8)
+        numbers = lrange(1, 8)
 
         def raceHook(conn):
             if not numbers:

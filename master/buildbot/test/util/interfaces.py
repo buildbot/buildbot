@@ -41,7 +41,7 @@ class InterfaceTests(object):
             args = spec[0]
             defaults = list(spec[3] if spec[3] is not None else [])
             di = -1
-            for ai in xrange(len(args) - 1, -1, -1):
+            for ai in range(len(args) - 1, -1, -1):
                 arg = args[ai]
                 if arg.startswith('_') or (arg == 'self' and ai == 0):
                     del args[ai]

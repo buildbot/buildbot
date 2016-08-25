@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import random
 
+from future.utils import lrange
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -63,7 +64,7 @@ class LRUCacheFuzzer(fuzz.FuzzTestCase):
                                    set([key + 1000]))
         self.lru = lru.AsyncLRUCache(delayed_miss_fn, 50)
 
-        keys = range(250)
+        keys = lrange(250)
         errors = []  # bail out early in the event of an error
         results = []  # keep references to (most) results
 

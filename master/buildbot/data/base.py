@@ -49,7 +49,7 @@ class ResourceType(object):
 
     def getEndpoints(self):
         endpoints = self.endpoints[:]
-        for i in xrange(len(endpoints)):
+        for i in range(len(endpoints)):
             ep = endpoints[i]
             if not issubclass(ep, Endpoint):
                 raise TypeError("Not an Endpoint subclass")

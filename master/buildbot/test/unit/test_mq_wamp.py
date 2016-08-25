@@ -45,7 +45,7 @@ class FakeWampConnector(object):
         owntopic = self.topic.split(".")
         if len(topic) != len(owntopic):
             return False
-        for i in xrange(len(topic)):
+        for i in range(len(topic)):
             if owntopic[i] != "" and topic[i] != owntopic[i]:
                 return False
         return True

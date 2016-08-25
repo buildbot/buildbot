@@ -94,8 +94,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 self.assertArgSpecMatches(actual, fake)
                 setattr(scheduler, method, fake)
             self.addBuildsetCalls = []
-            self._bsidGenerator = iter(xrange(500, 999))
-            self._bridGenerator = iter(xrange(100, 999))
+            self._bsidGenerator = iter(range(500, 999))
+            self._bridGenerator = iter(range(100, 999))
 
             # temporarily override the sourcestamp and sourcestampset methods
             self.addedSourceStamps = []

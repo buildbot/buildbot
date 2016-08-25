@@ -13,7 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = range(7)
+from future.utils import lrange
+
+SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = lrange(7)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
 
 

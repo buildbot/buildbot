@@ -172,7 +172,7 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(res, short('a'), 0, 1)
 
         self.lru.miss_fn = long
-        for i in xrange(100):
+        for i in range(100):
             res = self.lru.get('a')
             self.check_result(res, short('a'), i + 1, 1)
 
@@ -433,7 +433,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         self.check_result(res, short('a'), 0, 1)
 
         self.lru.miss_fn = self.long_miss_fn
-        for i in xrange(100):
+        for i in range(100):
             res = yield self.lru.get('a')
             self.check_result(res, short('a'), i + 1, 1)
 

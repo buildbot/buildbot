@@ -206,7 +206,7 @@ class Test(TestBRDBase):
         # test 15 "parallel" invocations of maybeStartBuildsOn, with a
         # _sortBuilders that takes a while.  This is a regression test for bug
         # 1979.
-        builders = ['bldr%02d' % i for i in xrange(15)]
+        builders = ['bldr%02d' % i for i in range(15)]
 
         def slow_sorter(master, bldrs):
             bldrs.sort(lambda b1, b2: cmp(b1.name, b2.name))

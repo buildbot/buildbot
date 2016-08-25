@@ -15,6 +15,7 @@
 import gc
 import sys
 
+from future.utils import lrange
 from twisted.internet import task
 from twisted.trial import unittest
 
@@ -125,7 +126,7 @@ class TestMetricTimeEvent(TestMetricBase):
         self.assertEquals(report['timers']['foo_time'], 5)
 
     def testAverages(self):
-        data = range(10)
+        data = lrange(10)
         for i in data:
             metrics.MetricTimeEvent.log('foo_time', i)
         report = self.observer.asDict()
