@@ -15,6 +15,7 @@
 import re
 import sys
 
+from future.builtins import range
 from twisted.enterprise import adbapi
 from twisted.internet import defer
 from twisted.python import log

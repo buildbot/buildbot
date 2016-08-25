@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+
+from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import task

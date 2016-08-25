@@ -13,6 +13,7 @@ from time import mktime
 from time import time
 
 from dateutil.relativedelta import relativedelta
+from future.builtins import range
 
 search_re = re.compile(r'^([^-]+)-([^-/]+)(/(.*))?$')
 only_int_re = re.compile(r'^\d+$')

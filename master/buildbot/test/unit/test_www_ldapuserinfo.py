@@ -17,6 +17,7 @@ import new
 import sys
 
 import mock
+from future.builtins import range
 from twisted.internet import defer
 from twisted.trial import unittest
 

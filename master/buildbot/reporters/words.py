@@ -20,6 +20,7 @@ from string import capitalize
 from string import join
 from string import lower
 
+from future.builtins import range
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor

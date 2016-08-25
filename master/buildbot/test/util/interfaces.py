@@ -15,6 +15,7 @@
 import inspect
 
 import pkg_resources
+from future.builtins import range
 from twisted.trial import unittest
 
 

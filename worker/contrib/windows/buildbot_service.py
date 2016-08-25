@@ -69,6 +69,8 @@ import os
 import sys
 import threading
 
+from future.builtins import range
+
 import pywintypes
 import servicemanager
 import win32api

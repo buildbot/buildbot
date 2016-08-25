@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import datetime
 
+from future.builtins import range
 from future.utils import lrange
 from twisted.internet import task
 from twisted.trial import unittest

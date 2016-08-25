@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import time
 
+from future.builtins import range
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest

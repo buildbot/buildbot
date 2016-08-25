@@ -15,6 +15,7 @@
 from random import choice
 from string import ascii_uppercase
 
+from future.builtins import range
 from twisted.trial import unittest
 
 from buildbot.process.buildstep import BuildStep

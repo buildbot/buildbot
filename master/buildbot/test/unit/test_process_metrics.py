@@ -15,6 +15,7 @@
 import gc
 import sys
 
+from future.builtins import range
 from future.utils import lrange
 from twisted.internet import task
 from twisted.trial import unittest

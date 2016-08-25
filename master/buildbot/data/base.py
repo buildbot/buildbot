@@ -17,6 +17,7 @@ import copy
 import re
 import UserList
 
+from future.builtins import range
 from twisted.internet import defer
 
 from buildbot.data import exceptions

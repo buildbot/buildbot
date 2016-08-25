@@ -16,6 +16,7 @@ import collections
 import re
 import weakref
 
+from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python.components import registerAdapter

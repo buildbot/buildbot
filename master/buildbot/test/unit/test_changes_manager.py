@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 import mock
+
+from future.builtins import range
 from twisted.trial import unittest
 
 from buildbot.changes import manager

@@ -41,6 +41,8 @@ import sys
 import time
 import urllib
 import urllib2
+
+from future.builtins import range
 from future.utils import lrange
 
 """Queries buildbot through the json interface.

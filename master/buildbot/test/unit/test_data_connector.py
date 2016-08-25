@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from future.builtins import range
 from twisted.internet import defer
 from twisted.python import reflect
 from twisted.trial import unittest

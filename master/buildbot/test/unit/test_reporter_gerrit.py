@@ -15,6 +15,7 @@
 
 import warnings
 
+from future.builtins import range
 from mock import Mock
 from mock import call
 from twisted.internet import defer

@@ -15,6 +15,7 @@
 import re
 
 import mock
+from future.builtins import range
 from future.utils import iteritems
 from future.utils import itervalues
 from twisted.internet import defer
