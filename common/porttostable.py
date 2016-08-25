@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from subprocess import CalledProcessError
 from subprocess import check_output
@@ -28,7 +29,7 @@ for pr in to_port['items']:
                 continue
             if 'fatal: bad object' in e.output:
                 continue
-            print "cannot automatically cherry-pick", pr['number'], c['sha'], title,e.output
+            print("cannot automatically cherry-pick", pr['number'], c['sha'], title,e.output)
         else:
             summary += "\n#{number}: {title}".format(number=pr['number'], title=title , **c)
-print summary
+print(summary)

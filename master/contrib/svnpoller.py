@@ -19,6 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 # USA
 
+from __future__ import print_function
 import commands
 import ConfigParser
 import os.path
@@ -49,11 +50,11 @@ try:
     # print "PATHS"
     # print paths
 except xml.parsers.expat.ExpatError as e:
-    print "FAILED TO PARSE 'svn log' XML:"
-    print str(e)
-    print "----"
-    print "RECEIVED TEXT:"
-    print xml1
+    print("FAILED TO PARSE 'svn log' XML:")
+    print(str(e))
+    print("----")
+    print("RECEIVED TEXT:")
+    print(xml1)
     import sys
     sys.exit(1)
 
@@ -64,17 +65,17 @@ ini = ConfigParser.SafeConfigParser()
 try:
     ini.read(fname)
 except Exception:
-    print "Creating changemonitor config.ini:", fname
+    print("Creating changemonitor config.ini:", fname)
     ini.add_section("CurrentRevision")
     ini.set("CurrentRevision", -1)
 
 try:
     lastrevision = ini.get("CurrentRevision", "changeset")
 except ConfigParser.NoOptionError:
-    print "NO OPTION FOUND"
+    print("NO OPTION FOUND")
     lastrevision = -1
 except ConfigParser.NoSectionError:
-    print "NO SECTION FOUND"
+    print("NO SECTION FOUND")
     lastrevision = -1
 
 if lastrevision != revision:
@@ -87,7 +88,7 @@ if lastrevision != revision:
     # print cmd
     res = commands.getoutput(cmd)
 
-    print "SUBMITTING NEW REVISION", revision
+    print("SUBMITTING NEW REVISION", revision)
     if not ini.has_section("CurrentRevision"):
         ini.add_section("CurrentRevision")
     try:
@@ -96,4 +97,4 @@ if lastrevision != revision:
         ini.write(f)
         # print "WROTE CHANGES TO",fname
     except Exception:
-        print "FAILED TO RECORD INI FILE"
+        print("FAILED TO RECORD INI FILE")

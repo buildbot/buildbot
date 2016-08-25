@@ -16,6 +16,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 OpenGamma Inc. and the OpenGamma group of companies
 
+from __future__ import print_function
 import getpass
 import httplib
 import optparse
@@ -207,12 +208,12 @@ parser.set_defaults(properties={})
 (options, args) = parser.parse_args()
 
 if options.repository is None:
-    print "repository must be specified"
+    print("repository must be specified")
     parser.print_usage()
     os._exit(2)
 
 if options.project is None:
-    print "project must be specified"
+    print("project must be specified")
     parser.print_usage()
     os._exit(2)
 
@@ -222,9 +223,9 @@ params = urllib.urlencode(urlDict)
 headers = {"Content-type": "application/x-www-form-urlencoded",
            "Accept": "text/plain"}
 if options.amTesting:
-    print "params: %s" % params
-    print "host: %s" % options.host
-    print "urlpath: %s" % options.urlpath
+    print("params: %s" % params)
+    print("host: %s" % options.host)
+    print("urlpath: %s" % options.urlpath)
 else:
     conn = httplib.HTTPConnection(options.host)
     conn.request("POST", options.urlpath, params, headers)
@@ -234,8 +235,8 @@ else:
     if response.status is not 202:
         exitCode = 1
     if options.verbosity >= 1:
-        print response.status, response.reason
+        print(response.status, response.reason)
         if options.verbosity >= 2:
-            print "Raw response: %s" % (data)
+            print("Raw response: %s" % (data))
     conn.close()
     os._exit(exitCode)

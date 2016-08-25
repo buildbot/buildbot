@@ -29,6 +29,8 @@
 
 # NOTE: This file is NOT under GPL.  See above.
 
+from __future__ import print_function
+
 """Queries buildbot through the json interface.
 """
 
@@ -1022,15 +1024,15 @@ def CMDpending(parser, args):
         pending_builds = builder.data.get('pendingBuilds', 0)
         if not pending_builds:
             continue
-        print 'Builder %s: %d' % (builder.name, pending_builds)
+        print('Builder %s: %d' % (builder.name, pending_builds))
         if not options.quiet:
             for pending in builder.pending_builds.data:
                 if 'revision' in pending['source']:
-                    print '  revision: %s' % pending['source']['revision']
+                    print('  revision: %s' % pending['source']['revision'])
                 for change in pending['source']['changes']:
-                    print '  change:'
-                    print '    comment: %r' % unicode(change['comments'][:50])
-                    print '    who:     %s' % change['who']
+                    print('  change:')
+                    print('    comment: %r' % unicode(change['comments'][:50]))
+                    print('    who:     %s' % change['who'])
     return 0
 
 
@@ -1098,7 +1100,7 @@ def CMDdisconnected(parser, args):
         parser.error('Unrecognized parameters: %s' % ' '.join(args))
     for slave in buildbot.slaves:
         if not slave.connected:
-            print slave.name
+            print(slave.name)
     return 0
 
 
@@ -1130,10 +1132,10 @@ def find_idle_busy_slaves(parser, args, show_idle):
             slaves = natsorted(set(slaves) & set(busy_slaves))
         if options.quiet:
             for slave in slaves:
-                print slave
+                print(slave)
         else:
             if slaves:
-                print 'Builder %s: %s' % (builder.name, ', '.join(slaves))
+                print('Builder %s: %s' % (builder.name, ', '.join(slaves)))
     return 0
 
 
@@ -1210,20 +1212,20 @@ def CMDlast_failure(parser, args):
             no_cache=options.no_cache):
 
         if print_builders and last_builder != build.builder:
-            print build.builder.name
+            print(build.builder.name)
             last_builder = build.builder
 
         if options.quiet:
             if options.slaves:
-                print '%s: %s' % (build.builder.name, build.slave.name)
+                print('%s: %s' % (build.builder.name, build.slave.name))
             else:
-                print build.slave.name
+                print(build.slave.name)
         else:
             out = '%d on %s: blame:%s' % (
                 build.number, build.slave.name, ', '.join(build.blame))
             if print_builders:
                 out = '  ' + out
-            print out
+            print(out)
 
             if len(options.steps) != 1:
                 for step in build.steps:
@@ -1233,7 +1235,7 @@ def CMDlast_failure(parser, args):
                         out = '  %s: "%s"' % (step.data['name'], summary)
                         if print_builders:
                             out = '  ' + out
-                        print out
+                        print(out)
     return 0
 
 
@@ -1258,16 +1260,16 @@ def CMDcurrent(parser, args):
                 if build.blame:
                     for blamed in build.blame:
                         blame.add(blamed)
-        print '\n'.join(blame)
+        print('\n'.join(blame))
         return 0
 
     for builder in options.builders:
         builder = buildbot.builders[builder]
         if not options.quiet and builder.current_builds:
-            print builder.name
+            print(builder.name)
         for build in builder.current_builds:
             if options.quiet:
-                print build.slave.name
+                print(build.slave.name)
             else:
                 out = '%4d: slave=%10s' % (build.number, build.slave.name)
                 out += '  duration=%5d' % (build.duration or 0)
@@ -1277,7 +1279,7 @@ def CMDcurrent(parser, args):
                     out += '           '
                 if build.blame:
                     out += '  blame=' + ', '.join(build.blame)
-                print out
+                print(out)
 
     return 0
 
@@ -1315,9 +1317,9 @@ def CMDbuilds(parser, args):
                         out += '%s/' % build.slave.name
                     out += '%d  revision:%s  result:%s  blame:%s' % (
                         build.number, build.revision, build.result, ','.join(build.blame))
-                    print out
+                    print(out)
                 else:
-                    print build
+                    print(build)
     return 0
 
 
@@ -1344,27 +1346,27 @@ def CMDcount(parser, args):
         builder = buildbot.builders[builder]
         counts[builder.name] = 0
         if not options.quiet:
-            print builder.name
+            print(builder.name)
         for build in builder.builds.iterall():
             try:
                 start_time = build.start_time
             except urllib2.HTTPError:
                 # The build was probably trimmed.
-                print >> sys.stderr, (
-                    'Failed to fetch build %s/%d' % (builder.name, build.number))
+                print(
+                    'Failed to fetch build %s/%d' % (builder.name, build.number), file=sys.stderr)
                 continue
             if start_time >= since:
                 counts[builder.name] += 1
             else:
                 break
         if not options.quiet:
-            print '.. %d' % counts[builder.name]
+            print('.. %d' % counts[builder.name])
 
     align_name = max(len(b) for b in counts)
     align_number = max(len(str(c)) for c in counts.itervalues())
     for builder in sorted(counts):
-        print '%*s: %*d' % (align_name, builder, align_number, counts[builder])
-    print 'Total: %d' % sum(counts.itervalues())
+        print('%*s: %*d' % (align_name, builder, align_number, counts[builder]))
+    print('Total: %d' % sum(counts.itervalues()))
     return 0
 
 

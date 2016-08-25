@@ -1,5 +1,7 @@
 #! /usr/bin/python
 
+from __future__ import print_function
+
 """
 This is an example of how to use the remote ChangeMaster interface, which is
 a port that allows a remote program to inject Changes into the buildmaster.
@@ -70,7 +72,7 @@ def send_change(remote):
     change = {'who': who, 'files': files, 'comments': comments}
     d = remote.callRemote('addChange', change)
     d.addCallback(done)
-    print "%s: %s" % (who, " ".join(files))
+    print("%s: %s" % (who, " ".join(files)))
 
 
 f = pb.PBClientFactory()

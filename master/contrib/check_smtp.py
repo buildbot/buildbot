@@ -1,4 +1,7 @@
 #! /usr/bin/python -tt
+
+from __future__ import print_function
+
 """
 This script helps to check that the SMTP_HOST (see below) would accept STARTTLS
 command, and if LOCAL_HOST is acceptable for it, would check the requested user
@@ -21,12 +24,12 @@ def main():
 
     server.starttls()
 
-    print server.ehlo(LOCAL_HOST)
+    print(server.ehlo(LOCAL_HOST))
 
     user = raw_input('user: ')
     password = getpass('password: ')
 
-    print server.login(user, password)
+    print(server.login(user, password))
     server.close()
 
 if __name__ == '__main__':

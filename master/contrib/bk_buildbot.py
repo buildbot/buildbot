@@ -7,6 +7,7 @@
 #
 # Amar Takhar <amar@ntp.org>
 
+from __future__ import print_function
 
 '''
 /path/to/bk_buildbot.py --repository "$REPOS" --revision "$REV" --branch \
@@ -75,7 +76,7 @@ class ChangeSender:
 
         # first we extract information about the files that were changed
         repo = opts['repository']
-        print "Repo:", repo
+        print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
             rev_arg = '-r"%s"' % (opts['revision'], )
@@ -125,30 +126,30 @@ class ChangeSender:
         try:
             opts.parseOptions()
             if not opts['branch']:
-                print "You must supply a branch with -b or --branch."
+                print("You must supply a branch with -b or --branch.")
                 sys.exit(1)
 
         except usage.error as ue:
-            print opts
-            print "%s: %s" % (sys.argv[0], ue)
+            print(opts)
+            print("%s: %s" % (sys.argv[0], ue))
             sys.exit()
 
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for k in changes.keys():
-                print "[%10s]: %s" % (k, changes[k])
-            print "*NOT* sending any changes"
+                print("[%10s]: %s" % (k, changes[k]))
+            print("*NOT* sending any changes")
             return
 
         d = self.sendChanges(opts, changes)
 
         def quit(*why):
-            print "quitting! because", why
+            print("quitting! because", why)
             reactor.stop()
 
         @d.addErrback(failed)
         def failed(f):
-            print "FAILURE: %s" % f
+            print("FAILURE: %s" % f)
             reactor.stop()
 
         d.addCallback(quit, "SUCCESS")

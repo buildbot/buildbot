@@ -20,6 +20,7 @@
 # 22.03.10 by Johnnie Pittman, added support for category and interval
 # options.
 
+from __future__ import print_function
 import subprocess
 import sys
 import time
@@ -52,7 +53,7 @@ def sendchange_cmd(master, revisionData):
         cmd.append(path)
 
     if opts.verbose:
-        print cmd
+        print(cmd)
 
     return cmd
 
@@ -85,7 +86,7 @@ def parseChangeXML(raw_xml):
     try:
         doc = xml.dom.minidom.parseString(raw_xml)
     except ExpatError:
-        print "\nError: Got an empty response with an empty changeset.\n"
+        print("\nError: Got an empty response with an empty changeset.\n")
         raise
     log_entry = doc.getElementsByTagName("logentry")[0]
 
@@ -111,7 +112,7 @@ def checkChanges(repo, master, oldRevision=-1):
            "--limit=1", repo]
 
     if opts.verbose:
-        print "Getting last revision of repository: " + repo
+        print("Getting last revision of repository: " + repo)
 
     if sys.platform == 'win32':
         f = win32pipe.popen(cmd)
@@ -121,13 +122,13 @@ def checkChanges(repo, master, oldRevision=-1):
         xml1 = getoutput(cmd)
 
     if opts.verbose:
-        print "XML\n-----------\n" + xml1 + "\n\n"
+        print("XML\n-----------\n" + xml1 + "\n\n")
 
     revisionData = parseChangeXML(xml1)
 
     if opts.verbose:
-        print "PATHS"
-        print revisionData['paths']
+        print("PATHS")
+        print(revisionData['paths'])
 
     if revisionData['revision'] != oldRevision:
 
@@ -136,15 +137,15 @@ def checkChanges(repo, master, oldRevision=-1):
         if sys.platform == 'win32':
             f = win32pipe.popen(cmd)
             pretty_time = time.strftime("%H.%M.%S ")
-            print "%s Revision %s: %s" % (pretty_time, revisionData['revision'],
-                                          ''.join(f.readlines()))
+            print("%s Revision %s: %s" % (pretty_time, revisionData['revision'],
+                                          ''.join(f.readlines())))
             f.close()
         else:
             xml1 = getoutput(cmd)
     else:
         pretty_time = time.strftime("%H.%M.%S ")
-        print "%s nothing has changed since revision %s" % (pretty_time,
-                                                            revisionData['revision'])
+        print("%s nothing has changed since revision %s" % (pretty_time,
+                                                            revisionData['revision']))
 
     return revisionData['revision']
 
@@ -179,11 +180,11 @@ def build_parser():
 def validate_args(args):
     """Validate our arguments and exit if we don't have what we want."""
     if not args:
-        print "\nError: No arguments were specified.\n"
+        print("\nError: No arguments were specified.\n")
         parser.print_help()
         sys.exit(1)
     elif len(args) > 2:
-        print "\nToo many arguments specified.\n"
+        print("\nToo many arguments specified.\n")
         parser.print_help()
         sys.exit(2)
 
@@ -198,7 +199,7 @@ if __name__ == '__main__':
         try:
             int(opts.interval)
         except ValueError:
-            print "\nError: Value of the interval option must be a number."
+            print("\nError: Value of the interval option must be a number.")
             parser.print_help()
             sys.exit(3)
 
@@ -209,7 +210,7 @@ if __name__ == '__main__':
     # if watch is specified, run until stopped
     if opts.watch or opts.interval:
         oldRevision = -1
-        print "Watching for changes in repo %s for master %s." % (repo_url, bbmaster)
+        print("Watching for changes in repo %s for master %s." % (repo_url, bbmaster))
         while True:
             try:
                 oldRevision = checkChanges(repo_url, bbmaster, oldRevision)
@@ -226,7 +227,7 @@ if __name__ == '__main__':
                     # Check the repository every 10 minutes
                     time.sleep(10 * 60)
             except KeyboardInterrupt:
-                print "\nReceived interrupt via keyboard.  Shutting Down."
+                print("\nReceived interrupt via keyboard.  Shutting Down.")
                 sys.exit(0)
 
     # default action if watch isn't specified

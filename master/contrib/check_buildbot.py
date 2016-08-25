@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+from __future__ import print_function
+
 """check_buildbot.py -H hostname -p httpport [options]
 
 nagios check for buildbot.
@@ -21,7 +24,7 @@ STATUS_CODES = dict(OK=OK, WARNING=WARNING, CRIT=CRITICAL)
 
 
 def exit(level, msg):
-    print "%s: %s" % (STATUS_TEXT[level], msg)
+    print("%s: %s" % (STATUS_TEXT[level], msg))
     sys.exit(level)
 
 

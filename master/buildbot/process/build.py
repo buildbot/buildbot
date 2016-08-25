@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import print_function
 from functools import reduce
 
 from twisted.internet import defer
@@ -314,7 +315,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             ping_success_or_failure = Failure()
 
         if ping_success_or_failure is not True:
-            print "ping", ping_success_or_failure
+            print("ping", ping_success_or_failure)
             yield self.buildPreparationFailure(ping_success_or_failure, "worker_ping")
             self.buildFinished(["worker", "not", "pinged"], RETRY)
             return

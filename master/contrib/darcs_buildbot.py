@@ -17,6 +17,7 @@
 # machine. You will also need the Python/XML distribution installed (the
 # "python2.3-xml" package under debian).
 
+from __future__ import print_function
 import commands
 import os
 import sys
@@ -85,12 +86,12 @@ def getChangesFromCommand(cmd, count):
     try:
         doc = minidom.parseString(out)
     except xml.parsers.expat.ExpatError as e:
-        print "failed to parse XML"
-        print str(e)
-        print "purported XML is:"
-        print "--BEGIN--"
-        print out
-        print "--END--"
+        print("failed to parse XML")
+        print(str(e))
+        print("purported XML is:")
+        print("--BEGIN--")
+        print(out)
+        print("--END--")
         sys.exit(1)
 
     c = doc.getElementsByTagName("changelog")[0]
@@ -144,12 +145,12 @@ def sendChanges(master):
     reactor.callLater(0, d.callback, None)
 
     if not changes:
-        print "darcs_buildbot.py: weird, no changes to send"
+        print("darcs_buildbot.py: weird, no changes to send")
         return
     elif len(changes) == 1:
-        print "sending 1 change to buildmaster:"
+        print("sending 1 change to buildmaster:")
     else:
-        print "sending %d changes to buildmaster:" % len(changes)
+        print("sending %d changes to buildmaster:" % len(changes))
 
     # the Darcs Source class expects revision to be a context, not a
     # hash of a patch (which is what we have in c['revision']).  For
@@ -162,7 +163,7 @@ def sendChanges(master):
 
     def _send(res, c):
         branch = None
-        print " %s" % c['revision']
+        print(" %s" % c['revision'])
         return s.send(branch, c.get('context'), c['comments'], c['files'],
                       c['username'], vc='darcs')
     for c in changes:
@@ -171,14 +172,14 @@ def sendChanges(master):
     def printSuccess(res):
         num_changes = len(changes)
         if num_changes > 1:
-            print "%d changes sent successfully" % num_changes
+            print("%d changes sent successfully" % num_changes)
         elif num_changes == 1:
-            print "change sent successfully"
+            print("change sent successfully")
         else:
-            print "no changes to send"
+            print("no changes to send")
 
     def printFailure(why):
-        print "change(s) NOT sent, something went wrong: " + str(why)
+        print("change(s) NOT sent, something went wrong: " + str(why))
 
     d.addCallbacks(printSuccess, printFailure)
     d.addBoth(lambda _: reactor.stop)
