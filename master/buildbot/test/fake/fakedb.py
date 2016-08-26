@@ -2339,7 +2339,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def getBuilders(self, masterid=None):
         rv = []
-        for builderid, bldr in self.builders.iteritems():
+        for builderid, bldr in iteritems(self.builders):
             masterids = [bm[1] for bm in itervalues(self.builder_masters)
                          if bm[0] == builderid]
             bldr = bldr.copy()

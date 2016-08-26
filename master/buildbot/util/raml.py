@@ -18,6 +18,7 @@ import os
 
 import ramlfications
 
+from future.utils import iteritems
 try:
     from collections import OrderedDict
 except ImportError:  # pragma: no cover
@@ -49,7 +50,7 @@ class RamlSpec(object):
         if uriParameters is None:
             uriParameters = OrderedDict()
 
-        for k, v in api.iteritems():
+        for k, v in iteritems(api):
             if k.startswith("/"):
                 ep = base + k
                 p = copy.deepcopy(uriParameters)

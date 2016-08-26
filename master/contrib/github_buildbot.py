@@ -25,6 +25,7 @@ from httplib import INTERNAL_SERVER_ERROR
 from httplib import OK
 from optparse import OptionParser
 
+from future.utils import iteritems
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
@@ -282,7 +283,7 @@ class GitHubBuildBot(resource.Resource):
             return None
 
         logging.info("New revision: %s", change['revision'][:8])
-        for key, value in change.iteritems():
+        for key, value in iteritems(change):
             logging.debug("  %s: %s", key, value)
 
         change['src'] = src

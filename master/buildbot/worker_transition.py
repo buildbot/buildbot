@@ -24,6 +24,7 @@ import functools
 import sys
 import warnings
 
+from future.utils import iteritems
 from twisted.python.deprecate import deprecatedModuleAttribute as _deprecatedModuleAttribute
 from twisted.python.deprecate import getWarningMethod
 from twisted.python.deprecate import setWarningMethod
@@ -73,7 +74,7 @@ def _compat_name(new_name, compat_name=None):
     compat_name = new_name
     assert "slave" not in compat_name.lower()
     assert "worker" in compat_name.lower()
-    for new_word, old_word in compat_replacements.iteritems():
+    for new_word, old_word in iteritems(compat_replacements):
         compat_name = compat_name.replace(new_word, old_word)
 
     assert compat_name != new_name

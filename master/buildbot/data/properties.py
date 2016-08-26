@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import iteritems
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -64,13 +65,13 @@ class Properties(base.ResourceType):
     def setBuildProperties(self, buildid, properties):
         to_update = {}
         oldproperties = yield self.master.data.get(('builds', str(buildid), "properties"))
-        for k, v in properties.getProperties().asDict().iteritems():
+        for k, v in iteritems(properties.getProperties().asDict()):
             if k in oldproperties and oldproperties[k] == v:
                 continue
             to_update[k] = v
 
         if to_update:
-            for k, v in to_update.iteritems():
+            for k, v in iteritems(to_update):
                 yield self.master.db.builds.setBuildProperty(
                     buildid, k, v[0], v[1])
             yield self.generateUpdateEvent(buildid, to_update)
