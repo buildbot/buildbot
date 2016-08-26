@@ -146,6 +146,7 @@ import os.path
 
 import requests
 
+from future.builtins import range
 from mercurial.encoding import fromlocal
 from mercurial.node import hex
 from mercurial.node import nullid

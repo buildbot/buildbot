@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+from future.builtins import range
 from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import log
@@ -114,13 +115,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 if row.first_line < first_line:
                     idx = -1
                     count = first_line - row.first_line
-                    for _ in xrange(count):
+                    for _ in range(count):
                         idx = content.index('\n', idx + 1)
                     content = content[idx + 1:]
                 if row.last_line > last_line:
                     idx = len(content) + 1
                     count = row.last_line - last_line
-                    for _ in xrange(count):
+                    for _ in range(count):
                         idx = content.rindex('\n', 0, idx)
                     content = content[:idx]
                 rv.append(content)

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+
+from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import task
@@ -318,7 +320,7 @@ class Tests(interfaces.InterfaceTests):
         d = self.insertTestData([
             fakedb.SourceStamp(id=92),
         ] + [
-            fakedb.Change(changeid=i) for i in xrange(2, 102)])
+            fakedb.Change(changeid=i) for i in range(2, 102)])
         d.addCallback(lambda _:
                       self.db.changes.getChangesCount())
 
@@ -671,7 +673,7 @@ class RealTests(Tests):
             fakedb.SourceStamp(id=29),
         ] + [
             fakedb.Change(changeid=n, sourcestampid=29)
-            for n in xrange(1, 151)
+            for n in range(1, 151)
         ])
 
         d.addCallback(lambda _: self.db.changes.pruneChanges(1))

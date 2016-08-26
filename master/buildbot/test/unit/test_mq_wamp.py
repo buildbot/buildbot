@@ -18,6 +18,7 @@ import textwrap
 import mock
 from autobahn.wamp.types import EventDetails
 from autobahn.wamp.types import SubscribeOptions
+from future.builtins import range
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -45,7 +46,7 @@ class FakeWampConnector(object):
         owntopic = self.topic.split(".")
         if len(topic) != len(owntopic):
             return False
-        for i in xrange(len(topic)):
+        for i in range(len(topic)):
             if owntopic[i] != "" and topic[i] != owntopic[i]:
                 return False
         return True

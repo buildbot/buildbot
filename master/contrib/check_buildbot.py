@@ -5,6 +5,9 @@ from __future__ import print_function
 import sys
 import urllib
 
+from future.utils import lrange
+
+
 """check_buildbot.py -H hostname -p httpport [options]
 
 nagios check for buildbot.
@@ -19,7 +22,7 @@ except ImportError:
     import json
 
 
-OK, WARNING, CRITICAL, UNKNOWN = range(4)
+OK, WARNING, CRITICAL, UNKNOWN = lrange(4)
 STATUS_TEXT = ["OK", "Warning", "Critical", "Unknown"]
 STATUS_CODES = dict(OK=OK, WARNING=WARNING, CRIT=CRITICAL)
 

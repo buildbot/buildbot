@@ -24,6 +24,7 @@ import sys
 import textwrap
 
 import sqlalchemy as sa
+from future.builtins import range
 from twisted.python import reflect
 from twisted.python import usage
 

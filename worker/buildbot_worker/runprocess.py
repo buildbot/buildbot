@@ -28,6 +28,7 @@ import traceback
 from collections import deque
 from tempfile import NamedTemporaryFile
 
+from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import error

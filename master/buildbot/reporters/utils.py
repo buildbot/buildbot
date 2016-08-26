@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from UserList import UserList
 
+from future.utils import lrange
 from twisted.internet import defer
 from twisted.python import log
 
@@ -92,13 +93,13 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
             [master.data.get(("builds", build['buildid'], 'properties'))
              for build in builds])
     else:  # we still need a list for the big zip
-        buildproperties = range(len(builds))
+        buildproperties = lrange(len(builds))
 
     if wantPreviousBuild:
         prev_builds = yield defer.gatherResults(
             [getPreviousBuild(master, build) for build in builds])
     else:  # we still need a list for the big zip
-        prev_builds = range(len(builds))
+        prev_builds = lrange(len(builds))
 
     if wantSteps:
         buildsteps = yield defer.gatherResults(
@@ -111,7 +112,7 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
-        buildsteps = range(len(builds))
+        buildsteps = lrange(len(builds))
 
     # a big zip to connect everything together
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):

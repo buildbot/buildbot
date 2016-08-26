@@ -21,6 +21,7 @@ import sys
 import traceback
 from contextlib import contextmanager
 
+from future.builtins import range
 from twisted.internet import defer
 from twisted.python import runtime
 from twisted.python import usage

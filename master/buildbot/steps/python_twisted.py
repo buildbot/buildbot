@@ -17,6 +17,7 @@ BuildSteps that are specific to the Twisted source tree
 """
 import re
 
+from future.builtins import range
 from twisted.python import log
 
 from buildbot.process import logobserver
@@ -397,7 +398,7 @@ class Trial(ShellCommand):
 
             # using -j/--jobs flag produces more than one test log.
             self.logfiles = {}
-            for i in xrange(self.jobs):
+            for i in range(self.jobs):
                 self.logfiles['test.%d.log' %
                               i] = '_trial_temp/%d/test.log' % i
                 self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i

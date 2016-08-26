@@ -15,6 +15,7 @@
 
 import os
 
+from future.builtins import range
 from twisted.python import threadpool
 from twisted.python.failure import Failure
 from twisted.trial.unittest import SynchronousTestCase

@@ -14,6 +14,8 @@
 # Copyright Buildbot Team Members
 import datetime
 
+from future.builtins import range
+from future.utils import lrange
 from twisted.internet import task
 from twisted.trial import unittest
 
@@ -416,12 +418,12 @@ class Tests(interfaces.InterfaceTests):
             [
                 fakedb.BuildRequest(
                     id=id, buildsetid=self.BSID, builderid=self.BLDRID1)
-                for id in xrange(1, 1000)
+                for id in range(1, 1000)
             ],
-            1300305713, range(1, 1000),
+            1300305713, lrange(1, 1000),
             [
                 (id, epoch2datetime(1300305713), self.MASTER_ID)
-                for id in xrange(1, 1000)
+                for id in range(1, 1000)
             ]
         )
 
@@ -446,7 +448,7 @@ class Tests(interfaces.InterfaceTests):
                 # the fly in the ointment..
                 fakedb.BuildRequestClaim(brid=1000,
                                          masterid=self.OTHER_MASTER_ID, claimed_at=1300103810),
-            ], 1300305712, range(1, 1001),
+            ], 1300305712, lrange(1, 1001),
             expfailure=buildrequests.AlreadyClaimedError)
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(claimed=True))
@@ -638,7 +640,7 @@ class Tests(interfaces.InterfaceTests):
         ], 1300305712,
             [(id, True, 7, epoch2datetime(1300305712))
                 for id in range(1, 280)
-             ], brids=range(1, 280))
+             ], brids=lrange(1, 280))
 
     def test_completeBuildRequests_multiple_notmine(self):
         # note that the requests are completed even though they are not mine!

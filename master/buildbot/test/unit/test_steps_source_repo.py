@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.builtins import range
+
 from twisted.trial import unittest
 
 from buildbot.changes.changes import Change
@@ -127,7 +129,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
         ]
-        for i in xrange(len(commands)):
+        for i in range(len(commands)):
             self.expectCommands(commands[i] + (which_fail == i and 1 or 0))
             if which_fail == i and breakatfail:
                 break

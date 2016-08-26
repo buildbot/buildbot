@@ -18,6 +18,7 @@ import re
 import textwrap
 
 import mock
+from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.trial import unittest

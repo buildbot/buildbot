@@ -17,6 +17,7 @@ import copy
 import re
 import UserList
 
+from future.builtins import range
 from twisted.internet import defer
 
 from buildbot.data import exceptions
@@ -49,7 +50,7 @@ class ResourceType(object):
 
     def getEndpoints(self):
         endpoints = self.endpoints[:]
-        for i in xrange(len(endpoints)):
+        for i in range(len(endpoints)):
             ep = endpoints[i]
             if not issubclass(ep, Endpoint):
                 raise TypeError("Not an Endpoint subclass")

@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import textwrap
 
+from future.builtins import range
 from twisted.internet import defer
 from twisted.trial import unittest
 

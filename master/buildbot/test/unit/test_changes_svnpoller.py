@@ -370,7 +370,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s._prefix = "sample"
 
         logentries = dict(
-            zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+            zip(range(1, 7), reversed(make_logentry_elements(6))))
         changes = s.create_changes(reversed([logentries[3], logentries[2]]))
         self.failUnlessEqual(len(changes), 2)
         # note that parsing occurs in reverse
@@ -431,7 +431,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s._prefix = "sample"
 
         logentries = dict(
-            zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+            zip(range(1, 7), reversed(make_logentry_elements(6))))
         changes = s.create_changes(reversed([logentries[3], logentries[2]]))
         self.failUnlessEqual(len(changes), 2)
 

@@ -16,9 +16,9 @@
 import multiprocessing
 import os
 import shutil
-from builtins import range
 
 import mock
+from future.builtins import range
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
