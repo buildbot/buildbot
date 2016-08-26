@@ -16,6 +16,8 @@
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
 import os
 
+from future.utils import iteritems
+
 from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import logobserver
@@ -119,7 +121,7 @@ class RpmBuild(ShellCommand):
 
         # The unit tests expect a certain order, so we sort the dict to keep
         # format the same every time
-        for k, v in sorted(rpm_extras_dict.iteritems()):
+        for k, v in sorted(iteritems(rpm_extras_dict)):
             self.rpmbuild = '{0} --define "{1} {2}"'.format(self.rpmbuild, k, v)
 
         self.rpmbuild = '{0} -ba {1}'.format(self.rpmbuild, self.specfile)

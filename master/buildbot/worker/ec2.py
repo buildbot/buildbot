@@ -23,6 +23,7 @@ import os
 import re
 import time
 
+from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
@@ -284,7 +285,7 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _convert_deprecated_block_device_mapping(self, mapping_definitions):
         new_mapping_definitions = []
-        for dev_name, dev_config in mapping_definitions.iteritems():
+        for dev_name, dev_config in iteritems(mapping_definitions):
             new_dev_config = {}
             new_dev_config['DeviceName'] = dev_name
             if dev_config:
@@ -373,7 +374,7 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _remove_none_opts(self, *args, **opts):
         if args:
             opts = args[0]
-        return dict((k, v) for k, v in opts.iteritems() if v is not None)
+        return dict((k, v) for k, v in iteritems(opts) if v is not None)
 
     def _start_instance(self):
         image = self.get_image()

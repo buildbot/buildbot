@@ -16,6 +16,7 @@
 Support for buildsets in the database
 """
 import sqlalchemy as sa
+from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -83,7 +84,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 inserts = [
                     dict(buildsetid=bsid, property_name=k,
                          property_value=json.dumps([v, s]))
-                    for k, (v, s) in properties.iteritems()]
+                    for k, (v, s) in iteritems(properties)]
                 for i in inserts:
                     self.checkLength(bs_props_tbl.c.property_name,
                                      i['property_name'])

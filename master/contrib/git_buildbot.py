@@ -31,6 +31,7 @@ import subprocess
 import sys
 from optparse import OptionParser
 
+from future.utils import iteritems
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -95,7 +96,7 @@ def addChanges(remote, changei, src='git'):
 
     def addChange(c):
         logging.info("New revision: %s", c['revision'][:8])
-        for key, value in c.iteritems():
+        for key, value in iteritems(c):
             logging.debug("  %s: %s", key, value)
 
         c['src'] = src
