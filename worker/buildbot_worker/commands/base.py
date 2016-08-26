@@ -25,7 +25,7 @@ from twisted.internet import threads
 from twisted.python import failure
 from twisted.python import log
 from twisted.python import runtime
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot_worker import runprocess
 from buildbot_worker import util
@@ -81,8 +81,8 @@ command_version = "3.0"
 #      command.
 
 
+@implementer(IWorkerCommand)
 class Command(object):
-    implements(IWorkerCommand)
 
     """This class defines one command that can be invoked by the build master.
     The command is executed on the worker side, and always sends back a

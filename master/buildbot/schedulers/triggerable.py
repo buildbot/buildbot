@@ -15,7 +15,7 @@
 from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import failure
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import ITriggerableScheduler
 from buildbot.process.properties import Properties
@@ -23,8 +23,8 @@ from buildbot.schedulers import base
 from buildbot.util import debounce
 
 
+@implementer(ITriggerableScheduler)
 class Triggerable(base.BaseScheduler):
-    implements(ITriggerableScheduler)
 
     compare_attrs = base.BaseScheduler.compare_attrs + ('reason',)
 

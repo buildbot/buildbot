@@ -15,19 +15,19 @@
 from twisted.internet.interfaces import IAddress
 from twisted.internet.interfaces import ITransport
 from twisted.protocols import basic
-from zope.interface import implements
+from zope.interface import implementer
 
 
+@implementer(IAddress)
 class NullAddress(object):
 
     "an address for NullTransport"
-    implements(IAddress)
 
 
+@implementer(ITransport)
 class NullTransport(object):
 
     "a do-nothing transport to make NetstringReceiver happy"
-    implements(ITransport)
 
     def write(self, data):
         raise NotImplementedError

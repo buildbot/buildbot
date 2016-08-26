@@ -23,14 +23,14 @@ from twisted.internet import reactor
 from twisted.internet import stdio
 from twisted.protocols import basic
 from twisted.spread import pb
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.util import service
 
 
+@implementer(portal.IRealm)
 class Dispatcher:
-    implements(portal.IRealm)
 
     def __init__(self):
         self.names = {}

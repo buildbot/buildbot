@@ -18,7 +18,7 @@ from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import html
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -26,13 +26,12 @@ from buildbot.process.properties import Properties
 from buildbot.util import datetime2epoch
 
 
+@implementer(interfaces.IStatusEvent)
 class Change:
 
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
-
-    implements(interfaces.IStatusEvent)
 
     number = None
     branch = None

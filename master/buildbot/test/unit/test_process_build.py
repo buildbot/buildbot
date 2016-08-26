@@ -19,7 +19,6 @@ from mock import call
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implementer
-from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.locks import WorkerLock
@@ -115,10 +114,10 @@ class FakeBuilder:
         pass
 
 
+@implementer(interfaces.IBuildStepFactory)
 class FakeStepFactory(object):
 
     """Fake step factory that just returns a fixed step object."""
-    implements(interfaces.IBuildStepFactory)
 
     def __init__(self, step):
         self.step = step
@@ -1060,8 +1059,9 @@ class TestBuildProperties(unittest.TestCase):
     """
 
     def setUp(self):
+        @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
-            implements(interfaces.IProperties)
+            pass
 
         class FakeBuildStatus(Mock):
             pass
@@ -1114,8 +1114,9 @@ class TestBuildProperties(unittest.TestCase):
         self.properties.render.assert_called_with("xyz")
 
     def test_getWorkerName_old_api(self):
+        @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
-            implements(interfaces.IProperties)
+            pass
 
         import posixpath
 
@@ -1148,8 +1149,9 @@ class TestBuildProperties(unittest.TestCase):
         self.assertIdentical(new, old)
 
     def test_workername_old_api(self):
+        @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
-            implements(interfaces.IProperties)
+            pass
 
         import posixpath
 

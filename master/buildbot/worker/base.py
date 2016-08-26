@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.reflect import namedModule
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot.interfaces import ILatentWorker
@@ -39,6 +39,7 @@ from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
 
 
+@implementer(IWorker)
 class AbstractWorker(service.BuildbotService, object):
 
     """This is the master-side representative for a remote buildbot worker.
@@ -50,8 +51,6 @@ class AbstractWorker(service.BuildbotService, object):
     I represent a worker -- a remote machine capable of
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
-
-    implements(IWorker)
 
     # reconfig workers after builders
     reconfig_priority = 64
@@ -613,6 +612,7 @@ class Worker(AbstractWorker):
         self.maybeShutdown()
 
 
+@implementer(ILatentWorker)
 class AbstractLatentWorker(AbstractWorker):
 
     """A worker that will start up a worker instance when needed.
@@ -622,8 +622,6 @@ class AbstractLatentWorker(AbstractWorker):
     See ec2buildslave.py for a concrete example.  Also see the stub example in
     test/test_slaves.py.
     """
-
-    implements(ILatentWorker)
 
     substantiated = False
     substantiation_build = None

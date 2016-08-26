@@ -17,7 +17,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -33,8 +33,8 @@ from buildbot.test.util import steps
 from buildbot.test.util.interfaces import InterfaceTests
 
 
+@implementer(interfaces.ITriggerableScheduler)
 class FakeTriggerable(object):
-    implements(interfaces.ITriggerableScheduler)
 
     triggered_with = None
     result = SUCCESS

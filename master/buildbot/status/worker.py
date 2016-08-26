@@ -15,15 +15,15 @@
 
 import time
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.util import ascii2unicode
 from buildbot.util.eventual import eventually
 
 
+@implementer(interfaces.IWorkerStatus)
 class WorkerStatus:
-    implements(interfaces.IWorkerStatus)
 
     admin = None
     host = None

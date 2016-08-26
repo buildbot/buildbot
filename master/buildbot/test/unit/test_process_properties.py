@@ -18,7 +18,7 @@ import mock
 from twisted.internet import defer
 from twisted.python import components
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
@@ -60,8 +60,8 @@ class FakeSource:
         return ds
 
 
+@implementer(IRenderable)
 class DeferredRenderable:
-    implements(IRenderable)
 
     def __init__(self):
         self.d = defer.Deferred()
@@ -1033,8 +1033,8 @@ class TestProperties(unittest.TestCase):
         self.assertIdentical(self.props.getBuild(), self.props.build)
 
     def test_render(self):
+        @implementer(IRenderable)
         class Renderable(object):
-            implements(IRenderable)
 
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'

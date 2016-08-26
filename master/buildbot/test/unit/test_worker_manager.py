@@ -15,7 +15,7 @@
 import mock
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.process import botmaster
@@ -24,9 +24,8 @@ from buildbot.util import service
 from buildbot.worker import manager as workermanager
 
 
+@implementer(interfaces.IWorker)
 class FakeWorker(service.BuildbotService):
-
-    implements(interfaces.IWorker)
 
     reconfig_count = 0
 

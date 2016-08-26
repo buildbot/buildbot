@@ -24,7 +24,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot_worker import bot
 from buildbot_worker.test.util import misc
@@ -47,13 +47,12 @@ class MasterPerspective(pb.Avatar):
             on_keepalive()
 
 
+@implementer(portal.IRealm)
 class MasterRealm(object):
 
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment
-
-    implements(portal.IRealm)
 
     def requestAvatar(self, avatarId, mind, *interfaces):
         assert pb.IPerspective in interfaces

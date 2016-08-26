@@ -18,7 +18,7 @@ import weakref
 import mock
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -102,9 +102,8 @@ class FakeStatus(service.BuildbotService):
         return "h://bb.me"
 
 
+@implementer(interfaces.IBuilderStatus)
 class FakeBuilderStatus(object):
-
-    implements(interfaces.IBuilderStatus)
 
     def __init__(self, master=None, buildername="Builder"):
         if master:

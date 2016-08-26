@@ -16,13 +16,13 @@ import re
 
 from future.utils import iteritems
 from twisted.python.components import registerAdapter
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 
 
+@implementer(IConfigured)
 class _DefaultConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -33,8 +33,8 @@ class _DefaultConfigured(object):
 registerAdapter(_DefaultConfigured, object, IConfigured)
 
 
+@implementer(IConfigured)
 class _ListConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -45,8 +45,8 @@ class _ListConfigured(object):
 registerAdapter(_ListConfigured, list, IConfigured)
 
 
+@implementer(IConfigured)
 class _DictConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -57,8 +57,8 @@ class _DictConfigured(object):
 registerAdapter(_DictConfigured, dict, IConfigured)
 
 
+@implementer(IConfigured)
 class _SREPatternConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -69,8 +69,8 @@ class _SREPatternConfigured(object):
 registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
 
 
+@implementer(IConfigured)
 class ConfiguredMixin(object):
-    implements(IConfigured)
 
     def getConfigDict(self):
         return {'name': self.name}

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import pbutil
 from buildbot import util
@@ -22,8 +22,8 @@ from buildbot.interfaces import IStatusReceiver
 from buildbot.util import service
 
 
+@implementer(IStatusReceiver)
 class StatusReceiverBase:
-    implements(IStatusReceiver)
 
     def requestSubmitted(self, request):
         pass
@@ -109,5 +109,6 @@ class StatusReceiverService(StatusReceiverBase, service.AsyncService,
 StatusReceiver = StatusReceiverService
 
 
+@implementer(IStatusReceiver)
 class StatusReceiverPerspective(StatusReceiver, pbutil.NewCredPerspective):
-    implements(IStatusReceiver)
+    pass

@@ -23,7 +23,7 @@ from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.failure import Failure
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.process import buildstep
@@ -44,6 +44,7 @@ from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
+@implementer(interfaces.IBuildControl)
 class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     """I represent a single build by a single worker. Specialized Builders can
@@ -67,8 +68,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     @ivar build_status: the L{buildbot.status.build.BuildStatus} that
                         collects our status
     """
-
-    implements(interfaces.IBuildControl)
 
     workdir = "build"
     build_status = None

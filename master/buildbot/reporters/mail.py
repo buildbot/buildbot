@@ -26,7 +26,7 @@ from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log as twlog
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -69,8 +69,8 @@ VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 ENCODING = 'utf8'
 
 
+@implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
-    implements(interfaces.IEmailLookup)
     compare_attrs = ("domain")
 
     def __init__(self, domain):
@@ -84,9 +84,8 @@ class Domain(util.ComparableMixin):
         return name + "@" + self.domain
 
 
+@implementer(interfaces.IEmailSender)
 class MailNotifier(service.BuildbotService):
-
-    implements(interfaces.IEmailSender)
 
     possible_modes = ("change", "failing", "passing", "problem", "warnings",
                       "exception", "cancelled")

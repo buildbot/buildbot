@@ -23,7 +23,7 @@ from twisted.python import log
 from twisted.web import guard
 from twisted.web import resource
 from twisted.web import server
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
@@ -232,13 +232,13 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             rsrc.reconfigResource(new_config)
 
     def setupProtectedResource(self, resource_obj, checkers):
+        @implementer(IRealm)
         class SimpleRealm(object):
 
             """
             A realm which gives out L{ChangeHookResource} instances for authenticated
             users.
             """
-            implements(IRealm)
 
             def requestAvatar(self, avatarId, mind, *interfaces):
                 if resource.IResource in interfaces:

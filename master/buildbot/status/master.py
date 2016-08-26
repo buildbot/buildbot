@@ -19,7 +19,7 @@ from future.utils import iteritems
 from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -32,8 +32,8 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 
 
+@implementer(interfaces.IStatus)
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    implements(interfaces.IStatus)
 
     def __init__(self):
         service.AsyncMultiService.__init__(self)

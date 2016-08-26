@@ -25,7 +25,7 @@ from twisted.internet import threads
 from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 import buildbot
 import buildbot.pbmanager
@@ -531,8 +531,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         return d
 
 
+@implementer(interfaces.IControl)
 class Control:
-    implements(interfaces.IControl)
 
     def __init__(self, master):
         self.master = master

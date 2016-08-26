@@ -22,7 +22,7 @@ from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -77,8 +77,8 @@ class FakeStatusReceiver(status_base.StatusReceiver):
     pass
 
 
+@implementer(interfaces.IScheduler)
 class FakeScheduler(object):
-    implements(interfaces.IScheduler)
 
     def __init__(self, name):
         self.name = name

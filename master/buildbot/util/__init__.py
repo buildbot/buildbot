@@ -27,7 +27,7 @@ import time
 
 from twisted.python import reflect
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.util.misc import deferredLocked
@@ -102,8 +102,8 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
+@implementer(IConfigured)
 class ComparableMixin(object):
-    implements(IConfigured)
     compare_attrs = ()
 
     class _None:

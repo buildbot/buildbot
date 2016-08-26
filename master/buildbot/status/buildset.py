@@ -13,15 +13,15 @@
 #
 # Copyright Buildbot Team Members
 from twisted.internet import defer
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.status.buildrequest import BuildRequestStatus
 
 
+@implementer(interfaces.IBuildSetStatus)
 class BuildSetStatus:
-    implements(interfaces.IBuildSetStatus)
 
     def __init__(self, bsdict, status):
         self.id = bsdict['bsid']

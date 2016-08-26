@@ -17,7 +17,7 @@ import os
 
 from twisted.persisted import styles
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -40,6 +40,7 @@ _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
                   EXCEPTION, RETRY, CANCELLED, Results, worst_status]
 
 
+@implementer(interfaces.IBuilderStatus, interfaces.IEventSource)
 class BuilderStatus(styles.Versioned):
 
     """I handle status information for a single process.build.Builder object.
@@ -59,8 +60,6 @@ class BuilderStatus(styles.Versioned):
     @ivar  tags: user-defined "tag" this builder has; can be
                      used to filter on in status clients
     """
-
-    implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
     persistenceVersion = 2
     persistenceForgets = ('wasUpgraded', )
