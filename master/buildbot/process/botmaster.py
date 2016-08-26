@@ -159,9 +159,11 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.start()
 
         # reconfigure slaves
+        log.msg("reconfigServiceSlaves")
         yield self.reconfigServiceSlaves(new_config)
 
         # reconfigure builders
+        log.msg("reconfigServiceBuilders")
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
@@ -330,6 +332,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param buildername: the name of the builder
         """
+        log.msg("maybeStartBuildsForBuilder")
         self.brd.maybeStartBuildsOn([buildername])
 
     def maybeStartBuildsForSlave(self, slave_name):
@@ -339,6 +342,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param slave_name: the name of the slave
         """
+        log.msg("maybeStartBuildsForSlave")
         builders = self.getBuildersForSlave(slave_name)
         self.brd.maybeStartBuildsOn([ b.name for b in builders ])
 
@@ -347,6 +351,7 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         Call this when something suggests that this would be a good time to 
         start some builds, but nothing more specific.
         """
+        log.msg("maybeStartBuildsForAllBuilders")
         self.brd.maybeStartBuildsOn(self.builderNames)
 
 

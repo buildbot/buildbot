@@ -1130,10 +1130,18 @@ class KatanaBuildRequestDistributor(service.Service):
             return x
         d.addErrback(log.err, "while starting or resuming builds on %s" % (new_builders,))
 
+    # temporary to slow down the service
+    def sleep(self, delay):
+        from twisted.internet import reactor
+        d = defer.Deferred()
+        reactor.callLater(delay, d.callback,1)
+        return d
+
     @defer.inlineCallbacks
     def _maybeStartOrResumeBuildsOn(self, new_builders):
         # start the activity loop, if we aren't already
         #  working on that.
+        # yield self.sleep(5)
         if not self.activity_lock.waiting:
             yield self.activity_lock.acquire()
             self._checkBuildRequests()
