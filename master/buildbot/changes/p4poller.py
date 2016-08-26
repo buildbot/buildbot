@@ -18,7 +18,6 @@
 # Many thanks to Dave Peticolas for contributing this module
 
 import datetime
-import exceptions
 import os
 import re
 
@@ -266,7 +265,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             # decode the result from its designated encoding
             try:
                 result = result.decode(self.encoding)
-            except exceptions.UnicodeError as ex:
+            except UnicodeError as ex:
                 log.msg(
                     "P4Poller: couldn't decode changelist description: %s" % ex.encoding)
                 log.msg("P4Poller: in object: %s" % ex.object)
