@@ -13,7 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-import __builtin__
+# We cannot use the builtins module here from Python-Future.
+# We need to use the native __builtin__ module on Python 2,
+# and builtins module on Python 3, because we need to override
+# the actual native open method.
+try:
+    # Python 2
+    import __builtin__ as builtins
+except ImportError:
+    # Python 3
+    import builtins
 import cStringIO
 import errno
 import os
@@ -102,7 +111,7 @@ class FileIOMixin(object):
 
         # patch open() to return mocked object
         self.open = mock.Mock(return_value=self.fileobj)
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
     def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg",
                        filename="dummy-file"):
@@ -114,7 +123,7 @@ class FileIOMixin(object):
         @param filename: exception's filename value
         """
         self.open = mock.Mock(side_effect=IOError(errno, strerror, filename))
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
     def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg",
                        filename="dummy-file"):
@@ -130,7 +139,7 @@ class FileIOMixin(object):
         self.fileobj.read = mock.Mock(side_effect=IOError(errno, strerror,
                                                           filename))
         self.open = mock.Mock(return_value=self.fileobj)
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
     def setUpWriteError(self, errno=errno.ENOSPC, strerror="dummy-msg",
                         filename="dummy-file"):
@@ -145,7 +154,7 @@ class FileIOMixin(object):
         self.fileobj.write = mock.Mock(side_effect=IOError(errno, strerror,
                                                            filename))
         self.open = mock.Mock(return_value=self.fileobj)
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
 
 class LoggingMixin(object):

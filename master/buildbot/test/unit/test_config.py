@@ -12,7 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import __builtin__
+
+# We cannot use the builtins module here from Python-Future.
+# We need to use the native __builtin__ module on Python 2,
+# and builtins module on Python 3, because we need to override
+# the actual native open method.
+try:
+    # Python 2
+    import __builtin__ as builtins
+except ImportError:
+    # Python 3
+    import builtins
 import os
 import re
 import textwrap
@@ -172,7 +182,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         self.install_config_file('#dummy')
 
         # override build-in open() function to always rise IOError
-        self.patch(__builtin__, "open", raise_IOError)
+        self.patch(builtins, "open", raise_IOError)
 
         # check that we got the expected ConfigError exception
         self.assertRaisesConfigError(
