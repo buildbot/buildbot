@@ -166,7 +166,7 @@ script:
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
 
   - "[ $TESTS != smokes ] || ./common/maketarballs.sh"
-#  - "[ $TESTS != smokes ] || ./common/smokedist.sh"
+  - "[ $TESTS != smokes ] || ./common/smokedist.sh"
 
 notifications:
   email: false
