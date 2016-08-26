@@ -15,9 +15,9 @@
 
 import copy
 import re
-import UserList
 
 from future.builtins import range
+from future.moves.collections import UserList
 from twisted.internet import defer
 
 from buildbot.data import exceptions
@@ -130,7 +130,7 @@ class BuildNestingMixin(object):
             defer.returnValue(dbdict['id'])
 
 
-class ListResult(UserList.UserList):
+class ListResult(UserList):
 
     __slots__ = ['offset', 'total', 'limit']
 
@@ -146,7 +146,7 @@ class ListResult(UserList.UserList):
 
     def __init__(self, values,
                  offset=None, total=None, limit=None):
-        UserList.UserList.__init__(self, values)
+        UserList.__init__(self, values)
         self.offset = offset
         self.total = total
         self.limit = limit
