@@ -159,11 +159,9 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         timer.start()
 
         # reconfigure slaves
-        log.msg("reconfigServiceSlaves")
         yield self.reconfigServiceSlaves(new_config)
 
         # reconfigure builders
-        log.msg("reconfigServiceBuilders")
         yield self.reconfigServiceBuilders(new_config)
 
         # call up

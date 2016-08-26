@@ -348,9 +348,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
-
-        self.assertRaises(config.ConfigErrors, lambda :
-                self.master.reconfigService(new))
+        self.failureResultOf(self.master.reconfigService(new), config.ConfigErrors)
 
     def test_reconfigService_start_polling(self):
         loopingcall = mock.Mock()
