@@ -14,9 +14,9 @@
 # Copyright Buildbot Team Members
 from collections import defaultdict
 from collections import deque
-from itertools import ifilterfalse
 from weakref import WeakValueDictionary
 
+from future.moves.itertools import filterfalse
 from twisted.internet import defer
 from twisted.python import log
 
@@ -120,8 +120,8 @@ class LRUCache(object):
             refcount.clear()
             queue_appendleft = queue.appendleft
             queue_appendleft(self.sentinel)
-            for k in ifilterfalse(refcount.__contains__,
-                                  iter(queue.pop, self.sentinel)):
+            for k in filterfalse(refcount.__contains__,
+                                 iter(queue.pop, self.sentinel)):
                 queue_appendleft(k)
                 refcount[k] = 1
 
