@@ -57,7 +57,7 @@ def getVersion(init_file):
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
-            v = VERSION_MATCH.search(out)
+            v = VERSION_MATCH.search(out.decode('utf-8'))
             if v is not None:
                 return v.group(1)
     except OSError:
