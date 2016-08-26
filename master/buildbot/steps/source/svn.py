@@ -15,7 +15,6 @@
 import re
 import xml.dom.minidom
 import xml.parsers.expat
-from string import lower
 
 from future.moves.urllib.parse import quote as urlquote
 from future.moves.urllib.parse import unquote as urlunquote
@@ -431,7 +430,7 @@ class SVN(Source):
             return uri
 
         (scheme, authority, path, parameters, query, fragment) = urlparse(uri)
-        scheme = lower(scheme)
+        scheme = scheme.lower()
         if authority:
             mo = server_authority.match(authority)
             if not mo:
@@ -439,7 +438,7 @@ class SVN(Source):
             userinfo, host, port = mo.groups()
             if host[-1] == '.':
                 host = host[:-1]
-            authority = lower(host)
+            authority = host.lower()
             if userinfo:
                 authority = "%s@%s" % (userinfo, authority)
             if port and port != default_port.get(scheme, None):
