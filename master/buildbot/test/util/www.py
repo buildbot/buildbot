@@ -20,6 +20,7 @@ from uuid import uuid1
 import mock
 import pkg_resources
 from future.moves.urllib.parse import unquote as urlunquote
+from future.utils import integer_types
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.web import server
@@ -79,7 +80,7 @@ class FakeRequest(object):
 
     def setResponseCode(self, code):
         # twisted > 16 started to assert this
-        assert isinstance(code, (int, long))
+        assert isinstance(code, integer_types)
         self.responseCode = code
 
     def setHeader(self, hdr, value):

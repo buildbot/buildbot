@@ -16,6 +16,7 @@
 Support for buildsets in the database
 """
 import sqlalchemy as sa
+from future.utils import integer_types
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -50,7 +51,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         # convert to sourcestamp IDs first, as necessary
         def toSsid(sourcestamp):
-            if isinstance(sourcestamp, (int, long)):
+            if isinstance(sourcestamp, integer_types):
                 return defer.succeed(sourcestamp)
             else:
                 ssConnector = self.master.db.sourcestamps

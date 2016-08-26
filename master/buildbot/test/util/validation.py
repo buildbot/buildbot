@@ -17,6 +17,7 @@ import datetime
 import re
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import integer_types
 from future.utils import iteritems
 
 from buildbot.util import UTC
@@ -57,7 +58,7 @@ class InstanceValidator(Validator):
 
 
 class IntValidator(InstanceValidator):
-    types = (int, long)
+    types = integer_types
     name = 'integer'
 
 
