@@ -19,7 +19,7 @@ import re
 
 import mock
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 import buildbot.plugins.db
 from buildbot.errors import PluginDBError
@@ -81,12 +81,12 @@ class ITestInterface(IPlugin):
         "Greets by :param:`name`"
 
 
+@implementer(ITestInterface)
 class ClassWithInterface(object):
 
     """
     a class to implement a simple interface
     """
-    implements(ITestInterface)
 
     def __init__(self, name=None):
         self._name = name

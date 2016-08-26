@@ -20,7 +20,7 @@ from future.builtins import range
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import util
@@ -31,6 +31,7 @@ from buildbot.util import json
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
+@implementer(IProperties)
 class Properties(util.ComparableMixin):
 
     """
@@ -49,7 +50,6 @@ class Properties(util.ComparableMixin):
     """
 
     compare_attrs = ('properties',)
-    implements(IProperties)
 
     def __init__(self, **kwargs):
         """
@@ -275,6 +275,7 @@ class _PropertyMap(object):
         self.temp_vals[key] = val
 
 
+@implementer(IRenderable)
 class WithProperties(util.ComparableMixin):
 
     """
@@ -282,7 +283,6 @@ class WithProperties(util.ComparableMixin):
     want to interpolate build properties.
     """
 
-    implements(IRenderable)
     compare_attrs = ('fmtstring', 'args', 'lambda_subs')
 
     def __init__(self, fmtstring, *args, **lambda_subs):
@@ -343,8 +343,8 @@ class _NotHasKey(util.ComparableMixin):
 _notHasKey = _NotHasKey()
 
 
+@implementer(IRenderable)
 class _Lookup(util.ComparableMixin, object):
-    implements(IRenderable)
 
     compare_attrs = (
         'value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
@@ -402,16 +402,16 @@ def _getInterpolationList(fmtstring):
     return list(dd)
 
 
+@implementer(IRenderable)
 class _PropertyDict(object):
-    implements(IRenderable)
 
     def getRenderingFor(self, build):
         return build.getProperties()
 _thePropertyDict = _PropertyDict()
 
 
+@implementer(IRenderable)
 class _SourceStampDict(util.ComparableMixin, object):
-    implements(IRenderable)
 
     compare_attrs = ('codebase',)
 
@@ -426,8 +426,8 @@ class _SourceStampDict(util.ComparableMixin, object):
             return {}
 
 
+@implementer(IRenderable)
 class _Lazy(util.ComparableMixin, object):
-    implements(IRenderable)
 
     compare_attrs = ('value',)
 
@@ -462,6 +462,7 @@ def _on_property_usage(prop_name, stacklevel):
             stacklevel=stacklevel)
 
 
+@implementer(IRenderable)
 class Interpolate(util.ComparableMixin, object):
 
     """
@@ -469,7 +470,6 @@ class Interpolate(util.ComparableMixin, object):
     want to interpolate build properties.
     """
 
-    implements(IRenderable)
     compare_attrs = ('fmtstring', 'args', 'kwargs')
 
     identifier_re = re.compile(r'^[\w._-]*$')
@@ -649,13 +649,12 @@ class Interpolate(util.ComparableMixin, object):
             return d
 
 
+@implementer(IRenderable)
 class Property(util.ComparableMixin):
 
     """
     An instance of this class renders a property of a build.
     """
-
-    implements(IRenderable)
 
     compare_attrs = ('key', 'default', 'defaultWhenFalse')
 
@@ -692,12 +691,12 @@ class Property(util.ComparableMixin):
                 return props.render(self.default)
 
 
+@implementer(IRenderable)
 class FlattenList(util.ComparableMixin):
 
     """
     An instance of this class flattens all nested lists in a list
     """
-    implements(IRenderable)
 
     compare_attrs = ('nestedlist')
 
@@ -723,8 +722,8 @@ class FlattenList(util.ComparableMixin):
         return FlattenList(self.nestedlist + b, self.types)
 
 
+@implementer(IRenderable)
 class _Renderer(util.ComparableMixin, object):
-    implements(IRenderable)
 
     compare_attrs = ('getRenderingFor',)
 
@@ -739,14 +738,13 @@ def renderer(fn):
     return _Renderer(fn)
 
 
+@implementer(IRenderable)
 class _DefaultRenderer(object):
 
     """
     Default IRenderable adaptor. Calls .getRenderingFor if available, otherwise
     returns argument unchanged.
     """
-
-    implements(IRenderable)
 
     def __init__(self, value):
         try:
@@ -760,13 +758,12 @@ class _DefaultRenderer(object):
 registerAdapter(_DefaultRenderer, object, IRenderable)
 
 
+@implementer(IRenderable)
 class _ListRenderer(object):
 
     """
     List IRenderable adaptor. Maps Build.render over the list.
     """
-
-    implements(IRenderable)
 
     def __init__(self, value):
         self.value = value
@@ -777,13 +774,12 @@ class _ListRenderer(object):
 registerAdapter(_ListRenderer, list, IRenderable)
 
 
+@implementer(IRenderable)
 class _TupleRenderer(object):
 
     """
     Tuple IRenderable adaptor. Maps Build.render over the tuple.
     """
-
-    implements(IRenderable)
 
     def __init__(self, value):
         self.value = value
@@ -796,13 +792,12 @@ class _TupleRenderer(object):
 registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 
+@implementer(IRenderable)
 class _DictRenderer(object):
 
     """
     Dict IRenderable adaptor. Maps Build.render over the keya and values in the dict.
     """
-
-    implements(IRenderable)
 
     def __init__(self, value):
         self.value = _ListRenderer(
@@ -816,13 +811,12 @@ class _DictRenderer(object):
 registerAdapter(_DictRenderer, dict, IRenderable)
 
 
+@implementer(IRenderable)
 class Transform(object):
 
     """
     A renderable that combines other renderables' results using an arbitrary function.
     """
-
-    implements(IRenderable)
 
     def __init__(self, function, *args, **kwargs):
         if not callable(function) and not IRenderable.providedBy(function):

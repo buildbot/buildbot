@@ -27,7 +27,7 @@ from twisted.python import versions
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -81,6 +81,7 @@ _hush_pyflakes = [
     LogObserver, LogLineObserver, OutputProgressObserver]
 
 
+@implementer(interfaces.IBuildStepFactory)
 class _BuildStepFactory(util.ComparableMixin):
 
     """
@@ -89,7 +90,6 @@ class _BuildStepFactory(util.ComparableMixin):
     easier to test that the right factories are getting created.
     """
     compare_attrs = ('factory', 'args', 'kwargs')
-    implements(interfaces.IBuildStepFactory)
 
     def __init__(self, factory, *args, **kwargs):
         self.factory = factory
@@ -241,11 +241,10 @@ class BuildStepStatus(object):
     pass
 
 
+@implementer(interfaces.IBuildStep)
 class BuildStep(results.ResultComputingConfigMixin,
                 properties.PropertiesMixin,
                 WorkerAPICompatMixin):
-
-    implements(interfaces.IBuildStep)
 
     alwaysRun = False
     doStepIf = True

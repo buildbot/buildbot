@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
 
 
+@implementer(interfaces.IStatusEvent)
 class Event:
-    implements(interfaces.IStatusEvent)
 
     started = None
     finished = None

@@ -17,7 +17,7 @@ import textwrap
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import util
 from buildbot.interfaces import IRenderable
@@ -25,8 +25,8 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 
 
+@implementer(IRenderable)
 class RepoDownloadsFromProperties(util.ComparableMixin, object):
-    implements(IRenderable)
     parse_download_re = (re.compile(r"repo download ([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+)/([0-9]+/[0-9]+)"),
@@ -65,8 +65,8 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
         return ret
 
 
+@implementer(IRenderable)
 class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
-    implements(IRenderable)
     compare_attrs = ('codebase',)
 
     def __init__(self, codebase=None):

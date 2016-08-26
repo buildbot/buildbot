@@ -16,7 +16,7 @@ from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import util
@@ -333,8 +333,8 @@ class Nightly(NightlyBase):
                              **kwargs)
 
 
+@implementer(ITriggerableScheduler)
 class NightlyTriggerable(NightlyBase):
-    implements(ITriggerableScheduler)
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',

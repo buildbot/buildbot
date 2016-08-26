@@ -17,7 +17,7 @@ import re
 
 from twisted.internet import defer
 from twisted.web.error import Error
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.www.authz.roles import RolesFromOwner
@@ -38,8 +38,8 @@ def reStrMatcher(value, match):
     return re.match(match, value)
 
 
+@implementer(IConfigured)
 class Authz(object):
-    implements(IConfigured)
 
     def getConfigDict(self):
         return {}

@@ -16,7 +16,7 @@ from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -26,9 +26,8 @@ from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
 
 
+@implementer(interfaces.IScheduler)
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
-
-    implements(interfaces.IScheduler)
 
     DEFAULT_CODEBASES = {'': {}}
 

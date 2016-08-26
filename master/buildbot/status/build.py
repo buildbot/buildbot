@@ -15,14 +15,14 @@
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
 
 
+@implementer(interfaces.IBuildStatus, interfaces.IStatusEvent)
 class BuildStatus():
-    implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
     sources = None
     reason = None

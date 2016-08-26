@@ -19,7 +19,7 @@ from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import resultspec
@@ -455,8 +455,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
 
 
+@implementer(interfaces.IBuilderControl)
 class BuilderControl:
-    implements(interfaces.IBuilderControl)
 
     def __init__(self, builder, control):
         self.original = builder

@@ -28,17 +28,17 @@ from email.utils import parsedate_tz
 
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
 
 
+@implementer(IChangeSource)
 class MaildirSource(MaildirService, util.ComparableMixin):
 
     """Generic base class for Maildir-based change sources"""
-    implements(IChangeSource)
 
     compare_attrs = ("basedir", "pollinterval", "prefix")
 

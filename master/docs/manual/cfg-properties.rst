@@ -390,8 +390,8 @@ The method should take one argument - an :class:`~buildbot.interfaces.IPropertie
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
+    @implementer(IRenderable)
     class DetermineFoo(object):
-        implements(IRenderable)
         def getRenderingFor(self, props):
             if props.hasProperty('bar'):
                 return props['bar']
@@ -404,8 +404,8 @@ or, more practically,
 
 ::
 
+    @implementer(IRenderable)
     class Now(object):
-        implements(IRenderable)
         def getRenderingFor(self, props):
             return time.clock()
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=Now())])

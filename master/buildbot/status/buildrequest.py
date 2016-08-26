@@ -14,14 +14,14 @@
 # Copyright Buildbot Team Members
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.util.eventual import eventually
 
 
+@implementer(interfaces.IBuildRequestStatus)
 class BuildRequestStatus:
-    implements(interfaces.IBuildRequestStatus)
 
     def __init__(self, buildername, brid, status, brdict=None):
         self.buildername = buildername
