@@ -11,6 +11,8 @@
 # Original Author: Chris AtLee <catlee@mozilla.com>
 # Licensed under the MPL version 2.0
 
+from __future__ import print_function
+
 import sys
 
 from twisted.application import strports
@@ -70,7 +72,7 @@ class FakeLog:
         sys.stdout.write(data)
 
     def addHeader(self, data):
-        print ">>> ", data,
+        print(">>> ", data, end=' ')
 
     def addStderr(self, data):
         sys.stderr.write(data)

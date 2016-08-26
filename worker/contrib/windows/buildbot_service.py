@@ -63,6 +63,8 @@
 
 # Written by Mark Hammond, 2006.
 
+from __future__ import print_function
+
 import os
 import sys
 import threading
@@ -318,7 +320,7 @@ class BBService(win32serviceutil.ServiceFramework):
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
             try:
-                print "FAILED to write INFO event", event, ":", details
+                print("FAILED to write INFO event", event, ":", details)
             except IOError:
                 # No valid stdout!  Ignore it.
                 pass
@@ -330,8 +332,8 @@ class BBService(win32serviceutil.ServiceFramework):
             # Failed to write a log entry - most likely problem is
             # that the event log is full.  We don't want this to kill us
             try:
-                print "FAILED to write event log entry:", details
-                print msg
+                print("FAILED to write event log entry:", details)
+                print(msg)
             except IOError:
                 pass
 
@@ -472,8 +474,8 @@ def CustomInstall(opts):
     try:
         RegisterWithFirewall(sys.executable, "BuildBot")
     except pythoncom.com_error as why:
-        print "FAILED to register with the Windows firewall"
-        print why
+        print("FAILED to register with the Windows firewall")
+        print(why)
 
 
 # Magic code to allow shutdown.  Note that this code is executed in
@@ -506,12 +508,12 @@ def _RunChild(runfn):
 
     # Start the buildbot/buildbot-worker app
     runfn()
-    print "Service child process terminating normally."
+    print("Service child process terminating normally.")
 
 
 def _WaitForShutdown(h):
     win32event.WaitForSingleObject(h, win32event.INFINITE)
-    print "Shutdown requested"
+    print("Shutdown requested")
 
     from twisted.internet import reactor
     reactor.callLater(0, reactor.stop)

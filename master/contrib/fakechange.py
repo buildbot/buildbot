@@ -1,5 +1,18 @@
 #! /usr/bin/python
 
+from __future__ import print_function
+
+import commands
+import os.path
+import random
+import sys
+
+from twisted.cred import credentials
+from twisted.internet import reactor
+from twisted.python import log
+from twisted.spread import pb
+
+
 """
 This is an example of how to use the remote ChangeMaster interface, which is
 a port that allows a remote program to inject Changes into the buildmaster.
@@ -30,15 +43,7 @@ available on that port if 'change' is in the list of services passed to
 buildbot.master.makeApp (this service is turned ON by default).
 """
 
-import commands
-import os.path
-import random
-import sys
 
-from twisted.cred import credentials
-from twisted.internet import reactor
-from twisted.python import log
-from twisted.spread import pb
 
 
 def done(*args):
@@ -70,7 +75,7 @@ def send_change(remote):
     change = {'who': who, 'files': files, 'comments': comments}
     d = remote.callRemote('addChange', change)
     d.addCallback(done)
-    print "%s: %s" % (who, " ".join(files))
+    print("%s: %s" % (who, " ".join(files)))
 
 
 f = pb.PBClientFactory()

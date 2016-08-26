@@ -7,11 +7,7 @@
 #
 # Amar Takhar <amar@ntp.org>
 
-
-'''
-/path/to/bk_buildbot.py --repository "$REPOS" --revision "$REV" --branch \
-"<branch>" --bbserver localhost --bbport 9989
-'''
+from __future__ import print_function
 
 import commands
 import sys
@@ -20,6 +16,13 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import usage
 from twisted.spread import pb
+
+'''
+/path/to/bk_buildbot.py --repository "$REPOS" --revision "$REV" --branch \
+"<branch>" --bbserver localhost --bbport 9989
+'''
+
+
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
@@ -75,7 +78,7 @@ class ChangeSender:
 
         # first we extract information about the files that were changed
         repo = opts['repository']
-        print "Repo:", repo
+        print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
             rev_arg = '-r"%s"' % (opts['revision'], )
@@ -125,30 +128,30 @@ class ChangeSender:
         try:
             opts.parseOptions()
             if not opts['branch']:
-                print "You must supply a branch with -b or --branch."
+                print("You must supply a branch with -b or --branch.")
                 sys.exit(1)
 
         except usage.error as ue:
-            print opts
-            print "%s: %s" % (sys.argv[0], ue)
+            print(opts)
+            print("%s: %s" % (sys.argv[0], ue))
             sys.exit()
 
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for k in changes.keys():
-                print "[%10s]: %s" % (k, changes[k])
-            print "*NOT* sending any changes"
+                print("[%10s]: %s" % (k, changes[k]))
+            print("*NOT* sending any changes")
             return
 
         d = self.sendChanges(opts, changes)
 
         def quit(*why):
-            print "quitting! because", why
+            print("quitting! because", why)
             reactor.stop()
 
         @d.addErrback(failed)
         def failed(f):
-            print "FAILURE: %s" % f
+            print("FAILURE: %s" % f)
             reactor.stop()
 
         d.addCallback(quit, "SUCCESS")

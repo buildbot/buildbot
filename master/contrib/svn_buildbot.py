@@ -16,14 +16,7 @@
 # edit your svn-repository/hooks/post-commit file, and add lines that look
 # like this:
 
-'''
-# set up PYTHONPATH to contain Twisted/buildbot perhaps, if not already
-# installed site-wide
-. ~/.environment
-
-/path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
---bbserver localhost --bbport 9989 --username myuser --auth passwd
-'''
+from __future__ import print_function
 
 import commands
 import os
@@ -36,6 +29,17 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import usage
 from twisted.spread import pb
+
+'''
+# set up PYTHONPATH to contain Twisted/buildbot perhaps, if not already
+# installed site-wide
+. ~/.environment
+
+/path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
+--bbserver localhost --bbport 9989 --username myuser --auth passwd
+'''
+
+
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
@@ -159,7 +163,7 @@ class ChangeSender:
         # first we extract information about the files that were changed
         repo = opts['repository']
         slave_repo = opts['slave-repo'] or repo
-        print "Repo:", repo
+        print("Repo:", repo)
         rev_arg = ''
         if opts['revision']:
             rev_arg = '-r %s' % (opts['revision'], )
@@ -188,11 +192,11 @@ class ChangeSender:
         else:
             excluded = sets.Set([])
         if len(included.difference(excluded)) == 0:
-            print changestring
-            print """\
+            print(changestring)
+            print("""\
     Buildbot was not interested, no changes matched any of these filters:\n %s
     or all the changes matched these exclusions:\n %s\
-    """ % (fltpat, expat)
+    """ % (fltpat, expat))
             sys.exit(0)
 
         # now see which branches are involved
@@ -247,32 +251,32 @@ class ChangeSender:
         try:
             opts.parseOptions()
         except usage.error as ue:
-            print opts
-            print "%s: %s" % (sys.argv[0], ue)
+            print(opts)
+            print("%s: %s" % (sys.argv[0], ue))
             sys.exit()
 
         changes = self.getChanges(opts)
         if opts['dryrun']:
             for i, c in enumerate(changes):
-                print "CHANGE #%d" % (i + 1)
+                print("CHANGE #%d" % (i + 1))
                 keys = sorted(c.keys())
                 for k in keys:
-                    print "[%10s]: %s" % (k, c[k])
-            print "*NOT* sending any changes"
+                    print("[%10s]: %s" % (k, c[k]))
+            print("*NOT* sending any changes")
             return
 
         d = self.sendChanges(opts, changes)
 
         def quit(*why):
-            print "quitting! because", why
+            print("quitting! because", why)
             reactor.stop()
 
         d.addCallback(quit, "SUCCESS")
 
         @d.addErrback
         def failed(f):
-            print "FAILURE"
-            print f
+            print("FAILURE")
+            print(f)
             reactor.stop()
 
         reactor.callLater(60, quit, "TIMEOUT")

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 
 import pkg_resources
@@ -49,13 +51,13 @@ class TracBuildBotWatcher(Component):
         try:
             master = BuildBotSystem(self.buildbot_url)
         except Exception as e:
-            print 'Error hitting BuildBot', e
+            print('Error hitting BuildBot', e)
             return
         # This was a comprehension: the loop is clearer
         for build in master.getAllBuildsInInterval(to_timestamp(start), to_timestamp(stop)):
             # BuildBot builds are reported as
             # (builder_name, num, end, branch, rev, results, text)
-            print 'Reporting build', build
+            print('Reporting build', build)
             yield ('build', to_datetime(build[2]), '', build)
 
     def render_timeline_event(self, context, field, event):
@@ -92,7 +94,7 @@ class TracBuildBotWatcher(Component):
                 master = BuildBotSystem(self.buildbot_url)
                 data = {'builder': master.getBuilder(builder)}
             except Exception as e:
-                print 'Error fetching builder stats', e
+                print('Error fetching builder stats', e)
             data['context'] = Context.from_request(req, ('buildbot', builder))
             return 'bbw_builder.html', data, 'text/html'
 
