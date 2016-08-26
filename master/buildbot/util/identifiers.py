@@ -15,6 +15,7 @@
 
 import re
 
+from future.utils import string_types
 from future.utils import text_type
 from buildbot import util
 
@@ -35,7 +36,7 @@ def isIdentifier(maxLength, object):
 
 
 def forceIdentifier(maxLength, str):
-    if not isinstance(str, basestring):
+    if not isinstance(str, string_types):
         raise TypeError("%r cannot be coerced to an identifier" % (str,))
 
     # usually ascii2unicode can handle it

@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
@@ -43,7 +44,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             ok = False
         else:
             for b in builderNames:
-                if not isinstance(b, basestring):
+                if not isinstance(b, string_types):
                     ok = False
         if not ok:
             config.error(

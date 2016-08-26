@@ -18,6 +18,7 @@ import mock
 from future.builtins import range
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import string_types
 from future.utils import text_type
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -615,7 +616,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
         exp['error'] = {'code': jsonrpccode, 'message': message}
 
         # process a regular expression for message, if given
-        if not isinstance(message, basestring):
+        if not isinstance(message, string_types):
             if message.match(got['error']['message']):
                 exp['error']['message'] = got['error']['message']
             else:

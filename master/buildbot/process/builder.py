@@ -15,6 +15,8 @@
 import warnings
 import weakref
 
+from future.utils import string_types
+
 from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
@@ -38,7 +40,7 @@ from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'workername' in breq.properties:
         workername = breq.properties['workername']
-        if isinstance(workername, basestring):
+        if isinstance(workername, string_types):
             return workername == workerforbuilder.worker.workername
 
     return True

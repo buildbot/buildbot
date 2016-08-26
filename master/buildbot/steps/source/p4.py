@@ -16,6 +16,7 @@
 import re
 from types import StringType
 
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.python import log
 
@@ -230,7 +231,7 @@ class P4(Source):
         command.extend(doCommand)
 
         def encodeArg(arg):
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 return arg.encode('utf-8')
             elif isinstance(arg, tuple):
                 # If a tuple, then the second element is the argument that will

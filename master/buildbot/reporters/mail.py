@@ -23,6 +23,7 @@ from email.utils import formatdate
 from StringIO import StringIO
 
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log as twlog
@@ -91,7 +92,7 @@ class MailNotifier(service.BuildbotService):
                       "exception", "cancelled")
 
     def computeShortcutModes(self, mode):
-        if isinstance(mode, basestring):
+        if isinstance(mode, string_types):
             if mode == "all":
                 mode = ("failing", "passing", "warnings",
                         "exception", "cancelled")
@@ -148,7 +149,7 @@ class MailNotifier(service.BuildbotService):
                 'Newlines are not allowed in email subjects')
 
         if lookup is not None:
-            if not isinstance(lookup, basestring):
+            if not isinstance(lookup, string_types):
                 assert interfaces.IEmailLookup.providedBy(lookup)
 
         if extraHeaders:
@@ -186,7 +187,7 @@ class MailNotifier(service.BuildbotService):
         self.relayhost = relayhost
         self.subject = subject
         if lookup is not None:
-            if isinstance(lookup, basestring):
+            if isinstance(lookup, string_types):
                 lookup = Domain(str(lookup))
 
         self.lookup = lookup

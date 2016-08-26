@@ -16,7 +16,9 @@ import re
 
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import string_types
 from future.utils import text_type
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import util as twutil
@@ -1229,7 +1231,7 @@ def regex_log_evaluator(cmd, _, regexes):
         # we won't be changing "worst" unless possible_status is worse than it,
         # so we don't even need to check the log if that's the case
         if worst_status(worst, possible_status) == possible_status:
-            if isinstance(err, (basestring)):
+            if isinstance(err, (string_types)):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
             for l in itervalues(cmd.logs):
                 if err.search(l.getText()):

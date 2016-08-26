@@ -16,6 +16,7 @@ import inspect
 import re
 
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -454,9 +455,9 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         is no upper bound."""
 
         for fileRe, warnRe, start, end in suppressionList:
-            if fileRe is not None and isinstance(fileRe, basestring):
+            if fileRe is not None and isinstance(fileRe, string_types):
                 fileRe = re.compile(fileRe)
-            if warnRe is not None and isinstance(warnRe, basestring):
+            if warnRe is not None and isinstance(warnRe, string_types):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
@@ -486,12 +487,12 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
 
         directoryEnterRe = self.directoryEnterPattern
         if (directoryEnterRe is not None
-                and isinstance(directoryEnterRe, basestring)):
+                and isinstance(directoryEnterRe, string_types)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
         if (directoryLeaveRe is not None
-                and isinstance(directoryLeaveRe, basestring)):
+                and isinstance(directoryLeaveRe, string_types)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
         # Check if each line in the output from this command matched our

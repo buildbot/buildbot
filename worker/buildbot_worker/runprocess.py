@@ -30,6 +30,7 @@ from tempfile import NamedTemporaryFile
 
 from future.builtins import range
 from future.utils import iteritems
+from future.utils import string_types
 from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import error
@@ -347,7 +348,7 @@ class RunProcess(object):
                     newenv[key] = os.environ[key]
             for key, v in iteritems(environ):
                 if v is not None:
-                    if not isinstance(v, basestring):
+                    if not isinstance(v, string_types):
                         raise RuntimeError("'env' values must be strings or "
                                            "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, v)
@@ -449,7 +450,7 @@ class RunProcess(object):
         self.pp = RunProcessPP(self)
 
         self.using_comspec = False
-        if isinstance(self.command, basestring):
+        if isinstance(self.command, string_types):
             if runtime.platformType == 'win32':
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -592,7 +593,7 @@ class RunProcess(object):
         tf = NamedTemporaryFile(dir='.', suffix=".bat", delete=False)
         # echo off hides this cheat from the log files.
         tf.write("@echo off\n")
-        if isinstance(self.command, basestring):
+        if isinstance(self.command, string_types):
             tf.write(self.command)
         else:
             tf.write(win32_batch_quote(self.command))

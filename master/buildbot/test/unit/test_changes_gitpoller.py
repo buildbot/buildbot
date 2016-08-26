@@ -16,6 +16,7 @@ import os
 import re
 
 import mock
+from future.utils import string_types
 from future.utils import text_type
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -106,7 +107,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         def cb_desired(r):
             self.assertEquals(r, desiredGoodResult)
             # check types
-            if isinstance(r, basestring):
+            if isinstance(r, string_types):
                 self.assertIsInstance(r, text_type)
             elif isinstance(r, list):
                 [self.assertIsInstance(e, text_type) for e in r]

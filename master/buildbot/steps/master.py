@@ -19,6 +19,7 @@ from builtins import bytes
 from builtins import str
 
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
@@ -133,7 +134,7 @@ class MasterShellCommand(BuildStep):
             newenv = {}
             for key, v in iteritems(env):
                 if v is not None:
-                    if not isinstance(v, basestring):
+                    if not isinstance(v, string_types):
                         raise RuntimeError("'env' values must be strings or "
                                            "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, env[key])

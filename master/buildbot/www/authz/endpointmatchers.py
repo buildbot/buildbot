@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import inspect
 
+from future.utils import string_types
 from twisted.internet import defer
 
 from buildbot.data.exceptions import InvalidPathError
@@ -51,7 +52,7 @@ class EndpointMatcherBase(object):
         # a repr for debugging. displays the class, and string attributes
         args = []
         for k, v in self.__dict__.items():
-            if isinstance(v, basestring):
+            if isinstance(v, string_types):
                 args.append("%s='%s'" % (k, v))
         return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 

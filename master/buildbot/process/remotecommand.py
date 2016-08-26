@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import log
@@ -348,7 +349,7 @@ class RemoteShellCommand(RemoteCommand):
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         self.command = command  # stash .command, set it later
-        if isinstance(self.command, basestring):
+        if isinstance(self.command, string_types):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
         else:

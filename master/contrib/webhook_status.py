@@ -1,5 +1,6 @@
 import urllib
 
+from future.utils import string_types
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import client
@@ -49,7 +50,7 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
     def __init__(self, url, categories=None, extra_params=None,
                  max_attempts=MAX_ATTEMPTS, retry_multiplier=RETRY_MULTIPLIER):
         status.base.StatusReceiverMultiService.__init__(self)
-        if isinstance(url, basestring):
+        if isinstance(url, string_types):
             self.urls = [url]
         else:
             self.urls = url
