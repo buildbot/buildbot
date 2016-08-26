@@ -119,7 +119,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.datafile = os.path.join(self.datadir, 'data')
         # note: use of 'wb' here ensures newlines aren't translated on the
         # upload
-        open(self.datafile, "wb").write("this is some data\n" * 10)
+        open(self.datafile, "wb").write(b"this is some data\n" * 10)
 
     def tearDown(self):
         self.tearDownCommand()
@@ -294,9 +294,9 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
         os.makedirs(self.datadir)
-        open(os.path.join(self.datadir, "aa"), "wb").write("lots of a" * 100)
+        open(os.path.join(self.datadir, "aa"), "wb").write(b"lots of a" * 100)
         open(os.path.join(self.datadir, "bb"), "wb").write(
-            "and a little b" * 17)
+            b"and a little b" * 17)
 
     def tearDown(self):
         self.tearDownCommand()
@@ -401,7 +401,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
     def test_simple(self):
         self.fakemaster.count_reads = True    # get actual byte counts
-        self.fakemaster.data = test_data = '1234' * 13
+        self.fakemaster.data = test_data = b'1234' * 13
         assert(len(self.fakemaster.data) == 52)
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
@@ -429,7 +429,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_mkdir(self):
-        self.fakemaster.data = test_data = 'hi'
+        self.fakemaster.data = test_data = b'hi'
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='workdir',
@@ -479,7 +479,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_truncated(self):
-        self.fakemaster.data = test_data = 'tenchars--' * 10
+        self.fakemaster.data = test_data = b'tenchars--' * 10
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
@@ -506,7 +506,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_interrupted(self):
-        self.fakemaster.data = 'tenchars--' * 100  # 1k
+        self.fakemaster.data = b'tenchars--' * 100  # 1k
         self.fakemaster.delay_read = True  # read veery slowly
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
