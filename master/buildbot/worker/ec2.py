@@ -25,6 +25,7 @@ import time
 
 from future.utils import integer_types
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
@@ -113,7 +114,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                             'valid_ami_owners should be int or iterable '
                             'of ints', element)
         if valid_ami_location_regex is not None:
-            if not isinstance(valid_ami_location_regex, basestring):
+            if not isinstance(valid_ami_location_regex, string_types):
                 raise ValueError(
                     'valid_ami_location_regex should be a string')
             else:

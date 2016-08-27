@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
+from future.utils import string_types
 
 import calendar
 import datetime
@@ -261,7 +262,7 @@ def human_readable_delta(start, end):
 
 
 def makeList(input):
-    if isinstance(input, basestring):
+    if isinstance(input, string_types):
         return [input]
     elif input is None:
         return []

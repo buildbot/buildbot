@@ -15,6 +15,7 @@
 from distutils.version import LooseVersion
 
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -141,11 +142,11 @@ class Git(Source):
 
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
-        if isinstance(self.mode, basestring):
+        if isinstance(self.mode, string_types):
             if not self._hasAttrGroupMember('mode', self.mode):
                 bbconfig.error("Git: mode must be %s" %
                                (' or '.join(self._listAttrGroupMembers('mode'))))
-            if isinstance(self.method, basestring):
+            if isinstance(self.method, string_types):
                 if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):

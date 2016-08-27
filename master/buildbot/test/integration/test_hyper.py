@@ -16,6 +16,7 @@ import json
 import os
 from unittest.case import SkipTest
 
+from future.utils import string_types
 from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
@@ -90,7 +91,7 @@ def masterConfig():
                       workernames=["hyper1"],
                       factory=f2)]
     hyperconfig = workerhyper.Hyper.guess_config()
-    if isinstance(hyperconfig, basestring):
+    if isinstance(hyperconfig, string_types):
         hyperconfig = json.load(open(hyperconfig))
     hyperhost, hyperconfig = hyperconfig['clouds'].items()[0]
     masterFQDN = os.environ.get('masterFQDN')

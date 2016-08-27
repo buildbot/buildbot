@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from future.moves.collections import UserList
 from future.utils import lrange
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.python import log
 
@@ -165,7 +166,7 @@ def getResponsibleUsersForBuild(master, buildid):
     # add owner from properties
     if 'owner' in properties:
         owner = properties['owner'][0]
-        if isinstance(owner, basestring):
+        if isinstance(owner, string_types):
             blamelist.add(owner)
         else:
             blamelist.update(owner)

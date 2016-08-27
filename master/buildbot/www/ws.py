@@ -16,6 +16,7 @@ from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
 from future.utils import itervalues
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.python import log
 
@@ -66,7 +67,7 @@ class WsProtocol(WebSocketServerProtocol):
         return tuple([str(p) if p != "*" else None for p in path])
 
     def isPath(self, path):
-        if not isinstance(path, basestring):
+        if not isinstance(path, string_types):
             return False
         return True
 

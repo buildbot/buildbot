@@ -15,6 +15,7 @@
 import re
 
 from future.utils import itervalues
+from future.utils import string_types
 from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import log
@@ -41,7 +42,7 @@ class Log(object):
 
     @staticmethod
     def _decoderFromString(cfg):
-        if isinstance(cfg, basestring):
+        if isinstance(cfg, string_types):
             return lambda s: s.decode(cfg, 'replace')
         else:
             return cfg

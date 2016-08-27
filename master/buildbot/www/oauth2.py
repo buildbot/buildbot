@@ -18,6 +18,7 @@ import requests
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import threads
 
@@ -130,7 +131,7 @@ class OAuth2Auth(auth.AuthBase):
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
-            if isinstance(response.content, basestring):
+            if isinstance(response.content, string_types):
                 try:
                     content = json.loads(response.content)
                 except ValueError:

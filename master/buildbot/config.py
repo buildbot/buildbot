@@ -21,6 +21,7 @@ from types import MethodType
 
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import string_types
 from future.utils import text_type
 from twisted.python import failure
 from twisted.python import log
@@ -338,7 +339,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         def copy_str_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                       check_type=basestring, check_type_name='a string')
+                       check_type=string_types, check_type_name='a string')
 
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')

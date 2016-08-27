@@ -17,6 +17,7 @@ import traceback
 
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import string_types
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
 
@@ -536,7 +537,7 @@ class CodebaseParameter(NestedParameter):
         for k, v in iteritems(fields_dict):
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
-            elif isinstance(v, basestring):
+            elif isinstance(v, string_types):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
@@ -671,7 +672,7 @@ class ForceScheduler(base.BaseScheduler):
 
         codebase_dict = {}
         for codebase in codebases:
-            if isinstance(codebase, basestring):
+            if isinstance(codebase, string_types):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
                 config.error("ForceScheduler '%s': 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (

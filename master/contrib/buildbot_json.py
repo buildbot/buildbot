@@ -44,6 +44,7 @@ import urllib2
 
 from future.builtins import range
 from future.utils import lrange
+from future.utils import string_types
 from future.utils import text_type
 
 """Queries buildbot through the json interface.
@@ -685,7 +686,7 @@ class BuildSteps(NonAddressableNodeList):
 
     def __getitem__(self, key):
         """Accept step name in addition to index number."""
-        if isinstance(key, basestring):
+        if isinstance(key, string_types):
             # It's a string, try to find the corresponding index.
             for i, step in enumerate(self.data):
                 if step['name'] == key:

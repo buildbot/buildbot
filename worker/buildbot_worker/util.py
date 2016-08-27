@@ -16,6 +16,7 @@
 import itertools
 import textwrap
 import time
+from future.utils import string_types
 
 
 def remove_userpassword(url):
@@ -59,7 +60,7 @@ class Obfuscated(object):
 
     @staticmethod
     def to_text(s):
-        if isinstance(s, basestring):
+        if isinstance(s, string_types):
             return s
         else:
             return str(s)
