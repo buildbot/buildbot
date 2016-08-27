@@ -262,6 +262,26 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertAllCommandsRan()
         return d
 
+    def test_poll_unicode_error(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1)))
+        self.expectCommands(
+            gpo.Expect(
+                'p4', 'changes', '//depot/myproject/...@3,#head').stdout(second_p4changes),
+        )
+        # Add a character which cannot be decoded with utf-8
+        undecodableText = p4change[2] + b"\x81"
+        self.add_p4_describe_result(2, undecodableText)
+
+        # tell poll() that it's already been called once
+        self.changesource.last_change = 2
+
+        # call _poll, so we can catch the failure
+        d = self.changesource._poll()
+        return self.assertFailure(d, UnicodeError)
+
     def test_acquire_ticket_auth(self):
         self.attachChangeSource(
             P4Source(p4port=None, p4user=None, p4passwd='pass',
