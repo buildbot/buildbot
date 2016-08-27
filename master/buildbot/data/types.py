@@ -17,6 +17,7 @@ import datetime
 import re
 
 # See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import integer_types
 from future.utils import iteritems
 from future.utils import text_type
 
@@ -106,7 +107,7 @@ class Instance(Type):
 class Integer(Instance):
 
     name = "integer"
-    types = (int, long)
+    types = integer_types
     ramlType = "integer"
 
     def valueFromString(self, arg):

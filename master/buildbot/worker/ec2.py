@@ -23,6 +23,7 @@ import os
 import re
 import time
 
+from future.utils import integer_types
 from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import threads
@@ -103,11 +104,11 @@ class EC2LatentWorker(AbstractLatentWorker):
                 'valid_ami_location_regex and valid_ami_owners')
         self.ami = ami
         if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, (int, long)):
+            if isinstance(valid_ami_owners, integer_types):
                 valid_ami_owners = (valid_ami_owners,)
             else:
                 for element in valid_ami_owners:
-                    if not isinstance(element, (int, long)):
+                    if not isinstance(element, integer_types):
                         raise ValueError(
                             'valid_ami_owners should be int or iterable '
                             'of ints', element)
