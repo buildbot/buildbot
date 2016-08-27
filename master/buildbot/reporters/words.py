@@ -16,9 +16,6 @@
 import random
 import re
 import shlex
-from string import capitalize
-from string import join
-from string import lower
 
 from future.builtins import range
 from twisted.internet import defer
@@ -586,17 +583,16 @@ class Contact(service.AsyncService):
         if self.notify_for('finished'):
             defer.returnValue(True)
 
-        if self.notify_for(lower(self.results_descriptions.get(build['results'])[0])):
+        if self.notify_for(self.results_descriptions.get(build['results'])[0].lower()):
             defer.returnValue(True)
 
         prevBuild = yield self.master.data.get(('builders', build['builderid'], 'builds', build['number'] - 1))
         if prevBuild:
             prevResult = prevBuild['results']
 
-            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)[0]),
+            required_notification_control_string = ''.join((self.results_descriptions.get(prevResult)[0].lower(),
                                                          'To',
-                                                         capitalize(self.results_descriptions.get(build['results'])[0])),
-                                                        '')
+                                                         self.results_descriptions.get(build['results'])[0].capitalize()))
 
             if (self.notify_for(required_notification_control_string)):
                 defer.returnValue(True)
