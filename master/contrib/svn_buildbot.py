@@ -24,6 +24,7 @@ import re
 import sets
 import sys
 
+from future.utils import text_type
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -212,21 +213,21 @@ class ChangeSender:
         changes = []
         encoding = opts['encoding']
         for branch in files_per_branch.keys():
-            d = {'who': unicode(who, encoding=encoding),
-                 'repository': unicode(slave_repo, encoding=encoding),
-                 'comments': unicode(message, encoding=encoding),
+            d = {'who': text_type(who, encoding=encoding),
+                 'repository': text_type(slave_repo, encoding=encoding),
+                 'comments': text_type(message, encoding=encoding),
                  'revision': revision,
-                 'project': unicode(opts['project'] or "", encoding=encoding),
+                 'project': text_type(opts['project'] or "", encoding=encoding),
                  'src': 'svn',
                  }
             if branch:
-                d['branch'] = unicode(branch, encoding=encoding)
+                d['branch'] = text_type(branch, encoding=encoding)
             else:
                 d['branch'] = branch
 
             files = []
             for file in files_per_branch[branch]:
-                files.append(unicode(file, encoding=encoding))
+                files.append(text_type(file, encoding=encoding))
             d['files'] = files
 
             changes.append(d)

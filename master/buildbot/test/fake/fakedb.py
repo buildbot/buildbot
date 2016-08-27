@@ -24,6 +24,7 @@ import hashlib
 
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -93,7 +94,7 @@ class Row(object):
         # cast to unicode
         for k, v in iteritems(self.values):
             if isinstance(v, str):
-                self.values[k] = unicode(v)
+                self.values[k] = text_type(v)
         # Binary columns stores either (compressed) binary data or encoded
         # with utf-8 unicode string. We assume that Row constructor receives
         # only unicode strings and encode them to utf-8 here.

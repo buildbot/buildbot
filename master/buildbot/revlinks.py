@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 
 import re
+from future.utils import text_type
 
 
 class RevlinkMatch(object):
 
     def __init__(self, repo_urls, revlink):
-        if isinstance(repo_urls, str) or isinstance(repo_urls, unicode):
+        if isinstance(repo_urls, str) or isinstance(repo_urls, text_type):
             repo_urls = [repo_urls]
         self.repo_urls = map(re.compile, repo_urls)
         self.revlink = revlink

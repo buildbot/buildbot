@@ -21,6 +21,7 @@ from types import MethodType
 
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import text_type
 from twisted.python import failure
 from twisted.python import log
 from zope.interface import implementer
@@ -919,7 +920,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             nextWorker = nextSlave
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, unicode):
+        if not name or type(name) not in (str, text_type):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':

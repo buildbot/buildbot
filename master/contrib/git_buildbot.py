@@ -32,6 +32,7 @@ import sys
 from optparse import OptionParser
 
 from future.utils import iteritems
+from future.utils import text_type
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -147,13 +148,13 @@ def grab_commit_info(c, rev):
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
         if m:
             logging.debug("Got file: %s", m.group(1))
-            files.append(unicode(m.group(1), encoding=encoding))
+            files.append(text_type(m.group(1), encoding=encoding))
             continue
 
         m = re.match(r"^Author:\s+(.+)$", line)
         if m:
             logging.debug("Got author: %s", m.group(1))
-            c['who'] = unicode(m.group(1), encoding=encoding)
+            c['who'] = text_type(m.group(1), encoding=encoding)
 
         if re.match(r"^Merge: .*$", line):
             files.append('merge')
@@ -175,20 +176,20 @@ def gen_changes(input, branch):
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
-             'branch': unicode(branch, encoding=encoding),
+             'branch': text_type(branch, encoding=encoding),
              }
 
         if category:
-            c['category'] = unicode(category, encoding=encoding)
+            c['category'] = text_type(category, encoding=encoding)
 
         if repository:
-            c['repository'] = unicode(repository, encoding=encoding)
+            c['repository'] = text_type(repository, encoding=encoding)
 
         if project:
-            c['project'] = unicode(project, encoding=encoding)
+            c['project'] = text_type(project, encoding=encoding)
 
         if codebase:
-            c['codebase'] = unicode(codebase, encoding=encoding)
+            c['codebase'] = text_type(codebase, encoding=encoding)
 
         grab_commit_info(c, m.group(1))
         changes.append(c)
@@ -251,7 +252,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     if baserev != oldrev:
         c = {'revision': baserev,
              'comments': "Rewind branch",
-             'branch': unicode(branch, encoding=encoding),
+             'branch': text_type(branch, encoding=encoding),
              'who': "dummy",
              }
         logging.info("Branch %s was rewound to %s", branch, baserev[:8])
@@ -264,23 +265,23 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
             file = re.match(r"^:.*[MAD]\s+(.+)$", line).group(1)
             logging.debug("  Rewound file: %s", file)
-            files.append(unicode(file, encoding=encoding))
+            files.append(text_type(file, encoding=encoding))
 
         status = f.close()
         if status:
             logging.warning("git diff exited with status %d", status)
 
         if category:
-            c['category'] = unicode(category, encoding=encoding)
+            c['category'] = text_type(category, encoding=encoding)
 
         if repository:
-            c['repository'] = unicode(repository, encoding=encoding)
+            c['repository'] = text_type(repository, encoding=encoding)
 
         if project:
-            c['project'] = unicode(project, encoding=encoding)
+            c['project'] = text_type(project, encoding=encoding)
 
         if codebase:
-            c['codebase'] = unicode(codebase, encoding=encoding)
+            c['codebase'] = text_type(codebase, encoding=encoding)
 
         if files:
             c['files'] = files

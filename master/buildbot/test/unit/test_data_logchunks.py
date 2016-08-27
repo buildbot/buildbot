@@ -15,6 +15,7 @@
 import textwrap
 
 from future.builtins import range
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -178,9 +179,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     endpointname = "raw"
 
     def validateData(self, data):
-        self.assertIsInstance(data['raw'], unicode)
-        self.assertIsInstance(data['mime-type'], unicode)
-        self.assertIsInstance(data['filename'], unicode)
+        self.assertIsInstance(data['raw'], text_type)
+        self.assertIsInstance(data['mime-type'], text_type)
+        self.assertIsInstance(data['filename'], text_type)
 
     @defer.inlineCallbacks
     def do_test_chunks(self, path, logid, expLines):

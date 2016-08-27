@@ -15,6 +15,7 @@
 
 import re
 
+from future.utils import text_type
 from buildbot import util
 
 ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')
@@ -24,7 +25,7 @@ trailing_digits_re = re.compile('_([0-9]+)$')
 
 
 def isIdentifier(maxLength, object):
-    if not isinstance(object, unicode):
+    if not isinstance(object, text_type):
         return False
     elif not ident_re.match(object):
         return False

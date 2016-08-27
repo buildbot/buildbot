@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -32,7 +33,7 @@ class Tests(unittest.TestCase):
     @defer.inlineCallbacks
     def makeLog(self, type, logEncoding='utf-8'):
         logid = yield self.master.data.updates.addLog(
-            stepid=27, name=u'testlog', type=unicode(type))
+            stepid=27, name=u'testlog', type=text_type(type))
         defer.returnValue(log.Log.new(self.master, u'testlog', type,
                                       logid, logEncoding))
 
@@ -55,7 +56,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(f(otilde_utf8), otilde)
         self.assertEqual(f(invalid_utf8), replacement)
 
-        f = log.Log._decoderFromString(lambda s: unicode(s[::-1]))
+        f = log.Log._decoderFromString(lambda s: text_type(s[::-1]))
         self.assertEqual(f('abc'), u'cba')
 
     @defer.inlineCallbacks
@@ -278,7 +279,7 @@ class TestProcessItfc(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
         self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
-                                 101, unicode)
+                                 101, text_type)
 
 
 class TestFakeLogFile(unittest.TestCase, InterfaceTests):
@@ -307,7 +308,7 @@ class TestErrorRaised(unittest.TestCase):
     def testErrorOnStreamLog(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
-                          101, unicode))
+                          101, text_type))
 
         correct_error_raised = False
         try:
@@ -320,7 +321,7 @@ class TestErrorRaised(unittest.TestCase):
     def testErrorOnPlainLog(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
-                         101, unicode))
+                         101, text_type))
         correct_error_raised = False
         try:
             yield tested_log.addContent('msg\n')
@@ -332,7 +333,7 @@ class TestErrorRaised(unittest.TestCase):
     def testErrorOnPlainLogFlush(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
-                         101, unicode))
+                         101, text_type))
         correct_error_raised = False
         try:
             yield tested_log.addContent('msg')

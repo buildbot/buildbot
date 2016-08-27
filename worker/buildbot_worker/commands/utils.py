@@ -15,6 +15,7 @@
 
 import os
 
+from future.utils import text_type
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python.procutils import which
@@ -60,9 +61,9 @@ if runtime.platformType == 'win32':  # pragma: no cover
         # os.listdir below only returns a list of unicode filenames if the parameter is unicode
         # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get garbled.
         # So force dir to be unicode.
-        if not isinstance(dir, unicode):
+        if not isinstance(dir, text_type):
             try:
-                dir = unicode(dir, "utf-8")
+                dir = text_type(dir, "utf-8")
             except UnicodeDecodeError:
                 log.err("rmdirRecursive: decoding from UTF-8 failed (ignoring)")
 

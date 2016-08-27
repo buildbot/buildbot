@@ -16,6 +16,7 @@ import re
 
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import util as twutil
@@ -432,7 +433,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                                 + methodInfo(self.getCurrentSummary))
 
         stepResult = summary.get('step', u'finished')
-        if not isinstance(stepResult, unicode):
+        if not isinstance(stepResult, text_type):
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
         if self.stepid is not None:
@@ -441,7 +442,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         if not self._running:
             buildResult = summary.get('build', None)
-            if buildResult and not isinstance(buildResult, unicode):
+            if buildResult and not isinstance(buildResult, text_type):
                 raise TypeError("build result string must be unicode")
     # updateSummary gets patched out for old-style steps, so keep a copy we can
     # call internally for such steps
@@ -746,7 +747,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addLog(self, name, type='s', logEncoding=None):
         d = self.master.data.updates.addLog(self.stepid,
                                             util.ascii2unicode(name),
-                                            unicode(type))
+                                            text_type(type))
 
         @d.addCallback
         def newLog(logid):
@@ -826,7 +827,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addURL(self, name, url):
-        yield self.master.data.updates.addStepURL(self.stepid, unicode(name), unicode(url))
+        yield self.master.data.updates.addStepURL(self.stepid, text_type(name), text_type(url))
         defer.returnValue(None)
 
     @defer.inlineCallbacks

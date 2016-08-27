@@ -26,6 +26,7 @@ from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
 
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
@@ -68,7 +69,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             if chtuple:
                 src, chdict = chtuple
             if chdict:
-                return self.master.data.updates.addChange(src=unicode(src),
+                return self.master.data.updates.addChange(src=text_type(src),
                                                           **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
@@ -467,7 +468,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = unicode(lines.pop(0), "utf-8", errors="ignore")
+            line = text_type(lines.pop(0), "utf-8", errors="ignore")
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)

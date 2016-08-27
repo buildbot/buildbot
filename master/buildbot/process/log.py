@@ -15,6 +15,7 @@
 import re
 
 from future.utils import itervalues
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import log
 
@@ -47,7 +48,7 @@ class Log(object):
 
     @classmethod
     def new(cls, master, name, type, logid, logEncoding):
-        type = unicode(type)
+        type = text_type(type)
         try:
             subcls = cls._byType[type]
         except KeyError:
@@ -114,7 +115,7 @@ class PlainLog(Log):
         super(PlainLog, self).__init__(master, name, type, logid, decoder)
 
         def wholeLines(lines):
-            if not isinstance(lines, unicode):
+            if not isinstance(lines, text_type):
                 lines = self.decoder(lines)
             self.subPoint.deliver(None, lines)
             return self.addRawLines(lines)
@@ -157,7 +158,7 @@ class StreamLog(Log):
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
-                if not isinstance(lines, unicode):
+                if not isinstance(lines, text_type):
                     lines = self.decoder(lines)
                 # deliver the un-annotated version to subscribers
                 self.subPoint.deliver(stream, lines)

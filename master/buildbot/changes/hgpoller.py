@@ -16,6 +16,7 @@
 import os
 import time
 
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -281,7 +282,7 @@ class HgPoller(base.PollingChangeSource):
                 node)
             yield self.master.data.updates.addChange(
                 author=author,
-                revision=unicode(node),
+                revision=text_type(node),
                 files=files,
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,
