@@ -16,6 +16,7 @@
 
 import sqlalchemy as sa
 
+from future.utils import text_type
 from buildbot.util import sautils
 
 
@@ -40,7 +41,7 @@ def test_unicode(migrate_engine):
 
     # see if the data is intact
     row = migrate_engine.execute(sa.select([test_unicode])).fetchall()[0]
-    assert isinstance(row['u'], unicode)
+    assert isinstance(row['u'], text_type)
     assert row['u'] == u
     assert isinstance(row['b'], str)
     assert row['b'] == b

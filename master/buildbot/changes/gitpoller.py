@@ -20,6 +20,7 @@ import re
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import iterkeys
 from future.utils import itervalues
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -328,7 +329,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         def encodeArg(arg):
             if isinstance(arg, list):
                 return [encodeArg(a) for a in arg]
-            elif isinstance(arg, unicode):
+            elif isinstance(arg, text_type):
                 return arg.encode("ascii")
             return arg
         d = utils.getProcessOutputAndValue(encodeArg(self.gitbin),

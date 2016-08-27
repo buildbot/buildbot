@@ -15,6 +15,7 @@
 
 import inspect
 
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import reflect
 
@@ -141,7 +142,7 @@ class DataConnector(service.AsyncService):
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
             paths.append(dict(path=u"/".join(k),
-                              plural=unicode(v.rtype.plural),
-                              type=unicode(v.rtype.entityType.name),
+                              plural=text_type(v.rtype.plural),
+                              type=text_type(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))
         return paths

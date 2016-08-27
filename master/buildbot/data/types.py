@@ -18,6 +18,7 @@ import re
 
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import iteritems
+from future.utils import text_type
 
 from buildbot import util
 from buildbot.util import json
@@ -165,7 +166,7 @@ class Identifier(Type):
         return val
 
     def validate(self, name, object):
-        if not isinstance(object, unicode):
+        if not isinstance(object, text_type):
             yield "%s - %r - is not a unicode string" % (name, object)
         elif not self.identRe.match(object):
             yield "%s - %r - is not an identifier" % (name, object)
@@ -232,13 +233,13 @@ class SourcedProperties(Type):
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
         for k, v in iteritems(object):
-            if not isinstance(k, unicode):
+            if not isinstance(k, text_type):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:
                 yield "%s property value for '%s' is not a 2-tuple" % (name, k)
                 return
             propval, propsrc = v
-            if not isinstance(propsrc, unicode):
+            if not isinstance(propsrc, text_type):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
                 json.loads(propval)

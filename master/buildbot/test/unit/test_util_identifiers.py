@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import text_type
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -37,7 +38,7 @@ class Tests(unittest.TestCase):
             self.assertFalse(identifiers.isIdentifier(50, b))
 
     def assertEqualUnicode(self, got, exp):
-        self.failUnless(isinstance(exp, unicode))
+        self.failUnless(isinstance(exp, text_type))
         self.assertEqual(got, exp)
 
     def test_forceIdentifier_already_is(self):

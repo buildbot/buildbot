@@ -17,6 +17,7 @@ import locale
 import os
 
 import mock
+from future.utils import text_type
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
@@ -112,7 +113,7 @@ class safeTranslate(unittest.TestCase):
         self.assertEqual(util.safeTranslate(u"full"), str("full"))
 
     def test_unicode_bad(self):
-        self.assertEqual(util.safeTranslate(unicode("speed=slow;quality=high")),
+        self.assertEqual(util.safeTranslate(text_type("speed=slow;quality=high")),
                          str("speed_slow_quality_high"))
 
     def test_unicode_pathological(self):
@@ -254,11 +255,11 @@ class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
         rv = util.ascii2unicode(u'\N{SNOWMAN}')
-        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', unicode))
+        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', text_type))
 
     def test_ascii(self):
         rv = util.ascii2unicode('abcd')
-        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
@@ -292,7 +293,7 @@ class StringToBoolean(unittest.TestCase):
 
     def test_ascii(self):
         rv = util.ascii2unicode('abcd')
-        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:

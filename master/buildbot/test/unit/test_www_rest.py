@@ -18,6 +18,7 @@ import mock
 from future.builtins import range
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -221,7 +222,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
-        self.failIf(isinstance(self.request.written, unicode))
+        self.failIf(isinstance(self.request.written, text_type))
         got = {}
         got['content'] = json.loads(self.request.written)
         got['contentType'] = self.request.headers['content-type']

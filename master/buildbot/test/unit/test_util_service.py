@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import mock
 from future.builtins import range
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -142,13 +143,13 @@ class ClusteredBuildbotService(unittest.TestCase):
     def test_name_PreservesUnicodePromotion(self):
         svc = self.makeService(name=u'n')
 
-        self.assertIsInstance(svc.name, unicode)
+        self.assertIsInstance(svc.name, text_type)
         self.assertEqual(svc.name, u'n')
 
     def test_name_GetsUnicodePromotion(self):
         svc = self.makeService(name='n')
 
-        self.assertIsInstance(svc.name, unicode)
+        self.assertIsInstance(svc.name, text_type)
         self.assertEqual(svc.name, u'n')
 
     def test_compare(self):

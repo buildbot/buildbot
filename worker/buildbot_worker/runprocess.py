@@ -30,6 +30,7 @@ from tempfile import NamedTemporaryFile
 
 from future.builtins import range
 from future.utils import iteritems
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol
@@ -303,9 +304,9 @@ class RunProcess(object):
         def to_str(cmd):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
-                    if isinstance(a, unicode):
+                    if isinstance(a, text_type):
                         cmd[i] = a.encode(self.builder.unicode_encoding)
-            elif isinstance(cmd, unicode):
+            elif isinstance(cmd, text_type):
                 cmd = cmd.encode(self.builder.unicode_encoding)
             return cmd
 

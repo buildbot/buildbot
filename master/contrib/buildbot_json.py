@@ -44,6 +44,7 @@ import urllib2
 
 from future.builtins import range
 from future.utils import lrange
+from future.utils import text_type
 
 """Queries buildbot through the json interface.
 """
@@ -1035,7 +1036,7 @@ def CMDpending(parser, args):
                     print('  revision: %s' % pending['source']['revision'])
                 for change in pending['source']['changes']:
                     print('  change:')
-                    print('    comment: %r' % unicode(change['comments'][:50]))
+                    print('    comment: %r' % text_type(change['comments'][:50]))
                     print('    who:     %s' % change['who'])
     return 0
 

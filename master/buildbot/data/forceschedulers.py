@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import text_type
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -24,10 +25,10 @@ from buildbot.www.rest import BadJsonRpc2
 
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
-               name=unicode(sched.name),
-               button_name=unicode(sched.buttonName),
-               label=unicode(sched.label),
-               builder_names=map(unicode, sched.builderNames))
+               name=text_type(sched.name),
+               button_name=text_type(sched.buttonName),
+               label=text_type(sched.label),
+               builder_names=map(text_type, sched.builderNames))
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 

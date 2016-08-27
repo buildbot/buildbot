@@ -16,6 +16,7 @@ import random
 
 import mock
 from future.utils import iteritems
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -437,7 +438,7 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         fbi.assert_called_once_with(u'b1')
         # check that the name was uniciodified
         arg = fbi.mock_calls[0][1][0]
-        self.assertIsInstance(arg, unicode)
+        self.assertIsInstance(arg, text_type)
 
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):

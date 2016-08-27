@@ -23,6 +23,7 @@ import os
 import re
 
 import dateutil.tz
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -323,7 +324,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                     author=who,
                     files=branch_files[branch],
                     comments=comments,
-                    revision=unicode(num),
+                    revision=text_type(num),
                     when_timestamp=when,
                     branch=branch,
                     project=self.project)

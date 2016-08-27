@@ -15,6 +15,7 @@
 import time
 
 from future.utils import iteritems
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import html
@@ -95,7 +96,7 @@ class Change:
         def none_or_unicode(x):
             if x is None:
                 return x
-            return unicode(x)
+            return text_type(x)
 
         self.revision = none_or_unicode(revision)
         now = util.now()

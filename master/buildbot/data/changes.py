@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 import copy
 
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -166,7 +167,7 @@ class Change(base.ResourceType):
                                                                repository=repository,
                                                                project=project)
             codebase = self.master.config.codebaseGenerator(pre_change)
-            codebase = unicode(codebase)
+            codebase = text_type(codebase)
         else:
             codebase = codebase or u''
 

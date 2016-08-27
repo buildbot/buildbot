@@ -20,6 +20,7 @@ from contextlib import contextmanager
 
 from future.moves.urllib.parse import urlparse
 from future.utils import iteritems
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.error import Error
@@ -177,9 +178,9 @@ class V2RootResource(resource.Resource):
             if not isinstance(data[name], types):
                 raise BadJsonRpc2("'%s' must be %s" % (name, typename),
                                   JSONRPC_CODES["invalid_request"])
-        check("jsonrpc", (str, unicode), "a string")
-        check("method", (str, unicode), "a string")
-        check("id", (str, unicode, int, type(None)),
+        check("jsonrpc", (str, text_type), "a string")
+        check("method", (str, text_type), "a string")
+        check("id", (str, text_type, int, type(None)),
               "a string, number, or null")
         check("params", (dict,), "an object")
         if data['jsonrpc'] != '2.0':

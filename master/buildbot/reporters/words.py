@@ -18,6 +18,7 @@ import re
 import shlex
 
 from future.builtins import range
+from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -290,7 +291,7 @@ class Contact(service.AsyncService):
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
-        if isinstance(args, unicode):
+        if isinstance(args, text_type):
             # shlex does not handle unicode.  See
             # http://bugs.python.org/issue1170
             args = args.encode('ascii')

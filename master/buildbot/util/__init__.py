@@ -25,6 +25,7 @@ import string
 import textwrap
 import time
 
+from future.utils import text_type
 from twisted.python import reflect
 
 from zope.interface import implementer
@@ -158,10 +159,10 @@ badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
                                 "______________________________")
 
 
-def safeTranslate(str):
-    if isinstance(str, unicode):
-        str = str.encode('utf8')
-    return str.translate(badchars_map)
+def safeTranslate(s):
+    if isinstance(s, text_type):
+        s = s.encode('utf8')
+    return s.translate(badchars_map)
 
 
 def none_or_str(x):
@@ -171,9 +172,9 @@ def none_or_str(x):
 
 
 def ascii2unicode(x):
-    if isinstance(x, (unicode, type(None))):
+    if isinstance(x, (text_type, type(None))):
         return x
-    return unicode(x, 'ascii')
+    return text_type(x, 'ascii')
 
 # place a working json module at 'buildbot.util.json'.  Code is adapted from
 # Paul Wise <pabs@debian.org>:
@@ -342,7 +343,7 @@ def join_list(maybeList):
 
 def command_to_string(command):
     words = command
-    if isinstance(words, (str, unicode)):
+    if isinstance(words, (str, text_type)):
         words = words.split()
 
     try:
@@ -358,7 +359,7 @@ def command_to_string(command):
 
     # strip instances and other detritus (which can happen if a
     # description is requested before rendering)
-    words = [w for w in words if isinstance(w, (str, unicode))]
+    words = [w for w in words if isinstance(w, (str, text_type))]
 
     if len(words) < 1:
         return None
