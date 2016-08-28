@@ -206,7 +206,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp()
-        fileobj = os.fdopen(fd, 'w')
+        fileobj = os.fdopen(fd, 'wb')
         if self.compress == 'bz2':
             mode = 'w|bz2'
         elif self.compress == 'gz':
