@@ -132,6 +132,7 @@ For example, if only short emails are desired (e.g., for delivery to phones)::
 
 Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step is given below::
 
+    from future.utils import text_type
     from buildbot.plugins import util, reporters
 
     import cgi, datetime
@@ -223,7 +224,7 @@ Another example of a function delivering a customized html email containing the 
             text.append(u'<h4>Last %d lines of "%s"</h4>' % (limit_lines, name))
             unilist = list()
             for line in content[len(content)-limit_lines:]:
-                unilist.append(cgi.escape(unicode(line,'utf-8')))
+                unilist.append(cgi.escape(text_type(line,'utf-8')))
             text.append(u'<pre>')
             text.extend(unilist)
             text.append(u'</pre>')

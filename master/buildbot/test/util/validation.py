@@ -70,7 +70,7 @@ class BooleanValidator(InstanceValidator):
 
 class StringValidator(InstanceValidator):
     # strings must be unicode
-    types = (unicode,)
+    types = (text_type,)
     name = 'string'
 
 
@@ -91,7 +91,7 @@ class DateTimeValidator(Validator):
 
 
 class IdentifierValidator(Validator):
-    types = (unicode,)
+    types = (text_type,)
     name = 'identifier'
     hasArgs = True
 

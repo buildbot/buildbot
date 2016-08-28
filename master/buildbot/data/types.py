@@ -123,7 +123,7 @@ class DateTime(Instance):
 class String(Instance):
 
     name = "string"
-    types = (unicode,)
+    types = (text_type,)
     ramlType = "string"
 
     def valueFromString(self, arg):
