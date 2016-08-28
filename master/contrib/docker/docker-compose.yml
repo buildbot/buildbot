@@ -2,7 +2,7 @@ postgres:
     env_file: db.env
     image: "postgres:9.4"
     volumes:
-        - /var/lib/buildbot_db:/var/lib/postgresql/data
+        - ./buildbot_db:/var/lib/postgresql/data
     expose:
         - 5432
 
