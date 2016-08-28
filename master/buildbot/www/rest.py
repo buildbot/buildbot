@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import cgi
 import datetime
 import fnmatch
-import mimetools
 import re
 from contextlib import contextmanager
 
@@ -44,13 +44,15 @@ class BadJsonRpc2(Exception):
         self.jsonrpccode = jsonrpccode
 
 
-class ContentTypeParser(mimetools.Message):
+class ContentTypeParser(object):
 
     def __init__(self, contenttype):
         self.typeheader = contenttype
-        self.encodingheader = None
-        self.parsetype()
-        self.parseplist()
+
+    def gettype(self):
+        mimetype, options = cgi.parse_header(self.typeheader)
+        return mimetype
+
 
 URL_ENCODED = "application/x-www-form-urlencoded"
 JSON_ENCODED = "application/json"
