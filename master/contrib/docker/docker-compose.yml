@@ -10,7 +10,7 @@ buildbot:
 # switch between local build and dockerhub image
 #    build: ../../Dockerfile
 #    build: ../../Dockerfile.ubuntu
-    image: "buildbot/buildbot-master"
+    image: "buildbot/buildbot-master:master"
     env_file: db.env
     ports:
         - "8010:8010"
@@ -26,7 +26,7 @@ buildbot:
 worker:
     # switch between local build and dockerhub image
 #    build: ../../../worker/Dockerfile
-    image: "buildbot/buildbot-worker"
+    image: "buildbot/buildbot-worker:master"
     environment:
         BUILDMASTER: buildbot
         BUILDMASTER_PORT: 9989
