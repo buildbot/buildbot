@@ -23,7 +23,7 @@ import sys
 import textwrap
 import time
 from cStringIO import StringIO
-from email.Utils import formataddr
+from email.utils import formataddr
 
 """
     -t
