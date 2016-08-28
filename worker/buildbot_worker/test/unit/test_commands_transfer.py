@@ -119,7 +119,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.datafile = os.path.join(self.datadir, 'data')
         # note: use of 'wb' here ensures newlines aren't translated on the
         # upload
-        open(self.datafile, "wb").write(b"this is some data\n" * 10)
+        open(self.datafile, mode="wb").write(b"this is some data\n" * 10)
 
     def tearDown(self):
         self.tearDownCommand()
@@ -294,8 +294,8 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
         os.makedirs(self.datadir)
-        open(os.path.join(self.datadir, "aa"), "wb").write(b"lots of a" * 100)
-        open(os.path.join(self.datadir, "bb"), "wb").write(
+        open(os.path.join(self.datadir, "aa"), mode="wb").write(b"lots of a" * 100)
+        open(os.path.join(self.datadir, "bb"), mode="wb").write(
             b"and a little b" * 17)
 
     def tearDown(self):
@@ -328,7 +328,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         def check_tarfile(_):
             f = io.BytesIO(self.fakemaster.data)
-            a = tarfile.open(fileobj=f, name='check.tar')
+            a = tarfile.open(fileobj=f, name='check.tar', mode="r")
             exp_names = ['.', 'aa', 'bb']
             got_names = [n.rstrip('/') for n in a.getnames()]
             # py27 uses '' instead of '.'
@@ -422,7 +422,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
-            self.assertEqual(open(datafile).read(), test_data)
+            self.assertEqual(open(datafile, mode="r").read(), test_data)
             if runtime.platformType != 'win32':
                 self.assertEqual(os.stat(datafile).st_mode & 0o777, 0o777)
         d.addCallback(check)
@@ -449,7 +449,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ])
             datafile = os.path.join(self.basedir, 'workdir', 'subdir', 'data')
             self.assertTrue(os.path.exists(datafile))
-            self.assertEqual(open(datafile).read(), test_data)
+            self.assertEqual(open(datafile, mode="r").read(), test_data)
         d.addCallback(check)
         return d
 
@@ -501,7 +501,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
-            self.assertEqual(open(datafile).read(), test_data[:50])
+            self.assertEqual(open(datafile, mode="r").read(), test_data[:50])
         d.addCallback(check)
         return d
 
