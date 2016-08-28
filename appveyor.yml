@@ -29,7 +29,7 @@ install:
 build: false
 
 test_script:
-  - "%PYTHON%\\python.exe %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "%PYTHON%\\python.exe -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
