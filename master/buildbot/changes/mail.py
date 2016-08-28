@@ -312,7 +312,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # better to work with, unless you count pulling the v1-vs-v2
         # timestamp out of the diffs, which would be ugly. TODO: Pulling the
         # 'Date:' header from the mail is a possibility, and
-        # email.Utils.parsedate_tz may be useful. It should be configurable,
+        # email.utils.parsedate_tz may be useful. It should be configurable,
         # however, because there are a lot of broken clocks out there.
         when = util.now()
 
