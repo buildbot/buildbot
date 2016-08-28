@@ -51,7 +51,7 @@ class FakeMasterMethods(object):
 
         self.written = False
         self.read = False
-        self.data = ''
+        self.data = b''
 
     def remote_write(self, data):
         if self.write_out_of_space_at is not None:
