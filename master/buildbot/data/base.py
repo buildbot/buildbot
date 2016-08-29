@@ -134,21 +134,18 @@ class ListResult(UserList):
 
     __slots__ = ['offset', 'total', 'limit']
 
-    # if set, this is the index in the overall results of the first element of
-    # this list
-    offset = None
-
-    # if set, this is the total number of results
-    total = None
-
-    # if set, this is the limit, either from the user or the implementation
-    limit = None
-
     def __init__(self, values,
                  offset=None, total=None, limit=None):
         UserList.__init__(self, values)
+
+        # if set, this is the index in the overall results of the first element of
+        # this list
         self.offset = offset
+
+        # if set, this is the total number of results
         self.total = total
+
+        # if set, this is the limit, either from the user or the implementation
         self.limit = limit
 
     def __repr__(self):
