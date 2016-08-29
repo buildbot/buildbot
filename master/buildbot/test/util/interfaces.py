@@ -16,6 +16,7 @@ import inspect
 
 import pkg_resources
 from future.builtins import range
+from future.utils import PY3
 from twisted.trial import unittest
 
 
@@ -66,17 +67,29 @@ class InterfaceTests(object):
                     inspect.formatargspec(*actual))
                 self.fail(msg)
 
-        actual_argspec = filter(
-            inspect.getargspec(remove_decorators(actualMethod)))
+        if PY3:
+            actual_argspec = filter(
+                inspect.signature(remove_decorators(actualMethod)))
+        else:
+            actual_argspec = filter(
+                inspect.getargspec(remove_decorators(actualMethod)))
 
         for fakeMethod in fakeMethods:
-            fake_argspec = filter(
-                inspect.getargspec(remove_decorators(fakeMethod)))
+            if PY3:
+                fake_argspec = filter(
+                    inspect.signature(remove_decorators(fakeMethod)))
+            else:
+                fake_argspec = filter(
+                    inspect.getargspec(remove_decorators(fakeMethod)))
             assert_same_argspec(actual_argspec, fake_argspec)
 
         def assert_same_argspec_decorator(decorated):
-            expected_argspec = filter(
-                inspect.getargspec(remove_decorators(decorated)))
+            if PY3:
+                expected_argspec = filter(
+                    inspect.signature(remove_decorators(decorated)))
+            else:
+                expected_argspec = filter(
+                    inspect.getargspec(remove_decorators(decorated)))
             assert_same_argspec(expected_argspec, actual_argspec)
             # The decorated function works as usual.
             return decorated
