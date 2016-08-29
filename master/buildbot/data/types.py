@@ -133,7 +133,7 @@ class String(Instance):
 class Binary(Instance):
 
     name = "binary"
-    types = (str,)
+    types = (bytes,)
     ramlType = "string"
 
     def valueFromString(self, arg):
