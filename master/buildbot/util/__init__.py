@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from builtins import bytes
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
 from future.utils import string_types
@@ -22,7 +23,6 @@ import dateutil.tz
 import itertools
 import locale
 import re
-import string
 import textwrap
 import time
 
@@ -156,8 +156,8 @@ def diffSets(old, new):
 
 # Remove potentially harmful characters from builder name if it is to be
 # used as the build dir.
-badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
-                                "______________________________")
+badchars_map = bytes.maketrans(b"\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
+                               b"______________________________")
 
 
 def safeTranslate(s):
