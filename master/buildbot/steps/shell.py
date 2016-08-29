@@ -15,6 +15,7 @@
 import inspect
 import re
 
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import string_types
 from twisted.python import failure
@@ -128,8 +129,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        valid_rsc_args = inspect.getargspec(
-            remotecommand.RemoteShellCommand.__init__)[0]
+        if PY3:
+            valid_rsc_args = inspect.signature(
+                remotecommand.RemoteShellCommand.__init__)
+        else:
+            valid_rsc_args = inspect.getargspec(
+                remotecommand.RemoteShellCommand.__init__)[0]
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
