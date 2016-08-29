@@ -56,7 +56,7 @@ class StdoutAssertionsMixin(object):
         return self.stdout.getvalue().strip()
 
 
-def _encodeExecutableAndArgs(executable, args, encoding="utf-8"):
+def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
     """
     Encode executable and arguments from unicode to bytes.
     This avoids a deprecation warning when calling reactor.spawnProcess()
