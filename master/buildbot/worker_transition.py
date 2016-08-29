@@ -199,7 +199,9 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
         "scope must be module, i.e. locals()"
 
     if new_name is None:
-        attribute_name = scope.keys()[scope.values().index(attribute)]
+        scope_keys = list(scope.keys())
+        scope_values = list(scope.values())
+        attribute_name = scope_keys[scope_values.index(attribute)]
     else:
         attribute_name = new_name
 
@@ -235,7 +237,9 @@ def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
     """
 
     if new_name is None:
-        attribute_name = scope.keys()[scope.values().index(prop)]
+        scope_keys = list(scope.keys())
+        scope_values = list(scope.values())
+        attribute_name = scope_keys[scope_values.index(prop)]
     else:
         attribute_name = new_name
 
