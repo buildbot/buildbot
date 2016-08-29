@@ -731,7 +731,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         sv = self.build.getWorkerCommandVersion(command, None)
         if sv is None:
             return True
-        if list(map(int, sv.split("."))) < list(map(int, minversion.split("."))):
+        if [int(s) for s in sv.split(".")] < [int(m) for m in minversion.split(".")]:
             return True
         return False
     deprecatedWorkerClassMethod(locals(), workerVersionIsOlderThan)
