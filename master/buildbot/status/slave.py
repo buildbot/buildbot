@@ -40,6 +40,7 @@ class SlaveStatus:
         self.connect_times = []
         self.master = None
         self.health = 0
+        self.slaveManagerUrl = "http:///blankurl/"
         self.eid = -1
 
     def getName(self):
@@ -187,6 +188,7 @@ class SlaveStatus:
         result['runningBuilds'] = builds
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
+        result['managerUrl'] = self.slaveManagerUrl
         result['eid'] = self.eid
         result['graceful_shutdown'] = self.graceful_shutdown
         result['paused'] = self.isPaused()
