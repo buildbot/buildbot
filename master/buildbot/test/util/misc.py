@@ -15,6 +15,7 @@
 import cStringIO
 import os
 import sys
+from future.utils import text_type
 
 
 class PatcherMixin(object):
@@ -53,3 +54,20 @@ class StdoutAssertionsMixin(object):
 
     def getStdout(self):
         return self.stdout.getvalue().strip()
+
+
+def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
+    """
+    Encode executable and arguments from unicode to bytes.
+    This avoids a deprecation warning when calling reactor.spawnProcess()
+    """
+    if isinstance(executable, text_type):
+        executable = executable.encode(encoding)
+
+    argsBytes = []
+    for arg in args:
+        if isinstance(arg, text_type):
+            arg = arg.encode(encoding)
+        argsBytes.append(arg)
+
+    return (executable, argsBytes)

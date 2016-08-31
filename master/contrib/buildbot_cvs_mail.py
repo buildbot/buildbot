@@ -13,6 +13,7 @@
 # Options handling done right by djmitche
 
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import optparse
 import os
@@ -22,8 +23,8 @@ import socket
 import sys
 import textwrap
 import time
-from cStringIO import StringIO
 from email.utils import formataddr
+from io import StringIO
 
 """
     -t
@@ -129,8 +130,15 @@ X-Mailer: Python buildbot-cvs-mail %(version)s
     if options.path:
         print('Path: %s' % options.path, file=s)
     print('Project: %s' % options.project, file=s)
-    s.write(sys.stdin.read())
-    print(file=s)
+    cvs_input = sys.stdin.read()
+
+    # On Python 2, sys.stdin.read() returns bytes, but
+    # on Python 3, it returns unicode str.
+    if isinstance(cvs_input, bytes):
+        cvs_input = cvs_input.decode("utf-8")
+
+    s.write(cvs_input)
+    print('', file=s)
     conn.sendmail(address, options.email, s.getvalue())
     conn.close()
 
