@@ -216,6 +216,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # give all services a chance to load the new configuration, rather than
             # the base configuration
             yield self.reconfigService(self.config)
+
         except:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
@@ -326,6 +327,8 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # reconfigure all the services
         yield config.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        # try to start the builds after all the services are configured
+        self.botmaster.maybeStartBuildsForAllBuilders()
 
         # adjust the db poller
         if self.configured_poll_interval != new_config.db['db_poll_interval']:

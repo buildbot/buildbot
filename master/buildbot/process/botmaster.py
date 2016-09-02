@@ -170,7 +170,8 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case
-        self.maybeStartBuildsForAllBuilders()
+        # it is not a good time to start this here if there are configuration changes in the schedulers
+        # self.maybeStartBuildsForAllBuilders()
 
         timer.stop()
 
