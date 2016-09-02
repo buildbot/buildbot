@@ -231,6 +231,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
                     classmethod(lambda cls, b, f : cls()))
 
             self.master = master.BuildMaster(self.basedir)
+            self.master.botmaster = mock.Mock()
             self.db = self.master.db = fakedb.FakeDBConnector(self)
 
         return d

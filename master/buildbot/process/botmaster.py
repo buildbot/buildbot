@@ -168,11 +168,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                     new_config)
 
-        # try to start a build for every builder; this is necessary at master
-        # startup, and a good idea in any other case
-        # it is not a good time to start this here if there are configuration changes in the schedulers
-        # self.maybeStartBuildsForAllBuilders()
-
         timer.stop()
 
 
@@ -331,7 +326,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param buildername: the name of the builder
         """
-        log.msg("maybeStartBuildsForBuilder")
         self.brd.maybeStartBuildsOn([buildername])
 
     def maybeStartBuildsForSlave(self, slave_name):
@@ -341,7 +335,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
         @param slave_name: the name of the slave
         """
-        log.msg("maybeStartBuildsForSlave")
         builders = self.getBuildersForSlave(slave_name)
         self.brd.maybeStartBuildsOn([ b.name for b in builders ])
 
@@ -350,7 +343,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         Call this when something suggests that this would be a good time to 
         start some builds, but nothing more specific.
         """
-        log.msg("maybeStartBuildsForAllBuilders")
         self.brd.maybeStartBuildsOn(self.builderNames)
 
 
