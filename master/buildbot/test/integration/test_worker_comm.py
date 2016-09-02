@@ -14,12 +14,16 @@
 # Copyright Buildbot Team Members
 
 
+import os
+
 import mock
 
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet.endpoints import clientFromString
 from twisted.python import log
+from twisted.python import util
 from twisted.spread import pb
 from twisted.trial import unittest
 
@@ -34,6 +38,8 @@ from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.util.eventual import eventually
 from buildbot.worker import manager as workermanager
+
+PKI_DIR = util.sibpath(__file__, 'pki')
 
 
 class FakeWorkerForBuilder(pb.Referenceable):
@@ -110,7 +116,6 @@ class FakeBuilder(builder.Builder):
         self.builder_status = mock.Mock()
 
     def attached(self, worker, commands):
-        assert commands == {'x': 1}
         return defer.succeed(None)
 
     def detached(self, worker):
@@ -149,7 +154,11 @@ class TestWorkerComm(unittest.TestCase):
     @ivar worker: master-side L{Worker} instance
     @ivar workerworker: worker-side L{FakeWorkerWorker} instance
     @ivar port: TCP port to connect to
-    @ivar connector: outbound TCP connection from worker to master
+    @ivar server_conndescr: description string for the server endpoint
+    @ivar client_conndescr_tpl: description string template for the client
+                                endpoint (expects to passed 'port')
+    @ivar endpoint: endpoint controlling the outbound connection
+                    from worker to master
     """
 
     @defer.inlineCallbacks
@@ -181,15 +190,21 @@ class TestWorkerComm(unittest.TestCase):
         self.buildworker = None
         self.port = None
         self.workerworker = None
-        self.connectors = []
+        self.endpoint = None
+        self.broker = None
         self._detach_deferreds = []
 
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
 
+        self.server_conndescr = "tcp:0:interface=127.0.0.1"
+        self.client_conndescr_tpl = "tcp:host=127.0.0.1:port={port}"
+
     def tearDown(self):
-        for connector in self.connectors:
-            connector.disconnect()
+        if self.broker:
+            del self.broker
+        if self.endpoint:
+            del self.endpoint
         deferreds = self._detach_deferreds + [
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
@@ -213,10 +228,11 @@ class TestWorkerComm(unittest.TestCase):
 
         # reconfig the master to get it set up
         new_config = self.master.config
-        new_config.protocols = {"pb": {"port": "tcp:0:interface=127.0.0.1"}}
+        new_config.protocols = {"pb": {"port": self.server_conndescr}}
         new_config.workers = [self.buildworker]
-        new_config.builders = [config.BuilderConfig(name='bldr',
-                                                    workername='testworker', factory=factory.BuildFactory())]
+        new_config.builders = [config.BuilderConfig(
+            name='bldr',
+            workername='testworker', factory=factory.BuildFactory())]
 
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
         yield self.workers.reconfigServiceWithBuildbotConfig(new_config)
@@ -248,18 +264,21 @@ class TestWorkerComm(unittest.TestCase):
 
             # set up to hear when the worker side disconnects
             workerworker.detach_d = defer.Deferred()
-            persp.broker.notifyOnDisconnect(lambda:
-                                            workerworker.detach_d.callback(None))
+            persp.broker.notifyOnDisconnect(
+                lambda: workerworker.detach_d.callback(None))
             self._detach_deferreds.append(workerworker.detach_d)
 
             return workerworker
 
-        self.connectors.append(
-            reactor.connectTCP("127.0.0.1", self.port, factory))
+        self.endpoint = clientFromString(
+                reactor, self.client_conndescr_tpl.format(port=self.port))
+        connected_d = self.endpoint.connect(factory)
 
-        if not waitForBuilderList:
-            return login_d
-        d = defer.DeferredList([login_d, setBuilderList_d],
+        dlist = [connected_d, login_d]
+        if waitForBuilderList:
+            dlist.append(setBuilderList_d)
+
+        d = defer.DeferredList(dlist,
                                consumeErrors=True, fireOnOneErrback=True)
         d.addCallback(lambda _: workerworker)
         return d
@@ -283,7 +302,39 @@ class TestWorkerComm(unittest.TestCase):
         yield worker.waitForDetach()
 
     @defer.inlineCallbacks
-    def test_duplicate_worker(self):
+    def test_tls_connect_disconnect(self):
+        """Test with TLS or SSL endpoint.
+
+        According to the deprecation note for the SSL client endpoint,
+        the TLS endpoint is supported from Twistd 16.0.
+
+        TODO add certificate verification (also will require some conditionals
+        on various versions, including PyOpenSSL, service_identity. The CA used
+        to generate the testing cert is in ``PKI_DIR/ca``
+        """
+        def escape_colon(path):
+            # on windows we can't have \ as it serves as the escape character for :
+            return path.replace('\\', '/').replace(':', '\\:')
+        self.server_conndescr = (
+            "ssl:port=0:certKey={pub}:privateKey={priv}:" +
+            "interface=127.0.0.1").format(
+                pub=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.crt')),
+                priv=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.key')))
+        self.client_conndescr_tpl = "ssl:host=127.0.0.1:port={port}"
+
+        yield self.addWorker()
+
+        # connect
+        worker = yield self.connectWorker()
+
+        # disconnect
+        self.workerSideDisconnect(worker)
+
+        # wait for the resulting detach
+        yield worker.waitForDetach()
+
+    @defer.inlineCallbacks
+    def _test_duplicate_worker(self):
         yield self.addWorker()
 
         # connect first worker
@@ -306,7 +357,7 @@ class TestWorkerComm(unittest.TestCase):
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
-    def test_duplicate_worker_old_dead(self):
+    def _test_duplicate_worker_old_dead(self):
         yield self.addWorker()
 
         # connect first worker
