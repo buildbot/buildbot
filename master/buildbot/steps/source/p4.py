@@ -21,6 +21,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot import interfaces
+from buildbot import util
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
@@ -230,12 +231,12 @@ class P4(Source):
         command.extend(doCommand)
 
         def encodeArg(arg):
-            if isinstance(arg, string_types):
-                return arg.encode('utf-8')
-            elif isinstance(arg, tuple):
+            if isinstance(arg, tuple):
                 # If a tuple, then the second element is the argument that will
                 # be used when executing the command.
-                return (arg[0], arg[1].encode('utf-8'), arg[2])
+                return (arg[0], util.encodeString(arg[1]), arg[2])
+            else:
+                return util.encodeString(arg)
 
         command = [encodeArg(c) for c in command]
         return command
