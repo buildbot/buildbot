@@ -61,7 +61,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
         evts = []
         b.chat('nick', 'hi')
-        self.assertEquals(evts, [('m', 'nick', 'hi')])
+        self.assertEqual(evts, [('m', 'nick', 'hi')])
 
     def test_getContact(self):
         b = self.makeBot()

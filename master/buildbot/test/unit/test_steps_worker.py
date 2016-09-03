@@ -337,7 +337,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(Expect(*cmd_args) + 1)
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
-        self.failUnless(testFunc.ran)
+        self.assertTrue(testFunc.ran)
 
     def test_mkdir(self):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))

@@ -105,7 +105,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
         @d.addCallback
         def cb_desired(r):
-            self.assertEquals(r, desiredGoodResult)
+            self.assertEqual(r, desiredGoodResult)
             # check types
             if isinstance(r, string_types):
                 self.assertIsInstance(r, text_type)

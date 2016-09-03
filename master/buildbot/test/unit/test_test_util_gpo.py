@@ -46,7 +46,7 @@ class TestGPOMixin(unittest.TestCase):
     def assertTestFailure(self, result, expectedFailure):
         self.assertEqual(result.errors, [])
         self.assertEqual(len(result.failures), 1)
-        self.failUnless(result.failures[0][1].check(unittest.FailTest))
+        self.assertTrue(result.failures[0][1].check(unittest.FailTest))
         if expectedFailure:
             self.assertSubstring(
                 expectedFailure, result.failures[0][1].getErrorMessage())
@@ -62,7 +62,7 @@ class TestGPOMixin(unittest.TestCase):
                            map(lambda x: x[1].value, result.errors))
             raise self.failureException(output)
 
-        self.failUnless(result.wasSuccessful())
+        self.assertTrue(result.wasSuccessful())
 
     def test_patch(self):
         original_getProcessOutput = utils.getProcessOutput

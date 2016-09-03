@@ -175,8 +175,8 @@ class TestDockerLatentWorker(unittest.TestCase):
 class testDockerPyStreamLogs(unittest.TestCase):
 
     def compare(self, result, log):
-        self.assertEquals(result,
-                          list(dockerworker._handle_stream_line(log)))
+        self.assertEqual(result,
+                         list(dockerworker._handle_stream_line(log)))
 
     def testEmpty(self):
         self.compare([], '{"stream":"\\n"}\r\n')

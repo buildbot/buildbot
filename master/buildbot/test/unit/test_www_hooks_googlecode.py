@@ -76,21 +76,21 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
 
         def check_changes(r):
             # Only one changeset has been submitted.
-            self.assertEquals(len(self.changeHook.master.addedChanges), 1)
+            self.assertEqual(len(self.changeHook.master.addedChanges), 1)
 
             # First changeset.
             change = self.changeHook.master.addedChanges[0]
-            self.assertEquals(change['files'], ['/CMakeLists.txt'])
-            self.assertEquals(
+            self.assertEqual(change['files'], ['/CMakeLists.txt'])
+            self.assertEqual(
                 change["repository"], "https://code.google.com/p/webhook-test/")
-            self.assertEquals(change["when"], 1324082130)
-            self.assertEquals(
+            self.assertEqual(change["when"], 1324082130)
+            self.assertEqual(
                 change["author"], "Louis Opter <louis@lse.epitech.net>")
-            self.assertEquals(
+            self.assertEqual(
                 change["revision"], '68e5df283a8e751cdbf95516b20357b2c46f93d4')
-            self.assertEquals(change["comments"], "Print a message")
-            self.assertEquals(change["branch"], "test")
-            self.assertEquals(change[
+            self.assertEqual(change["comments"], "Print a message")
+            self.assertEqual(change["branch"], "test")
+            self.assertEqual(change[
                               "revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
 
         d.addCallback(check_changes)

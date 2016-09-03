@@ -20,4 +20,4 @@ from buildbot.util import sautils
 class SAVersion(unittest.TestCase):
 
     def test_sa_version(self):
-        self.failUnless(sautils.sa_version() > (0, 5, 0))
+        self.assertTrue(sautils.sa_version() > (0, 5, 0))

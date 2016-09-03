@@ -107,7 +107,7 @@ class RunMasterBase(unittest.TestCase):
 
         m = yield getMaster(self, reactor, config_dict)
         self.master = m
-        self.failIf(stop.called,
+        self.assertFalse(stop.called,
                     "startService tried to stop the reactor; check logs")
 
         if not startWorker:

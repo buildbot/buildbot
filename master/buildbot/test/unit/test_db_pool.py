@@ -58,7 +58,7 @@ class Basic(unittest.TestCase):
             exception = e
         errors = self.flushLoggedErrors(expected_exception)
         if expect_logged_error:
-            self.assertEquals(len(errors), 1)
+            self.assertEqual(len(errors), 1)
         self.assertTrue(isinstance(exception, expected_exception))
 
     def test_do_error(self):

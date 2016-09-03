@@ -260,7 +260,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         for buildid in (50, 51, 52):
             props = yield self.db.builds.getBuildProperties(buildid)
-            self.assertEquals(0, len(props))
+            self.assertEqual(0, len(props))
 
     @defer.inlineCallbacks
     def testsetandgetProperties(self):

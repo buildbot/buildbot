@@ -213,7 +213,7 @@ class RunSteps(unittest.TestCase):
         self.builder.buildFinished = buildFinished
 
         # start the builder
-        self.failUnless((yield self.builder.maybeStartBuild(
+        self.assertTrue((yield self.builder.maybeStartBuild(
             self.workerforbuilder, [self.buildrequest])))
 
         # and wait for completion
@@ -225,7 +225,7 @@ class RunSteps(unittest.TestCase):
     def assertLogs(self, exp_logs):
         got_logs = {}
         for id, l in iteritems(self.master.data.updates.logs):
-            self.failUnless(l['finished'])
+            self.assertTrue(l['finished'])
             got_logs[l['name']] = ''.join(l['content'])
         self.assertEqual(got_logs, exp_logs)
 

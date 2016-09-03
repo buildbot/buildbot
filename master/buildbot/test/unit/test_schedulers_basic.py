@@ -127,7 +127,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             def fileIsImportant(self, change):
                 return False
         sched = self.makeScheduler(Subclass, onlyImportant=True)
-        self.failUnlessEqual(
+        self.assertEqual(
             Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
 
     def test_activate_treeStableTimer(self):

@@ -223,7 +223,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
-        self.failIf(isinstance(self.request.written, text_type))
+        self.assertFalse(isinstance(self.request.written, text_type))
         got = {}
         got['content'] = json.loads(self.request.written)
         got['contentType'] = self.request.headers['content-type']

@@ -202,7 +202,7 @@ class TestWorkQueue(unittest.TestCase):
     def expect_errback(self, d):
         @d.addCallback
         def shouldnt_get_called(f):
-            self.failUnlessEqual(True, False)
+            self.assertEqual(True, False)
 
         @d.addErrback
         def errback(f):
@@ -258,10 +258,10 @@ class TestWorkQueue(unittest.TestCase):
 
         @d1.addCallback
         def cb1(res):
-            self.failUnlessEqual(flags[1], False)
+            self.assertEqual(flags[1], False)
             flags[1] = True
-            self.failUnlessEqual(flags[2], False)
-            self.failUnlessEqual(flags[3], False)
+            self.assertEqual(flags[2], False)
+            self.assertEqual(flags[3], False)
 
         # When second deferred fires, only flags[3] should be set
         # flags[2] should definitely be False

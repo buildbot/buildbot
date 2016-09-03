@@ -48,4 +48,4 @@ class TestWarningCountingShellCommand(unittest.TestCase):
         # Finally make the suppressed warning was *not* added to the
         # list of warnings
         expectedWarnings = 0
-        self.assertEquals(len(warnings), expectedWarnings)
+        self.assertEqual(len(warnings), expectedWarnings)

@@ -38,7 +38,7 @@ class Tests(unittest.TestCase):
             self.assertFalse(identifiers.isIdentifier(50, b))
 
     def assertEqualUnicode(self, got, exp):
-        self.failUnless(isinstance(exp, text_type))
+        self.assertTrue(isinstance(exp, text_type))
         self.assertEqual(got, exp)
 
     def test_forceIdentifier_already_is(self):

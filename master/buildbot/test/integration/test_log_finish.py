@@ -118,6 +118,6 @@ class TestLog(RunMasterBase):
         self.assertFalse(self.curr_log.finished)
         self.assertEqual(build['results'], EXCEPTION)
         errors = self.flushLoggedErrors()
-        self.assertEquals(len(errors), 1)
+        self.assertEqual(len(errors), 1)
         error = errors[0]
-        self.assertEquals(error.getErrorMessage(), 'Could not finish')
+        self.assertEqual(error.getErrorMessage(), 'Could not finish')

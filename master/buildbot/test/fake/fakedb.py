@@ -1334,7 +1334,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildsetCompletion(self, bsid, complete):
         """Assert that the completion state of buildset BSID is COMPLETE"""
         actual = self.buildsets[bsid]['complete']
-        self.t.failUnless(
+        self.t.assertTrue(
             (actual and complete) or (not actual and not complete))
 
     def assertBuildset(self, bsid=None, expected_buildset=None):

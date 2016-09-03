@@ -148,11 +148,11 @@ class TestRunCommand(unittest.TestCase, Tests):
         log = logfile.FakeLogFile(logname, 'dummy')
         cmd.useLog(log)
         cmd.addStdout('some stdout')
-        self.failUnlessEqual(log.stdout, 'some stdout')
+        self.assertEqual(log.stdout, 'some stdout')
         cmd.addStderr('some stderr')
-        self.failUnlessEqual(log.stderr, 'some stderr')
+        self.assertEqual(log.stderr, 'some stderr')
         cmd.addHeader('some header')
-        self.failUnlessEqual(log.header, 'some header')
+        self.assertEqual(log.header, 'some header')
 
     def test_RemoteShellCommand_usePTY_on_worker_2_16(self):
         cmd = remotecommand.RemoteShellCommand('workdir', 'shell')

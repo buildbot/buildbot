@@ -152,8 +152,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d = self.changesource.poll()
 
         def check_first_check(_):
-            self.assertEquals(self.master.data.updates.changesAdded, [])
-            self.assertEquals(self.changesource.last_change, 1)
+            self.assertEqual(self.master.data.updates.changesAdded, [])
+            self.assertEqual(self.changesource.last_change, 1)
         d.addCallback(check_first_check)
 
         # Subsequent times, it returns Change objects for new changes.
@@ -258,7 +258,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         @d.addCallback
         def check(_):
             # check that 2 was processed OK
-            self.assertEquals(self.changesource.last_change, 2)
+            self.assertEqual(self.changesource.last_change, 2)
             self.assertAllCommandsRan()
         return d
 
@@ -320,7 +320,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d = self.changesource.poll()
 
         def check_ticket_passwd(_):
-            self.assertEquals(
+            self.assertEqual(
                 self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
         d.addCallback(check_ticket_passwd)
         return d
@@ -374,7 +374,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'src': None,
                 'when_timestamp': datetime2epoch(when),
             }])
-            self.assertEquals(self.changesource.last_change, 5)
+            self.assertEqual(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d

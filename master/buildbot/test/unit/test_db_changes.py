@@ -229,7 +229,7 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(get14)
 
         def check14(chdict):
-            self.failUnless(chdict is None)
+            self.assertTrue(chdict is None)
         d.addCallback(check14)
         return d
 

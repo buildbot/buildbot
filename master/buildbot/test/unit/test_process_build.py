@@ -360,7 +360,7 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(b.results, SUCCESS)
         self.assertIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                       step.method_calls)
-        self.assertEquals(claimCount[0], 1)
+        self.assertEqual(claimCount[0], 1)
 
     def testBuildLocksOrder(self):
         """Test that locks are acquired in FIFO order; specifically that
@@ -411,7 +411,7 @@ class TestBuild(unittest.TestCase):
         def check(ign):
             self.assertEqual(eBuild.results, SUCCESS)
             self.assertEqual(cBuild.results, SUCCESS)
-            self.assertEquals(claimLog, [fakeBuild, eBuild, cBuild])
+            self.assertEqual(claimLog, [fakeBuild, eBuild, cBuild])
 
         d.addCallback(check)
         return d
@@ -444,7 +444,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                          step.method_calls)
-        self.assertEquals(claimCount[0], 1)
+        self.assertEqual(claimCount[0], 1)
         self.assertTrue(b.currentStep is None)
         self.assertTrue(b._acquiringLock is not None)
 
@@ -701,7 +701,7 @@ class TestBuild(unittest.TestCase):
         b.buildid = 43
         result = 'SUCCESS'
         res = yield b._flushProperties(result)
-        self.assertEquals(res, result)
+        self.assertEqual(res, result)
         self.assertEqual(self.master.data.updates.properties,
                          [(43, u'foo', 'bar', u'test')])
 

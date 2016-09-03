@@ -110,7 +110,7 @@ class TriggeringMaster(RunMasterBase):
 
     def assertBuildIsCancelled(self, b):
         self.assertTrue(b['complete'])
-        self.assertEquals(b['results'], CANCELLED, repr(b))
+        self.assertEqual(b['results'], CANCELLED, repr(b))
 
     @defer.inlineCallbacks
     def runTest(self, newBuildCallback, flushErrors=False):

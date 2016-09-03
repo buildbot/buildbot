@@ -130,7 +130,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         # so we just hope this does not fail
         yield self.bldr.stopService()
         started = yield self.bldr.maybeStartBuild(None, [])
-        self.assertEquals(started, False)
+        self.assertEqual(started, False)
 
     # maybeStartBuild
     def _makeMocks(self):
