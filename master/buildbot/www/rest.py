@@ -124,7 +124,7 @@ class V2RootResource(resource.Resource):
         try:
             yield
         except exceptions.InvalidPathError as e:
-            writeError(str(e) or "invalid path", errcode=404,
+            writeError(e.args[0] or "invalid path", errcode=404,
                        jsonrpccode=JSONRPC_CODES['invalid_request'])
             return
         except exceptions.InvalidControlException as e:
@@ -132,7 +132,7 @@ class V2RootResource(resource.Resource):
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadRequest as e:
-            writeError(str(e) or "invalid request", errcode=400,
+            writeError(e.args[0] or "invalid request", errcode=400,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadJsonRpc2 as e:
