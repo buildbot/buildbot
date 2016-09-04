@@ -48,14 +48,14 @@ def getVersion(init_file):
 
     # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
     # no matter the number of digits for X, Y and Z
-    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?(\w|-)*)')
+    VERSION_MATCH = re.compile(br'(\d+\.\d+(\.\d+)?(\w|-)*)')
 
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
-            v = VERSION_MATCH.search(out.decode('utf-8'))
+            v = VERSION_MATCH.search(out)
             if v:
                 return v.group(1)
     except OSError:
