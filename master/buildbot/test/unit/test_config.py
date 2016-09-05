@@ -60,6 +60,7 @@ global_defaults = dict(
     protocols={},
     multiMaster=False,
     manhole=None,
+    buildbotNetUsageData='basic',
     www=dict(port=None, plugins={},
              auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
@@ -460,7 +461,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
     def test_load_global_eventHorizon(self):
-        self.do_test_load_global(dict(eventHorizon=10), eventHorizon=10)
+        self.do_test_load_global(dict(eventHorizon=None), eventHorizon=None)
 
     def test_load_global_logHorizon(self):
         self.do_test_load_global(dict(logHorizon=10), logHorizon=10)
