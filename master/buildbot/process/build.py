@@ -528,7 +528,7 @@ class Build(properties.PropertiesMixin):
         elif result in (EXCEPTION, RETRY, DEPENDENCY_FAILURE):
             terminate = True
 
-        if result in (FAILURE, EXCEPTION) and step.pauseAgentOnFailure:
+        if result in (FAILURE, EXCEPTION) and step.pauseSlaveOnFailure:
                 self.slavebuilder.slave.slave_status.setPaused(True)
 
         # if we skipped this step, then don't adjust the build status

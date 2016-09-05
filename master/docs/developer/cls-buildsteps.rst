@@ -9,7 +9,7 @@ This section describes the base classes.  The "leaf" classes are described in :d
 BuildStep
 ---------
 
-.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, pauseAgentOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
+.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, pauseSlaveOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     All constructor arguments must be given as keyword arguments.
     Each constructor parameter is copied to the corresponding attribute.
@@ -64,7 +64,7 @@ BuildStep
 
         If true, the build will be marked as warnings, or worse, if this step fails.
 
-    .. py:attribute:: pauseAgentOnFailure
+    .. py:attribute:: pauseSlaveOnFailure
 
         If true, the slave running the build will be paused if this step fails.
 

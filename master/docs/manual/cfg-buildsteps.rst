@@ -86,10 +86,10 @@ Arguments common to all :class:`BuildStep` subclasses:
     when ``True``, a ``FAILURE`` of this build step will mark the overall build as
     having ``WARNINGS``. The remaining steps will still be executed.
 
-.. index:: Buildstep Parameter; pauseAgentOnFailure
+.. index:: Buildstep Parameter; pauseSlaveOnFailure
 
-``pauseAgentOnFailure``
-    when ``True``, a ``FAILURE`` of this build step will pause the agent currently running this step.
+``pauseSlaveOnFailure``
+    when ``True``, a ``FAILURE`` of this build step will pause the slave currently running this step.
     The remaining steps will still be executed.
 
 .. index:: Buildstep Parameter; alwaysRun
