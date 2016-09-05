@@ -24670,19 +24670,11 @@ helpers = this.merge(helpers, Handlebars.helpers); partials = this.merge(partial
 function program1(depth0,data) {
   
   var buffer = "", stack1, helper;
-  buffer += "\n        <li><strong>Yumi URL:</strong> <a href=\"";
-  if (helper = helpers.managerUrl) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-  else { helper = (depth0 && depth0.managerUrl); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-  buffer += escapeExpression(stack1)
-    + "/";
+  buffer += "\n        <li><strong>Yumi URL:</strong> <a href=\" http://yumi.hq.unity3d.com/agent/";
   if (helper = helpers.eid) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.eid); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
-    + "\">";
-  if (helper = helpers.managerUrl) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-  else { helper = (depth0 && depth0.managerUrl); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
-  buffer += escapeExpression(stack1)
-    + "/";
+    + "\"> http://yumi.hq.unity3d.com/agent/";
   if (helper = helpers.eid) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.eid); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
@@ -24720,10 +24712,10 @@ function program6(depth0,data) {
   else { helper = (depth0 && depth0.name); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
     + "</h3>\n<ul class=\"list\">\n    <li><strong>Status:</strong> <div id=\"slave-status\"></div></li>\n    <li><strong>Hostname:</strong> ";
-  if (helper = helpers.name) { stack1 = helper.call(depth0, {hash:{},data:data}); }
-  else { helper = (depth0 && depth0.name); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  if (helper = helpers.fqdn) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.fqdn); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
-    + ".hq.unity3d.com</li>\n    <li><strong>Health:</strong> ";
+    + "</li>\n    <li><strong>Health:</strong> ";
   stack1 = self.invokePartial(partials['slave:health'], 'slave:health', depth0, helpers, partials, data);
   if(stack1 || stack1 === 0) { buffer += stack1; }
   buffer += "</li>\n    <li><strong>Builders:</strong> ";
