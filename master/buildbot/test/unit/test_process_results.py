@@ -27,9 +27,15 @@ class TestResults(unittest.TestCase):
             self.assertEqual(results.Results[i], r)
 
     def test_worst_status(self):
+        self.assertEqual(results.WARNINGS,
+            results.worst_status(results.SUCCESS, results.WARNINGS))
+        self.assertEqual(results.CANCELLED,
+            results.worst_status(results.SKIPPED, results.CANCELLED))
+
+    def test_sort_worst_status(self):
         res = lrange(len(results.Results))
         res.sort(
-            cmp=lambda a, b: 1 if (results.worst_status(a, b) == a) else -1)
+            key=lambda a: a if a != results.SKIPPED else -1)
         self.assertEqual(res, [
             results.SKIPPED,
             results.SUCCESS,
