@@ -177,6 +177,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.reactor = self.make_reactor()
             self.master = master.BuildMaster(
                 self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
+            self.master.sendBuildbotNetStatistics = mock.Mock()
             self.master.botmaster = FakeBotMaster()
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.db.setServiceParent(self.master)

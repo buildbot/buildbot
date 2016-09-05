@@ -55,6 +55,7 @@ def getMaster(case, reactor, config_dict):
     """
     basedir = FilePath(case.mktemp())
     basedir.createDirectory()
+    config_dict['buildbotNetStatistics'] = None
     master = BuildMaster(
         basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
