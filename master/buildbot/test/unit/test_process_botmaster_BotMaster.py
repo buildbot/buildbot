@@ -143,8 +143,6 @@ class TestBotMaster(unittest.TestCase):
                 mock.Mock(side_effect=lambda c : defer.succeed(None)))
         self.patch(self.botmaster, 'reconfigServiceSlaves',
                 mock.Mock(side_effect=lambda c : defer.succeed(None)))
-        self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
-                mock.Mock())
 
         old_config, new_config = mock.Mock(), mock.Mock()
         d = self.botmaster.reconfigService(new_config)
@@ -154,8 +152,6 @@ class TestBotMaster(unittest.TestCase):
                     new_config)
             self.botmaster.reconfigServiceSlaves.assert_called_with(
                     new_config)
-            self.assertTrue(
-                    self.botmaster.maybeStartBuildsForAllBuilders.called)
         return d
 
     @defer.inlineCallbacks

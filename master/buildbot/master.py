@@ -130,11 +130,11 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         self.change_svc = ChangeManager(self)
         self.change_svc.setServiceParent(self)
 
-        self.scheduler_manager = SchedulerManager(self)
-        self.scheduler_manager.setServiceParent(self)
-
         self.botmaster = BotMaster(self)
         self.botmaster.setServiceParent(self)
+
+        self.scheduler_manager = SchedulerManager(self)
+        self.scheduler_manager.setServiceParent(self)
 
         self.user_manager = UserManagerManager(self)
         self.user_manager.setServiceParent(self)
@@ -216,6 +216,7 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
             # give all services a chance to load the new configuration, rather than
             # the base configuration
             yield self.reconfigService(self.config)
+
         except:
             f = failure.Failure()
             log.err(f, 'while starting BuildMaster')
@@ -225,11 +226,13 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        if self.running:
-            yield service.MultiService.stopService(self)
+        # first we need to stop db_loop to avoid process request
         if self.db_loop:
             self.db_loop.stop()
             self.db_loop = None
+
+        if self.running:
+            yield service.MultiService.stopService(self)
 
 
     def reconfig(self):
@@ -301,36 +304,40 @@ class BuildMaster(config.ReconfigurableServiceMixin, service.MultiService):
         else:
             log.msg("configuration update complete")
 
-
+    @defer.inlineCallbacks
     def reconfigService(self, new_config):
+        # check configured db
         if self.configured_db_url is None:
             self.configured_db_url = new_config.db['db_url']
-        elif (self.configured_db_url != new_config.db['db_url']):
+        elif self.configured_db_url != new_config.db['db_url']:
             config.error(
                 "Cannot change c['db']['db_url'] after the master has started",
             )
 
-        # adjust the db poller
-        if (self.configured_poll_interval
-                != new_config.db['db_poll_interval']):
-            if self.db_loop:
-                self.db_loop.stop()
-                self.db_loop = None
-            self.configured_poll_interval = new_config.db['db_poll_interval']
-            if self.configured_poll_interval:
-                self.db_loop = task.LoopingCall(self.pollDatabase)
-                self.db_loop.start(self.configured_poll_interval, now=False)
-
         # setup buildbotURL
         if self.configured_buildbotURL != new_config.buildbotURL:
             self.configured_buildbotURL = new_config.buildbotURL
-            def setupMaster(_master_objectid):
-                self.db.mastersconfig.setupMaster(self.configured_buildbotURL, _master_objectid)
-            d = self.getObjectId()
-            d.addCallback(setupMaster)
+            _master_objectid = yield self.getObjectId()
+            yield self.db.mastersconfig.setupMaster(self.configured_buildbotURL, _master_objectid)
 
-        return config.ReconfigurableServiceMixin.reconfigService(self,
-                                            new_config)
+        # stop the db pool while starting or reconfiguring the master
+        if self.db_loop:
+            self.db_loop.stop()
+            self.db_loop = None
+
+        # reconfigure all the services
+        yield config.ReconfigurableServiceMixin.reconfigService(self, new_config)
+        # try to start the builds after all the services are configured
+        self.botmaster.maybeStartBuildsForAllBuilders()
+
+        # adjust the db poller
+        if self.configured_poll_interval != new_config.db['db_poll_interval']:
+            self.configured_poll_interval = new_config.db['db_poll_interval']
+
+        # resume the db poller
+        if self.configured_poll_interval:
+            self.db_loop = task.LoopingCall(self.pollDatabase)
+            self.db_loop.start(self.configured_poll_interval, now=False)
 
     ## informational methods
 
