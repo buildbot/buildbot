@@ -162,7 +162,7 @@ class Change:
     def asDict(self):
         '''returns a dictonary with suitable info for html/mail rendering'''
         files = [dict(name=f) for f in self.files]
-        files.sort(cmp=lambda a, b: a['name'] < b['name'])
+        files.sort(key=lambda a: a['name'])
 
         result = {
             # Constant

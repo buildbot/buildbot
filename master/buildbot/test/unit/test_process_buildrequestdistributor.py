@@ -35,7 +35,7 @@ def nth_worker(n):
         if workers is None:
             workers = builder
         workers = workers[:]
-        workers.sort(cmp=lambda a, b: cmp(a.name, b.name))
+        workers.sort(key=lambda a: a.name)
         return workers[n]
     return pick_nth_by_name
 
@@ -210,7 +210,7 @@ class Test(TestBRDBase):
         builders = ['bldr%02d' % i for i in range(15)]
 
         def slow_sorter(master, bldrs):
-            bldrs.sort(lambda b1, b2: cmp(b1.name, b2.name))
+            bldrs.sort(key=lambda b1: b1.name)
             d = defer.Deferred()
             reactor.callLater(0, d.callback, bldrs)
 

@@ -307,7 +307,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             candidates = [(i, b, b.getTimes()[1])
                           for i, b in enumerate(next_build)
                           if b is not None]
-            candidates.sort(lambda x, y: cmp(x[2], y[2]))
+            candidates.sort(key=lambda x: x[2])
             if not candidates:
                 return
 
